@@ -10,13 +10,13 @@ pub(crate) unsafe fn month_award_club_by_id(id: i32) -> Club {
 pub(crate) static MONTH_AWARD_DRY_RUN: AtomicBool = AtomicBool::new(false);
 
 /// Picks the best player of the month ratings with the requested age and records him as the month winner, with his
-/// club.
-///
-/// `MONTH_AWARD::award_best_rated_player(ratings, age)`, called at the turn of the month by the nations' awards
-/// (England's at 0x579a37..0x579adc). It takes the best of the ratings (`find_best_player`) in the award's league (`[+9]`, or −1)
-/// and with the requested age; when one is found, it records the winner (`set_winner`) with the person's club (+0x39, or
-/// −1), and the month (+0xc) and year (+0xd) of the ratings. The high bytes of the month and the year are passed
-/// exactly as the original pushes them (taken from the person table in the register).
+/// club. `MONTH_AWARD::award_best_rated_player(notes, age)`, called at the turn of the month by the nations' awards
+/// (England's at 0x579a37..0x579adc). It takes the best of the ratings (`exe::month_ratings_find_best_player`) in the
+/// award's league (`[+9]`, or −1) and with the requested age; when one is found, it records the winner
+/// (`exe::month_award_set_winner`) with the person's club (`staff::CLUB_JOB`, or −1), and the month
+/// (`month_ratings_fields::MONTH`) and year (`month_ratings_fields::YEAR`) of the ratings. The high bytes of the month
+/// and the year are passed exactly as the original pushes them (taken from the person table, `G_STAFF_TABLE`, in the
+/// register).
 /// Original: `MONTH_AWARD::award_best_rated_player` (0x767150, month_award.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn award_best_rated_player(this: usize, notes: usize, age: u32) {
     let league = {
@@ -56,12 +56,14 @@ pub(crate) unsafe fn raise_winner_reputation(person: usize, club: usize, nation:
 }
 
 /// Finds the month slot, stores the person and the club, raises the winner's reputation, sends the news and records the
-/// award in the history.
-///
-/// `MONTH_AWARD::set_winner(person, club, month, year)`. It looks for the month's slot (12 slots of 11 bytes: month at
-/// +0x25, year at +0x26); without one, it does nothing. It stores the person (+0x1d) and the club (+0x21); when there
-/// is a person, it raises the award winner's reputation (`award_raise_winner_reputation`, with the award's reputations +0x15 and +0x17 and the
-/// player flag +0x19); then the news (`exe::month_award_post_winner_news`) and the award record (`add_month_award_record` on `[0xdd7f00]`, with the award's +5).
+/// award in the history. `MONTH_AWARD::set_winner(id, club_id, month, year)`. It looks for the month's slot (12 slots
+/// of 11 bytes: month at `month_award_fields::SLOT_MONTH`, year at `month_award_fields::SLOT_YEAR`); without one, it
+/// does nothing. It stores the person (`month_award_fields::SLOT_WINNER_ID`) and the club
+/// (`month_award_fields::SLOT_CLUB_ID`); when there is a person, it raises the award winner's reputation
+/// (`raise_winner_reputation`, with the award's reputations `award_fields::NATIONAL_REPUTATION` and
+/// `award_fields::WORLD_REPUTATION` and the player flag `award_fields::FOR_PLAYERS`); then the news
+/// (`exe::month_award_post_winner_news`) and the award record (`exe::staff_records_add_month_award_record` on
+/// `G_STAFF_RECORDS`, with the award's +5).
 /// Original: `MONTH_AWARD::set_winner` (0x7671c0, month_award.cpp, thiscall, ret 0x10).
 pub(crate) unsafe extern "thiscall" fn set_winner(this: usize, id: i32, club_id: i32, month: u32, year: u32) {
     let mut slot = None;

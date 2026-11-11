@@ -220,9 +220,9 @@ pub(crate) unsafe extern "C" fn db_files_write_officials(stream: usize, use_zip:
 /// through zwrite (save) or fwrite (Data folder); 1 if everything was written.
 ///
 /// `db_files_write_records_0x3a(stream, use_zip, records, n)`: writes `n` 58-byte records (colour.dat, id 2, and
-/// staff_comp_history.dat, id 18: the same routine for both) in one go through `zwrite` `zipdir_zwrite` (use_zip ≠ 0: the
-/// save) or `fwrite` `exe::crt_fwrite` (the Data folder); 1 if everything was written. No stack frame: nothing from the stack
-/// goes into the file.
+/// staff_comp_history.dat, id 18: the same routine for both) in one go through `zwrite` `exe::zwrite` (use_zip ≠ 0: the
+/// save) or `fwrite` `exe::crt_fwrite` (the Data folder); 1 if everything was written. No stack frame: nothing from the
+/// stack goes into the file.
 /// Original: `db_files_write_records_0x3a` (0x550800, Db_files.cpp, cdecl).
 pub(crate) unsafe extern "C" fn db_files_write_records_0x3a(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     covered!("database write 58-byte records");
@@ -481,11 +481,11 @@ pub(crate) unsafe extern "C" fn db_files_write_staff_extra(stream: usize, use_zi
 /// Reads the officials.dat table (id 7) of 43-byte records in one go, through zread (save) or fread (Data), with entry
 /// version 1 (other: box and exit); 1 if everything was read.
 ///
-/// `db_files_read_officials(stream, use_zip, records, entry)`: with the index entry version (+0x3f) equal to 1, reads
-/// in one go the count (+0x37) of 43-byte records (officials.dat) through `zread` `zipdir_zread` (use_zip ≠ 0: the save) or
-/// `fread` `exe::crt_fread` (the Data folder); 1 if everything was read. Another version: the "Error" box (Db_files.cpp) and
-/// the game exits; the copy calls the original. The original's 0x200 frame only serves the box path (_splitpath):
-/// nothing from the stack goes into the table.
+/// `db_files_read_officials(stream, use_zip, records, entry)`: with the index entry version (`db_index_entry::VERSION`)
+/// equal to 1, reads in one go the count (`db_index_entry::RECORD_COUNT`) of 43-byte records (officials.dat) through
+/// `zread` `exe::zread` (use_zip ≠ 0: the save) or `fread` `exe::crt_fread` (the Data folder); 1 if everything was
+/// read. Another version: the "Error" box (Db_files.cpp) and the game exits; the copy calls the original. The
+/// original's 0x200 frame only serves the box path (_splitpath): nothing from the stack goes into the table.
 /// Original: `db_files_read_officials` (0x5505c0, Db_files.cpp, cdecl).
 pub(crate) unsafe extern "C" fn db_files_read_officials(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
     let n = read_u32(entry + db_index_entry::RECORD_COUNT);
@@ -508,11 +508,11 @@ pub(crate) unsafe extern "C" fn db_files_read_officials(stream: usize, use_zip: 
 /// Reads the colour.dat table (id 2) of 58-byte records in one go, through zread (save) or fread (Data), with entry
 /// version 1 (other: box and exit); 1 if everything was read.
 ///
-/// `db_files_read_colours(stream, use_zip, records, entry)`: with the index entry version (+0x3f) equal to 1, reads in
-/// one go the count (+0x37) of 58-byte records (colour.dat) through `zread` `zipdir_zread` (use_zip ≠ 0: the save) or `fread`
-/// `exe::crt_fread` (the Data folder); 1 if everything was read. Another version: the "Error" box (Db_files.cpp) and the game
-/// exits; the copy calls the original. The original's 0x200 frame only serves the box path (_splitpath): nothing from
-/// the stack goes into the table.
+/// `db_files_read_colours(stream, use_zip, records, entry)`: with the index entry version (`db_index_entry::VERSION`)
+/// equal to 1, reads in one go the count (`db_index_entry::RECORD_COUNT`) of 58-byte records (colour.dat) through
+/// `zread` `exe::zread` (use_zip ≠ 0: the save) or `fread` `exe::crt_fread` (the Data folder); 1 if everything was
+/// read. Another version: the "Error" box (Db_files.cpp) and the game exits; the copy calls the original. The
+/// original's 0x200 frame only serves the box path (_splitpath): nothing from the stack goes into the table.
 /// Original: `db_files_read_colours` (0x550710, Db_files.cpp, cdecl).
 pub(crate) unsafe extern "C" fn db_files_read_colours(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
     let n = read_u32(entry + db_index_entry::RECORD_COUNT);
@@ -535,12 +535,12 @@ pub(crate) unsafe extern "C" fn db_files_read_colours(stream: usize, use_zip: i3
 /// Reads the first_names.dat, second_names.dat and common_names.dat tables (ids 13, 14, 15) of 60-byte records in one
 /// go, through zread (save) or fread (Data), with entry version 1 (other: box and exit); 1 if everything was read.
 ///
-/// `db_files_read_names(stream, use_zip, records, entry)`: with the index entry version (+0x3f) equal to 1, reads in
-/// one go the count (+0x37) of 60-byte records (first_names.dat, second_names.dat and common_names.dat: the same
-/// routine for the three) through `zread` `zipdir_zread` (use_zip ≠ 0: the save) or `fread` `exe::crt_fread` (the Data folder); 1 if
-/// everything was read. Another version: the "Error" box (Db_files.cpp) and the game exits; the copy calls the
-/// original. The original's 0x200 frame only serves the box path (_splitpath): nothing from the stack goes into the
-/// table.
+/// `db_files_read_names(stream, use_zip, records, entry)`: with the index entry version (`db_index_entry::VERSION`)
+/// equal to 1, reads in one go the count (`db_index_entry::RECORD_COUNT`) of 60-byte records (first_names.dat,
+/// second_names.dat and common_names.dat: the same routine for the three) through `zread` `exe::zread` (use_zip ≠ 0:
+/// the save) or `fread` `exe::crt_fread` (the Data folder); 1 if everything was read. Another version: the "Error" box
+/// (Db_files.cpp) and the game exits; the copy calls the original. The original's 0x200 frame only serves the box path
+/// (_splitpath): nothing from the stack goes into the table.
 /// Original: `db_files_read_names` (0x550860, Db_files.cpp, cdecl).
 pub(crate) unsafe extern "C" fn db_files_read_names(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
     let n = read_u32(entry + db_index_entry::RECORD_COUNT);
@@ -561,16 +561,17 @@ pub(crate) unsafe extern "C" fn db_files_read_names(stream: usize, use_zip: i32,
 // simplification: original only; the proof is the .qst (the table read goes into the save) and the copy’s branch in Rust mode.
 
 /// Reads the club.dat and nat_club.dat table (ids 0, 1) of 581-byte records in one go, through zread (save) or fread
-/// (Data), with entry version 2, and turns reputation 0 into 1; version 1: the `db_files_read_clubs_v1` converter (other: box and
-/// exit); 1 if everything was read.
+/// (Data), with entry version 2, and turns reputation 0 into 1; version 1: the `db_files_read_clubs_v1` converter
+/// (other: box and exit); 1 if everything was read.
 ///
-/// `db_files_read_clubs(stream, use_zip, records, entry)`: with the index entry version (+0x3f) equal to 2, reads in
-/// one go the count (+0x37) of 581-byte records (club.dat and nat_club.dat) through `zread` `zipdir_zread` (use_zip ≠ 0: the
-/// save) or `fread` `exe::crt_fread` (the Data folder); if not everything was read, 0; if it was, replaces reputation (+0x80,
-/// u16) 0 with 1 in all of them and returns 1. Version 1: the field-by-field converter `db_files_read_clubs_v1` (stream, use_zip,
-/// records, count), called by address, and its answer (without the reputation replacement: the converter does its own,
-/// ×500). Another version: the "Error" box (Db_files.cpp) and the game exits; the copy calls the original. The
-/// original's 0x200 frame only serves the box path.
+/// `db_files_read_clubs(stream, use_zip, records, entry)`: with the index entry version (`db_index_entry::VERSION`)
+/// equal to 2, reads in one go the count (`db_index_entry::RECORD_COUNT`) of 581-byte records (club.dat and
+/// nat_club.dat) through `zread` `exe::zread` (use_zip ≠ 0: the save) or `fread` `exe::crt_fread` (the Data folder); if
+/// not everything was read, 0; if it was, replaces reputation (`club::REPUTATION`, u16) 0 with 1 in all of them and
+/// returns 1. Version 1: the field-by-field converter `exe::db_files_read_clubs_v1` (stream, use_zip, records, count),
+/// called by address, and its answer (without the reputation replacement: the converter does its own, ×500). Another
+/// version: the "Error" box (Db_files.cpp) and the game exits; the copy calls the original. The original's 0x200 frame
+/// only serves the box path.
 /// Original: `db_files_read_clubs` (0x54db50, Db_files.cpp, cdecl).
 pub(crate) unsafe extern "C" fn db_files_read_clubs(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
     let n = read_u32(entry + db_index_entry::RECORD_COUNT);
@@ -604,15 +605,15 @@ pub(crate) unsafe extern "C" fn db_files_read_clubs(stream: usize, use_zip: i32,
 // simplification: original only; the proof is the .qst (the table read goes into the save) and the copy’s branch in Rust mode.
 
 /// Reads the club_comp.dat and nation_comp.dat table (ids 12, 16) of 107-byte records in one go, through zread (save)
-/// or fread (Data), with entry version 2; version 1: the `db_files_read_comps_v1` converter (other: box and exit); 1 if everything was
-/// read.
+/// or fread (Data), with entry version 2; version 1: the `db_files_read_comps_v1` converter (other: box and exit); 1 if
+/// everything was read.
 ///
-/// `db_files_read_comps(stream, use_zip, records, entry)`: with the index entry version (+0x3f) equal to 2, reads in
-/// one go the count (+0x37) of 107-byte records (club_comp.dat and nation_comp.dat) through `zread` `zipdir_zread` (use_zip ≠
-/// 0: the save) or `fread` `exe::crt_fread` (the Data folder); 1 if everything was read. Version 1: the field-by-field
-/// converter `db_files_read_comps_v1` (stream, use_zip, records, count), called by address, and its answer. Another version: the
-/// "Error" box (Db_files.cpp) and the game exits; the copy calls the original. The original's 0x200 frame only serves
-/// the box path.
+/// `db_files_read_comps(stream, use_zip, records, entry)`: with the index entry version (`db_index_entry::VERSION`)
+/// equal to 2, reads in one go the count (`db_index_entry::RECORD_COUNT`) of 107-byte records (club_comp.dat and
+/// nation_comp.dat) through `zread` `exe::zread` (use_zip ≠ 0: the save) or `fread` `exe::crt_fread` (the Data folder);
+/// 1 if everything was read. Version 1: the field-by-field converter `exe::db_files_read_comps_v1` (stream, use_zip,
+/// records, count), called by address, and its answer. Another version: the "Error" box (Db_files.cpp) and the game
+/// exits; the copy calls the original. The original's 0x200 frame only serves the box path.
 /// Original: `db_files_read_comps` (0x54feb0, Db_files.cpp, cdecl).
 pub(crate) unsafe extern "C" fn db_files_read_comps(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
     let n = read_u32(entry + db_index_entry::RECORD_COUNT);
@@ -637,15 +638,16 @@ pub(crate) unsafe extern "C" fn db_files_read_comps(stream: usize, use_zip: i32,
 // simplification: original only; the proof is the .qst (the table read goes into the save) and the copy’s branch in Rust mode.
 
 /// Reads the non-player table of staff.dat (id 9; the community map calls it players) of 68-byte records in one go,
-/// through zread (save) or fread (Data), with entry version 2; version 1: the `db_files_read_players_v1` converter (other: box and exit);
-/// 1 if everything was read.
+/// through zread (save) or fread (Data), with entry version 2; version 1: the `db_files_read_players_v1` converter
+/// (other: box and exit); 1 if everything was read.
 ///
 /// `db_files_read_players(stream, use_zip, records, entry)` (the community map swaps the names: it is table id 9, the
-/// non-players, 0xae23c0): with the index entry version (+0x3f) equal to 2, reads in one go the count (+0x37) of
-/// 68-byte records through `zread` `zipdir_zread` (use_zip ≠ 0: the save) or `fread` `exe::crt_fread` (the Data folder); 1 if
-/// everything was read. Version 1: the field-by-field converter `db_files_read_players_v1` (stream, use_zip, records, count), called by
-/// address, and its answer. Another version: the "Error" box (Db_files.cpp) and the game exits; the copy calls the
-/// original. The original's 0x200 frame only serves the box path.
+/// non-players, 0xae23c0): with the index entry version (`db_index_entry::VERSION`) equal to 2, reads in one go the
+/// count (`db_index_entry::RECORD_COUNT`) of 68-byte records through `zread` `exe::zread` (use_zip ≠ 0: the save) or
+/// `fread` `exe::crt_fread` (the Data folder); 1 if everything was read. Version 1: the field-by-field converter
+/// `exe::db_files_read_players_v1` (stream, use_zip, records, count), called by address, and its answer. Another
+/// version: the "Error" box (Db_files.cpp) and the game exits; the copy calls the original. The original's 0x200 frame
+/// only serves the box path.
 /// Original: `db_files_read_players` (0x54e880, Db_files.cpp, cdecl).
 pub(crate) unsafe extern "C" fn db_files_read_players(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
     let n = read_u32(entry + db_index_entry::RECORD_COUNT);
@@ -670,15 +672,16 @@ pub(crate) unsafe extern "C" fn db_files_read_players(stream: usize, use_zip: i3
 // simplification: original only; the proof is the .qst (the table read goes into the save) and the copy’s branch in Rust mode.
 
 /// Reads the player table of staff.dat (id 10; the community map calls it non_players) of 70-byte records in one go,
-/// through zread (save) or fread (Data), with entry version 2; version 1: the `db_files_read_non_players_v1` converter (other: box and exit);
-/// 1 if everything was read.
+/// through zread (save) or fread (Data), with entry version 2; version 1: the `db_files_read_non_players_v1` converter
+/// (other: box and exit); 1 if everything was read.
 ///
 /// `db_files_read_non_players(stream, use_zip, records, entry)` (the community map swaps the names: it is table id 10,
-/// the players, 0xae23c4): with the index entry version (+0x3f) equal to 2, reads in one go the count (+0x37) of
-/// 70-byte records through `zread` `zipdir_zread` (use_zip ≠ 0: the save) or `fread` `exe::crt_fread` (the Data folder); 1 if
-/// everything was read. Version 1: the field-by-field converter `db_files_read_non_players_v1` (stream, use_zip, records, count), called by
-/// address, and its answer. Another version: the "Error" box (Db_files.cpp) and the game exits; the copy calls the
-/// original. The original's 0x200 frame only serves the box path.
+/// the players, 0xae23c4): with the index entry version (`db_index_entry::VERSION`) equal to 2, reads in one go the
+/// count (`db_index_entry::RECORD_COUNT`) of 70-byte records through `zread` `exe::zread` (use_zip ≠ 0: the save) or
+/// `fread` `exe::crt_fread` (the Data folder); 1 if everything was read. Version 1: the field-by-field converter
+/// `exe::db_files_read_non_players_v1` (stream, use_zip, records, count), called by address, and its answer. Another
+/// version: the "Error" box (Db_files.cpp) and the game exits; the copy calls the original. The original's 0x200 frame
+/// only serves the box path.
 /// Original: `db_files_read_non_players` (0x54f030, Db_files.cpp, cdecl).
 pub(crate) unsafe extern "C" fn db_files_read_non_players(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
     let n = read_u32(entry + db_index_entry::RECORD_COUNT);
@@ -706,12 +709,12 @@ pub(crate) unsafe extern "C" fn db_files_read_non_players(stream: usize, use_zip
 /// records in one go, through zread (save) or fread (Data), with entry version 2 (other: box and exit); 1 if everything
 /// was read.
 ///
-/// `db_files_read_staff(stream, use_zip, records, entry)`: with the index entry version (+0x3f) equal to 2, reads in
-/// one go the count (+0x37) of 110-byte records (staff.dat in version 2: the save and the community databases; the
-/// stock database is version 1, `db_files_read_staff_v1`) through `zread` `zipdir_zread` (use_zip ≠ 0: the save) or `fread` `exe::crt_fread` (the
-/// Data folder); 1 if everything was read. Another version: the "Error" box (Db_files.cpp) and the game exits; the copy
-/// calls the original. The original's 0x200 frame only serves the box path (_splitpath): nothing from the stack goes
-/// into the table.
+/// `db_files_read_staff(stream, use_zip, records, entry)`: with the index entry version (`db_index_entry::VERSION`)
+/// equal to 2, reads in one go the count (`db_index_entry::RECORD_COUNT`) of 110-byte records (staff.dat in version 2:
+/// the save and the community databases; the stock database is version 1, `db_files_read_staff_v1`) through `zread`
+/// `exe::zread` (use_zip ≠ 0: the save) or `fread` `exe::crt_fread` (the Data folder); 1 if everything was read.
+/// Another version: the "Error" box (Db_files.cpp) and the game exits; the copy calls the original. The original's
+/// 0x200 frame only serves the box path (_splitpath): nothing from the stack goes into the table.
 /// Original: `db_files_read_staff` (0x54e630, Db_files.cpp, cdecl).
 pub(crate) unsafe extern "C" fn db_files_read_staff(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
     let n = read_u32(entry + db_index_entry::RECORD_COUNT);
@@ -734,12 +737,13 @@ pub(crate) unsafe extern "C" fn db_files_read_staff(stream: usize, use_zip: i32,
 /// Reads the staff preferences table (id 22: the save and the community databases) of 52-byte records in one go,
 /// through zread (save) or fread (Data), with entry version 1 (other: box and exit); 1 if everything was read.
 ///
-/// `db_files_read_staff_extra(stream, use_zip, records, entry)`: with the index entry version (+0x3f) equal to 1, reads
-/// in one go the count (+0x37) of 52-byte records (the preferences, id 22: the save and the community databases; in the
-/// stock database they come out of the conversion of the 157-byte persons) through `zread` `zipdir_zread` (use_zip ≠ 0: the
-/// save) or `fread` `exe::crt_fread` (the Data folder); 1 if everything was read. Another version: the "Error" box
-/// (Db_files.cpp) and the game exits; the copy calls the original. The original's 0x200 frame only serves the box path
-/// (_splitpath): nothing from the stack goes into the table.
+/// `db_files_read_staff_extra(stream, use_zip, records, entry)`: with the index entry version
+/// (`db_index_entry::VERSION`) equal to 1, reads in one go the count (`db_index_entry::RECORD_COUNT`) of 52-byte
+/// records (the preferences, id 22: the save and the community databases; in the stock database they come out of the
+/// conversion of the 157-byte persons) through `zread` `exe::zread` (use_zip ≠ 0: the save) or `fread` `exe::crt_fread`
+/// (the Data folder); 1 if everything was read. Another version: the "Error" box (Db_files.cpp) and the game exits; the
+/// copy calls the original. The original's 0x200 frame only serves the box path (_splitpath): nothing from the stack
+/// goes into the table.
 /// Original: `db_files_read_staff_extra` (0x54fc10, Db_files.cpp, cdecl).
 pub(crate) unsafe extern "C" fn db_files_read_staff_extra(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
     let n = read_u32(entry + db_index_entry::RECORD_COUNT);
@@ -762,11 +766,12 @@ pub(crate) unsafe extern "C" fn db_files_read_staff_extra(stream: usize, use_zip
 /// Reads the continent.dat table (id 3) of 198-byte records in one go, through zread (save) or fread (Data), with entry
 /// version 1 (other: box and exit); 1 if everything was read.
 ///
-/// `db_files_read_continents(stream, use_zip, records, entry)`: with the index entry version (+0x3f) equal to 1, reads
-/// in one go the count (+0x37) of 198-byte records (continent.dat) through `zread` `zipdir_zread` (use_zip ≠ 0: the save) or
-/// `fread` `exe::crt_fread` (the Data folder); 1 if everything was read. Another version: the "Error" box (Db_files.cpp) and
-/// the game exits; the copy calls the original. The original's 0x200 frame only serves the box path (_splitpath):
-/// nothing from the stack goes into the table.
+/// `db_files_read_continents(stream, use_zip, records, entry)`: with the index entry version
+/// (`db_index_entry::VERSION`) equal to 1, reads in one go the count (`db_index_entry::RECORD_COUNT`) of 198-byte
+/// records (continent.dat) through `zread` `exe::zread` (use_zip ≠ 0: the save) or `fread` `exe::crt_fread` (the Data
+/// folder); 1 if everything was read. Another version: the "Error" box (Db_files.cpp) and the game exits; the copy
+/// calls the original. The original's 0x200 frame only serves the box path (_splitpath): nothing from the stack goes
+/// into the table.
 /// Original: `db_files_read_continents` (0x54d5e0, Db_files.cpp, cdecl).
 pub(crate) unsafe extern "C" fn db_files_read_continents(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
     let n = read_u32(entry + db_index_entry::RECORD_COUNT);
@@ -789,11 +794,11 @@ pub(crate) unsafe extern "C" fn db_files_read_continents(stream: usize, use_zip:
 /// Reads the nation.dat table (id 4) of 290-byte records in one go, through zread (save) or fread (Data), with entry
 /// version 2 (other: box and exit); 1 if everything was read.
 ///
-/// `db_files_read_nations(stream, use_zip, records, entry)`: with the index entry version (+0x3f) equal to 2, reads in
-/// one go the count (+0x37) of 290-byte records (nation.dat) through `zread` `zipdir_zread` (use_zip ≠ 0: the save) or
-/// `fread` `exe::crt_fread` (the Data folder); 1 if everything was read. Another version: the "Error" box (Db_files.cpp) and
-/// the game exits; the copy calls the original. The original's 0x200 frame only serves the box path (_splitpath):
-/// nothing from the stack goes into the table.
+/// `db_files_read_nations(stream, use_zip, records, entry)`: with the index entry version (`db_index_entry::VERSION`)
+/// equal to 2, reads in one go the count (`db_index_entry::RECORD_COUNT`) of 290-byte records (nation.dat) through
+/// `zread` `exe::zread` (use_zip ≠ 0: the save) or `fread` `exe::crt_fread` (the Data folder); 1 if everything was
+/// read. Another version: the "Error" box (Db_files.cpp) and the game exits; the copy calls the original. The
+/// original's 0x200 frame only serves the box path (_splitpath): nothing from the stack goes into the table.
 /// Original: `db_files_read_nations` (0x54d740, Db_files.cpp, cdecl).
 pub(crate) unsafe extern "C" fn db_files_read_nations(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
     let n = read_u32(entry + db_index_entry::RECORD_COUNT);
@@ -816,11 +821,11 @@ pub(crate) unsafe extern "C" fn db_files_read_nations(stream: usize, use_zip: i3
 /// Reads the city.dat table (id 21) of 56-byte records in one go, through zread (save) or fread (Data), with entry
 /// version 1 to 2 (other: box and exit); 1 if everything was read.
 ///
-/// `db_files_read_cities(stream, use_zip, records, entry)`: with the index entry version (+0x3f) from 1 to 2 (signed),
-/// reads in one go the count (+0x37) of 56-byte records (city.dat) through `zread` `zipdir_zread` (use_zip ≠ 0: the save) or
-/// `fread` `exe::crt_fread` (the Data folder); 1 if everything was read. Another version: the "Error" box (Db_files.cpp) and
-/// the game exits; the copy calls the original. The original's 0x200 frame only serves the box path (_splitpath):
-/// nothing from the stack goes into the table.
+/// `db_files_read_cities(stream, use_zip, records, entry)`: with the index entry version (`db_index_entry::VERSION`)
+/// from 1 to 2 (signed), reads in one go the count (`db_index_entry::RECORD_COUNT`) of 56-byte records (city.dat)
+/// through `zread` `exe::zread` (use_zip ≠ 0: the save) or `fread` `exe::crt_fread` (the Data folder); 1 if everything
+/// was read. Another version: the "Error" box (Db_files.cpp) and the game exits; the copy calls the original. The
+/// original's 0x200 frame only serves the box path (_splitpath): nothing from the stack goes into the table.
 /// Original: `db_files_read_cities` (0x54d8a0, Db_files.cpp, cdecl).
 pub(crate) unsafe extern "C" fn db_files_read_cities(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
     let n = read_u32(entry + db_index_entry::RECORD_COUNT);
@@ -843,11 +848,11 @@ pub(crate) unsafe extern "C" fn db_files_read_cities(stream: usize, use_zip: i32
 /// Reads the stadium.dat table (id 5) of 78-byte records in one go, through zread (save) or fread (Data), with entry
 /// version 1 (other: box and exit); 1 if everything was read.
 ///
-/// `db_files_read_stadiums(stream, use_zip, records, entry)`: with the index entry version (+0x3f) equal to 1, reads in
-/// one go the count (+0x37) of 78-byte records (stadium.dat) through `zread` `zipdir_zread` (use_zip ≠ 0: the save) or
-/// `fread` `exe::crt_fread` (the Data folder); 1 if everything was read. Another version: the "Error" box (Db_files.cpp) and
-/// the game exits; the copy calls the original. The original's 0x200 frame only serves the box path (_splitpath):
-/// nothing from the stack goes into the table.
+/// `db_files_read_stadiums(stream, use_zip, records, entry)`: with the index entry version (`db_index_entry::VERSION`)
+/// equal to 1, reads in one go the count (`db_index_entry::RECORD_COUNT`) of 78-byte records (stadium.dat) through
+/// `zread` `exe::zread` (use_zip ≠ 0: the save) or `fread` `exe::crt_fread` (the Data folder); 1 if everything was
+/// read. Another version: the "Error" box (Db_files.cpp) and the game exits; the copy calls the original. The
+/// original's 0x200 frame only serves the box path (_splitpath): nothing from the stack goes into the table.
 /// Original: `db_files_read_stadiums` (0x54da00, Db_files.cpp, cdecl).
 pub(crate) unsafe extern "C" fn db_files_read_stadiums(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
     let n = read_u32(entry + db_index_entry::RECORD_COUNT);
@@ -870,11 +875,12 @@ pub(crate) unsafe extern "C" fn db_files_read_stadiums(stream: usize, use_zip: i
 /// Reads the staff.dat table (id 6; staff, the 157-byte file version) of 157-byte records in one go, through zread
 /// (save) or fread (Data), with entry version 1 (other: box and exit); 1 if everything was read.
 ///
-/// `db_files_read_staff_v1(stream, use_zip, records, entry)`: with the index entry version (+0x3f) equal to 1, reads in
-/// one go the count (+0x37) of 157-byte records (staff.dat: persons, the 157-byte file version) through `zread`
-/// `zipdir_zread` (use_zip ≠ 0: the save) or `fread` `exe::crt_fread` (the Data folder); 1 if everything was read. Another version:
-/// the "Error" box (Db_files.cpp) and the game exits; the copy calls the original. The original's 0x200 frame only
-/// serves the box path (_splitpath): nothing from the stack goes into the table.
+/// `db_files_read_staff_v1(stream, use_zip, records, entry)`: with the index entry version (`db_index_entry::VERSION`)
+/// equal to 1, reads in one go the count (`db_index_entry::RECORD_COUNT`) of 157-byte records (staff.dat: persons, the
+/// 157-byte file version) through `zread` `exe::zread` (use_zip ≠ 0: the save) or `fread` `exe::crt_fread` (the Data
+/// folder); 1 if everything was read. Another version: the "Error" box (Db_files.cpp) and the game exits; the copy
+/// calls the original. The original's 0x200 frame only serves the box path (_splitpath): nothing from the stack goes
+/// into the table.
 /// Original: `db_files_read_staff_v1` (0x54e780, Db_files.cpp, cdecl).
 pub(crate) unsafe extern "C" fn db_files_read_staff_v1(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
     let n = read_u32(entry + db_index_entry::RECORD_COUNT);
@@ -897,11 +903,12 @@ pub(crate) unsafe extern "C" fn db_files_read_staff_v1(stream: usize, use_zip: i
 /// Reads the staff_history.dat table (id 17) of 17-byte records in one go, through zread (save) or fread (Data), with
 /// entry version 1 (other: box and exit); 1 if everything was read.
 ///
-/// `db_files_read_staff_history(stream, use_zip, records, entry)`: with the index entry version (+0x3f) equal to 1,
-/// reads in one go the count (+0x37) of 17-byte records (staff_history.dat) through `zread` `zipdir_zread` (use_zip ≠ 0: the
-/// save) or `fread` `exe::crt_fread` (the Data folder); 1 if everything was read. Another version: the "Error" box
-/// (Db_files.cpp) and the game exits; the copy calls the original. The original's 0x200 frame only serves the box path
-/// (_splitpath): nothing from the stack goes into the table.
+/// `db_files_read_staff_history(stream, use_zip, records, entry)`: with the index entry version
+/// (`db_index_entry::VERSION`) equal to 1, reads in one go the count (`db_index_entry::RECORD_COUNT`) of 17-byte
+/// records (staff_history.dat) through `zread` `exe::zread` (use_zip ≠ 0: the save) or `fread` `exe::crt_fread` (the
+/// Data folder); 1 if everything was read. Another version: the "Error" box (Db_files.cpp) and the game exits; the copy
+/// calls the original. The original's 0x200 frame only serves the box path (_splitpath): nothing from the stack goes
+/// into the table.
 /// Original: `db_files_read_staff_history` (0x54fd60, Db_files.cpp, cdecl).
 pub(crate) unsafe extern "C" fn db_files_read_staff_history(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
     let n = read_u32(entry + db_index_entry::RECORD_COUNT);
@@ -924,11 +931,12 @@ pub(crate) unsafe extern "C" fn db_files_read_staff_history(stream: usize, use_z
 /// Reads the club_comp_history.dat and nation_comp_history.dat table (ids 19, 20) of 26-byte records in one go, through
 /// zread (save) or fread (Data), with entry version 1 (other: box and exit); 1 if everything was read.
 ///
-/// `db_files_read_comp_history(stream, use_zip, records, entry)`: with the index entry version (+0x3f) equal to 1,
-/// reads in one go the count (+0x37) of 26-byte records (club_comp_history.dat and nation_comp_history.dat) through
-/// `zread` `zipdir_zread` (use_zip ≠ 0: the save) or `fread` `exe::crt_fread` (the Data folder); 1 if everything was read. Another
-/// version: the "Error" box (Db_files.cpp) and the game exits; the copy calls the original. The original's 0x200 frame
-/// only serves the box path (_splitpath): nothing from the stack goes into the table.
+/// `db_files_read_comp_history(stream, use_zip, records, entry)`: with the index entry version
+/// (`db_index_entry::VERSION`) equal to 1, reads in one go the count (`db_index_entry::RECORD_COUNT`) of 26-byte
+/// records (club_comp_history.dat and nation_comp_history.dat) through `zread` `exe::zread` (use_zip ≠ 0: the save) or
+/// `fread` `exe::crt_fread` (the Data folder); 1 if everything was read. Another version: the "Error" box
+/// (Db_files.cpp) and the game exits; the copy calls the original. The original's 0x200 frame only serves the box path
+/// (_splitpath): nothing from the stack goes into the table.
 /// Original: `db_files_read_comp_history` (0x550230, Db_files.cpp, cdecl).
 pub(crate) unsafe extern "C" fn db_files_read_comp_history(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
     let n = read_u32(entry + db_index_entry::RECORD_COUNT);
@@ -951,11 +959,12 @@ pub(crate) unsafe extern "C" fn db_files_read_comp_history(stream: usize, use_zi
 /// Reads the staff_comp.dat table (id 11) of 101-byte records in one go, through zread (save) or fread (Data), with
 /// entry version 2 (other: box and exit); 1 if everything was read.
 ///
-/// `db_files_read_staff_comps(stream, use_zip, records, entry)`: with the index entry version (+0x3f) equal to 2, reads
-/// in one go the count (+0x37) of 101-byte records (staff_comp.dat) through `zread` `zipdir_zread` (use_zip ≠ 0: the save) or
-/// `fread` `exe::crt_fread` (the Data folder); 1 if everything was read. Another version: the "Error" box (Db_files.cpp) and
-/// the game exits; the copy calls the original. The original's 0x200 frame only serves the box path (_splitpath):
-/// nothing from the stack goes into the table.
+/// `db_files_read_staff_comps(stream, use_zip, records, entry)`: with the index entry version
+/// (`db_index_entry::VERSION`) equal to 2, reads in one go the count (`db_index_entry::RECORD_COUNT`) of 101-byte
+/// records (staff_comp.dat) through `zread` `exe::zread` (use_zip ≠ 0: the save) or `fread` `exe::crt_fread` (the Data
+/// folder); 1 if everything was read. Another version: the "Error" box (Db_files.cpp) and the game exits; the copy
+/// calls the original. The original's 0x200 frame only serves the box path (_splitpath): nothing from the stack goes
+/// into the table.
 /// Original: `db_files_read_staff_comps` (0x550380, Db_files.cpp, cdecl).
 pub(crate) unsafe extern "C" fn db_files_read_staff_comps(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
     let n = read_u32(entry + db_index_entry::RECORD_COUNT);
@@ -978,11 +987,12 @@ pub(crate) unsafe extern "C" fn db_files_read_staff_comps(stream: usize, use_zip
 /// Reads the staff_comp_history.dat table (id 18) of 58-byte records in one go, through zread (save) or fread (Data),
 /// with entry version 1 (other: box and exit); 1 if everything was read.
 ///
-/// `db_files_read_staff_comp_history(stream, use_zip, records, entry)`: with the index entry version (+0x3f) equal to
-/// 1, reads in one go the count (+0x37) of 58-byte records (staff_comp_history.dat) through `zread` `zipdir_zread` (use_zip ≠
-/// 0: the save) or `fread` `exe::crt_fread` (the Data folder); 1 if everything was read. Another version: the "Error" box
-/// (Db_files.cpp) and the game exits; the copy calls the original. The original's 0x200 frame only serves the box path
-/// (_splitpath): nothing from the stack goes into the table.
+/// `db_files_read_staff_comp_history(stream, use_zip, records, entry)`: with the index entry version
+/// (`db_index_entry::VERSION`) equal to 1, reads in one go the count (`db_index_entry::RECORD_COUNT`) of 58-byte
+/// records (staff_comp_history.dat) through `zread` `exe::zread` (use_zip ≠ 0: the save) or `fread` `exe::crt_fread`
+/// (the Data folder); 1 if everything was read. Another version: the "Error" box (Db_files.cpp) and the game exits; the
+/// copy calls the original. The original's 0x200 frame only serves the box path (_splitpath): nothing from the stack
+/// goes into the table.
 /// Original: `db_files_read_staff_comp_history` (0x5504d0, Db_files.cpp, cdecl).
 pub(crate) unsafe extern "C" fn db_files_read_staff_comp_history(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
     let n = read_u32(entry + db_index_entry::RECORD_COUNT);

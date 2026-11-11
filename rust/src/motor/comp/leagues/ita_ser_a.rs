@@ -322,23 +322,19 @@ pub(crate) unsafe fn tie_on_zone_boundary(league: League, z: &[u8; 64]) -> bool 
 
 /// The Serie A day; at season end, two clubs level on points in different bands are not split by goal difference: the
 /// first such pair from the top is ordered by head-to-head and goes to an extra match (the next stage); with no tie on
-/// a boundary, the season closes.
-///
-/// Convention: thiscall, ret 8, `ita_ser_a.cpp`, slot `+0x14`. `ItaSerA::update_for_date(hoje, completo)` (today,
-/// complete). First the league day (League::update_for_date `0x6847c0`: push complete; push today; mov ecx, this ->
-/// thiscall, ret 8), whose return value it passes on.
-///
-/// Then, at the end of the season (`+0xdd`), in the main stage (`+0x2c` = 0, no stages created), with `completo` and
-/// with `+0xe6` [inference: the table closed]: it clears `+0x4c` and looks, from top to bottom, for the first pair of
-/// neighbouring clubs with the same points in different bands (serie_a_zones). If found: it orders the tied clubs by
-/// head-to-head (`0x6471a0`: push points; mov ecx, this -> thiscall, ret 4), creates the array of 1 stage (`+0x2c` = 1,
-/// `+0xc` = malloc `0x944e46` of 4: push 4; add esp, 4 -> cdecl) and calls virtual `+0x28` (the next stage: the
-/// tie-break match). With no tie on a boundary: `+0xdd` = 0, `+0xe6` = 0 and virtual `+0x94`
-/// (League::update_positions_and_status).
-///
-/// The rule: in Italy, a tie on points between clubs in different bands (the title; Italy's Champions League places;
-/// the UEFA Cup places; the next two [inference: the Intertoto]; relegation, the last `+0xc1` of 18) is not decided by
-/// goal difference: it goes to an extra match.
+/// a boundary, the season closes. Convention: thiscall, ret 8, `ita_ser_a.cpp`, slot `+0x14`.
+/// `ItaSerA::update_for_date(today, full)` (today, complete). First the league day (`exe::league_update_for_date`: push
+/// complete; push today; mov ecx, this -> thiscall, ret 8), whose return value it passes on. Then, at the end of the
+/// season (`complete()`), in the main stage (`stage_count()` = 0, no stages created), with `full` and with
+/// `tiebreak_matches()` [inference: the table closed]: it clears `season_closed` and looks, from top to bottom, for the
+/// first pair of neighbouring clubs with the same points in different bands (serie_a_zones). If found: it orders the
+/// tied clubs by head-to-head (`exe::ita_league_sort_clubs_level_on_points`: push points; mov ecx, this -> thiscall,
+/// ret 4), creates the array of 1 stage (`stage_count` = 1, `stages` = `exe::crt_malloc` of 4: push 4; add esp, 4 ->
+/// cdecl) and calls virtual `comp_vtable::ADVANCE_STAGE` (the next stage: the tie-break match). With no tie on a
+/// boundary: `complete` = 0, `tiebreak_matches` = 0 and virtual `league_vtable::UPDATE_POSITIONS_AND_STATUS`
+/// (League::update_positions_and_status). The rule: in Italy, a tie on points between clubs in different bands (the
+/// title; Italy's Champions League places; the UEFA Cup places; the next two [inference: the Intertoto]; relegation,
+/// the last `+0xc1` of 18) is not decided by goal difference: it goes to an extra match.
 /// Original: `ItaSerA::update_for_date` (0x642880, ita_ser_a.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let this = League(this);
@@ -401,21 +397,18 @@ pub(crate) unsafe fn compare_league_day(name: &str, this: League, full: u32, fai
 
 /// Updates the staff records by status in Serie A: in the league, the base records; in the tie-break match, the winner
 /// (status 1 [inference: the club won]) is placed above the other in the table (the rows swap if it was below) and,
-/// with no play-off pending, the season closes. Returns −1 in the tie-break case.
-///
-/// Convention: thiscall, ret `0x18`, `ita_ser_a.cpp`, slot `+0x44`. `ItaSerA::update_staff_records_for_status(clube,
-/// situação, fase, a4, jogo, a6)` (club, status, stage, a4, match, a6). In the league (stage `0xff`): the base version
-/// (League::update_staff_records_for_status `0x686940`: push a6; push match; push a4; push -1; push status; push club;
-/// mov ecx, this -> thiscall, ret `0x18`), whose return value it passes on.
-///
-/// In the tie-break match (any other stage), only with status 1: `+0xad` = 0, sorts the table (League::sort_table
-/// `0x6827d0`: push 0; mov ecx -> thiscall, ret 4) and finds the club's row: if the club above is one of the two in the
-/// match (`+0x1c`, `+0x20`), the two rows swap places; otherwise, if the club below is one of them, they stay. In both
-/// cases the two rows get their position (`+4`) and an open destination (`+0x37` = `0xff`). Then, if no row has
-/// destination 1 (the play-off above), it closes the season: `+0xe6` = 0, `+0xdd` = 0, virtual `+0x94`, virtual `+0x10`
-/// (0, 0) and `+0xdd` = 1.
-///
-/// The rule: the winner of the tie-break match finishes ahead of the other.
+/// with no play-off pending, the season closes. Returns −1 in the tie-break case. Convention: thiscall, ret `0x18`,
+/// `ita_ser_a.cpp`, slot `+0x44`. `ItaSerA::update_staff_records_for_status(club, status, stage, a4, game, a6)` (club,
+/// status, stage, a4, match, a6). In the league (stage `0xff`): the base version
+/// (`exe::league_update_staff_records_for_status`: push a6; push match; push a4; push -1; push status; push club; mov
+/// ecx, this -> thiscall, ret `0x18`), whose return value it passes on. In the tie-break match (any other stage), only
+/// with status 1: `table_column` = 0, sorts the table (`exe::league_sort_table`: push 0; mov ecx -> thiscall, ret 4)
+/// and finds the club's row: if the club above is one of the two in the match (`fixture::HOME_CLUB`,
+/// `fixture::AWAY_CLUB`), the two rows swap places; otherwise, if the club below is one of them, they stay. In both
+/// cases the two rows get their position (`+4`) and an open destination (`league_table_row::STATUS` = `0xff`). Then, if
+/// no row has destination 1 (the play-off above), it closes the season: `tiebreak_matches` = 0, `complete` = 0, virtual
+/// `league_vtable::UPDATE_POSITIONS_AND_STATUS`, virtual `comp_vtable::CHECK_COMPLETE` (0, 0) and `complete` = 1. The
+/// rule: the winner of the tie-break match finishes ahead of the other.
 /// Original: `ItaSerA::update_staff_records_for_status` (0x641dc0, ita_ser_a.cpp, thiscall, ret 0x18).
 pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, a4: u32, game: usize, a6: u32) -> u32 {
     let this = League(this);
@@ -1547,11 +1540,9 @@ pub(crate) unsafe fn set_prize_fund(this: League, quota: i32) {
 }
 
 /// Creates the Serie A table: 18 clubs; the prize fund starts at 250,000 per place (paid by table position when the
-/// league ends); TV pays 5,000,000 to each club.
-///
-/// `ItaSerA::create_table()`: 18 clubs (`[0x9cf570]`); once full, the fund by the 250,000 share and the TV money of
-/// 5,000,000 to each club (League::pay_tv_rights `0x683010`: thiscall(league, value, 0), ret 8); returns 1 (0 if it
-/// could not fill). Source `0x9ea2a8`, line `0x253`.
+/// league ends); TV pays 5,000,000 to each club. `ItaSerA::create_table()`: 18 clubs (`KEY_CLUB_COMP_ITALIAN_SERIE_A`);
+/// once full, the fund by the 250,000 share and the TV money of 5,000,000 to each club (`exe::league_pay_tv_rights`:
+/// thiscall(league, value, 0), ret 8); returns 1 (0 if it could not fill). Source `0x9ea2a8`, line `0x253`.
 /// Original: `ItaSerA::create_table` (0x641510, ita_ser_a.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn ita_ser_a_create_table(this: usize) -> u32 {
     match ita_ser_a_fill_league_table(League(this), 0x12, 0x9ea2a8, 0x253, KEY_CLUB_COMP_ITALIAN_SERIE_A) {

@@ -2,16 +2,18 @@ use super::*;
 
 /// Raises the reputations of an award winner: for a player, the world, home and current reputations rise by a fraction
 /// of the award's reputations (up to 10000 and at least them); for a non-player, they rise up to the award floors and
-/// the board confidence gains 1000.
-///
-/// `award_raise_winner_reputation(person, club, national_rep, world_rep, for_player)`, called for the
-/// player-of-the-month slot (`set_winner`) and for the yearly and national side awards. A player (+0x61) in a player award:
-/// world (+0xd) + 5% of the award's world reputation, up to 10000 and at least that value; home (+9): for the club of
-/// his own nation (+0x53 = +0x1a of the person), + 10% of the national reputation and at least that value; otherwise +
-/// 2.5% of the sum and at least the average; current (+0xb) + 10% of the national reputation, at least that value; puts
-/// the player in the clubs' lists (`add_player_to_club_shortlists`, with 1) if the list manager exists. A non-player (+0x69) in a non-player
-/// award: the three rise to the floors (+0xc world, +8 by the club's nation, +0xa national) and, with a club, the board
-/// confidence (+6 of the 73-byte row) + 1000, between 6500 and 10000. Only the low words of the reputations count.
+/// the board confidence gains 1000. `award_raise_winner_reputation(person, club, nation, world, player)`, called for
+/// the player-of-the-month slot (`set_winner`) and for the yearly and national side awards. A player (`.player()`) in a
+/// player award: world (`player_sheet::WORLD_REPUTATION`) + 5% (`rdata::F64_0_05`) of the award's world reputation, up
+/// to 10000 and at least that value; home (`player_sheet::HOME_REPUTATION`): for the club of his own nation
+/// (`.nation()` of the club = `.nation()` of the person), + 10% (`rdata::F64_0_1`) of the national reputation and at
+/// least that value; otherwise + 2.5% (`rdata::F64_0_025`) of the sum and at least the average; current
+/// (`player_sheet::CURRENT_REPUTATION`) + 10% of the national reputation, at least that value; puts the player in the
+/// clubs' lists (`exe::shortlist_manager_add_player_to_club_shortlists`, with 1) if the list manager exists. A
+/// non-player (`.non_player()`) in a non-player award: the three rise to the floors (`.world_reputation()` world,
+/// `.home_reputation()` by the club's nation, `.current_reputation()` national) and, with a club, the board confidence
+/// (+6 of the 73-byte row of `G_MANAGER_MANAGER`) + 1000, between 6500 and 10000. Only the low words of the reputations
+/// count.
 /// Original: `award_raise_winner_reputation` (0x412f00, award_manager.cpp, cdecl).
 pub(crate) unsafe extern "C" fn award_raise_winner_reputation(person: usize, club: usize, nation: u32, world: u32, player: u32) {
     let person = Staff(person);

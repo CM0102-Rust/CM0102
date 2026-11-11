@@ -150,11 +150,10 @@ pub(crate) unsafe fn compare_division_league_ctor(name: &str, this: League, year
 }
 
 /// Sets up the rules of the French second division: 4 go up and 2 go down in 2001, then 3 up and 3 down; the rest as
-/// the top division.
-///
-/// `FraSecond::set_up_rules()`: the common rules, 2 rounds, 3 points; in 2001, 4 promoted (`+0xbe`) and 2 relegated
-/// (`+0xc1`), afterwards 3 up and 3 down; the first division above (`[0x9cf5cc]`), the third below (`[0x9cf5d4]`),
-/// `+0x52` = 2 and 5 substitutes.
+/// the top division. `FraSecond::set_up_rules()`: the common rules, 2 rounds, 3 points; in 2001, 4 promoted (`+0xbe`)
+/// and 2 relegated (`+0xc1`), afterwards 3 up and 3 down; the first division above
+/// (`KEY_CLUB_COMP_FRENCH_FIRST_DIVISION`), the third below (`KEY_CLUB_COMP_FRENCH_NATIONAL`), `+0x52` = 2 and 5
+/// substitutes.
 /// Original: `FraSecond::set_up_rules` (0x5bf0a0, fra_second.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn fra_second_set_up_rules(this: usize) -> u32 {
     covered!("cqj_5 second division rules");

@@ -4,7 +4,10 @@ cabeçalhos em que o português é mais que o dobro do inglês; os tradutores de
 (uma linha, parágrafos separados por ` \n `). `--aplicar a.tsv [...]` troca o texto em inglês acima de `Original:` pelo
 inglês completo (quebrado em 120 colunas); o [pt] fica. É só comentário: o código gerado não muda.
 
-Uso: python cabecalhos_completos.py --extrair 6 --pasta DIR | --aplicar a.tsv [...] [--gravar]
+`--extrair-hex N`: os cabeçalhos que narram deslocamentos e endereços em hexadecimal (decisão (b), 11/11/2026), para
+os leitores reescreverem com os nomes do corpo.
+
+Uso: python cabecalhos_completos.py --extrair N | --extrair-hex N --pasta DIR | --aplicar a.tsv [...] [--gravar]
 """
 import glob
 import json
@@ -26,27 +29,32 @@ def cabecalhos():
         t = open(p, encoding='utf-8').read()
         for m in CAB.finditer(t):
             h = m.group(1)
-            if '[pt]' not in h or '/// Original:' not in h:
+            if '/// Original:' not in h:
                 continue
             i_or = h.index('/// Original:')
             en = re.sub(r'^///\s?', '', h[:i_or], flags=re.M).strip()
-            pt = re.sub(r'^///\s?', '', h[h.index('[pt]') + 4:], flags=re.M).strip()
+            pt = re.sub(r'^///\s?', '', h[h.index('[pt]') + 4:], flags=re.M).strip() if '[pt]' in h else ''
             yield rel, m.group(3), en, pt, p, m
 
 
 def main():
-    if '--extrair' in sys.argv:
-        n = int(sys.argv[sys.argv.index('--extrair') + 1])
+    if '--extrair' in sys.argv or '--extrair-hex' in sys.argv:
+        hexa = '--extrair-hex' in sys.argv
+        n = int(sys.argv[sys.argv.index('--extrair-hex' if hexa else '--extrair') + 1])
         pasta = sys.argv[sys.argv.index('--pasta') + 1]
+        # --extrair-hex (11/11/2026, decision (b)): the headers whose English narrates offsets and addresses in hex,
+        # for the readers to rewrite with the names the body uses
         itens = [dict(file=rel, fn=fn, english=en, pt=pt) for rel, fn, en, pt, _, _ in cabecalhos()
-                 if len(pt) > 2 * len(en) and len(pt) > 250]
+                 if (re.search(r'0x[0-9a-fA-F]{2,}|`\+\d', en) if hexa else len(pt) > 2 * len(en) and len(pt) > 250)]
+        for it in itens:
+            del it['pt']
         lotes = [[] for _ in range(n)]
         tam = [0] * n
         for it in itens:  # por arquivo, para cada tradutor ler um arquivo inteiro
             k = tam.index(min(tam)) if not lotes or not any(l and l[-1]['file'] == it['file'] for l in lotes) else \
                 next(i for i, l in enumerate(lotes) if l and l[-1]['file'] == it['file'])
             lotes[k].append(it)
-            tam[k] += len(it['pt'])
+            tam[k] += len(it.get('pt') or it['english'])
         for k, l in enumerate(lotes):
             with open(os.path.join(pasta, 'cab_%d.jsonl' % k), 'w', encoding='utf-8') as f:
                 for it in l:

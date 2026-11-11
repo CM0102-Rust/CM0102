@@ -4,9 +4,9 @@ use super::*;
 /// preliminary (code 0xdc) drawn 9/10, played 16/10, 56 teams; 1st round 17/10 and 18/11; 2nd 19/11 and 9/12; 3rd 10/12
 /// and 6/1; 4th 7/1 and 27/1; 5th 28/1 and 17/2; quarter-finals 18/2 and 10/3; semi-final 11/3 and 8/4 at its own
 /// ground (venue 0x2a, no replay); final 9/4 and 12/5 at a neutral ground; the team counts from the 2nd to the 5th
-/// round depend on the exemptions (+0xb3) and on the choice of entering at the 5th round (+0xb4 = 1); prize for winning
-/// a round from 10 thousand to 400 thousand, and the final 2 million to the winner and 1 million to the runner-up;
-/// category 4 up to the 5th round and 6 from the quarter-finals
+/// round depend on the exemptions (`eng_fa_cup::EXEMPTION_COUNT`) and on the choice of entering at the 5th round
+/// (`eng_fa_cup::FIFTH_ROUND_ENTRY` = 1); prize for winning a round from 10 thousand to 400 thousand, and the final 2
+/// million to the winner and 1 million to the runner-up; category 4 up to the 5th round and 6 from the quarter-finals
 /// Original: `EngFaCup::create_round_table` (0x56f320, eng_fa_cup.cpp, thiscall, ret 0x10).
 pub(crate) unsafe extern "thiscall" fn eng_fa_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
     let this = Cup(this);
@@ -16,16 +16,18 @@ pub(crate) unsafe extern "thiscall" fn eng_fa_cup_create_round_table(this: usize
 
 /// Daily update of the FA Cup. Rule: the FA Cup gathers its entrants on 3 October each year (Date(3, 9): month 9 is
 /// October; the community map says September), rebuilds the rounds and the tree and draws the preliminary round, once
-/// per season (+0x45); on 1 October 1999 it asked the human manager whether the club enters at the 5th round (+0xb2
-/// marks the question); then, every day, the cup update.
+/// per season (`.season_set_up()`); on 1 October 1999 it asked the human manager whether the club enters at the 5th
+/// round (`eng_fa_cup::FIFTH_ROUND_QUESTION_ASKED` marks the question); then, every day, the cup update.
 ///
 /// Ret 8; virtual +0x14 of the English cup; SEH frame for the news of the 1999 path, no destructor on the normal path:
-/// `today.update_for_date(stage)`. With +0x45 = 0 and the stage different from 0: on Date(1, 9, 1999) (month
-/// 9 is October) with +0xb2 = 0, the question to the human manager about entering at the 5th round (only in 1999: the
-/// original routine through the trampoline); on Date(3, 9, today's year) (3 October), frees the tables, +0x45 = 1, the
-/// entrants (`exe::engfacup_collect_entrants`, thiscall), the rounds (virtual +0x8c), the tree (virtual +0x94) (a negative return gives the
-/// box, lines 0x3d6, 0x3dd, 0x3e4, and 1), the predicted order (virtual +0x5c) and the draw of the 1st round (`set_up_round`:
-/// push 0; mov ecx, cup -> thiscall, ret 4). Always, at the end, the cup update.
+/// `today.update_for_date(stage)`. With `.season_set_up()` = 0 and the stage different from 0: on Date(1, 9, 1999)
+/// (month 9 is October) with `eng_fa_cup::FIFTH_ROUND_QUESTION_ASKED` = 0, the question to the human manager about
+/// entering at the 5th round (only in 1999: the original routine through the trampoline); on Date(3, 9, today's year)
+/// (3 October), frees the tables, `.set_season_set_up(1)`, the entrants (`exe::engfacup_collect_entrants`, thiscall),
+/// the rounds (virtual `comp_vtable::SET_UP_RULES`), the tree (virtual `cup_vtable::MAP_FIXTURE_TREE`) (a negative
+/// return gives the box, lines 0x3d6, 0x3dd, 0x3e4, and 1), the predicted order (virtual
+/// `comp_vtable::SET_PREDICTED_POSITIONS`) and the draw of the 1st round (`exe::cup_set_up_round`: push 0; mov ecx, cup
+/// -> thiscall, ret 4). Always, at the end, the cup update.
 /// Original: `EngFaCup::update_for_date` (0x570550, eng_fa_cup.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn eng_fa_cup_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
     let this = Cup(this);

@@ -33,21 +33,28 @@ pub(crate) fn add_unique_recipient(dest: &mut [usize; 30], n: &mut u8, c: usize)
 /// player to the interested clubs, with the transfer request, the AI manager response, the squad reaction and the rival
 /// warning; the AI owner may say he will not sell.
 ///
-/// For each interest record (25-byte vector at [this+0xc], count [this+0x14]: +0 player, +4 club, +8 date, +0x10 state,
-/// +0x11, +0x15): expired (more than 31 days, `exe::date_add_days`), no manager at the owning club (the +0xcf of the club of the
-/// player's contract, kept from the previous iteration when he has no contract) or no player sheet: it leaves (the last
-/// one takes its place). Otherwise, if the club can reach the player (`can_club_bid_for_player`): state 0 and draw(25) zero give the
-/// rumour: the up to 5 clubs interested in him (records of the same player still at 0, marked 1; one already marked
-/// cancels), news item 0xfbc (`construct_news_item`) with the player, the owner, the transfer request (below 15 in +0x5b and +0x59,
-/// reputation above draw(12500) and +0x15 above 12.5 × +0x59 + 500: 0x24, otherwise draw(3)), +0x11, the AI manager's
-/// response (`pick_ai_manager_response`), the strengths (`staff_get_player_strength_flags`), the exe::formation_get_position_mask(`position_mask`), the owner's manager, the transfer list
-/// (`staff_is_transfer_listed_or_requested`) and the interested clubs by reputation; to the humans (`exe::transfer_manager_collect_player_news_recipients`: the interested ones and the humans of
-/// the same division, or of the same nation and up to 3000 below) (`send_to_club_manager`); with the request, the squad reaction
-/// (`apply_squad_reaction_to_player_story`); with the response, the rival warning (`warn_squad_of_position_rival`) and the reply to the story (`exe::media_apply_player_story_response`).
+/// For each interest record (25-byte vector at `media_fields::TRANSFER_INTERESTS`, count
+/// `media_fields::INTEREST_COUNT`: +0 player, `transfer_interest::CLUB` club, `transfer_interest::DATE` date,
+/// `transfer_interest::STATE` state, `transfer_interest::VALUE`, `transfer_interest::RATING`): expired (more than 31
+/// days, `exe::date_add_days`), no manager at the owning club (the `club::MANAGER` of the club of the player's
+/// contract, kept from the previous iteration when he has no contract) or no player sheet: it leaves (the last one
+/// takes its place). Otherwise, if the club can reach the player (`exe::transfer_manager_can_club_bid_for_player`):
+/// state 0 and draw(25) zero give the rumour: the up to 5 clubs interested in him (records of the same player still at
+/// 0, marked 1; one already marked cancels), news item 0xfbc (`exe::new_newsitem`) with the player, the owner, the
+/// transfer request (below 15 in `.professionalism()` and `.loyalty()`, reputation above draw(12500) and
+/// `transfer_interest::RATING` above 12.5 × `.loyalty()` + 500: 0x24, otherwise draw(3)), `transfer_interest::VALUE`,
+/// the AI manager's response (`exe::media_pick_ai_manager_response`), the strengths
+/// (`exe::staff_get_player_strength_flags`), the position mask (`exe::formation_get_position_mask`), the owner's
+/// manager, the transfer list (`exe::staff_is_transfer_listed_or_requested`) and the interested clubs by reputation; to
+/// the humans (`player_news_recipients`: the interested ones and the humans of the same division, or of the same nation
+/// and up to 3000 below) (`exe::news_send_to_club_manager`); with the request, the squad reaction
+/// (`exe::media_apply_squad_reaction_to_player_story`); with the response, the rival warning
+/// (`exe::media_warn_squad_of_position_rival`) and the reply to the story (`exe::media_apply_player_story_response`).
 ///
-/// In state 1, an AI owner, the record date after the player's +0x3e, the contract without +0x49 and off the list,
-/// happiness above draw(50) + 40 and draw(30) zero: the news that he will not sell (`news_create_not_for_sale_story`) and his records go to 2.
-/// At the end, the vector is sorted (`exe::crt_qsort` with `compare_id_pair_keys`).
+/// In state 1, an AI owner, the record date after the player's `.date_joined_club()`, the contract without
+/// `contract::LEAVING_ON_BOSMAN` and off the list, happiness (`contract::HAPPINESS`) above draw(50) + 40 and draw(30)
+/// zero: the news that he will not sell (`exe::news_create_not_for_sale_story`) and his records go to 2. At the end,
+/// the vector is sorted (`exe::crt_qsort` with `compare_id_pair_keys`).
 /// Original: `Media::process_transfer_interest` (0x754a30, media.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
     let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
@@ -255,10 +262,11 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
 /// the map, with no other caller; SEH frame without a destructor on the normal path): news item 0xfbe that the club
 /// will not sell the player.
 ///
-/// With a player sheet and a club, news item 0xfbe (`construct_news_item`) with the player, the other club (or −1), the club and a
-/// draw(3); the chairman, if he likes the player (`exe::staff_is_favoured_by`) or with draw(+0x16 of his sheet) above draw(20), otherwise
-/// −1 in slot 7; reputation (+0xd of the sheet) above 8000: to all managers (`send_to_all_managers`), otherwise to the interested
-/// human managers (`exe::transfer_manager_collect_player_news_recipients` with 0xd8, up to 30, `send_to_club_manager`).
+/// With a player sheet and a club, news item 0xfbe (`exe::new_newsitem`) with the player, the other club (or −1), the
+/// club and a draw(3); the chairman, if he likes the player (`exe::staff_is_favoured_by`) or with
+/// draw(`.interference()` of his sheet) above draw(20), otherwise −1 in slot 7; reputation (`.world_reputation()` of
+/// the sheet) above 8000: to all managers (`exe::news_send_to_all_managers`), otherwise to the interested human
+/// managers (`player_news_recipients` with 0xd8, up to 30, `exe::news_send_to_club_manager`).
 /// Original: `news_create_not_for_sale_story` (0x587600, media.cpp, cdecl).
 pub(crate) unsafe extern "C" fn news_create_not_for_sale_story(player: usize, club: usize, chairman: usize, other: usize) {
     let chairman = Staff(chairman);
@@ -299,14 +307,14 @@ pub(crate) unsafe extern "C" fn news_create_not_for_sale_story(player: usize, cl
 
 // simplification: the news goes to the managers (allocates): original only; the copy takes the branch.
 
-/// `Media::queue_trophy_praise_story(club, competition, flag)` (SEH frame without a destructor on the normal path),
-/// called by the title records (0x8693e2, 0x86b000): news item 0x2e with the board and fans praising the manager for
-/// the title.
+/// `Media::queue_trophy_praise_story(club, comp, mark)` (SEH frame without a destructor on the normal path), called by
+/// the title records (0x8693e2, 0x86b000): news item 0x2e with the board and fans praising the manager for the title.
 ///
-/// A club with a manager, a competition and outside national sides: news item 0x2e (`construct_news_item`) with the manager, the
-/// club, the competition, a draw(2), the outlet (`media_pick_outlet_type_for_club`), the pundit (`pick_random_pundit` with the nation or −1), the flag, the
-/// board confidence (+6 of the row in [0xb67a44], or 5000), the club's league and the manager's days (`exe::date_days_since`); with
-/// 180 days or more, the club's reputation and the delivery to the manager (`send_to_club_manager`).
+/// A club with a manager, a competition and outside national sides: news item 0x2e (`exe::new_newsitem`) with the
+/// manager, the club, the competition, a draw(2), the outlet (`exe::media_pick_outlet_type_for_club`), the pundit
+/// (`exe::punditlist_pick_random_pundit` with the nation or −1), the flag, the board confidence (+6 of the row in
+/// [`G_MANAGER_MANAGER`], or 5000), the club's league and the manager's days (`exe::date_days_since`); with 180 days or
+/// more, the club's reputation and the delivery to the manager (`exe::news_send_to_club_manager`).
 /// Original: `Media::queue_trophy_praise_story` (0x75c390, media.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn queue_trophy_praise_story(_this: usize, club: usize, comp: usize, mark: u32) {
     let club = Club(club);
@@ -685,10 +693,10 @@ pub(crate) const PRESS_ANSWERS: [(usize, usize); 22] = [
     (0xa27798, 0xa277c8), (0xa2740c, 0xa2741c),
 ];
 
-/// `media_format_response_option_label(type, option, out, size)` (stdcall, ret 0x10): writes the label of a media story
+/// `media_format_response_option_label(kind, option, out, size)` (stdcall, ret 0x10): writes the label of a media story
 /// response option ("Deny rumour", "Defend Player", "No Comment"...) from the 22-case table by story kind into the
-/// output (0x66f4e0), for the stories screen (0x742b3b, with 0xde1f64 and 0x7d0). A null output or a size below 15:
-/// nothing.
+/// output (`FN_LANGLIB_SPRINTF`), for the stories screen (0x742b3b, with 0xde1f64 and 0x7d0). A null output or a size
+/// below 15: nothing.
 /// Original: `media_format_response_option_label` (0x735160, media.cpp, stdcall).
 pub(crate) unsafe extern "stdcall" fn media_format_response_option_label(kind: u32, option: u32, out: usize, size: u32) {
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
@@ -862,23 +870,27 @@ pub(crate) unsafe fn squad_spokesman(club: Club, p: Staff) -> usize {
     quem
 }
 
-/// `Media::process_transfer_squad_reactions(player, new, old, flag)`, at the end of each transfer
-/// (TRANSFER_MANAGER::move_player_to_club, 0x8ca879): the squad reactions to the transfer. Only for a player (sheet
-/// +0x61) aged 19 or more with reputation 4250.
+/// `Media::process_transfer_squad_reactions(p, new, old, flag)`, at the end of each transfer
+/// (TRANSFER_MANAGER::move_player_to_club, 0x8ca879): the squad reactions to the transfer. Only for a player
+/// (`.player()`) aged 19 or more with reputation 4250.
 ///
-/// (A) The media story at the front of the queue (0xbd0, +0x11 = 0x25, new club with id 0x25; never in practice):
-/// grievances in its person's contract. (B) In the new club's squad (50 slots +0xd7), those who have been there more
-/// than +0x5a + 15 days (`exe::date_days_since` of +0x3e) and have a contract: flag 0x800 with the same position turns into a
-/// grievance (`exe::staff_contract_apply_event_flags` 0x80000000) and draws; 0x400 is cleared with a strong squad (`database_count_club_squad` up to the limit by
+/// (A) The media story at the front of the queue (0xbd0, `story_log_entry::SUBTYPE` = 0x25, new club with id 0x25;
+/// never in practice): grievances in its person's contract. (B) In the new club's squad (50 slots `.squad()`), those
+/// who have been there more than `staff::PRESSURE` + 15 days (`FN_DATE_DAYS_SINCE` of `staff::DATE_JOINED_CLUB`) and
+/// have a contract: flag 0x800 with the same position turns into a grievance (`exe::staff_contract_apply_event_flags`
+/// 0x80000000) and draws; 0x400 is cleared with a strong squad (`exe::database_count_club_squad` up to the limit by
 /// reputation); with more than 2 in the position, the strong player may become a grievance or flag 0x200; grievance
-/// 0x20000000 is cleared (`exe::staff_contract_clear_grievances`) when someone bigger arrives. A star signing (player's +0xd above 6250): the
-/// supporters (+8 of the club's row in [[0xb67a44]], +500 up to 10000) and the celebration (`queue_signing_celebration_story`); if something
+/// `grievances::STAR_TEAMMATE_SOLD` is cleared (`exe::staff_contract_clear_grievances`) when someone bigger arrives. A
+/// star signing (player's `.world_reputation()` above 6250): the supporters (+8 of the club's row in
+/// [[`G_MANAGER_MANAGER`]], +500 up to 10000) and the celebration (`queue_signing_celebration_story`); if something
 /// changed, draw(3) and the spokesman celebrate.
 ///
 /// (C) In the old club's squad (with a league), with the club's strength and reputation (or the nation among the seven
-/// at 0x9cf31c..): grievances 0x40000000 / 0x20000000 at the team mate leaving, morale −25, flag 0x400, flags
-/// 0x200/0x800 and grievance 0x80000000 cleared; if something changed and the player was a star, the unsettled team
-/// mate (`queue_sale_unrest_story`).
+/// `KEY_NATION_GREECE`, `KEY_NATION_SWEDEN`, `KEY_NATION_WALES`, `KEY_NATION_FINLAND`,
+/// `KEY_NATION_REPUBLIC_OF_IRELAND`, `KEY_NATION_NORTHERN_IRELAND`, `KEY_NATION_AUSTRALIA`): grievances 0x40000000 /
+/// 0x20000000 at the team mate leaving, morale (`contract::MORALE`) −25, flag 0x400, flags 0x200/0x800 and grievance
+/// `grievances::SAME_POSITION_SIGNING` cleared; if something changed and the player was a star, the unsettled team mate
+/// (`exe::media_queue_sale_unrest_story`).
 /// Original: `Media::process_transfer_squad_reactions` (0x758200, media.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: usize, p: usize, new: usize, old: usize, flag: u32) {
     let p = Staff(p);
@@ -1159,16 +1171,18 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
     }
 }
 
-/// `Media::queue_signing_celebration_story(player, club, type, a, spokesman)` (SEH frame for the local news item),
-/// called by the transfer reactions (`process_transfer_squad_reactions`): news item 0xbe5 of the fans or a squad spokesman celebrating the
-/// signing, to the club manager.
+/// `Media::queue_signing_celebration_story(p, club, kind, a, porta_voz)` (SEH frame for the local news item), called by
+/// the transfer reactions (`process_transfer_squad_reactions`): news item 0xbe5 of the fans or a squad spokesman
+/// celebrating the signing, to the club manager.
 ///
-/// A player with +0x1a, a current club (+0x39) with a manager (+0xcf) and +0x69, a player sheet (+0x61); type 2 without
-/// a spokesman: nothing. The news item 0xbe5: the player (id and the three keys), his club's id, draw(2), the outlet
-/// (`media_pick_outlet_type_for_person`), the pundit (`pick_random_pundit` with the club, the outlet and the nation +0x53 or −1), the exe::formation_get_position_mask(`position_mask`),
-/// the type, the computer manager's response (`pick_ai_manager_response` with 0x82; 0 with a human manager), for type 2 the spokesman (id
-/// and keys), the club's reputation above 7250, the manager (id and keys) and `a`; it goes to the manager of the
-/// player's club (`send_to_club_manager`).
+/// A player with `.nation()`, a current club (`.club_job()`) with a manager (`.manager()`) and `.stadium()`, a player
+/// sheet (`.player()`); type 2 without a spokesman: nothing. The news item 0xbe5: the player (id and the three keys),
+/// his club's id, draw(2), the outlet (`exe::media_pick_outlet_type_for_person`), the pundit
+/// (`exe::punditlist_pick_random_pundit` with the club, the outlet and the nation `.nation()` or −1), the position mask
+/// (`exe::formation_get_position_mask`), the type, the computer manager's response
+/// (`exe::media_pick_ai_manager_response` with 0x82; 0 with a human manager), for type 2 the spokesman (id and keys),
+/// the club's reputation above 7250, the manager (id and keys) and `a`; it goes to the manager of the player's club
+/// (`exe::news_send_to_club_manager`).
 /// Original: `Media::queue_signing_celebration_story` (0x75b6e0, media.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn queue_signing_celebration_story(this: usize, p: usize, club: usize, kind: u32, a: u32, porta_voz: usize) {
     let p = Staff(p);
@@ -1225,13 +1239,15 @@ pub(crate) unsafe extern "thiscall" fn queue_signing_celebration_story(this: usi
 
 // simplification: the news item goes to the manager’s inbox (allocates) and draws: original only; the copy carries the branch.
 
-/// `Media::queue_sale_unrest_story(old, new, player, team_mate)` (SEH frame for the local news item), called by the
-/// transfer reactions (`process_transfer_squad_reactions`): news item 0xbe4 of the team mate unhappy at the sale, to the old club's manager.
+/// `Media::queue_sale_unrest_story(old, new, p, comp)` (SEH frame for the local news item), called by the transfer
+/// reactions (`process_transfer_squad_reactions`): news item 0xbe4 of the team mate unhappy at the sale, to the old
+/// club's manager.
 ///
-/// An old club with a manager (+0xcf), not a national side (`exe::database_is_national_team`), a team mate and a player with a player sheet
-/// (+0x61). The news item 0xbe4: the manager, the team mate and the player (id and the three keys of each), the ids of
-/// the two clubs, draw(2) (+2 if the team mate's +0x5b is not above draw(5) + 10), the outlet (`media_pick_outlet_type_for_club`), the pundit
-/// (`pick_random_pundit` with the nation +0x53 or −1) and 2; it goes to the old club's manager (`send_to_club_manager`).
+/// An old club with a manager (`.manager()`), not a national side (`is_national_team`), a team mate and a player with a
+/// player sheet (`.player()`). The news item 0xbe4: the manager, the team mate and the player (id and the three keys of
+/// each), the ids of the two clubs, draw(2) (+2 if the team mate's `.professionalism()` is not above draw(5) + 10), the
+/// outlet (`exe::media_pick_outlet_type_for_club`), the pundit (`exe::punditlist_pick_random_pundit` with the nation
+/// `.nation()` or −1) and 2; it goes to the old club's manager (`exe::news_send_to_club_manager`).
 /// Original: `Media::queue_sale_unrest_story` (0x75cfc0, media.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn queue_sale_unrest_story(_this: usize, old: usize, new: usize, p: usize, comp: usize) {
     let p = Staff(p);
@@ -1369,10 +1385,10 @@ pub(crate) unsafe extern "C" fn media_pick_outlet_type_for_club(club: usize) -> 
 }
 
 /// `media_pick_outlet_type_for_person(person)` (cdecl): picks the media outlet type like the club version does, but
-/// from the player's reputation (+0xb of the player sheet +0x61).
+/// from the player's reputation (`.current_reputation()` of the player sheet `.player()`).
 ///
-/// Used by the player's stories (`exe::media_create_player_media_story`): the outburst, the praise, wanting to play, and the signing celebration
-/// (`queue_signing_celebration_story`, in transfers).
+/// Used by the player's stories (`exe::media_create_player_media_story`): the outburst, the praise, wanting to play,
+/// and the signing celebration (`queue_signing_celebration_story`, in transfers).
 /// Original: `media_pick_outlet_type_for_person` (0x757fa0, media.cpp, cdecl).
 pub(crate) unsafe extern "C" fn media_pick_outlet_type_for_person(person: usize) -> u32 {
     let person = Staff(person);
@@ -1442,14 +1458,15 @@ pub(crate) unsafe fn add_clamped_confidence(p: usize, v: i16) {
     write_i16(p, x.clamp(1, 10000));
 }
 
-/// `Media::adjust_supporter_confidence(club, subject, topic, target, variant)` (SEH frame without a destructor): adds
+/// `Media::adjust_supporter_confidence(club, sujeito, topic, target, variant)` (SEH frame without a destructor): adds
 /// the change to the supporters' confidence (+8 of the club's row in [[0xb67a44]], kept between 1 and 10000): the
 /// target minus the current confidence, × 0.75, damped by a favoured or rejected manager and beyond ±1000 (see
 /// `fan_confidence_change`).
 ///
-/// Beyond ±500, news item 0xbe0 (local) to the club's manager (`send_to_club_manager`): 0 = 0, 1 = topic, 2 = variant, 3 = draw(4), 4
-/// = club id, 5 = the degree (5 below −750, 4 negative, 3 up to 750, 2 above), 6..9 the manager; with a subject, 10..13
-/// the subject and 14 = 6 favoured, 7 rejected, 8 neither; then −1, the new confidence and 0.
+/// Beyond ±500, news item 0xbe0 (local) to the club's manager (`exe::news_send_to_club_manager`): 0 = 0, 1 = topic, 2 =
+/// variant, 3 = draw(4), 4 = club id, 5 = the degree (5 below −750, 4 negative, 3 up to 750, 2 above), 6..9 the
+/// manager; with a `sujeito`, 10..13 the `sujeito` and 14 = 6 favoured, 7 rejected, 8 neither; then −1, the new
+/// confidence and 0.
 /// Original: `Media::adjust_supporter_confidence` (0x738340, media.cpp, thiscall, ret 0x14).
 pub(crate) unsafe extern "thiscall" fn adjust_supporter_confidence(_this: usize, club: usize, sujeito: usize, topic: u32, target: u32, variant: u32) {
     let club = Club(club);
@@ -1496,18 +1513,19 @@ pub(crate) unsafe extern "thiscall" fn adjust_supporter_confidence(_this: usize,
     exe::news_send_to_club_manager(read_usize(G_NEWS), n, club);
 }
 
-/// `Media::adjust_board_confidence(club, subject, topic, target, variant, sixth)` (SEH frame without a destructor):
+/// `Media::adjust_board_confidence(club, sujeito, topic, target, variant, sexto)` (SEH frame without a destructor):
 /// adds the change to the board's confidence (+6 of the club's row, kept between 1 and 10000): (confidence − 6000)/20 +
 /// target, × 0.75, damped by a chairman who likes or dislikes the manager and beyond ±1000 (see
 /// `board_confidence_change`).
 ///
-/// Beyond ±500, news item 0xbe0 (local) to the club's manager (`send_to_club_manager`): 0 = 1, 1 = topic, 2 = variant, 3 = draw(4), 4
-/// = club id, 5 = the degree (5 below −750 with confidence below 4500; 9 when negative with confidence above 6250,
-/// otherwise 4; 2 above 750 with confidence above 6250, otherwise 3), 6..9 the manager; with a subject 10..13 and 14 =
-/// 6/7/8 (the chairman likes, dislikes, neither); then the chairman (or −1), the new confidence, the sixth (with it 1
-/// and the word +0xe), and the subject's flags: contract 0x10/0x20 above 25 years old, average rating above the league
-/// average × 5, +0x59 and +0x5b above 14, more than 1500 days at the club, value (`calc_player_value`) above 4,500,000 and
-/// reputation (+5 of the sheet) above 140.
+/// Beyond ±500, news item 0xbe0 (local) to the club's manager (`exe::news_send_to_club_manager`): 0 = 1, 1 = topic, 2 =
+/// variant, 3 = draw(4), 4 = club id, 5 = the degree (5 below −750 with confidence below 4500; 9 when negative with
+/// confidence above 6250, otherwise 4; 2 above 750 with confidence above 6250, otherwise 3), 6..9 the manager; with a
+/// `sujeito` 10..13 and 14 = 6/7/8 (the chairman likes, dislikes, neither); then the chairman (or −1), the new
+/// confidence, the `sexto` (with it 1 and the word `board_record::EXPECTATION_FLAGS`), and the `sujeito`'s flags:
+/// contract `.squad_status()` 0x10/0x20 above 25 years old, average rating above the league average × 5, `.loyalty()`
+/// and `.professionalism()` above 14, more than 1500 days at the club, value (`FN_CONTRACT_MANAGER_CALC_PLAYER_VALUE`)
+/// above 4,500,000 and reputation (+5 of the sheet) above 140.
 /// Original: `Media::adjust_board_confidence` (0x7386f0, media.cpp, thiscall, ret 0x18).
 pub(crate) unsafe extern "thiscall" fn adjust_board_confidence(_this: usize, club: usize, sujeito: usize, topic: u32, target: u32, variant: u32, sexto: u32) {
     let sujeito = Staff(sujeito);
@@ -1647,16 +1665,18 @@ pub(crate) unsafe fn days_since_arrival(p: Staff) -> i32 {
 /// os 2 e 30 (sorteio(2)); 2 os 4, 9, 33, 34 e 37 (sorteio(3)); 3 os 5 e 7 (sorteio(4)); o resto 0.
 pub(crate) const GRATITUDE_DRAW_CASE: [u8; 0x26] = [0, 5, 1, 5, 2, 3, 0, 3, 5, 2, 5, 5, 5, 4, 0, 5, 5, 0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 1, 5, 5, 2, 2, 4, 5, 2];
 
-/// `Media::queue_player_gratitude_news(player, club, type, variant)` (SEH frame without a destructor): posts news item
+/// `Media::queue_player_gratitude_news(player, club, kind, variant)` (SEH frame without a destructor): posts news item
 /// 0xbda of the player's gratitude to the manager.
 ///
-/// With a player with a sheet (+0x61), a club with a manager (+0xcf) and his contract with the club (`exe::contract_manager_get_contract_for_club`), news
-/// item 0xbda (local) to the manager (`send_to_club_manager`): 0..3 the player (3 = −1 without +0xc), 4 = club id, 5 = the type, 6 =
-/// the variant, 7 = the type's draw, 8..0xb the manager, 0xc = 0x420e9, 0xd..0x10 the assistant (+0xd3) or −1. The
-/// type: if the player is on the media list (this +0/+8, 0x17 bytes, id at +8 and flag 2 at +0x10) or the contract has
-/// 0x2000 or 8 in +0x45, types 0, 2, 4, 7, 9, 0xe and 0x23 become 0x12 (+0x5d ≥ draw(10)) or 0x21; injured (`exe::injury_get_player_injury`):
-/// 0xc. For types 0, 6, 14 and 17: with the sheet's +0x44 below 10, draw(3) + 2; otherwise draw(5), and 0 or 1 raises
-/// the sheet's +0x44 (up to 20).
+/// With a player with a sheet (`.player()`), a club with a manager (`.manager()`) and his contract with the club
+/// (`exe::contract_manager_get_contract_for_club`), news item 0xbda (local) to the manager
+/// (`exe::news_send_to_club_manager`): 0..3 the player (3 = −1 without +0xc), 4 = club id, 5 = the type, 6 = the
+/// variant, 7 = the type's draw, 8..0xb the manager, 0xc = 0x420e9, 0xd..0x10 the assistant (`.assistant_manager()`) or
+/// −1. The type: if the player is on the media list (this +0/`media_fields::STORY_LOG_COUNT`, 0x17 bytes, id at
+/// `story_log_entry::PERSON_A` and flag 2 at `story_log_entry::RESPONSE`) or the contract has 0x2000 or 8 in
+/// `contract::GRIEVANCES`, types 0, 2, 4, 7, 9, 0xe and 0x23 become 0x12 (`.temperament()` ≥ draw(10)) or 0x21; injured
+/// (`exe::injury_get_player_injury`): 0xc. For types 0, 6, 14 and 17: with the sheet's `.work_rate()` below 10, draw(3)
+/// + 2; otherwise draw(5), and 0 or 1 raises the sheet's `player_sheet::WORK_RATE` (up to 20).
 /// Original: `Media::queue_player_gratitude_news` (0x732c80, media.cpp, thiscall, ret 0x10).
 pub(crate) unsafe extern "thiscall" fn queue_player_gratitude_news(this: usize, player: usize, club: usize, kind: u32, variant: u32) {
     let player = Staff(player);
@@ -1737,14 +1757,15 @@ pub(crate) unsafe extern "thiscall" fn queue_player_gratitude_news(this: usize, 
     exe::news_send_to_club_manager(read_usize(G_NEWS), n, club);
 }
 
-/// `Media::post_player_backing_request_news(player, club, type, fourth)` (SEH frame without a destructor): for a human
+/// `Media::post_player_backing_request_news(player, club, kind, quarto)` (SEH frame without a destructor): for a human
 /// club, posts news item 0xbcf of the player asking for backing to the manager.
 ///
-/// With a player with a sheet (+0x61) and a human club (`exe::human_manager_is_human_club`), news item 0xbcf (local) to the club's manager
-/// (`send_to_club_manager`): 0..3 the player (3 = −1 without +0xc), 4 = club id, 5/6 = (1, ·) with reputation (+0xb of the sheet)
-/// above 4250, otherwise (2, ·): the second is 1 if (+0x57 > 15 and +0x5d < 6, or +0x5b < 10 and +0x59 < 6 in the lower
-/// band), 3 if the type is 0x20, 1 or 0x1e with +0x59 > 15, +0x5b > 10 and more than 210 days at the club, otherwise 2;
-/// 7 = type, 8 = fourth, 9 = transfer listed (`staff_is_transfer_listed_or_requested`).
+/// With a player with a sheet (`.player()`) and a human club (`exe::human_manager_is_human_club`), news item 0xbcf
+/// (local) to the club's manager (`exe::news_send_to_club_manager`): 0..3 the player (3 = −1 without +0xc), 4 = club
+/// id, 5/6 = (1, ·) with reputation (`.current_reputation()` of the sheet) above 4250, otherwise (2, ·): the second is
+/// 1 if (`.ambition()` > 15 and `.temperament()` < 6, or `.professionalism()` < 10 and `.loyalty()` < 6 in the lower
+/// band), 3 if the type is 0x20, 1 or 0x1e with `.loyalty()` > 15, `.professionalism()` > 10 and more than 210 days at
+/// the club, otherwise 2; 7 = type, 8 = `quarto`, 9 = transfer listed (`exe::staff_is_transfer_listed_or_requested`).
 /// Original: `Media::post_player_backing_request_news` (0x743370, media.cpp, thiscall, ret 0x10).
 pub(crate) unsafe extern "thiscall" fn post_player_backing_request_news(_this: usize, player: usize, club: usize, kind: u32, quarto: u32) {
     let player = Staff(player);
@@ -1786,16 +1807,17 @@ pub(crate) unsafe extern "thiscall" fn post_player_backing_request_news(_this: u
     exe::news_send_to_club_manager(read_usize(G_NEWS), n, club);
 }
 
-/// `Media::post_player_criticism_reaction_news(player, club, topic, response)` (SEH frame without a destructor): posts
+/// `Media::post_player_criticism_reaction_news(player, club, topic, reply)` (SEH frame without a destructor): posts
 /// news item 0xbdc of the player's reaction to criticism, delivered to the managers of the interested clubs.
 ///
-/// With a player with a sheet, a club with a manager and the contract (`exe::contract_manager_get_contract_for_club`), news item 0xbdc (local): 0..3 the
-/// player, 4 = club id, 5 = the reaction (with reputation above 4250 and above the club's, category `contract_category` 1 or 2 and
-/// more than 22 years old: 1 or 3 if +0x59 < 10, +0x57 > 15 and +0x5d < 6; 2 or 4 with more than 1000 days, +0x59 > 15
-/// and without 0x181 in the contract's +0x45; the higher one when the contract has 0x2000 or 8, +0x5b < 10, +0x5d > 10,
-/// +0x59 < 15, more than 23 years old and the response is 2; otherwise 0), 6 = response, 7 = board confidence below
-/// 4000, 8 = topic, 9..0xc the manager. It goes to the managers of the clubs that `exe::transfer_manager_collect_player_news_recipients` ([0xde1f54], 0x21a, up to
-/// 30) returns.
+/// With a player with a sheet, a club with a manager and the contract (`exe::contract_manager_get_contract_for_club`),
+/// news item 0xbdc (local): 0..3 the player, 4 = club id, 5 = the reaction (with reputation above 4250 and above the
+/// club's, category `exe::contract_manager_get_deserved_squad_status` 1 or 2 and more than 22 years old: 1 or 3 if
+/// `.loyalty()` < 10, `.ambition()` > 15 and `.temperament()` < 6; 2 or 4 with more than 1000 days, `.loyalty()` > 15
+/// and without 0x181 in the contract's `contract::GRIEVANCES`; the higher one when the contract has 0x2000 or 8,
+/// `.professionalism()` < 10, `.temperament()` > 10, `.loyalty()` < 15, more than 23 years old and the `reply` is 2;
+/// otherwise 0), 6 = `reply`, 7 = board confidence below 4000, 8 = topic, 9..0xc the manager. It goes to the managers
+/// of the clubs that `exe::transfer_manager_collect_player_news_recipients` ([0xde1f54], 0x21a, up to 30) returns.
 /// Original: `Media::post_player_criticism_reaction_news` (0x743a50, media.cpp, thiscall, ret 0x10).
 pub(crate) unsafe extern "thiscall" fn post_player_criticism_reaction_news(_this: usize, player: usize, club: usize, topic: u32, reply: u32) {
     let player = Staff(player);
@@ -1879,15 +1901,17 @@ pub(crate) fn story_type_case(kind: i16) -> u8 {
     }
 }
 
-/// `Media::rate_player_form_for_story(player, club, contract, type, mode, weight)`: the player's rating (x87, in st0)
+/// `Media::rate_player_form_for_story(player, club, contract, kind, mode, weight)`: the player's rating (x87, in st0)
 /// for a media story kind.
 ///
-/// Without a contract, the player's contract with the club (`exe::contract_manager_get_contract_for_club`); without any, 0. Base: the league's average
-/// rating x ([0xb74350] +0x10 / +0x18, without games 6.8), the player's statistics (`get_stat`, category 6: s1 field 1,
-/// s2 field 0x11, s3 field 2, default 6.5) and the average of the ratings (`ratings_average`) × 0.2: r = (s2 − x) + (average −
-/// x) − weight/60; with s1 < 12, r × s1/12; when negative, × the ratio of the reputations. Then, by type (0..0x52),
-/// additions from the contract type (+0x4f >> 4), the age, the days at the club (`exe::date_days_since`), attributes of the record
-/// +0x61 and the weight; type 0x52 gives r × 0.75 + s3/max(s1, 1) − 0.4.
+/// Without a contract, the player's contract with the club (`exe::contract_manager_get_contract_for_club`); without
+/// any, 0. Base: the league's average rating x (`G_PLAYER_STATS` `player_stats_fields::RATING_SUM` /
+/// `player_stats_fields::RATED_COUNT`, without games 6.8), the player's statistics (`exe::playerstats_get_stat`,
+/// category 6: s1 field 1, s2 field 0x11, s3 field 2, default 6.5) and the average of the ratings
+/// (`exe::playerstats_get_recent_form`) × 0.2: r = (s2 − x) + (average − x) − weight/60; with s1 < 12, r × s1/12; when
+/// negative, × the ratio of the reputations. Then, by type (0..0x52), additions from the contract type
+/// (`contract::SQUAD_STATUS` >> 4), the age, the days at the club (`exe::date_days_since`), attributes of the record
+/// `.player()` and the weight; type 0x52 gives r × 0.75 + s3/max(s1, 1) − 0.4.
 /// Original: `Media::rate_player_form_for_story` (0x736720, media.cpp, thiscall, ret 0x18, st0).
 pub(crate) unsafe extern "thiscall" fn rate_player_form_for_story(_this: usize, player: usize, club: usize, contract: usize, kind: u32, mode: u32, weight: f32) -> f64 {
     let player = Staff(player);
@@ -1981,9 +2005,10 @@ pub(crate) unsafe extern "thiscall" fn rate_player_form_for_story(_this: usize, 
 /// `Media::write_financial_trouble_news_text(news, body, out)`: writes the headline or body of the
 /// club-in-financial-trouble story, by severity, with the club name linked.
 ///
-/// It reads fields 0 (the club), 1 (the severity) and 2 of the news item (`get_slot`), builds the text in 0xde1f64
-/// (0x66f4e0) by severity (> 0x1a5e, > 0xcb2 in the body; > 0x1a5e in the headline) with the club's name (+0x38) and
-/// gender (+0x52), puts it into `out` (0x4ae660) and links the name to the club (0x4ae8a0, type 0x7d5).
+/// It reads fields 0 (the club), 1 (the severity) and 2 of the news item (`exe::newsitem_get_slot`), builds the text in
+/// 0xde1f64 (`FN_LANGLIB_SPRINTF`) by severity (> 0x1a5e, > 0xcb2 in the body; > 0x1a5e in the headline) with the
+/// club's name (`club::SHORT_NAME`) and gender (`.short_gender_name()`), puts it into `out` (`exe::text_set_string`)
+/// and links the name to the club (`exe::text_add_link`, type 0x7d5).
 /// Original: `Media::write_financial_trouble_news_text` (0x74af60, media.cpp, thiscall, ret 0xc).
 pub(crate) unsafe extern "thiscall" fn write_financial_trouble_news_text(_this: usize, news: usize, body: u32, out: usize) {
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
@@ -2043,12 +2068,14 @@ pub(crate) unsafe fn sort_news_log(base: usize, n: usize) {
     exe::crt_qsort(base, n as u32, 0x17, 0x757ee0);
 }
 
-/// `Media::log_story(a, b, type, subtype, response)`: appends a story to the story log and sorts it again.
+/// `Media::log_story(a, b, kind, subtype, reply)`: appends a story to the story log and sorts it again.
 ///
-/// Appends to the story log ([this], capacity +4, count +8; 23-byte records) today's date (+0, `exe::date_operator_3d` from
-/// [0xae2c90]), the id of `a` (+8) and of `b` (+0xc) (−1 without them), the `type` (+0x13), the `subtype` (signed byte,
-/// as a word at +0x11) and the `response` (+0x10); the count goes up and the log is re-sorted (qsort `exe::crt_qsort` with
-/// `compare_story_log_records`). Without a log, it allocates 20 (`exe::crt_malloc`; without memory, box 0x6e11 and the end); when full, it grows by
+/// Appends to the story log ([this], capacity `media_fields::STORY_LOG_CAPACITY`, count
+/// `media_fields::STORY_LOG_COUNT`; 23-byte records) today's date (+0, `copy_record_date` from `G_CURRENT_DATE`), the
+/// id of `a` (+8) and of `b` (`story_log_entry::PERSON_B`) (−1 without them), the `kind` (`story_log_entry::TYPE`), the
+/// `subtype` (signed byte, as a word at `story_log_entry::SUBTYPE`) and the `reply` (`story_log_entry::RESPONSE`); the
+/// count goes up and the log is re-sorted (`sort_news_log`: qsort `exe::crt_qsort` with `compare_story_log_records`).
+/// Without a log, it allocates 20 (`exe::crt_malloc`; without memory, box 0x6e11 and the end); when full, it grows by
 /// 20 (realloc `exe::crt_realloc`; box 0x6e1c).
 /// Original: `Media::log_story` (0x757a50, media.cpp, thiscall, ret 0x14).
 pub(crate) unsafe extern "thiscall" fn log_story(this: usize, a: usize, b: usize, kind: u32, subtype: u32, reply: u32) {
@@ -2087,9 +2114,10 @@ pub(crate) unsafe extern "thiscall" fn log_story(this: usize, a: usize, b: usize
 /// `Media::expire_story_log()`: removes the stories older than the limit, moving the last one into the gap, then sorts
 /// again.
 ///
-/// Each story in the log older than the limit (today − 100 days; the team one, type 0xbdf, today − (40 + draw(40)), one
-/// draw `exe::utils_random` per such story on each pass; dates from 0x54c8e0 over [0xae2c90]) is overwritten by the last one (23
-/// bytes), the count goes down and the same place is looked at again. If any are left, it re-sorts (qsort with
+/// Each story in the log older than the limit (today − 100 days; the team one, `story_log_entry::TYPE` 0xbdf, today −
+/// (40 + draw(40)), one draw `exe::utils_random` per such story on each pass; dates from `exe::date_sub_days` over
+/// `G_CURRENT_DATE`) is overwritten by the last one (23 bytes), the count (`media_fields::STORY_LOG_COUNT`) goes down
+/// and the same place is looked at again. If any are left, it re-sorts (`sort_news_log`: qsort with
 /// `compare_story_log_records`). Without a log, nothing.
 /// Original: `Media::expire_story_log` (0x757c70, media.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn expire_story_log(this: usize) {
@@ -2122,13 +2150,14 @@ pub(crate) unsafe extern "thiscall" fn expire_story_log(this: usize) {
     }
 }
 
-/// `Media::has_logged_story(a, b, type, subtype, since)`: tells whether a story is in the log.
+/// `Media::has_logged_story(a, b, kind, subtype, desde)`: tells whether a story is in the log.
 ///
-/// The team story (type 0xbdf): a linear search for one of type 0xbdf with the id of `b` (+0xc) and the `subtype` (word
-/// +0x11), without looking at `a` or the date: 1 if found. The others: a binary search (bsearch `exe::crt_bsearch` with `compare_story_log_records`)
-/// by the key {id of `a` or −1, id of `b`, type, subtype} (the default date `exe::date_date_54a110` in the key, which the comparison
-/// does not read); found and without `since`, 1; with `since`, 1 if the story is not older than it. Otherwise 0. `b`
-/// cannot be null (the original reads it without checking).
+/// The team story (type 0xbdf): a linear search for one of `story_log_entry::TYPE` 0xbdf with the id of `b`
+/// (`story_log_entry::PERSON_B`) and the `subtype` (word `story_log_entry::SUBTYPE`), without looking at `a` or the
+/// date: 1 if found. The others: a binary search (bsearch `exe::crt_bsearch` with `compare_story_log_records`) by the
+/// key {id of `a` or −1, id of `b`, kind, subtype} (the default date `exe::date_date_54a110` in the key, which the
+/// comparison does not read); found and without `desde`, 1; with `desde`, 1 if the story is not older than it.
+/// Otherwise 0. `b` cannot be null (the original reads it without checking).
 /// Original: `Media::has_logged_story` (0x757da0, media.cpp, thiscall, ret 0x14).
 pub(crate) unsafe extern "thiscall" fn has_logged_story(this: usize, a: usize, b: usize, kind: u32, subtype: u32, desde: usize) -> u32 {
     let mut key = [0u8; 0x17];
@@ -2178,16 +2207,18 @@ pub(crate) fn cap_interest_value(value: i32) -> i32 {
     if value < 0x2faf080 { value } else { 0x2faf080 }
 }
 
-/// `Media::add_transfer_interest(player, club, fee, valuation)`: if the {player, club} key is missing, appends the
+/// `Media::add_transfer_interest(player, club, value, rating)`: if the {player, club} key is missing, appends the
 /// interest and sorts again.
 ///
-/// With the interest vector ([this+0xc], capacity +0x10, count +0x14; 25-byte records), it searches (bsearch `exe::crt_bsearch`
-/// with `compare_id_pair_keys`) for the key {player id, club id or −1}: already there, nothing. Otherwise it appends: player id (+0),
-/// club id (+4, read without checking), today's date (+8, `exe::date_operator_3d` from [0xae2c90]), 0 (+0x10, the rumour has not come
-/// out yet), the `fee` up to 50,000,000 (+0x11) and the `valuation` × 100 truncated (+0x15, _ftol 0x945640); the count
-/// goes up and it re-sorts (qsort with `compare_id_pair_keys`). Without a vector, it allocates 20 (`exe::crt_malloc`; without memory, box
-/// 0x665d and the end); when full, it grows by 20 (realloc `exe::crt_realloc`; box 0x6668). The key's default date (`exe::date_date_54a110`) is
-/// on the stack, as in the original.
+/// With the interest vector (`media_fields::TRANSFER_INTERESTS`, capacity `media_fields::INTEREST_CAPACITY`, count
+/// `media_fields::INTEREST_COUNT`; 25-byte records), it searches (`has_interest`: bsearch `exe::crt_bsearch` with
+/// `compare_id_pair_keys`) for the key {player id, club id or −1}: already there, nothing. Otherwise it appends: player
+/// id (+0), club id (+4, read without checking), today's date (+8, `copy_record_date` from `G_CURRENT_DATE`), 0
+/// (`transfer_interest::STATE`, the rumour has not come out yet), the `value` up to 50,000,000
+/// (`transfer_interest::VALUE`) and the `rating` × 100 truncated (`transfer_interest::RATING`, _ftol 0x945640); the
+/// count goes up and it re-sorts (qsort with `compare_id_pair_keys`). Without a vector, it allocates 20
+/// (`exe::crt_malloc`; without memory, box 0x665d and the end); when full, it grows by 20 (realloc `exe::crt_realloc`;
+/// box 0x6668). The key's default date (`exe::date_date_54a110`) is on the stack, as in the original.
 /// Original: `Media::add_transfer_interest` (0x754740, media.cpp, thiscall, ret 0x14).
 pub(crate) unsafe extern "thiscall" fn add_transfer_interest(this: usize, player: usize, club: usize, value: i32, rating: f64) {
     let mut data = [0u8; 8];
@@ -2252,7 +2283,7 @@ pub(crate) unsafe extern "C" fn compare_id_pair_keys(a: usize, b: usize) -> i32 
 /// `compare_story_log_records(a, b)` (cdecl): the qsort and bsearch comparison of the story log.
 ///
 /// Null first (`a` null −1, `b` null 1); by subject a (+8), subject b (+0xc) and type (+0x13), the difference of the
-/// first one that differs; when equal, the difference of the subtypes (signed words +0x11).
+/// first one that differs; when equal, the difference of the subtypes (signed words `story_log_entry::SUBTYPE`).
 /// Original: `compare_story_log_records` (0x757ee0, media.cpp, cdecl).
 pub(crate) unsafe extern "C" fn compare_story_log_records(a: usize, b: usize) -> i32 {
     if a == 0 {
@@ -2295,9 +2326,9 @@ pub(crate) unsafe fn crt_bsearch(key: usize, base: usize, n: u32, size: u32, com
 /// `Media::remove_transfer_interest(person)`: removes the person's interests, moving the last one into the gap, then
 /// sorts again.
 ///
-/// In the interest vector ([this+0xc], [this+0x14] records of 25 bytes), each one of the person (+0 = id) is
-/// overwritten by the last one (6 dwords and a byte), the count goes down and the same place is looked at again. If any
-/// are left, it re-sorts (qsort `exe::crt_qsort` with `compare_id_pair_keys`).
+/// In the interest vector (`media_fields::TRANSFER_INTERESTS`, `media_fields::INTEREST_COUNT` records of 25 bytes),
+/// each one of the person (+0 = id) is overwritten by the last one (6 dwords and a byte), the count goes down and the
+/// same place is looked at again. If any are left, it re-sorts (qsort `media_crt_qsort` with `compare_id_pair_keys`).
 /// Original: `Media::remove_transfer_interest` (0x7549b0, media.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn remove_transfer_interest(this: usize, person: usize) {
     let n = (this + media_fields::INTEREST_COUNT) as *mut i32;
@@ -2394,14 +2425,14 @@ pub(crate) unsafe extern "thiscall" fn has_story(average: usize, id: *const i32)
     any_news_for_player(average, *id, |_| true) as u8
 }
 
-/// `media_queue_player_apology_news(player, club, story)` (stdcall, ret 0xc; SEH frame without a destructor), called by
-/// the story effects (0x736c00) and the reply to the player's story (`exe::media_apply_player_story_response`): builds news item 0xbdb and sends it to
-/// the club's manager.
+/// `media_queue_player_apology_news(player, club, historia)` (stdcall, ret 0xc; SEH frame without a destructor), called
+/// by the story effects (0x736c00) and the reply to the player's story (`exe::media_apply_player_story_response`):
+/// builds news item 0xbdb and sends it to the club's manager.
 ///
-/// With the player, the sheet (+0x61) and the club, news item 0xbdb in a local (`construct_news_item` with 0) with the data 0 = id,
-/// 1 to 3 = the names (+0x33 of +4, +8 and +0xc; without the third, −1), 4 = club id, 5 = the story, 6 = 0 and 7 = the
-/// variant: draw(4) for stories 0, 2 to 5, 13, 14, 17 and 35 (table 0x72bd2c), otherwise 0; it goes to the club's
-/// manager (`send_to_club_manager`).
+/// With the player, the sheet (`.player()`) and the club, news item 0xbdb in a local (`exe::new_newsitem` with 0) with
+/// the data 0 = id, 1 to 3 = the names (`names::ID` of `.first_name()`, `.second_name()` and `.common_name()`; without
+/// the third, −1), 4 = club id, 5 = the story (`historia`), 6 = 0 and 7 = the variant: draw(4) for stories 0, 2 to 5,
+/// 13, 14, 17 and 35 (table 0x72bd2c), otherwise 0; it goes to the club's manager (`exe::news_send_to_club_manager`).
 /// Original: `media_queue_player_apology_news` (0x72bbf0, media.cpp, stdcall, ret 0xc).
 pub(crate) unsafe extern "stdcall" fn media_queue_player_apology_news(player: usize, club: usize, historia: i16) {
     let player = Staff(player);
@@ -2429,13 +2460,15 @@ pub(crate) unsafe extern "stdcall" fn media_queue_player_apology_news(player: us
 /// Draws a former international as the pundit for `club` (or to talk about `subject`), weighted by nation reputation
 /// and caps (`this` is not read).
 ///
-/// 150 rounds; in each it draws people (`exe::utils_random` with [0xae2364], 110 bytes in [0xae23bc]) until it finds one aged
-/// (+0x18) ≥ 37, with national team caps (+0x22) ≥ 50, a sheet (+0x69), no club (+0x39) if he has a contract (+0x61)
-/// and who is not the club's manager (+0xcf); the 100th try ends the round. The weight is a draw of the nation's
-/// reputation (+0x1a, word +0x8e) × caps, doubled if he is from the subject's nation (without a subject: he must be
-/// from the club's nation, +0x53). From another nation: the reputation must beat 6500 + a draw of 100, the sheet's +0xc
-/// ≥ 6000 and the subject must not dislike him (`exe::staff_is_disliked_by`). The one with the highest weight is kept (the first accepted
-/// always gets in). Without a club and without a subject: 0.
+/// 150 rounds; in each it draws people (`exe::utils_random` with `G_STAFF_COUNT`, 110 bytes in `G_STAFF_TABLE`) until
+/// it finds one aged (`staff::AGE`) ≥ 37, with national team caps (`staff::INT_APPS`) ≥ 50, a sheet
+/// (`staff::NON_PLAYER`), no club (`staff::CLUB_JOB`) if he has a contract (`staff::PLAYER`) and who is not the club's
+/// manager (`.manager()`); the 100th try ends the round. The weight is a draw of the nation's reputation
+/// (`staff::NATION`, `.reputation()`) × caps, doubled if he is from the subject's nation (without a subject: he must be
+/// from the club's nation, `.nation()`). From another nation: the reputation must beat 6500 + a draw of 100, the
+/// sheet's `non_player::WORLD_REPUTATION` ≥ 6000 and the subject must not dislike him (`exe::staff_is_disliked_by`).
+/// The one with the highest weight is kept (the first accepted always gets in). Without a club and without a subject:
+/// 0.
 /// Original: `Media::pick_former_international_pundit` (0x72b810, media.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn pick_former_international_pundit(_this: usize, club: usize, subject: usize) -> usize {
     let subject = Staff(subject);
@@ -2498,16 +2531,19 @@ pub(crate) unsafe extern "thiscall" fn pick_former_international_pundit(_this: u
     melhor
 }
 
-/// `Media::pick_ai_manager_response(manager, player, type)` (3.7 KB): the computer manager's response (1, 2 or 3) to a
+/// `Media::pick_ai_manager_response(manager, player, kind)` (3.7 KB): the computer manager's response (1, 2 or 3) to a
 /// story of the given type about the player.
 ///
-/// Without a manager, without the manager sheet (+0x69), a player without a sheet (+0x61), the manager himself, without
-/// a club (+0x39, otherwise the national side +0x24) or without the player's contract with it (`exe::contract_manager_get_contract_for_club`): 3. The rating
-/// is trunc(5 × `rate_player_form_for_story`(player, club, contract, type, 3, 0)); without a player, the argument's word stays in its place
-/// (the manager pointer, as in the original). Then, by type: 0x83 by the contract type and the knowledge (`exe::non_player_attribute_rating`);
-/// 0x82 by the manager's likes and dislikes (`exe::staff_is_disliked_by`/`exe::staff_is_favoured_by`) and draws; 0x1f by the transfer list (`staff_is_transfer_listed_or_requested`) and the
-/// contract; the others, first, by the likes and dislikes with the rating, and then by families of types, each with its
-/// own chain of draws (`exe::utils_random`); 8/0x25 and 3/4 can put the player on the manager's rejected list (`exe::staff_add_disliked_staff`).
+/// Without a manager, without the manager sheet (`.non_player()`), a player without a sheet (`.player()`), the manager
+/// himself, without a club (`.club_job()`, otherwise the national side `.national_job()`) or without the player's
+/// contract with it (`exe::contract_manager_get_contract_for_club`): 3. The rating is trunc(5 ×
+/// `exe::media_rate_player_form_for_story`(player, club, contract, kind, 3, 0)); without a player, the argument's word
+/// stays in its place (the manager pointer, as in the original). Then, by type: 0x83 by the contract type and the
+/// knowledge (`exe::non_player_attribute_rating`); 0x82 by the manager's likes and dislikes
+/// (`exe::staff_is_disliked_by`/`exe::staff_is_favoured_by`) and draws; 0x1f by the transfer list
+/// (`exe::staff_is_transfer_listed_or_requested`) and the contract; the others, first, by the likes and dislikes with
+/// the rating, and then by families of types, each with its own chain of draws (`exe::utils_random`); 8/0x25 and 3/4
+/// can put the player on the manager's rejected list (`exe::staff_add_disliked_staff`).
 /// Original: `Media::pick_ai_manager_response` (0x735870, media.cpp, thiscall, ret 0xc).
 pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, manager: usize, player: usize, kind: u32) -> u32 {
     let manager = Staff(manager);
@@ -2922,10 +2958,12 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
 /// `Media::post_financial_trouble_news(club)` (SEH frame without a destructor): posts news item 0x1790 of the club in
 /// financial trouble to the managers of the nation, or to all for a big club.
 ///
-/// With the club, the nation (+0x53), the sheet (+0x69, with +0x38) and the division (+0x57), it builds news item
-/// 0x1790 in a local (`construct_news_item` with 0) with the data 0 = club id, 1 = reputation (+0x80) and 2 = draw(2) (`exe::utils_random`); a
-/// club with reputation 9000 or more in a division with +0x69 above 12: to all managers (`send_to_all_managers`); otherwise to those
-/// of the nation (`send_to_nation_managers`). The local news item is 0xe0 bytes (the delivery copies only up to +0xde).
+/// With the club, the nation (`.nation()`), the sheet (`.stadium()`, with `player_sheet::PENALTIES`) and the division
+/// (`.division()`), it builds news item 0x1790 in a local (`exe::new_newsitem` with 0) with the data 0 = club id, 1 =
+/// reputation (`.reputation()`) and 2 = draw(2) (`exe::utils_random`); a club with reputation 9000 or more in a
+/// division with `.reputation()` above 12: to all managers (`exe::news_send_to_all_managers`); otherwise to those of
+/// the nation (`exe::news_send_to_nation_managers`). The local news item is 0xe0 bytes (the delivery copies only up to
+/// +0xde).
 /// Original: `Media::post_financial_trouble_news` (0x74ae60, media.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn post_financial_trouble_news(_this: usize, club: usize) {
     let club = Club(club);
@@ -2956,12 +2994,14 @@ pub(crate) unsafe extern "thiscall" fn post_financial_trouble_news(_this: usize,
 /// `Media::pick_rival_manager_id(club)`: returns the id of the manager of a rival of the same league and much bigger,
 /// or of a drawn club in a league clash, who passes the draws; or −1.
 ///
-/// With a manager (+0xcf) with a contract (+0x69) and a league (+0x57; without a league, only a national side,
-/// `exe::database_is_national_team`): the first of the manager's rejected list (`staff_get_disliked_staff`) with a manager record and rating + 750 < rating
+/// With a manager (`.manager()`) with a contract (`.non_player()`) and a league (`.division()`; without a league, only
+/// a national side, `exe::database_is_national_team`): the first of the manager's rejected list
+/// (`exe::staff_get_disliked_staff`) with a manager record and rating (`non_player::CURRENT_REPUTATION`) + 750 < rating
 /// (never: the draw(3) there does not happen); then each rival (+0xb3, +0xb7, +0xbb) with a manager who passes the
-/// draws, of the same league and with reputation (+0x80) above the club's + 750, with draw(3) ≠ 0; then up to 50 drawn
-/// clubs (from [0xae235c] − 2 × [0xae2350]) that make a league clash (`comp_util_get_league_clash_type`, with the draw limit as 3rd argument, a
-/// leftover on the original's stack) with a manager who passes the draws. Returns the manager's id, or −1.
+/// draws, of the same league and with reputation (`.reputation()`) above the club's + 750, with draw(3) ≠ 0; then up to
+/// 50 drawn clubs (from `G_CLUB_COUNT` − 2 × `G_NATION_COUNT`) that make a league clash
+/// (`FN_COMP_UTIL_GET_LEAGUE_CLASH_TYPE`, with the draw limit as 3rd argument, a leftover on the original's stack) with
+/// a manager who passes the draws. Returns the manager's id, or −1.
 /// Original: `Media::pick_rival_manager_id` (0x72b940, media.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn pick_rival_manager_id(_this: usize, club: usize) -> u32 {
     let club = Club(club);
@@ -3019,13 +3059,14 @@ pub(crate) unsafe extern "thiscall" fn pick_rival_manager_id(_this: usize, club:
     u32::MAX
 }
 
-/// `Media::queue_manager_fa_complaint_story(club, person, type, a, b, c)` (SEH for the local news item, no destructor),
-/// called by discipline (0x55e300) and by MANAGER_MANAGER (`exe::manager_manager_handle_fa_request`, 0x6ab800): posts news item 0x178e of the manager's
-/// complaint to the FA.
+/// `Media::queue_manager_fa_complaint_story(club, person, kind, a, b, c)` (SEH for the local news item, no destructor),
+/// called by discipline (0x55e300) and by MANAGER_MANAGER (`exe::manager_manager_handle_fa_request`, 0x6ab800): posts
+/// news item 0x178e of the manager's complaint to the FA.
 ///
-/// A club with a nation (+0x53) and a manager (+0xcf), and a person: news item 0x178e (the club; the manager, id and
-/// keys, or −1; the type; the person, id and keys; a; b; the nation or −1; c) to the nation's managers (`send_to_nation_managers`) if
-/// the reputation (+0x80) is above 4750, otherwise to the club (`send_to_club_manager`).
+/// A club with a nation (`.nation()`) and a manager (`.manager()`), and a person: news item 0x178e (the club; the
+/// manager, id and keys, or −1; the type; the person, id and keys; a; b; the nation or −1; c) to the nation's managers
+/// (`exe::news_send_to_nation_managers`) if the reputation (`.reputation()`) is above 4750, otherwise to the club
+/// (`exe::news_send_to_club_manager`).
 /// Original: `Media::queue_manager_fa_complaint_story` (0x758de0, media.cpp, thiscall, ret 0x18).
 pub(crate) unsafe extern "thiscall" fn queue_manager_fa_complaint_story(this: usize, club: usize, person: usize, kind: u32, a: u32, b: u32, c: u32) {
     let person = Staff(person);

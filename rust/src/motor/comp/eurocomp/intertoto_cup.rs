@@ -134,9 +134,9 @@ pub(crate) unsafe fn collect_intertoto_entrants(this: Cup) -> (i32, i32) {
     ((k == this.team_count() as i32) as i32, this.team_count() as i32)
 }
 
-/// rule: the Intertoto Cup takes the 60 clubs the European rules put in it (European cup +0x1db = the Intertoto), in
-/// club table order; each with class = its coefficient (+0x1df), and the list is sorted by class (the seeds); with
-/// fewer than 60, the error box
+/// rule: the Intertoto Cup takes the 60 clubs the European rules put in it (European cup `club::CONTINENTAL_COMP_ID` =
+/// the Intertoto, `KEY_CLUB_COMP_INTER_TOTO_CUP`), in club table order; each with class = its coefficient
+/// (`club::EURO_SEEDING`), and the list is sorted by class (the seeds); with fewer than 60, the error box
 /// Original: `IntertotoCup::collect_entrants` (0x6336c0, intertoto_cup.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn intertoto_cup_collect_entrants(this: usize) -> i32 {
     collect_intertoto_entrants(Cup(this)).0
@@ -215,14 +215,16 @@ pub(crate) unsafe fn intertoto_winners_for_uefa(this: Cup, uefa: Cup) -> ([usize
 /// Daily Intertoto update: once a season, when the Intertoto ends, its final winners (up to three, in August) enter the
 /// UEFA Cup; every day, the cup update.
 ///
-/// `today.update_for_date(stage)`, virtual +0x14 of the Intertoto. Once (+0xb2 = 0), when the cup has
-/// ended (virtual +0x10 with 0, 1: push 1; push 0; mov ecx, this -> thiscall, ret 8; the low byte): without the UEFA
-/// Cup, the box for line 0x29e; with it, each Intertoto team with +5 = 1 (the winners of the finals) goes, in order,
-/// into the places from +0x3e − 27 on of the UEFA Cup's table +0xa7 (the last three places; up to three: the club, +4
-/// and +5 zeroed) and into its entry book (+0x14, 6 bytes: the club and status 4 at +4 [inference: entry through the
-/// Intertoto]; +0x36 goes up); then the UEFA predicted positions (virtual +0x5c: mov ecx, uefa -> thiscall, ret 0),
-/// +0xb2 = 1 and the predicted positions once more (the original re-reads the UEFA Cup). Always, at the end, the cup
-/// update (`cup_update_for_date`: push stage; push today; mov ecx, this -> thiscall, ret 8), whose return value is returned.
+/// `today.update_for_date(stage)`, virtual +0x14 of the Intertoto. Once (`intertoto_cup::WINNERS_SENT_TO_UEFA` = 0),
+/// when the cup has ended (virtual `comp_vtable::CHECK_COMPLETE` with 0, 1: push 1; push 0; mov ecx, this -> thiscall,
+/// ret 8; the low byte): without the UEFA Cup (`uefa_cup_object`), the box for line 0x29e; with it, each Intertoto team
+/// with +5 = 1 (the winners of the finals) goes, in order, into the places from `cup::TEAM_COUNT` − 27 on of the UEFA
+/// Cup's table `cup::TEAM_TABLE` (the last three places; up to three: the club, +4 and +5 zeroed) and into its entry
+/// book (`cup::ENTRANT_BOOK`, 6 bytes: the club and status 4 at +4 [inference: entry through the Intertoto];
+/// `cup::ENTRANT_COUNT` goes up); then the UEFA predicted positions (virtual `comp_vtable::SET_PREDICTED_POSITIONS`:
+/// mov ecx, uefa -> thiscall, ret 0), `intertoto_cup::WINNERS_SENT_TO_UEFA` = 1 and the predicted positions once more
+/// (the original re-reads the UEFA Cup). Always, at the end, the cup update (`FN_CUP_UPDATE_FOR_DATE`: push stage; push
+/// today; mov ecx, this -> thiscall, ret 8), whose return value is returned.
 /// Original: `IntertotoCup::update_for_date` (0x633d40, intertoto_cup.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
     let this = Cup(this);
@@ -283,18 +285,22 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_for_date(this: usize
 /// Records a club's Intertoto outcome in the staff records: the final winner qualifies for the UEFA Cup, a club going
 /// through gets the next round record, a club knocked out leaves European competition.
 ///
-/// `club.update_staff_records_for_status(outcome, _, _, match, _)`, virtual +0x44 of the Intertoto;
-/// returns 0. Weight = `comp_util_scale_by_round`(low, high, match round +0x34, rounds +0x3c) (cdecl, 4 pushes; add esp, 0x10).
+/// `club.update_staff_records_for_status(outcome, _, _, game, _)`, virtual +0x44 of the Intertoto; returns 0. Weight =
+/// `scale_by_round`(low, high, match round `fixture::ROUND_NUMBER`, rounds `.round_count()`) (cdecl, 4 pushes; add esp,
+/// 0x10).
 ///
-/// - 1 (won the final): the qualification record (`add_qualified_for_round_record`) for the UEFA Cup (the competition [0xae23d0] + 0x6b ×
-/// [0x9cf6f0]), stage 0, round 0xa, weight(0x3c, 0x64), and the club moves to the UEFA Cup (+0x1db = [0x9cf6f0]).
+/// - 1 (won the final): the qualification record (`european_cup_add_qualified_record`) for the UEFA Cup (the
+/// competition `G_CLUB_COMP_TABLE` + 0x6b × `KEY_CLUB_COMP_UEFA_CUP`), stage 0, round 0xa, weight(0x3c, 0x64), and the
+/// club moves to the UEFA Cup (`.set_continental_comp_id(KEY_CLUB_COMP_UEFA_CUP)`).
 ///
-/// - 0 (went through a round): if the next round exists (+0x34 + 1 < +0x3c), the qualification record in the Intertoto
-/// (+4) with the match's stage +0x32, the +7 of the next round (+0xa3, 0x68 bytes) and the weight round × 99 / (rounds
-/// − 1) + 1 (only the low byte is incremented: inc al).
+/// - 0 (went through a round): if the next round exists (`fixture::ROUND_NUMBER` + 1 < `.round_count()`), the
+/// qualification record in the Intertoto (+4) with the match's stage `fixture::ROUND_PREFIX`, the +7 of the next round
+/// (`.round_table()`, 0x68 bytes) and the weight round × 99 / (rounds − 1) + 1 (only the low byte is incremented: inc
+/// al).
 ///
-/// - 0xff or 2 (knocked out, or lost the final): the elimination record (`add_knocked_out_record`) in the Intertoto, stage 0, round
-/// +0x30 of the match, weight(0x14, 0x50), and the club leaves European competition (+0x1db = −1).
+/// - 0xff or 2 (knocked out, or lost the final): the elimination record (`european_cup_add_knocked_out_record`) in the
+/// Intertoto, stage 0, round `fixture::ROUND_NAME` of the match, weight(0x14, 0x50), and the club leaves European
+/// competition (`leave_euro_competition`: `club::CONTINENTAL_COMP_ID` = −1).
 /// Original: `IntertotoCup::update_staff_records_for_status` (0x633c10, intertoto_cup.cpp, thiscall, ret 0x18).
 pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_staff_records_for_status(this: usize, club: usize, outcome: u32, a3: u32, a4: u32, game: usize, a6: u32) -> u32 {
     let this = Cup(this);

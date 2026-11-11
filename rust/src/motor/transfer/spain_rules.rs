@@ -41,9 +41,10 @@ pub(crate) const FRANCE_TRANSFER_WINDOWS: [[u8; 6]; 6] = [
 /// Decides whether a Spanish loan is allowed: refuses outside the window (9) and between clubs of the same division
 /// after five league games of the player (0x1f).
 ///
-/// `SPAIN_RULES::can_loan_player(club, player, message, reason)`: outside the window (`exe::transfer_rules_find_open_window`): 9; with a contract,
-/// between clubs of the same division (+0x57) after more than `[0x968990]` league matches of the player (`get_stat` of
-/// record +0x61, type 2, 1, 6.5): 0x1f.
+/// `SPAIN_RULES::can_loan_player(club, player, msg, reason)`: outside the window
+/// (`exe::transfer_rules_find_open_window`): 9; with a contract, between clubs of the same division (`.division()`)
+/// after more than `rdata::F32_5` league matches of the player (`exe::playerstats_get_stat` of record `.player()`, type
+/// 2, 1, 6.5): 0x1f.
 /// Original: `SPAIN_RULES::can_loan_player` (0x859630, spain_rules.cpp, thiscall, ret 0x10).
 pub(crate) unsafe extern "thiscall" fn spain_rules_can_loan_player(this: usize, club: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
     let player = Staff(player);

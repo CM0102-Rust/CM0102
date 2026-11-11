@@ -1,19 +1,23 @@
 use super::*;
 
 /// Constructs a cup knockout stage: the round table copied from the cup's template (dates, draws), the year, the stage,
-/// the id and the parent's rules (+0x49, +0x4a), the team list with pot seeds, and the fixture tree.
+/// the id and the parent's rules (`cup::SUBSTITUTES_NAMED`, `cup::SUBSTITUTIONS_ALLOWED`), the team list with pot
+/// seeds, and the fixture tree.
 ///
-/// `Cup_Stage::Cup_Stage(parent, n, teams, rounds, a5, template, year, stage, b2, id, b3, tree, by_order, a14, seeds)`;
-/// SEH frame with no destructor on the normal path. The base (Cup::Cup `exe::new_cup`, mov ecx -> thiscall, ret 0); +4 = a5;
-/// +0x40 = the year (word); +0x44 = the stage, +0x42 = b2 (bytes); +0x30 = +0x2c = −1; +0x51 = b3; the vtable 0x969468;
-/// +0x43 = 1; +0xb1 = +0xab = +0xac = 0; +0x3c = the rounds and +0x3a = the id (words); +0x49 and +0x4a copied from the
-/// parent; +0x28 = a14. The round table (`exe::crt_malloc` of rounds × 0x68 at +0xa3; out of memory, the box for line 0x48) is
-/// copied from the template; +0x3e = n and the team list (calloc `exe::crt_calloc`(n, 6) at +0xa7; out of memory, the box for
-/// line 0x53): each team gets status (+5) 0 and its pot seed (+4): the one from the `seeds` vector (given by the cup),
-/// or, without it, the position in the list if `by_order`, or 0. Finally the fixture tree, built at once: with `tree`,
-/// Cup_Stage::map_fixture_tree (0x5241e0, which links the winners and places the seeds in the first round), otherwise
-/// Cup::map_fixture_tree (`map_fixture_tree`, which links at random), both thiscall, ret 0 (they draw); if negative, the box for
-/// line 0x62 or 0x6a. Returns this.
+/// `Cup_Stage::Cup_Stage(parent, n, teams, rounds, a5, template, year, stage, b2, id, b3, arvore, by_order, a14,
+/// seeds)`; SEH frame with no destructor on the normal path. The base (Cup::Cup `exe::new_cup`, mov ecx -> thiscall,
+/// ret 0); +4 = a5; `.set_year()` = the year (word); `.set_stage_index()` = the stage, `.set_club_sides()` = b2
+/// (bytes); `.set_current_stage()` = `.set_stage_count()` = −1; `.set_importance_bias()` = b3; the vtable 0x969468;
+/// `.set_comp_type(comp_type::CUP)`; `.set_run_by_stages()` = `.set_current_round()` = `.set_next_draw_round()` = 0;
+/// `.set_round_count()` = the rounds and `.set_stage_label()` = the id (words); `cup::SUBSTITUTES_NAMED` and
+/// `cup::SUBSTITUTIONS_ALLOWED` copied from the parent; `.set_prize_fund()` = a14. The round table (`exe::crt_malloc`
+/// of rounds × 0x68 at `.set_round_table()`; out of memory, the box for line 0x48) is copied from the template;
+/// `.set_team_count()` = n and the team list (calloc `exe::crt_calloc`(n, 6) at `.set_team_table()`; out of memory, the
+/// box for line 0x53): each team gets status (+5) 0 and its pot seed (+4): the one from the `seeds` vector (given by
+/// the cup), or, without it, the position in the list if `by_order`, or 0. Finally the fixture tree, built at once:
+/// with `arvore`, Cup_Stage::map_fixture_tree (0x5241e0, which links the winners and places the seeds in the first
+/// round), otherwise Cup::map_fixture_tree (`map_fixture_tree`, which links at random), both thiscall, ret 0 (they
+/// draw); if negative, the box for line 0x62 or 0x6a. Returns this.
 /// Original: `Cup_Stage::Cup_Stage` (0x522e00, cup_stage.cpp, thiscall, ret 0x3c).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn construct_cup_stage(this: usize, parent: usize, n: u32, teams: usize, rounds: u32, a5: u32, template: usize, year: u32, stage: u32, b2: u32,
@@ -81,9 +85,9 @@ pub(crate) unsafe extern "thiscall" fn construct_cup_stage(this: usize, parent: 
 /// Destroys a knockout stage: frees the team list, the round table and each round's fixtures, then destroys the base.
 ///
 /// `Cup_Stage::~Cup_Stage()`, the destructor, called by the virtual destructor. Sets the vtable 0x969468; the team list
-/// (+0xa7), the round table (+0xa3) and, if there are fixtures (+0xad), each fixture vector of the +0x3c rounds and the
-/// vector itself are freed (`exe::crt_free`, cdecl; the pointers are left in place); finally the base (Cup::~Cup `exe::drop_cup`, mov
-/// ecx -> thiscall, ret 0), whose eax it returns.
+/// (`.team_table()`), the round table (`.round_table()`) and, if there are fixtures (`.tie_tables()`), each fixture
+/// vector of the `.round_count()` rounds and the vector itself are freed (`exe::crt_free`, cdecl; the pointers are left
+/// in place); finally the base (Cup::~Cup `exe::drop_cup`, mov ecx -> thiscall, ret 0), whose eax it returns.
 /// Original: `Cup_Stage::~Cup_Stage` (0x523300, cup_stage.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn destroy_cup_stage(this: usize) -> usize {
     let this = Cup(this);

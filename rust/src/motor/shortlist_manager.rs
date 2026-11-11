@@ -38,42 +38,61 @@ pub(crate) unsafe fn staff_state_byte_0b(person: Staff) -> u8 {
 /// The AI's bids and loan requests for a computer club with an active shortlist: in each slot with a target and no
 /// offer it checks the role, contract, reach and offer rules; in a purchase slot it values the slot and bids if
 /// random(value) beats random(2 × reputation + 1000); in a loan slot it checks whether the loan is possible and makes
-/// the request if random(`+0xb`) beats random(reputation / 10) or random(2 × reputation).
+/// the request if random(`shortlist_slot::PRICE`) beats random(reputation / 10) or random(2 × reputation).
 ///
 /// Convention: thiscall, ret 4, `shortlist_manager.cpp`, SEH frame: local STAFF_CONTRACT and offer, only the offer with
-/// a destructor. `Shortlist_Manager::make_club_bids(clube)` (club), from the day loop (`0x5cccd0`). Today + 7
-/// (`0x54c5b0`) and a local STAFF_CONTRACT (`0x85e410`). National team (`0x53b900`), human club (`0x600a50` with 0, 1),
-/// or a human on holiday (with 1, 1) whose manager responds (`0x5fd210`) with rule 4 (`0x5fea50`) equal to 1: nothing.
-/// The club's list (the 9-byte record in `[this+0xdc]`): active (`+4` = 1), with fewer than 100 days (`+8`) and
-/// finances (`0x5a0590`). The count = slots with a player bid (`0x844540` with `0xb`) + the squad (`0x53c590` with 0,
+/// a destructor. `Shortlist_Manager::make_club_bids(club)`, from the day loop (`0x5cccd0`). Today + 7
+/// (`exe::date_add_days`) and a local STAFF_CONTRACT (`exe::new_staff_contract`). National team
+/// (`exe::database_is_national_team`), human club (`exe::human_manager_is_human_club` with 0, 1), or a human on holiday
+/// (with 1, 1) whose manager responds (`FN_HUMAN_MANAGER_IS_ON_HOLIDAY`) with rule 4
+/// (`exe::human_manager_get_holiday_option`) equal to 1: nothing. The club's list (the 9-byte record in
+/// `shortlist_manager_fields::CLUB_SHORTLISTS`): active (`club_shortlist::ACTIVE` = 1), with fewer than 100 days
+/// (`club_shortlist::DAYS`) and finances (`exe::financetable_get_club_finance`). The count = slots with a player bid
+/// (`exe::shortlist_manager_count_slots_with_bids` with `0xb`) + the squad (`exe::database_count_club_squad` with 0,
 /// 0).
 ///
-/// Each of the 40 slots of `0x25` bytes with a target (`+0xf`) and no offer (`+0x17` = −1), except player slots when
-/// the count is at 50: the target outside the club; in slots for another role, role 8/9/10 with a free place in lists
-/// `+0x19f` (5), `+0x1b3` (7), `+0x1cf` (3) and role 6/7 with no exe::database_get_club_manager(`+0xd3`); without bits `0x30` of `+0xb` of
-/// the 79-byte record (player slot), no future transfer (`0x8cca10`), agreed contract (`0x8c5450`) or outgoing loan
-/// (`+0x24` with `+0x28` = 5).
+/// Each of the 40 slots of `0x25` bytes with a target (`shortlist_slot::TARGET_STAFF_ID`) and no offer
+/// (`shortlist_slot::OFFER_REF` = −1), except player slots when the count is at 50: the target outside the club; in
+/// slots for another role, role 8/9/10 with a free place in lists `+0x19f` (5), `+0x1b3` (7), `+0x1cf` (3) and role 6/7
+/// with no `.assistant_manager()`; without bits `0x30` of `+0xb` of the 79-byte record (`staff_state_byte_0b`; player
+/// slot), no future transfer (`exe::transfer_manager_get_future_transfer`), agreed contract
+/// (`exe::transfer_manager_get_agreed_contract_club`) or outgoing loan (`.national_job()` with `.job_for_nation()` =
+/// `job_kind::MANAGER`).
 ///
-/// Purchase slot (`+0x24` bit 0 clear): position (`+1`) not negative in a player slot; the club can reach him
-/// (`0x8ce990`, or reason 9); no offer from the club for him (`0x8cdc90`) and no exchange (`0x8c5e40`). The value =
-/// `+0xb` (doubled with bit `0x20`, at least 20000); with the league (`+0x57`) active in `[0xadadfc]`, × 3 or × 2 by
-/// reputation (`+0x80` above `0x128e`) and the count below 25/35, or × 2 below 25. Player slot with a player to replace
-/// (`+0x13`): unable to sign (`0x8ced40` with today + 7, 1; except reason 9) adds `+0xb` (at least 10000); the injury
-/// of the player to replace (`0x62ed70` on `[0xb63d28]`, three times) adds days² × (reputation / 500); with a player
-/// sheet, (1.5 − the player's morale, byte `+0x45` of the sheet, / 30) × value; under offer (`0x8cde70`) adds
-/// max(`+0xb` × 1.5, 10000). Player slot with a human seller (or the target already at the club): the desired contract
-/// (`0x85fc50`) 0 skips; wage (`+0xc`) above 1.3 × the cap (`0x5968d0`) skips.
+/// Purchase slot (`shortlist_slot::FLAGS` bit 0, `shortlist_slot_flags::LOAN_SLOT`, clear): position (`+1`) not
+/// negative in a player slot; the club can reach him (`exe::transfer_manager_can_club_bid_for_player`, or reason 9); no
+/// offer from the club for him (`exe::transfer_manager_club_has_offer_for_player`) and no exchange
+/// (`exe::transfer_manager_get_exchange_offers_for_player`). The value = `shortlist_slot::PRICE` (doubled with bit
+/// `shortlist_slot_flags::BID_MARKER`, at least 20000); with the league (`.division()`) active in
+/// `[G_COMP_OBJECT_TABLE]`, × 3 or × 2 by reputation (`.reputation()` above `0x128e`) and the count below 25/35, or × 2
+/// below 25. Player slot with a player to replace (`shortlist_slot::REPLACEMENT_STAFF_ID`): unable to sign
+/// (`exe::transfer_manager_can_sign_player` with today + 7, 1; except reason 9) adds `shortlist_slot::PRICE` (at least
+/// 10000); the injury of the player to replace (`exe::injury_get_player_injury` on `[G_INJURY]`, three times) adds
+/// days² (`injury_entry::DAYS_LEFT`) × (reputation / 500); with a player sheet, (1.5 − the player's morale,
+/// `.player_morale()` of the sheet, / 30) × value; under offer (`exe::transfer_manager_is_player_under_offer`) adds
+/// max(`shortlist_slot::PRICE` × 1.5, 10000). Player slot with a human seller (or the target already at the club): the
+/// desired contract (`exe::staff_contract_set_to_desired_contract`) 0 skips; wage (`.wage()`) above 1.3 × the cap
+/// (`exe::finance_get_max_wage`) skips.
 ///
-/// The random draws (`0x90cfc0`): random(value) above random(2 × reputation + 1000) makes the bid: `+0x24` bit 5
-/// cleared, the local offer (`0x8e5680`) filled (`0x8e5d60`); with no offer, the status in the list (`0x843e10` with
-/// 1); with one, the bid (`0x8be300`) and, with terms, the contract offer (`0x4cc490`) and, with an AI seller with no
-/// contract offer (`0x4cc9e0`) and with the target's contract (`0x4cf5f0`), the renewal negotiation at the seller
-/// (`0x4cda70` with the factor by squad status 1..5 and the seller's entry `0x849ce0`) and the terms freed; `+0x17` =
-/// the offer index and the count goes up for a player slot. The local offer is destroyed (`0x8e5710`).
+/// The random draws (`exe::utils_random`): random(value) above random(2 × reputation + 1000) makes the bid:
+/// `shortlist_slot::FLAGS` bit 5 (`shortlist_slot_flags::BID_MARKER`) cleared, the local offer
+/// (`exe::new_transfer_offer`) filled (`exe::transfer_offer_build_bid`); with no offer, the status in the list
+/// (`exe::shortlist_manager_update_staff_status` with 1); with one, the bid
+/// (`exe::transfer_manager_add_transfer_offer`) and, with terms, the contract offer
+/// (`exe::contract_manager_add_contract_offer`) and, with an AI seller with no contract offer
+/// (`exe::contract_manager_find_contract_offer`) and with the target's contract
+/// (`exe::contract_manager_get_contract_for_club`), the renewal negotiation at the seller
+/// (`FN_CONTRACT_MANAGER_OFFER_CONTRACT` with the factor by squad status 1..5 and the seller's entry
+/// `exe::shortlist_manager_find_club_shortlist_entry`) and the terms freed; `shortlist_slot::OFFER_REF` = the offer
+/// index (`.slot_index()`) and the count goes up for a player slot. The local offer is destroyed
+/// (`exe::drop_transfer_offer`).
 ///
-/// Loan slot (bit 0): outside England (`[0x9cf300]`) with `+0x64` = 3; the loan possible (`0x8d0040`); a human seller
-/// without bit 2 of the contract's `+0x4e` skips; no offer (`0x8cdc90`) and no exchange; random(`+0xb`) above
-/// random(reputation / 10), or above random(2 × reputation) on the second pair: the request (`0x842740`) in `+0x17`;
+/// Loan slot (bit 0, `shortlist_slot_flags::LOAN_SLOT`): outside England (`[KEY_NATION_FRANCE]`) with
+/// `.professional_status()` = `professional_status::AMATEUR`; the loan possible
+/// (`exe::transfer_manager_can_loan_player`); a human seller without bit 2 (`transfer_status::LOAN_LISTED`) of the
+/// contract's `contract::TRANSFER_STATUS` skips; no offer (`exe::transfer_manager_club_has_offer_for_player`) and no
+/// exchange; random(`shortlist_slot::PRICE`) above random(reputation / 10), or above random(2 × reputation) on the
+/// second pair: the request (`exe::shortlist_manager_try_loan_offer_for_player`) in `shortlist_slot::OFFER_REF`;
 /// negative, the status in the list; otherwise the count goes up.
 /// Original: `Shortlist_Manager::make_club_bids` (0x84a020, shortlist_manager.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn make_club_bids(this: usize, club: usize) {
@@ -482,17 +501,18 @@ pub(crate) unsafe fn language_fluency_factor(p1: Staff, club: Club, s: i16) -> (
 /// Returns in st0 the person's willingness score for joining the club (or for staying, when the club is his own) and
 /// marks the reason bits.
 ///
-/// `Shortlist_Manager::staff_interest_in_joining_club(pessoa, clube, salário, empréstimo, situação, motivos)` (person,
-/// club, wage, loan, status, reasons): x87 transcribed into f64 in the original's order. The reasons (bits) are only
-/// set when the pointer is given.
+/// `Shortlist_Manager::staff_interest_in_joining_club(p1, p2, p3, p4, p5, p6)` (person, club, wage, loan, status,
+/// reasons): x87 transcribed into f64 in the original's order. The reasons (bits) are only set when the pointer is
+/// given.
 ///
 /// The score starts at 2.75 (3.5 for his own club; with the contract running out, 1.1 − days × 0.002; with no club, the
 /// age outside a club) and goes through the factors: the club reputations on loans, liking or disliking the club and
-/// the manager, rivals, the nations and distance, happiness in the contract (`+0x44`), squad status (`+0x4f`) and
-/// demands, the compared reputation (the new club's and the current one's, by division, competition, manager and
-/// finances), language fluency, international caps and time without a club; and, when a wage is asked (wage ≠ 0, no
-/// loan and a score of 1.75), the default wage (`0x864550` in a local STAFF_CONTRACT) against the club's wage cap
-/// (`0x5968d0`). The rest of the arithmetic is in the comments.
+/// the manager, rivals, the nations and distance, happiness in the contract (`contract::MORALE`), squad status
+/// (`contract::SQUAD_STATUS`) and demands, the compared reputation (the new club's and the current one's, by division,
+/// competition, manager and finances), language fluency, international caps and time without a club; and, when a wage
+/// is asked (wage ≠ 0, no loan and a score of 1.75), the default wage (`exe::staff_contract_default_staff_contract` in
+/// a local STAFF_CONTRACT) against the club's wage cap (`exe::finance_get_max_wage`). The rest of the arithmetic is in
+/// the comments.
 /// Original: `Shortlist_Manager::staff_interest_in_joining_club` (0x846920, shortlist_manager.cpp, thiscall, ret 0x18).
 pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usize, p1: usize, p2: usize, p3: u32, p4: u32, p5: u32, p6: *mut u32) -> f64 {
     let p1 = Staff(p1);
@@ -1537,15 +1557,17 @@ pub(crate) static FAR_BAND_HITS: core::sync::atomic::AtomicU32 = core::sync::ato
 /// below his value; inside it, only with the Bosman rule and the fee up to the value, by the contract expiry band.
 ///
 /// Convention: thiscall, ret `0x10`, `shortlist_manager.cpp`; `this` is not read.
-/// `shortlist_manager_is_compensation_deal(vaga, contrato, clube, &taxa)` (slot, contract, club, &fee), called by the
+/// `shortlist_manager_is_compensation_deal(slot, contract, club, &taxa)` (slot, contract, club, &fee), called by the
 /// shortlist slot (`0x842e10`, `0x840000`), the scout report (`0x7b62a0`), the bid (`0x8e5d60`) and the screen. It
-/// clears the fee; with no contract, no slot or with the contract's byte `+0x49`: 1. The contract's person
-/// (`[0xae23bc]` + 110 × `[+0]`).
+/// clears the fee; with no contract, no slot or with the contract's byte `.leaving_on_bosman()`: 1. The contract's
+/// person (`[G_STAFF_TABLE]` + 110 × `[+0]`).
 ///
-/// Outside the FIFA protected period (`0x868210` zero): the compensation fee (`0x8d0780` with 0) and 1 if it is lower
-/// than the person's value (`+0x52`). Otherwise: no Bosman law at the player's club (`0x8d0a70`), 0; the fee
-/// (`0x8d0780` with 1) above the value, 0; by the expiry band (`0x867d30`): 0 → 0; 1-2, 3-4, 5-6, 7-8 → 1 if the slot's
-/// `+3` × 0.5 / 0.65 / 0.8 / 0.9 exceeds the price (`+0xb`); 9-14 → 1; above, 0.
+/// Outside the FIFA protected period (`exe::staff_contract_check_fifa_protected_period` zero): the compensation fee
+/// (`exe::transfer_manager_calc_compensation_fee` with 0) and 1 if it is lower than the person's value
+/// (`staff::VALUE`). Otherwise: no Bosman law at the player's club (`exe::transfer_manager_player_club_uses_bosman`),
+/// 0; the fee (`exe::transfer_manager_calc_compensation_fee` with 1) above the value, 0; by the expiry band
+/// (`exe::staff_contract_get_expiry_band`): 0 → 0; 1-2, 3-4, 5-6, 7-8 → 1 if the slot's `.valuation()` × 0.5 / 0.65 /
+/// 0.8 / 0.9 exceeds the price (`.price()`); 9-14 → 1; above, 0.
 /// Original: `shortlist_manager_is_compensation_deal` (0x84b6f0, shortlist_manager.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn shortlist_manager_is_compensation_deal(this: usize, slot: usize, contract: usize, club: usize, taxa: *mut i32) -> u32 {
     let slot = ShortlistSlot(slot);
@@ -1595,7 +1617,7 @@ pub(crate) unsafe extern "thiscall" fn shortlist_manager_is_compensation_deal(th
 }
 
 /// qsort comparer of the 40 shortlist slots (`0x25` bytes) in the squad evaluation (`0x83cb40`): the difference of the
-/// indices (`+0x23`, signed byte); when equal, 1 (it never ties).
+/// indices (`.index()`, signed byte); when equal, 1 (it never ties).
 ///
 /// `shortlist_compare_slots_by_index(a, b)`.
 /// Original: `shortlist_compare_slots_by_index` (0x83b6c0, shortlist_manager.cpp, cdecl).
@@ -1626,14 +1648,15 @@ pub(crate) unsafe fn interested_clubs(this: usize, player: usize) -> Vec<usize> 
 /// Marks the player as under offer: his slot in the interested clubs' lists (except human clubs, the buyer or the clubs
 /// of the exchange offers) gets bit `0x20`, which doubles the AI bid price.
 ///
-/// Convention: thiscall, ret `0xc`, `shortlist_manager.cpp`, SEH frame for the local list (`0x68d020`/`0x68d040`).
-/// `Shortlist_Manager::mark_player_under_offer(jogador, comprador, troca)` (player, buyer, exchange), called by the
-/// added negotiation (`0x8be9d0`) and the accepted bid (`0x8c0080`). The clubs interested in the player (`0x842180`
-/// with mode 1, in a local list), except those of a human who decides (`0x600a50` with 0, 1): with list `troca` (cursor
-/// at the head), a club of any of its offers (`0x8c61e0` by the item id; club `+8` of the offer) is left out; otherwise
-/// the player's slot (`0x849ce0`, only of type 11 if byte `+0x11` of the last offer found is 11) gets bit `0x20`
-/// (`+0x24`); without the list, except the buyer, the type-11 slot or, without it, the one of another type. A club with
-/// no slot ends it.
+/// Convention: thiscall, ret `0xc`, `shortlist_manager.cpp`, SEH frame for the local list
+/// (`exe::new_llist`/`exe::drop_llist`). `Shortlist_Manager::mark_player_under_offer(player, buyer, swap)` (player,
+/// buyer, exchange), called by the added negotiation (`0x8be9d0`) and the accepted bid (`0x8c0080`). The clubs
+/// interested in the player (`exe::shortlist_manager_collect_interested_clubs` with mode 1, in a local list), except
+/// those of a human who decides (`exe::human_manager_is_human_club` with 0, 1): with list `swap` (cursor at the head),
+/// a club of any of its offers (`exe::transfer_manager_get_offer_slot` by the item id; club `+8` of the offer) is left
+/// out; otherwise the player's slot (`exe::shortlist_manager_find_club_shortlist_entry`, only of type 11 if byte
+/// `offer::JOB_TYPE` of the last offer found is 11) gets bit `0x20` (`shortlist_slot::FLAGS`); without the list, except
+/// the buyer, the type-11 slot or, without it, the one of another type. A club with no slot ends it.
 /// Original: `Shortlist_Manager::mark_player_under_offer` (0x84b580, shortlist_manager.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn mark_player_under_offer(this: usize, player: usize, buyer: usize, swap: usize) {
     let swap = Llist(swap);
@@ -1752,29 +1775,34 @@ pub(crate) unsafe fn young_player_adjustment(this: usize, club: Club, p: Staff, 
 /// (_ftol).
 ///
 /// Convention: thiscall, ret `0x18`, `shortlist_manager.cpp`, 4.6 KB of x87; the map gives 1332 bytes.
-/// `Shortlist_Manager::value_player_for_club(clube, pessoa, vaga, saida, mínimo, teto)` (club, person, slot, output,
+/// `Shortlist_Manager::value_player_for_club(club, p, slot, out, minimum, ceiling)` (club, person, slot, output,
 /// minimum, cap), called from the scouting lists and the computer's offers (`0x83f3a0`, `0x842e10`, `0x843800`,
 /// `0x8c0810`, `0x8c8090`, `0x8c8860`, `0x8e5d60`).
 ///
-/// The observer is the club's manager (`+0xcf`; without sheet `+0x69`, a random one, `0x90cfc0` over `[0xae2368]`, at
-/// `[0xae23c0]` + `0x44` × i). The rating flags by slot type (`+0x24` & `0x1e`: 4 and 6 with `0x5882`, or `0x815882`
-/// for the human club's own player, and the reputation scope `0x5408c0`; 8 with `0x5982` and the scope; otherwise
-/// `0x5902`); a loan-list slot (bit 0) changes the minimum's divisor to 16 or 6 (`0x544590`). Human club (`0x600a50`
-/// with 1, 1): its manager (`0x53ca90`) and, with the player on the scout's list (`0x7f7490`), the rating (`0x6e6340`
-/// with −1 and the replacement `0x600e90`) becomes max(rating + 15000, rating × 1.5); otherwise the rating with
-/// minimum² × 0.000025 / divisor. Computer: with flag `0x100` (or `0x80`) the best observer between the manager and the
-/// 7 scouts (`+0x1b3`) by knowledge (`0x544410` with 6 or 5) minus 5 or 10 by the scope; the rating with the minimum
-/// and that observer, × 1.05 for a player transfer-listed by another club (`0x544520`). A negative rating or 10000
-/// below the minimum, or a loan-list slot: the end with no value (`loan_listed_value_end`).
+/// The observer is the club's manager (`.manager()`; without sheet `staff::NON_PLAYER`, a random one,
+/// `exe::utils_random` over `[G_NON_PLAYER_COUNT]`, at `[G_NON_PLAYER_TABLE]` + `0x44` × i). The rating flags by slot
+/// type (`.flags()` & `0x1e`: 4 and 6 with `0x5882`, or `0x815882` for the human club's own player, and the reputation
+/// scope `exe::database_get_reputation_scope`; 8 with `0x5982` and the scope; otherwise `0x5902`); a loan-list slot
+/// (bit 0, `shortlist_slot_flags::LOAN_SLOT`) changes the minimum's divisor to 16 or 6 (`exe::staff_is_loan_listed`).
+/// Human club (`exe::human_manager_is_human_club` with 1, 1): its manager (`FN_DATABASE_GET_CLUB_MANAGER`) and, with
+/// the player on the scout's list (`exe::scout_manager_is_player_shortlisted`), the rating
+/// (`exe::match_man_score_player_for_selection` with −1 and the replacement `exe::human_manager_get_stand_in_manager`)
+/// becomes max(rating + 15000, rating × 1.5); otherwise the rating with minimum² × 0.000025 / divisor. Computer: with
+/// flag `0x100` (or `0x80`) the best observer between the manager and the 7 scouts (`.scouts(k)`) by knowledge
+/// (`exe::non_player_attribute_rating` with 6 or 5) minus 5 or 10 by the scope; the rating with the minimum and that
+/// observer, × 1.05 for a player transfer-listed by another club (`exe::staff_is_transfer_listed_or_requested`). A
+/// negative rating or 10000 below the minimum, or a loan-list slot: the end with no value (`loan_listed_value_end`).
 ///
-/// The fog (`+0xb` of the 79-byte record in `[0xae2d0c]`, 4 bits) limits the rating to rating + 5000 by (1 + n²/100) ×
-/// rating. By position (`0x83bd00`) the price cap and the fraction; the base value (high with rating ≥ 35000, the
-/// slot's `+0xb` ≥ rating/8 and `+1` ≥ `0x80`); the adjustment by slot type (1, 2, 3: the young players,
-/// `young_player_adjustment`; 3, 4, 5, 6: fractions); the age above the divisor (28, 32 with no position, 19 in slot 5)
-/// and the foreigner (`0x53d980`); the price by consistency (`+0x2d` of sheet `+0x61`) and the cap by slot type,
-/// reputation, record (`+0xd`) and age; above 1.5 million, a perceived potential ability (`0x6e86d0` with 2) below 145
-/// pulls it to 1.5 million; the limit of the club's division (`+0x57`, `+0x69` < 16); the club's nation (`+0x53`)
-/// `[0x9cf434]` or `[0x9cf300]`; with `teto`, at most the slot's `+7` (at least 1).
+/// The fog (`staff_state::STATUS_FLAGS` of the 79-byte record in `[G_STAFF_STATE_TABLE]`, 4 bits
+/// `staff_state_status_flags::AI_SHORTLIST_COUNT`) limits the rating to rating + 5000 by (1 + n²/100) × rating. By
+/// position (`exe::shortlist_position_mask_to_index`) the price cap and the fraction; the base value (high with rating
+/// ≥ 35000, the slot's `.price()` ≥ rating/8 and `.position()` ≥ `0x80`); the adjustment by slot type (1, 2, 3: the
+/// young players, `young_player_adjustment`; 3, 4, 5, 6: fractions); the age above the divisor (28, 32 with no
+/// position, 19 in slot 5) and the foreigner (`exe::database_is_staff_foreign`); the price by consistency
+/// (`.injury_proneness()` of sheet `.player()`) and the cap by slot type, reputation, record (`+0xd`) and age; above
+/// 1.5 million, a perceived potential ability (`FN_MATCH_MAN_JUDGE_PLAYER_ABILITY` with 2) below 145 pulls it to 1.5
+/// million; the limit of the club's division (`.division()`, `.reputation()` < 16); the club's nation (`.nation()`)
+/// `[KEY_NATION_PORTUGAL]` or `[KEY_NATION_FRANCE]`; with `ceiling`, at most the slot's `+7` (at least 1).
 /// Original: `Shortlist_Manager::value_player_for_club` (0x840d80, shortlist_manager.cpp, thiscall, ret 0x18).
 pub(crate) unsafe extern "thiscall" fn value_player_for_club(this: usize, club: usize, p: usize, slot: usize, out: *mut i32, minimum: i32, ceiling: u32) -> i32 {
     let slot = ShortlistSlot(slot);
@@ -2104,13 +2132,14 @@ pub(crate) const SHORTLIST_MANAGER_DATE_STATICS: [(usize, usize); 6] = [(G_ADD_D
 /// state 2 for a human club, a slot whose manager arrived over 20 days ago and whose target has no offers loses its
 /// target and bid.
 ///
-/// `Shortlist_Manager::count_slots_with_bids(clube, posicao)` (club, position), called by the list evaluation
-/// (`0x84a020`, with `0xb`), the squad evaluation (`0x83cb40`, with −1) and the day loop (`0x5cccd0`, with −1). Of the
-/// 40 slots of the club's list, it counts those with a target (`+0xf`) and a bid (`+0x17`), both above −1, and position
-/// (`+0`) equal to `posicao` (`0xff`: any). With the list in state 2 (`+4` of the entry) and the human's club
-/// (`0x600a50` with 1, 1): if today − 20 days (`0x54c8e0`) is past the manager's arrival date (`+0x3e` of the record at
-/// the club's `+0xcf`) and the target has no offers (`0x8c5cf0`), the slot loses its target and bid (−1) and does not
-/// count. The count is a byte.
+/// `Shortlist_Manager::count_slots_with_bids(club, position)`, called by the list evaluation (`0x84a020`, with `0xb`),
+/// the squad evaluation (`0x83cb40`, with −1) and the day loop (`0x5cccd0`, with −1). Of the 40 slots of the club's
+/// list, it counts those with a target (`shortlist_slot::TARGET_STAFF_ID`) and a bid (`shortlist_slot::OFFER_REF`),
+/// both above −1, and position (`+0`) equal to `position` (`0xff`: any). With the list in state 2
+/// (`club_shortlist::ACTIVE` of the entry) and the human's club (`exe::human_manager_is_human_club` with 1, 1): if
+/// today − 20 days (`exe::date_sub_days`) is past the manager's arrival date (`+0x3e` of the record at the club's
+/// `.manager()`) and the target has no offers (`exe::transfer_manager_get_offers_for_player`), the slot loses its
+/// target and bid (−1) and does not count. The count is a byte.
 /// Original: `Shortlist_Manager::count_slots_with_bids` (0x844540, shortlist_manager.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn count_slots_with_bids(this: usize, club: usize, position: u32) -> u8 {
     let club = Club(club);
@@ -2155,12 +2184,12 @@ pub(crate) unsafe extern "thiscall" fn count_slots_with_bids(this: usize, club: 
     n
 }
 
-/// Removes the person from the transfer list: clears bit 0 of the contract's `+0x4e`; returns 1 with a contract, 0
-/// without.
+/// Removes the person from the transfer list: clears bit 0 of the contract's `.transfer_status()`; returns 1 with a
+/// contract, 0 without.
 ///
-/// `shortlist_manager_remove_from_transfer_list(pessoa)`, called by the transfer screens (`0x8f6770`, `0x8f8120`). No
-/// contract (`0x4cf5a0`): 0. With one, bit 0 of `+0x4e` (on the transfer list) is cleared and it returns 1 in the low
-/// read_i8(the upper ones are those of the contract pointer + (as in the original)).
+/// `shortlist_manager_remove_from_transfer_list(person)`, called by the transfer screens (`0x8f6770`, `0x8f8120`). No
+/// contract (`contract_of_staff`): 0. With one, bit 0 of `.transfer_status()` (on the transfer list) is cleared and it
+/// returns 1 in the low read_i8(the upper ones are those of the contract pointer + (as in the original)).
 /// Original: `shortlist_manager_remove_from_transfer_list` (0x844280, shortlist_manager.cpp, stdcall).
 pub(crate) unsafe extern "stdcall" fn shortlist_manager_remove_from_transfer_list(person: usize) -> u32 {
     let c = Contract((contract_of_staff(person)).addr());
@@ -2171,11 +2200,12 @@ pub(crate) unsafe extern "stdcall" fn shortlist_manager_remove_from_transfer_lis
     (c.addr() as u32 & !0xff) | 1
 }
 
-/// Removes the person from the loan list: clears bit 1 of the contract's `+0x4e`; returns 1 with a contract, 0 without.
+/// Removes the person from the loan list: clears bit 1 of the contract's `.transfer_status()`; returns 1 with a
+/// contract, 0 without.
 ///
-/// `shortlist_manager_remove_from_loan_list(pessoa)`, called by the contract renewal (`0x4dc3a0`) and the transfer
-/// screens. No contract: 0; with one, bit 1 of `+0x4e` (on the loan list) is cleared and it returns 1 in the low byte
-/// (the upper ones are those of the contract pointer).
+/// `shortlist_manager_remove_from_loan_list(person)`, called by the contract renewal (`0x4dc3a0`) and the transfer
+/// screens. No contract (`contract_of_staff`): 0; with one, bit 1 of `.transfer_status()` (on the loan list) is cleared
+/// and it returns 1 in the low byte (the upper ones are those of the contract pointer).
 /// Original: `shortlist_manager_remove_from_loan_list` (0x8442d0, shortlist_manager.cpp, stdcall).
 pub(crate) unsafe extern "stdcall" fn shortlist_manager_remove_from_loan_list(person: usize) -> u32 {
     let c = Contract((contract_of_staff(person)).addr());
@@ -2245,20 +2275,22 @@ pub(crate) unsafe fn block_slot_for_person(v: usize, entry: usize, person: Staff
 /// Returns 1.
 ///
 /// Convention: thiscall, ret `0x10`, `shortlist_manager.cpp`, SEH frame for the local LLIST.
-/// `Shortlist_Manager::update_staff_status(pessoa, clube, evento, tipo)` (person, club, event, type), called by the
+/// `Shortlist_Manager::update_staff_status(person, club, event, kind)` (person, club, event, type), called by the
 /// offers, contracts, managers and regens (`0x4d07e0`, `0x690730`, `0x7a59e0`, `0x8bf680`, `0x8c44e0`...) and by
 /// itself.
 ///
-/// With event 4 and a null club or the person's own (`+0x39`): each interested club (`0x842180` with 0, 3, 0) receives
-/// event 1 with type 2 (recursion). Null club: 1. With event 5, or 1..3 from another club: the (person, club) pair
-/// leaves the two sorted arrays (`+0`/`+0x10` via `0x757ea0`, `+4`/`+0x14` via `0x844740`; null array: 0); if found in
-/// both and the club is not human (`0x600a50` with 0, 1), the low nibble of `+0xb` of the person's 79-byte record
-/// (`[0xae2d0c]`) drops by one.
+/// With event 4 and a null club or the person's own (`.club_job()`): each interested club
+/// (`exe::shortlist_manager_collect_interested_clubs` with 0, 3, 0) receives event 1 with type 2 (recursion). Null
+/// club: 1. With event 5, or 1..3 from another club: the (person, club) pair leaves the two sorted arrays (`+0`/`+0x10`
+/// via `0x757ea0`, `shortlist_manager_fields::PAIRS_BY_CLUB`/`+0x14` via `0x844740`; null array: 0); if found in both
+/// and the club is not human (`FN_HUMAN_MANAGER_IS_HUMAN_CLUB` with 0, 1), the low nibble of
+/// `staff_state::STATUS_FLAGS` of the person's 79-byte record (`[G_STAFF_STATE_TABLE]`) drops by one.
 ///
 /// Then, in the club's 40 slots (type 1: except player slots `0xb`; type 0: only those) with the person as target
-/// (`+0xf`; on event 4, also at `+0x13`): 1 = the slot is emptied and filled again (`0x83f3a0`); 2 and 5 = a block of
-/// 120 and 14 days (`0x54c5b0`); 3 = emptied, date today − 120 (`0x54c8e0`); 4 = releases `+0x13` and the target, date
-/// today − 120.
+/// (`shortlist_slot::TARGET_STAFF_ID`; on event 4, also at `shortlist_slot::REPLACEMENT_STAFF_ID`): 1 = the slot is
+/// emptied and filled again (`exe::shortlist_manager_fill_shortlist_slot`); 2 and 5 = a block of 120 and 14 days
+/// (`0x54c5b0`); 3 = emptied, date today − 120 (`0x54c8e0`); 4 = releases `shortlist_slot::REPLACEMENT_STAFF_ID` and
+/// the target, date today − 120.
 /// Original: `Shortlist_Manager::update_staff_status` (0x843e10, shortlist_manager.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn update_staff_status(this: usize, person: usize, club: usize, event: u32, kind: u32) -> u8 {
     let person = Staff(person);
@@ -2379,11 +2411,12 @@ pub(crate) unsafe fn is_original_only_case(this: usize, person: Staff, club: usi
     })
 }
 
-/// Puts the person on the loan list: sets bit 1 of the person's contract `+0x4e`. Returns the eax the original leaves:
-/// the contract.
+/// Puts the person on the loan list: sets bit 1 of the person's contract `.transfer_status()`. Returns the eax the
+/// original leaves: the contract.
 ///
-/// `shortlist_manager_add_to_loan_list(pessoa)`, called by the transfer screens (`0x8f6770`, `0x8f8120`). With a
-/// contract (`0x4cf5a0`, without storing it in `[0xae1080]`), bit 1 of `+0x4e` (on the loan list) is set.
+/// `shortlist_manager_add_to_loan_list(person)`, called by the transfer screens (`0x8f6770`, `0x8f8120`). With a
+/// contract (`exe::contract_manager_get_contract`, without storing it in `[0xae1080]`), bit 1 of `.transfer_status()`
+/// (on the loan list) is set.
 /// Original: `shortlist_manager_add_to_loan_list` (0x8442b0, shortlist_manager.cpp, stdcall).
 pub(crate) unsafe extern "stdcall" fn shortlist_manager_add_to_loan_list(person: usize) -> usize {
     let c = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person));
@@ -2395,10 +2428,10 @@ pub(crate) unsafe extern "stdcall" fn shortlist_manager_add_to_loan_list(person:
 
 /// Returns the club's fee limit for the player at the given squad status; −1 without a person or player sheet.
 ///
-/// `shortlist_manager_max_fee_for_player_status(clube, pessoa, estatuto)` (club, person, status), called by the
-/// contract screen (`0x4dd0f0`, ecx = the Shortlist_Manager at `+0x856` of the transfer manager). No person or no
-/// player sheet (`+0x61`): −1. Otherwise the slot cap (`0x84b230`) with the player's strong (exe::formation_get_position_mask(`0x5b7d20`) as u32) and
-/// the status.
+/// `shortlist_manager_max_fee_for_player_status(club, person, status)`, called by the contract screen (`0x4dd0f0`, ecx
+/// = the Shortlist_Manager at `+0x856` of the transfer manager). No person or no player sheet (`.player()`): −1.
+/// Otherwise the slot cap (`exe::shortlist_manager_max_fee_for_squad_status`) with the player's strong positions
+/// (`exe::formation_get_position_mask`) and the status.
 /// Original: `shortlist_manager_max_fee_for_player_status` (0x84b1f0, shortlist_manager.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn shortlist_manager_max_fee_for_player_status(this: usize, club: usize, person: usize, status: u32) -> i32 {
     let person = Staff(person);
@@ -2420,16 +2453,19 @@ pub(crate) unsafe fn shortlist_manager_staff_by_index(i: i32) -> usize {
 /// bids and the remainder, fills each slot without a target and gives the remainder to the first own-club player slot
 /// the manager would sell.
 ///
-/// `Shortlist_Manager::allocate_transfer_budget(clube)` (club), called by the update of the club's list (`0x83a730`,
-/// already in Rust), the initial lists (`0x83a1b0`) and the rebuilt list (`0x84abe0`). Human club (`0x600a50` with 0,
-/// 1), national team (`0x53b900`), no finances (`0x5a0590`) or a list not in state 1: nothing.
+/// `Shortlist_Manager::allocate_transfer_budget(club)`, called by the update of the club's list (`0x83a730`, already in
+/// Rust), the initial lists (`0x83a1b0`) and the rebuilt list (`0x84abe0`). Human club
+/// (`exe::human_manager_is_human_club` with 0, 1), national team (`exe::database_is_national_team`), no finances
+/// (`exe::financetable_get_club_finance`) or a list not in state 1 (`club_shortlist::ACTIVE`): nothing.
 ///
-/// The budget (`0x598800` with 0, 0, 0, 1, 0; negative: 0) is split among the open slots (target −1) after sorting the
-/// 40 (qsort `0x83b690`): among the first 8 (or up to the fourth open player slot), each open slot receives at `+7` the
-/// budget / (open slots × the factor of the type and the status); the rest of the budget goes through the slots still
-/// without a target (reductions by the held bids, by the value of `+0xb` over the sum and by the factors at `0x969540`,
-/// `0x968968`), each one filled by `0x83f3a0`; what is left goes to the first own-club player slot the manager would
-/// accept selling (`0x846920` above `0x968e58`, random draws of 10 and 100 days, offers `0x8c5cf0`).
+/// The budget (`exe::finance_get_transfer_budget` with 0, 0, 0, 1, 0; negative: 0) is split among the open slots
+/// (target −1) after sorting the 40 (qsort `0x83b690`): among the first 8 (or up to the fourth open player slot), each
+/// open slot receives at `+7` the budget / (open slots × the factor of the type and the status); the rest of the budget
+/// goes through the slots still without a target (reductions by the held bids, by the value of `shortlist_slot::PRICE`
+/// over the sum and by the factors at `rdata::F64_NEG_0_5`, `rdata::F64_0_5`), each one filled by
+/// `exe::shortlist_manager_fill_shortlist_slot`; what is left goes to the first own-club player slot the manager would
+/// accept selling (`exe::shortlist_manager_staff_interest_in_joining_club` above `rdata::F64_3_15`, random draws of 10
+/// and 100 days, offers `exe::transfer_manager_get_offers_for_player`).
 /// Original: `Shortlist_Manager::allocate_transfer_budget` (0x83b6e0, shortlist_manager.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn allocate_transfer_budget(this: usize, club: usize) {
     let club = Club(club);
@@ -2643,13 +2679,12 @@ pub(crate) unsafe extern "thiscall" fn allocate_transfer_budget(this: usize, clu
 // simplification: 0x83f3a0 (called for each slot still without a target) rolls, appends pairs to the vectors with reallocation and gives
 // news: cannot run twice. Original only; the copy takes the branches and the mutations.
 
-/// Tells whether the squad status is allowed for the person: statuses 5 and 6 (youth) only below age 24 (`+0x18`,
+/// Tells whether the squad status is allowed for the person: statuses 5 and 6 (youth) only below age 24 (`.age()`,
 /// signed); the others, always (1).
 ///
 /// Convention: stdcall, ret 8, `shortlist_manager.cpp`; called with ecx = the Shortlist_Manager, which it does not
-/// read. `shortlist_manager_squad_status_allowed(pessoa, estatuto)` (person, status), called by the contract screen
-/// (`0x4dd0f0`) and the transfer screen (`0x8f6770`). No player sheet (`+0x61`): the original routine runs ("Error"
-/// box, 0).
+/// read. `shortlist_manager_squad_status_allowed(person, status)`, called by the contract screen (`0x4dd0f0`) and the
+/// transfer screen (`0x8f6770`). No player sheet (`.player()`): the original routine runs ("Error" box, 0).
 /// Original: `shortlist_manager_squad_status_allowed` (0x84b4d0, shortlist_manager.cpp, stdcall).
 pub(crate) unsafe extern "stdcall" fn shortlist_manager_squad_status_allowed(person: usize, status: u32) -> u32 {
     let person = Staff(person);
@@ -2695,11 +2730,11 @@ pub(crate) static FORMATION_POSITION_MASKS: [[u16; 24]; 10] = [
 /// Sets the role of the 40 slots of the club's entry (25 player slots, 15 staff slots) and writes the position mask of
 /// the 25 player slots by formation (`+7`).
 ///
-/// `shortlist_set_up_formation_slots(entrada)` (entry): in the 40 slots of `0x25` bytes of the entry (`+0`), the first
-/// 25 become player slots (`+0` = `0xb`) and the next 15 receive the role (6, 7, 8 ×5, 10, 9 ×7) with `+0x24` =
-/// (`+0x24` & `0xe3`) | 2; then it writes the position mask (`+1`, 16 bits) of the 25 player slots by the formation
-/// (`+7`, signed byte; outside 1..9 the default row). The table came out of emulating the switch (each case writes the
-/// 25 slots only once).
+/// `shortlist_set_up_formation_slots(entry)`: in the 40 slots of `0x25` bytes of the entry (`+0`), the first 25 become
+/// player slots (`+0` = `0xb`) and the next 15 receive the role (6, 7, 8 ×5, 10, 9 ×7) with `shortlist_slot::FLAGS` =
+/// (`shortlist_slot::FLAGS` & `0xe3`) | 2; then it writes the position mask (`shortlist_slot::POSITION`, 16 bits) of
+/// the 25 player slots by the formation (`+7`, signed byte; outside 1..9 the default row). The table came out of
+/// emulating the switch (each case writes the 25 slots only once).
 /// Original: `shortlist_set_up_formation_slots` (0x83c090, shortlist_manager.cpp, stdcall, ret 4).
 pub(crate) unsafe extern "stdcall" fn shortlist_set_up_formation_slots(entry: usize) {
     for k in 0..40usize {
@@ -2728,11 +2763,12 @@ pub(crate) unsafe extern "stdcall" fn shortlist_set_up_formation_slots(entry: us
     }
 }
 
-/// Updates the club's shortlist: releases the stale targets of the club's slots (`0x844660` with the entry), reassesses
-/// the squad (`0x83cb40` with the recomputed entry, the club, daily 1, rebuild 0) and shares out the transfer budget
-/// again (`0x83b6e0`).
+/// Updates the club's shortlist: releases the stale targets of the club's slots
+/// (`exe::shortlist_manager_release_club_slot_targets` with the entry), reassesses the squad
+/// (`exe::shortlist_manager_assess_club_squad` with the recomputed entry, the club, daily 1, rebuild 0) and shares out
+/// the transfer budget again (`exe::shortlist_manager_allocate_transfer_budget`).
 ///
-/// `Shortlist_Manager::update_club_shortlist(clube)`.
+/// `Shortlist_Manager::update_club_shortlist(club)`.
 /// Original: `Shortlist_Manager::update_club_shortlist` (0x83a730, shortlist_manager.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn update_club_shortlist(this: usize, club: usize) {
     exe::shortlist_manager_release_club_slot_targets(this, club, shortlist_club_entry(this, club));
@@ -2741,16 +2777,17 @@ pub(crate) unsafe extern "thiscall" fn update_club_shortlist(this: usize, club: 
     exe::shortlist_manager_allocate_transfer_budget(this, club); // the transfer budget
 }
 
-/// Sets to 100 the entry state of every club that targets the player and, with `limpar` (clear), removes the bid marker
-/// from the slots holding him.
+/// Sets to 100 the entry state of every club that targets the player and, with `clear`, removes the bid marker from the
+/// slots holding him.
 ///
 /// Convention: thiscall, ret 8, `shortlist_manager.cpp`, SEH frame only for the new list.
-/// `Shortlist_Manager::suspend_clubs_shortlisting_player(jogador, limpar)` (player, clear): in a new LLIST
-/// (`0x944cf1(0xe)` and `0x68d020`) it gathers the clubs targeting the player (`0x842180` with ignore 1, mode 3, all);
-/// for each item (`0x68d1b0`, after resetting the cursor `+0xa` = `+2`) it sets the state of the club's entry (`+8`) to
-/// 100 and, with `limpar`, removes the bid marker (`+0x17` = −1 when > −1) from the slots that hold the player (`+0xf`
-/// = id). It destroys and frees the list (`0x68d040`, `0x944c94`). The count (`+0`, signed 16 bits) is re-read on every
-/// pass, as in the original.
+/// `Shortlist_Manager::suspend_clubs_shortlisting_player(player, clear)`: in a new LLIST (`exe::crt_operator_new(0xe)`
+/// and `exe::new_llist`) it gathers the clubs targeting the player (`exe::shortlist_manager_collect_interested_clubs`
+/// with ignore 1, mode 3, all); for each item (`exe::llist_get_next`, after resetting the cursor
+/// `.set_cursor(.head())`) it sets the state of the club's entry (`club_shortlist::DAYS`) to 100 and, with `clear`,
+/// removes the bid marker (`.offer_ref()` = −1 when > −1) from the slots that hold the player (`.target_staff_id()` =
+/// id). It destroys and frees the list (`exe::drop_llist`, `exe::crt_operator_delete`). The count (`+0`, signed 16
+/// bits) is re-read on every pass, as in the original.
 /// Original: `Shortlist_Manager::suspend_clubs_shortlisting_player` (0x842b00, shortlist_manager.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn suspend_clubs_shortlisting_player(this: usize, player: usize, clear: u8) {
     let p = exe::crt_operator_new(0xe);
@@ -2890,14 +2927,16 @@ pub(crate) unsafe extern "thiscall" fn add_player_to_club_shortlists(this: usize
 }
 
 /// Transfer-lists the player: marks the contract as for sale; the player may come to dislike the manager (liking the
-/// club or loyalty against two draws of 100); with `notícia` (news), puts him on the clubs' lists and posts the news.
+/// club or loyalty against two draws of 100); with `news`, puts him on the clubs' lists and posts the news.
 ///
-/// `Shortlist_Manager::transfer_list_player(jogador, notícia)` (player, news): if the club has not listed him yet
-/// (`0x5444a0` with 0) and there is a contract: marks the contract for sale (`+0x4e` bit 1, `+0x4f` high nibble 7); if
-/// he is not untouchable (`0x8cca10`): with the player liking the club (`0x547d60`) or with the loyalty (`+0x44` of the
-/// contract, signed) above the difference of two random(100) draws, the player starts to dislike the club's manager
-/// (`0x547af0` with the club's `+0xcf`, 1); with `notícia`, puts the player on the clubs' lists (`0x842c00` with 1) and
-/// posts the news (`0x4d71b0` with the club `+0x39`).
+/// `Shortlist_Manager::transfer_list_player(player, news)`: if the club has not listed him yet
+/// (`exe::staff_is_transfer_listed` with 0) and there is a contract: marks the contract for sale (`.transfer_status()`
+/// bit 1, `.squad_status()` high nibble 7); if he is not untouchable (`exe::transfer_manager_get_future_transfer`):
+/// with the player liking the club (`exe::staff_favours_club`) or with the loyalty (`.morale()` of the contract,
+/// signed) above the difference of two random(100) draws, the player starts to dislike the club's manager
+/// (`exe::staff_add_disliked_staff` with the club's `.manager()`, 1); with `news`, puts the player on the clubs' lists
+/// (`exe::shortlist_manager_add_player_to_club_shortlists` with 1) and posts the news
+/// (`exe::contract_manager_post_transfer_listed_news` with the club `.club_job()`).
 /// Original: `Shortlist_Manager::transfer_list_player` (0x842320, shortlist_manager.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn transfer_list_player(this: usize, player: usize, news: u32) {
     let player = Staff(player);
@@ -2956,17 +2995,20 @@ pub(crate) unsafe fn contract_with_own_club(p: Staff) -> usize {
 
 /// Rebuilds the 32 position lists (16 slots × 2) at 12 bytes per entry: the size is the largest number of people
 /// fitting a slot; each non-human person enters every slot he fits with his id, the nation id (drawn when missing) and
-/// the value or the contract's `+0x3d`. Runs every 30 days.
+/// the value or the contract's `contract::HAPPINESS`. Runs every 30 days.
 ///
-/// `Shortlist_Manager::build_position_lists(não usado)` (unused): frees the 32 arrays of the position lists (`+0x18`:
-/// 16 by person, `+0x58`: 16 by contract key); their size (`+0xd8`) is the largest number of people (all, humans
-/// included) that fit one of the 16 slots (`0x844300`); it allocates the 32 with 12 bytes per entry (out of memory: the
-/// "Error" box and the game stops) and zeroes the counts (`+0x98`).
+/// `Shortlist_Manager::build_position_lists(_not_used)` (unused): frees the 32 arrays of the position lists
+/// (`shortlist_manager_fields::POSITION_LISTS_BY_PERSON`: 16 by person,
+/// `shortlist_manager_fields::POSITION_LISTS_BY_KEY`: 16 by contract key); their size
+/// (`shortlist_manager_fields::POSITION_LIST_CAPACITY`) is the largest number of people (all, humans included) that fit
+/// one of the 16 slots (`exe::shortlist_staff_fits_slot_position`); it allocates the 32 with 12 bytes per entry (out of
+/// memory: the "Error" box and the game stops) and zeroes the counts
+/// (`shortlist_manager_fields::POSITION_LIST_COUNTS`).
 ///
 /// Then each person outside the 16 humans, in each slot he fits (count at the limit: the box and the game stops): the
-/// two entries with his id (`+0`), the nation id (`+4`; with no nation at `+0x1a`, `0x90cfc0` draws one and writes it
-/// into the person), in the first one the value (`+0x52`) and in the second the `+0x3d` of the contract with the
-/// contract's club (with no contract: 100).
+/// two entries with his id (`+0`), the nation id (`+4`; with no nation at `.nation()`, `exe::utils_random` draws one
+/// and writes it into the person), in the first one the value (`.value()`) and in the second the `contract::HAPPINESS`
+/// of the contract with the contract's club (with no contract: 100).
 /// Original: `Shortlist_Manager::build_position_lists` (0x839e60, shortlist_manager.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn build_position_lists(this: usize, _not_used: u32) {
     // simplification: the original pushes the slot in a dword with 3 bytes of stack garbage above; 0x844300 only reads the byte
@@ -3036,17 +3078,17 @@ pub(crate) unsafe extern "thiscall" fn build_position_lists(this: usize, _not_us
     }
 }
 
-/// Every day, recomputes the entry keys (`+8`) of the 16 slots and sorts both arrays of each slot (`0x945333` with
-/// `0x83b670`: by the key and by `+4`).
+/// Every day, recomputes the entry keys (`+8`) of the 16 slots and sorts both arrays of each slot (`exe::crt_qsort`
+/// with `0x83b670`: by the key and by `+4`).
 ///
-/// `Shortlist_Manager::sort_position_lists()`. In the first list: the person's value (`+0x52`) if the contract with the
-/// club exists and the expiry band (`0x867d30`) is 0, otherwise 0; a player of a human club (`0x600a50`) on the
-/// transfer list (`0x5444a0`) loses 1,500,000, at least down to a third of the value. In slot 15 only the first list,
-/// with the value.
+/// `Shortlist_Manager::sort_position_lists()`. In the first list: the person's value (`.value()`) if the contract with
+/// the club exists and the expiry band (`exe::staff_contract_get_expiry_band`) is 0, otherwise 0; a player of a human
+/// club (`exe::human_manager_is_human_club`) on the transfer list (`exe::staff_is_transfer_listed`) loses 1,500,000, at
+/// least down to a third of the value. In slot 15 only the first list, with the value.
 ///
-/// In the second: −1000 with bit 2 of the contract's `+0x4e`; 2000 with bits 0 or 3, or with no player sheet (`+0x61`),
-/// no club, no division (`+0x57`) or a division with no flag in `[0xadadfc]` and reputation below 6000, or no contract;
-/// otherwise the contract's `+0x3d`.
+/// In the second: −1000 with bit 2 of the contract's `.transfer_status()`; 2000 with bits 0 or 3, or with no player
+/// sheet (`.player()`), no club, no division (`.division()`) or a division with no flag in `[G_COMP_OBJECT_TABLE]` and
+/// reputation below 6000, or no contract; otherwise the contract's `.happiness()`.
 /// Original: `Shortlist_Manager::sort_position_lists` (0x83a780, shortlist_manager.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn sort_position_lists(this: usize) {
     for vaga in 0..16usize {
@@ -3111,14 +3153,16 @@ pub(crate) unsafe extern "thiscall" fn sort_position_lists(this: usize) {
 /// Empties the output list and adds the interested (player, club) pairs: the humans who have the player on the scout
 /// shortlist and the clubs in the by-person array that are not suspended, are not his and value him above his value.
 ///
-/// `Shortlist_Manager::collect_interested_clubs(jogador, saída, ignorar, modo, só_humanos)` (player, output, ignore,
-/// mode, humans only): empties list `saída` (`0x68d080`) and adds (`0x68d0d0`, 8 bytes: player id, club id) the
-/// interested clubs: with mode ≠ 3, the 16 humans (from last to first) with `+0x5f` and a club who have the player on
-/// the scout's list (`0x7f7490`; with mode 2, except the clubs the current human controls, `0x600c90`); without
-/// `só_humanos`, the (player, club) pairs of the by-person array (`+0`, count `+0x10`; `0x946464` up to the player's
-/// first) whose club is not suspended (`+8` of the club's 9-byte entry at `+0xdc` below 100, unless `ignorar`), is not
-/// the player's and puts on him (`+7` of the `0x25`-byte slot with the player at `+0xf`; with no slot, the first one)
-/// more than his value (`+0x52`).
+/// `Shortlist_Manager::collect_interested_clubs(player, out, ignore, mode, so_humanos)` (player, output, ignore, mode,
+/// humans only): empties list `out` (`exe::llist_clear`) and adds (`exe::llist_add_tail`, 8 bytes: player id, club id)
+/// the interested clubs: with mode ≠ 3, the 16 humans (from last to first) with `.classification()` and a club who have
+/// the player on the scout's list (`exe::scout_manager_is_player_shortlisted`; with mode 2, except the clubs the
+/// current human controls, `exe::human_manager_current_controls_club`); without `so_humanos`, the (player, club) pairs
+/// of the by-person array (`+0`, count `shortlist_manager_fields::PAIRS_BY_PERSON_COUNT`; `exe::crt_bsearch` up to the
+/// player's first) whose club is not suspended (`club_shortlist::DAYS` of the club's 9-byte entry at
+/// `shortlist_manager_fields::CLUB_SHORTLISTS` below 100, unless `ignore`), is not the player's and puts on him (`+7`
+/// of the `0x25`-byte slot with the player at `shortlist_slot::TARGET_STAFF_ID`; with no slot, the first one) more than
+/// his value (`.value()`).
 /// Original: `Shortlist_Manager::collect_interested_clubs` (0x842180, shortlist_manager.cpp, thiscall, ret 0x14).
 pub(crate) unsafe extern "thiscall" fn collect_interested_clubs(this: usize, player: usize, out: usize, ignore: u32, mode: u32, so_humanos: u32) {
     let player = Staff(player);
@@ -3225,12 +3269,14 @@ pub(crate) unsafe fn insert_sorted_pair(this: usize, vet: usize, count: usize, p
 /// new, grows by 100, adds and sorts (by person, by club) and, outside a human club, adds 1 to the low nibble of `+0xb`
 /// of the person's 79-byte record.
 ///
-/// `Shortlist_Manager::add_shortlist_entry(pessoa, clube)` (person, club): creates the two pair arrays the first time
-/// (`0x944e46` of `0x320` bytes, capacity `+8`/`+0xc` = 100; out of memory: the "Error" box and the game stops); with
-/// the pair (person, club; with no club −1) already in the by-person array (`0x946464` with `0x757ea0`), nothing.
-/// Otherwise it grows the full array by 100 (`0x945667`), adds the pair to both and sorts them (by person with
-/// `0x757ea0`, by club with `0x844740`) and, outside a human club (`0x600a50`), adds 1 to the low nibble of `+0xb` of
-/// the person's 79-byte record (`[0xae2d0c]`: how many lists have him).
+/// `Shortlist_Manager::add_shortlist_entry(person, club)`: creates the two pair arrays the first time
+/// (`exe::crt_malloc` of `0x320` bytes, capacity
+/// `shortlist_manager_fields::PAIRS_BY_PERSON_CAPACITY`/`shortlist_manager_fields::PAIRS_BY_CLUB_CAPACITY` = 100; out
+/// of memory: the "Error" box and the game stops); with the pair (person, club; with no club −1) already in the
+/// by-person array (`exe::crt_bsearch` with `0x757ea0`), nothing. Otherwise it grows the full array by 100
+/// (`exe::crt_realloc`), adds the pair to both and sorts them (by person with `0x757ea0`, by club with `0x844740`) and,
+/// outside a human club (`exe::human_manager_is_human_club`), adds 1 to the low nibble of `staff_state::STATUS_FLAGS`
+/// of the person's 79-byte record (`[G_STAFF_STATE_TABLE]`: how many lists have him).
 /// Original: `Shortlist_Manager::add_shortlist_entry` (0x8423f0, shortlist_manager.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn add_shortlist_entry(this: usize, person: usize, club: usize) {
     if read_usize(this) == 0 {
@@ -3282,20 +3328,26 @@ pub(crate) unsafe extern "thiscall" fn add_shortlist_entry(this: usize, person: 
 }
 
 /// Predicts the selling club's response: 0 accepts, 1 haggles, 2 rejects, from the contract with the seller, the loan
-/// case (listed, reputation, status) and the price (human, clause, holiday, asking or `0x4d1600`) against the offer.
+/// case (listed, reputation, status) and the price (human, clause, holiday, asking or
+/// `exe::contract_manager_calc_asking_price`) against the offer.
 ///
-/// `shortlist_manager_predict_selling_club_response(vendedor, jogador, oferta, comprador, pedido, empréstimo)` (seller,
-/// player, offer, buyer, asking price, loan). No seller or with the contract with him (`0x4cf5f0`) flagged at `+0x49`:
-/// 0; the seller's manager is the player: 2; no contract of type 2 (`+0x35`): 2 for a loan, 0 otherwise.
+/// `shortlist_manager_predict_selling_club_response(seller, player, offer, buyer, request, loan)` (seller, player,
+/// offer, buyer, asking price, loan). No seller or with the contract with him
+/// (`exe::contract_manager_get_contract_for_club`) flagged at `.leaving_on_bosman()`: 0; the seller's manager is the
+/// player: 2; no contract of type 2 (`.contract_type()`): 2 for a loan, 0 otherwise.
 ///
-/// Loan: human club (`0x600a50`): 0; loan-listed (`0x544590`) with the buyer's reputation × `[0x968928]` above the
-/// sheet's `+0xb`: 0; status 6/7 (`+0x4f`) or the sheet's `+0xf` 20, with the reputation above `+0xb` × `[0x969040]`,
-/// the contract's `+0x3d` below −50 and the seller's `+0x1db` different from `[0x9cf6e8]`: 0; otherwise 2.
+/// Loan: human club (`exe::human_manager_is_human_club`): 0; loan-listed (`FN_STAFF_IS_LOAN_LISTED`) with the buyer's
+/// reputation × `[rdata::F64_1_25]` above the sheet's `.current_reputation()`: 0; status 6/7 (`.squad_status()`) or the
+/// sheet's `.goalkeeper()` 20, with the reputation above `.current_reputation()` × `[rdata::F64_0_75]`, the contract's
+/// `.happiness()` below −50 and the seller's `.continental_comp_id()` different from
+/// `[KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE]`: 0; otherwise 2.
 ///
-/// Purchase: the price (human: `0x4d42d0` × `[0x9689b0]`, with no clause `0x867b50` and with the manager on holiday
-/// `0x5fd210` option 0 `0x5fea50`: 1 rejects, 2 the value `+0x52`; otherwise the `pedido` if not negative, the value
-/// with no sheet, or `0x4d1600`); offer at the price: 0; human with the offer above price − 1,500,000 and listed
-/// (`0x5444a0`): 1; price × `[0x96f9c0]` above the offer: 2; otherwise 1.
+/// Purchase: the price (human: `exe::contract_manager_get_human_asking_price` × `[rdata::F64_0_8]`, with no clause
+/// `exe::staff_contract_has_active_release_clause` and with the manager on holiday `exe::human_manager_is_on_holiday`
+/// option 0 `exe::human_manager_get_holiday_option`: 1 rejects, 2 the value `.value()`; otherwise the `request` if not
+/// negative, the value with no sheet, or `exe::contract_manager_calc_asking_price`); offer at the price: 0; human with
+/// the offer above price − 1,500,000 and listed (`FN_STAFF_IS_TRANSFER_LISTED`): 1; price × `[rdata::F64_0_7142857143]`
+/// above the offer: 2; otherwise 1.
 /// Original: `shortlist_manager_predict_selling_club_response` (0x84af00, shortlist_manager.cpp, stdcall, ret 0x20).
 pub(crate) unsafe extern "stdcall" fn shortlist_manager_predict_selling_club_response(seller: usize, player: usize, offer: i64, buyer: usize, request: i64, loan: u32) -> u8 {
     let player = Staff(player);
@@ -3388,16 +3440,19 @@ pub(crate) unsafe fn shortlist_manager_club_of_contract(c: Contract) -> usize {
     read_usize(G_CLUB_TABLE).wrapping_add(c.club().wrapping_mul(club::SIZE))
 }
 
-/// Returns the squad status the club gives the person: from her entry in the club's shortlist (bits 1..4 of `+0x24`,
-/// job from `+0`), from the contract with the club (high nibble of `+0x4f`), from the human club estimate, or 7.
+/// Returns the squad status the club gives the person: from her entry in the club's shortlist (bits 1..4 of
+/// `shortlist_slot::FLAGS`, job from `+0`), from the contract with the club (high nibble of `.squad_status()`), from
+/// the human club estimate, or 7.
 ///
-/// `Shortlist_Manager::get_squad_status_for_club(pessoa, clube, cargo)` (person, club, job). Null club: 7. The person's
-/// entry in the club's list (`0x849ce0`: the one of type ≠ 11 for a player, `+0x61`; having `+0x69`, the one of type 11
-/// too): the job (`+0` of the entry) and bits 1..4 of `+0x24`. Otherwise the job is the person's `+0x3d` and the
-/// contract decides (`0x4cf5a0`, stored in `[0xae1080]`): at her own club, the high nibble of `+0x4f` of the contract
-/// with the club (`0x4cf5f0`; without it, 7); a human club (`0x600a50`) with job 11 to 15 (`0x53b620`): the estimate
-/// `0x849d60`; otherwise, the person's club (`+0x39`) being the club or its partner (`0x540a50`) leads to the contract
-/// with the club; none: 7.
+/// `Shortlist_Manager::get_squad_status_for_club(person, club, job)`. Null club: 7. The person's entry in the club's
+/// list (`exe::shortlist_manager_find_club_shortlist_entry`: the one of type ≠ 11 for a player, `.player()`; having
+/// `.non_player()`, the one of type 11 too): the job (`+0` of the entry) and bits 1..4 of `shortlist_slot::FLAGS`.
+/// Otherwise the job is the person's `.job_for_club()` and the contract decides (`exe::contract_manager_get_contract`,
+/// stored in `[G_CONTRACT_LOOKUP_RESULT]`): at her own club, the high nibble of `.squad_status()` of the contract with
+/// the club (`exe::contract_manager_get_contract_for_club`; without it, 7); a human club
+/// (`exe::human_manager_is_human_club`) with job 11 to 15 (`exe::database_is_player_job`): the estimate
+/// `exe::shortlist_manager_estimate_squad_status`; otherwise, the person's club (`.club_job()`) being the club or its
+/// partner (`FN_CLUB_GET_LINKED_B_TEAM`) leads to the contract with the club; none: 7.
 /// Original: `Shortlist_Manager::get_squad_status_for_club` (0x849f00, shortlist_manager.cpp, thiscall, ret 0xc).
 pub(crate) unsafe extern "thiscall" fn get_squad_status_for_club(this: usize, person: usize, club: usize, job: *mut u8) -> u8 {
     let person = Staff(person);
@@ -3446,12 +3501,13 @@ pub(crate) unsafe extern "thiscall" fn get_squad_status_for_club(this: usize, pe
 /// Estimates the squad status the human club would give: from the ratio between the person's reputation as seen by the
 /// manager (×1.5 when on the human's shortlist) and the club's, and from the age. Only runs for the human club.
 ///
-/// `shortlist_manager_estimate_squad_status(pessoa, clube)` (person, club). The person's reputation as seen by the
-/// club's manager (`0x53ca90`, `0x5407e0`; up to 1: 1, otherwise the two calls again) and the club's (`+0x80`, at least
-/// 1); a person on the human's list (`0x7f7490` of `[0xb74448]`): the reputation becomes the larger of 1.5 × it and
-/// 0.75 × the club's (truncated, 16 bits). The ratio (clamped to 0.1..2): above 1.5: 1; its float above 1.2 with the
-/// club below 8500: 2; up to 1.2 with the reputation up to 6500: 5 (above 0.6 and age `+0x18` below 23), 4 (24 or more)
-/// or 6; otherwise 3.
+/// `shortlist_manager_estimate_squad_status(person, club)`. The person's reputation as seen by the club's manager
+/// (`exe::database_get_club_manager`, `exe::database_get_staff_reputation_for_viewer`; up to 1: 1, otherwise the two
+/// calls again) and the club's (`.reputation()`, at least 1); a person on the human's list
+/// (`exe::scout_manager_is_player_shortlisted` of `[G_SCOUT_MANAGER]`): the reputation becomes the larger of 1.5 × it
+/// and 0.75 × the club's (truncated, 16 bits). The ratio (clamped to 0.1..2): above 1.5: 1; its float above 1.2 with
+/// the club below 8500: 2; up to 1.2 with the reputation up to 6500: 5 (above 0.6 and age `.age()` below 23), 4 (24 or
+/// more) or 6; otherwise 3.
 /// Original: `shortlist_manager_estimate_squad_status` (0x849d60, shortlist_manager.cpp, stdcall, ret 8).
 pub(crate) unsafe extern "stdcall" fn shortlist_manager_estimate_squad_status(person: usize, club: usize) -> u32 {
     let person = Staff(person);
@@ -3490,13 +3546,14 @@ pub(crate) unsafe extern "stdcall" fn shortlist_manager_estimate_squad_status(pe
     3
 }
 
-/// In the club's 40 slots, a target with an invalid id becomes −1 and a target not at the club (by contract or `+0x39`)
-/// and without `+0x17` gets shortlist event 3.
+/// In the club's 40 slots, a target with an invalid id becomes −1 and a target not at the club (by contract or
+/// `.club_job()`) and without `.offer_ref()` gets shortlist event 3.
 ///
-/// `shortlist_manager_release_club_slot_targets(clube, entrada)` (club, entry): in the 40 slots of `0x25` bytes of
-/// `[entrada]`, a target (`+0xf`) above the last person id (`[0xae2364]` − 1) becomes −1; a valid target whose contract
-/// (`0x4cf5a0`, stored in `[0xae1080]`; one of type 5 at `+0x35` does not count) is not with the club, whose own club
-/// (`+0x39`) is not the club either, and with the slot's `+0x17` at −1: list event 3 (`0x843e10`) with the type "not
+/// `shortlist_manager_release_club_slot_targets(club, entry)`: in the 40 slots of `0x25` bytes of `[entry]`, a target
+/// (`shortlist_slot::TARGET_STAFF_ID`) above the last person id (`[G_STAFF_COUNT]` − 1) becomes −1; a valid target
+/// whose contract (`exe::contract_manager_get_contract`, stored in `[G_CONTRACT_LOOKUP_RESULT]`; one of type 5 at
+/// `.contract_type()` does not count) is not with the club, whose own club (`.club_job()`) is not the club either, and
+/// with the slot's `.offer_ref()` at −1: list event 3 (`exe::shortlist_manager_update_staff_status`) with the type "not
 /// 11" from the slot's `+0` (in the low byte of the slot's address, as the original does).
 /// Original: `shortlist_manager_release_club_slot_targets` (0x844660, shortlist_manager.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn shortlist_manager_release_club_slot_targets(this: usize, club: usize, entry: usize) {
@@ -3535,10 +3592,12 @@ pub(crate) unsafe extern "thiscall" fn shortlist_manager_release_club_slot_targe
 /// Tells whether the player may move to the buying club: without rule `0xe` in the buyer's nation, same nation, second
 /// nation or EU: yes; no national team: no; otherwise the work permit.
 ///
-/// `passes_work_permit_check(jogador, _, comprador)` (player, _, buyer). No nation (`+0x1a`): no. The buyer's nation
-/// (`+0x53`) without rule `0xe` (`+0x76`), the same nation, the 2nd nation (`+0x1e`) or an EU player (`0x53d740`): yes.
-/// No national team (`+0x24`) and no caps for it (`+0x22`): no. Otherwise the work permit (`0x8c7950` on `[0xde1f54]`,
-/// with no offer, record or random draw). The 2nd argument is not used.
+/// `passes_work_permit_check(player, _current, buyer)` (player, _, buyer). No nation (`.nation()`): no. The buyer's
+/// nation (`.nation()`) without rule `0xe` (`.actual_region()`, `world_region::UK_AND_IRELAND`), the same nation, the
+/// 2nd nation (`.second_nation()`) or an EU player (`exe::database_is_staff_eu_national`): yes. No national team
+/// (`.national_job()`) and no caps for it (`.int_apps()`): no. Otherwise the work permit
+/// (`exe::transfer_manager_is_work_permit_granted` on `[G_TRANSFER_MANAGER]`, with no offer, record or random draw).
+/// The 2nd argument is not used.
 /// Original: `passes_work_permit_check` (0x84b180, shortlist_manager.cpp, stdcall, ret 0xc).
 pub(crate) unsafe extern "stdcall" fn passes_work_permit_check(player: usize, _current: usize, buyer: usize) -> u8 {
     let player = Staff(player);
@@ -3565,18 +3624,21 @@ pub(crate) unsafe extern "stdcall" fn passes_work_permit_check(player: usize, _c
 /// returns the offer's slot, or −1.
 ///
 /// Convention: thiscall, ret 8, `shortlist_manager.cpp`, SEH frame with no destructor.
-/// `Shortlist_Manager::try_loan_offer_for_player(jogador, clube)` (player, club), called by the evaluation of the
-/// clubs' lists (`0x84a020`). No owner (contract `0x4cf5a0`, stored in `[0xae1080]`): the list slot (`0x849ce0`) goes
-/// back to state 1 (`0x843e10`) and −1. The interest (`0x846920`, with the slot's status) below 3.5: −1.
+/// `Shortlist_Manager::try_loan_offer_for_player(player, club)`, called by the evaluation of the clubs' lists
+/// (`0x84a020`). No owner (contract `main_contract_via_manager`, stored in `[G_CONTRACT_LOOKUP_RESULT]`): the list slot
+/// (`exe::shortlist_manager_find_club_shortlist_entry`) goes back to state 1
+/// (`exe::shortlist_manager_update_staff_status`) and −1. The interest (`staff_interest_in_club`, with the slot's
+/// status) below 3.5: −1.
 ///
-/// The loan period (`0x8d0590`): the months until the end and until the start (at least 1); start after the end: −1; a
-/// club of nation `0x9cf408` outside March to September: −1. The interest without wage of 2.75 (outside nations
-/// `0x9cf488`, `0x9cf434`, `0x9cf360`) counts from the start; otherwise from the end. The return date (today's day, at
-/// most 28; `0x549f70`); unable to end the loan (`0x8d0530`), after the end of the contract, before 4 weeks from the
-/// start of the key nation's window (`0x669360`, `[0xb63d8a]`) or less than 3 weeks from today: −1.
+/// The loan period (`FN_TRANSFER_MANAGER_GET_LOAN_PERIOD`): the months until the end and until the start (at least 1);
+/// start after the end: −1; a club of nation `KEY_NATION_NORWAY` outside March to September: −1. The interest without
+/// wage of 2.75 (outside nations `KEY_NATION_SPAIN`, `KEY_NATION_PORTUGAL`, `KEY_NATION_ITALY`) counts from the start;
+/// otherwise from the end. The return date (today's day, at most 28; `exe::date_date_549f70`); unable to end the loan
+/// (`exe::transfer_manager_can_end_loan`), after the end of the contract, before 4 weeks from the start of the key
+/// nation's window (`exe::key_nation_index_of_club`, `[0xb63d8a]`) or less than 3 weeks from today: −1.
 ///
 /// The wage percentage (100 with a reputation 2500 above the owner's, 0 with 1500 below, otherwise 50) and the offer
-/// (`0x8bed60`).
+/// (`exe::transfer_manager_make_loan_offer`).
 /// Original: `try_loan_offer_for_player` (0x842740, shortlist_manager.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn try_loan_offer_for_player(this: usize, player: usize, club: usize) -> i32 {
     let club = Club(club);
@@ -3696,12 +3758,13 @@ pub(crate) unsafe extern "thiscall" fn collect_club_shortlist_entries(this: usiz
     }
 }
 
-/// Returns the fee ceiling for a shortlist slot of type `tipo`: the club's reputation (word `+0x80`) times a factor, or
-/// -1.
+/// Returns the fee ceiling for a shortlist slot of type `kind`: the club's reputation (word `.reputation()`) times a
+/// factor, or -1.
 ///
-/// Convention: stdcall, ret `0xc`, `shortlist_manager.cpp`; `posicoes` is not read. Type 4 = x550 in Italy, England and
-/// Spain (`[0x9cf360]`, `[0x9cf2e4]`, `[0x9cf488]`, nation `+0x53`), x475 in Germany and France (`[0x9cf314]`,
-/// `[0x9cf300]`), x330 elsewhere; type 5 = x550; type 6 = x110; the others, -1.
+/// Convention: stdcall, ret `0xc`, `shortlist_manager.cpp`; `_positions` is not read. Type 4 = x550 in Italy, England
+/// and Spain (`[KEY_NATION_ITALY]`, `[KEY_NATION_ENGLAND]`, `[KEY_NATION_SPAIN]`, nation `.nation()`), x475 in Germany
+/// and France (`[KEY_NATION_GERMANY]`, `[KEY_NATION_FRANCE]`), x330 elsewhere; type 5 = x550; type 6 = x110; the
+/// others, -1.
 /// Original: `shortlist_manager_max_fee_for_squad_status` (0x84b230, shortlist_manager.cpp, stdcall).
 pub(crate) unsafe extern "stdcall" fn shortlist_manager_max_fee_for_squad_status(club: usize, _positions: u32, kind: u32) -> i32 {
     let club = Club(club);
@@ -3726,10 +3789,10 @@ pub(crate) unsafe extern "stdcall" fn shortlist_manager_max_fee_for_squad_status
 
 /// Tells whether the (player, club or −1) pair is in the shortlist pairs.
 ///
-/// `Shortlist_Manager::is_on_shortlist(jogador, clube)` (player, club): with no pair array (`[this]`) it returns 0;
-/// otherwise it searches (bsearch `0x946464`, `[this+0x10]` pairs of 8 bytes, comparer `0x757ea0`) for the key (player
-/// id, club id or −1 with no club). al is 1 if found; the 3 high bytes of eax are those of the pointer found (setne al
-/// on the bsearch return value), and the port reproduces them.
+/// `Shortlist_Manager::is_on_shortlist(player, club)`: with no pair array (`[this]`) it returns 0; otherwise it
+/// searches (bsearch `exe::crt_bsearch`, `shortlist_manager_fields::PAIRS_BY_PERSON_COUNT` pairs of 8 bytes, comparer
+/// `0x757ea0`) for the key (player id, club id or −1 with no club). al is 1 if found; the 3 high bytes of eax are those
+/// of the pointer found (setne al on the bsearch return value), and the port reproduces them.
 /// Original: `Shortlist_Manager::is_on_shortlist` (0x842080, shortlist_manager.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn is_on_shortlist(this: usize, player: usize, club: usize) -> u32 {
     let v = read_usize(this);
@@ -3744,9 +3807,10 @@ pub(crate) unsafe extern "thiscall" fn is_on_shortlist(this: usize, player: usiz
 /// Computes the reputation a club aims for in signings, adjusted by manager and chairman, between the club's floor and
 /// 10000, and writes it to word `+5` of the club's record. Returns the value.
 ///
-/// `+0x73` / 10 + 4500; if not human-managed (`0x600a50` with 1, 1), the manager (`+0xcf`) adjusts by (`+0x57` − sheet
-/// `+0x1d`) × 0.0125; the chairman (`+0xbf`, with a sheet) by (`+0x57` − sheet `+0x1d`) / 60 and by (sheet `+0x20` −
-/// 10) × 0.025 (each multiplies by 1 + factor, truncating). Never below `+0x80` nor above 10000.
+/// `.attendance()` / 10 + 4500; if not human-managed (`exe::human_manager_is_human_club` with 1, 1), the manager
+/// (`.manager()`) adjusts by (`.ambition()` − sheet `.patience()`) × 0.0125; the chairman (`.chairman()`, with a sheet)
+/// by (`staff::AMBITION` − sheet `non_player::PATIENCE`) / 60 and by (sheet `.resources()` − 10) × 0.025 (each
+/// multiplies by 1 + factor, truncating). Never below `.reputation()` nor above 10000.
 /// Original: `Shortlist_Manager::update_club_target_reputation` (0x83bf40, shortlist_manager.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn update_club_target_reputation(this: usize, club: usize) -> i32 {
     let club = Club(club);
@@ -3778,12 +3842,12 @@ pub(crate) unsafe extern "thiscall" fn update_club_target_reputation(this: usize
     v as i32
 }
 
-/// Tells whether player `j` (sheet at `[j+0x61]`) fits scouting list slot `vaga` 0..15. Returns only `al`.
+/// Tells whether player `j` (sheet at `.player()`) fits scouting list slot `slot` 0..15. Returns only `al`.
 ///
 /// Slots 0..14 require a rating of 15 in the slot's positions (sector and side: `+0xf..+0x16` and `+0x17..+0x19`); 15
-/// requires a contract sheet (`[j+0x69]`), an id below `[0xae2364]`−16 and, with a coach at `[j+0x39]` with role 11, 13
-/// or 15 at `+0x3d`, `0x600a50` at zero. No sheet (except slot 15): 0. Slot outside 0..15: the original routine runs
-/// (error box).
+/// requires a contract sheet (`.non_player()`), an id below `[G_STAFF_COUNT]`−16 and, with a coach at `.club_job()`
+/// with role 11, 13 or 15 at `.job_for_club()`, `exe::human_manager_is_human_club` at zero. No sheet (except slot 15):
+/// 0. Slot outside 0..15: the original routine runs (error box).
 /// Original: `shortlist_slot_fits` (0x844300, shortlist_manager.cpp, stdcall).
 pub(crate) unsafe extern "stdcall" fn shortlist_slot_fits(j: usize, slot: i8) -> u8 {
     let j = Staff(j);

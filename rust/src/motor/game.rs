@@ -190,18 +190,22 @@ pub(crate) unsafe fn dressing_room_friction(p: Staff, club: Club, k: usize) {
 }
 
 /// Updates the relationships in the squads: ten random pairs of team-mates: a disliked one stops being disliked and may
-/// fight (`exe::news_post_feud_settled`); otherwise becomes disliked, liked or stops being liked; every 50 days, random clubs go through the
-/// dressing room friction; on the other days each player, by attribute draws, may reach friction with the manager.
+/// fight (`exe::news_post_feud_settled`); otherwise becomes disliked, liked or stops being liked; every 50 days, random
+/// clubs go through the dressing room friction; on the other days each player, by attribute draws, may reach friction
+/// with the manager.
 ///
 /// `game_update_squad_relationships()`, every day from the game's day loop. (1) Ten times: a random club and two random
-/// squad slots (50); different people and random(the first one's +0x5b) = 0: if the first dislikes the second, he stops
-/// disliking him (`staff_remove_disliked_staff`) and, at the same contract club and with the link flagged in +0x45 & 0x800, the fight
-/// (`exe::news_post_feud_settled`); otherwise, 1/3 start disliking (`exe::staff_add_disliked_staff`), 1/3 of the rest start liking (`staff_add_favoured_staff`) and the rest stop
-/// liking (`staff_remove_favoured_staff`). (2) Day a multiple of 50: `[0xae235c]`/100 random clubs go through the dressing room friction
-/// (`game_check_club_dressing_room_unrest`). On the other days, each person (except the last 17) with a player record and preferences, a contract and
-/// the club's link with the +0xff person: three random draws (+0x5b, +0x5d, +0x5a, each + 5) filter; the sum of five
-/// attributes minus 3, 5, 15, 15 by draws that came out zero and 5 if the player's reputation (+0xb) exceeds 4500 and
-/// the club's (+0x80) gives the draw that, when zero, leads to friction with the manager.
+/// squad slots (`club::SQUAD`, 50); different people and random(the first one's `.professionalism()`) = 0: if the first
+/// dislikes the second, he stops disliking him (`exe::staff_remove_disliked_staff`) and, at the same contract club and
+/// with the link flagged in `.grievances()` & 0x800, the fight (`exe::news_post_feud_settled`); otherwise, 1/3 start
+/// disliking (`exe::staff_add_disliked_staff`), 1/3 of the rest start liking (`exe::staff_add_favoured_staff`) and the
+/// rest stop liking (`exe::staff_remove_favoured_staff`). (2) Day (`G_CURRENT_DATE`) a multiple of 50:
+/// `G_CLUB_COUNT`/100 random clubs go through the dressing room friction (`exe::game_check_club_dressing_room_unrest`).
+/// On the other days, each person (except the last 17) with a player record and preferences, a contract and the club's
+/// link with the `club.squad(10)` person: three random draws (`.professionalism()`, `.temperament()`, `.pressure()`,
+/// each + 5) filter; the sum of five attributes minus 3, 5, 15, 15 by draws that came out zero and 5 if the player's
+/// reputation (`.current_reputation()`) exceeds 4500 and the club's (`.reputation()`) gives the draw that, when zero,
+/// leads to friction with the manager.
 /// Original: `game_update_squad_relationships` (0x5d6d10, game.cpp, cdecl).
 pub(crate) unsafe extern "C" fn game_update_squad_relationships() {
     for _ in 0..10 {
@@ -343,11 +347,11 @@ pub(crate) unsafe fn is_club_squad_player(p: Staff, club: usize) -> bool {
 /// up or down by one (`staff_adjust_morale`).
 ///
 /// `game_spread_squad_morale_by_leadership()`, every day from the game's day loop. Each club that is not a national
-/// team (`exe::database_is_national_team`), with random(7) = 0: sums the leadership (player +0x2f) and leadership × morale of the link (+0x44)
-/// over the squad (+0xd7, 50 slots); fewer than 16 players count 10 for each one missing. With a non-zero sum, each
-/// player draws (2 × Σ leadership × morale) / (his leadership + sum) plus random(morale / 12), as a signed byte:
-/// negative, random(s) < random(−5) lowers the morale (`staff_adjust_morale` with −1); positive, random(s) > random(5) raises it
-/// (+1).
+/// team (`exe::database_is_national_team`), with random(7) = 0: sums the leadership (player `player_sheet::LEADERSHIP`)
+/// and leadership × morale of the link (`.morale()`) over the squad (`club::SQUAD`, 50 slots); fewer than 16 players
+/// count 10 for each one missing. With a non-zero sum, each player draws (2 × Σ leadership × morale) / (his leadership
+/// + sum) plus random(morale / 12), as a signed byte: negative, random(s) < random(−5) lowers the morale
+/// (`staff_adjust_morale` with −1); positive, random(s) > random(5) raises it (+1).
 /// Original: `game_spread_squad_morale_by_leadership` (0x5ce0b0, game.cpp, cdecl).
 pub(crate) unsafe extern "C" fn game_spread_squad_morale_by_leadership() {
     let morale: unsafe extern "C" fn(usize, i32, u32) -> u32 = core::mem::transmute(FN_STAFF_ADJUST_MORALE);
@@ -425,17 +429,20 @@ pub(crate) unsafe fn days_since_staff_date(p: Staff) -> i32 {
 }
 
 /// Checks players missing training: n/250 consecutive people from a random one; a present player with training and
-/// without a serious injury misses training (`miss_training`) by a random draw on the sum of attributes, morale and liking of
-/// the manager (more likely when newly arrived) or by the contract flags.
+/// without a serious injury misses training (`exe::awol_miss_training`) by a random draw on the sum of attributes,
+/// morale and liking of the manager (more likely when newly arrived) or by the contract flags.
 ///
 /// `game_check_players_missing_training()`, every day from the game's day loop. Starting from a random person (random(n
-/// − n/250 − 1)), n/250 consecutive people: a player (+0x61, function +0x3d = 11) with a contract and a club, present
-/// (`is_player_awol`), with the training record (`get_player_schedule`, +0x15) and without a serious injury (`get_player_injury_status` ≠ 2). (1) With +0x5b <
-/// 8, player +0x2f < 8 and the sum (player +0x2f, +0x18, +0x5b, link +0x44, −5 if +0x5b or the morale are 1, −5 if he
-/// dislikes the manager, +2 if he likes him) < 43: random(+0x5b + 100, 50 or 25 depending on the days since +0x3e: <
-/// 30, < 90, < 180) coming out zero is a miss. (2) Otherwise, with +0x5b < 10 and a link with the club: the link flags
-/// (+0x45: 0x8000, 0x30000; with +0x5b < 5, 0x7800) give random(+0x5b) draws that, when zero, are a miss. The miss:
-/// `miss_training`.
+/// − n/250 − 1)), n/250 consecutive people: a player (`.player()`, `.job_for_club()` = `job_kind::PLAYER`) with a
+/// contract and a club, present (`exe::awol_is_player_awol`), with the training record
+/// (`exe::training_manager_get_player_schedule`, `training_schedule::TYPE`) and without a serious injury
+/// (`exe::injury_get_player_injury_status` ≠ 2). (1) With `.professionalism()` < 8, player `.leadership()` < 8 and the
+/// sum (player `.leadership()`, `.age()`, `.professionalism()`, link +0x44, −5 if `.professionalism()` or the morale
+/// are 1, −5 if he dislikes the manager (`club::MANAGER`), +2 if he likes him) < 43: random(`.professionalism()` + 100,
+/// 50 or 25 depending on the days since `.date_joined_club()`: < 30, < 90, < 180) coming out zero is a miss. (2)
+/// Otherwise, with `.professionalism()` < 10 and a link with the club: the link flags (`contract::GRIEVANCES`:
+/// `grievances::UNHAPPY_WITH_TRAINING`, 0x30000; with `.professionalism()` < 5, 0x7800) give
+/// random(`.professionalism()`) draws that, when zero, are a miss. The miss: `exe::awol_miss_training`.
 /// Original: `game_check_players_missing_training` (0x5d6aa0, game.cpp, cdecl).
 pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
     let n = read_usize(G_STAFF_COUNT) as i32;
@@ -529,12 +536,14 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
 
 // simplification: draws and the foul (0x41a360) fines, draws and changes the form: original only; the copy carries the branches.
 
-/// Gives the day to each competition in the list (virtual +0x14 with the game date and the flag); with the flag, the
-/// next step of `[0xae2a58]` (`fix_man_daily_update`).
+/// Gives the day to each competition in the list (virtual `comp_vtable::UPDATE_FOR_DATE` with the game date and the
+/// mark); with the mark, the next step of `G_FIXTURE_MANAGER` (`exe::fixture_manager_daily_update`).
 ///
-/// `game_update_comps_for_date(flag)`: each competition in the list (`[0xadadfc]`, count `[0xadadf8]` re-read on each
-/// iteration) receives the day (virtual +0x14 with the game date 0xae2c90 and the flag); with the flag, the next step
-/// of `[0xae2a58]` (`fix_man_daily_update`, which the original calls as a tail jump). Called from the game's day loop (with 1).
+/// `game_update_comps_for_date(mark)`: each competition in the list (`G_COMP_OBJECT_TABLE`, count `G_COMP_OBJECT_COUNT`
+/// re-read on each iteration) receives the day (virtual `comp_vtable::UPDATE_FOR_DATE` with the game date
+/// `G_CURRENT_DATE` and the mark); with the mark, the next step of `G_FIXTURE_MANAGER`
+/// (`exe::fixture_manager_daily_update`, which the original calls as a tail jump). Called from the game's day loop
+/// (with 1).
 /// Original: `game_update_comps_for_date` (0x5ce060, game.cpp, cdecl).
 pub(crate) unsafe extern "C" fn game_update_comps_for_date(mark: u32) {
     let m = mark as u8 as i8;
@@ -601,7 +610,8 @@ pub(crate) unsafe fn training_load_byte(injuries: usize, id: *const i32) -> *mut
     (read_usize(injuries) as isize + *id as isize * 31 + (physical_record::PRONENESS as isize)) as *mut u8
 }
 
-/// the f64 average +0x20/+0x28 or +0x10/+0x18 (zero divisor: 6.8)
+/// the f64 average `player_stats_fields::FLAGGED_RATING_SUM`/`player_stats_fields::FLAGGED_RATED_COUNT` or
+/// `player_stats_fields::RATING_SUM`/`player_stats_fields::RATED_COUNT` (zero divisor: 6.8, `rdata::F64_6_8`)
 /// Original: `game_average` (0x5d5a60, game.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn game_average(t: usize, second: u8) -> f64 {
     let (n, q) = if second != 0 { (read_f64(t + player_stats_fields::FLAGGED_RATING_SUM), read_f64(t + player_stats_fields::FLAGGED_RATED_COUNT)) } else { (read_f64(t + player_stats_fields::RATING_SUM), read_f64(t + player_stats_fields::RATED_COUNT)) };

@@ -212,11 +212,10 @@ pub(crate) unsafe extern "thiscall" fn fra_third_create_schedule(this: usize, st
 }
 
 /// Sets up the rules of the French National: 4 go up in 2001 and 3 afterwards, 4 go down (no league below in the game);
-/// 3 substitutes and 3 substitutions.
-///
-/// `FraThird::set_up_rules()`: the common rules, 2 rounds, 3 points; 4 promoted in 2001 and 3 afterwards (`+0xbe`), 4
-/// relegated (`+0xc1`); the second division above (`[0x9cf5d0]`), none below (`+0x20` = −1), `+0xa7` (the season's
-/// matches) = −1 (recomputed by `0x687430`) and 3 substitutes (`+0x49`).
+/// 3 substitutes and 3 substitutions. `FraThird::set_up_rules()`: the common rules, 2 rounds, 3 points; 4 promoted in
+/// 2001 and 3 afterwards (`+0xbe`), 4 relegated (`+0xc1`); the second division above
+/// (`KEY_CLUB_COMP_FRENCH_SECOND_DIVISION`), none below (`+0x20` = −1), `+0xa7` (the season's matches) = −1 (recomputed
+/// by `0x687430`) and 3 substitutes (`+0x49`).
 /// Original: `FraThird::set_up_rules` (0x5c0700, fra_third.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn fra_third_set_up_rules(this: usize) -> u32 {
     covered!("cqj_5 national rules");

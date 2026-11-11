@@ -125,12 +125,12 @@ pub(crate) unsafe extern "thiscall" fn build_entrants(this: usize) -> i32 {
     uefa_cup_build_entrants(Cup(this))
 }
 
-/// rule: the UEFA Cup has, only when there are preliminary clubs (+0xb2, those with coefficient 10 or more
-/// [inference]), a preliminary round drawn on 28/6 and played on 6/7 (b teams); then: 1st qualifying round drawn on
-/// 28/7 and played on 10/8 (82 teams, 0x52 − b/2 new), 2nd on 14/9 (96 teams, 55 new), 1st round on 19/10 (48 teams),
-/// 2nd on 23/11 (32 teams, 8 new), 3rd on 1/3 of the following year, round of 16 on 15/3, quarter-finals on 5/4 and the
-/// single-match final on 16/5 (venue 4, prize of 1.5 million to the winner); two legs 14 days apart (7 in the 3rd round
-/// and the round of 16); category 7 in qualifying and 8 after
+/// rule: the UEFA Cup has, only when there are preliminary clubs (`uefa_cup::PRELIMINARY_CLUB_COUNT`, those with
+/// coefficient 10 or more [inference]), a preliminary round drawn on 28/6 and played on 6/7 (b teams); then: 1st
+/// qualifying round drawn on 28/7 and played on 10/8 (82 teams, 0x52 − b/2 new), 2nd on 14/9 (96 teams, 55 new), 1st
+/// round on 19/10 (48 teams), 2nd on 23/11 (32 teams, 8 new), 3rd on 1/3 of the following year, round of 16 on 15/3,
+/// quarter-finals on 5/4 and the single-match final on 16/5 (venue 4, prize of 1.5 million to the winner); two legs 14
+/// days apart (7 in the 3rd round and the round of 16); category 7 in qualifying and 8 after
 /// Original: `UefaCup::create_round_table` (0x9025c0, uefa_cup.cpp, thiscall, ret 0x10).
 pub(crate) unsafe extern "thiscall" fn uefa_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
     let this = Cup(this);

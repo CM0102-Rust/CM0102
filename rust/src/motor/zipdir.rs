@@ -155,11 +155,11 @@ pub(crate) unsafe fn zipdir_c_strcat(target: *mut u8, source: *const u8) {
 /// in 0x30d40-byte blocks, zclose.
 ///
 /// `zadd_matching_files(path, folder, pattern, a4, kind)`: each file in the folder that `FindFirstFile` finds with the
-/// pattern (`exe::file_find_first`/`exe::file_find_next`, files only, in the system's order) becomes a container item: `zopen` for writing
-/// (`exe::zopen`, creates the container with `a4`/`kind` if it does not exist) + `fread` in blocks of 0x30d40 into the
-/// item's read buffer (+0x41705) + `zwrite` (`zipdir_zwrite`) + `zclose` (`zclose`). 1 at the end; 0 if nothing matches. A
-/// file that does not open or an item refused: the error box (zipdir.cpp 797 / 805) and 0, without closing the search
-/// (as the original).
+/// pattern (`exe::file_find_first`/`exe::file_find_next`, files only, in the system's order) becomes a container item:
+/// `zopen` for writing (`exe::zopen`, creates the container with `a4`/`kind` if it does not exist) + `fread`
+/// (`exe::crt_fread`) in blocks of 0x30d40 into the item's read buffer (`zfile::READ_BUFFER`) + `zwrite`
+/// (`exe::zwrite`) + `zclose` (`exe::zclose`). 1 at the end; 0 if nothing matches. A file that does not open or an item
+/// refused: the error box (zipdir.cpp 797 / 805) and 0, without closing the search (as the original).
 /// Original: `zadd_matching_files` (0x933610, zipdir.cpp, cdecl).
 pub(crate) unsafe extern "C" fn zadd_matching_files(path: usize, folder: usize, default: usize, a4: u32, kind: u32) -> u32 {
     covered!("save pack");
@@ -206,10 +206,10 @@ pub(crate) unsafe extern "C" fn zadd_matching_files(path: usize, folder: usize, 
 /// 0x30d40-byte blocks, fwrite).
 ///
 /// `zextract_matching_files(path, folder, pattern)`: copies the names of the index's 1000 slots (the empty ones as "{
-/// Empty }") into a list of 0x104 bytes per name (malloc `exe::crt_malloc`); each name that matches the pattern (`zipdir_match_filename_pattern`) and
-/// opens (`zopen` reading, a4 0x15, kind 4) becomes a file in the folder ("wb"), in blocks of 0x30d40 read by `zread`
-/// (`zipdir_zread`) into the item's write buffer (+0x72445). 1 if it extracted any. A file that cannot be created: 0 (closes
-/// the item).
+/// Empty }") into a list of 0x104 bytes per name (malloc `exe::crt_malloc`); each name that matches the pattern
+/// (`exe::zipdir_match_filename_pattern`) and opens (`exe::zopen` reading, a4 0x15, kind 4) becomes a file in the
+/// folder ("wb"), in blocks of 0x30d40 read by `zread` (`exe::zread`) into the item's write buffer
+/// (`zfile::WRITE_BUFFER`). 1 if it extracted any. A file that cannot be created: 0 (closes the item).
 ///
 /// Stack garbage in the original: on the error paths (out of memory for the list, a container that does not open or is
 /// of an unknown type) it closes the item from a local variable that was never written; here it starts at 0. Out of
@@ -434,11 +434,11 @@ pub(crate) unsafe fn zf_put_byte(z: usize, b: u8) {
 /// Writes to the item like fwrite and adds to the size in the index; on type 4 encodes the RLE (runs of up to 0x7f kept
 /// across calls).
 ///
-/// `zwrite(buf, size, count, z)` like `fwrite`, in the item opened for writing (otherwise 0): adds `size × count` to
-/// the item's size in the index and to the logical position. Type 3: a direct `fwrite` (returns whatever it returns).
-/// Type 4: encodes the RLE byte by byte, keeping the run in +0x18/+0x14 between calls; a different byte closes the run
-/// (1 with byte <= 0x80 goes out as a literal, otherwise the pair 0x80 + n, byte); at 0x7f the pair goes out and the
-/// run restarts. Returns `count`.
+/// `zwrite(buf, size, count, z)` like `fwrite`, in the item opened for writing (otherwise 0): adds `size × how_many` to
+/// the item's size in the index and to the logical position. Type 3: a direct `fwrite` (`exe::crt_fwrite`, returns
+/// whatever it returns). Type 4: encodes the RLE byte by byte, keeping the run in `zfile::RLE_REPEAT_BYTE`/+0x14
+/// between calls; a different byte closes the run (1 with byte <= 0x80 goes out as a literal, otherwise the pair 0x80 +
+/// n, byte); at 0x7f the pair goes out and the run restarts. Returns `how_many`.
 /// Original: `zwrite` (0x932e10, zipdir.cpp, cdecl).
 pub(crate) unsafe extern "C" fn zipdir_zwrite(buf: *const u8, size: i32, how_many: i32, z: usize) -> i32 {
     if z == 0 || zf_read_i32(z, 4) != 1 {

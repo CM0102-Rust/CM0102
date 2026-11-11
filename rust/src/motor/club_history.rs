@@ -15,8 +15,9 @@ pub(crate) unsafe fn zip_close(z: &mut usize) {
     exe::zclose(z);
 }
 
-/// writes the count (+0xc) and the 0x10-byte records from [+8] into the "club history.dat" item and returns 1; no
-/// container the "Error" box and 0; on open or write error the box and the game stops
+/// writes the count (`club_history_fields::RECORD_COUNT`) and the 0x10-byte records from [+8] into the "club
+/// history.dat" item and returns 1; no container the "Error" box and 0; on open or write error the box and the game
+/// stops
 /// Original: `Club_History::save` (0x443f50, club_history.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn club_history_save(this: usize, save: usize) -> u32 {
     const FONTE: usize = 0x98b644;

@@ -1,11 +1,11 @@
 use super::*;
 
 /// Decides whether an Italian loan is allowed: refuses outside the first two windows (9) and, in the five listed
-/// divisions, with four players on loan from other clubs (0x25).
-///
-/// `ITALY_RULES::can_loan_player(club, player, message, reason)`: outside the first two windows (`exe::transfer_window_contains_date` with
-/// `[this+4]` and `[this+4]` + 0xc): reason 9. A club of one of the five divisions (`[0x9cf578]` to `[0x9cf588]`) with
-/// four players on loan from other clubs (ids below `[0xae2364]`, loan contract `contract_record`) may not (0x25).
+/// divisions, with four players on loan from other clubs (0x25). `ITALY_RULES::can_loan_player(club, _player, msg,
+/// reason)`: outside the first two windows (`exe::transfer_window_contains_date` with `[this+4]` and `[this+4]` + 0xc):
+/// reason 9. A club of one of the five divisions (`KEY_CLUB_COMP_ITALIAN_SERIE_C1_A` to
+/// `KEY_CLUB_COMP_ITALIAN_SERIE_C2_C`) with four players on loan from other clubs (ids below `G_STAFF_COUNT`, loan
+/// contract `exe::contract_manager_get_loan_contract`) may not (0x25).
 /// Original: `ITALY_RULES::can_loan_player` (0x661770, italy_rules.cpp, thiscall, ret 0x10).
 pub(crate) unsafe extern "thiscall" fn italy_rules_can_loan_player(this: usize, club: usize, _player: usize, msg: usize, reason: *mut u16) -> u32 {
     let club = Club(club);

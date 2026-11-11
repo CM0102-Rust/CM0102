@@ -3,13 +3,17 @@ use super::*;
 /// Fills the match record as seen by the club: date, fixture id, competition, venue, club, opponent and goals for and
 /// against (the extra-time score, if any).
 ///
-/// `fill_match_record_from_fixture(match, club, out)`, from the tactic statistics (`record_tactic_result`, at the end of each match
-/// without a human) and from the records. Null match, club or output: the box (lines 0x29, 0x31, 0x39) and 0. Otherwise
-/// the date (+0, `exe::date_operator_3d` of the Date(day +0x2a, year +0x28) from 0x549ef0), +8 the match id (+0), +0xc word +0x32,
-/// +0xe word +0x30, +0x10 the side (`comp_util_get_fixture_venue_side`, cdecl(club, match)), +0x11 the club id, +0x1b dword +8 of the match; home
-/// side (+0x1c): +0x15 the match's +0x10 and the score (+0x19 for, +0x1a against) from the extra-time one (+0x47/+0x48)
-/// if it is not negative, otherwise the normal one (+0x43/+0x44); away side: +0x15 the +0xc and the score reversed.
-/// Returns 1.
+/// `fill_match_record_from_fixture(game, club, out)`, from the tactic statistics (`record_tactic_result`, at the end of
+/// each match without a human) and from the records. Null match, club or output: the box (lines 0x29, 0x31, 0x39) and
+/// 0. Otherwise the date (+0, `exe::date_operator_3d` of the Date(day `.day()`, year `.year()`) from `exe::new_date`),
+/// +8 the match id (+0), `club_match_record::ROUND_PREFIX` word `.round_prefix()`, `club_match_record::ROUND_NAME` word
+/// `.round_name()`, `club_match_record::VENUE` the side (`exe::comp_util_get_fixture_venue_side`, cdecl(club, match)),
+/// `club_match_record::CLUB_ID` the club id, `club_match_record::MATCH_STATS_SLOT` the match's `.match_stats_slot()`;
+/// home side (`.home_club()`): `club_match_record::OPPONENT_ID` the match's `.away_club_id()` and the score
+/// (`club_match_record::GOALS_FOR` for, `club_match_record::GOALS_AGAINST` against) from the extra-time one
+/// (`.home_goals_extra_time()`/`.away_goals_extra_time()`) if it is not negative, otherwise the normal one
+/// (`.home_goals()`/`.away_goals()`); away side: `club_match_record::OPPONENT_ID` the `.home_club_id()` and the score
+/// reversed. Returns 1.
 /// Original: `fill_match_record_from_fixture` (0x7e4750, record_utils.cpp, cdecl).
 pub(crate) unsafe extern "C" fn fill_match_record_from_fixture(game: usize, club: usize, out: usize) -> u32 {
     let game = Fixture(game);
@@ -67,8 +71,9 @@ pub(crate) unsafe fn name_id(p: u32) -> u32 {
 /// Stores the three name ids (−1 when missing), the person's id and birth date in a compact reference.
 ///
 /// `fill_staff_name_ref(person, out)`, from the club and competition records, the suspension news, the award and the
-/// player search. Null person or output: the box (lines 0x80, 0x88) and 0. Otherwise +0, +4, +8 the name ids (+4, +8,
-/// +0xc of the person; −1 with no name), +0xc the person's id and +0x10 the birth date (+0x10, `exe::date_operator_3d`); returns 1.
+/// player search. Null person or output: the box (lines 0x80, 0x88) and 0. Otherwise +0, +4, +8 the name ids
+/// (`staff::FIRST_NAME` and the two after it; −1 with no name), `record_holder::STAFF_ID` the person's id and
+/// `record_holder::DATE` the birth date (`staff::DATE_OF_BIRTH`, `exe::date_operator_3d`); returns 1.
 /// Original: `fill_staff_name_ref` (0x7e4920, record_utils.cpp, cdecl).
 pub(crate) unsafe extern "C" fn fill_staff_name_ref(person: usize, out: usize) -> u32 {
     let person = Staff(person);
@@ -91,9 +96,10 @@ pub(crate) unsafe extern "C" fn fill_staff_name_ref(person: usize, out: usize) -
 
 /// Returns the result code of the record: 3 win, 2 score draw, 1 goalless draw, −3 defeat.
 ///
-/// `match_record_result_code(record)`, from the competition statistics (`exe::comp_stats_record_match_result`, on each match). Null record: the box
-/// (line 0x25a) and 0. For (+0x19) > against (+0x1a), signed: 3; draw with goals: 2; goalless draw: 1; defeat: −3 (only
-/// the byte counts: the caller reads al).
+/// `match_record_result_code(record)`, from the competition statistics (`exe::comp_stats_record_match_result`, on each
+/// match). Null record: the box (line 0x25a) and 0. For (`club_match_record::GOALS_FOR`) > against
+/// (`club_match_record::GOALS_AGAINST`), signed: 3; draw with goals: 2; goalless draw: 1; defeat: −3 (only the byte
+/// counts: the caller reads al).
 /// Original: `match_record_result_code` (0x7e56d0, record_utils.cpp, cdecl).
 pub(crate) unsafe extern "C" fn match_record_result_code(record: usize) -> u8 {
     if record == 0 {
@@ -184,8 +190,9 @@ pub(crate) unsafe fn add_year_award(this: usize, p: Staff, club: usize, prize: u
 /// scored.
 ///
 /// `match_record_is_bigger_win(a, b)`, from the club records after each match (0x444930) and from the competition ones
-/// (0x49fb93): 1 if `a` is a win (goals +0x19 > +0x1a, signed bytes) by a larger margin than that of `b`, or equal with
-/// more goals scored. Null record: the original routine ("Error" box, 0).
+/// (0x49fb93): 1 if `a` is a win (goals `club_match_record::GOALS_FOR` > `club_match_record::GOALS_AGAINST`, signed
+/// bytes) by a larger margin than that of `b`, or equal with more goals scored. Null record: the original routine
+/// ("Error" box, 0).
 /// Original: `match_record_is_bigger_win` (0x7e4a30, record_utils.cpp, cdecl).
 pub(crate) unsafe extern "C" fn match_record_is_bigger_win(a: usize, b: usize) -> u32 {
     if a == 0 || b == 0 {
@@ -203,8 +210,8 @@ pub(crate) unsafe extern "C" fn match_record_is_bigger_win(a: usize, b: usize) -
 /// conceded.
 ///
 /// `match_record_is_bigger_defeat(a, b)`, from the club records after each match (0x444930): 1 if `a` is a defeat
-/// (+0x19 < +0x1a) by a larger margin than that of `b`, or equal with more goals conceded. Null record: the original
-/// routine ("Error" box, 0).
+/// (`club_match_record::GOALS_FOR` < `club_match_record::GOALS_AGAINST`) by a larger margin than that of `b`, or equal
+/// with more goals conceded. Null record: the original routine ("Error" box, 0).
 /// Original: `match_record_is_bigger_defeat` (0x7e4b00, record_utils.cpp, cdecl).
 pub(crate) unsafe extern "C" fn match_record_is_bigger_defeat(a: usize, b: usize) -> u32 {
     if a == 0 || b == 0 {

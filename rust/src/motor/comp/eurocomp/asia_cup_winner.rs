@@ -174,8 +174,8 @@ pub(crate) unsafe extern "thiscall" fn asia_cup_winner_create_round_table(this: 
     create_round_table(Cup(this), asian_cup_winners_stage(stage), rounds, extra, league, 0x987b60)
 }
 
-/// rule: the Asian Cup Winners' Cup has 16 teams, the qualified clubs (+0xb2) in the order they were picked, all with
-/// class and status 0
+/// rule: the Asian Cup Winners' Cup has 16 teams, the qualified clubs (`asia_club_champ_fields::QUALIFIED_CLUBS`) in
+/// the order they were picked, all with class and status 0
 /// Original: `AsiaCupWinner::create_team_entries` (0x40d4d0, asia_cup_winner.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn create_team_entries(this: usize) -> i32 {
     build_team_table(Cup(this), 0x987b60, 0x185, "cqq_12 times da recopa asiatica", |i| i) // cqq12: the Asian Cup Winners’ Cup teams

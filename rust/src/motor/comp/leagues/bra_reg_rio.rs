@@ -173,40 +173,47 @@ pub(crate) unsafe fn cap_attendance(c: Club, lim: i32) {
 
 /// `atualizar_media_de_publico(league)` (cdecl, game.cpp, unnamed in the map): updates the clubs' average attendance at
 /// the end of each league season. Called by the seasons loop (0x5d5ae0, at 0x5d5cfb: push league; call; add esp, 4), at
-/// the end of the season of each league of the nation (the top one and those below, through +0x20).
+/// the end of the season of each league of the nation (the top one and those below, through `lower_division_id()`).
 ///
-/// The club's average attendance (+0x73, Attendance) moves with the season result, between the minimum (+0x77) and the
-/// record (+0x7b). The weight `f` comes from the competition's nation (the first dword of [+4]+0x5d): 0.1 in
-/// [0x9cf510], [0x9cf2dc], [0x9cf3e4], [0x9cf224]; 0.25 in [0x9cf2c0], [0x9cf2fc], [0x9cf408], [0x9cf4a8], [0x9cf4f8];
-/// 0.5 in [0x9cf45c]; 1 in the others. `r` = the competition's reputation (+0x69 of the record, word). The final table
-/// comes from the statistics (Comp_Stats::get_sorted_team_table `exe::comp_stats_get_sorted_team_table`, thiscall(+8, 1, &n, 1000), ret 0xc: 0x76-byte
-/// records, +0 the club id, +0x72 the predicted position, +0x73 the final one, +5 the home games [inference], +6 the
-/// summed attendance [inference]).
+/// The club's average attendance (`attendance()`, Attendance) moves with the season result, between the minimum
+/// (`min_attendance()`) and the record (`max_attendance()`). The weight `f` comes from the competition's nation (the
+/// first dword of `competition::NATION` of `competition()`): 0.1 in [`KEY_NATION_WALES`],
+/// [`KEY_NATION_REPUBLIC_OF_IRELAND`], [`KEY_NATION_NORTHERN_IRELAND`], [`KEY_NATION_AUSTRALIA`]; 0.25 in
+/// [`KEY_NATION_DENMARK`], [`KEY_NATION_FINLAND`], [`KEY_NATION_NORWAY`], [`KEY_NATION_SWEDEN`],
+/// [`KEY_NATION_UNITED_STATES`]; 0.5 in [`KEY_NATION_SCOTLAND`]; 1 in the others. `r` = the competition's reputation
+/// (`competition::REPUTATION` of the record, word; `league_comp_reputation`). The final table comes from the statistics
+/// (Comp_Stats::get_sorted_team_table `exe::comp_stats_get_sorted_team_table`, thiscall(`comp_stats()`, 1, &n, 1000),
+/// ret 0xc: 0x76-byte records, +0 the club id, `final_position()` the predicted position, `current_position()` the
+/// final one, +5 the home games [inference], +6 the summed attendance [inference]).
 ///
-/// For each club (the branches in the original's order, with the same calls to virtuals +0x98 "has promotion" and +0x9c
-/// "has relegation"; d = predicted − final + 1, word):
+/// For each club (the branches in the original's order, with the same calls to virtuals
+/// `league_vtable::HAS_AUTOMATIC_PROMOTION` "has promotion" and `league_vtable::HAS_RELEGATION` "has relegation"; d =
+/// predicted − final + 1, word):
 ///
-/// - champion without promotion: + (r + max(d, 0)) × 200 × f (stadium owner, +0x6d) or × 100 × f;
+/// - champion without promotion: + (r + max(d, 0)) × 200 × f (stadium owner, `own_stadium()`) or × 100 × f;
 ///
 /// - 2nd (or position 0) without promotion: + (r + max(d, 0)) × 125 × f or × 65 × f;
 ///
-/// - promoted (position ≤ +0xbe): by the league above ([0xadadfc][+0x1c]; without it, nothing): v = the club's +0x80
-/// (reputation, word) × max(r above − r, 1) × f × 0.1, at least 100; + v + draw(v) (owner) or + v; and the floor by the
-/// reputation of the league above;
+/// - promoted (position ≤ `promoted_count()`): by the league above ([`G_COMP_OBJECT_TABLE`][`upper_division_id()`];
+/// without it, nothing): v = the club's `reputation()` (word) × max(r above − r, 1) × f × 0.1, at least 100; + v +
+/// draw(v) (owner) or + v; and the floor by the reputation of the league above (`raise_attendance_floor`);
 ///
-/// - promotion play-off (+0xbf ≠ 0 and position ≤ +0xbf): with d − 1 > 0: + draw(r(d − 1) × 75 × f) + r(d − 1) × 75 × f
-/// (owner) or + draw(r(d − 1) × 25 × f) + r(d − 1) × 10 × f; otherwise + draw(r × 50 × f or r × 25 × f); with home
-/// games, the mix with the real attendance: (summed attendance / games + 4 × average) × f × 0.2;
+/// - promotion play-off (`promotion_playoff_count()` ≠ 0 and position ≤ `promotion_playoff_count()`): with d − 1 > 0: +
+/// draw(r(d − 1) × 75 × f) + r(d − 1) × 75 × f (owner) or + draw(r(d − 1) × 25 × f) + r(d − 1) × 10 × f; otherwise +
+/// draw(r × 50 × f or r × 25 × f); with home games, the mix with the real attendance: (summed attendance / games + 4 ×
+/// average) × f × 0.2;
 ///
-/// - relegated (position > +0x3e − +0xc1): by the league below (without it, nothing): v = +0x80 × min(r below − r, −1)
-/// × f × 0.2, at most −100 (with no relegation in the league below, +0x20 = −1: v = 2v − 250 − draw(750)); + v +
-/// draw(v); and the ceiling of 2000 (r below ≤ 7) or 3000 times r below, × f;
+/// - relegated (position > `club_count()` − `relegated_count()`): by the league below (without it, nothing): v =
+/// `reputation()` × min(r below − r, −1) × f × 0.2, at most −100 (with no relegation in the league below,
+/// `league::LOWER_DIVISION_ID` = −1: v = 2v − 250 − draw(750)); + v + draw(v); and the ceiling (`cap_attendance`) of
+/// 2000 (r below ≤ 7) or 3000 times r below, × f;
 ///
-/// - the others: + draw(r × d × 5 × f), × 10 for the owner with d > 0 or with +0x80 above 500 × r; the mix with the
-/// real attendance (without the weight f); the floor by reputation; and the ceiling of 2000 r (r ≤ 7), 3000 r (r ≤ 12)
-/// or 5000 r.
+/// - the others: + draw(r × d × 5 × f), × 10 for the owner with d > 0 or with `reputation()` above 500 × r; the mix
+/// with the real attendance (without the weight f); the floor by reputation; and the ceiling of 2000 r (r ≤ 7), 3000 r
+/// (r ≤ 12) or 5000 r.
 ///
-/// At the end of each: at least 500, and within [+0x77, +0x7b]. The table is freed (free `exe::crt_free`).
+/// At the end of each: at least 500, and within [`min_attendance()`, `max_attendance()`]. The table is freed (free
+/// `exe::crt_free`).
 /// Original: `atualizar_media_de_publico (sem nome no mapa)` (0x5d6280, game.cpp, cdecl).
 pub(crate) unsafe extern "C" fn cqt4_update_average_attendance(league: usize) {
     let league = League(league);
@@ -543,20 +550,22 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_advance_stage(this: usize) {
 /// the first-half winner as seed 0; if the same club wins both halves, it is champion without a final.
 ///
 /// `BraRegRio::create_final_stage()`, called from the next stage when the second half ends. The two half winners (the
-/// club in the first row of each League_Stage's table) go into a list of 2 (malloc `exe::crt_malloc` of 8; out of memory: the
-/// error box at line 0x226 and return).
+/// club in the first row of each League_Stage's table, `half_champion`) go into a list of 2 (malloc `exe::crt_malloc`
+/// of 8; out of memory: the error box at line 0x226 and return).
 ///
-/// - The same club in both halves: it is champion without a final. +0x30 = 1, +0x2c = 2 (the season ends with the two
-/// stages), status 5 (+0x37, champion) in the first row of each half's table and in its row of the league table (+0xb1,
-/// the +0x3e rows). The list is not freed (the original leaks it; so does the copy).
+/// - The same club in both halves: it is champion without a final. `set_current_stage(1)`, `set_stage_count(2)` (the
+/// season ends with the two stages), status 5 (`league_table_row::STATUS`, `table_status::CHAMPIONS`) in the first row
+/// of each half's table and in its row of the league table (`table()`, the `club_count()` rows). The list is not freed
+/// (the original leaks it; so does the copy).
 ///
-/// - Different winners: the final, over two games [inference: home and away]. Virtual +0x3c (create_round_table:
-/// thiscall(this, stage 2, &rounds, &extra, 0), ret 0x10) builds the round table; the new stage (operator new `exe::crt_operator_new`
-/// of 0xb2; Cup_Stage::Cup_Stage `construct_cup_stage`, thiscall, ret 0x3c: the league, 2, the list, the rounds, +4, the table, the
-/// year +0x40, 2, 1, the extra, 0x14, 0, 1, 0 and the seeds {0, 1}: the first-half winner is seed 0) goes into the
-/// third stage slot ([+0xc]+8; no stage: the error box at line 0x250 and return, without freeing). With it:
-/// Cup::set_up_round (`set_up_round`, thiscall(stage, 0), ret 4), the table and the list freed (free `exe::crt_free`, in that order)
-/// and +0x30 = 2. The original's SEH frame covers only the constructor (no destructor).
+/// - Different winners: the final, over two games [inference: home and away]. Virtual `comp_vtable::CREATE_SCHEDULE`
+/// (create_round_table: thiscall(this, stage 2, &rounds, &extra, 0), ret 0x10) builds the round table; the new stage
+/// (operator new `exe::crt_operator_new` of 0xb2; Cup_Stage::Cup_Stage `FN_CUP_STAGE_CUP_STAGE`, thiscall, ret 0x3c:
+/// the league, 2, the list, the rounds, `competition()`, the table, the year `year()`, 2, 1, the extra, 0x14, 0, 1, 0
+/// and the seeds {0, 1}: the first-half winner is seed 0) goes into the third stage slot (`stages()` + 8; no stage: the
+/// error box at line 0x250 and return, without freeing). With it: Cup::set_up_round (`exe::cup_set_up_round`,
+/// thiscall(stage, 0), ret 4), the table and the list freed (free `exe::crt_free`, in that order) and
+/// `set_current_stage(2)`. The original's SEH frame covers only the constructor (no destructor).
 /// Original: `BraRegRio::create_final_stage` (0x43a900, bra_reg_rio.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_final_stage(this: usize) {
     let this = League(this);
@@ -619,15 +628,17 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_final_stage(this: usiz
 ///
 /// `BraRegRio::record_season_honours()` (slot 13).
 ///
-/// - With a final (+0x30 = 2): the history of the final (slot 13, +0x30, of stage [+0xc]+8) and then, as a tail jump,
-/// `exe::bra_nat_first_fill_champions_cup_entrants` (`bra_nat_first_fill_champions_cup_entrants`, cdecl with no arguments: when the twelve state leagues are
-/// over, it puts the champions into the Champions Cup); returns its eax.
+/// - With a final (`current_stage()` = 2): the history of the final (slot 13, `comp_vtable::RECORD_SEASON_HONOURS`, of
+/// stage `stages()` + 8) and then, as a tail jump, `exe::bra_nat_first_fill_champions_cup_entrants` (cdecl with no
+/// arguments: when the twelve state leagues are over, it puts the champions into the Champions Cup); returns its eax.
 ///
-/// - Without a final (the same champion in both halves): the league history (League::record_season_honours `league_record_season_honours`,
-/// thiscall, ret 0); the prizes, 675,000 to the champion (first row of table +0xb1) and 250,000 to the runner-up
-/// (second row), each one to the balance (`get_club_finance` on [0xae2a38] -> the club's finances, thiscall, ret 4; `add_prize_money`
-/// Finance::add_prize_money, thiscall, ret 4) and in the prize money news (`send_prize_money_news` Comp::send_prize_money_news:
-/// thiscall(this, club, 64-bit amount, position 1 or 2, round 0, match 0, type −2), ret 0x1c); then `exe::bra_nat_first_fill_champions_cup_entrants`, as above.
+/// - Without a final (the same champion in both halves): the league history (League::record_season_honours
+/// `FN_LEAGUE_RECORD_SEASON_HONOURS`, thiscall, ret 0); the prizes, 675,000 to the champion (first row of table
+/// `table()`) and 250,000 to the runner-up (second row), each one to the balance (`exe::financetable_get_club_finance`
+/// on [`G_FINANCE_TABLE`] -> the club's finances, thiscall, ret 4; `exe::finance_add_prize_money`
+/// Finance::add_prize_money, thiscall, ret 4) and in the prize money news (`exe::comp_send_prize_money_news`
+/// Comp::send_prize_money_news: thiscall(this, club, 64-bit amount, position 1 or 2, round 0, match 0, type −2), ret
+/// 0x1c); then `exe::bra_nat_first_fill_champions_cup_entrants`, as above.
 /// Original: `BraRegRio::record_season_honours` (0x43ad20, bra_reg_rio.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn bra_reg_rio_record_season_honours(this: usize) -> u32 {
     let this = League(this);

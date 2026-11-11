@@ -149,11 +149,12 @@ pub(crate) unsafe extern "C" fn comp_util_sort_clubs_by_strength(v: usize, n: i3
     exe::crt_free(k);
 }
 
-/// Finds or adds the club's record in the competition statistics and stores the position at +0x72.
+/// Finds or adds the club's record in the competition statistics and stores the position at
+/// `comp_stats_club::FINAL_POSITION`.
 ///
-/// `Comp_Stats::set_club_final_position(club, position)`: finds (`exe::comp_stats_find_club_entry`) or adds (`exe::comp_stats_add_club_entry`) the club's record in the
-/// competition statistics and stores the position (a byte) at +0x72; returns the record. Null club: the error box (line
-/// 0x680).
+/// `Comp_Stats::set_club_final_position(club, pos)`: finds (`exe::comp_stats_find_club_entry`) or adds
+/// (`exe::comp_stats_add_club_entry`) the club's record in the competition statistics and stores the position (a byte)
+/// at `comp_stats_club::FINAL_POSITION`; returns the record. Null club: the error box (line 0x680).
 /// Original: `Comp_Stats::set_club_final_position` (0x4a2540, comp_stats.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn set_club_final_position(this: usize, club: usize, pos: u32) -> usize {
     if club == 0 {
@@ -225,11 +226,12 @@ pub(crate) unsafe fn set_final_positions_by_round(this: Cup, v: *const u32, writ
 /// Returns the club's side in the fixture: 1 home, 2 away, 3 neutral, from the fixture's stadium and the two clubs'
 /// stadiums (national sides: by the stadium's nation).
 ///
-/// `comp_util_get_fixture_venue_side(club, fixture)`. Without a venue in the fixture (+0x18): by the home club (+0x1c),
-/// 3 if it has no stadium (+0x69), otherwise 1 for the home club and 2 for the other. National side (`exe::database_is_national_team`): 1 if
-/// the venue's nation (+0x38, +0x1f) is the club's (+0x53), 2 if it is the opponent's, otherwise 3. Club: if the venue
-/// is the club's stadium and not the opponent's, 1; if it is both clubs' stadium, 1 for the home club and 2 for the
-/// other; if only the opponent's, 2; if neither's, 3. The caller reads only `al`.
+/// `comp_util_get_fixture_venue_side(club, game)`. Without a venue in the fixture (`.stadium()`): by the home club
+/// (`fixture::HOME_CLUB`), 3 if it has no stadium (`club::STADIUM`), otherwise 1 for the home club and 2 for the other.
+/// National side (`exe::database_is_national_team`): 1 if the venue's nation (`stadium::CITY`, `city::NATION`) is the
+/// club's (`.nation()`), 2 if it is the opponent's (`club::NATION`), otherwise 3. Club: if the venue is the club's
+/// stadium and not the opponent's, 1; if it is both clubs' stadium, 1 for the home club and 2 for the other; if only
+/// the opponent's, 2; if neither's, 3. The caller reads only `al`.
 /// Original: `comp_util_get_fixture_venue_side` (0x4afa80, comp_util.cpp, cdecl).
 pub(crate) unsafe extern "C" fn comp_util_get_fixture_venue_side(club: usize, game: usize) -> u8 {
     let game = Fixture(game);
@@ -360,15 +362,20 @@ pub(crate) unsafe fn league_stats_rating(e: usize, b73: f64) -> f64 {
 }
 
 /// Classifies a league match between two clubs: 1 = title clash, 3 = zone clash, 0 = none, from the weighted statistics
-/// ratings (`exe::comp_stats_find_club_entry`) against a third of the clubs or 0.2 × clubs + `+0xbe` (+ `+0xbf`).
+/// ratings (`exe::comp_stats_find_club_entry`) against a third of the clubs or 0.2 × clubs + `.promoted_count()` (+
+/// `.promotion_playoff_count()`).
 ///
-/// `comp_util_get_league_clash_type(a, b)`: both clubs must be in the same division (+0x57, neither reserve nor minor:
-/// 0x7e6f20), its league (`[0xadadfc][id]`) must have statistics (+8, `exe::comp_stats_find_club_entry` for both), no stages (+0x30 = −1) and
-/// +0x43 = 2, and the difference in +0x73 must be at most a quarter of the clubs (+0x3e). With the ratings
-/// (league_stats_rating): 1 = title clash (virtual +0x98 = 0, both below a third of the clubs and each not below the
-/// other's +0x74); 3 = zone clash (+0x98 ≠ 0, both up to 0.2 × clubs + +0xbe, or, with +0xbf, up to 0.2 × clubs + +0xbe
-/// + +0xbf, and the same cross-check of +0x74); otherwise 0. Returns only `al`. No SEH, no random draw; the virtual
-/// +0x98 is called up to three times, as in the original.
+/// `comp_util_get_league_clash_type(a, b)`: both clubs must be in the same division (`.division()`, neither reserve nor
+/// minor: `FN_COMP_IS_RESERVE_OR_MINOR_COMP`), its league (`G_COMP_OBJECT_TABLE[id]`) must have statistics
+/// (`.comp_stats()`, `exe::comp_stats_find_club_entry` for both), no stages (`.current_stage()` = −1) and
+/// `.comp_type()` = `comp_type::LEAGUE`, and the difference in `.current_position()` must be at most a quarter
+/// (`rdata::F64_0_25`) of the clubs (`.club_count()`). With the ratings (`league_stats_rating`): 1 = title clash
+/// (virtual `league_vtable::HAS_AUTOMATIC_PROMOTION` = 0, both below a third (`rdata::F64_0_3333333333`) of the clubs
+/// and each not below the other's `.best_position()`); 3 = zone clash (`league_vtable::HAS_AUTOMATIC_PROMOTION` ≠ 0,
+/// both up to 0.2 (`rdata::F64_0_2`) × clubs + `.promoted_count()`, or, with `.promotion_playoff_count()`, up to 0.2 ×
+/// clubs + `.promoted_count()` + `.promotion_playoff_count()`, and the same cross-check of `.best_position()`);
+/// otherwise 0. Returns only `al`. No SEH, no random draw; the virtual `league_vtable::HAS_AUTOMATIC_PROMOTION` is
+/// called up to three times, as in the original.
 /// Original: `comp_util_get_league_clash_type` (0x4b02e0, comp_util.cpp, cdecl).
 pub(crate) unsafe extern "C" fn comp_util_get_league_clash_type(a: usize, b: usize) -> u8 {
     let b = Club(b);
@@ -434,15 +441,18 @@ pub(crate) unsafe extern "C" fn comp_util_get_league_clash_type(a: usize, b: usi
 // simplification: ~4 million calls in the career: compares only the value, without regions (the routine only reads; 0x4a4850 may
 // reorder the statistics, and the original already leaves it sorted for the copy).
 
-/// Computes a club's strength score: money (+0x65 / 400 or balance / 300) + 16 × reputation + the off-match ratings
-/// (`off_match_score`) of the 15 picked (0x6e2000) from the squad; null club: −10,000,000.
+/// Computes a club's strength score: money (`.cash()` / 400 or balance / 300) + 16 × reputation + the off-match ratings
+/// (`exe::match_man_score_player_for_selection`) of the 15 picked (`FN_MATCH_MAN_ASSIGN_PLAYERS_TO_POSITIONS`) from the
+/// squad; null club: −10,000,000.
 ///
-/// `comp_util_get_club_strength_score(club)`: the money (without the finance table `[0xae2a38]`: +0x65 / 400; with it,
-/// the 64-bit balance / 300 via `get_club_finance`), plus 16 × the reputation (+0x80), plus the off-match rating (`off_match_score`,
-/// 0x840, limit −1) of the 15 picked players (0x6e2000, codes 1, 0x804, 0x84, 3 × 0x204, 0x810, 0x90, 3 × 0x210, 4 ×
-/// 0x40) among the players (+0x61) of the squad (`database_collect_club_squad`). Null club: −10,000,000. No SEH, no random draw of its own.
-/// The original pushes the number of players as a dword with only the low byte written (the rest is stack leftover);
-/// 0x6e2000 reads only the byte, and the copy passes the byte zero-extended.
+/// `comp_util_get_club_strength_score(club)`: the money (without the finance table `G_FINANCE_TABLE`: `.cash()` / 400;
+/// with it, the 64-bit balance / 300 via `exe::financetable_get_club_finance`), plus 16 × the reputation
+/// (`.reputation()`), plus the off-match rating (`exe::match_man_score_player_for_selection`, 0x840, limit −1) of the
+/// 15 picked players (`FN_MATCH_MAN_ASSIGN_PLAYERS_TO_POSITIONS`, codes 1, 0x804, 0x84, 3 × 0x204, 0x810, 0x90, 3 ×
+/// 0x210, 4 × 0x40) among the players (`staff::PLAYER`) of the squad (`exe::database_collect_club_squad`). Null club:
+/// −10,000,000. No SEH, no random draw of its own. The original pushes the number of players as a dword with only the
+/// low byte written (the rest is stack leftover); `FN_MATCH_MAN_ASSIGN_PLAYERS_TO_POSITIONS` reads only the byte, and
+/// the copy passes the byte zero-extended.
 /// Original: `comp_util_get_club_strength_score` (0x4c0720, comp_util.cpp, cdecl).
 pub(crate) unsafe extern "C" fn comp_util_get_club_strength_score(club: usize) -> i32 {
     let club = Club(club);
@@ -520,11 +530,15 @@ pub(crate) unsafe extern "C" fn comp_util_get_latest_placed_club(comp: usize, pl
 
 /// Rebuilds the fixture from eighteen consecutive news slots and resolves its clubs, stadium and competition.
 ///
-/// The fixture (`partida`) is rebuilt from 18 consecutive slots of the `noticia` (news item, `get_slot`) starting at
-/// `*cursor` (which advances by 18): +0xc and +0x10 the clubs, +0x3d, +0x3e, +4 the stadium, +0 the competition, +0x42,
-/// +0x32, +0x30, +0x43/+0x44, +0x4b/+0x4c and +0x47/+0x48 the scores, +0x2a, +0x28 and +8. Then the pointers: clubs
-/// (0xae23b4, 0x245 bytes) at +0x1c/+0x20, stadium (0xae23b0, 0x4e) at +0x18 and competition (0xae23d0, 0x6b) at +0x14;
-/// id −1: 0.
+/// The `fixture` is rebuilt from 18 consecutive slots of the `news` item (`exe::newsitem_get_slot`) starting at
+/// `*cursor` (which advances by 18): `fixture::HOME_CLUB_ID` and `fixture::AWAY_CLUB_ID` the clubs,
+/// `fixture::HOME_RESULT_MARK`, `fixture::AWAY_RESULT_MARK`, +4 the stadium, +0 the competition,
+/// `fixture::STAGE_INDEX`, `fixture::ROUND_PREFIX`, `fixture::ROUND_NAME`, `fixture::HOME_GOALS`/`fixture::AWAY_GOALS`,
+/// `fixture::HOME_AGGREGATE`/`fixture::AWAY_AGGREGATE` and
+/// `fixture::HOME_GOALS_EXTRA_TIME`/`fixture::AWAY_GOALS_EXTRA_TIME` the scores, `fixture::DAY`, `fixture::YEAR` and
+/// +8. Then the pointers: clubs (`G_CLUB_TABLE`, 0x245 bytes) at `fixture::HOME_CLUB`/`fixture::AWAY_CLUB`, stadium
+/// (`G_STADIUM_TABLE`, 0x4e) at `fixture::STADIUM` and competition (`G_CLUB_COMP_TABLE`, 0x6b) at
+/// `fixture::COMPETITION`; id −1: 0.
 /// Original: `comp_util_read_fixture_from_news_slots` (0x4b0010, comp_util.cpp, cdecl).
 pub(crate) unsafe extern "C" fn comp_util_read_fixture_from_news_slots(news: usize, fixture: usize, cursor: *mut u8) {
     // simplification: the original pushes the whole eax (remainder of the previous slot in the high bits); 0x785830 only reads the byte
@@ -568,10 +582,11 @@ pub(crate) unsafe extern "C" fn comp_util_read_fixture_from_news_slots(news: usi
 
 /// Classifies the cup tie result for the club, from the final margin, the side and the reputation gap.
 ///
-/// The category (1 to 7) of the tie result for the `clube` (club) in the `partida` (fixture): the final margin (score
-/// +0x4b/+0x4c, or +0x47/+0x48, or +0x43/+0x44, the first one without 0xff) from the club's side (home = +0x1c) and the
-/// clubs' reputations (+0x80 / 500). 1 thrashing, 2 and 3 wins against stronger sides, 4 ordinary, 5 and 7 defeats to
-/// weaker sides, 6 upset. Only `al` is faithful (the caller uses `al`).
+/// The category (1 to 7) of the tie result for the `club` in the `fixture`: the final margin (score
+/// `.home_aggregate()`/`.away_aggregate()`, or `.home_goals_extra_time()`/`.away_goals_extra_time()`, or
+/// `.home_goals()`/`.away_goals()`, the first one without 0xff) from the club's side (home = `.home_club()`) and the
+/// clubs' reputations (`.reputation()` / 500). 1 thrashing, 2 and 3 wins against stronger sides, 4 ordinary, 5 and 7
+/// defeats to weaker sides, 6 upset. Only `al` is faithful (the caller uses `al`).
 /// Original: `comp_util_classify_tie_result_for_news` (0x4b0890, comp_util.cpp, cdecl).
 pub(crate) unsafe extern "C" fn comp_util_classify_tie_result_for_news(club: usize, fixture: usize) -> u8 {
     let fixture = Fixture(fixture);
@@ -645,11 +660,14 @@ pub(crate) unsafe extern "C" fn comp_util_classify_tie_result_for_news(club: usi
 /// cursor.
 ///
 /// The community map gives the 2nd argument as unused, but it is the news item. Writes the fixture into 18 consecutive
-/// data slots of the news item (`set_news_field`), starting at slot `[cursor]`, and advances the cursor by 18. Order: +0xc,
-/// +0x10, +0x3d, +0x3e, +4, +0, +0x42, +0x32, +0x30, +0x43, +0x44, +0x4b, +0x4c, +0x47, +0x48, +0x2a, +0x28, +8 (bytes
-/// and the words +0x30/+0x32 signed; +0x28 and +0x2a unsigned). Returns what the last write returned. The original
-/// keeps the index of the 18th slot in the low byte of the `cursor` argument itself (only the low part reaches
-/// `set_news_field`).
+/// data slots of the news item (`exe::newsitem_set_slot`), starting at slot `[cursor]`, and advances the cursor by 18.
+/// Order: `fixture::HOME_CLUB_ID`, `fixture::AWAY_CLUB_ID`, `fixture::HOME_RESULT_MARK`, `fixture::AWAY_RESULT_MARK`,
+/// +4, +0, `fixture::STAGE_INDEX`, `fixture::ROUND_PREFIX`, `fixture::ROUND_NAME`, `fixture::HOME_GOALS`,
+/// `fixture::AWAY_GOALS`, `fixture::HOME_AGGREGATE`, `fixture::AWAY_AGGREGATE`, `fixture::HOME_GOALS_EXTRA_TIME`,
+/// `fixture::AWAY_GOALS_EXTRA_TIME`, `fixture::DAY`, `fixture::YEAR`, +8 (bytes and the words
+/// `fixture::ROUND_NAME`/`fixture::ROUND_PREFIX` signed; `fixture::YEAR` and `fixture::DAY` unsigned). Returns what the
+/// last write returned. The original keeps the index of the 18th slot in the low byte of the `cursor` argument itself
+/// (only the low part reaches `exe::newsitem_set_slot`).
 /// Original: `comp_util_write_fixture_to_news_slots` (0x4afeb0, comp_util.cpp, cdecl).
 pub(crate) unsafe extern "C" fn comp_util_write_fixture_to_news_slots(game: usize, news: usize, cursor: *mut u8) -> u32 {
     let b = |o: usize| read_i8(game + o) as i32 as u32;
@@ -671,10 +689,11 @@ pub(crate) unsafe extern "C" fn comp_util_write_fixture_to_news_slots(game: usiz
 /// Writes the stage and round names (with their genders, through template 0x9a7cfc), or just one of them; without an
 /// output or under 200 bytes, the error box and 0.
 ///
-/// `comp_util_format_stage_round_name(stage, round, output, size, style)`: without an output or with fewer than 200
-/// bytes, the error box (line 0x26a1) and 0. Clears the output; with both stage and round, "{stage} {round}" (0x66f4e0
-/// with template 0x9a7cfc, the 100-byte names from 0x4b4850 and the genders from `exe::comp_util_get_stage_name_gender`); with only one of them, its
-/// name directly in the output (0x4b4850 with the size); with neither, just the zero. Returns 1 (0 on the error box).
+/// `comp_util_format_stage_round_name(stage, round, out, size, style)`: without an output or with fewer than 200 bytes,
+/// the error box (line 0x26a1) and 0. Clears the output; with both stage and round, "{stage} {round}"
+/// (`FN_LANGLIB_SPRINTF` with template 0x9a7cfc, the 100-byte names from `exe::comp_util_get_stage_name` and the
+/// genders from `exe::comp_util_get_stage_name_gender`); with only one of them, its name directly in the output
+/// (`exe::comp_util_get_stage_name` with the size); with neither, just the zero. Returns 1 (0 on the error box).
 /// Original: `comp_util_format_stage_round_name` (0x4bffc0, comp_util.cpp, cdecl).
 pub(crate) unsafe extern "C" fn comp_util_format_stage_round_name(stage: u32, round: u32, out: *mut u8, size: i32, style: u32) -> i32 {
     if out.is_null() || size < 0xc8 {
@@ -722,12 +741,12 @@ pub(crate) unsafe extern "C" fn comp_util_scale_by_round(low: u32, high: u32, ro
 }
 
 /// Stores competition, year and four values in the free row of the competition history (without one, grows by 20 rows
-/// through `database_grow_comp_history_table`); returns the row.
+/// through `exe::database_grow_comp_history_table`); returns the row.
 ///
-/// `comp_util_add_history_record(league, first, second, third, extra)`: the free row of the competition history
-/// (without one, it grows by 20 rows through `database_grow_comp_history_table` and uses the first new one; out of memory, 0) receives the
-/// competition (the league's +4), the year `[0xae2c92]` (+8), and the four values at +0xa, +0xe, +0x12, +0x16. Returns
-/// the row. No SEH, no random draw, no locals.
+/// `comp_util_add_history_record(league, a, b, c, d)`: the free row of the competition history (without one, it grows
+/// by 20 rows through `exe::database_grow_comp_history_table` and uses the first new one; out of memory, 0) receives
+/// the competition (the league's +4), the year `G_CURRENT_DATE_YEAR` (+8), and the four values at
+/// `comp_history_row::CHAMPION` (+0xa), +0xe, +0x12, +0x16. Returns the row. No SEH, no random draw, no locals.
 /// Original: `comp_util_add_history_record` (0x4afce0, comp_util.cpp, cdecl).
 pub(crate) unsafe extern "C" fn comp_util_add_history_record(league: usize, a: u32, b: u32, c: u32, d: u32) -> usize {
     let mut r = free_comp_history_row();

@@ -84,12 +84,14 @@ pub(crate) unsafe fn season_loans_entry(club: Club) -> usize {
 /// English division (0x1d), with five loans this season (0x1e), with more than one player on loan from another club in
 /// the squad (0x26) and outside the window (9); otherwise 1.
 ///
-/// `ENGLAND_RULES::can_loan_player(club, player, message, reason)`, through the nation's rules in
-/// `TRANSFER_MANAGER::can_loan_player` (`transfer_manager_can_loan_player`). Without a contract (or without the contract's club): allowed. The
-/// requesting club and the owner in the same English division (`[0x9cf5bc]`): reason 0x1d. Five loans in the season
-/// (the table `[[0xde1f54] + 0x91c]`): 0x1e. More than one player from another club in the squad (the 50 slots at
-/// +0xd7, counted only with the player's id below `[0xae2364]`): 0x26. Outside the window (`exe::transfer_rules_find_open_window`): 9, with the
-/// nation's adjective.
+/// `ENGLAND_RULES::can_loan_player(club, player, msg, reason)`, through the nation's rules in
+/// `TRANSFER_MANAGER::can_loan_player` (`transfer_manager_can_loan_player`). Without a contract
+/// (`game_get_contract_and_store`; or without the contract's club, `england_rules_club_of_contract`): allowed. The
+/// requesting club and the owner in the same English division (`KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION`): reason 0x1d.
+/// Five loans in the season (the table `[[0xde1f54] + 0x91c]`, `season_loans_entry`): 0x1e. More than one player from
+/// another club in the squad (the 50 slots, `club.squad()`, counted only with the player's id below `G_STAFF_COUNT`;
+/// `exe::contract_manager_get_loan_contract`): 0x26. Outside the window (`exe::transfer_rules_find_open_window`): 9,
+/// with the nation's adjective (`exe::nation_get_nationality_adjective`).
 /// Original: `ENGLAND_RULES::can_loan_player` (0x579d60, england_rules.cpp, thiscall, ret 0x10).
 pub(crate) unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize, club: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
     let club = Club(club);
@@ -188,8 +190,9 @@ pub(crate) unsafe extern "thiscall" fn record_loan(_this: usize, offer: usize) {
 
 /// On 20 June, resets the season loan count of every club of this rule set's nation.
 ///
-/// `ENGLAND_RULES::daily_update(date)`, from the rules' daily pass: on 20 June (only the day of the year, `exe::date_date_549f70` with
-/// 1998), the season count of each club (`[0xae235c]` in `[0xae23b4]`) of these rules' nation (+0xa) goes back to zero.
+/// `ENGLAND_RULES::daily_update(data)`, from the rules' daily pass: on 20 June (only the day of the year,
+/// `exe::date_date_549f70` with 1998), the season count (`season_loans_entry`) of each club (`G_CLUB_COUNT` in
+/// `G_CLUB_TABLE`) of these rules' nation (+0xa) goes back to zero.
 /// Original: `ENGLAND_RULES::daily_update` (0x57a020, england_rules.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn england_rules_daily_update(this: usize, data: usize) {
     let mut d = [0u8; 8];
@@ -255,8 +258,9 @@ pub(crate) unsafe fn england_rules_compare_can_loan(o: unsafe extern "thiscall" 
 /// to three months later.
 ///
 /// `ENGLAND_RULES::get_loan_period(club, a2, start_month, start_year, end_month, end_year, player)`, called from the
-/// loan period (`transfer_manager_get_loan_period`). After 19 June (only the day of the year, `exe::date_date_549f70` with 1998) and with the player under 24
-/// (+0x18): the base rule period (`exe::transfer_rules_get_loan_period`). Otherwise it starts the following month and ends three months later.
+/// loan period (`transfer_manager_get_loan_period`). After 19 June (only the day of the year, `exe::date_date_549f70`
+/// with 1998) and with the player under 24 (`age()`): the base rule period (`exe::transfer_rules_get_loan_period`).
+/// Otherwise it starts the following month (`exe::date_get_month`) and ends three months later.
 /// Original: `ENGLAND_RULES::get_loan_period` (0x579c70, england_rules.cpp, thiscall, ret 0x1c).
 pub(crate) unsafe extern "thiscall" fn england_rules_get_loan_period(this: usize, club: usize, a2: u32, start_month: *mut i8, start_year: *mut i16, end_month: *mut i8, end_year: *mut i16, player: usize) {
     let player = Staff(player);

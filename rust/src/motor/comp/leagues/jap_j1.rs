@@ -20,14 +20,15 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_advance_stage(this: usize) {
 /// stage's table), over two games [inference: home and away], with no seeds; unlike the Brazilian state leagues, it
 /// never checks for the same club (the final is built anyway).
 ///
-/// `JapJ1::create_championship_final_stage()`: the list of 2 (malloc `0x944e46` of 8; out of memory: the box of line
-/// `0x245` and it returns); virtual `+0x3c` (create_round_table: thiscall(this, stage 2, &rounds, &extra, 0), ret
-/// `0x10`); the new stage (operator new `0x944cf1` of `0xb2`; Cup_Stage::Cup_Stage `0x522e00`, thiscall, ret `0x3c`:
-/// the league, 2, the list, the rounds, `+4`, the table, the year `+0x40`, 2, 1, the extra, `0x14`, 0, 0, 0 and no
-/// seed) in the third stage slot (`[+0xc]+8`); the list and the table freed (free `0x9452ca`, in that order);
-/// Cup::set_up_round (`0x51c800`, thiscall(stage, 0), ret 4) called with the third slot's stage even when null (as in
-/// the original); with no stage, the box of line `0x25c`; with it, `+0x30` = 2. The original's SEH frame only covers
-/// the constructor (no destructor).
+/// `JapJ1::create_championship_final_stage()`: the list of 2 (malloc `exe::crt_malloc` of 8; out of memory: the box of
+/// line `0x245` and it returns); virtual `comp_vtable::CREATE_SCHEDULE` (create_round_table: thiscall(this, stage 2,
+/// &rounds, &extra, 0), ret `0x10`); the new stage (operator new `exe::crt_operator_new` of `0xb2`;
+/// Cup_Stage::Cup_Stage `FN_CUP_STAGE_CUP_STAGE`, thiscall, ret `0x3c`: the league, 2, the list, the rounds,
+/// `.competition()`, the table, the year `.year()`, 2, 1, the extra, `0x14`, 0, 0, 0 and no seed) in the third stage
+/// slot (`.stages()` + 8); the list and the table freed (free `exe::crt_free`, in that order); Cup::set_up_round
+/// (`exe::cup_set_up_round`, thiscall(stage, 0), ret 4) called with the third slot's stage even when null (as in the
+/// original); with no stage, the box of line `0x25c`; with it, `.set_current_stage(2)`. The original's SEH frame only
+/// covers the constructor (no destructor).
 /// Original: `JapJ1::create_championship_final_stage` (0x663a50, jap_j1.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn create_championship_final_stage(this: usize) {
     let this = League(this);
@@ -66,19 +67,23 @@ pub(crate) unsafe extern "thiscall" fn create_championship_final_stage(this: usi
 /// three stages (the two halves and the final), next year, rules, the table and the fixtures; then the J2 turns over,
 /// followed by the predicted positions, the board expectations and the referee renewal.
 ///
-/// `JapJ1::start_new_season()`: `+0x4c` = 0; promotion and relegation (virtual `+0xb0`, thiscall(this, 1), ret 4); the
-/// table freed (League::free_table `0x687970`, thiscall(this, 0), ret 4); the list at `+0xba` freed and cleared; with
-/// statistics (`+8`), Comp_Stats::archive_season_and_reset (`0x4a1c50`, thiscall(`+8`, 1), ret 4); with a current stage
-/// ≥ 0, the existing stages 0..=`+0x30` destroyed (virtual 0 with 1); the stage array freed and a new one of 3 (malloc
-/// `0x944e46` of `0xc`, `+0x2c` = 3; out of memory: the box of line `0x1b4`, the clean-up `0x5cc7d0`, `0x5a8f60` and
-/// exit(−1) `0x945934`, all cdecl); the year (`+0x40`) goes up by one and `+0x30` = −1.
+/// `JapJ1::start_new_season()`: `league::SEASON_CLOSED` = 0; promotion and relegation (virtual
+/// `league_vtable::PROCESS_PROMOTION_RELEGATION_CHAIN`, thiscall(this, 1), ret 4); the table freed (League::free_table
+/// `exe::league_free_table`, thiscall(this, 0), ret 4); the list at `.round_dates()` freed and cleared; with statistics
+/// (`.comp_stats()`), Comp_Stats::archive_season_and_reset (`exe::comp_stats_archive_season_and_reset`,
+/// thiscall(`.comp_stats()`, 1), ret 4); with a current stage ≥ 0, the existing stages 0..=`.current_stage()` destroyed
+/// (virtual 0 with 1); the stage array freed and a new one of 3 (malloc `exe::crt_malloc` of `0xc`,
+/// `league::STAGE_COUNT` = 3; out of memory: the box of line `0x1b4`, the clean-up `0x5cc7d0`, `0x5a8f60` and exit(−1)
+/// `exe::crt_exit`, all cdecl); the year (`.year()`) goes up by one and `league::CURRENT_STAGE` = −1.
 ///
-/// Then, each with its own box if it returns 0: the rules (virtual `+0x8c`, `0x1be`), the table (`0x6634e0`, `0x1c5`),
-/// the fixtures (League::create_fixtures `0x6835c0`, `0x1cb`) and the order (League::sort_table `0x6827d0`,
-/// thiscall(this, 0), `0x1d2`); then the J2 turnover (virtual `+8` of the competition with id `[0x9cf768]`), the
-/// predicted positions (virtual `+0x5c`), the board exe::league_set_club_season_expectations(League::set_club_season_expectations `0x68aa80`) and
-/// the referee renewal (OfficialsManager::renew_officials `0x79cee0`, thiscall(`[0xb74340]`, `+4`), ret 4), whose eax
-/// it returns.
+/// Then, each with its own box if it returns 0: the rules (virtual `comp_vtable::SET_UP_RULES`, `0x1be`), the table
+/// (`0x6634e0`, `0x1c5`), the fixtures (League::create_fixtures `0x6835c0`, `0x1cb`) and the order (League::sort_table
+/// `0x6827d0`, thiscall(this, 0), `0x1d2`); then the J2 turnover (virtual `+8` of the competition with id
+/// `KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2`, from `G_COMP_OBJECT_TABLE`), the predicted positions (virtual
+/// `comp_vtable::SET_PREDICTED_POSITIONS`), the board expectations (League::set_club_season_expectations
+/// `exe::league_set_club_season_expectations`) and the referee renewal (OfficialsManager::renew_officials
+/// `exe::officialsmanager_renew_officials`, thiscall(`G_OFFICIALS_MANAGER`, `.competition()`), ret 4), whose eax it
+/// returns.
 /// Original: `JapJ1::start_new_season` (0x6636d0, jap_j1.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u32 {
     let this = League(this);
@@ -204,10 +209,11 @@ pub(crate) unsafe fn fill_japanese_table(this: League, g: usize, girar: u8, ramo
 /// Creates the J1 table: 16 clubs, those of the division in database order; those beyond 16 lose their division (left
 /// with no league); when full, the prize fund starts at 100,000 per place and TV pays 3,000,000 to each club.
 ///
-/// `JapJ1::create_table()`: J1 has 16 clubs (`+0x57` = `[0x9cf65c]`; the rest lose the division); once full, the prize
-/// fund with the 100,000 share (League::calc_prize_fund `0x682f70`: push `0x186a0`; mov ecx, edi -> thiscall, ret 4) at
-/// `+0x28`, `+0xe1` = 1, the TV money of 3,000,000 to each club (League::pay_tv_rights `0x683010`: push 0; push
-/// `0x2dc6c0`; mov ecx, edi -> thiscall, ret 8; it sends the TV news) and returns 1. Source `0x9eabc8`, line `0x148`.
+/// `JapJ1::create_table()`: J1 has 16 clubs (`club::DIVISION` = `KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1`; the rest lose the
+/// division); once full, the prize fund with the 100,000 share (League::calc_prize_fund `exe::league_calc_prize_fund`:
+/// push `0x186a0`; mov ecx, edi -> thiscall, ret 4) at `.set_prize_fund()`, `.set_prize_mode(1)`, the TV money of
+/// 3,000,000 to each club (League::pay_tv_rights `exe::league_pay_tv_rights`: push 0; push `0x2dc6c0`; mov ecx, edi ->
+/// thiscall, ret 8; it sends the TV news) and returns 1. Source `0x9eabc8`, line `0x148`.
 /// Original: `JapJ1::create_table` (0x6634e0, jap_j1.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn jap_j1_create_table(this: usize) -> u32 {
     let this = League(this);

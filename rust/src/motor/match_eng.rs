@@ -267,7 +267,8 @@ pub(crate) unsafe extern "thiscall" fn in_the_box(this: usize) -> u8 {
     exe::match_player_is_cell_in_view(this, 4, row, 0, 0.0, 0.0, core::ptr::null_mut())
 }
 
-/// the moment's attributes (0x104 to 0x10d), several "best of two draws"; 15 draws in the original's order
+/// the moment's attributes (`match_player::MOMENT_PACE` to `match_player::MOMENT_WORK_RATE`), several "best of two
+/// draws"; 15 draws in the original's order
 /// Original: `draw_moment` (0x6f44a0, thiscall).
 pub(crate) unsafe extern "thiscall" fn draw_moment(this: usize) {
     let this = MatchPlayer(this);
@@ -482,7 +483,7 @@ pub(crate) unsafe extern "thiscall" fn behind_the_extreme(this: usize, j: usize)
     }
 }
 
-/// `*[0x4792] == −2`
+/// `*[engine::MATCH] == −2`
 /// Original: `no_match` (0x6d4280, thiscall, `al`).
 pub(crate) unsafe extern "thiscall" fn no_match(this: usize) -> u8 {
     let this = Engine(this);
@@ -746,7 +747,7 @@ pub(crate) unsafe extern "thiscall" fn take_the_field(this: usize, player: usize
     n as u8
 }
 
-/// 12 × 9 float table (0xa15e44) ≤ 1.0, otherwise `behind_the_extreme`
+/// 12 × 9 float table (0xa15e44) ≤ 1.0, otherwise `exe::cm3_match_engine_is_behind_own_back_line`
 /// Original: `in_danger` (0x70d630, thiscall, `al`).
 pub(crate) unsafe extern "thiscall" fn in_danger(this: usize) -> u8 {
     let this = MatchPlayer(this);
@@ -838,13 +839,12 @@ pub(crate) unsafe extern "thiscall" fn reaches_the_point(this: usize, x: i8, y: 
     (exe::get_cell_distance(x, y, 4, bottom) >= t) as u8
 }
 
-/// Chooses the match's standout player: 16-bit score (disposition + 125 × (0x10 + 2 × 0x0c) + 50 × 0x03 + 35 × 0x06)
-/// and ftol(disposition × factor); stores the record's id at 0x477a.
-///
-/// The standout among the first (byte 0x4d of the fixture & 0xf) + 11 of each side (inactive ones, with 0x20 = 0xff,
-/// left out): score (16 bits) = disposition 0x35 + 125 × (0x10 + 2 × 0x0c) + 50 × 0x03 + 35 × 0x06; replaces only with
-/// a higher score and ftol(disposition × factor) not lower. Stores the first dword of the player sheet (0x69) at
-/// 0x477a.
+/// Chooses the match's standout player: 16-bit score (disposition + 125 × (`match_player::ASSISTS` + 2 × 0x0c) + 50 ×
+/// 0x03 + 35 × 0x06) and ftol(disposition × factor); stores the record's id at `adjusted_player_id`. The standout among
+/// the first (`squad_rules()` of the fixture & 0xf) + 11 of each side (inactive ones, with 0x20 = 0xff, left out):
+/// score (16 bits) = disposition `match_rating()` + 125 × (`match_player::ASSISTS` + 2 × 0x0c) + 50 × 0x03 + 35 × 0x06;
+/// replaces only with a higher score and ftol(disposition × factor) not lower. Stores the first dword of the player
+/// sheet (`match_player::STAFF`) at `adjusted_player_id`.
 /// Original: `choose_standout` (0x6d0f80, among the (match byte 0x4d & 0xf) + 11 of each side, thiscall).
 pub(crate) unsafe extern "thiscall" fn choose_standout(this: usize) {
     let this = Engine(this);
@@ -1781,14 +1781,18 @@ pub(crate) unsafe fn apply_substitutions_with(m: Engine, call: &mut dyn FnMut(us
 }
 
 /// applies both sides' marked substitutions (+0x1d). With +0x1c the player goes off (on the pitch: narrates 0x1f56,
-/// `exe::cm3_match_engine_remove_player_from_pitch` with −1 or −2 by `engine::SIDE0_MANAGER_SUBSTITUTIONS_LEFT`, +0x1a = position and +0x19 = −2; with −3: narrates 0x1f57 and `exe::cm3_match_engine_remove_player_from_pitch` with 0)
-/// and the minute goes to +0x22; without +0x1c it narrates 0x1f58 by draw(4) or with +0x55; with +0x55 it narrates
-/// 0x20f6 with each one's side (`player_side`). With marked players and outside matches with a human manager who doesn't
-/// delegate: with `engine::SIDE0_MANAGER_SUBSTITUTIONS_LEFT` the staff substitute (`exe::match_man_make_substitutions`); otherwise they redo the team (`redo_team`), give the armband
-/// (0x897760, the best rated from `best_rated`) if the captain (`exe::tactics_find_captain_slot`) went off, clear `engine::GOALKEEPER`/`engine::GOALKEEPER_SIDE1` and recompose
-/// (`exe::cm3_match_engine_get_goalkeeper`). Stores the minute (`engine::LAST_SUBSTITUTION_TICK`), redoes the side's strength (`exe::cm3_match_engine_recalc_side_score`) and the marking (`individual_marking`); at the
-/// end clears `engine::SUBSTITUTION_PENDING`. Compared through the tape (narration, staff and captain as units); the 6th argument of narration
-/// 0x20f6 goes in byte 1 of the 5th (0x6d6f70 reads both as bytes)
+/// `exe::cm3_match_engine_remove_player_from_pitch` with −1 or −2 by `engine::SIDE0_MANAGER_SUBSTITUTIONS_LEFT`, +0x1a
+/// = position and +0x19 = −2; with −3: narrates 0x1f57 and `exe::cm3_match_engine_remove_player_from_pitch` with 0) and
+/// the minute goes to +0x22; without +0x1c it narrates 0x1f58 by draw(4) or with +0x55; with +0x55 it narrates 0x20f6
+/// with each one's side (`player_side`). With marked players and outside matches with a human manager who doesn't
+/// delegate: with `engine::SIDE0_MANAGER_SUBSTITUTIONS_LEFT` the staff substitute
+/// (`exe::match_man_make_substitutions`); otherwise they redo the team (`redo_team`), give the armband
+/// (`FN_TACTICS_SET_CAPTAIN_FROM_SLOT`, the best rated from `best_rated`) if the captain
+/// (`exe::tactics_find_captain_slot`) went off, clear `engine::GOALKEEPER`/`engine::GOALKEEPER_SIDE1` and recompose
+/// (`exe::cm3_match_engine_get_goalkeeper`). Stores the minute (`engine::LAST_SUBSTITUTION_TICK`), redoes the side's
+/// strength (`exe::cm3_match_engine_recalc_side_score`) and the marking (`individual_marking`); at the end clears
+/// `engine::SUBSTITUTION_PENDING`. Compared through the tape (narration, staff and captain as units); the 6th argument
+/// of narration 0x20f6 goes in byte 1 of the 5th (0x6d6f70 reads both as bytes)
 /// Original: `apply_substitutions` (0x6d0b60, match_eng.cpp (~1 KB), thiscall).
 pub(crate) unsafe extern "thiscall" fn apply_substitutions(m: usize) {
     apply_substitutions_with(Engine(m), &mut |rotina, this, a| {
@@ -3293,19 +3297,23 @@ pub(crate) unsafe fn update_nearest_to_ball(m: Engine) {
 /// The match engine loop: `n` match instants. Match already decided: quick simulation, standout, closing, humans'
 /// instructions restored, referee rating (2). Each instant: punishments, shoot-out, kick-off, drawn substitution,
 /// marked incident, restart and taker; on the clock, abandonment (8), period (4) and full time (2 or 4); then
-/// possession, each player's time, lines, nearest to the ball, marking and each active player's decision (`decide_player`),
-/// with the pending shot and the contest. Validated by the career.
-///
-/// Ret 4: the engine loop, `n` instants of the match. Match already decided (+0): quick simulation (`quick_simulation`), standout
-/// (`choose_standout`), closing, the humans' instructions restored and the referee rating (`referee_grade`); returns 2. Otherwise
-/// clears the player sheets and the pointers of those who left and, at each instant: pending punishments (0x6d1210),
-/// penalty shoot-out (0x6be710; at the end, 2), the narrated kick-off (0x212f/0x1f74), the randomly drawn substitution,
-/// the marked incident (`apply_foul`/`clear_move`), the restart (`restart_play`) and the set-piece taker (`exe::cm3_match_engine_pick_restart_taker`). On the clock
-/// (`engine::CLOCK`): end by abandonment (8), the period (`period_completed`: 4 at the breaks; end of the match with the aggregate score,
-/// `record_tactic_result` and 2 or 4). Ball in play (`roll_ball`) or stopped adds stoppage time; otherwise possession (0x6cf750), each
-/// player's time (`update_player`), the lines (`defensive_lines`, `store_extremes`, `player_order`), those nearest to the ball, the pressure in the
-/// areas (0x6bd6b0), the marking (`designated_marked`/0x6bc030) and each active player's decision (`decide_player`), with the pending
-/// shot (`shot`) and the contest (0x6c9cd0). Returns 1 at the end of the `n` instants.
+/// possession, each player's time, lines, nearest to the ball, marking and each active player's decision
+/// (`decide_player`), with the pending shot and the contest. Validated by the career. Ret 4: the engine loop, `n`
+/// instants of the match. Match already decided (+0): quick simulation (`quick_simulation`), standout
+/// (`choose_standout`), closing, the humans' instructions restored and the referee rating (`referee_grade`); returns 2.
+/// Otherwise clears the player sheets and the pointers of those who left and, at each instant: pending punishments
+/// (`FN_CM3_MATCH_ENGINE_PROCESS_QUEUED_FOULS`), penalty shoot-out (`FN_CM3_MATCH_ENGINE_RUN_PENALTY_SHOOTOUT_STEP`; at
+/// the end, 2), the narrated kick-off (0x212f/0x1f74), the randomly drawn substitution, the marked incident
+/// (`apply_foul`/`clear_move`), the restart (`restart_play`) and the set-piece taker
+/// (`exe::cm3_match_engine_pick_restart_taker`). On the clock (`engine::CLOCK`): end by abandonment (8), the period
+/// (`period_completed`: 4 at the breaks; end of the match with the aggregate score, `record_tactic_result` and 2 or 4).
+/// Ball in play (`roll_ball`) or stopped adds stoppage time; otherwise possession
+/// (`FN_CM3_MATCH_ENGINE_RECORD_POSSESSION_TICK`), each player's time (`update_player`), the lines (`defensive_lines`,
+/// `store_extremes`, `player_order`), those nearest to the ball, the pressure in the areas
+/// (`FN_CM3_MATCH_ENGINE_UPDATE_SIDE_PRESSURE_FLAG`), the marking
+/// (`designated_marked`/`FN_CM3_MATCH_ENGINE_CHOOSE_MARKING_TARGET`) and each active player's decision
+/// (`decide_player`), with the pending shot (`shot`) and the contest (`FN_CM3_MATCH_ENGINE_RESOLVE_BALL_CHALLENGE`).
+/// Returns 1 at the end of the `n` instants.
 /// Original: `engine_loop` (0x6b98c0, match_eng.cpp (4.8 KB), thiscall, ret 4).
 #[allow(clippy::cognitive_complexity)]
 pub(crate) unsafe extern "thiscall" fn engine_loop(m: usize, n_in: u32) -> u32 {
@@ -3691,7 +3699,8 @@ pub(crate) unsafe extern "thiscall" fn behind_on_aggregate(m: usize, side: i8) -
     (ida != 0 && fase3 == 0 && classificado == 0 && casa <= fora) as u8
 }
 
-/// the first active teammate in the deep attack (`player_limit`), central (`x_off_centre`) and unpressed (0x6bcbd0)
+/// the first active teammate in the deep attack (`player_limit`), central (`x_off_centre`) and unpressed
+/// (`pressure_on_player_with`)
 /// Original: `free_teammate` (0x6d5a70, match_eng.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn free_teammate(m: usize, p: usize) -> usize {
     let l = side_of_player(MatchPlayer(p));
@@ -7617,26 +7626,28 @@ pub(crate) unsafe fn is_past_defensive_line(engine: Engine, j: MatchPlayer) -> b
     d >= 0
 }
 
-/// Lines the teams up for a set piece of side `engine::POSSESSION_SIDE`: counter `engine::SET_PIECES` + 54 × side; releases the ball. Ball in the
-/// side's own area: formation (as `line_up_kickoff`) and whoever of the other side lands on the spot moves one row. Otherwise:
-/// spot clamped to the grid, far (`engine::SET_PIECE_KIND` = 7) or near (−1), base column 4 − draw + draw, base row 3/4 from the spot;
-/// near, everyone from the set-piece table (12 rows × 9 columns per position and kicking side); far, by role (`attacking_role`
-/// in attack: 1 deep, 2 middle; `defending_role` in defence: 4 deep, 3 middle). Finally the taker (`exe::cm3_match_engine_pick_restart_taker`, type `engine::RESTART_TYPE`) goes
-/// to the spot, takes the ball and aims (`exe::match_player_set_facing_direction`). Cell off the grid: fatal error, as in the original.
-///
-/// Details: counter `engine::SET_PIECES` + 54 × side goes up; `engine::POSSESSION_SIDE` = -1; the ball is released (`release_ball`). Ball in the side's own
-/// area (row < 3 on side 0, > 8 on side 1): each player goes to his formation cell (as `line_up_kickoff`), and whoever of the
-/// other side lands on the ball's spot moves one row; on the kicking side, whoever passed the line goes back one
-/// (`exe::match_player_drop_back_one_row`). Otherwise (spot clamped to 0..=8 × 0..=11): far from goal (`engine::SET_PIECE_KIND` = 7) or near (-1); base column 4 -
-/// random(2) + random(2) and base row 3 (near) or 4 (far) from the spot towards the goal. Near: everyone from the
-/// side's set-piece table (`engine::FORMATION_TABLE`, 12 rows per column, 9 columns per position and kicking side). Far: by role: in
-/// attack (`attacking_role`) 1 goes deep and 2 to the middle, in defence (`defending_role`) 4 deep and 3 to the middle, the others from
-/// the table. Middle: x 4 ± random, row 6 (side 1) or 5. Deep: x of the base column ± random and row 0..1 or 10..11
-/// next to the attacked or defended goal. Whoever passed the line goes back one (`exe::match_player_drop_back_one_row`). Cell off the grid: the
-/// original ends the game (fatal error).
-///
-/// At the end the taker (`exe::cm3_match_engine_pick_restart_taker` with type `engine::RESTART_TYPE`) goes to the spot, takes the ball (`take_ball`) and aims (`exe::match_player_set_facing_direction`, 4,
-/// 1 on side 1 or 10), with +0x19c = 200. Everyone zeroes +0x2b (`exe::match_player_set_action_delay`).
+/// Lines the teams up for a set piece of side `engine::POSSESSION_SIDE`: counter `engine::SET_PIECES` + 54 × side;
+/// releases the ball. Ball in the side's own area: formation (as `line_up_kickoff`) and whoever of the other side lands
+/// on the spot moves one row. Otherwise: spot clamped to the grid, far (`engine::SET_PIECE_KIND` = 7) or near (−1),
+/// base column 4 − draw + draw, base row 3/4 from the spot; near, everyone from the set-piece table (12 rows × 9
+/// columns per position and kicking side); far, by role (`attacking_role` in attack: 1 deep, 2 middle; `defending_role`
+/// in defence: 4 deep, 3 middle). Finally the taker (`exe::cm3_match_engine_pick_restart_taker`, type
+/// `engine::RESTART_TYPE`) goes to the spot, takes the ball and aims (`exe::match_player_set_facing_direction`). Cell
+/// off the grid: fatal error, as in the original. Details: counter `engine::SET_PIECES` + 54 × side goes up;
+/// `engine::POSSESSION_SIDE` = -1; the ball is released (`release_ball`). Ball in the side's own area (row < 3 on side
+/// 0, > 8 on side 1): each player goes to his formation cell (as `line_up_kickoff`), and whoever of the other side
+/// lands on the ball's spot moves one row; on the kicking side, whoever passed the line goes back one
+/// (`exe::match_player_drop_back_one_row`). Otherwise (spot clamped to 0..=8 × 0..=11): far from goal
+/// (`engine::SET_PIECE_KIND` = 7) or near (-1); base column 4 - random(2) + random(2) and base row 3 (near) or 4 (far)
+/// from the spot towards the goal. Near: everyone from the side's set-piece table (`engine::FORMATION_TABLE`, 12 rows
+/// per column, 9 columns per position and kicking side). Far: by role: in attack (`attacking_role`) 1 goes deep and 2
+/// to the middle, in defence (`defending_role`) 4 deep and 3 to the middle, the others from the table. Middle: x 4 ±
+/// random, row 6 (side 1) or 5. Deep: x of the base column ± random and row 0..1 or 10..11 next to the attacked or
+/// defended goal. Whoever passed the line goes back one (`exe::match_player_drop_back_one_row`). Cell off the grid: the
+/// original ends the game (fatal error). At the end the taker (`exe::cm3_match_engine_pick_restart_taker` with type
+/// `engine::RESTART_TYPE`) goes to the spot, takes the ball (`take_ball`) and aims
+/// (`exe::match_player_set_facing_direction`, 4, 1 on side 1 or 10), with `set_ball_control(200)`. Everyone zeroes
+/// +0x2b (`exe::match_player_set_action_delay`).
 /// Original: `line_up_set_piece` (0x6c4820, match_eng.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn line_up_set_piece(this: usize) {
     let this = Engine(this);
@@ -7750,12 +7761,13 @@ pub(crate) unsafe extern "thiscall" fn line_up_set_piece(this: usize) {
     who.set_ball_control((200) as i16);
 }
 
-/// who kicks off (`engine::GOALKEEPER` side 0, centre 4, 0; `engine::GOALKEEPER_SIDE1` side 1, centre 4, 11); releases the ball (`release_ball`); every
-/// player on the pitch goes to his formation cell (table `engine::FORMATION_TABLE` of the direction, byte +0xa2 of the position: x in the
-/// low nibble, y in the high one), the defensive lines are redone (`defensive_lines`) and, on the kicking-off side, whoever
-/// crossed the line steps back one row (`exe::match_player_drop_back_one_row`); +0x2b is cleared; finally the kicker goes to the centre and takes
-/// the ball (`take_ball`), +0x19c = 200, +0x19a = 180 off row 0. Without him: the original (error box). Compared with
-/// `lado_a_lado` over the engine from 0x1a0, the grid, the 40 players and the 0xf56e pointers
+/// who kicks off (`engine::GOALKEEPER` side 0, centre 4, 0; `engine::GOALKEEPER_SIDE1` side 1, centre 4, 11); releases
+/// the ball (`release_ball`); every player on the pitch goes to his formation cell (table `engine::FORMATION_TABLE` of
+/// the direction, byte +0xa2 of the position: x in the low nibble, y in the high one), the defensive lines are redone
+/// (`defensive_lines`) and, on the kicking-off side, whoever crossed the line steps back one row
+/// (`exe::match_player_drop_back_one_row`); +0x2b is cleared; finally the kicker goes to the centre and takes the ball
+/// (`take_ball`), `set_ball_control(200)`, `set_facing(180)` off row 0. Without him: the original (error box). Compared
+/// with `lado_a_lado` over the engine from 0x1a0, the grid, the 40 players and the 0xf56e pointers
 /// Original: `line_up_kickoff` (0x6c4ec0, match_eng.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn line_up_kickoff(this: usize) {
     let this = Engine(this);
@@ -8765,9 +8777,9 @@ pub(crate) unsafe extern "thiscall" fn choose_teammate(
     res
 }
 
-/// the list of active players (+0x19 ≥ 0) at `engine::ACTIVE_LIST`, count at `engine::ACTIVE_LIST_COUNT`. For each slot 0..20 draws (`exe::utils_random`(2)) which
-/// side goes first. Sorts with the CRT `qsort` (`exe::crt_qsort`) and the game's own compare (`action_order`, which reads the engine
-/// at 0xb67a64)
+/// the list of active players (`position()` ≥ 0) at `engine::ACTIVE_LIST`, count at `engine::ACTIVE_LIST_COUNT`. For
+/// each slot 0..20 draws (`exe::utils_random`(2)) which side goes first. Sorts with the CRT `qsort` (`exe::crt_qsort`)
+/// and the game's own compare (`action_order`, which reads the engine at `G_ACTION_ORDER_MATCH_ENGINE`)
 /// Original: `player_order` (0x6bd760, match_eng.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn player_order(m: usize) {
     let m = Engine(m);
@@ -8788,10 +8800,12 @@ pub(crate) unsafe extern "thiscall" fn player_order(m: usize) {
     exe::crt_qsort(m.addr() + engine::ACTIVE_LIST, (*n as i32) as u32, (4) as u32, 0x6bd840);
 }
 
-/// the order of the 11 takers of each side at +0x1af + 11 × side (−1 first), marking those chosen in each side's 20
-/// slots at `engine::SHOOTOUT_TAKEN` (zeroed first). Side's manager (`engine::SIDE0_MANAGER` + 208 × side) human, with +0x5f, without 0x9a01 and (with
-/// `engine::SIDE0_MANAGER_TACTIC_SLOT`) national team or with 0x9a05: the order comes from the tactics table (`exe::tactics_get_shootout_taker_slot` on [0xde1d08]). Otherwise,
-/// `choose_taker` type 5; with no one, clears the side's marks and repeats the turn
+/// the order of the 11 takers of each side at `engine::PENALTY_TAKER_ORDER` + 11 × side (−1 first), marking those
+/// chosen in each side's 20 slots at `engine::SHOOTOUT_TAKEN` (zeroed first). Side's manager (`engine::SIDE0_MANAGER` +
+/// 208 × side) human, with `classification()`, without `exe::human_manager_is_on_holiday` and (with
+/// `engine::SIDE0_MANAGER_TACTIC_SLOT`) national team or with `exe::human_manager_controls_reserve_team`: the order
+/// comes from the tactics table (`exe::tactics_get_shootout_taker_slot` on `G_TACTICS`). Otherwise, `choose_taker` type
+/// 5; with no one, clears the side's marks and repeats the turn
 /// Original: `penalty_order` (0x6be520, match_eng.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn penalty_order(m: usize) {
     let m = Engine(m);
@@ -9103,10 +9117,11 @@ pub(crate) unsafe fn pick_restart_taker(this: Engine, side: i8, kind: i8) -> Mat
     MatchPlayer(exe::cm3_match_engine_pick_restart_taker(this, side, kind, 0))
 }
 
-/// throw-in for side 0x8eae. Counts (0xf5c8 + 54 × side), puts the ball (0x8ea7, 0x8ea8) inside the pitch, picks the
-/// taker (type 2), arranges the 40 players by the formation table (0xf56e/0xf572 by the player's side; index: of the
-/// side taking?, position, ball column and row; byte = column + 16 × row) and puts the taker on the ball, facing
-/// inwards (90 or 270). With no taker the original shows an error box (no box here) and marks the engine (+0 = 1)
+/// throw-in for side `possession_side()`. Counts (`engine::THROW_INS` + 54 × side), puts the ball (`engine::BALL_X`,
+/// `engine::BALL_Y`) inside the pitch, picks the taker (type 2), arranges the 40 players by the formation table
+/// (`engine::FORMATION_TABLE`/`engine::FORMATION_TABLE` + 4 by the player's side; index: of the side taking?, position,
+/// ball column and row; byte = column + 16 × row) and puts the taker on the ball, facing inwards (90 or 270). With no
+/// taker the original shows an error box (no box here) and marks the engine (+0 = 1)
 /// Original: `throw_in` (0x6c4290, match_eng.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn throw_in(this: usize) {
     let this = Engine(this);
@@ -9143,10 +9158,11 @@ pub(crate) unsafe extern "thiscall" fn throw_in(this: usize) {
     c.set_facing(if *a7 != 0 { 270 } else { 90 });
 }
 
-/// counts (0xf5c7 + 54 × side), marks the play (0x8eb1 = 3, 0x8eae = −1) and arranges the 40: by the attacking role
-/// (`attacking_role`, side taking) or defending role (`defending_role`), some go to drawn squares in the box (column 4 ± 1; row 5/6, or
-/// drawn 0..1/10..11), the others by the formation table (+0x3b or +0x30). Off the pitch: fatal error. Taker (type 3)
-/// at the flag (column 0 or 8 by a draw against 0x8ea7; row 0 or 11)
+/// counts (`engine::CORNER_KICKS` + 54 × side), marks the play (`set_piece_kind` = 3, `possession_side` = −1) and
+/// arranges the 40: by the attacking role (`attacking_role`, side taking) or defending role (`defending_role`), some go
+/// to drawn squares in the box (column 4 ± 1; row 5/6, or drawn 0..1/10..11), the others by the formation table (+0x3b
+/// or +0x30). Off the pitch: fatal error. Taker (type 3) at the flag (column 0 or 8 by a draw against `ball_x()`; row 0
+/// or 11)
 /// Original: `corner` (0x6c4470, match_eng.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn corner(this: usize) {
     let this = Engine(this);
@@ -9209,8 +9225,8 @@ pub(crate) unsafe extern "thiscall" fn corner(this: usize) {
     }
 }
 
-/// taker (type 5) with the ball on the spot (column 4; row 1 or 10, also in 0x8ea7/0x8ea8); the stored goalkeepers go
-/// to goal, those on rows 0..1 go to row 2 and those on 10..11 to row 9
+/// taker (type 5) with the ball on the spot (column 4; row 1 or 10, also in `ball_x`/`ball_y`); the stored goalkeepers
+/// go to goal, those on rows 0..1 go to row 2 and those on 10..11 to row 9
 /// Original: `penalty` (0x6c50d0, match_eng.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn penalty(this: usize) {
     let this = Engine(this);
@@ -9617,9 +9633,9 @@ pub(crate) unsafe extern "C" fn new_reputation(this: usize, side: i8, value: f32
     *((this.addr() as isize + (engine::SIDE_REPUTATION as isize) + 2 * side as isize) as *mut i16) = r;
 }
 
-/// for each side and active player whose position has marks 0x10 and 4 in the side's table (`position_byte`), finds the direct
-/// marker (`exe::cm3_match_engine_find_marking_target`) and stores his record (+0x69) in the per-position table (0x5b5910). Marker −1 reads the "player"
-/// before the block, like the original
+/// for each side and active player whose position has marks 0x10 and 4 in the side's table (`position_byte`), finds the
+/// direct marker (`exe::cm3_match_engine_find_marking_target`) and stores his record (`staff()`) in the per-position
+/// table (`exe::formation_set_marking_target`). Marker −1 reads the "player" before the block, like the original
 /// Original: `individual_marking` (0x6bbf60, match_eng.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn individual_marking(this: usize) {
     let this = Engine(this);
@@ -9966,12 +9982,12 @@ pub(crate) unsafe extern "thiscall" fn roll_ball(this: usize) {
     roll_loose_ball_with(Engine(this), &mut |t, a| add_match_event(t, a))
 }
 
-/// who kicks off (0x8eae; outside 0..=1, side 0), ball at the centre (4, 5 or 6); every active player goes to their
-/// formation square (table 0xf56e + 0x9e for side 0 or 0xf572 + 0xa6 for side 1, 216 bytes per position; low nibble x,
-/// high nibble y, clamped to their own half) through 0x6f46b0 and faces forward (`exe::match_player_set_facing_direction`). On the kicking side, the
-/// player closest to the ball (a position > 10 becomes −1) takes the ball (`take_ball`) and faces the square computed from
-/// the last formation square used (same point: the low byte of 0x8ed8, sign-extended). With nobody available, it sets
-/// byte 0 of the engine
+/// who kicks off (`possession_side()`; outside 0..=1, side 0), ball at the centre (4, 5 or 6); every active player goes
+/// to their formation square (table 0xf56e + 0x9e for side 0 or 0xf572 + 0xa6 for side 1, 216 bytes per position; low
+/// nibble x, high nibble y, clamped to their own half) through `exe::match_player_move_to_grid_cell` and faces forward
+/// (`exe::match_player_set_facing_direction`). On the kicking side, the player closest to the ball (a position > 10
+/// becomes −1) takes the ball (`take_ball`) and faces the square computed from the last formation square used (same
+/// point: the low byte of `ball_direction()`, sign-extended). With nobody available, it sets byte 0 of the engine
 /// Original: `kick_off` (0x6c51e0, match_eng.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn kick_off(this: usize) {
     let this = Engine(this);
@@ -10401,11 +10417,10 @@ pub(crate) unsafe extern "thiscall" fn injure(m: usize, kind: u32, chance: u32, 
     injure_with(Engine(m), kind, chance, MatchPlayer(p), o, &mut |r, t, a| dispatch_injury_list_call(r, t, a))
 }
 
-/// The ordering of the day's matches (qsort): competition, record fields and the club name.
-///
-/// The order of the day's matches (0x69-byte records): by competition (+4), then +0x46 (byte), +0x36, +0x38 and +0x34
-/// (words) and, when everything ties, by the name of the first club (+0x20 → +0x38) with the text comparison `exe::utils_string_compare`
-/// (case-insensitive).
+/// The ordering of the day's matches (qsort): competition, record fields and the club name. The order of the day's
+/// matches (0x69-byte records): by competition (+4), then `day_match::STAGE_INDEX` (byte), +0x36, +0x38 and +0x34
+/// (words) and, when everything ties, by the name of the first club (`day_match::HOME_CLUB` → +0x38) with the text
+/// comparison `exe::utils_string_compare` (case-insensitive).
 /// Original: `day_match_order` (0x6b6510, match_eng.cpp, cdecl).
 pub(crate) unsafe extern "C" fn day_match_order(a: usize, b: usize) -> i32 {
     let d = read_i32(a + 4).wrapping_sub(read_i32(b + 4));
@@ -10426,11 +10441,11 @@ pub(crate) unsafe extern "C" fn day_match_order(a: usize, b: usize) -> i32 {
     exe::utils_string_compare((name(a)) as *const u8, (name(b)) as *const u8, 1, 0)
 }
 
-/// The players' order on the engine's turn (qsort): the marked ones first, then by strength.
-///
-/// The order of the players on the engine's turn (`[0xb67a64]`): with `engine::RESTART_TYPE` set, the one in `engine::BALL_HOLDER` comes first; then
-/// the one in `engine::ACTION_FIRST_PLAYER`; the rest by strength (+0x104 + +0x105) × (+0x3b × 0.005 + 0.5) × +0x4d (f32), truncated, from
-/// highest to lowest.
+/// The players' order on the engine's turn (qsort): the marked ones first, then by strength. The order of the players
+/// on the engine's turn (`G_ACTION_ORDER_MATCH_ENGINE`): with `engine::RESTART_TYPE` set, the one in
+/// `engine::BALL_HOLDER` comes first; then the one in `engine::ACTION_FIRST_PLAYER`; the rest by strength
+/// (`moment_pace()` + `moment_anticipation()`) × (`effective_ability()` × 0.005 + 0.5) × `stamina()` (f32), truncated,
+/// from highest to lowest.
 /// Original: `action_order` (0x6bd840, match_eng.cpp, cdecl).
 pub(crate) unsafe extern "C" fn action_order(a: *const usize, b: *const usize) -> i32 {
     let (pa, pb) = (*a, *b);
@@ -10459,14 +10474,15 @@ pub(crate) unsafe extern "C" fn action_order(a: *const usize, b: *const usize) -
     strength(MatchPlayer(pb)).wrapping_sub(strength(MatchPlayer(pa)))
 }
 
-/// Decides whether a context commentary (league race, club news) may play now.
-///
-/// Ret 0xc: may context commentary `event` (0x21a3..=0x21af: the league race, the club's recent news) play now for
-/// `side`? Outside the range 8000..=0x21e4, already played (table at +0x21e per side) or without a competition (`engine::MATCH`
-/// → +0x14): no. It weighs the aggregate score (`exe::cm3_match_engine_get_goal_margin`), the club's row in the league table (`exe::comp_stats_find_club_entry`: +0x19/+0x41
-/// and +0x2d/+0x55), the minute (`engine::CLOCK` / 11), the club's news in the last 10 or 30 days (`has_logged_story` on the media
-/// `[0xb6b7c8]`) and the average of the side's 20 players (+0x47cb, step 0x1be, the marked ones at −0x1c); those in the
-/// table write the value into `out`. The events in the range outside the 13 cases: yes.
+/// Decides whether a context commentary (league race, club news) may play now. Ret 0xc: may context commentary `event`
+/// (0x21a3..=0x21af: the league race, the club's recent news) play now for `side`? Outside the range 8000..=0x21e4,
+/// already played (table at +0x21e per side) or without a competition (`engine::MATCH` → `competition()`): no. It
+/// weighs the aggregate score (`exe::cm3_match_engine_get_goal_margin`), the club's row in the league table
+/// (`exe::comp_stats_find_club_entry`: `comp_stats_club::WINNING_RUN`/+0x41 and `comp_stats_club::LOSING_RUN`/+0x55),
+/// the minute (`engine::CLOCK` / 11), the club's news in the last 10 or 30 days (`FN_MEDIA_HAS_LOGGED_STORY` on the
+/// media `G_MEDIA`) and the average of the side's 20 players (`match_player::MATCH_RATING` of `player(side, k)`, step
+/// 0x1be, the marked ones at −0x1c); those in the table write the value into `out`. The events in the range outside the
+/// 13 cases: yes.
 /// Original: `context_commentary` (0x6d4b70, match_eng.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn context_commentary(m: usize, side: u32, event: u32, out: *mut i32) -> u32 {
     let m = Engine(m);
@@ -10645,12 +10661,14 @@ pub(crate) unsafe extern "thiscall" fn context_commentary(m: usize, side: u32, e
     }
 }
 
-/// the match referee (`engine::REFEREE_ID`, id ≠ −1), except in friendly competitions (`exe::friendly_is_friendly_competition` on [0xae2c74]). Cards (`engine::RED_CARDS` and
-/// `engine::RED_CARDS_SIDE1` on both sides) and fouls (`engine::YELLOW_CARDS` and `engine::YELLOW_CARDS_SIDE1`); the grade starts at `engine::REFEREE_RATING` / 1000, loses 2 with more than 2
-/// cards, 1 with 2, gains 1 with none; loses 1 with more than 5 fouls, gains 1 with fewer than 3; below 4 becomes 4
-/// (except 1 in 500), above 8 becomes 8 (except 1 in 25), and stays within 1 to 10. Records through `record_referee_grade` on
-/// [0xb74340] (8-byte record: id, cards, fouls, grade; the 8th byte is stack garbage and is not read). Compared side by
-/// side (draws and the referee's record)
+/// the match referee (`engine::REFEREE_ID`, id ≠ −1), except in friendly competitions
+/// (`exe::friendly_is_friendly_competition` on `G_FRIENDLY`). Cards (`engine::RED_CARDS` and `engine::RED_CARDS_SIDE1`
+/// on both sides) and fouls (`engine::YELLOW_CARDS` and `engine::YELLOW_CARDS_SIDE1`); the grade starts at
+/// `engine::REFEREE_RATING` / 1000, loses 2 with more than 2 cards, 1 with 2, gains 1 with none; loses 1 with more than
+/// 5 fouls, gains 1 with fewer than 3; below 4 becomes 4 (except 1 in 500), above 8 becomes 8 (except 1 in 25), and
+/// stays within 1 to 10. Records through `exe::officialsmanager_record_match_stats` on `G_OFFICIALS_MANAGER` (8-byte
+/// record: id, cards, fouls, grade; the 8th byte is stack garbage and is not read). Compared side by side (draws and
+/// the referee's record)
 /// Original: `referee_grade` (0x6d4a20, match_eng.cpp (336 bytes, called by 0x6b98c0), thiscall).
 pub(crate) unsafe extern "thiscall" fn referee_grade(m: usize) {
     let m = Engine(m);
@@ -10774,8 +10792,9 @@ pub(crate) unsafe extern "stdcall" fn limit(side: u8, v: i8) -> u8 {
     (if side == 1 { v < 3 } else { side == 0 && v > 8 }) as u8
 }
 
-/// Match engine: the distance in rows between player `jogador` (+0x103) and his side's line (`engine::OFFSIDE_LINE` / `engine::OFFSIDE_LINE_SIDE1`)
-/// [inference: the defensive/offside line]; 0 for the ball holder (`engine::BALL_HOLDER`).
+/// Match engine: the distance in rows between player `player` (`cell_y()`) and his side's line (`engine::OFFSIDE_LINE`
+/// / `engine::OFFSIDE_LINE_SIDE1`) [inference: the defensive/offside line]; 0 for the ball holder
+/// (`engine::BALL_HOLDER`).
 /// Original: `player_difference` (0x6c4130, match_eng.cpp).
 pub(crate) unsafe extern "thiscall" fn player_difference(this: usize, player: usize) -> u8 {
     let this = Engine(this);
@@ -10809,9 +10828,9 @@ pub(crate) unsafe extern "thiscall" fn side_byte(this: usize, player: usize) -> 
     (player == stored) as u8
 }
 
-/// Returns 1 if match player `j` can be chosen: not standing on cell (b, c), busy counter +0x2b below 2, neither the
-/// ball holder (engine `engine::BALL_HOLDER`) nor the set-piece taker (`engine::SET_PIECE_TAKER`), a nonzero marking rating (`field_by_position`) and no set piece
-/// pending (engine `engine::RESTART_TYPE` zero).
+/// Returns 1 if match player `j` can be chosen: not standing on cell (b, c), busy counter `busy()` below 2, neither the
+/// ball holder (engine `engine::BALL_HOLDER`) nor the set-piece taker (`engine::SET_PIECE_TAKER`), a nonzero marking
+/// rating (`field_by_position`) and no set piece pending (engine `engine::RESTART_TYPE` zero).
 /// Original: `can_choose` (0x6bce20, match_eng.cpp).
 pub(crate) unsafe extern "thiscall" fn can_choose(this: usize, j: usize, b: i8, c: i8) -> u32 {
     let this = Engine(this);

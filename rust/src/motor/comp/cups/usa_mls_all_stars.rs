@@ -142,10 +142,11 @@ pub(crate) unsafe fn set_up_all_star_teams(this: Cup) -> i32 {
     1
 }
 
-/// rule: the MLS All-Star Game pits the two conference all-star teams ([0x9d00a4] and [0x9d00a8], clubs in the table);
-/// in odd years the [0x9d00a4] team is at home, in even years the [0x9d00a8] one; the stadium is that of an MLS club
-/// drawn (1 in 6, in table order) among the home conference's clubs (0x413 in odd years, 0x414 in even ones); both
-/// teams get the USA nation [inference]
+/// rule: the MLS All-Star Game pits the two conference all-star teams (`G_KEY_CLUB_MLS_ALL_STARS_EAST` and
+/// `G_KEY_CLUB_MLS_ALL_STARS_WEST`, clubs in the table); in odd years the `G_KEY_CLUB_MLS_ALL_STARS_EAST` team is at
+/// home, in even years the `G_KEY_CLUB_MLS_ALL_STARS_WEST` one; the stadium is that of an MLS club drawn (1 in 6, in
+/// table order) among the home conference's clubs (0x413 in odd years, 0x414 in even ones); both teams get the USA
+/// nation [inference]
 /// Original: `UsaMlsAllStars::set_up_teams` (0x90a540, usa_mls_all_stars.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn set_up_teams(this: usize) -> i32 {
     set_up_all_star_teams(Cup(this))
@@ -166,14 +167,14 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_update_for_date(this: u
 }
 
 /// Rule: the MLS All-Star game is a single match between the two conference selections, drawn on 15/6 and played on 2/8
-/// (moved to weekday 6) at the borrowed home ground [inference: venue 0], with no bracket draw (+0xd = 0x20
-/// [inference]); category 8; no prize.
-///
-/// `UsaMlsAllStars::create_round_table(stage, &rounds, &extra, &out)` (virtual +0x3c of the All-Star Game): outside
-/// stage −1 (the byte), 0. On −1: out (if requested) = 0, rounds = 1, extra = 0; the table (`exe::crt_malloc` of 0x68; out of
-/// memory, the error box at line 0x9a and 0) with the single round: the draw on day 15 of month 5 (June) moved to
-/// weekday 5, the match on day 2 of month 7 (August) moved to weekday 6, leg 1, venue 0 (`cup_set_round_draw_date` and `cup_set_round_match_date`, cdecl,
-/// with the year +0x40); name 0, +0xd = 0x20, category 8, 2 teams, 1 match, 2 new, 1 match per tie, no prize.
+/// (moved to weekday 6) at the borrowed home ground [inference: venue 0], with no bracket draw (`cup_round::TIE_RULES`
+/// = 0x20 [inference]); category 8; no prize. `UsaMlsAllStars::create_round_table(stage, &rounds, &extra, &out)`
+/// (virtual +0x3c of the All-Star Game): outside stage −1 (the byte), 0. On −1: out (if requested) = 0, rounds = 1,
+/// extra = 0; the table (`exe::crt_malloc` of 0x68; out of memory, the error box at line 0x9a and 0) with the single
+/// round: the draw on day 15 of month 5 (June) moved to weekday 5, the match on day 2 of month 7 (August) moved to
+/// weekday 6, leg 1, venue 0 (`exe::cup_set_round_draw_date` and `exe::cup_set_round_match_date`, cdecl, with the year
+/// `.year()`); name 0, `cup_round::TIE_RULES` = 0x20, category 8 (`match_category::CONTINENTAL_LATE_ROUND`), 2 teams, 1
+/// match, 2 new, 1 match per tie, no prize.
 /// Original: `UsaMlsAllStars::create_round_table` (0x90a400, usa_mls_all_stars.cpp, thiscall, ret 0x10).
 pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
     let this = Cup(this);

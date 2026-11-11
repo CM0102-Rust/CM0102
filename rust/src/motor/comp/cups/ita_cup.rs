@@ -760,10 +760,10 @@ pub(crate) unsafe fn select_coppa_italia_entrants(this: usize) -> (i32, i32) {
 
 /// rule: 48 Italian clubs enter the Coppa Italia. The 32 of the group stage: the season's Serie B clubs, those that
 /// came from Serie B in 4th, 5th or from 18th down and those that came from C1 in 4th, 5th or 6th (positions counted
-/// from 0 [inference]); if short, C1 clubs by position (6th, 7th...). The 32 are sorted (qsort 0x640590) and split into
-/// 4 pots of 8, and each of the 8 rounds draws one club from each pot. In the 2nd round enter the top 3 of last
-/// season's Serie B (the promoted) and the Serie A clubs from 10th to 15th; last, the top 9 of Serie A, up to 48 (the
-/// rest are left out by table order)
+/// from 0 [inference]); if short, C1 clubs by position (6th, 7th...). The 32 are sorted (`sort_pointers` with 0x640590)
+/// and split into 4 pots of 8, and each of the 8 rounds draws one club from each pot. In the 2nd round enter the top 3
+/// of last season's Serie B (the promoted) and the Serie A clubs from 10th to 15th; last, the top 9 of Serie A, up to
+/// 48 (the rest are left out by table order)
 /// Original: `ItaCup::select_entrants` (0x63faf0, ita_cup.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn ita_cup_select_entrants(this: usize) -> i32 {
     select_coppa_italia_entrants(this).0

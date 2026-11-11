@@ -2,10 +2,11 @@ use super::*;
 
 /// Builds the CM3_TEMP folder path in `[0xde279c]` and deletes its files matching the pattern, in groups of 100.
 ///
-/// `utils_clear_temp_folder(pattern)`: builds the temporary folder in `[0xde279c]` (the `CM3_TEMP` variable via
-/// `exe::utils_get_folder_for_key` + "\", if present, and the text of `[0xad9c64]`, copied with a limit by `exe::utils_copy_path_limited`) and deletes (`remove`
-/// `exe::crt_remove`) its files that match the pattern, in groups of 100 names (the search is closed before deleting and redone
-/// while the group fills up).
+/// `utils_clear_temp_folder(default)`: builds the temporary folder in `[0xde279c]` (the `CM3_TEMP` variable via
+/// `exe::utils_get_folder_for_key` + "\", if present, and the text of `[0xad9c64]`, copied with a limit by
+/// `exe::utils_copy_path_limited`) and deletes (`remove` `exe::crt_remove`) its files that match the pattern `default`
+/// (`exe::crt_makepath`, `exe::file_find_first`/`exe::file_find_next`/`exe::file_find_close`), in groups of 100 names
+/// (the search is closed before deleting and redone while the group fills up).
 /// Original: `utils_clear_temp_folder` (0x90cd50, utils.cpp, cdecl).
 pub(crate) unsafe extern "C" fn utils_clear_temp_folder(default: usize) {
     covered!("save clear temporaries");

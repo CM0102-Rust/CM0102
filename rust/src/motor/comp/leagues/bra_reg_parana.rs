@@ -22,20 +22,22 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_advance_stage(this: usize)
 /// (the season ends with the two stages and it gets status 5, champion, in the three tables).
 ///
 /// `BraRegParana::create_final_stage()`, called from the next-stage step when the second half ends. The two half
-/// champions (the club in the first row of the table of each League_Stage) go into a list of 2 (malloc `0x944e46` of 8;
-/// out of memory: the box of line `0x226` and it returns).
+/// champions (the club in the first row of the table of each League_Stage) go into a list of 2 (malloc
+/// `exe::crt_malloc` of 8; out of memory: the box of line `0x226` and it returns).
 ///
-/// Same club in both halves: it is champion without a final. `+0x30` = 1, `+0x2c` = 2 (the season ends with the two
-/// stages), status 5 (`+0x37`, champion) in the first row of each half's table and in its row of the league table
-/// (`+0xb1`, the `+0x3e` rows). The list is not freed (the original leaks it; the port does too).
+/// Same club in both halves: it is champion without a final. `.set_current_stage(1)`, `.set_stage_count(2)` (the season
+/// ends with the two stages), status 5 (`league_table_row::STATUS`, `table_status::CHAMPIONS`) in the first row of each
+/// half's table (`league::TABLE`) and in its row of the league table (`.table()`, the `.club_count()` rows). The list
+/// is not freed (the original leaks it; the port does too).
 ///
-/// Different champions: the final, in two games [inference: home and away]. Virtual `+0x3c` (create_round_table:
-/// thiscall(this, stage 2, &rounds, &extra, 0), ret `0x10`) builds the round table; the new stage (operator new
-/// `0x944cf1` of `0xb2`; Cup_Stage::Cup_Stage `0x522e00`, thiscall, ret `0x3c`: the league, 2, the list, the rounds,
-/// `+4`, the table, the year `+0x40`, 2, 1, the extra, `0x14`, 0, 1, 0 and the seeds {0, 1}: the first-half champion is
-/// seed 0) goes into the third stage slot (`[+0xc]+8`; no stage: the box of line `0x250` and it returns, without
-/// freeing). With it: Cup::set_up_round (`0x51c800`, thiscall(stage, 0), ret 4), the table and the list freed (free
-/// `0x9452ca`, in that order) and `+0x30` = 2. The original's SEH frame only covers the constructor (no destructor).
+/// Different champions: the final, in two games [inference: home and away]. Virtual `comp_vtable::CREATE_SCHEDULE`
+/// (create_round_table: thiscall(this, stage 2, &rounds, &extra, 0), ret `0x10`) builds the round table; the new stage
+/// (operator new `exe::crt_operator_new` of `0xb2`; Cup_Stage::Cup_Stage `FN_CUP_STAGE_CUP_STAGE`, thiscall, ret
+/// `0x3c`: the league, 2, the list, the rounds, `.competition()`, the table, the year `.year()`, 2, 1, the extra,
+/// `0x14`, 0, 1, 0 and the seeds {0, 1}: the first-half champion is seed 0) goes into the third stage slot (`.stages()`
+/// + 8; no stage: the box of line `0x250` and it returns, without freeing). With it: Cup::set_up_round
+/// (`exe::cup_set_up_round`, thiscall(stage, 0), ret 4), the table and the list freed (free `exe::crt_free`, in that
+/// order) and `.set_current_stage(2)`. The original's SEH frame only covers the constructor (no destructor).
 /// Original: `BraRegParana::create_final_stage` (0x4382c0, bra_reg_parana.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_final_stage(this: usize) {
     let this = League(this);
@@ -98,16 +100,17 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_final_stage(this: u
 ///
 /// `BraRegParana::record_season_honours()` (slot 13).
 ///
-/// With a final (`+0x30` = 2): the final's history (slot 13, `+0x30`, of stage `[+0xc]+8`) and, as a tail jump,
-/// `0x42bba0` (`bra_nat_first_fill_champions_cup_entrants`, cdecl with no arguments: when the twelve state leagues
-/// finish, it puts the champions into the Champions Cup); returns its eax.
+/// With a final (`.current_stage()` = 2): the final's history (slot 13, `comp_vtable::RECORD_SEASON_HONOURS`, of stage
+/// `.stages()` + 8) and, as a tail jump, `exe::bra_nat_first_fill_champions_cup_entrants` (cdecl with no arguments:
+/// when the twelve state leagues finish, it puts the champions into the Champions Cup); returns its eax.
 ///
-/// Without a final (the same champion in both halves): the league history (League::record_season_honours `0x684640`,
-/// thiscall, ret 0); the prizes, 175,000 to the champion (first row of table `+0xb1`) and 100,000 to the runner-up
-/// (second row), each to the balance (`0x5a0590` on `[0xae2a38]` -> the club's finances, thiscall, ret 4; `0x5999a0`
-/// Finance::add_prize_money, thiscall, ret 4) and in the prize news (`0x48e3e0` Comp::send_prize_money_news:
-/// thiscall(this, club, 64-bit value, position 1 or 2, round 0, match 0, type −2), ret `0x1c`); then `0x42bba0`, as
-/// above.
+/// Without a final (the same champion in both halves): the league history (League::record_season_honours
+/// `FN_LEAGUE_RECORD_SEASON_HONOURS`, thiscall, ret 0); the prizes, 175,000 to the champion (first row of table
+/// `.table()`) and 100,000 to the runner-up (second row), each to the balance (`exe::financetable_get_club_finance` on
+/// `G_FINANCE_TABLE` -> the club's finances, thiscall, ret 4; `exe::finance_add_prize_money` Finance::add_prize_money,
+/// thiscall, ret 4) and in the prize news (`exe::comp_send_prize_money_news` Comp::send_prize_money_news:
+/// thiscall(this, club, 64-bit value, position 1 or 2, round 0, match 0, type −2), ret `0x1c`); then
+/// `exe::bra_nat_first_fill_champions_cup_entrants`, as above.
 /// Original: `BraRegParana::record_season_honours` (0x4384e0, bra_reg_parana.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn bra_reg_parana_record_season_honours(this: usize) -> u32 {
     let this = League(this);

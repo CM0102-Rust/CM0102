@@ -243,14 +243,15 @@ pub(crate) unsafe extern "thiscall" fn spa_second_set_up_rules(this: usize) -> u
     spa_first_apply_league_rules(League(this), &segunda_rules(this))
 }
 
-/// `SpaSecond::create_table()`: the Segunda has 22 clubs (+0x3e), those of the competition in database order.
-///
-/// The table (malloc `exe::crt_malloc` of 0x512: push; add esp, 4 -> cdecl; out of memory, the error box at line 0x298 and 0)
-/// receives, in database order ([0xae23b4], [0xae235c] clubs of 0x245 bytes), the clubs of the competition of id
-/// [0x9cf628] until it is full (League::init_table_row `init_table_row`: push 0; push 0; push club; push row (the pushed word
-/// has the row byte with stack garbage above it; `init_table_row` reads only the byte); mov ecx, this -> thiscall, ret 0x10);
-/// the B team of a Primera club ([0x9cf624]) gets fate −4 (+0x37 = 0xfc: cannot go up). Full: the prize fund (+0x28 =
-/// League::calc_prize_fund `calc_prize_fund`: push 50000; mov ecx -> thiscall, ret 4), +0xe1 = 1 and 1; otherwise 0.
+/// `SpaSecond::create_table()`: the Segunda has 22 clubs (`club_count`), those of the competition in database order.
+/// The table (`exe::crt_malloc` of 0x512: push; add esp, 4 -> cdecl; out of memory, the error box at line 0x298 and 0)
+/// receives, in database order (`G_CLUB_TABLE`, `G_CLUB_COUNT` clubs of `club::SIZE` bytes), the clubs of the
+/// competition of id `KEY_CLUB_COMP_SPANISH_SECOND_DIVISION` until it is full (`exe::league_init_table_row`: push 0;
+/// push 0; push club; push row (the pushed word has the row byte with stack garbage above it;
+/// `exe::league_init_table_row` reads only the byte); mov ecx, this -> thiscall, ret 0x10); the B team of a Primera
+/// club (`KEY_CLUB_COMP_SPANISH_FIRST_DIVISION`) gets fate −4 (+0x37 = 0xfc: cannot go up). Full: the prize fund
+/// (`set_prize_fund` = `exe::league_calc_prize_fund`: push 50000; mov ecx -> thiscall, ret 4), `prize_mode` = 1 and 1;
+/// otherwise 0.
 /// Original: `SpaSecond::create_table` (0x855b40, spa_second.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u32 {
     let this = League(this);

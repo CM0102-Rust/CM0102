@@ -164,9 +164,10 @@ pub(crate) unsafe fn league_written_table_bytes(t: usize) -> Vec<u8> {
 
 /// Sets the season expectations of each club in the table, through the manager manager, with the news.
 ///
-/// Ret 0, a league method: `League::set_club_season_expectations()`: with the manager manager (`[0xb67a44]`), the
-/// season expectations of each club in the table (+0xb1, rows of 0x3b bytes, +0x3e clubs) through `set_season_expectations` (push 1;
-/// push club; mov ecx, `[0xb67a44]` -> thiscall, ret 8: with the news).
+/// Ret 0, a league method: `League::set_club_season_expectations()`: with the manager manager (`G_MANAGER_MANAGER`),
+/// the season expectations of each club in the table (`table()`, rows of `league_table_row::SIZE` bytes, `club_count()`
+/// clubs) through `exe::manager_manager_set_season_expectations` (push 1; push club; mov ecx, `G_MANAGER_MANAGER` ->
+/// thiscall, ret 8: with the news).
 /// Original: `League::set_club_season_expectations` (0x68aa80, league.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn set_club_season_expectations(this: usize) {
     let this = League(this);
@@ -185,12 +186,13 @@ pub(crate) unsafe extern "thiscall" fn set_club_season_expectations(this: usize)
 /// Moves the club down to the division (keeping the previous one), applies the relegation clauses and makes the human
 /// manager leave when the division is not played.
 ///
-/// Ret 0xc; this is not read: `club.relegate_club_to_division(division, _)`: the club's competition (+0x57)
-/// becomes the division and the previous one goes to +0x5b; the relegation clauses (`trigger_relegation_clauses` push old; push club; mov
-/// ecx, `[0xae1050]` -> thiscall, ret 8); if the division is not played (no competition table `[0xadadfc]`, no division
-/// or no competition with its id) and the club has a human manager who decides (`exe::human_manager_is_human_club` push 0; push 0; push 1; push
-/// 1; push club; add esp, 0x14 -> cdecl), the manager leaves (`remove_club_manager` push 0; push 7; push 1; push club; mov ecx,
-/// `[0xb67a44]` -> thiscall, ret 0x10).
+/// Ret 0xc; this is not read: `club.relegate_club_to_division(division, _)`: the club's competition (`club::DIVISION`)
+/// becomes the division and the previous one goes to `club::LAST_DIVISION`; the relegation clauses
+/// (`exe::contract_manager_trigger_relegation_clauses` push old; push club; mov ecx, `G_CONTRACT_MANAGER` -> thiscall,
+/// ret 8); if the division is not played (no competition table `G_COMP_OBJECT_TABLE`, no division or no competition
+/// with its id) and the club has a human manager who decides (`exe::human_manager_is_human_club` push 0; push 0; push
+/// 1; push 1; push club; add esp, 0x14 -> cdecl), the manager leaves (`exe::manager_manager_remove_club_manager` push
+/// 0; push 7; push 1; push club; mov ecx, `G_MANAGER_MANAGER` -> thiscall, ret 0x10).
 /// Original: `League::relegate_club_to_division` (0x6831a0, league.cpp, thiscall, ret 0xc).
 pub(crate) unsafe extern "thiscall" fn relegate_club_to_division(_this: usize, club: usize, division: usize, _x: u32) {
     let club = Club(club);
@@ -239,21 +241,24 @@ pub(crate) unsafe fn tv_date_entry(this: League, data: usize) -> Option<usize> {
 /// reputation, zeroed when either club plays 2..5 days before or after; 100/50 in national team slots) to the weekday
 /// and time slot of the slot, with the news, the stadium and the calendar.
 ///
-/// Ret 4; SEH frame with no destructor on the normal path (the local dates and list):
-/// `date.move_fixtures_for_tv()`, from the league day (`league_update_for_date`) and from building the calendar (0x683e30).
-/// Through the date's entry (tv_date_entry), the league matches on the entry's day and time slot (+4) go to a local
-/// list (`exe::new_llist`; `collect_comp_fixtures_on_day`: push list; push league +0x44; push -1; push id; push slot; push day; push year; mov ecx,
-/// `[0xae2a58]` -> thiscall, ret 0x1c). With matches: the entry's slots (7 bytes from +5, up to the first with +0xb =
-/// 0xff) are sorted (`exe::crt_qsort` with 0x8b4e00) if any has bits 0x7fc0 in dword +5. For each slot with time slot (+0xa)
-/// 0..2: the date moved to the slot's weekday (+9; `exe::date_get_nearest_weekday`); the clash window: 2..5 days after the requested date if
-/// the TV day falls after it, otherwise 5..2 days before (`exe::date_add_days`/0x54c8e0 + `exe::date_operator_3d`). Among the matches in the list
-/// (of the league's type, +0x42), the one with the highest rating (signed word; the first on a tie): slot of type 3,
-/// 100 for a national side match (`exe::database_is_national_team` on the home side) in the stadium (+0x18 → +0x38 → +0x1f) of the nation of
-/// either side, otherwise 50; otherwise the random draw (`exe::utils_random`) of the away side's reputation (+0x80) + 1500 plus
-/// that of the home side's, zeroed if either has a match in the window (`find_fixtures`). The chosen one: outside type 3, news
-/// 3 to both clubs; it leaves the calendar (`remove_fixture`), takes the TV date, the time slot and the slot's type, the
-/// stadium (`set_fixture_venue`) and goes back into the calendar (`add_fixture`); the slot becomes 0xff and the match leaves the list
-/// (`manager_manager_remove`).
+/// Ret 4; SEH frame with no destructor on the normal path (the local dates and list): `date.move_fixtures_for_tv()`,
+/// from the league day (`league_update_for_date`) and from building the calendar (0x683e30). Through the date's entry
+/// (tv_date_entry), the league matches on the entry's day and time slot (+4) go to a local list (`exe::new_llist`;
+/// `exe::fixture_manager_collect_comp_fixtures_on_day`: push list; push league `stage_index()`; push -1; push id; push
+/// slot; push day; push year; mov ecx, `G_FIXTURE_MANAGER` -> thiscall, ret 0x1c). With matches: the entry's slots (7
+/// bytes from +5, up to the first with `league_round_date::TV_SLOT_KIND` = 0xff) are sorted (`exe::crt_qsort` with
+/// 0x8b4e00) if any has bits 0x7fc0 in dword +5. For each slot with time slot (`league_round_date::TV_SLOT_TIME_SLICE`)
+/// 0..2: the date moved to the slot's weekday (`league_round_date::TV_SLOT_WEEKDAY`; `exe::date_get_nearest_weekday`);
+/// the clash window: 2..5 days after the requested date if the TV day falls after it, otherwise 5..2 days before
+/// (`exe::date_add_days`/`exe::date_sub_days` + `exe::date_operator_3d`). Among the matches in the list (of the
+/// league's type, `fixture::STAGE_INDEX`), the one with the highest rating (signed word; the first on a tie): slot of
+/// type 3, 100 for a national side match (`exe::database_is_national_team` on the home side) in the stadium
+/// (`fixture::STADIUM` → `city()` → `city::NATION`) of the nation of either side, otherwise 50; otherwise the random
+/// draw (`exe::utils_random`) of the away side's reputation (`club::REPUTATION`) + 1500 plus that of the home side's,
+/// zeroed if either has a match in the window (`FN_FIXTURE_MANAGER_FIND_FIXTURES`). The chosen one: outside type 3,
+/// news 3 to both clubs; it leaves the calendar (`exe::fixture_manager_remove_fixture`), takes the TV date, the time
+/// slot and the slot's type, the stadium (`FN_STADIUM_SET_FIXTURE_VENUE`) and goes back into the calendar
+/// (`exe::fixture_manager_add_fixture`); the slot becomes 0xff and the match leaves the list (`exe::llist_remove`).
 /// Original: `League::move_fixtures_for_tv` (0x685640, league.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn move_fixtures_for_tv(this: usize, data: usize) {
     let this = League(this);
@@ -399,11 +404,13 @@ pub(crate) unsafe extern "thiscall" fn move_fixtures_for_tv(this: usize, data: u
 /// group.
 ///
 /// Ret 0; SEH frame with no destructor on the normal path: `League::send_group_draw_news()`, from the competitions'
-/// group draw. A group of up to 8 teams (+0x3e; the 0x3b-byte teams in `[+0xb1]`, +0 the club): for each club with a
-/// human manager, news 0x15 (allocated once, `exe::crt_operator_new`(0xdf), built by `construct_news_item`, freed at the end by `exe::crt_operator_delete` without a
-/// destructor) with the competition id, +0x3a, the first date (that of the first entry of table `[+0xba]` moved to the
-/// weekday of each slot, `exe::date_get_nearest_weekday`, the earliest), the number of opponents; per club, its own id (2) and those of the
-/// others (6 onwards), delivered to it (`send_to_club_manager`).
+/// group draw. A group of up to 8 teams (`club_count()`; the `league_table_row::SIZE`-byte teams in `table()`, +0 the
+/// club): for each club with a human manager (`cup_has_human_manager`), news 0x15 (allocated once,
+/// `exe::crt_operator_new`(0xdf), built by `exe::new_newsitem`, freed at the end by `exe::crt_operator_delete` without
+/// a destructor) with the competition id, `stage_id()`, the first date (that of the first entry of table
+/// `round_dates()` moved to the weekday of each slot, `exe::date_get_nearest_weekday`, the earliest), the number of
+/// opponents; per club, its own id (2) and those of the others (6 onwards), delivered to it
+/// (`exe::news_send_to_club_manager`).
 /// Original: `League::send_group_draw_news` (0x684230, league.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn send_group_draw_news(this: usize) {
     let this = League(this);
@@ -471,17 +478,19 @@ pub(crate) unsafe extern "thiscall" fn send_group_draw_news(this: usize) {
 /// Sends news 0xd with the first three fixtures (date, opponent, venue) to each human-managed club not yet told, and
 /// does the same in the following stages.
 ///
-/// Ret 4; SEH frame with no destructor on the normal path (the local lists): `list.send_fixture_list_news()`,
-/// from creating the calendar (0x5cd1e0) and from the league day in its year. Uses the local list (`exe::new_llist`) if the
-/// league is a first stage (+0x44 = 0xff) or there is no list. With the competition counting (`exe::comp_util_is_league_division`: push id; add
-/// esp, 4 -> cdecl) and a first stage: the date of the first entry of table `[+0xba]` minus 5 days (0x54c8e0,
-/// `exe::date_operator_3d`); for each club with a human manager (0x3b-byte teams in `[+0xb1]`) that is not in the list (4-byte ids):
-/// its first 3 matches from that date (0x5acee0 into a local list, 18 arguments: push 1; push -1; push +0x44; push 0;
-/// push list; push 3; push -1 ×4; push club id; push -1; push -1; push competition id; push 1; push &slot; push &day;
-/// push &year; mov ecx, `[0xae2a58]` -> thiscall, ret 0x48); finding 3: news 0xd (competition id, club id, the league
-/// year and, per match, the day, the year, the opponent and 1 at home or 0 away) to the club, which enters the list
-/// (0x68d0d0: push 4; push club; mov ecx, list -> thiscall, ret 8). Then, in the stages (`[+0xc]`, up to +0x30) with
-/// +0x43 = 2, the same routine with the list.
+/// Ret 4; SEH frame with no destructor on the normal path (the local lists): `list.send_fixture_list_news()`, from
+/// creating the calendar (0x5cd1e0) and from the league day in its year. Uses the local list (`exe::new_llist`) if the
+/// league is a first stage (`stage_index()` = `stage_index::MAIN`) or there is no list. With the competition counting
+/// (`exe::comp_util_is_league_division`: push id; add esp, 4 -> cdecl) and a first stage: the date of the first entry
+/// of table `round_dates()` minus 5 days (`exe::date_sub_days`, `exe::date_operator_3d`); for each club with a human
+/// manager (`cup_has_human_manager`; `league_table_row::SIZE`-byte teams in `table()`) that is not in the list (4-byte
+/// ids): its first 3 matches from that date (`FN_FIXTURE_MANAGER_SCAN_FIXTURES` into a local list, 18 arguments: push
+/// 1; push -1; push `stage_index()`; push 0; push list; push 3; push -1 ×4; push club id; push -1; push -1; push
+/// competition id; push 1; push &slot; push &day; push &year; mov ecx, `G_FIXTURE_MANAGER` -> thiscall, ret 0x48);
+/// finding 3: news 0xd (competition id, club id, the league year and, per match, the day, the year, the opponent and 1
+/// at home or 0 away) to the club, which enters the list (`exe::llist_add_tail`: push 4; push club; mov ecx, list ->
+/// thiscall, ret 8). Then, in the stages (`stages()`, up to `current_stage()`) with `league::COMP_TYPE` = 2, the same
+/// routine with the list (`exe::league_send_fixture_list_news`).
 /// Original: `League::send_fixture_list_news` (0x683ee0, league.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn send_fixture_list_news(this: usize, list: usize) {
     let this = League(this);
@@ -593,38 +602,47 @@ pub(crate) unsafe fn same_date(a: usize, b: usize) -> bool {
     read_i16(a + 2) == read_i16(b + 2) && read_i16(a) == read_i16(b)
 }
 
-/// The league day: the fixture list news on its day, each stage's day, the +0xc9 date event, the season end (next
-/// stage, history, records), the TV fixtures four weeks ahead, the registration deadline 5/20/14 days before the first
-/// date and the +0xd1 date.
+/// The league day: the fixture list news on its day, each stage's day, the `league::LAST_RESULT_DATE` date event, the
+/// season end (next stage, history, records), the TV fixtures four weeks ahead, the registration deadline 5/20/14 days
+/// before the first date and the `league::LAST_UPDATE_DATE` date.
 ///
-/// Ret 8; SEH frame with no destructor on the normal path (the local dates): `date.update_for_date(full)`, the
-/// day of each league (through the competitions, 46522 calls up to 2002-06-01). League stopped (+0xb5) or without clubs
-/// (+0x45 = 0): 0. Otherwise (returns 1, in the byte):
+/// Ret 8; SEH frame with no destructor on the normal path (the local dates): `date.update_for_date(full)`, the day of
+/// each league (through the competitions, 46522 calls up to 2002-06-01). League stopped (`stopped()`) or without clubs
+/// (`active()` = 0): 0. Otherwise (returns 1, in the byte):
 ///
-/// - +0xa7 = -1 with teams (+0x3e) > 0: +0xa7 = (teams − 1) · legs (+0x3c), in the word;
+/// - `games_per_club()` = -1 with teams (`club_count()`) > 0: `games_per_club()` = (teams − 1) · legs (`legs()`), in
+/// the word;
 ///
-/// - in the first stage (+0x44 = 0xff) with a table (+0xb1, +0x11 = 0), full and a new date (≠ +0xd1): on the day after
-/// the key nation's Cup day (`key_nation_index_of_comp`; `[0xb63d75 + 72·k]` + 1, 0 after 364) and in the league year (+0x40), the table
-/// news (`send_fixture_list_news`: push 0; mov ecx, this -> thiscall, ret 4);
+/// - in the first stage (`stage_index()` = `stage_index::MAIN`) with a table (`table()`, `played()` = 0), full and a
+/// new date (≠ `league::LAST_UPDATE_DATE`): on the day after the key nation's Cup day (`exe::key_nation_index_of_comp`;
+/// `[0xb63d75 + 72·k]` + 1, 0 after 364) and in the league year (`year()`), the table news
+/// (`exe::league_send_fixture_list_news`: push 0; mov ecx, this -> thiscall, ret 4);
 ///
-/// - in the first stage, each stage's day (+0xc, up to +0x30; method 0x14 with the date and the full flag);
+/// - in the first stage, each stage's day (`stages()`, up to `current_stage()`; method `comp_vtable::UPDATE_FOR_DATE`
+/// with the date and the full flag);
 ///
-/// - on date +0xc9 (without +0xdd): +0xad = 0 and method 0x94;
+/// - on date `league::LAST_RESULT_DATE` (without `complete()`): `set_table_column(0)` and method
+/// `league_vtable::UPDATE_POSITIONS_AND_STATUS`;
 ///
-/// - in the first stage with a table and a new date: method 0x10 (0, 0); season end (+0xdd = 1) with all stages
-/// finished (method 0x10 with (0, 1) ≠ 0): the next stage (method 0x28) if +0x30 < +0x2c − 1, otherwise (once, +0x4c)
-/// the history (`exe::club_history_record_comp_season`: push league; mov ecx, `[0xad9da8]` -> thiscall, ret 4), the records with 1 (`update_league_position_records`: push 1;
-/// push league; mov ecx, `[0xad9dac]` -> thiscall, ret 8) if the competition counts (`exe::comp_util_is_league_division`: push id; add esp, 4 ->
-/// cdecl), the box at line 0x74c if +0xe6, method 0x30 and the end of attachment +8 (0x4a19f0: mov ecx, `[+8]` ->
-/// thiscall, ret 0); then the records with 0 and the attachment (0x4a2450: mov ecx, `[+8]` -> thiscall, ret 0);
+/// - in the first stage with a table and a new date: method `comp_vtable::CHECK_COMPLETE` (0, 0); season end
+/// (`complete()` = 1) with all stages finished (method `comp_vtable::CHECK_COMPLETE` with (0, 1) ≠ 0): the next stage
+/// (method `comp_vtable::ADVANCE_STAGE`) if `current_stage()` < `stage_count()` − 1, otherwise (once,
+/// `season_closed()`) the history (`exe::club_history_record_comp_season`: push league; mov ecx, `G_CLUB_HISTORY` ->
+/// thiscall, ret 4), the records with 1 (`exe::club_records_update_league_position_records`: push 1; push league; mov
+/// ecx, `G_CLUB_RECORDS` -> thiscall, ret 8) if the competition counts (`exe::comp_util_is_league_division`: push id;
+/// add esp, 4 -> cdecl), the box at line 0x74c if `tiebreak_matches()`, method `comp_vtable::RECORD_SEASON_HONOURS` and
+/// the end of attachment `comp_stats()` (`exe::comp_stats_update_season_end_records`: mov ecx, `[+8]` -> thiscall, ret
+/// 0); then the records with 0 and the attachment (`FN_COMP_STATS_SEND_RECORD_NEWS`: mov ecx, `[+8]` -> thiscall, ret
+/// 0);
 ///
-/// - with a table and full, without +0xdd: the TV fixtures four weeks ahead (`exe::date_add_weeks` + `move_fixtures_for_tv`: push &date; mov ecx,
-/// this -> thiscall, ret 4);
+/// - with a table and full, without `complete()`: the TV fixtures four weeks ahead (`exe::date_add_weeks` +
+/// `exe::league_move_fixtures_for_tv`: push &date; mov ecx, this -> thiscall, ret 4);
 ///
-/// - full: in the first stage with registrations (+0x52 bit 2), a new date, without +0xdd and the table in progress: if
-/// the first date of the TV table (+0xba; day, year − the league's) falls 5 days from now (Argentina `[0x9cf218]`), 20
-/// (Italy `[0x9cf360]`) or 14 days, the registration deadline (`assign_league_squad_numbers`: push 0; push 0; push league; mov ecx,
-/// `[0xdd7ef0]` -> thiscall, ret 0xc); and +0xd1 takes the date (`exe::date_operator_3d`).
+/// - full: in the first stage with registrations (`squad_flags()` & `squad_flags::FIXED_SQUAD_NUMBERS`), a new date,
+/// without `complete()` and the table in progress: if the first date of the TV table (`round_dates()`; day, year − the
+/// league's) falls 5 days from now (Argentina `KEY_NATION_ARGENTINA`), 20 (Italy `KEY_NATION_ITALY`) or 14 days, the
+/// registration deadline (`exe::squad_manager_assign_league_squad_numbers`: push 0; push 0; push league; mov ecx,
+/// `G_SQUAD_MANAGER` -> thiscall, ret 0xc); and `league::LAST_UPDATE_DATE` takes the date (`exe::date_operator_3d`).
 /// Original: `League::update_for_date` (0x6847c0, league.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn league_update_for_date(this: usize, data: usize, full: u32) -> u32 {
     let this = League(this);
@@ -795,21 +813,28 @@ pub(crate) unsafe fn add_league_fixture(this: League, r: Fixture, ea: usize, eb:
 /// dates.
 ///
 /// Ret 0; SEH frame with no destructor on the normal path (the local dates): `League::create_fixtures()`, from building
-/// the competitions (44 calls up to 2002-06-01). With n = teams (+0x3e) + teams % 2: +0xdd = 0; the grid of n rows of n
-/// dwords (`exe::crt_operator_new`; out of memory: the box at line 0x3fc or 0x405 and 0), built by `league_build_round_robin_grid` (push n; push grid ->
-/// stdcall, ret 8: it does not read the mov ecx, this before it) and, outside competitions `[0x9cf79c]` and
-/// `[0x9cf7a4]`, the club order drawn (`draw_team_order`: push n; mov ecx, this -> thiscall, ret 4). The match record (0x4f
-/// bytes on the stack): +0 competition id, +8 = -1, +0x14 the competition, +0x24/+0x26 the last date of the table
-/// (+0xba, entry +0xa9 − 1), +0x2c year (+0x40), +0x30 = 0, +0x32 (+0x3a), +0x36 (+0xdb), +0x38 (+0xab), +0x3a (+0xc4),
-/// +0x3b = 0xff, +0x3d/+0x3e = 0, +0x42 stage (+0x44), +0x43..+0x4c = 0xff, and the league's method 0x7c with it. With
-/// its own list (+0xea, 0x10-byte entries: +8/+0xc the club ids) for the league year: in each round k (+0xa9) the
-/// teams/2 matches of the list (the indices through table +0xb1), and the list is freed (`exe::crt_vector_destructor_iterator` + `exe::crt_operator_delete`).
-/// Otherwise the round robin: for j = 1..legs (+0x3c)·(n − 1), the round through `rotate_round` (push +0xd9; push +0xa9; push
-/// +0x3c; push +0x3e; push id; push &step; push round; add esp, 0x1c -> cdecl) and column j % (n − 1) (n − 1 at zero):
-/// each team i with opponent v ≠ 0 in the grid clears the opponent's slot; home advantage by the parity of v > 0, of
-/// the half ((j − 1)/(n − 1)) and of year + stage; with nation +0x24, the club of that nation (+0x69) stays at home.
-/// Each match goes to the calendar (add_league_fixture). At the end, the grid is freed and the type 3 dates of the
-/// table take the matches to TV (`move_fixtures_for_tv`). Returns 1.
+/// the competitions (44 calls up to 2002-06-01). With n = teams (`club_count()`) + teams % 2: `set_complete(0)`; the
+/// grid of n rows of n dwords (`exe::crt_operator_new`; out of memory: the box at line 0x3fc or 0x405 and 0), built by
+/// `exe::league_build_round_robin_grid` (push n; push grid -> stdcall, ret 8: it does not read the mov ecx, this before
+/// it) and, outside competitions `KEY_CLUB_COMP_FIFA_WORLD_CUP` and `KEY_CLUB_COMP_EUROPEAN_FOOTBALL_CHAMPIONSHIP`, the
+/// club order drawn (`exe::league_draw_team_order`: push n; mov ecx, this -> thiscall, ret 4). The match record (0x4f
+/// bytes on the stack): +0 competition id, `fixture::MATCH_STATS_SLOT` = -1, `fixture::COMPETITION` the competition,
+/// `fixture::NEXT_ROUND_YEAR`/`fixture::NEXT_ROUND_DAY` the last date of the table (`round_dates()`, entry
+/// `round_count()` − 1), `fixture::SEASON_YEAR` year (`year()`), `fixture::ROUND_NAME` = 0 (`round_name::NONE`),
+/// `fixture::ROUND_PREFIX` (`stage_id()`), `fixture::ROUND_DRAW_RULES` (`round_draw_rules()`), `fixture::TIE_RULES`
+/// (`match_rules()`), `fixture::CATEGORY` (`match_category()`), `fixture::STAGE` = 0xff,
+/// `fixture::HOME_RESULT_MARK`/`fixture::AWAY_RESULT_MARK` = 0, `fixture::STAGE_INDEX` stage (`stage_index()`),
+/// +0x43..+0x4c = 0xff, and the league's method `comp_vtable::SET_FIXTURE_SUBSTITUTES` with it. With its own list
+/// (`fixed_fixtures()`, 0x10-byte entries: +8/`fixed_fixture::AWAY_CLUB_ID` the club ids) for the league year: in each
+/// round k (`round_count()`) the teams/2 matches of the list (the indices through table `table()`), and the list is
+/// freed (`exe::crt_vector_destructor_iterator` + `exe::crt_operator_delete`). Otherwise the round robin: for j =
+/// 1..legs (`legs()`)·(n − 1), the round through `exe::league_next_schedule_round` (push `league_flags()`; push
+/// `round_count()`; push `legs()`; push `club_count()`; push id; push &step; push round; add esp, 0x1c -> cdecl) and
+/// column j % (n − 1) (n − 1 at zero): each team i with opponent v ≠ 0 in the grid clears the opponent's slot; home
+/// advantage by the parity of v > 0, of the half ((j − 1)/(n − 1)) and of year + stage; with a fixed stadium
+/// (`fixed_stadium_id()`), the club whose stadium (`club::STADIUM`) it is stays at home. Each match goes to the
+/// calendar (`add_league_fixture`). At the end, the grid is freed and the type 3 dates of the table
+/// (`league_round_date::TV_SLOT_KIND`) take the matches to TV (`exe::league_move_fixtures_for_tv`). Returns 1.
 /// Original: `League::create_fixtures` (0x6835c0, league.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn create_fixtures(this: usize) -> u32 {
     let this = League(this);
@@ -982,18 +1007,21 @@ pub(crate) unsafe extern "thiscall" fn create_fixtures(this: usize) -> u32 {
 /// clauses, human manager sacked in a competition with no active record) and the promoted clubs go up, in pairs or all;
 /// the box if the counts differ from the expected ones.
 ///
-/// Ret 0x18: `league_promote_and_relegate(upper, lower, contracts, in_pairs, going_up, going_down)`, from the end of
-/// the leagues (after 2002-06-01). It receives the caller's ecx and passes it to `move_club_to_division`, which does not read it:
-/// thiscall here to keep it. With `contracts`, the clubs of the lower league that do not go up (+0x37 ≠ 0 and ≠ 5)
-/// trigger the non-promotion clauses (`exe::contract_manager_trigger_non_promotion_clauses`: push league; push club; mov ecx, `[0xae1050]` -> thiscall, ret 8). In
-/// pairs: each relegated club from above (+0x37 = 3) swaps with the first one below that goes up (+0x37 = 0 or 5): that
-/// one goes up (`move_club_to_division`: push 0; push upper competition; push club; caller's ecx -> thiscall, ret 0xc), the relegated
-/// one keeps the old competition (+0x5b) and takes the lower one (+0x57), triggers the relegation clauses (`trigger_relegation_clauses`:
-/// push old; push club; mov ecx, `[0xae1050]` -> thiscall, ret 8) and, in a competition with no active record and with
-/// a human manager (`exe::human_manager_is_human_club`), loses the manager (`remove_club_manager`: push 0; push 7; push 1; push club; mov ecx, `[0xb67a44]` ->
-/// thiscall, ret 0x10); both end with +0x37 = 0xff. Otherwise, all relegated clubs go down this way and then all the
-/// lower ones that go up go up. Counts that differ from the expected ones (0xff = any) give the box at line 0x15dc
-/// (going up) or 0x15e2 (going down).
+/// Ret 0x18: `league_promote_and_relegate(above, below, contracts, aos_pairs, sobem, descem)`, from the end of the
+/// leagues (after 2002-06-01). It receives the caller's ecx and passes it to `exe::league_move_club_to_division`, which
+/// does not read it: thiscall here to keep it. With `contracts`, the clubs of the lower league that do not go up
+/// (`league_table_row::STATUS` ≠ 0 and ≠ 5) trigger the non-promotion clauses
+/// (`exe::contract_manager_trigger_non_promotion_clauses`: push league; push club; mov ecx, `G_CONTRACT_MANAGER` ->
+/// thiscall, ret 8). In pairs: each relegated club from above (`league_table_row::STATUS` = 3) swaps with the first one
+/// below that goes up (`league_table_row::STATUS` = 0 or 5): that one goes up (`exe::league_move_club_to_division`:
+/// push 0; push upper competition; push club; caller's ecx -> thiscall, ret 0xc), the relegated one keeps the old
+/// competition (`club::LAST_DIVISION`) and takes the lower one (`club::DIVISION`), triggers the relegation clauses
+/// (`exe::contract_manager_trigger_relegation_clauses`: push old; push club; mov ecx, `G_CONTRACT_MANAGER` -> thiscall,
+/// ret 8) and, in a competition with no active record and with a human manager (`exe::human_manager_is_human_club`),
+/// loses the manager (`exe::manager_manager_remove_club_manager`: push 0; push 7; push 1; push club; mov ecx,
+/// `G_MANAGER_MANAGER` -> thiscall, ret 0x10); both end with `league_table_row::STATUS` = 0xff. Otherwise, all
+/// relegated clubs go down this way and then all the lower ones that go up go up. Counts that differ from the expected
+/// ones (0xff = any) give the box at line 0x15dc (going up) or 0x15e2 (going down).
 /// Original: `league_promote_and_relegate` (0x689c80, league.cpp, thiscall (ecx repassado), ret 0x18).
 pub(crate) unsafe extern "thiscall" fn league_promote_and_relegate(ecx: usize, above: usize, below: usize, contracts: u32, aos_pairs: u32, sobem: u32, descem: u32) {
     let below = League(below);
@@ -1134,30 +1162,39 @@ pub(crate) unsafe fn max_points(league: League, l: LeagueTableRow) -> i32 {
     ((league.games_per_club() as i32) - (l.played() as i32)).wrapping_mul((league.win_points() as i8) as i32).wrapping_add(l.points() as i32)
 }
 
-/// Sorts the table (`sort_table`), marks the bands (promotion, play-offs, 2 and relegation) from the top and the bottom,
-/// works out the best (+0x39) and worst (+0x3a) possible position from the maximum points and decides the status
-/// (+0x37): title (5), promotion (0, 7 or 6), play-offs (1), relegation (3, with the clauses `trigger_relegation_clauses`), 2 and 0xfe,
-/// each announced (+0x40); the European place (`[0xae2d14]`) from the nation places (`exe::uefaseeding_get_nation_places`); the stats progress
-/// (+0x68).
+/// Sorts the table (`exe::league_sort_table`), marks the bands (promotion, play-offs, 2 and relegation) from the top
+/// and the bottom, works out the best (`league_table_row::BEST_POSSIBLE_POSITION`) and worst
+/// (`league_table_row::WORST_POSSIBLE_POSITION`) possible position from the maximum points and decides the status
+/// (`league_table_row::STATUS`): title (5), promotion (0, 7 or 6), play-offs (1), relegation (3, with the clauses
+/// `exe::contract_manager_trigger_relegation_clauses`), 2 and 0xfe, each announced
+/// (`comp_vtable::ANNOUNCE_TEAM_STATUS`); the European place (`G_CLUB_STATE_TABLE`) from the nation places
+/// (`exe::uefaseeding_get_nation_places`); the stats progress (`comp_vtable::SET_CLUB_PROGRESS`).
 ///
-/// Ret 0: `League::update_positions_and_status()`, virtual +0x94 of the league (from the day pass 0x684946). +0xa7 (the
-/// season's matches) = (+0x3e − 1) × +0x3c (16 bits) if still −1, with rows and +0x45. With +0xdd, nothing more.
-/// Otherwise sorts the table (League::sort_table `sort_table`, thiscall(league, 0), ret 4) and builds the band map (malloc
-/// `exe::crt_malloc` of +0x3e bytes set to 0xff; out of memory: the box at line 0x7c9): from the top, counts +0xbe (band 0,
-/// promotion) and +0xbf (band 1, play-offs) on the rows not in 0xfe, 0xfc or 3; from the bottom, +0xc1 (band 3,
-/// relegation) and +0xc0 (band 2) on those not in 0, 1 or 5. With +0xd9 bit 0, the first in the table outside 0xfe,
-/// 0xfc and 3. The best position (+0x39) and the worst (+0x3a) of each row not yet decided, from the maximum points and
-/// the matches played (with +0xe6 on a tie among those that finished). Then, row by row: worst = first + 1, the title
-/// (5); band 0 at the worst, promotion (0 with +0xd9 bit 1; 7 with bit 2; 6 with bit 3) for those in 0xff or 1; band 1,
-/// play-offs (1) for those in 0xff; band 3 at the best, the relegation clauses
-/// (CONTRACT_MANAGER::trigger_relegation_clauses `trigger_relegation_clauses`, thiscall(`[0xae1050]`, club, +4), ret 8) and relegation (3)
-/// for those in 0xff, 2 or 0xfc; band 2 at the best, 2 for those in 0xff or 0xfe. Each new status is announced (+0x40).
-/// With +0xd9 bit 0x20, those between the bands with no band in the middle and in 0xff become 0xfe (announced with −2).
-/// Best = worst below 9, top league (+0x44 = 0xff) that counts (`exe::comp_util_is_league_division`, cdecl(id)), without +0x1c and a club with no
-/// European place (`[0xae2d14]` + 6 × id = −1) from a European nation (`[0x9cfa10]`) outside `[0x9cf45c]`: the nation's
-/// places (UefaSeeding::get_nation_places `exe::uefaseeding_get_nation_places`, thiscall(`[0xde1f58]`, nation, &cl, &uefa), ret 0xc) give the
-/// Champions League (`[0x9cf6e8]`) or the UEFA Cup (`[0x9cf6f0]`). Finally virtual +0x68 (the status in the stats:
-/// club, +0x44, position, best, worst) and the free (`exe::crt_free`) of the map.
+/// Ret 0: `League::update_positions_and_status()`, virtual `league_vtable::UPDATE_POSITIONS_AND_STATUS` of the league
+/// (from the day pass 0x684946). `games_per_club()` (the season's matches) = (`club_count()` − 1) × `legs()` (16 bits)
+/// if still −1, with rows and `active()`. With `complete()`, nothing more. Otherwise sorts the table
+/// (League::sort_table `exe::league_sort_table`, thiscall(league, 0), ret 4) and builds the band map (malloc
+/// `exe::crt_malloc` of `club_count()` bytes set to 0xff; out of memory: the box at line 0x7c9): from the top, counts
+/// `promoted_count()` (band 0, promotion) and `promotion_playoff_count()` (band 1, play-offs) on the rows not in 0xfe,
+/// 0xfc or 3; from the bottom, `relegated_count()` (band 3, relegation) and `relegation_playoff_count()` (band 2) on
+/// those not in 0, 1 or 5. With `league_flags::CHAMPION_STATUS` (bit 0 of `league_flags()`), the first in the table
+/// outside 0xfe, 0xfc and 3. The best position (`league_table_row::BEST_POSSIBLE_POSITION`) and the worst
+/// (`league_table_row::WORST_POSSIBLE_POSITION`) of each row not yet decided, from the maximum points (`max_points`)
+/// and the matches played (with `tiebreak_matches()` on a tie among those that finished). Then, row by row: worst =
+/// first + 1, the title (5); band 0 at the worst, promotion (0 with `league_flags()` bit 1; 7 with bit 2; 6 with bit 3)
+/// for those in 0xff or 1; band 1, play-offs (1) for those in 0xff; band 3 at the best, the relegation clauses
+/// (CONTRACT_MANAGER::trigger_relegation_clauses `exe::contract_manager_trigger_relegation_clauses`,
+/// thiscall(`G_CONTRACT_MANAGER`, club, `competition()`), ret 8) and relegation (3) for those in 0xff, 2 or 0xfc; band
+/// 2 at the best, 2 for those in 0xff or 0xfe. Each new status is announced (`set_row_status`,
+/// `comp_vtable::ANNOUNCE_TEAM_STATUS`). With `league_flags()` bit 0x20, those between the bands with no band in the
+/// middle and in 0xff become 0xfe (announced with −2). Best = worst below 9, top league (`stage_index()` =
+/// `stage_index::MAIN`) that counts (`exe::comp_util_is_league_division`, cdecl(id)), without an upper division
+/// (`upper_division_id()` = −1) and a club with no European place (`G_CLUB_STATE_TABLE` + 6 × id = −1) from a European
+/// nation (`KEY_CONTINENT_EUROPE`) outside `KEY_NATION_SCOTLAND`: the nation's places (UefaSeeding::get_nation_places
+/// `exe::uefaseeding_get_nation_places`, thiscall(`G_UEFA_SEEDING`, nation, &cl, &uefa), ret 0xc) give the Champions
+/// League (`KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE`) or the UEFA Cup (`KEY_CLUB_COMP_UEFA_CUP`). Finally virtual
+/// `comp_vtable::SET_CLUB_PROGRESS` (the status in the stats: club, `stage_index()`, position, best, worst) and the
+/// free (`exe::crt_free`) of the map.
 /// Original: `League::update_positions_and_status` (0x684cd0, league.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn update_positions_and_status(this: usize) {
     let this = League(this);
@@ -1484,15 +1521,17 @@ pub(crate) unsafe fn sum_of_positions(n: i16) -> i32 {
     s as i16 as i32
 }
 
-/// Pays the prize money: divides the prize fund (+0x28) by 1 + 2 + ... + n and pays (n − i) shares to the club in table
-/// row i (`add_prize_money` on the finance record), with the prize news item above 1000; with +0xe1 = 3 the competition pays
-/// through virtual +0x6c; with +0xe1 = 2, nothing.
+/// Pays the prize money: divides the prize fund (`prize_fund()`) by 1 + 2 + ... + n and pays (n − i) shares to the club
+/// in table row i (`exe::finance_add_prize_money` on the finance record), with the prize news item above 1000; with
+/// `prize_mode()` = 3 the competition pays through virtual `comp_vtable::PAY_STAGE_PRIZE_MONEY`; with `prize_mode()` =
+/// 2, nothing.
 ///
-/// Ret 0: `League::pay_prize_money()`: with +0xe1 = 2, nothing. With +0xe1 = 3, the competition (`[0xadadfc]` by the id
-/// of +4) pays through virtual +0x6c (without the competition table: the box at line 0x1df). Otherwise the fund (+0x28)
-/// divided by 1 + 2 + … + n (n = +0x3e table rows) is the share; the club of row i (+0xb1, 0x3b each) receives (n − i)
-/// shares in the finance record (`get_club_finance`; `add_prize_money` adds to the balance, in +0xa8 and +0x148) and, above 1000, the
-/// prize news (`send_prize_money_news` with position i + 1).
+/// Ret 0: `League::pay_prize_money()`: with `prize_mode()` = 2, nothing. With `prize_mode()` = 3, the competition
+/// (`G_COMP_OBJECT_TABLE` by the id of `competition()`) pays through virtual `comp_vtable::PAY_STAGE_PRIZE_MONEY`
+/// (without the competition table: the box at line 0x1df). Otherwise the fund (`prize_fund()`) divided by 1 + 2 + … + n
+/// (n = `club_count()` table rows) is the share; the club of row i (`table()`, `league_table_row::SIZE` each) receives
+/// (n − i) shares in the finance record (`european_cup_club_finance`; `exe::finance_add_prize_money` adds to the
+/// balance, in +0xa8 and +0x148) and, above 1000, the prize news (`FN_COMP_SEND_PRIZE_MONEY_NEWS` with position i + 1).
 /// Original: `League::pay_prize_money` (0x682e10, league.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn pay_prize_money(league: usize) {
     let league = League(league);
@@ -1540,12 +1579,15 @@ pub(crate) unsafe extern "thiscall" fn pay_prize_money(league: usize) {
     }
 }
 
-/// Updates the staff records by status: 5 the title (`add_league_champions_record`), 0 promotion (`add_promotion_record`, weight 100), 3 relegation
-/// (`add_relegation_record`); returns 0.
+/// Updates the staff records by status: 5 the title (`exe::staff_records_add_league_champions_record`), 0 promotion
+/// (`exe::staff_records_add_promotion_record`, weight 100), 3 relegation (`exe::staff_records_add_relegation_record`);
+/// returns 0.
 ///
-/// Ret 0x18: `club.update_staff_records_for_status(status, stage, out, _, _)` (virtual +0x44 of the league):
-/// status 5, the title (Staff_Records `add_league_champions_record` of `[0xdd7f00]` with the club and competition +4); 0, promotion
-/// (`add_promotion_record` with weight 100); 3, relegation (`add_relegation_record`). Returns 0 and does not write the output.
+/// Ret 0x18: `club.update_staff_records_for_status(status, stage, out, _, _)` (virtual
+/// `comp_vtable::UPDATE_STAFF_RECORDS_FOR_STATUS` of the league): status 5, the title (Staff_Records
+/// `exe::staff_records_add_league_champions_record` of `G_STAFF_RECORDS` with the club and competition +4); 0,
+/// promotion (`exe::staff_records_add_promotion_record` with weight 100); 3, relegation
+/// (`exe::staff_records_add_relegation_record`). Returns 0 and does not write the output.
 /// Original: `League::update_staff_records_for_status` (0x686940, league.cpp, thiscall, ret 0x18).
 pub(crate) unsafe extern "thiscall" fn league_update_staff_records_for_status(league: usize, club: usize, status: u32, _stage: u32, _out: usize, _a: u32, _b: u32) -> u32 {
     let records = read_usize(G_STAFF_RECORDS);
@@ -1571,18 +1613,22 @@ pub(crate) unsafe extern "thiscall" fn league_update_staff_records_for_status(le
 // simplification: the three records append to the people’s history and change reputation (they allocate): original only; the
 // the copy takes the branches.
 
-/// Announces a team's status: outside friendlies, calls the competition's virtual +0x44 and builds news item 0xc (club,
-/// competition, stage, status, round, what the virtual returned), delivered by scope or, by status, to the nation, the
-/// division (and the promotion or relegation one) or the club's manager.
+/// Announces a team's status: outside friendlies, calls the competition's virtual
+/// `comp_vtable::UPDATE_STAFF_RECORDS_FOR_STATUS` and builds news item 0xc (club, competition, stage, status, round,
+/// what the virtual returned), delivered by scope or, by status, to the nation, the division (and the promotion or
+/// relegation one) or the club's manager.
 ///
 /// Ret 0x14; SEH frame with no destructor: `club.announce_team_status(status, stage, _, _)`: friendly
-/// (`exe::friendly_is_friendly_competition`), 0. Virtual +0x44 of the competition (`[0xadadfc]` by the id of +4) with the club, the status, the stage
-/// and the output (0xff); −1 from it: 0. The round (+0x3a; with stages, +0x44 = 0xff, and stage ≠ 0xff: that of the
-/// stage). News 0xc (local): 0 the club, 1 the competition, 2 the stage, 3 the status, 4 the round, 5 what the virtual
-/// returned. Output ≠ 0xff: delivery by scope (`send_by_scope` with the club's nation and the continent). Otherwise by status:
-/// 5, to the competition's nation (`send_to_nation_managers`) without +0x1c, to the division (`send_to_division_managers`) with it; 0 and 3, to the
-/// division and to the competition's promotion (+0x1c) or relegation (+0x20) division, if any; 1 and 2, to the
-/// division; 6, 7 and 0xfe, to the club's manager (`send_to_club_manager`). Returns 1.
+/// (`exe::friendly_is_friendly_competition`), 0. Virtual `comp_vtable::UPDATE_STAFF_RECORDS_FOR_STATUS` of the
+/// competition (`G_COMP_OBJECT_TABLE` by the id of `competition()`) with the club, the status, the stage and the output
+/// (0xff); −1 from it: 0. The round (`stage_id()`; with stages, `stage_index()` = `stage_index::MAIN`, and stage ≠
+/// 0xff: that of the stage, `league::STAGE_ID`). News 0xc (local): 0 the club, 1 the competition, 2 the stage, 3 the
+/// status, 4 the round, 5 what the virtual returned. Output ≠ 0xff: delivery by scope (`exe::news_send_by_scope` with
+/// the club's nation and the continent). Otherwise by status: 5, to the competition's nation
+/// (`FN_NEWS_SEND_TO_NATION_MANAGERS`) without an upper division (`upper_division_id()`), to the division
+/// (`exe::news_send_to_division_managers`) with it; 0 and 3, to the division and to the competition's promotion (+0x1c)
+/// or relegation (+0x20) division, if any; 1 and 2, to the division; 6, 7 and 0xfe, to the club's manager
+/// (`exe::news_send_to_club_manager`). Returns 1.
 /// Original: `League::announce_team_status` (0x686670, league.cpp, thiscall, ret 0x14).
 pub(crate) unsafe extern "thiscall" fn announce_team_status(league: usize, club: usize, status: u32, stage: u32, _a: u32, _b: u32) -> u32 {
     let league = League(league);
@@ -1668,15 +1714,18 @@ pub(crate) unsafe extern "thiscall" fn announce_team_status(league: usize, club:
 pub(crate) static LEAGUE_ADD_RESULT_DRY_RUN: AtomicBool = AtomicBool::new(false);
 
 /// Adds a result to the league: stamps today's date on the league; a stage fixture goes to its stage; otherwise adds
-/// the fixture to the table (`apply_result_to_table`) and to the competition stats (`exe::comp_stats_record_match_result`) and returns 1.
+/// the fixture to the table (`exe::league_apply_result_to_table`) and to the competition stats
+/// (`exe::comp_stats_record_match_result`) and returns 1.
 ///
-/// Ret 8: `fixture.add_result(match)`: stores the day's date in +0xc9 (`exe::date_operator_3d` of `[0xae2c90]`); league with
-/// stages (+0x44 = 0xff) and a fixture of a stage (+0x42 ≠ 0xff): the stage (`[+0xc]` + 4 × stage, up to +0x30)
-/// receives the fixture through virtual +4 and what it returns is returned; stage out of range: the boxes and 0.
-/// Fixture of another stage (+0x42 ≠ +0x44, which is not 0xfe): 0. Otherwise adds the fixture to the table (`apply_result_to_table` on
-/// table +0xb1 with the +0x3e rows, marking) and, outside stages 0xfe, with the competition (`[0xadadfc]` by the id of
-/// +4) and its stats (+8) and with the match: `exe::comp_stats_record_match_result` with the points of both; returns 1. Null fixture: the box and
-/// −1.
+/// Ret 8: `fixture.add_result(match)`: stores the day's date in `league::LAST_RESULT_DATE` (`exe::date_operator_3d` of
+/// `G_CURRENT_DATE`); league with stages (`stage_index()` = 0xff) and a fixture of a stage (`fixture::STAGE_INDEX` ≠
+/// 0xff): the stage (`stages()` + 4 × stage, up to `current_stage()`) receives the fixture through virtual
+/// `comp_vtable::ADD_RESULT` and what it returns is returned; stage out of range: the boxes and 0. Fixture of another
+/// stage (`fixture::STAGE_INDEX` ≠ `stage_index()`, which is not 0xfe): 0. Otherwise adds the fixture to the table
+/// (`exe::league_apply_result_to_table` on table `table()` with the `club_count()` rows, marking) and, outside stages
+/// 0xfe (`stage_index::SPECIAL_STAGE`), with the competition (`G_COMP_OBJECT_TABLE` by the id of `competition()`) and
+/// its stats (+8) and with the match: `exe::comp_stats_record_match_result` with the points of both; returns 1. Null
+/// fixture: the box and −1.
 /// Original: `League::add_result` (0x685d30, league.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn league_add_result(league: usize, p: usize, game: usize) -> i32 {
     let p = Fixture(p);
@@ -1719,13 +1768,15 @@ pub(crate) unsafe extern "thiscall" fn league_add_result(league: usize, p: usize
     1
 }
 
-/// Allocates and returns a copy of the table rows, with new head-to-head and form buffers; sets +0xa7 when it is −1.
+/// Allocates and returns a copy of the table rows, with new head-to-head and form buffers; sets `games_per_club()` when
+/// it is −1.
 ///
-/// Ret 0: `League::copy_table()`: no table (+0xb1) or no rows (+0x3e): 0. With +0xa7 = −1, writes (rows − 1) × +0x3c
-/// into it (16 bits; more than 50 rows: the box at line 0x1059 first, as in the original). Allocates the rows
-/// (`exe::crt_malloc`, 0x3b each; out of memory: box 0x1061 and 0) and copies them; with head-to-head on the first row (+5),
-/// each row gets a new vector of (rows − 1) × 14 bytes with a copy of its own; with form (+9), one of +0xa7 bytes.
-/// Returns the copy. The vector allocations are not checked (as in the original).
+/// Ret 0: `League::copy_table()`: no table (`table()`) or no rows (`club_count()`): 0. With `games_per_club()` = −1,
+/// writes (rows − 1) × `legs()` into it (16 bits; more than 50 rows: the box at line 0x1059 first, as in the original).
+/// Allocates the rows (`exe::crt_malloc`, 0x3b each; out of memory: box 0x1061 and 0) and copies them; with
+/// head-to-head on the first row (+5), each row gets a new vector of (rows − 1) × 14 bytes with a copy of its own; with
+/// form (+9), one of `games_per_club()` bytes. Returns the copy. The vector allocations are not checked (as in the
+/// original).
 /// Original: `League::copy_table` (0x687710, league.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn copy_table(league: usize) -> usize {
     let league = League(league);
@@ -1775,9 +1826,10 @@ pub(crate) unsafe extern "thiscall" fn copy_table(league: usize) -> usize {
 
 /// Sorts the table's clubs by strength and stores each one's predicted position in the competition stats.
 ///
-/// Ret 0: `League::set_predicted_positions()`: without stats (+8): the box (line 0x189e). Copies the clubs of the +0x3e
-/// table rows (+0xb1, 0x3b each) into a vector (`exe::crt_malloc`; out of memory: box 0x18a6, without freeing), sorts by
-/// strength (`comp_util_sort_clubs_by_strength`) and stores position i + 1 of each non-null club in the stats (`set_club_final_position`); frees the vector
+/// Ret 0: `League::set_predicted_positions()`: without stats (`comp_stats()`): the box (line 0x189e). Copies the clubs
+/// of the `club_count()` table rows (`table()`, `league_table_row::SIZE` each) into a vector (`exe::crt_malloc`; out of
+/// memory: box 0x18a6, without freeing), sorts by strength (`exe::comp_util_sort_clubs_by_strength`) and stores
+/// position i + 1 of each non-null club in the stats (`exe::comp_stats_set_club_final_position`); frees the vector
 /// (`exe::crt_free`).
 /// Original: `League::set_predicted_positions` (0x68a850, league.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn league_set_predicted_positions(league: usize) {
@@ -1812,7 +1864,7 @@ pub(crate) unsafe fn projection_entry(buf: usize, i: i32) -> usize {
     buf.wrapping_add((i as isize * 0xe) as usize)
 }
 
-/// qsort comparator of projection entries by club reputation (+0x80), highest first
+/// qsort comparator of projection entries by club reputation (`club::REPUTATION`), highest first
 /// Original: `compare_projection_by_reputation_desc` (0x68afb0, league.cpp, cdecl).
 pub(crate) unsafe extern "C" fn compare_projection_by_reputation_desc(a: usize, b: usize) -> i32 {
     let ra = read_i16(read_usize(a) + club::REPUTATION) as i32;
@@ -1842,17 +1894,21 @@ pub(crate) unsafe fn apply_form_factor(this: League, e: usize, factor: f64) -> i
 }
 
 /// Projects each table club's end-of-season points (in the first third of the season, by a reputation scale), sorts
-/// them and hands the club's positions in normal, better (× 1.5) and worse (× 0.444) form to virtual +0x68.
+/// them and hands the club's positions in normal, better (× 1.5) and worse (× 0.444) form to virtual
+/// `comp_vtable::SET_CLUB_PROGRESS`.
 ///
-/// Ret 4; virtual +0x84 of the leagues, called only by Comp_Stats `exe::comp_stats_get_club_projected_positions`, which the board uses in the weekly
-/// confidence 0x697c40 and in the reason for the manager leaving `get_departure_reason`: `club.update_projected_positions()`:
-/// with the club in the table (+0xb1, 0x3b bytes, count +0x3e: +0 the club, +0x11 the matches, +0x19 the points),
-/// builds in a block (`exe::crt_operator_new`) one 0xe-byte entry per row with the points per match; in the first third of the season
-/// (club's matches × 3 < +0xa7), replaces them with a scale by reputation (0.83 × +0xc2 for the first down to 0.23 ×
-/// +0xc2 below the last). Projects the end-of-season points, sorts and finds the club's position in normal, better (×
-/// 1.5) and worse (× 0.444) form; frees the block and hands the three to virtual +0x68 (`set_club_progress(club,
-/// competition +0x44, normal, better, worse)`, which writes bytes +0x73..+0x75 of the club's record in Comp_Stats).
-/// Returns 1; outside the table, 0.
+/// Ret 4; virtual +0x84 of the leagues, called only by Comp_Stats `exe::comp_stats_get_club_projected_positions`, which
+/// the board uses in the weekly confidence 0x697c40 and in the reason for the manager leaving `get_departure_reason`:
+/// `club.update_projected_positions()`: with the club in the table (`table()`, `league_table_row::SIZE` bytes, count
+/// `club_count()`: +0 the club, `league_table_row::PLAYED` the matches, `league_table_row::POINTS` the points), builds
+/// in a block (`exe::crt_operator_new`) one 0xe-byte entry per row with the points per match
+/// (`league_projection::POINTS_PER_GAME`); in the first third of the season (club's matches × 3 < `games_per_club()`),
+/// replaces them with a scale by reputation (0.83 × `win_points()` (`rdata::F64_0_83`) for the first down to 0.23 ×
+/// `win_points()` (`rdata::F64_0_23`) below the last). Projects the end-of-season points
+/// (`league_projection::PROJECTED_POINTS`), sorts and finds the club's position in normal, better (× 1.5,
+/// `rdata::F64_1_5`) and worse (× 0.444, `rdata::F64_0_4444444444`) form; frees the block and hands the three to
+/// virtual `comp_vtable::SET_CLUB_PROGRESS` (`set_club_progress(club, competition stage_index(), normal, better,
+/// worse)`, which writes bytes +0x73..+0x75 of the club's record in Comp_Stats). Returns 1; outside the table, 0.
 /// Original: `League::update_projected_positions` (0x68ac40, league.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn update_projected_positions(this: usize, club: usize) -> u32 {
     let this = League(this);
@@ -1951,15 +2007,18 @@ pub(crate) unsafe fn uses_head_to_head_rule(this: League) -> bool {
     false
 }
 
-/// Puts the club in table row i: totals cleared, status 0xff, flag, total rounds (+0xa7) if still −1, position history
-/// and, under rule 4, the head-to-head entries (the last row fills every row's opponents).
+/// Puts the club in table row i: totals cleared, status 0xff, mark, total rounds (`games_per_club()`) if still −1,
+/// position history and, under rule 4, the head-to-head entries (the last row fills every row's opponents).
 ///
-/// Ret 0x10: `i.init_table_row(club, flag, rows)`: puts the club in row `i` (char) of table `rows` (null: the
-/// league's, +0xb1): a club with status +0x64 = 3 changes to 2; total rounds +0xa7 still −1 becomes (clubs +0x3e − 1) ×
-/// legs +0x3c (more than 50 clubs: box and continues); the row gets the club, position `i`, the three totals blocks
-/// zeroed, the flag (+0x38), status 0xff, 1 in +0x39 and the clubs (+0x3a); with legs, the position history (+9, +0xa7
-/// bytes; out of memory, box and end); with rule 4, the head-to-head entries (+5, 14 bytes per opponent, zeroed). On
-/// the last row with head-to-head, each row receives the opponents in table order.
+/// Ret 0x10: `i.init_table_row(club, mark, rows)`: puts the club in row `i` (char) of table `rows` (null: the league's,
+/// `table()`): a club with status `professional_status()` = 3 (`professional_status::AMATEUR`) changes to 2
+/// (`professional_status::SEMI_PROFESSIONAL`); total rounds `games_per_club()` still −1 becomes (clubs `club_count()` −
+/// 1) × legs `legs()` (more than 50 clubs: box and continues); the row gets the club, position `i`, the three totals
+/// blocks zeroed, the mark (`set_mark`), status 0xff (`table_status::UNDECIDED`), 1 in `set_best_possible_position` and
+/// the clubs (`set_worst_possible_position`); with legs, the position history (`set_position_history`,
+/// `games_per_club()` bytes; out of memory, box and end); with rule 4 (`uses_head_to_head_rule`), the head-to-head
+/// entries (`set_h2h_entries`, 14 bytes per opponent, zeroed). On the last row with head-to-head, each row receives the
+/// opponents in table order.
 /// Original: `League::init_table_row` (0x687430, league.cpp, thiscall, ret 0x10).
 pub(crate) unsafe extern "thiscall" fn init_table_row(this: usize, i: u32, club: usize, mark: u32, rows: usize) {
     let this = League(this);
@@ -2051,7 +2110,8 @@ pub(crate) unsafe extern "thiscall" fn league_get_club_array(this: usize, out: *
     *n = this.club_count(); // the count
 }
 
-/// each club still in the league division stores last season's division (+0x5b) and the final position (+0x5f)
+/// each club still in the league division stores last season's division (`club::LAST_DIVISION`) and the final position
+/// (`set_last_position`)
 /// Original: `League::record_final_positions` (0x68aa30, league.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn record_final_positions(this: usize) {
     let this = League(this);
@@ -2083,19 +2143,27 @@ pub(crate) unsafe fn league_add_i16(a: usize, v: i16) {
 pub(crate) const RESULT_TABLE_ROW_SIZE: usize = 0x3b;
 
 /// Applies a result to the table: finds the home and away rows and adds the game at home and away (played, goals,
-/// win/draw/loss, by extra time and penalties, marking +0x3d/+0x3e), the win points by the +0x90 virtual and the draw
-/// points +0xc3; redoes the totals, returns both rows' points and adds the head-to-head (`update_head_to_head`).
+/// win/draw/loss, by extra time and penalties, marking `fixture::HOME_RESULT_MARK`/`fixture::AWAY_RESULT_MARK`), the
+/// win points by the `league_vtable::POINTS_FOR_RESULT` virtual and the draw points `draw_points()`; redoes the totals,
+/// returns both rows' points and adds the head-to-head (`exe::league_update_head_to_head`).
 ///
-/// Ret 0x18: `fixture.apply_result_to_table(table, n, mark, home_pts*, away_pts*)`: finds the rows of the home
-/// side (+0x1c) and the away side (+0x20) among the `n` (short) of the table (stops at the first club that is neither
-/// after finding both) and adds the game: matches (+0x1f/+0x2d), goals (+0x23/+0x25 and +0x31/+0x33: the score of
-/// +0x47/+0x48 when ≠ 0xff, otherwise that of +0x43/+0x44). The result from score +0x43/+0x44; level: by extra time
-/// (+0x38 bit 2, +0x47/+0x48; `mark` writes 3 in +0x3d/+0x3e) and by penalties (bits 0x20/1, +0x49/+0x4a; a home win
-/// counts as a draw for it; 5 with 0x20, otherwise 4); a pure draw with the league's draw points (+0xc3). The win
-/// points through virtual +0x90 (`points_for_result`) of the type 2 competition (`[0xadadfc]`, +0x43) or of the league itself,
-/// read on each call. Redoes the totals of both rows and returns the points (+0x19) in `home_pts`/`away_pts` (0 without
-/// the row). With head-to-head on the first row (+5), finds the opponent in each one and adds the tie (`update_head_to_head`). No
-/// SEH, no random draw, no box, all locals written before being read.
+/// Ret 0x18: `fixture.apply_result_to_table(table, n, mark, pts_home*, pts_away*)`: finds the rows of the home side
+/// (`home_club()`) and the away side (`away_club()`) among the `n` (short) of the table (stops at the first club that
+/// is neither after finding both) and adds the game: matches
+/// (`league_table_row::HOME_PLAYED`/`league_table_row::AWAY_PLAYED`), goals
+/// (`league_table_row::HOME_GOALS_FOR`/`league_table_row::HOME_GOALS_AGAINST` and
+/// `league_table_row::AWAY_GOALS_FOR`/`league_table_row::AWAY_GOALS_AGAINST`: the score of
+/// `home_goals_extra_time()`/`away_goals_extra_time()` when ≠ 0xff, otherwise that of `home_goals()`/`away_goals()`).
+/// The result from score `home_goals()`/`away_goals()`; level: by extra time (`tie_rules()` &
+/// `fixture_tie_rules::EXTRA_TIME`, `home_goals_extra_time()`/`away_goals_extra_time()`; `mark` writes 3
+/// (`result_mark::WON_EXTRA_TIME`) in `fixture::HOME_RESULT_MARK`/`fixture::AWAY_RESULT_MARK`) and by penalties (bits
+/// 0x20/1, `home_penalties()`/`away_penalties()`; a home win counts as a draw for it; 5 with 0x20
+/// (`fixture_tie_rules::SHOOT_OUT_35_YARD`), otherwise 4); a pure draw with the league's draw points (`draw_points()`).
+/// The win points through virtual `league_vtable::POINTS_FOR_RESULT` (`points_for_result`) of the type 2 competition
+/// (`G_COMP_OBJECT_TABLE`, `league::COMP_TYPE`) or of the league itself, read on each call. Redoes the totals of both
+/// rows and returns the points (`league_table_row::POINTS`) in `pts_home`/`pts_away` (0 without the row). With
+/// head-to-head on the first row (+5), finds the opponent in each one and adds the tie
+/// (`exe::league_update_head_to_head`). No SEH, no random draw, no box, all locals written before being read.
 /// Original: `League::apply_result_to_table` (0x685f60, league.cpp, thiscall, ret 0x18).
 pub(crate) unsafe extern "thiscall" fn apply_result_to_table(league: usize, p: usize, table: usize, n: u32, mark: u32, pts_home: *mut i16, pts_away: *mut i16) {
     let p = Fixture(p);
@@ -2276,13 +2344,15 @@ pub(crate) unsafe fn result_update_regions(p: Fixture, table: usize, n: u32, pts
     reg
 }
 
-/// Returns the points for a result: the win points (+0xc2) to the winner, 0 to the loser; when level, by extra time
-/// (+0xab bit 2), by penalties (bits 0x21: the draw points +0xc3 to the winner) or the draw points.
+/// Returns the points for a result: the win points (`win_points()`) to the winner, 0 to the loser; when level, by extra
+/// time (`match_rules()` bit 2), by penalties (bits 0x21: the draw points `draw_points()` to the winner) or the draw
+/// points.
 ///
-/// Ret 8: `club.points_for_result(fixture)`: the win points (+0xc2) if the club won (home side +0x1c with
-/// +0x43 > +0x44, away side +0x20 with fewer), otherwise 0; level: by extra time (+0xab bit 2, +0x47/+0x48, the win
-/// points), by penalties (bits 0x21, +0x49/+0x4a: the draw points +0xc3 to the winner, 0 to the loser) or the draw
-/// points. Only al is written: the 3 high bytes of eax are those of the fixture.
+/// Ret 8: `club.points_for_result(fixture)`: the win points (`win_points()`) if the club won (home side `home_club()`
+/// with `home_goals()` > `away_goals()`, away side `away_club()` with fewer), otherwise 0; level: by extra time
+/// (`match_rules()` bit 2, `home_goals_extra_time()`/`away_goals_extra_time()`, the win points), by penalties (bits
+/// 0x21, `home_penalties()`/`away_penalties()`: the draw points `draw_points()` to the winner, 0 to the loser) or the
+/// draw points. Only al is written: the 3 high bytes of eax are those of the fixture.
 /// Original: `League::points_for_result` (0x68aad0, league.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn points_for_result(league: usize, club: usize, p: usize) -> u32 {
     let p = Fixture(p);
@@ -2307,10 +2377,12 @@ compare_value!(compare_points_for_result, points_for_result, IDX_POINTS_FOR_RESU
 /// qsort callback comparing table rows with head-to-head: the own compare, the points, the club id with no games, the
 /// stored head-to-head position (+4) and the name.
 ///
-/// `league_compare_table_rows_h2h(a, b)` (qsort callback of `sort_table` under rule 4 and of `ita_league_sort_clubs_level_on_points` of the Italian Serie
-/// B): an empty row ties; the own comparison `[0xb67a00]` when it does not give 0 (called again); the points (+0x19 of
-/// column `[[0xb679fc]+0xad]`, b − a); both without matches (+0x11): the club id (a − b); the head-to-head position
-/// stored in +4 (b − a); finally the clubs' name (+4, strcmp: −1, 0 or 1).
+/// `league_compare_table_rows_h2h(a, b)` (qsort callback of `sort_table` under rule 4 and of
+/// `ita_league_sort_clubs_level_on_points` of the Italian Serie B): an empty row ties; the own comparison
+/// `G_LEAGUE_SORT_CUSTOM_COMPARE_FUNC` when it does not give 0 (called again); the points (`league_table_row::POINTS`
+/// of column `G_LEAGUE_SORT_CURRENT_LEAGUE` → `league::TABLE_COLUMN`, b − a); both without matches
+/// (`league_table_row::PLAYED`): the club id (a − b); the head-to-head position stored in +4 (b − a); finally the
+/// clubs' name (+4, strcmp: −1, 0 or 1).
 /// Original: `league_compare_table_rows_h2h` (0x683410, league.cpp, cdecl).
 pub(crate) unsafe extern "C" fn league_compare_table_rows_h2h(a: usize, b: usize) -> i32 {
     let col = read_usize(read_usize(G_LEAGUE_SORT_CURRENT_LEAGUE) + league::TABLE_COLUMN);
@@ -2422,17 +2494,20 @@ compare_value!(compare_contains_club, contains_club, IDX_CONTAINS_CLUB, (clube: 
 /// `+0x11` matches and, every 14 bytes per column (`+0xad`), the points at `+0x19`.
 pub(crate) const LEAGUE_TABLE_ROW_SIZE: usize = 0x3b;
 
-/// Sorts the table by the rules (+0xc5): rule 6 only sorts (`league_compare_table_rows`); rule 4 builds the mini table and, when first,
-/// sorts by head-to-head (`league_compare_table_rows_h2h`) and bubbles the ties; stores the position (+4) and the position history (+9);
-/// returns 1.
+/// Sorts the table by the rules (`league::TIEBREAKS`): rule 6 only sorts (`league_compare_table_rows`); rule 4 builds
+/// the mini table and, when first, sorts by head-to-head (`league_compare_table_rows_h2h`) and bubbles the ties; stores
+/// the position (`set_position`) and the position history (`position_history()`); returns 1.
 ///
-/// `rows.sort_table()`: sorts the table (`rows` null: the league's, +0xb1). First fixes total rounds +0xa7 (−1:
-/// (+0x3e − 1) × +0x3c, with clubs and +0x45). Rule 6 (+0xc5, without column +0xad) only sorts (qsort `exe::crt_qsort` with
-/// `league_compare_table_rows`); rule 4 with head-to-head builds the mini table (`build_h2h_table`) and, being the first rule, sorts with `league_compare_table_rows_h2h`
-/// and runs a bubble pass over the league rows (+0xb1) while there are swaps: a tie on points (or on the own comparison
-/// +0xa3) decided by `league_compare_table_rows`; otherwise qsort with `league_compare_table_rows`. Finally (+0x44 ≠ 0xfe, without column) stores the
-/// position in +4 and in history +9 (round +0x11 up to +0xa7). Keeps the league in `[0xb679fc]` and the own comparison
-/// in `[0xb67a00]`. Returns 1. No SEH, no random draw.
+/// `rows.sort_table()`: sorts the table (`rows` null: the league's, `table()`). First fixes total rounds
+/// `games_per_club()` (−1: (`club_count()` − 1) × `legs()`, with clubs and `active()`). Rule 6 (`league::TIEBREAKS`,
+/// without column `table_column()`) only sorts (qsort `exe::crt_qsort` with `league_compare_table_rows`); rule 4 with
+/// head-to-head builds the mini table (`exe::league_rank_by_head_to_head`) and, being the first rule, sorts with
+/// `league_compare_table_rows_h2h` and runs a bubble pass over the league rows (`table()`) while there are swaps: a tie
+/// on points (or on the own comparison `custom_compare()`) decided by `exe::league_compare_table_rows`; otherwise qsort
+/// with `league_compare_table_rows`. Finally (`stage_index()` ≠ `stage_index::SPECIAL_STAGE`, without column) stores
+/// the position in `set_position` and in history `position_history()` (round `played()` up to `games_per_club()`).
+/// Keeps the league in `G_LEAGUE_SORT_CURRENT_LEAGUE` and the own comparison in `G_LEAGUE_SORT_CUSTOM_COMPARE_FUNC`.
+/// Returns 1. No SEH, no random draw.
 /// Original: `League::sort_table` (0x6827d0, league.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn sort_table(league: usize, rows: usize) -> u32 {
     let league = League(league);
@@ -2592,14 +2667,15 @@ pub(crate) unsafe fn sort_regions(league: League, rows: usize) -> Vec<(usize, us
 }
 
 /// Builds the head-to-head mini table of the clubs level on points with their summed head-to-head results, sorted by
-/// `league_compare_h2h_rows`; the position (+4) starts at the club count and drops at each separated pair.
+/// `exe::league_compare_h2h_rows`; the position (+4) starts at the club count and drops at each separated pair.
 ///
-/// `rows.build_h2h_table()` (unnamed in the community map): a mini table (calloc `exe::crt_calloc` of +0x3e rows) with
-/// the club of each row and, for each other club with the same points (+0x19), the sum of the head-to-head against it
-/// (entry of +5: bytes +4..+7 into +0x11..+0x14, words +8/+0xa/+0xc into +0x15/+0x17/+0x19); sorts with `league_compare_h2h_rows` and
-/// writes in +4 of each row the position, which starts at the number of clubs and drops at each pair of the mini table
-/// that `league_compare_h2h_rows` separates. Frees the mini table (`exe::crt_free`). Out of memory: the original routine (the league.cpp box).
-/// TapeCall through `sort_table` under rule 4.
+/// `rows.build_h2h_table()` (unnamed in the community map): a mini table (calloc `exe::crt_calloc` of `club_count()`
+/// rows) with the club of each row and, for each other club with the same points (`league_table_row::POINTS`), the sum
+/// of the head-to-head against it (entry of `league_table_row::H2H_ENTRIES`: bytes +4..+7 into +0x11..+0x14, words
+/// +8/+0xa/+0xc into +0x15/+0x17/+0x19); sorts with `league_compare_h2h_rows` and writes in +4 of each row the
+/// position, which starts at the number of clubs and drops at each pair of the mini table that
+/// `exe::league_compare_h2h_rows` separates. Frees the mini table (`exe::crt_free`). Out of memory: the original
+/// routine (the league.cpp box). TapeCall through `sort_table` under rule 4.
 /// Original: `League::build_h2h_table` (0x682b30, league.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn build_h2h_table(league: usize, rows: usize) {
     let league = League(league);
@@ -2675,11 +2751,12 @@ pub(crate) unsafe extern "thiscall" fn build_h2h_table(league: usize, rows: usiz
     exe::crt_free(t);
 }
 
-/// Frees the +5 and +9 row buffers and the table (null: the league's, then clears +0x3e and +0xb1).
+/// Frees the +5 and +9 row buffers and the table (null: the league's, then clears `club_count()` and `table()`).
 ///
-/// `table.free_table()`: a null `table` = the league's (+0xb1). With clubs (+0x3e ≥ 1) and a table: frees
-/// (`exe::crt_free`) the +5 vectors of each row (if the first row's is not null), then the +9 ones (likewise) and the table;
-/// if it is the league's, zeroes +0x3e and +0xb1. No SEH, no random draw.
+/// `table.free_table()`: a null `table` = the league's (`table()`). With clubs (`club_count()` ≥ 1) and a table: frees
+/// (`exe::crt_free`) the +5 vectors of each row (if the first row's is not null), then the +9 ones (likewise) and the
+/// table; if it is the league's, zeroes `club_count()` and `table()` (`set_club_count(0)`, `set_table(0)`). No SEH, no
+/// random draw.
 /// Original: `League::free_table` (0x687970, league.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn free_table(league: usize, table: usize) {
     let league = League(league);
@@ -2710,15 +2787,19 @@ pub(crate) unsafe extern "thiscall" fn free_table(league: usize, table: usize) {
 /// Comparador: liberar duas vezes soltaria os mesmos blocos duas vezes.
 // simplification: original only (like the releases of the 232nd); the proof is the career and the copy’s branch in Rust mode.
 
-/// Returns 1 when every club has played the +0xa7 rounds (and the stages, if asked); at the end of the league, the
-/// records (`add_league_finish_records`), the prize money (`pay_prize_money`), the notice (+0x94) and +0xdd.
+/// Returns 1 when every club has played the `games_per_club()` rounds (and the stages, if asked); at the end of the
+/// league, the records (`exe::staff_records_add_league_finish_records`), the prize money
+/// (`exe::league_pay_prize_money`), the notice (`league_vtable::UPDATE_POSITIONS_AND_STATUS`) and `complete()`.
 ///
-/// `stages.check_complete(notify)`: 0 without a table, closed (+0xb5) or without +0x45. Outside the single
-/// stage (+0x44 ≠ 0xff) already complete (+0xdd): 1. Not complete: fixes total rounds +0xa7 (−1) and, if some club has
-/// not yet played them all (+0x11 < +0xa7), 0; otherwise, in league divisions (`exe::comp_util_is_league_division`) with +0xa9 > 8 and without
-/// +0xe6, the end-of-league records (`add_league_finish_records`), and without +0xe6 the prizes (`pay_prize_money`). With `stages` = 1 in the
-/// single stage: each stage of +0xc (0..=+0x30) must be complete (virtual +0x10 with 0, 1) and +0x30 ≥ +0x2c − 1,
-/// otherwise 0. Marks +0xdd (before that, with `notify`, virtual +0x94) and returns 1. No SEH, no random draw.
+/// `stages.check_complete(warn)`: 0 without a table, closed (`stopped()`) or without `active()`. Outside the single
+/// stage (`stage_index()` ≠ `stage_index::MAIN`) already complete (`complete()`): 1. Not complete: fixes total rounds
+/// `games_per_club()` (−1) and, if some club has not yet played them all (`league_table_row::PLAYED` <
+/// `games_per_club()`), 0; otherwise, in league divisions (`exe::comp_util_is_league_division`) with `round_count()` >
+/// 8 and without `tiebreak_matches()`, the end-of-league records (`exe::staff_records_add_league_finish_records`), and
+/// without `tiebreak_matches()` the prizes (`exe::league_pay_prize_money`). With `stages` = 1 in the single stage: each
+/// stage of `stages()` (0..=`current_stage()`) must be complete (virtual `comp_vtable::CHECK_COMPLETE` with 0, 1) and
+/// `current_stage()` ≥ `stage_count()` − 1, otherwise 0. Marks `complete()` (before that, with `warn`, virtual
+/// `league_vtable::UPDATE_POSITIONS_AND_STATUS`) and returns 1. No SEH, no random draw.
 /// Original: `League::check_complete` (0x689ad0, league.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn league_check_complete(league: usize, stages: u32, warn: u32) -> u8 {
     let league = League(league);
@@ -2826,28 +2907,31 @@ pub(crate) unsafe fn pay_tv_money(league: League, value: i32, filter: usize, new
     }
 }
 
-/// Pays TV rights: adds the amount to the TV revenue of every club in the table (with a filter, only those with +0x5b
-/// equal to it) and sends the news (`send_tv_rights_news`).
+/// Pays TV rights: adds the amount to the TV revenue of every club in the table (with a filter, only those with
+/// `last_division()` equal to it) and sends the news (`exe::comp_send_tv_rights_news`).
 ///
-/// `amount.pay_tv_rights(filter)`: with the finance table `[0xae2a38]`, for each club in the table (+0xb1;
-/// with `filter`, only those whose +0x5b equals it) adds `amount` to the TV revenue (`get_club_finance` → `add_tv_revenue`) and sends the
-/// news (Comp::send_tv_rights_news `send_tv_rights_news`, only for a club with a human manager). No SEH, no random draw, no locals.
+/// `value.pay_tv_rights(filter)`: with the finance table `G_FINANCE_TABLE`, for each club in the table (`table()`; with
+/// `filter`, only those whose `last_division()` equals it) adds `value` to the TV revenue
+/// (`exe::financetable_get_club_finance` → `exe::finance_add_tv_revenue`) and sends the news (Comp::send_tv_rights_news
+/// `exe::comp_send_tv_rights_news`, only for a club with a human manager). No SEH, no random draw, no locals.
 /// Original: `League::pay_tv_rights` (0x683010, league.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn pay_tv_rights(league: usize, value: i32, filter: usize) {
     pay_tv_money(League(league), value, filter, true)
 }
 
-/// Records the season honours: champion, runner-up and third into the history (`comp_util_add_history_record`), with the host nation's
-/// national side as the featured entry when the competition asks (+0x88, `find_hosts`, `exe::database_get_national_team`); a champion of this
-/// division clears +0x5b of the clubs pointing at it.
+/// Records the season honours: champion, runner-up and third into the history (`exe::comp_util_add_history_record`),
+/// with the host nation's national side as the featured entry when the competition asks
+/// (`comp_vtable::HAS_HOST_COUNTRY`, `exe::hostcountry_find_hosts`, `exe::database_get_national_team`); a champion of
+/// this division clears `club::LAST_DIVISION` of the clubs pointing at it.
 ///
-/// `League::record_season_honours()`: champion, runner-up and (with more than 2 clubs) third of the table (+0xb1). If
-/// the champion's division (+0x57) is this competition (+4), zeroes in the clubs (`[0xae23b4]`, 0x245 bytes,
-/// `[0xae235c]` − `[0xae2350]`) the +0x5b that points at it. If virtual +0x88 of the competition's league
-/// (`[0xadadfc][id]`) asks, the featured entry is the national side (`exe::database_get_national_team`) of the host country
-/// (HostCountry::find_hosts `find_hosts` with year +0x40): with two hosts, the one with the higher +0x8e (tie: the first).
-/// Writes into the history (`comp_util_add_history_record`) and returns what it returns. No SEH, no random draw; the two host locals are only
-/// read when `find_hosts` writes them.
+/// `League::record_season_honours()`: champion, runner-up and (with more than 2 clubs) third of the table (`table()`).
+/// If the champion's division (`division()`) is this competition (`competition()`), zeroes in the clubs (`club_at`,
+/// `G_CLUB_COUNT` − `G_NATION_COUNT`) the `club::LAST_DIVISION` that points at it. If virtual
+/// `comp_vtable::HAS_HOST_COUNTRY` of the competition's league (`G_COMP_OBJECT_TABLE`[id]) asks, the featured entry is
+/// the national side (`exe::database_get_national_team`) of the host country (HostCountry::find_hosts
+/// `exe::hostcountry_find_hosts` with year `year()`): with two hosts, the one with the higher `nation::REPUTATION`
+/// (tie: the first). Writes into the history (`exe::comp_util_add_history_record`) and returns what it returns. No SEH,
+/// no random draw; the two host locals are only read when `exe::hostcountry_find_hosts` writes them.
 /// Original: `League::record_season_honours` (0x684640, league.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn league_record_season_honours(league: usize) -> usize {
     let league = League(league);
@@ -2917,9 +3001,10 @@ pub(crate) unsafe extern "thiscall" fn has_relegation(league: usize) -> u32 {
 
 /// Stores in a league schedule round record the date with a relative year, the code and a value.
 ///
-/// The date (Date::Date, `exe::date_date_549f70`, into a local Date) from `day`/`month`/(`years` + `base`)/`week` in record `i`
-/// (signed word, 0x41 bytes) of `rounds`: day of the year in word +0, year − `base` in word +2, `code` in byte +4 and
-/// `value` in +0x3d. Returns the record.
+/// The date (Date::Date, `exe::date_date_549f70`, into a local Date) from `day`/`month`/(`years` + `base`)/`week` in
+/// record `i` (signed word, 0x41 bytes) of `rounds`: day of the year in word +0, year − `base` in word
+/// `league_round_date::YEAR_OFFSET`, `code` in byte `league_round_date::TIME_SLICE` and `value` in
+/// `league_round_date::VENUE_VALUE`. Returns the record.
 /// Original: `league_round_set_date` (0x68a160, league.cpp, cdecl).
 pub(crate) unsafe extern "C" fn league_round_set_date(rounds: usize, i: u32, day: u32, month: u32, years: u32, week: u32, code: u32, base: u32, value: u32) -> usize {
     let mut d = [0u16; 4];
@@ -2935,11 +3020,12 @@ pub(crate) unsafe extern "C" fn league_round_set_date(rounds: usize, i: u32, day
 /// Returns the league match importance for the club: the league base, +1 early in the season or with the final-day
 /// margin.
 ///
-/// Ret 0xc: the importance of the `fixture` for the club on `side` (0 = home, +0x1c; otherwise +0x20): (byte +0x51 of
-/// the league − 10) / 4 + 10. Writes 0xff into `out`; with the club in the table (+0xb1, 59-byte rows, +0x3e clubs) and
-/// more than 10 rounds (+0xa9): +1 with +0x34 of the fixture below 3; otherwise, a row with no mark (+0x37 = 0xff), +1
-/// and the last-day margin (`final_day_margin_needed`, which can change the importance) in `out`. Only al is returned (the caller uses
-/// al).
+/// Ret 0xc: the importance of the `fixture` for the club on `side` (0 = home, +0x1c; otherwise +0x20): (byte
+/// `importance()` of the league − 10) / 4 + 10. Writes 0xff into `out`; with the club in the table (`table()`,
+/// `league_table_row::SIZE`-byte rows, `club_count()` clubs) and more than 10 rounds (`round_count()`): +1 with
+/// `round_number()` of the fixture below 3; otherwise, a row with no mark (`status()` = `table_status::UNDECIDED`), +1
+/// and the last-day margin (`exe::league_final_day_margin_needed`, which can change the importance) in `out`. Only al
+/// is returned (the caller uses al).
 /// Original: `League::get_match_importance` (0x68a3e0, league.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn get_match_importance(league: usize, fixture: usize, side: u32, out: *mut u8) -> u8 {
     let fixture = Fixture(fixture);
@@ -2978,12 +3064,13 @@ pub(crate) unsafe extern "thiscall" fn get_match_importance(league: usize, fixtu
 
 /// The qsort comparison of the table rows: points, the league tie-break rules and the club id.
 ///
-/// Compares table rows `a` and `b` (`[+0]` club). Current league in `[0xb679fc]`, the table column in +0xad (14 bytes
-/// per column in the rows). Row without a club: 0. With the private comparison in `[0xb67a00]` and its answer non-zero:
-/// it again. Otherwise points (+0x19) descending; both without matches (+0x11): by club id. Then the league's four
-/// criteria (+0xc5): 1 goal difference, 2 goals for, 3 byte +0x12, 4 byte +4, 5 word +0x31 (in column 0, criterion 6 =
-/// byte +4 and stop); in column 0 with both at the league's number of matches (+0xa7), the id in +0x69 of the clubs;
-/// finally the club id.
+/// Compares table rows `a` and `b` (`[+0]` club). Current league in `G_LEAGUE_SORT_CURRENT_LEAGUE`, the table column in
+/// `table_column()` (14 bytes per column in the rows). Row without a club: 0. With the private comparison in
+/// `G_LEAGUE_SORT_CUSTOM_COMPARE_FUNC` and its answer non-zero: it again. Otherwise points (+0x19) descending; both
+/// without matches (+0x11): by club id. Then the league's four criteria (`league::TIEBREAKS`): 1 goal difference, 2
+/// goals for, 3 byte +0x12, 4 byte +4 (`position()`), 5 word `away_goals_for()` (in column 0, criterion 6 = byte +4 and
+/// stop); in column 0 with both at the league's number of matches (`played()` = `games_per_club()`), the id of the
+/// clubs' `club::STADIUM`; finally the club id.
 /// Original: `league_compare_table_rows` (0x683210, league.cpp, cdecl).
 pub(crate) unsafe extern "C" fn league_compare_table_rows(a: usize, b: usize) -> i32 {
     let a = LeagueTableRow(a);
@@ -3120,10 +3207,11 @@ pub(crate) unsafe fn goal_margin_to_reach(league: League, row: LeagueTableRow, t
 /// On the last matchday, returns the goal margin a club needs for the title, the top places or survival, and sets the
 /// deciding-match flag.
 ///
-/// Ret 8: on the last day (matches +0x11 ≥ league rounds +0xa9 − 1) and a row with no mark (+0x37 = 0xff), the goal
-/// margin the club needs for the title, the top places (+0xbe/+0xbf) or to escape the bottom ones (+0xc0/+0xc1); 0xff
-/// if none. With points equal to the club ahead and no possible margin, writes 0x14 into `out` (deciding) and returns 0
-/// or 0xff. Only al is returned (the caller uses al).
+/// Ret 8: on the last day (matches `played()` ≥ league rounds `round_count()` − 1) and a row with no mark (`status()` =
+/// `table_status::UNDECIDED`), the goal margin the club needs for the title, the top places
+/// (`promoted_count()`/`promotion_playoff_count()`) or to escape the bottom ones
+/// (`relegation_playoff_count()`/`relegated_count()`); 0xff if none. With points equal to the club ahead and no
+/// possible margin, writes 0x14 into `out` (deciding) and returns 0 or 0xff. Only al is returned (the caller uses al).
 /// Original: `League::final_day_margin_needed` (0x68a4d0, league.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn final_day_margin_needed(league: usize, row: usize, out: *mut u8) -> u8 {
     let row = LeagueTableRow(row);
@@ -3234,9 +3322,10 @@ pub(crate) unsafe extern "thiscall" fn final_day_margin_needed(league: usize, ro
 
 /// The ordering of the head-to-head mini table: points and the league tie-breakers.
 ///
-/// qsort callback: an empty row ties; otherwise points (+0x19), and then the league's criteria (`[0xb679fc]`+0xc5, up
-/// to 4; 0 ends): 1 goal difference (+0x15 − +0x17), 2 goals for (+0x15), 3 byte +0x12, 5 word +0x31; 4 and the others
-/// do not decide. Returns b − a at the first criterion that differs.
+/// qsort callback: an empty row ties; otherwise points (`points()`), and then the league's criteria
+/// (`G_LEAGUE_SORT_CURRENT_LEAGUE` + `league::TIEBREAKS`, up to 4; 0 ends): 1 goal difference (`goals_for()` −
+/// `goals_against()`), 2 goals for (`goals_for()`), 3 byte `won()`, 5 word `away_goals_for()`; 4 and the others do not
+/// decide. Returns b − a at the first criterion that differs.
 /// Original: `league_compare_h2h_rows` (0x6834f0, league.cpp, cdecl).
 pub(crate) unsafe extern "C" fn league_compare_h2h_rows(a: usize, b: usize) -> i32 {
     let a = LeagueTableRow(a);
@@ -3272,9 +3361,9 @@ pub(crate) unsafe fn head_to_head_record(table: usize, row: i32, opponent: i32) 
 
 /// Adds one match to the head-to-head record (played, result, goals and points).
 ///
-/// Ret 0x14: adds a match to the head-to-head entry: matches (+4), wins (+5, with the league's win points +0xc2), draws
-/// (+6, draw points +0xc3) or defeats (+7), goals for (+8) and against (+0xa); the points in +0xc. Negative row or
-/// opponent: nothing.
+/// Ret 0x14: adds a match to the head-to-head entry: matches (+4), wins (+5, with the league's win points
+/// `win_points()`), draws (+6, draw points `draw_points()`) or defeats (+7), goals for (`h2h_entry::GOALS_FOR`) and
+/// against (`h2h_entry::GOALS_AGAINST`); the points in `h2h_entry::POINTS`. Negative row or opponent: nothing.
 /// Original: `League::update_head_to_head` (0x6869a0, league.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn update_head_to_head(league: usize, table: usize, row: i32, opponent: i32, pro: i8, contra: i8) {
     let league = League(league);
@@ -3297,14 +3386,14 @@ pub(crate) unsafe extern "thiscall" fn update_head_to_head(league: usize, table:
     add(h2h_entry::GOALS_AGAINST, contra as i16);
 }
 
-/// does the competition have +0xbe and flag 2 of +0xd9?
+/// does the competition have `promoted_count()` and flag 2 of `league_flags()`?
 /// Original: `competition_flagged` (0x684790, league.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn competition_flagged(t: usize) -> u32 {
     let t = League(t);
     (t.promoted_count() != 0 && (t.league_flags() as u8) & 2 != 0) as u32
 }
 
-/// the record (59 bytes) of table +0xb1
+/// the record (`league_table_row::SIZE` bytes) of table `table()`
 /// Original: `league_record` (0x6826d0, league.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn league_record(t: usize, i: i32) -> usize {
     let t = League(t);
@@ -3317,10 +3406,11 @@ compare_value!(compare_league_record, league_record, IDX_LEAGUE_RECORD, (i: i32)
 /// Returns the next position in the calendar rotation (special league, jumps of 3 by random draw, wrapping at n).
 ///
 /// The next position `pos` in the calendar rotation of `n` (word) clubs. In the special league (`league` =
-/// `[0x9cf6e8]`): 2 becomes 4, 5 becomes 3, the rest advance 1. With fewer than 2 legs or 8 rounds, or the 0x40 flag,
-/// advances 1; with 0x80, advances 1 swapping n/2 for n−1 and n for n/2. Otherwise the state `*step` (0..3) alternates
-/// jumps: 1 and 2 go back 1 (below 0, n−1) and move to 2 and 3; 3 jumps 3 and goes back to 0; 0 jumps 3 (moving to 1)
-/// if `pos` < n−5 and random(4) ≥ 2, otherwise advances 1; the jumps wrap around at n.
+/// `KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE`): 2 becomes 4, 5 becomes 3, the rest advance 1. With fewer than 2
+/// legs (`turnos`) or 8 rounds (`rounds`), or the 0x40 flag (`marks`), advances 1; with 0x80, advances 1 swapping n/2
+/// for n−1 and n for n/2. Otherwise the state `*step_towards` (0..3) alternates jumps: 1 and 2 go back 1 (below 0, n−1)
+/// and move to 2 and 3; 3 jumps 3 and goes back to 0; 0 jumps 3 (moving to 1) if `pos` < n−5 and random(4)
+/// (`exe::utils_random`) ≥ 2, otherwise advances 1; the jumps wrap around at n.
 /// Original: `rotate_round` (0x68a030, league.cpp, cdecl).
 pub(crate) unsafe extern "C" fn rotate_round(pos: i32, step_towards: *mut i8, league: i32, rounds: i16, turnos: i16, n: i16, marks: u8) -> i32 {
     if league == read_i32(KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE) {
@@ -3361,9 +3451,10 @@ pub(crate) unsafe extern "C" fn rotate_round(pos: i32, step_towards: *mut i8, le
 
 /// Stores a round match (three bytes and a dword).
 ///
-/// Writes match `j` 0..7 of round `round` (0x41 bytes each, 7 per match starting at `base`): +9 `a` (−1..6), +0xa `b`
-/// (−1..2), +0xb `c` (−1..4) and +5 the dword `value`. Out of range: the original routine (error boxes, and it writes
-/// anyway).
+/// Writes match `j` 0..7 of round `round` (0x41 bytes each, 7 per match starting at `base`):
+/// `league_round_date::TV_SLOT_WEEKDAY` `a` (−1..6), `league_round_date::TV_SLOT_TIME_SLICE` `b` (−1..2),
+/// `league_round_date::TV_SLOT_KIND` `c` (−1..4) and `league_round_date::TV_SLOT_DATA` the dword `value`. Out of range:
+/// the original routine (error boxes, and it writes anyway).
 /// Original: `store_round_match` (0x68a1c0, league.cpp, cdecl).
 pub(crate) unsafe extern "C" fn store_round_match(base: usize, round: i16, j: i16, a: i16, b: i8, c: i8, value: u32) {
     if !(0..=7).contains(&j) || !(-1..=6).contains(&a) || !(-1..=2).contains(&b) || !(-1..=4).contains(&c) {
@@ -3419,13 +3510,17 @@ pub(crate) unsafe extern "thiscall" fn league_process_promotion_relegation_chain
 /// clauses (and the squad numbers when the new one uses them), opens the requested manager vacancy, upgrades the
 /// stadium to the league minimum and turns status 3 into 2.
 ///
-/// Ret 0xc; `this` is not read: `club.move_club_to_division(division, vacancy)`: the current division (+0x57)
-/// becomes last season's (+0x5b) and the new one goes in; the players' division clauses are cleared (`exe::contract_manager_reset_division_clauses` on
-/// `[0xae1050]`), also the squad numbers if the old division did not use them and the new one does (`club_uses_squad_numbers` on
-/// `[0xdd7ef0]`, before and after); with `vacancy` and no manager (+0xcf), the manager vacancy (`add_job_vacancy` on
-/// `[0xb67a44]`); in a league division (+0x43 = 2 in competition `[0xadadfc][id]`) with a minimum stadium (+0xe2 ≠ −1)
-/// and a stadium record (+0x69), the stadium works (`exe::finance_upgrade_stadium_for_league` on the finances `get_club_finance` of `[0xae2a38]`, seats +0xe4 and
-/// +0xe2); and, with the competition loaded, status +0x64 = 3 changes to 2.
+/// Ret 0xc; `this` is not read: `club.move_club_to_division(division, slot)`: the current division (`club::DIVISION`)
+/// becomes last season's (`club::LAST_DIVISION`) and the new one goes in; the players' division clauses are cleared
+/// (`exe::contract_manager_reset_division_clauses` on `G_CONTRACT_MANAGER`), also the squad numbers if the old division
+/// did not use them and the new one does (`exe::squad_manager_club_uses_squad_numbers` on `G_SQUAD_MANAGER`, before and
+/// after); with `slot` and no manager (`manager()`), the manager vacancy (`exe::manager_manager_add_job_vacancy` on
+/// `G_MANAGER_MANAGER`); in a league division (`comp_type()` = `comp_type::LEAGUE` in competition
+/// `G_COMP_OBJECT_TABLE`[id]) with a minimum stadium (`required_capacity()` ≠ −1) and a stadium record (`stadium()`),
+/// the stadium works (`exe::finance_upgrade_stadium_for_league` on the finances `exe::financetable_get_club_finance` of
+/// `G_FINANCE_TABLE`, seats `required_seats()` and `required_capacity()`); and, with the competition loaded, status
+/// `professional_status()` = 3 (`professional_status::AMATEUR`) changes to 2
+/// (`professional_status::SEMI_PROFESSIONAL`).
 /// Original: `League::move_club_to_division` (0x6830b0, league.cpp, thiscall, ret 0xc).
 pub(crate) unsafe extern "thiscall" fn move_club_to_division(_this: usize, club: usize, division: usize, slot: u32) {
     let club = Club(club);
@@ -3464,14 +3559,18 @@ pub(crate) unsafe extern "thiscall" fn move_club_to_division(_this: usize, club:
 /// Shuffles the league table with the seeded rand and puts clubs sharing a ground, clubs with linked grounds, and
 /// Celtic and Rangers in paired slots.
 ///
-/// Ret 4: `clubs.draw_team_order()`: shuffles the league table (`[+0xb1]`, +0x3e records of 59 bytes) for the
-/// fixture grid: keeps a random draw (`exe::utils_random`, 30000), seeds the CRT rand with +0x40 + `[0xdd7120]` and swaps n random
-/// pairs (rand × n / 0x8000), then restores the seed (draw + 1). League with flag 0x100 in +0xd9: each club goes to the
-/// slot that virtual table +0xa8 says (if free), the others to the first free ones, and +0xac receives each slot.
-/// Otherwise: in Scotland (`[+4]` = `[0x9cf5dc]`) Celtic and Rangers (`[0x9d0118]`, `[0x9d011c]`) go to slots 0 and
-/// clubs / 2, in random order (`exe::utils_random`, 2); clubs of the same stadium (+0x69) and then those of linked stadiums (+0x48
-/// of the stadium) go in pairs to slots k and clubs / 2 + k (past half of the clubs, the box); the others to the first
-/// free slots. The grid (`exe::crt_operator_new`, freed with `exe::crt_operator_delete`) goes back to the table. Out of memory: the box (line 0xed3).
+/// Ret 4: `clubs.draw_team_order()`: shuffles the league table (`table()`, `club_count()` records of 59 bytes,
+/// `CUP_LEAGUE_TABLE_ROW_SIZE`) for the fixture grid: keeps a random draw (`exe::utils_random`, 30000), seeds the CRT
+/// rand (`exe::crt_srand`) with `year()` + `G_GAME_RANDOM_SEED` and swaps n random pairs (`exe::crt_rand` × n /
+/// 0x8000), then restores the seed (draw + 1). League with flag 0x100 (`league_flags::FIXED_TABLE_SLOTS`) in
+/// `league_flags()`: each club goes to the slot that virtual table +0xa8 says (if free), the others to the first free
+/// ones, and +0xac receives each slot. Otherwise: in Scotland (`competition()` =
+/// `KEY_CLUB_COMP_SCOTTISH_PREMIER_DIVISION`) Celtic and Rangers (`G_KEY_CLUB_GLASGOW_CELTIC`,
+/// `G_KEY_CLUB_GLASGOW_RANGERS`) go to slots 0 and clubs / 2, in random order (`exe::utils_random`, 2); clubs of the
+/// same stadium (`club::STADIUM`) and then those of linked stadiums (`stadium::NEARBY_STADIUM`) go in pairs to slots k
+/// and clubs / 2 + k (past half of the clubs, the box); the others to the first free slots. The grid
+/// (`exe::crt_operator_new`, freed with `exe::crt_operator_delete`) goes back to the table. Out of memory: the box
+/// (line 0xed3).
 /// Original: `League::draw_team_order` (0x686a70, league.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn draw_team_order(this: usize, clubs: i32) {
     let this = League(this);
@@ -3649,14 +3748,15 @@ pub(crate) unsafe extern "thiscall" fn draw_team_order(this: usize, clubs: i32) 
     exe::crt_operator_delete(grid);
 }
 
-/// For each table row, moves the club byte +0x64 to the value (down or up) when the row status is not the excluded one
-/// and when it is the included one (0xfd = none).
+/// For each table row, moves the club's professional status (`club::PROFESSIONAL_STATUS`) to the value (down or up)
+/// when the row status is not the excluded one and when it is the included one (0xfd = none).
 ///
-/// Ret 0x10: `value.limit_club_division_tier(excluded, included, lower)` (called by the season end of each
-/// league: Argentina, Belgium, Brazil, Croatia, Denmark, England, France, Germany, Netherlands, Italy, Russia,
-/// Scotland, Sweden and Turkey): for each table row (+0xb1, 0x3b bytes, count +0x3e), adjusts byte +0x64 of the club
-/// (+0) to `value` when the row status (+0x37) is not `excluded` (0xfd = none) and again when it is `included` (0xfd =
-/// none). The first three arguments are bytes pushed as dwords: only the low byte counts.
+/// Ret 0x10: `value.limit_club_division_tier(away, inside, baixar)` (called by the season end of each league:
+/// Argentina, Belgium, Brazil, Croatia, Denmark, England, France, Germany, Netherlands, Italy, Russia, Scotland, Sweden
+/// and Turkey): for each table row (`table()`, `league_table_row::SIZE` bytes, count `club_count()`), adjusts the
+/// professional status of the club (+0) to `value` (`cap_professional_status`) when the row status
+/// (`league_table_row::STATUS`) is not `away` (0xfd = none) and again when it is `inside` (0xfd = none). The first
+/// three arguments are bytes pushed as dwords: only the low byte counts.
 /// Original: `League::limit_club_division_tier` (0x68a980, league.cpp, thiscall, ret 0x10).
 pub(crate) unsafe extern "thiscall" fn limit_club_division_tier(this: usize, value: u32, away: u32, inside: u32, baixar: u32) {
     let this = League(this);

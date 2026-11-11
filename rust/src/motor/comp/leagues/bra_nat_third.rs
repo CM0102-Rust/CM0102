@@ -11,12 +11,13 @@ pub(crate) unsafe fn stage_leader(this: League, k: i32) -> usize {
 ///
 /// SEH frame only for the `new`. `BraNatThird::create_final_stage()`, the Series C final, called at the end of the
 /// third round: the champions of the two third-round groups (the first of stage 8's table and that of stage 9, in that
-/// order) in a local list of 2; the round table through the virtual +0x3c (create_round_table: thiscall(this, 10,
-/// &rounds, &extra, 0), ret 0x10); the stage (operator new `exe::crt_operator_new`(0xb2) and the Cup_Stage constructor `construct_cup_stage`,
-/// thiscall, ret 0x3c: the league, 2, the list, the rounds, +4, the table, the year, 10, 1, the extra, 0x14, 0, 0, 0,
-/// null seeds; clean words) into `[+0xc][10]`. Without a stage: the error box at line 0x392 and it returns (without
-/// freeing the table). With one: the table freed (free `exe::crt_free`) and +0x30 = 10. [inference] The final decides the
-/// Series C champion, home and away.
+/// order; `stage_leader`) in a local list of 2; the round table through `comp_vtable::CREATE_SCHEDULE`
+/// (create_round_table: thiscall(this, 10, &rounds, &extra, 0), ret 0x10); the stage (operator new
+/// `exe::crt_operator_new`(0xb2) and the Cup_Stage constructor `FN_CUP_STAGE_CUP_STAGE`, thiscall, ret 0x3c: the
+/// league, 2, the list, the rounds, `.competition()`, the table, the year, 10, 1, the extra, 0x14, 0, 0, 0, null seeds;
+/// clean words) into `.stages()`[10]. Without a stage: the error box at line 0x392 and it returns (without freeing the
+/// table). With one: the table freed (free `exe::crt_free`) and `.set_current_stage(10)`. [inference] The final decides
+/// the Series C champion, home and away.
 /// Original: `BraNatThird::create_final_stage` (0x42e980, bra_nat_third.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_final_stage(this: usize) {
     let this = League(this);
@@ -50,19 +51,24 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_final_stage(this: us
 /// expectations, the referee renewal, the seven first-round groups and the predicted positions; the 56-club list is
 /// discarded at the end.
 ///
-/// `BraNatThird::start_new_season()`, the Series C turnover (called from the Series A turnover): +0x4c = 0 and the
-/// table freed (League::free_table `free_table`, thiscall(this, 0), ret 4); the schedule (+0xba) freed (free `exe::crt_free`) and
-/// cleared; with statistics (+8), Comp_Stats::archive_season_and_reset (`exe::comp_stats_archive_season_and_reset`, thiscall(+8, 1), ret 4); with the
-/// current stage ≥ 0, the existing stages 0..=+0x30 are destroyed (virtual 0, the destructor with 1); +0x30 = −1; the
-/// stage array freed; the year (+0x40, word) goes up by one; a new array of +0x2c stages (malloc of 4 × +0x2c, not
-/// cleared; with +0x2c ≤ 0, null); then, each with its own error box (lines 0x202, 0x209, 0x20f and 0x216) if it
-/// returns 0: the rules (virtual +0x8c), the table and the list of the 56 (`bra_nat_third_create_table`, thiscall, ret 0), the fixtures
-/// (League::create_fixtures `create_fixtures`) and the table order (League::sort_table `sort_table`, thiscall(this, 0), ret 4);
-/// finally the boards' expectations (League::set_club_season_expectations `set_club_season_expectations`, thiscall, ret 0), the referee
-/// renewal (OfficialsManager::renew_officials `renew_officials`, thiscall(`[0xb74340]`, +4), ret 4), the seven first-round
-/// groups (`bra_nat_third_create_group_stage`(g), thiscall, ret 4, g from 0 to 6), the predicted positions (virtual +0x5c) and the list of the 56
-/// (+0xee) freed (if present) and cleared. With an error box, the copy returns 0 (the original returns the box's eax,
-/// which the Brazilian turnover does not read); at the end, the eax of the free or +0xee (the copy returns 0: nobody
+/// `BraNatThird::start_new_season()`, the Series C turnover (called from the Series A turnover):
+/// `league::SEASON_CLOSED` = 0 and the table freed (League::free_table `exe::league_free_table`, thiscall(this, 0), ret
+/// 4); the schedule (`league::ROUND_DATES`) freed (free `exe::crt_free`) and cleared; with statistics
+/// (`league::COMP_STATS`), Comp_Stats::archive_season_and_reset (`exe::comp_stats_archive_season_and_reset`,
+/// thiscall(stats, 1), ret 4); with the current stage ≥ 0, the existing stages 0..=`.current_stage()` are destroyed
+/// (virtual 0, the destructor with 1); `league::CURRENT_STAGE` = −1; the stage array freed; the year (`league::YEAR`,
+/// word) goes up by one; a new array of `.stage_count()` stages (malloc of 4 × `.stage_count()`, not cleared; with
+/// `.stage_count()` ≤ 0, null) into `league::STAGES`; then, each with its own error box (lines 0x202, 0x209, 0x20f and
+/// 0x216) if it returns 0: the rules (`comp_vtable::SET_UP_RULES`), the table and the list of the 56
+/// (`exe::branatthird_create_table`, thiscall, ret 0), the fixtures (League::create_fixtures
+/// `exe::league_create_fixtures`) and the table order (League::sort_table `exe::league_sort_table`, thiscall(this, 0),
+/// ret 4); finally the boards' expectations (League::set_club_season_expectations
+/// `exe::league_set_club_season_expectations`, thiscall, ret 0), the referee renewal (OfficialsManager::renew_officials
+/// `exe::officialsmanager_renew_officials`, thiscall(`[G_OFFICIALS_MANAGER]`, `league::COMPETITION`), ret 4), the seven
+/// first-round groups (`exe::branatthird_create_group_stage`(g), thiscall, ret 4, g from 0 to 6), the predicted
+/// positions (`comp_vtable::SET_PREDICTED_POSITIONS`) and the list of the 56 (`bra_nat_third::CLUB_LIST`) freed (if
+/// present) and cleared. With an error box, the copy returns 0 (the original returns the box's eax, which the Brazilian
+/// turnover does not read); at the end, the eax of the free or `bra_nat_third::CLUB_LIST` (the copy returns 0: nobody
 /// reads it).
 /// Original: `BraNatThird::start_new_season` (0x42def0, bra_nat_third.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn bra_nat_third_start_new_season(this: usize) -> u32 {
@@ -148,11 +154,12 @@ pub(crate) fn place_for_index(k: usize) -> u8 {
 /// 16th, 24th, 32nd, 40th and 48th.
 ///
 /// `BraNatThird::set_predicted_positions()`, called from the constructor and the turnover, after the groups. Without
-/// statistics (+8): the error box at line 0x4a2 and it returns. The list of the 56 (+0xee) is sorted in place by
-/// reputation (qsort `exe::crt_qsort` with 0x4b07d0, highest first, nulls at the end) and each club, in order, gets the
-/// predicted position from `place_for_index` (Comp_Stats::set_club_final_position `set_club_final_position`, thiscall(+8, club,
-/// position), ret 8; the original pushes the band of the forty in a dword with the band's byte and stack garbage above
-/// it; `set_club_final_position` reads only the byte: the copy passes the clean byte).
+/// statistics (+8): the error box at line 0x4a2 and it returns. The list of the 56 (`bra_nat_third::CLUB_LIST`) is
+/// sorted in place by reputation (qsort `exe::crt_qsort` with 0x4b07d0, highest first, nulls at the end) and each club,
+/// in order, gets the predicted position from `place_for_index` (Comp_Stats::set_club_final_position
+/// `exe::comp_stats_set_club_final_position`, thiscall(+8, club, position), ret 8; the original pushes the band of the
+/// forty in a dword with the band's byte and stack garbage above it; `set_club_final_position` reads only the byte: the
+/// copy passes the clean byte).
 /// Original: `BraNatThird::set_predicted_positions` (0x42f0a0, bra_nat_third.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn bra_nat_third_set_predicted_positions(this: usize) {
     if read_usize(this + 8) == 0 {
@@ -238,17 +245,18 @@ pub(crate) const SECOND_ROUND_SEEDS: [u8; 16] = [0, 2, 4, 6, 8, 10, 12, 14, 15, 
 ///
 /// 1) A list of 16 (malloc `exe::crt_malloc` of 0x40; out of memory: the error box at line 0x2e6 and it returns).
 ///
-/// 2) The top two of each of the eight groups (the league's table and those of stages 0 to 6, in that order), in 6-byte
-/// records (the club and the points, the row's +0x19).
+/// 2) The top two of each of the eight groups (the league's table `league::TABLE` and those of stages 0 to 6, in that
+/// order), in 6-byte records (the club and the points, the row's `league_table_row::POINTS`).
 ///
 /// 3) Sixteen times: the record with most points (the first one, on a tie) among those that still have a club is taken
 /// out (the club becomes 0) and the club goes to slot `SECOND_ROUND_SEEDS[k]`: the best against the 16th, the 2nd
 /// against the 15th... (with none left: the error box at line 0x30b; the original then reads address 0 and crashes).
 ///
-/// 4) The round table through the virtual +0x3c (thiscall(this, 7, &rounds, &extra, 0), ret 0x10); the stage (operator
-/// new `exe::crt_operator_new`(0xb2) and the Cup_Stage constructor `construct_cup_stage`, thiscall, ret 0x3c: the league, 16, the list, the rounds,
-/// +4, the table, the year, 7, 1, the extra, 0x14, 0, 0, 0, null seeds; clean words) into `[+0xc][7]`. Without a stage:
-/// the error box at line 0x31b and it returns. With one: the table and the list freed (free `exe::crt_free`) and +0x30 = 7.
+/// 4) The round table through `comp_vtable::CREATE_SCHEDULE` (thiscall(this, 7, &rounds, &extra, 0), ret 0x10); the
+/// stage (operator new `exe::crt_operator_new`(0xb2) and the Cup_Stage constructor `FN_CUP_STAGE_CUP_STAGE`, thiscall,
+/// ret 0x3c: the league, 16, the list, the rounds, `.competition()`, the table, the year, 7, 1, the extra, 0x14, 0, 0,
+/// 0, null seeds; clean words) into `.stages()`[7]. Without a stage: the error box at line 0x31b and it returns. With
+/// one: the table and the list freed (free `exe::crt_free`) and `.set_current_stage(7)`.
 /// Original: `BraNatThird::create_second_round_stage` (0x42e430, bra_nat_third.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn create_second_round_stage(this: usize) {
     let this = League(this);
@@ -310,15 +318,16 @@ pub(crate) unsafe extern "thiscall" fn create_second_round_stage(this: usize) {
 /// top two of each group go up to Series B and the group winners play the final].
 ///
 /// SEH frame only for the `new`. `BraNatThird::create_third_round_groups()`, the Series C third round, called at the
-/// end of the second: the second-round winners (`[+0xc][7]`, the 6-byte records of +0xa7 with +5 = 1, in order) in a
-/// local list of 8, shuffled (comp_util_shuffle_pointer_array `comp_util_shuffle_pointer_array`, cdecl(v, 8)); the first four form group A
-/// (stage 8) and the other four group B (stage 9). Each group: the round table through the virtual +0x3c
-/// (thiscall(this, 8 or 9, &rounds, &extra, 0)) and the stage (operator new `exe::crt_operator_new`(0xee) and the League_Stage
-/// constructor 0x68b100: the league, 4, the list (or the list + 4), 2 (home and away), +4, the table, the rounds
-/// (word), 3 points per win, 1 per draw, category 5, &{1,2,4,0} (the tie-break criteria), &{2,0,0,0} (two top places),
-/// the year, 8 or 9, the extra (word), 0x14, 1, 0, 2 (the rule bits), −1, 0, 2) into `[+0xc][8]` or `[9]`; without a
-/// stage: the error box at line 0x353 or 0x363 and it returns; with one, the table freed (free `exe::crt_free`). After the
-/// second one, +0x30 = 9. [inference] The top two of each group go up to Series B; the group winners play the final.
+/// end of the second: the second-round winners (`.stages()`[7], the 6-byte records of `.team_table()` with +5 = 1, in
+/// order) in a local list of 8, shuffled (`exe::comp_util_shuffle_pointer_array`, cdecl(v, 8)); the first four form
+/// group A (stage 8) and the other four group B (stage 9). Each group: the round table through
+/// `comp_vtable::CREATE_SCHEDULE` (thiscall(this, 8 or 9, &rounds, &extra, 0)) and the stage (operator new
+/// `exe::crt_operator_new`(0xee) and the League_Stage constructor `FN_LEAGUE_STAGE_LEAGUE_STAGE`: the league, 4, the
+/// list (or the list + 4), 2 (home and away), `.competition()`, the table, the rounds (word), 3 points per win, 1 per
+/// draw, category 5, &{1,2,4,0} (the tie-break criteria), &{2,0,0,0} (two top places), the year, 8 or 9, the extra
+/// (word), 0x14, 1, 0, 2 (the rule bits), −1, 0, 2) into `.stages()`[8] or `[9]`; without a stage: the error box at
+/// line 0x353 or 0x363 and it returns; with one, the table freed (free `exe::crt_free`). After the second one,
+/// `.set_current_stage(9)`. [inference] The top two of each group go up to Series B; the group winners play the final.
 /// Original: `BraNatThird::create_third_round_groups` (0x42e700, bra_nat_third.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn create_third_round_groups(this: usize) {
     let this = League(this);
@@ -366,12 +375,13 @@ pub(crate) unsafe extern "thiscall" fn create_third_round_groups(this: usize) {
 /// club); the first 7 of the draw make the first table, of 7 clubs, and the drawn list is kept for the other groups
 /// [inference: 8 groups of 7 in the first stage].
 ///
-/// `BraNatThird::create_table()`: +0x3e = 7; the list of entrants (+0xee) is rebuilt (the old one freed, `exe::crt_free` push;
-/// add esp -> cdecl; the new one with 0xe0 bytes = 56 pointers; out of memory: the error box at line 0x18f and it
-/// returns 1, as the original); the table (+0xb1, 7 × 0x3b; out of memory: the error box at line 0x196 and 0); the list
-/// receives, in database order, up to 56 clubs whose division (+0x57) is Series C itself (the record in `[this+4]`);
-/// the list is shuffled (comp_util_shuffle_pointer_array `comp_util_shuffle_pointer_array`: push count (word); push list; add esp, 8 -> cdecl; 3
-/// × count random swaps) and the first 7 of the draw go into rows 0..6 (`init_table_row`, the row in a clean dword). Source
+/// `BraNatThird::create_table()`: `.set_club_count(7)`; the list of entrants (`bra_nat_third::CLUB_LIST`) is rebuilt
+/// (the old one freed, `exe::crt_free` push; add esp -> cdecl; the new one with 0xe0 bytes = 56 pointers; out of
+/// memory: the error box at line 0x18f and it returns 1, as the original); the table (`.set_table()`, 7 × 0x3b; out of
+/// memory: the error box at line 0x196 and 0); the list receives, in database order, up to 56 clubs whose division
+/// (`club::DIVISION`) is Series C itself (the record in `.competition()`); the list is shuffled
+/// (`exe::comp_util_shuffle_pointer_array`: push count (word); push list; add esp, 8 -> cdecl; 3 × count random swaps)
+/// and the first 7 of the draw go into rows 0..6 (`exe::league_init_table_row`, the row in a clean dword). Source
 /// 0x98aba4. Returns 1.
 /// Original: `BraNatThird::create_table` (0x42dc90, bra_nat_third.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_table(this: usize) -> u32 {

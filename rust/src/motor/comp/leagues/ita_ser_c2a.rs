@@ -1,19 +1,19 @@
 use super::*;
 
-/// `ItaSerC2a::update_staff_records_for_status(club, status, stage, _, match, _)` (virtual +0x44, announced by
-/// `announce_team_status`): the Serie C2/A staff records. Returns 0.
-///
-/// In the league (stage 0xff), by status: 5, the title (Staff_Records::add_league_champions_record `add_league_champions_record`:
-/// thiscall(records, club, comp +4), ret 8); 0, promotion (`add_promotion_record`: thiscall(records, club, comp, 0x64), ret 0xc); 1,
-/// the play-off place (`add_qualified_for_round_record`: thiscall(records, club, comp, 0xa0, 0x82, 0x28), ret 0x14); 3, relegation (`add_relegation_record`:
-/// thiscall(records, club, comp), ret 8).
-///
-/// In the promotion play-off (stage 0), in the club's first row with status 1, 2 or 0xff: 1 (won), promotion with
-/// weight 0x32 and +0x37 = 0; 2 or 0xff (knocked out), the knock-out record (`add_knocked_out_record`: thiscall(records, club, comp,
-/// match stage +0x32, round +0x30, weight), ret 0x14; the weight = comp_util_scale_by_round `comp_util_scale_by_round`: cdecl(0x1e, 0x32,
-/// match round +0x34, 2)) and +0x37 = 0xfe.
-///
-/// In the play-out (stage 1): 1 (stayed up), +0x37 = 0xfe; 2 or 0xff, relegation and +0x37 = 3.
+/// `ItaSerC2a::update_staff_records_for_status(club, status, stage, _a4, game, _a6)` (virtual +0x44, announced by
+/// `announce_team_status`): the Serie C2/A staff records. Returns 0. In the league (stage 0xff), by status: 5, the
+/// title (Staff_Records::add_league_champions_record `exe::staff_records_add_league_champions_record`:
+/// thiscall(records, club, comp `.competition()`), ret 8); 0, promotion (`FN_STAFF_RECORDS_ADD_PROMOTION_RECORD`:
+/// thiscall(records, club, comp, 0x64), ret 0xc); 1, the play-off place
+/// (`exe::staff_records_add_qualified_for_round_record`: thiscall(records, club, comp, 0xa0, 0x82, 0x28), ret 0x14); 3,
+/// relegation (`FN_STAFF_RECORDS_ADD_RELEGATION_RECORD`: thiscall(records, club, comp), ret 8). In the promotion
+/// play-off (stage 0), in the club's first row with status 1, 2 or 0xff: 1 (won), promotion with weight 0x32 and
+/// `league_table_row::STATUS` = 0; 2 or 0xff (knocked out), the knock-out record
+/// (`exe::staff_records_add_knocked_out_record`: thiscall(records, club, comp, game stage `fixture::ROUND_PREFIX`,
+/// round `fixture::ROUND_NAME`, weight), ret 0x14; the weight = comp_util_scale_by_round
+/// `exe::comp_util_scale_by_round`: cdecl(0x1e, 0x32, game round `fixture::ROUND_NUMBER`, 2)) and
+/// `league_table_row::STATUS` = 0xfe. In the play-out (stage 1): 1 (stayed up), `league_table_row::STATUS` = 0xfe; 2 or
+/// 0xff, relegation and `league_table_row::STATUS` = 3.
 /// Original: `ItaSerC2a::update_staff_records_for_status` (0x654180, ita_ser_c2a.cpp, thiscall, ret 0x18).
 pub(crate) unsafe extern "thiscall" fn ita_ser_c2a_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, _a4: u32, game: usize, _a6: u32) -> u32 {
     let this = League(this);

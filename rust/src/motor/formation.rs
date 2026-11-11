@@ -78,7 +78,8 @@ pub(crate) unsafe extern "thiscall" fn slot_of_code(this: usize, code: u16) -> u
     (0..11u32).find(|&k| read_u16(this + formation_fields::SLOT_CELLS + 2 * k as usize) == code).unwrap_or(0xff)
 }
 
-/// marks (+0x5b4) with 4 and 8 become 2; assigned records (+0x5bf) go back to −1; returns 1
+/// marks (`formation_fields::MARKING_TYPES`) with 4 and 8 become 2; assigned records
+/// (`formation_fields::DESIGNATED_PEOPLE`) go back to −1; returns 1
 /// Original: `clear_assigned` (0x5b5960, formation.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn clear_assigned(this: usize) -> u32 {
     for k in 0..11usize {
@@ -91,7 +92,8 @@ pub(crate) unsafe extern "thiscall" fn clear_assigned(this: usize) -> u32 {
     1
 }
 
-/// +0x187b = OR of the bits of the 11 slots (`exe::formation_position_to_shape_bit`), with 11 masks swapped for 4 reference formations
+/// `formation_fields::FORMATION_MASK` = OR of the bits of the 11 slots (`exe::formation_position_to_shape_bit`), with
+/// 11 masks swapped for 4 reference formations
 /// Original: `formation_mask` (0x5b59a0, formation.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn formation_mask(this: usize) -> u32 {
     let m = (this + formation_fields::FORMATION_MASK) as *mut u32;
@@ -192,13 +194,13 @@ pub(crate) unsafe extern "thiscall" fn mark_stars(this: usize, side: i8) {
 }
 
 /// Builds the player's strong-position mask from the position ratings and the sides rated 15; returns only `ax`.
-///
 /// (cdecl) The mask of the strong positions of player `p` from the position ratings (signed bytes): from 15, going down
-/// to 10, the first level at which any rating passes gives the sector bits (+0xf goalkeeper 1, +0x10 sweeper 2, +0x11
-/// centre-back 4, +0x12 defensive midfielder 8 or, without it, +0x14 midfielder 0x20 or +0x13 0x10, +0x15 striker
-/// 0x40); the sides (+0x17 0x800, +0x18 0x80, +0x19 0x200) only count with a rating of 15 or more (the original repeats
-/// the same test at each level). Returns only `ax` (the callers use 16 bits). Null `p`: as in the original (error box
-/// and 0).
+/// to 10, the first level at which any rating passes gives the sector bits (`player_sheet::GOALKEEPER` 1,
+/// `player_sheet::SWEEPER` 2, `player_sheet::DEFENDER` 4, `player_sheet::DEFENSIVE_MIDFIELDER` 8 or, without it,
+/// `player_sheet::ATTACKING_MIDFIELDER` 0x20 or `player_sheet::MIDFIELDER` 0x10, `player_sheet::ATTACKER` 0x40); the
+/// sides (`player_sheet::RIGHT_SIDE` 0x800, `player_sheet::LEFT_SIDE` 0x80, `player_sheet::CENTRAL` 0x200) only count
+/// with a rating of 15 or more (the original repeats the same test at each level). Returns only `ax` (the callers use
+/// 16 bits). Null `p`: as in the original (error box and 0).
 /// Original: `position_mask` (0x5b7d20, formation.cpp, cdecl).
 pub(crate) unsafe extern "C" fn position_mask(p: usize) -> u16 {
     if p == 0 {
@@ -387,17 +389,18 @@ pub(crate) unsafe extern "thiscall" fn slots_without_conflict(this: usize) -> u8
 compare_value!(compare_slots_without_conflict, slots_without_conflict, IDX_SLOTS_WITHOUT_CONFLICT, () -> u8);
 
 /// Stores the slot coordinate for the phase and ball zone and picks the general and extra positions closest to the
-/// slot's 12 coordinates.
-///
-/// `Formation::set_slot_coordinate(cell, phase, band, coord)`: writes the coordinate (dword: x 0..0x1a, y 0..0x23) of
-/// the cell for the phase and the ball band (+0x164, 11 × 2 × 3 × 4 dwords) and, for each phase, finds the positions of
-/// table 0x9cc368 (words up to 0xffff) closest to the cell's 12 coordinates in that phase (|Δx·9/27| + |Δy·12/36|
-/// against each position's cell through `pitch_cell`; doubled for positions with bit 2; ties go into the phase's list, up
-/// to 11 contiguous at [esp+0x64]). The general position (+0x12d) stays if it is in one of the lists; otherwise it
-/// becomes the first of the phase with the smallest distance (`formation_mask` redoes the mask, the cell gets the flag +0x143
-/// and the other cells with the same position lose it). The extra position (+0x14e) comes from the other phase's list:
-/// the same position, or one with the same side (`exe::formation_split_position_code`), or the first, or, with two, the middle of the two's bits.
-/// Zeroes +0x187f. Arguments out of range: as in the original (box and 0). Returns 1.
+/// slot's 12 coordinates. `Formation::set_slot_coordinate(home, stage, band, coord)` (cell, phase, band, coord): writes
+/// the coordinate (dword: x 0..0x1a, y 0..0x23) of the cell for the phase and the ball band
+/// (`formation_fields::SLOT_COORDINATES`, 11 × 2 × 3 × 4 dwords) and, for each phase, finds the positions of table
+/// 0x9cc368 (words up to 0xffff) closest to the cell's 12 coordinates in that phase (|Δx·9/27| + |Δy·12/36| against
+/// each position's cell through `exe::formation_get_default_coordinate`; doubled for positions with bit 2; ties go into
+/// the phase's list, up to 11 contiguous at [esp+0x64]). The general position (`formation_fields::SLOT_CELLS`) stays if
+/// it is in one of the lists; otherwise it becomes the first of the phase with the smallest distance
+/// (`exe::formation_update_shape_code` redoes the mask, the cell gets the flag `formation_fields::DISPLAY_ORDER` and
+/// the other cells with the same position lose it). The extra position (`formation_fields::EXTRA_SLOT_CELLS`) comes
+/// from the other phase's list: the same position, or one with the same side (`exe::formation_split_position_code`), or
+/// the first, or, with two, the middle of the two's bits. Zeroes `formation_fields::CHANGED_FLAG`. Arguments out of
+/// range: as in the original (box and 0). Returns 1.
 /// Original: `Formation::set_slot_coordinate` (0x5b3560, formation.cpp, thiscall, ret 0x10).
 pub(crate) unsafe extern "thiscall" fn set_slot_coordinate(this: usize, home: u32, stage: u32, band: u32, coord: u32) -> u32 {
     let (s, f) = (home as u8 as i8, stage as u8 as i8);
@@ -544,10 +547,10 @@ pub(crate) unsafe extern "thiscall" fn set_slot_coordinate(this: usize, home: u3
 }
 
 /// Finds another slot with the same general position and sets the output when its flag is lower.
-///
-/// `Formation::check_duplicate_position(cell, *out)`: zeroes the output; the first other cell with the same general
-/// position (+0x12d) decides: with a flag (+0x143, signed byte) lower than the cell's, output 1 and returns 1;
-/// otherwise returns 0. With no duplicate, 1. Cell outside 0..10: as in the original (box and 0).
+/// `Formation::check_duplicate_position(home, out)` (cell, *out): zeroes the output; the first other cell with the same
+/// general position (`formation_fields::SLOT_CELLS`) decides: with a flag (`formation_fields::DISPLAY_ORDER`, signed
+/// byte) lower than the cell's, output 1 and returns 1; otherwise returns 0. With no duplicate, 1. Cell outside 0..10:
+/// as in the original (box and 0).
 /// Original: `Formation::check_duplicate_position` (0x5b3460, formation.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn check_duplicate_position(this: usize, home: u32, out: *mut u32) -> u32 {
     let s = home as u8 as i8;
@@ -568,10 +571,10 @@ pub(crate) unsafe extern "thiscall" fn check_duplicate_position(this: usize, hom
     1
 }
 
-/// Sets one marking type of the slot (bits 0..2 or 3..4 of byte +0x5b4) and clears +0x187f.
-///
-/// `Formation::set_marking_type(cell, marking)`: markings 1, 2 and 4 replace bits 0..2 of the cell's byte +0x5b4; 8 and
-/// 0x10, bits 3..4; it zeroes +0x187f and returns 1. Any other marking: as in the original (box and 0). The cell is not
+/// Sets one marking type of the slot (bits 0..2 or 3..4 of byte `formation_fields::MARKING_TYPES`) and clears
+/// `formation_fields::CHANGED_FLAG`. `Formation::set_marking_type(home, mark)` (cell, marking): markings 1, 2 and 4
+/// replace bits 0..2 of the cell's byte `formation_fields::MARKING_TYPES`; 8 and 0x10, bits 3..4; it zeroes
+/// `formation_fields::CHANGED_FLAG` and returns 1. Any other marking: as in the original (box and 0). The cell is not
 /// checked.
 /// Original: `Formation::set_marking_type` (0x5b57d0, formation.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn set_marking_type(this: usize, home: u32, mark: u32) -> u32 {
@@ -593,13 +596,13 @@ pub(crate) fn formation_regions(this: usize) -> [(usize, usize); 3] {
     [(this + formation_fields::SLOT_CELLS, 0x584 - 0x12d), (this + formation_fields::MARKING_TYPES, 11), (this + formation_fields::FORMATION_MASK, 8)]
 }
 
-/// Expands each formation slot's positions into the pitch cell tables and their mirrored copy.
-///
-/// (thiscall) The formation's cell map. For each of the 22 lines k (11 cells × 2 phases) and 3 × 4 block (a18, a14)
-/// with the position (i = 12k + 4·a18 + a14) at +0x164 (column, word) and +0x166 (row), the 3 × 3 cells of the block
-/// get the column × 9 / 27 in the low nibble and the row × 12 / 36 in the high nibble of table +0x5eb (12 per row, 9
-/// rows per k); the mirror at +0xf9e (row and column inverted) receives (0xb0 − row × 16) with (0xf8 − column) & 0xf.
-/// Returns 1.
+/// Expands each formation slot's positions into the pitch cell tables and their mirrored copy. (thiscall) The
+/// formation's cell map. For each of the 22 lines k (11 cells × 2 phases) and 3 × 4 block (a18, a14) with the position
+/// (i = 12k + 4·a18 + a14) at `formation_fields::SLOT_COORDINATES` (column, word) and
+/// `formation_fields::SLOT_COORDINATES` + 2 (row), the 3 × 3 cells of the block get the column × 9 / 27 in the low
+/// nibble and the row × 12 / 36 in the high nibble of table `formation_fields::POSITION_LOOKUP` (12 per row, 9 rows per
+/// k); the mirror at `formation_fields::POSITION_LOOKUP` + 0x9b3 (row and column inverted) receives (0xb0 − row × 16)
+/// with (0xf8 − column) & 0xf. Returns 1.
 /// Original: `Formation::build_position_lookup` (0x5b7160, formation.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn build_position_lookup(this: usize) -> u32 {
     for k in 0..22i32 {
@@ -643,10 +646,9 @@ pub(crate) unsafe fn formation_watched_match_record(this: usize, human: usize) -
     Ok((*(this as *const usize)).wrapping_add((i as usize).wrapping_mul(42735)))
 }
 
-/// Returns the stored cell of the slot by attack and band.
-///
-/// The stored cell of slot `slot` 0..10 with `attack` 0/1 and `band` (low word 0..2, high word 0..3): the dword +0x164
-/// + 4×(high + 4×(low + 3×(attack + 2×slot))) goes to `*out`. Returns 1. Out of range: as in the original (error box).
+/// Returns the stored cell of the slot by attack and band. The stored cell of slot `slot` 0..10 with `attack` 0/1 and
+/// `band` (low word 0..2, high word 0..3): the dword `formation_fields::SLOT_COORDINATES` + 4×(high + 4×(low +
+/// 3×(attack + 2×slot))) goes to `*out`. Returns 1. Out of range: as in the original (error box).
 /// Original: `stored_cell` (0x5b3c70, formation.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn stored_cell(t: usize, slot: i8, attack: i8, band: u32, out: *mut u32) -> u32 {
     let low = band as u16 as i16;
@@ -659,11 +661,10 @@ pub(crate) unsafe extern "thiscall" fn stored_cell(t: usize, slot: i8, attack: i
     1
 }
 
-/// Sets a formation flag in +0x584, clearing the others of the same group, and zeroes +0x187f.
-///
-/// Sets flag `m` in +0x584, first clearing those of the same group (1/2/4/8; 0x10/0x20/0x40; 0x80/0x100; 0x200/0x400;
-/// 0x800/0x1000; 0x2000/0x4000; 0x8000/0x10000/0x20000) and zeroes +0x187f. Returns 1. Flag outside the groups: as in
-/// the original (error box).
+/// Sets a formation flag in `formation_fields::FLAGS`, clearing the others of the same group, and zeroes
+/// `formation_fields::CHANGED_FLAG`. Sets flag `m` in `formation_fields::FLAGS`, first clearing those of the same group
+/// (1/2/4/8; 0x10/0x20/0x40; 0x80/0x100; 0x200/0x400; 0x800/0x1000; 0x2000/0x4000; 0x8000/0x10000/0x20000) and zeroes
+/// `formation_fields::CHANGED_FLAG`. Returns 1. Flag outside the groups: as in the original (error box).
 /// Original: `set_formation_flag` (0x5b50d0, formation.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn set_formation_flag(t: usize, m: u32) -> u32 {
     let group: u32 = match m {
@@ -684,23 +685,26 @@ pub(crate) unsafe extern "thiscall" fn set_formation_flag(t: usize, m: u32) -> u
 }
 
 /// Reads a formation from a .pct file, fixes the instructions of old versions, redoes the positions of the 11 slots
-/// from the coordinates and builds the coordinate map.
-///
-/// `Formation::load_from_disk(path, quiet, obfuscated)`, from the creation of the tactics (0x893dc0: the AI formations
-/// and the predefined ones, 45 in a career) and from the tactics screens. Null path (line 0x8d8) or a file that does
-/// not open (0x8e0): 0 (without `quiet`, the box). It reads the identifier (4 bytes; byte-swapped if the file's marker
-/// `exe::utils_read_file_format_marker` is not the native one; minus 123456789 if obfuscated): outside 0x98ec54..0x98ec5e "not a formation"
-/// (0x8f7), below 0x98ec59 "old version" (0x900). Then, in order: the password (+0x33, 50 bytes, each byte inverted,
-/// 0xff stays), the creator (+0x65, 200), the mask (+0x187b, from 0x98ec5a; before that 0), the 11 general positions
-/// (+0x12d, words) and the mask redone (`formation_mask`), the display order (+0x143, 11 bytes, from 0x98ec5c; before that
-/// zeros), the 11 extra positions (+0x14e), the cells (+0x164, 0x420 bytes = 0x210 words), in versions
-/// 0x98ec59/0x98ec5a 0x108 bytes discarded, the team instructions (+0x584, dword), the player instructions (below
-/// 0x98ec5e 11 dwords, each with 10 alongside, at +0x188b every 8; after that 0x58 bytes at +0x188b) and the marking
-/// types (+0x5b4, 11 bytes); the last three, if they fail, only show the box. The team instructions get 0x2000 (without
-/// 0x4000) and, below 0x98ec5d, 0x20000. The 11 slots redo their positions from the stored cell (`stored_cell` and `set_slot_coordinate`
-/// with phase 0 and band 0); the name (+0) is the file's (_splitpath `exe::crt_strtok`); the cell map (`build_position_lookup`); +0x187f = 1,
-/// +0x1883 = password not empty, +0x1887 = 1. Closes and returns 1. Non-native files swap the byte order (`swap_bytes_16_array`
-/// words, `swap_bytes_32_array` dwords, `exe::swap_bytes_64_array` qwords).
+/// from the coordinates and builds the coordinate map. `Formation::load_from_disk(path, quiet, dimmed)`, from the
+/// creation of the tactics (0x893dc0: the AI formations and the predefined ones, 45 in a career) and from the tactics
+/// screens. Null path (line 0x8d8) or a file that does not open (0x8e0): 0 (without `quiet`, the box). It reads the
+/// identifier (4 bytes; byte-swapped if the file's marker `exe::utils_read_file_format_marker` is not the native one;
+/// minus 123456789 if obfuscated (`dimmed`)): outside 0x98ec54..0x98ec5e "not a formation" (0x8f7), below 0x98ec59 "old
+/// version" (0x900). Then, in order: the password (`formation_fields::PASSWORD`, 50 bytes, each byte inverted, 0xff
+/// stays), the creator (`formation_fields::CREATOR`, 200), the mask (`formation_fields::FORMATION_MASK`, from 0x98ec5a;
+/// before that 0), the 11 general positions (`formation_fields::SLOT_CELLS`, words) and the mask redone
+/// (`exe::formation_update_shape_code`), the display order (`formation_fields::DISPLAY_ORDER`, 11 bytes, from 0x98ec5c;
+/// before that zeros), the 11 extra positions (`formation_fields::EXTRA_SLOT_CELLS`), the cells
+/// (`formation_fields::SLOT_COORDINATES`, 0x420 bytes = 0x210 words), in versions 0x98ec59/0x98ec5a 0x108 bytes
+/// discarded, the team instructions (`formation_fields::FLAGS`, dword), the player instructions (below 0x98ec5e 11
+/// dwords, each with 10 alongside, at +0x188b every 8; after that 0x58 bytes at +0x188b) and the marking types
+/// (`formation_fields::MARKING_TYPES`, 11 bytes); the last three, if they fail, only show the box. The team
+/// instructions get 0x2000 (without 0x4000) and, below 0x98ec5d, 0x20000. The 11 slots redo their positions from the
+/// stored cell (`exe::formation_get_slot_coordinate` and `exe::formation_set_slot_coordinate` with phase 0 and band 0);
+/// the name (+0) is the file's (_splitpath `exe::crt_strtok`); the cell map (`exe::formation_build_position_lookup`);
+/// `formation_fields::CHANGED_FLAG` = 1, `formation_fields::HAS_PASSWORD` = password not empty, +0x1887 = 1. Closes and
+/// returns 1. Non-native files swap the byte order (`exe::swap_bytes_16_array` words, `exe::swap_bytes_32_array`
+/// dwords, `exe::swap_bytes_64_array` qwords).
 /// Original: `Formation::load_from_disk` (0x5b5d10, formation.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, quiet: u32, dimmed: u32) -> u32 {
     if path == 0 {
@@ -885,16 +889,17 @@ pub(crate) unsafe extern "thiscall" fn centre_backs_without_conflict(this: usize
 }
 
 /// Stores the general or extra position of the slot, the flags, and recomputes the pitch cells without and with the
-/// ball (`pitch_cell`).
-///
-/// `Formation::set_slot_position(cell, position, extra)`: without `extra`, the cell's general position (+0x12d, words)
-/// changes to `position` (if it changes: the mask `formation_mask`, the cell's flag +0x143 = 1 and that of the other cells with
-/// the same position = 0); with or without it, the extra position (+0x14e) = `position`. Then, for each band 0..2 and
-/// height 0..3 (the low and high word of `pitch_cell`'s argument), the pitch cells without and with the ball (+0x164 and
-/// +0x194 + 4 × (height + 4 × band + 24 × cell)): with general = extra, both from the general one; otherwise, by
-/// sectors (`exe::formation_split_position_code`): an extra in a sector below the general's gives the extra without the ball and the general with
-/// the ball; otherwise the reverse. Finally +0x187f = 0. Returns 1. Cell outside 0..10: as in the original ("Error" box
-/// and 0).
+/// ball (`exe::formation_get_default_coordinate`). `Formation::set_slot_position(home, position, extra)` (cell,
+/// position, extra): without `extra`, the cell's general position (`formation_fields::SLOT_CELLS`, words) changes to
+/// `position` (if it changes: the mask `exe::formation_update_shape_code`, the cell's flag
+/// `formation_fields::DISPLAY_ORDER` = 1 and that of the other cells with the same position = 0); with or without it,
+/// the extra position (`formation_fields::EXTRA_SLOT_CELLS`) = `position`. Then, for each band 0..2 and height 0..3
+/// (the low and high word of `exe::formation_get_default_coordinate`'s argument), the pitch cells without and with the
+/// ball (`formation_fields::SLOT_COORDINATES` and `formation_fields::SLOT_COORDINATES` + 0x30, + 4 × (height + 4 × band
+/// + 24 × cell)): with general = extra, both from the general one; otherwise, by sectors
+/// (`exe::formation_split_position_code`): an extra in a sector below the general's gives the extra without the ball
+/// and the general with the ball; otherwise the reverse. Finally `formation_fields::CHANGED_FLAG` = 0. Returns 1. Cell
+/// outside 0..10: as in the original ("Error" box and 0).
 /// Original: `Formation::set_slot_position` (0x5b2ba0, formation.cpp, thiscall, ret 0xc).
 pub(crate) unsafe extern "thiscall" fn set_slot_position(this: usize, home: u32, position: u32, extra: u32) -> u32 {
     let k = home as u8 as i8;
@@ -952,8 +957,8 @@ pub(crate) unsafe extern "thiscall" fn set_slot_position(this: usize, home: u32,
     1
 }
 
-/// Formation: returns byte `i` of the per-position table at +0x5b4 [inference: the role flags of position `i`; bit 1
-/// marks the goalkeeper].
+/// Formation: returns byte `i` of the per-position table at `formation_fields::MARKING_TYPES` [inference: the role
+/// flags of position `i`; bit 1 marks the goalkeeper].
 /// Original: `position_byte` (0x5b57c0, formation.cpp).
 pub(crate) unsafe extern "thiscall" fn position_byte(this: usize, i: i8) -> u8 {
     *((this as isize + (formation_fields::MARKING_TYPES as isize) + i as isize) as *const u8)

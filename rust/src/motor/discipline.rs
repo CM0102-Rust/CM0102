@@ -30,11 +30,12 @@ pub(crate) unsafe fn nation_index_range(this: usize, team: Club) -> (usize, usiz
 /// match of their ban under rule 0, one by one from a list of their ids (the count can release the ban and reorder the
 /// index).
 ///
-/// Convention: thiscall, ret 4, `discipline.cpp`, SEH frame for the local LLIST (`0x68d020`/`0x68d040`).
-/// `Discipline::serve_international_bans(time)` (team), called by the national team match (`0x7e8090`, in the ruling
-/// body of the bans). The people of the team's nation in the nation index (nation_index_range) go into a list
-/// (`0x68d0d0` with the item and 4: a copy of the id, because the count can release the ban and reorder the index) and,
-/// for each one, one match served under rule 0 (`0x556e90` with 0 and 1). At the end the list is destroyed.
+/// Convention: thiscall, ret 4, `discipline.cpp`, SEH frame for the local LLIST (`exe::new_llist`/`exe::drop_llist`).
+/// `Discipline::serve_international_bans(team)`, called by the national team match (`0x7e8090`, in the ruling body of
+/// the bans). The people of the team's nation in the nation index (`nation_index_range`) go into a list
+/// (`exe::llist_add_tail` with the item and 4: a copy of the id, because the count can release the ban and reorder the
+/// index) and, for each one, one match served under rule 0 (`exe::discipline_update_ban_progress` with 0 and 1). At the
+/// end the list is destroyed.
 /// Original: `Discipline::serve_international_bans` (0x557120, discipline.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn serve_international_bans(this: usize, team: usize) {
     let mut l = [0u8; 14];
@@ -114,13 +115,14 @@ pub(crate) unsafe fn appeal_plan(this: usize, id: u32, rule: u32, reduces: u32, 
 /// Applies the result of a ban appeal: the ruling body drops the person's pending bans; a match ban loses matches (or
 /// stops at the counter) and a timed ban loses days, and it is released when over or when the appeal lifts it.
 ///
-/// `Discipline::apply_appeal_result(id, regra, reduz, menos_jogos, menos_dias, novo, dias_fixo, _)` (id, rule, reduce,
-/// fewer matches, fewer days, new, fixed days, _), called by the appeal result (`0x6abf99`, the human manager's news).
-/// With the person's entry in the ruling body (`0x7e82e0` without creating) and a ban (`+6`): the body removes the
-/// person's pending bans (`0x7e91d0`); by matches (`+0` ≠ `0xff`): `novo` ≠ `0xff` removes `novo` matches (below 0:
-/// zero and release), otherwise `reduz` removes `menos_jogos` and releases if it ends at or below the counter (`+1`),
-/// otherwise releases; by days: `dias_fixo` ≠ −1 removes `menos_dias` (down to 0: zero and release), otherwise `reduz`
-/// removes and releases at 0, otherwise releases. Release: `0x556d00` with the index.
+/// `Discipline::apply_appeal_result(id, rule, reduces, minus_games, minus_days, new, days_fixed, _x)`, called by the
+/// appeal result (`0x6abf99`, the human manager's news). With the person's entry in the ruling body
+/// (`exe::rulingbody_find_or_add_discipline_entry` without creating) and a ban (`ruling_body_entry::BAN_INDEX`): the
+/// body removes the person's pending bans (`exe::rulingbody_remove_pending_bans`); by matches (`+0` ≠ `0xff`): `new` ≠
+/// `0xff` removes `new` matches (below 0: zero and release), otherwise `reduces` removes `minus_games` and releases if
+/// it ends at or below the counter (`ban_record::MATCHES_SERVED`), otherwise releases; by days (`ban_record::DAYS`):
+/// `days_fixed` ≠ −1 removes `minus_days` (down to 0: zero and release), otherwise `reduces` removes and releases at 0,
+/// otherwise releases. Release: `exe::discipline_release_ban` with the index.
 /// Original: `Discipline::apply_appeal_result` (0x557000, discipline.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn apply_appeal_result(this: usize, id: u32, rule: u32, reduces: u32, minus_games: u32, minus_days: u32, new: u32, days_fixed: u32, _x: u32) {
     let r = appeal_plan(this, id, rule, reduces, minus_games, minus_days, new, days_fixed);
@@ -147,10 +149,10 @@ pub(crate) unsafe fn ban_slot_rule(this: usize, person: usize, slot: u32) -> u8 
 
 /// Returns the text of the ban in the person's slot, from the ruling body of its rule; with no rule in the slot, 0.
 ///
-/// `Discipline::get_slot_text(pessoa, vaga, saída, tamanho)` (person, slot, output, size), called by the person screen
-/// (`0x87618a`, with `0xc8`). A person with id from `[0xae2364]` on: 0. The slot's rule (ban_slot_rule) `0xff`: 0;
-/// otherwise its ruling body's text (`[[this] + 4 × rule]`, `0x7e88d0` with the person, the output and the size). Null
-/// person: the original routine runs (it reads the id from 0).
+/// `Discipline::get_slot_text(person, slot, out, size)`, called by the person screen (`0x87618a`, with `0xc8`). A
+/// person with id from `G_STAFF_COUNT` on: 0. The slot's rule (`ban_slot_rule`) `0xff`: 0; otherwise its ruling body's
+/// text (`[[this] + 4 × rule]`, `exe::rulingbody_get_ban_text` with the person, the output and the size). Null person:
+/// the original routine runs (it reads the id from 0).
 /// Original: `Discipline::get_slot_text` (0x55d3c0, discipline.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn get_slot_text(this: usize, person: usize, slot: u32, out: usize, size: u32) -> u32 {
     if person == 0 {
@@ -213,14 +215,17 @@ pub(crate) unsafe fn clear_discipline_slot(this: usize, id: u32, k: usize, e: us
 /// flags both; otherwise copies the new ban into the array's first free slot (or the end, growing by 100 up to
 /// `0x7d00`), links each rule to it and, with the fourth rule, adds {id, nation} to the nation index.
 ///
-/// `Discipline::add_ban(id, suspensao)` (id, ban): if any of the 4 rules of the new ban (`+0xc..+0xf`) already has a
-/// ban for the person (the body's entry with `+6` > −1), it extends the old one (matches `+0` added together or, with
-/// either of the two by days (`0xff`), the days `+2`) and flags both (`+0x13` bit 0); otherwise (bit 0 of the new one
-/// cleared for each rule with no ban) it copies the new one (`0x556c70`) into the first free slot of the array (`+0` =
-/// `0xff` and `+2` = −1), or at the end (count `+0xa`, capacity `+8`; grows by 100, up to `0x7d00`, malloc/realloc, the
-/// new slots free), links each rule to the index (`0x7e8510`) and, with the fourth rule, puts {id, nation} into the
-/// nation index (`+0xc`, capacity `+0x10`, count `+0x12`; grows by 20; qsort `0x55e5f0`). "Error" boxes (capacity at
-/// maximum, out of memory) via show_error_at.
+/// `Discipline::add_ban(id, ban)`: if any of the 4 rules of the new ban (`ban_record::RULES`) already has a ban for the
+/// person (the body's entry with `ruling_body_entry::BAN_INDEX` > −1), it extends the old one (matches `+0` added
+/// together or, with either of the two by days (`0xff`), the days `ban_record::DAYS`) and flags both
+/// (`ban_record::FLAGS` bit 0); otherwise (bit 0 of the new one cleared for each rule with no ban) it copies the new
+/// one (`exe::banrecord_operator_3d`) into the first free slot of the array (`discipline_fields::BANS`; `+0` = `0xff`
+/// and `ban_record::DAYS` = −1), or at the end (count `discipline_fields::BAN_COUNT`, capacity
+/// `discipline_fields::BAN_CAPACITY`; grows by 100, up to `0x7d00`, malloc (`exe::crt_malloc`)/realloc
+/// (`FN_CRT_REALLOC`), the new slots free), links each rule to the index (`exe::rulingbody_attach_ban`) and, with the
+/// fourth rule (`ban_record::NATION_RULE`), puts {id, nation} into the nation index (`discipline_fields::NATION_INDEX`,
+/// capacity `discipline_fields::NATION_INDEX_CAPACITY`, count `discipline_fields::NATION_INDEX_COUNT`; grows by 20;
+/// qsort `0x55e5f0`). "Error" boxes (capacity at maximum, out of memory) via show_error_at.
 /// Original: `Discipline::add_ban` (0x556940, discipline.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn add_ban(this: usize, id: u32, ban: usize) {
     for k in 0..4usize {
@@ -324,8 +329,9 @@ pub(crate) unsafe extern "thiscall" fn add_ban(this: usize, id: u32, ban: usize)
     exe::crt_qsort(read_usize(this + discipline_fields::NATION_INDEX), (read_i16(this + discipline_fields::NATION_INDEX_COUNT) as i32) as u32, 8, 0x55e5f0);
 }
 
-/// on a club move, frees each of the person's 4 record slots whose ruling body (nation +0x17 or continent +0x1b) does
-/// not cover the new club: releases the ban, frees the slot and the entry; with held bans, shows the "Error" box
+/// on a club move, frees each of the person's 4 record slots whose ruling body (nation `ruling_body::NATION_ID` or
+/// continent `ruling_body::CONTINENT_ID`, `ruling_body_covers_club`) does not cover the new club: releases the ban,
+/// frees the slot and the entry; with held bans, shows the "Error" box
 /// Original: `Discipline::clear_bans_invalid_for_club` (0x556270, discipline.cpp, thiscall, ret 0xc).
 pub(crate) unsafe extern "thiscall" fn clear_bans_invalid_for_club(this: usize, person: usize, _nada: u32, club: usize) {
     let id = read_usize(person) as u32;
@@ -407,12 +413,13 @@ pub(crate) unsafe fn return_bans_plan(this: usize, person: usize) -> ContractRet
 /// When a loan ends, puts the person's held bans back into their slots (freeing the occupied slot first; the item
 /// leaves the list) and frees slots 0..2 not restored whose ruling body does not cover the contract club.
 ///
-/// `Discipline::restore_held_bans(pessoa)` (person), at the end of a loan (`0x4d07e0`): the contract (`0x4cf5a0`,
-/// stored in `[0xae1080]`) gives the club; for each held ban of the person in list `[this+0x1c]` (id, slot `+4`, the 5
-/// bytes `+5`), while there are held bans (`+0x1c` of the record, signed): the occupied slot is freed first (the ban
-/// released, `0x556d00`), the held ban goes back to the slot, leaves the list (`0x68d1f0`, which frees it) and the
-/// count drops. Then the slots 0..2 not restored (never the fourth: the original's `k != 3`) whose ruling body does not
-/// cover the club are freed.
+/// `Discipline::restore_held_bans(person)`, at the end of a loan (`0x4d07e0`): the contract
+/// (`exe::contract_manager_get_contract`, stored in `G_CONTRACT_LOOKUP_RESULT`) gives the club; for each held ban of
+/// the person in list `discipline_fields::HELD_BANS` (id, slot `held_ban::SLOT`, the 5 bytes `held_ban::SLOT_DATA`),
+/// while there are held bans (`discipline_record::HELD_BAN_COUNT` of the record, signed): the occupied slot is freed
+/// first (the ban released, `release_entry_ban`), the held ban goes back to the slot, leaves the list
+/// (`exe::llist_remove`, which frees it) and the count drops. Then the slots 0..2 not restored (never the fourth: the
+/// original's `k != 3`) whose ruling body does not cover the club are freed.
 /// Original: `Discipline::restore_held_bans` (0x556570, discipline.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn restore_held_bans(this: usize, person: usize) {
     let id = read_usize(person) as u32;
@@ -590,9 +597,10 @@ pub(crate) unsafe fn serve_ban_match_plan(this: usize, id: u32, rule: u32, count
     j
 }
 
-/// the person's ban in the rule's ruling body: match bans, from the start date (+4/+6) and when counting, +1 to the
-/// counter (+1); on reaching the total (+0), or day bans once today reaches start + days (+2, `exe::date_add_days`), it goes to the
-/// history (0x58e340) and is released (`release_ban`)
+/// the person's ban in the rule's ruling body: match bans, from the start date (`ban_record::START_DATE`/+6) and when
+/// counting, +1 to the counter (`ban_record::MATCHES_SERVED`); on reaching the total (+0), or day bans once today
+/// reaches start + days (`ban_record::DAYS`, `exe::date_add_days`), it goes to the history (`FN_FILE_LLIST_ADD_NODE`)
+/// and is released (`exe::discipline_release_ban`)
 /// Original: `Discipline::update_ban_progress` (0x556e90, discipline.cpp, thiscall, ret 0xc).
 pub(crate) unsafe extern "thiscall" fn update_ban_progress(this: usize, id: u32, rule: u32, count: u32) {
     let j = serve_ban_match_plan(this, id, rule, count);
@@ -612,11 +620,11 @@ pub(crate) unsafe extern "thiscall" fn update_ban_progress(this: usize, id: u32,
 /// Releases a ban: each ruling body of the ban's 4 rules forgets it; on the fourth rule, the person's item leaves the
 /// nation index; the ban becomes free. Returns the ban.
 ///
-/// `Discipline::release_ban(id, indice)` (id, index): ban `indice` (20 bytes in `[this+4]`; the word is signed): for
-/// each of the 4 rules (`+0xc..+0xf`, `0xff` = none), the ruling body forgets it (`0x7e8590`); on the fourth, the
-/// person's item leaves the nation index (the last one is moved into its place, count `+0x12` − 1, qsort `0x945333`
-/// with `0x55e5f0`; if not found, "Error" box and it carries on). Finally the ban becomes free (`+0` = `0xff`, `+2` =
-/// −1).
+/// `Discipline::release_ban(id, index)`: ban `index` (20 bytes in `discipline_fields::BANS`; the word is signed): for
+/// each of the 4 rules (`ban_record::RULES`, `0xff` = none), the ruling body forgets it (`exe::rulingbody_detach_ban`);
+/// on the fourth, the person's item leaves the nation index (the last one is moved into its place, count
+/// `discipline_fields::NATION_INDEX_COUNT` − 1, qsort `exe::crt_qsort` with `0x55e5f0`; if not found, "Error" box and
+/// it carries on). Finally the ban becomes free (`+0` = `0xff`, `ban_record::DAYS` = −1).
 /// Original: `Discipline::release_ban` (0x556d00, discipline.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn release_ban(this: usize, id: u32, index: u32) -> usize {
     let s = read_usize(this + discipline_fields::BANS).wrapping_add((index as u16 as i16 as i32 as usize).wrapping_mul(20));
@@ -647,12 +655,14 @@ pub(crate) unsafe extern "thiscall" fn release_ban(this: usize, id: u32, index: 
     s
 }
 
-/// Clears the person's ban history: the last entry of the history is dropped (`+0x18` of the 29-byte record = −1, via
-/// `0x58f110`).
+/// Clears the person's ban history: the last entry of the history is dropped (`discipline_record::HISTORY_LAST` of the
+/// 29-byte record = −1, via `exe::file_llist_reset_last_offset`).
 ///
-/// `Discipline::clear_ban_history(pessoa)` (person): the person's ban history (29-byte record of the id in
-/// `[this+0x14]`) loses its last entry (`0x58f110` on `[this+0x18]`: `+0x18` = −1). Returns what `0x58f110` returns.
-/// Null person or not a player (`+0x61`): the original routine runs (fatal box).
+/// `Discipline::clear_ban_history(person)`: the person's ban history (29-byte record of the id in
+/// `discipline_fields::PERSON_RECORDS`) loses its last entry (`exe::file_llist_reset_last_offset` on
+/// `discipline_fields::BAN_HISTORY`: `discipline_record::HISTORY_LAST` = −1). Returns what
+/// `exe::file_llist_reset_last_offset` returns. Null person or not a player (`.player()`): the original routine runs
+/// (fatal box).
 /// Original: `Discipline::clear_ban_history` (0x55e1d0, discipline.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn clear_ban_history(this: usize, person: usize) -> usize {
     let person = Staff(person);
@@ -663,11 +673,13 @@ pub(crate) unsafe extern "thiscall" fn clear_ban_history(this: usize, person: us
     exe::file_llist_reset_last_offset(read_usize(this + discipline_fields::BAN_HISTORY), r + discipline_record::HISTORY_START, r + discipline_record::HISTORY_LAST)
 }
 
-/// Copies a ban record (`0x14` bytes): the fields, the date (`+4`) and bits 0..2 of `+0x13`. Returns `this`.
+/// Copies a ban record (`0x14` bytes): the fields, the date (`ban_record::START_DATE`) and bits 0..2 of
+/// `ban_record::FLAGS`. Returns `this`.
 ///
-/// `BanRecord::operator=`: copies the ban record from `origem` (source): `+0` and `+1` (bytes), `+2` (word), the date
-/// at `+4` (`0x417c10`, return value in a local), `+0xc..+0xf` (byte by byte), `+0x10` (byte), `+0x11` (word) and bits
-/// 0..2 of `+0x13` (the other bits are kept).
+/// `BanRecord::operator=`: copies the ban record from `source`: `+0` and `+1` (bytes), `ban_record::DAYS` (word), the
+/// date at `ban_record::START_DATE` (`exe::date_operator_3d`, return value in a local), `+0xc..+0xf` (byte by byte),
+/// `ban_record::REASON` (byte), `ban_record::REASON_AMOUNT` (word) and bits 0..2 of `ban_record::FLAGS` (the other bits
+/// are kept).
 /// Original: `BanRecord::operator=` (0x556c70, discipline.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn discipline_operator(this: usize, source: usize) -> usize {
     let b = |o: usize| write_u8(this + o, read_u8(source + o));
@@ -730,14 +742,15 @@ pub(crate) unsafe extern "thiscall" fn discipline_set_slot(this: usize, id: i32,
 
 // simplification: the first two only dispatch through the virtual table (effects outside): proven by the career
 
-/// Tells whether the player is suspended: by the general ruling body (`0x7e85b0` with 1) or by the competition's
-/// (`+0x50`, with 0); in the latter case, at a human-managed club, he leaves his slot among the 20 at `+0x1e0`.
+/// Tells whether the player is suspended: by the general ruling body (`exe::rulingbody_is_player_banned` with 1) or by
+/// the competition's (`.discipline_rule()`, with 0); in the latter case, at a human-managed club, he leaves his slot
+/// among the 20 at `club::TEAM_SELECTED`.
 ///
-/// `Discipline::is_player_suspended(jogador, competição, extra, partida)` (player, competition, extra, match): player
-/// outside the people (`[0xae2364]`) or a non-existent competition (id in `*comp`, array `[0xadadfc]`): 0. Suspended by
-/// the general body (`[[this]]`, `0x7e85b0` with 1): 1. Otherwise, by the competition's body (`+0x50`, ≠ −1, with 0):
-/// 1, and if his club (`+0x39`) is human-managed (`0x600a50` with 0, 1, 0, 0), he leaves the slot he holds among the 20
-/// at `+0x1e0`. Otherwise 0.
+/// `Discipline::is_player_suspended(player, comp, extra, fixture)`: player outside the people (`G_STAFF_COUNT`) or a
+/// non-existent competition (id in `*comp`, array `G_COMP_OBJECT_TABLE`): 0. Suspended by the general body (`[[this]]`,
+/// `exe::rulingbody_is_player_banned` with 1): 1. Otherwise, by the competition's body (`.discipline_rule()`, ≠ −1,
+/// with 0): 1, and if his club (`.club_job()`) is human-managed (`exe::human_manager_is_human_club` with 0, 1, 0, 0),
+/// he leaves the slot he holds among the 20 at `club::TEAM_SELECTED`. Otherwise 0.
 /// Original: `Discipline::is_player_suspended` (0x55d270, discipline.cpp, thiscall, ret 0x10).
 pub(crate) unsafe extern "thiscall" fn is_player_suspended(this: usize, player: usize, comp: *const i32, extra: u32, fixture: usize) -> u32 {
     let player = Staff(player);
@@ -776,12 +789,12 @@ pub(crate) unsafe extern "thiscall" fn is_player_suspended(this: usize, player: 
     1
 }
 
-/// Removes the person's items from the held-ban list (`+0x1c`) while the `+0x1c` counter of the person's record is
-/// positive.
+/// Removes the person's items from the held-ban list (`discipline_fields::HELD_BANS`) while the
+/// `discipline_record::HELD_BAN_COUNT` counter of the person's record is positive.
 ///
-/// `Discipline::drop_held_bans(pessoa)` (person): from the list of held bans (`+0x1c`; the cursor `+0xa` goes back to
-/// the start `+2`), it removes (`0x68d1f0`) each item of id `*pessoa` while the counter of the person's record
-/// (`+0x1c`, signed) is positive, decrementing it for each item.
+/// `Discipline::drop_held_bans(person)`: from the list of held bans (`discipline_fields::HELD_BANS`; the cursor goes
+/// back to the start, `.set_cursor(.head())`), it removes (`list_remove`) each item of id `*person` while the counter
+/// of the person's record (`discipline_record::HELD_BAN_COUNT`, signed) is positive, decrementing it for each item.
 /// Original: `Discipline::drop_held_bans` (0x5567d0, discipline.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn drop_held_bans(this: usize, person: *const u32) {
     let l = Llist(this + discipline_fields::HELD_BANS);
@@ -797,13 +810,14 @@ pub(crate) unsafe extern "thiscall" fn drop_held_bans(this: usize, person: *cons
     }
 }
 
-/// Holds bans for a loan: the bans (slots 0 to 2) that do not apply at the loan club go to the held list (`+0x1c`), the
-/// slot becomes −1 and the `+0x1c` counter goes up.
+/// Holds bans for a loan: the bans (slots 0 to 2) that do not apply at the loan club go to the held list
+/// (`discipline_fields::HELD_BANS`), the slot becomes −1 and the `discipline_record::HELD_BAN_COUNT` counter goes up.
 ///
-/// `Discipline::hold_bans_for_loan(jogador)` (player): with the player's contract sheet (`0x4cf6d0` on `[0xae1050]`),
-/// each ban in his record (slots 0 to 2) that does not apply at the loan club goes to the list of held bans (`+0x1c`,
-/// `0x68d0d0` with 10 bytes: the id, the slot and its 5 bytes), the slot becomes −1 and the record's `+0x1c` counter
-/// goes up. No contract sheet: the original routine runs ("Error" box).
+/// `Discipline::hold_bans_for_loan(player)`: with the player's contract sheet
+/// (`exe::contract_manager_get_loan_contract` on `G_CONTRACT_MANAGER`), each ban in his record (slots 0 to 2) that does
+/// not apply at the loan club goes to the list of held bans (`discipline_fields::HELD_BANS`, `exe::llist_add_tail` with
+/// 10 bytes: the id, the slot and its 5 bytes), the slot becomes −1 and the record's
+/// `discipline_record::HELD_BAN_COUNT` counter goes up. No contract sheet: the original routine runs ("Error" box).
 /// Original: `Discipline::hold_bans_for_loan` (0x5563f0, discipline.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn hold_bans_for_loan(this: usize, player: usize) {
     let sheet = exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), (player as *const i32) as usize);
@@ -827,9 +841,10 @@ pub(crate) unsafe extern "thiscall" fn hold_bans_for_loan(this: usize, player: u
 /// Tells whether the person is one booking away from a ban: with a valid id, it asks the competition's ruling body;
 /// otherwise 0.
 ///
-/// `Discipline::is_one_booking_from_ban(pessoa, competicao)` (person, competition): with a valid id, the competition
-/// (`[[0xadadfc] + 4 × id]`) and its ruling body (`+0x50`, `0xff` if none; `[this]` + 4 × body), the question to the
-/// body (`0x7e8d60` with the id, 0, 0 and the competition's `+4`); otherwise 0. Called by the club screen (`0x4849f0`).
+/// `Discipline::is_one_booking_from_ban(person, competition)`: with a valid id, the competition (`G_COMP_OBJECT_TABLE`
+/// + 4 × id) and its ruling body (`.discipline_rule()`, `0xff` if none; `[this]` + 4 × body), the question to the body
+/// (`exe::rulingbody_check_one_booking_from_ban` with the id, 0, 0 and the competition's `.competition()`); otherwise
+/// 0. Called by the club screen (`0x4849f0`).
 /// Original: `Discipline::is_one_booking_from_ban` (0x55d360, discipline.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn is_one_booking_from_ban(this: usize, person: usize, competition: usize) -> u32 {
     if person != 0 && read_i32(person) >= read_i32(G_STAFF_COUNT) {
@@ -866,9 +881,10 @@ pub(crate) unsafe extern "thiscall" fn table_penalty(t: usize, row: i32, column:
 /// Processes a match for discipline: the competition's ruling body judges it; without one, in friendlies, the league
 /// ruling bodies of both clubs.
 ///
-/// `Discipline::process_match(partida, resultado)` (match, result): the ruling body of the match's competition (`+0`,
-/// id > −1) judges it (`0x7e7ff0` with 1, 1, 1). Without one, in a friendly (`0x5c6710` on `[0xae2c74]` with `+0x14`)
-/// or in competition `[0x9cf684]`: the league (`+0x57`) body of the home club (`+0x1c`, with 1, 0, 0) and that of the
+/// `Discipline::process_match(fixture, result)`: the ruling body of the match's competition (`+0`, id > −1;
+/// `comp_tribunal`) judges it (`exe::rulingbody_process_match` with 1, 1, 1). Without one, in a friendly
+/// (`exe::friendly_is_friendly_competition` on `G_FRIENDLY` with `.competition()`) or in competition
+/// `KEY_CLUB_COMP_RESERVE`: the league (`club::DIVISION`) body of the home club (`+0x1c`, with 1, 0, 0) and that of the
 /// away club (`+0x20`, with 0, 1, 0). Returns what the first body returns (the other paths, 0; nobody reads it).
 /// Original: `Discipline::process_match` (0x55ca00, discipline.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn process_match(this: usize, fixture: usize, result: u32) -> u32 {
@@ -897,10 +913,11 @@ pub(crate) unsafe extern "thiscall" fn process_match(this: usize, fixture: usize
 /// Removes a player from discipline: clears the ban history, releases the bans and frees the 4 slots, drops the held
 /// bans from the list and leaves the 29-byte record free (`0xff`, count 0).
 ///
-/// `Discipline::remove_player(id)`, called by the regen (`0x7abac0`): deletes the ban history (`0x55e1d0`), frees the 4
-/// slots of the 29-byte record (with an entry in the ruling body: the ban released, `0x556d00`, the slot free and entry
-/// `+0` = −1), removes the person's held bans from list `[this+0x1c]` (`0x68d1f0`, while count `+0x1c` > 0) and the
-/// record becomes `0xff` with count 0.
+/// `Discipline::remove_player(id)`, called by the regen (`0x7abac0`): deletes the ban history
+/// (`exe::discipline_clear_ban_history`), frees the 4 slots of the 29-byte record (`discipline_fields::PERSON_RECORDS`;
+/// with an entry in the ruling body: the ban released, `exe::discipline_release_ban`, the slot free and entry `+0` =
+/// −1), removes the person's held bans from list `discipline_fields::HELD_BANS` (`exe::llist_remove`, while count
+/// `discipline_record::HELD_BAN_COUNT` > 0) and the record becomes `0xff` with count 0.
 /// Original: `Discipline::remove_player` (0x556830, discipline.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn discipline_remove_player(this: usize, id: u32) {
     let r = read_usize(this + discipline_fields::PERSON_RECORDS).wrapping_add((id as usize).wrapping_mul(29));
@@ -941,9 +958,9 @@ pub(crate) unsafe extern "thiscall" fn discipline_remove_player(this: usize, id:
 
 /// Returns the player's held ban in a slot, or 0 if none.
 ///
-/// The held ban of player `id` in slot `vaga`: it walks the list of held bans (`+0x1c`, from the start, `0x68d1b0`)
-/// while the player has any (byte `+0x1c` of the 29-byte record in `[+0x14]`) and returns the one with the same player
-/// and slot.
+/// The held ban of player `id` in slot `slot`: it walks the list of held bans (`discipline_fields::HELD_BANS`, from the
+/// start, `exe::llist_get_next`) while the player has any (byte `discipline_record::HELD_BAN_COUNT` of the 29-byte
+/// record in `discipline_fields::PERSON_RECORDS`) and returns the one with the same player and slot (`held_ban::SLOT`).
 /// Original: `Discipline::find_held_ban` (0x55cb60, discipline.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn find_held_ban(discipline: usize, id: i32, slot: i8) -> usize {
     let list = Llist(discipline + discipline_fields::HELD_BANS);

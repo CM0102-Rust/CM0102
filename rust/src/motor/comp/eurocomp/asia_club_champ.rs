@@ -470,8 +470,8 @@ pub(crate) fn ldv_trophy_stage(stage: u32) -> Option<ScheduleStage> {
     }
 }
 
-/// rule: the Asian Club Championship has 16 teams, the qualified clubs (+0xb2) in the order they were picked, all with
-/// class and status 0
+/// rule: the Asian Club Championship has 16 teams, the qualified clubs (`asia_club_champ_fields::QUALIFIED_CLUBS`) in
+/// the order they were picked, all with class and status 0
 /// Original: `AsiaClubChamp::build_team_table` (0x40b620, asia_club_champ.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn asia_club_champ_build_team_table(this: usize) -> i32 {
     build_team_table(Cup(this), 0x987a40, 0x1cd, "cqq_12 times da liga dos campeoes asiatica", |i| i) // cqq12: the Asian Champions League teams

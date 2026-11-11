@@ -6,12 +6,14 @@ pub(crate) const TURKEY_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
     [0x18, 0x00, 0xff, 0x1f, 0x00, 0x00],
 ];
 
-/// Constructs the Turkey transfer rules (rule 24): one window, from 1 June to 31 January; +0x13 = 8 (base default 50)
-/// [inference: the foreign player limit]; +0x14 = 8 (default 30).
+/// Constructs the Turkey transfer rules (rule 24): one window, from 1 June to 31 January;
+/// `transfer_rules::FOREIGN_PLAYER_LIMIT` = 8 (base default 50) [inference: the foreign player limit];
+/// `transfer_rules::NON_EU_PLAYER_LIMIT` = 8 (default 30).
 ///
 /// Ret 0x14, `TURKEY_RULES::TURKEY_RULES`; SEH frame only for the `new`, no destructor on the normal path: the base
-/// (`exe::new_transfer_rules`), vtable 0x97075c, 1 window from `TURKEY_TRANSFER_WINDOWS`; +0x13 = 8 (the base default is 50) [inference:
-/// the foreign player limit]; +0x14 = 8 (the default is 30). Returns the object.
+/// (`exe::new_transfer_rules`, through `construct_nation_rules`), vtable 0x97075c, 1 window from
+/// `TURKEY_TRANSFER_WINDOWS`; `transfer_rules::FOREIGN_PLAYER_LIMIT` = 8 (the base default is 50) [inference: the
+/// foreign player limit]; `transfer_rules::NON_EU_PLAYER_LIMIT` = 8 (the default is 30). Returns the object.
 /// Original: `TURKEY_RULES::TURKEY_RULES` (0x9020a0, turkey_rules.cpp, thiscall, ret 0x14).
 pub(crate) unsafe extern "thiscall" fn construct_turkey_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     covered!("cqm_3 turkey");

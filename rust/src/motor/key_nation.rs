@@ -2,10 +2,10 @@ use super::*;
 
 /// Returns the first row of the 35-row key nation table holding the given nation, or 4.
 ///
-/// `key_nation_index_of_nation(nação)` (nation): the first row of the table of the 35 key nations (`0xb63d60`, 72
-/// bytes, nation at `+0`) with the given nation (without checking for null), or 4. Called by the match morale
-/// `0x4cb250`, the retirements `0x7a7310`, the free friendly `0x5c6b70`, the prizes of the nations' day and the UEFA
-/// places. TapeCall for every player: no counter.
+/// `key_nation_index_of_nation(nation)`: the first row of the table of the 35 key nations (`G_LEAGUE_TABLE`, 72 bytes,
+/// nation at `+0`) with the given nation (without checking for null), or 4. Called by the match morale `0x4cb250`, the
+/// retirements `0x7a7310`, the free friendly `0x5c6b70`, the prizes of the nations' day and the UEFA places. TapeCall
+/// for every player: no counter.
 /// Original: `key_nation_index_of_nation` (0x669340, key_nation.cpp, cdecl).
 pub(crate) unsafe extern "C" fn key_nation_index_of_nation(nation: usize) -> u8 {
     for k in 0..0x23usize {
@@ -19,12 +19,13 @@ pub(crate) unsafe extern "C" fn key_nation_index_of_nation(nation: usize) -> u8 
 /// Returns the key nation row of the club: the row of its chosen nation; for a national team, 1; for a nation not
 /// chosen, the row of its continent, or 3.
 ///
-/// `key_nation_index_of_club(clube)` (club). A club that is not a national team (`0x53b900`), with a nation (`+0x53`)
-/// chosen to be played (`+0x11c` of the nation): the nation's row in the table, or the "Error" box (line `0x26d`) and
-/// 0. Otherwise (the original calls `0x53b900` again): national team, 1; the first row whose continent (`+4`) is that
-/// of the club's nation (`+0x71`), or 3 (with no nation, 3). Called by the retirements `0x7a7310`, the weather
-/// postponement `0x923630`, the days until the season `0x59b4c0`, the desired contract `0x85fc50`, the season year
-/// `0x669950` and others. No counter.
+/// `key_nation_index_of_club(club)`. A club that is not a national team (`exe::database_is_national_team`), with a
+/// nation (`.nation()`) chosen to be played (`nation::LEAGUE_SELECTED` of the nation): the nation's row in the table
+/// (`G_LEAGUE_TABLE`), or the "Error" box (line `0x26d`) and 0. Otherwise (the original calls
+/// `exe::database_is_national_team` again): national team, 1; the first row whose continent
+/// (`G_LEAGUE_WORLD_CUP_CONTINENT`) is that of the club's nation (`nation::CONTINENT`), or 3 (with no nation, 3).
+/// Called by the retirements `0x7a7310`, the weather postponement `0x923630`, the days until the season `0x59b4c0`, the
+/// desired contract `0x85fc50`, the season year `0x669950` and others. No counter.
 /// Original: `key_nation_index_of_club` (0x669360, key_nation.cpp, cdecl).
 pub(crate) unsafe extern "C" fn key_nation_index_of_club(club: usize) -> u8 {
     let club = Club(club);
@@ -63,10 +64,11 @@ pub(crate) unsafe fn hits_key_nation_error(club: Club) -> bool {
 
 /// Returns the club's season year: the previous year when today is before the season start day of its row.
 ///
-/// `key_nation_get_club_season_year(clube)` (club): today's year (`[0xae2c92]`); for a club that is not a national
-/// team, by the club's exe::key_nation_index_of_club(`0x669360`): with the row's dword `+0x17` not zero or the start day (`+0x15`, unsigned)
-/// below 60, and today's day (`[0xae2c90]`, signed) before the start day, the previous year. The original returns only
-/// the low 16 bits meaningfully (the high ones are left over from the pushed slot). Called by the club records
+/// `key_nation_get_club_season_year(club)`: today's year (`G_CURRENT_DATE_YEAR`); for a club that is not a national
+/// team (`exe::database_is_national_team`), by the club's row (`exe::key_nation_index_of_club`): with the row's dword
+/// `key_nation_record::SPLIT_SEASON_FLAG` not zero or the start day (`key_nation_record::SEASON_END_DAY`, unsigned)
+/// below 60, and today's day (`G_CURRENT_DATE`, signed) before the start day, the previous year. The original returns
+/// only the low 16 bits meaningfully (the high ones are left over from the pushed slot). Called by the club records
 /// `0x444930`/`0x447430`/`0x448ad0` and the player history `0x7c3e40`/`0x7c5fe0`.
 /// Original: `key_nation_get_club_season_year` (0x669950, key_nation.cpp, cdecl).
 pub(crate) unsafe extern "C" fn key_nation_get_club_season_year(club: usize) -> u16 {
@@ -96,16 +98,17 @@ pub(crate) unsafe fn write_date(dst: usize, day: i16, year: u16) {
 /// By the start and end days of the club's nation row and today, tells whether the club is in season and gives the
 /// start and end dates with the right year.
 ///
-/// Convention: cdecl, `key_nation.cpp`, SEH frame only for the local dates. `key_nation_club_in_season(clube, &início,
-/// &fim)` (club, &start, &end). The row of the club's nation (`+0x53`) in the table of the 35 key nations (`0xb63d60`,
-/// 72 bytes; with no nation or outside the table, row 3 `0xb63e38` and the end day of the default date `0x54a110`, 40).
-/// `a` = day `+0x2a` of the row (start), `c` = the day of date `+0x39` (end; the original also copies the next 7 bytes
-/// and, with club `+0x1db` ≠ −1 and byte `+0x43` 3, 4 or 5, swaps two of them, but does not use them), `t` today's day
-/// (`[0xae2c90]`) and `y` the year (`[0xae2c92]`); signed 16-bit comparisons.
+/// Convention: cdecl, `key_nation.cpp`, SEH frame only for the local dates. `key_nation_club_in_season(club, &start,
+/// &end)`. The row of the club's nation (`.nation()`) in the table of the 35 key nations (`G_LEAGUE_TABLE`, 72 bytes;
+/// with no nation or outside the table, row 3 `G_LEAGUE_EUROPE_NATION` and the end day of the default date `0x54a110`,
+/// 40). `a` = day `key_nation_record::START_DATE` of the row (start), `c` = the day of date
+/// `key_nation_record::END_DATE` (end; the original also copies the next 7 bytes and, with club `+0x1db` ≠ −1 and byte
+/// `+0x43` 3, 4 or 5, swaps two of them, but does not use them), `t` today's day (`G_CURRENT_DATE`) and `y` the year
+/// (`G_CURRENT_DATE_YEAR`); signed 16-bit comparisons.
 ///
 /// With a > c (a season that crosses the year): t > a, (a, y) and (c, y+1), 1; t < c, (a, y−1) and (c, y), 1; otherwise
 /// (a, y) and (c, y), 0. With a ≤ c: t < a, (a, y) and (c, y), 0; t > c, (a, y+1) and (c, y+1), 1; otherwise (a, y) and
-/// (c, y), 1. The dates go to `início` and `fim` when not null.
+/// (c, y), 1. The dates go to `start` and `end` when not null.
 ///
 /// Called by the club in season `0x547770`, the fitness `0x62a920`, `0x62c680` and `0x62ce30`, the month of the season
 /// end `0x4d45f0` and the transfer date `0x8cee70`. TapeCall for every player: no counter.
@@ -222,14 +225,17 @@ pub(crate) unsafe extern "C" fn key_nation_is_international_comp(comp: usize) ->
 /// Returns the competition's key nation row: the nation's row, 0 for the World Cup, 1 for national team tournaments, 2
 /// for the club world cups, the continent's row or 3.
 ///
-/// `key_nation_index_of_comp(competição)` (competition), called by the scope of the match rules `0x8d2fa0`, the league
-/// day `0x6847c0`, the cup records `0x519890` and the match key nation `0x48dd70` of cpt_3. A nation competition
-/// (`+0x5d`): its row in the table of the 35 key nations (`0xb63d60`, 72 bytes), or 4. With no nation: the World Cup
-/// and its qualifiers, 0; national team tournament (`0x669ae0`), 1; the Club World Cup and the FIFA Club World
-/// Championship, 2; otherwise the continent row (nation 0) with the competition's continent (`+0x59`), or 3.
+/// `key_nation_index_of_comp(comp)` (competition), called by the scope of the match rules `0x8d2fa0`, the league day
+/// `0x6847c0`, the cup records `0x519890` and the match key nation `0x48dd70` of cpt_3. A nation competition
+/// (`.nation()`): its row in the table of the 35 key nations (`G_LEAGUE_TABLE`, 72 bytes), or 4. With no nation: the
+/// World Cup and its qualifiers (`KEY_CLUB_COMP_FIFA_WORLD_CUP` and the `KEY_CLUB_COMP_WORLD_CUP_*_QUALIFYING_SECTION`
+/// keys), 0; national team tournament (`exe::key_nation_is_international_comp`), 1; the Club World Cup
+/// (`KEY_CLUB_COMP_WORLD_CLUB_CUP`) and the FIFA Club World Championship
+/// (`KEY_CLUB_COMP_FIFA_CLUB_WORLD_CHAMPIONSHIP`), 2; otherwise the continent row (nation 0) with the competition's
+/// continent (`.continent()`, against `G_LEAGUE_WORLD_CUP_CONTINENT`), or 3.
 ///
-/// The original reads `+0x5d` before checking for a null competition (the error case never reaches the box). TapeCall
-/// for every match: no counter.
+/// The original reads `.nation()` before checking for a null competition (the error case never reaches the box).
+/// TapeCall for every match: no counter.
 /// Original: `key_nation_index_of_comp` (0x669470, key_nation.cpp, cdecl).
 pub(crate) unsafe extern "C" fn key_nation_index_of_comp(comp: usize) -> u8 {
     let comp = Competition(comp);

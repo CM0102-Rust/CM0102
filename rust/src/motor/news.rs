@@ -11,11 +11,13 @@ pub(crate) const STORED_NEWS_SIZE: usize = 0xdf;
 /// Marks read the first unread news item with the id in the human's ring, unless it needs a reply, takes it off the
 /// count and, when asked, repeats it for the humans on the same network machine.
 ///
-/// `News::mark_item_read(manager, id, sync)`: in the human's ring of 100 slots (News +8, by id − [0xae2364] + 16), the
-/// first slot with the `id` not yet read (+0xda = 0) whose button (`exe::newsitem_get_action_button` on 0xde1f64) does not ask for a reply (2)
-/// becomes read and leaves the count (+8 of the entry). No ring: 0. Otherwise (even when not found), with `sync`, it
-/// repeats (without sync) for the other humans (+0x5f = 1) on the same network machine (`exe::screenmanager_find_manager_channel`) as the current human;
-/// returns 1. No manager, no id, or a manager of the machine: the "Error" box and 0.
+/// `News::mark_item_read(manager, id, sincronizar)`: in the human's ring of 100 slots (`news_fields::HUMAN_INBOXES`, by
+/// id − `G_STAFF_COUNT` + 16), the first slot with the `id` (`news_item::ID`) not yet read (`news_item::READ` = 0)
+/// whose button (`exe::newsitem_get_action_button` on 0xde1f64) does not ask for a reply (2) becomes read and leaves
+/// the count (+8 of the entry). No ring: 0. Otherwise (even when not found), with `sincronizar`, it repeats (without
+/// sync, `exe::news_mark_item_read`) for the other humans (`.classification()` = 1) on the same network machine
+/// (`exe::screenmanager_find_manager_channel`) as the current human; returns 1. No manager, no id, or a manager of the
+/// machine: the "Error" box and 0.
 /// Original: `News::mark_item_read` (0x787140, news.cpp, thiscall, ret 0xc).
 pub(crate) unsafe extern "thiscall" fn mark_item_read(this: usize, manager: usize, id: u32, sincronizar: u32) -> u32 {
     if manager == 0 {
@@ -155,9 +157,11 @@ pub(crate) unsafe extern "thiscall" fn send_by_scope(this: usize, news: usize, c
     two(this, news, target)
 }
 
-/// marks the scope as club (+0xde = 0) and delivers the item to the club manager (+0xcf) when he is human (among the
-/// last 16 people); turned off (DESLIGADAS) from 2026-10-29 to 2026-10-31, when the test criterion changed and the list was emptied (the detour, even passing through, changes the stack residue a later
-/// original reads: the career left be54a138); the copy stays in the code and does not run
+/// marks the scope as club (`news_item::REACH` = 0) and delivers the item (`exe::news_deliver_to_manager`) to the club
+/// manager (`.manager()`) when he is human (among the last 16 people, `G_STAFF_COUNT`); turned off (DESLIGADAS) from
+/// 2026-10-29 to 2026-10-31, when the test criterion changed and the list was emptied (the detour, even passing
+/// through, changes the stack residue a later original reads: the career left be54a138); the copy stays in the code and
+/// does not run
 /// Original: `News::send_to_club_manager` (0x7861e0, news.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn send_to_club_manager(this: usize, news: usize, club: usize) -> u32 {
     let club = Club(club);
@@ -281,9 +285,9 @@ pub(crate) fn ring_prev_wrap(k: i32, start: i32) -> i32 {
 /// slot.
 ///
 /// `News::auto_respond_all(manager, club)`: from the newest to the oldest news item of the human's ring, up to the
-/// first empty slot (+0xd6 = 0), gives the automatic reply (`exe::newsitem_auto_respond`) for the `club`. No manager or a manager of the
-/// machine: the "Error" box and 0; no ring or at the end: 1. TapeCall when going on holiday, when sacked and when
-/// hired.
+/// first empty slot (`news_item::ID` = 0), gives the automatic reply (`exe::newsitem_auto_respond`) for the `club`. No
+/// manager or a manager of the machine: the "Error" box and 0; no ring or at the end: 1. TapeCall when going on
+/// holiday, when sacked and when hired.
 /// Original: `News::auto_respond_all` (0x7874b0, news.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn auto_respond_all(this: usize, manager: usize, club: usize) -> u32 {
     if manager == 0 {
@@ -316,10 +320,11 @@ pub(crate) unsafe extern "thiscall" fn auto_respond_all(this: usize, manager: us
 /// Without "urgent only", tells whether there is an unread item; with it, whether an item needs a reply or is important
 /// and unread.
 ///
-/// `News::has_urgent_items(manager, urgent_only)`: without `urgent_only`, whether there is an unread news item
-/// (`count_unread` > 0). With it, from the newest to the oldest of the human's ring, up to the first empty slot: 1 if one
-/// needs a reply (the text `exe::newsitem_get_action_button` on 0xde1f64 returns 2) or is important (+4 = 1) and unread (+0xda = 0). A manager
-/// of the machine: the "Error" box and 0.
+/// `News::has_urgent_items(manager, so_urgentes)`: without `so_urgentes`, whether there is an unread news item
+/// (`exe::news_count_unread` > 0). With it, from the newest to the oldest of the human's ring, up to the first empty
+/// slot (`news_item::ID` = 0): 1 if one needs a reply (the text `exe::newsitem_get_action_button` on 0xde1f64 returns
+/// 2) or is important (`news_item::IMPORTANT` = 1) and unread (`news_item::READ` = 0). A manager of the machine: the
+/// "Error" box and 0.
 /// Original: `News::has_urgent_items` (0x787350, news.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn has_urgent_items(this: usize, manager: usize, so_urgentes: u32) -> u32 {
     if so_urgentes == 0 {
@@ -357,10 +362,11 @@ pub(crate) unsafe extern "thiscall" fn has_urgent_items(this: usize, manager: us
 /// Copies the text into the news item's slots from the given slot and returns the first free slot after it (at most
 /// 50).
 ///
-/// `slot.set_slot_string(text, next)`: copies the `text` into the news item's slots from `slot` (strncpy
-/// `exe::at_9466d0` at +5 + 4·slot, up to 200 − 4·slot bytes), terminates the area (+0xcc = 0) and, with `next`, writes the
-/// first free slot after the text (the length with the terminating zero rounded up to 4, in slots, plus `slot`; at most
-/// 50). Slot outside 0..49 or no text: the "Error" box and 0; otherwise 1.
+/// `NewsItem::set_slot_string(field, text, next)`: copies the `text` into the news item's slots from slot `field`
+/// (strncpy `exe::at_9466d0` at `news_item::DATA` + 4·field, up to 200 − 4·field bytes), terminates the area
+/// (`news_item::TEXT_END` = 0) and, with `next`, writes the first free slot after the text (the length with the
+/// terminating zero rounded up to 4, in slots, plus `field`; at most 50). Slot outside 0..49 or no text: the "Error"
+/// box and 0; otherwise 1.
 /// Original: `NewsItem::set_slot_string` (0x7858c0, news.cpp, thiscall, ret 0xc).
 pub(crate) unsafe extern "thiscall" fn set_slot_string(this: usize, field: u32, text: *const u8, next: *mut u8) -> u32 {
     let field = field as u8 as i8;
@@ -391,12 +397,13 @@ pub(crate) unsafe extern "thiscall" fn set_slot_string(this: usize, field: u32, 
     1
 }
 
-/// Sets the continent scope (+0xde = 3) and delivers the news to every active human manager whose club or nation is in
-/// the continent.
+/// Sets the continent scope (`news_item::REACH` = 3) and delivers the news to every active human manager whose club or
+/// nation is in the continent.
 ///
-/// `News::send_to_continent_managers(news, continent)`: continent scope (+0xde = 3) and delivery (`deliver_to_manager` with 0) to
-/// each active human manager whose club (+0x39) has its nation (+0x53) in the `continent` (+0x71) or whose nation
-/// (+0x1a) is in it. Returns 1, or 0 on the first refusal. Null news or continent: as in the original ("Error" box).
+/// `News::send_to_continent_managers(news, continent)`: continent scope (`news_item::REACH` = 3) and delivery
+/// (`exe::news_deliver_to_manager` with 0) to each active human manager whose club (`staff::CLUB_JOB`) has its nation
+/// (`.nation()`) in the `continent` (`.continent()`) or whose nation (`staff::NATION`) is in it. Returns 1, or 0 on the
+/// first refusal. Null news or continent: as in the original ("Error" box).
 /// Original: `News::send_to_continent_managers` (0x786640, news.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn send_to_continent_managers(this: usize, news: usize, continent: usize) -> u32 {
     if news == 0 || continent == 0 {
@@ -416,12 +423,13 @@ pub(crate) unsafe extern "thiscall" fn send_to_continent_managers(this: usize, n
     }) as u32
 }
 
-/// Delivers the news to the managers of the competition's nation (`send_to_nation_club_managers`), else of its continent (`send_to_continent_managers`), else to
-/// all (`send_to_all_managers`).
+/// Delivers the news to the managers of the competition's nation (`send_to_nation_club_managers`), else of its
+/// continent (`send_to_continent_managers`), else to all (`send_to_all_managers`).
 ///
-/// `News::send_to_comp_region(news, comp)`: with the competition's nation (+0x5d), to the nation's managers (`send_to_nation_club_managers`);
-/// otherwise, with the continent (+0x59), to the continent's (`send_to_continent_managers`); otherwise to all (`send_to_all_managers`). Returns what the
-/// delivery returns. Null news or competition: as in the original ("Error" box).
+/// `News::send_to_comp_region(news, comp)`: with the competition's nation (`.nation()`), to the nation's managers
+/// (`FN_NEWS_SEND_TO_NATION_CLUB_MANAGERS`); otherwise, with the continent (`.continent()`), to the continent's
+/// (`FN_NEWS_SEND_TO_CONTINENT_MANAGERS`); otherwise to all (`FN_NEWS_SEND_TO_ALL_MANAGERS`). Returns what the delivery
+/// returns. Null news or competition: as in the original ("Error" box).
 /// Original: `News::send_to_comp_region` (0x786860, news.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn send_to_comp_region(this: usize, news: usize, comp: usize) -> u32 {
     let comp = Competition(comp);
@@ -451,12 +459,13 @@ pub(crate) unsafe fn manager_of_news_club(news: usize, o: usize) -> usize {
 /// Tells whether the news item is important for the person, by category and type (bids on the person's club, the
 /// humans...).
 ///
-/// `person.is_important_for()`: is the news important for the person (the byte +4 that the delivery `deliver_to_manager`
-/// writes)? By the category (`get_category`) and the type (+0): category 2, types 7 to 0xb, 0x27 and 0x28; category 4, 0xbb8,
-/// 0xbb9 and 0xbc4; category 5, a fixed list, 0xfa1 if the person is the manager of the club in data 5 (+0x19) and
-/// 0xfb6 if he is that of data 4 (+0x15) or of data 5; category 6, 0x1770 if data 0 (+5) is one of the 16 human
-/// managers; category 1, 0x1388; the rest, 0. The original calls `get_category` up to six times (it only reads): the port
-/// calls it once. Null person or type outside 1..0x1790 (`get_category`'s box): as in the original.
+/// `person.is_important_for()`: is the news important for the person (the byte +4 that the delivery
+/// `deliver_to_manager` writes)? By the category (`exe::newsitem_get_category`) and the type (+0): category 2, types 7
+/// to 0xb, 0x27 and 0x28; category 4, 0xbb8, 0xbb9 and 0xbc4; category 5, a fixed list, 0xfa1 if the person is the
+/// manager of the club in data 5 (+0x19) and 0xfb6 if he is that of data 4 (+0x15) or of data 5; category 6, 0x1770 if
+/// data 0 (`news_item::DATA`) is one of the 16 human managers (`G_STAFF_COUNT`); category 1, 0x1388; the rest, 0. The
+/// original calls `exe::newsitem_get_category` up to six times (it only reads): the port calls it once. Null person or
+/// type outside 1..0x1790 (`exe::newsitem_get_category`'s box): as in the original.
 /// Original: `NewsItem::is_important_for` (0x784eb0, news.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn is_important_for(news: usize, person: usize) -> u8 {
     let t = read_usize(news) as i32;
@@ -533,7 +542,8 @@ pub(crate) unsafe fn deliver_to_human_managers(this: usize, news: usize, reach: 
     true
 }
 
-/// all scope (+0xde = 4) and delivery (`deliver_to_manager`) to every active human manager; 1, or 0 on the first refusal
+/// all scope (`news_item::REACH` = 4) and delivery (`exe::news_deliver_to_manager`) to every active human manager; 1,
+/// or 0 on the first refusal
 /// Original: `News::send_to_all_managers` (0x786780, news.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn send_to_all_managers(this: usize, news: usize) -> u32 {
     if news == 0 {
@@ -542,12 +552,12 @@ pub(crate) unsafe extern "thiscall" fn send_to_all_managers(this: usize, news: u
     deliver_to_human_managers(this, news, 4, |_| true) as u32
 }
 
-/// Sets the division scope (+0xde = 1) and delivers the news to every active human manager with a club in the division
-/// (+0x57); returns 1, or 0 on the first refusal.
+/// Sets the division scope (`news_item::REACH` = 1) and delivers the news to every active human manager with a club in
+/// the division (`.division()`); returns 1, or 0 on the first refusal.
 ///
-/// `News::send_to_division_managers(news, division)`: division scope (+0xde = 1) and delivery to each active human
-/// manager with a club (+0x39) in the `division` (+0x57). Returns 1, or 0 on the first refusal. Null news or division:
-/// as in the original ("Error" box).
+/// `News::send_to_division_managers(news, division)`: division scope (`news_item::REACH` = 1) and delivery to each
+/// active human manager with a club (`staff::CLUB_JOB`) in the `division` (`.division()`). Returns 1, or 0 on the first
+/// refusal. Null news or division: as in the original ("Error" box).
 /// Original: `News::send_to_division_managers` (0x7862d0, news.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn send_to_division_managers(this: usize, news: usize, division: usize) -> u32 {
     if news == 0 || division == 0 {
@@ -559,12 +569,12 @@ pub(crate) unsafe extern "thiscall" fn send_to_division_managers(this: usize, ne
     }) as u32
 }
 
-/// Sets the nation scope (+0xde = 2) and delivers the news to every active human manager whose club or national team
-/// belongs to the nation (+0x53); returns 0.
+/// Sets the nation scope (`news_item::REACH` = 2) and delivers the news to every active human manager whose club or
+/// national team belongs to the nation (`club::NATION`); returns 0.
 ///
-/// `News::send_to_nation_managers(news, nation)`: nation scope (+0xde = 2) and delivery to each active human manager
-/// whose club (+0x39) or national team (+0x24) belongs to the `nation` (+0x53). Returns 0. Null news or nation: as in
-/// the original ("Error" box).
+/// `News::send_to_nation_managers(news, nation)`: nation scope (`news_item::REACH` = 2) and delivery to each active
+/// human manager whose club (`staff::CLUB_JOB`) or national team (`staff::NATIONAL_JOB`) belongs to the `nation`
+/// (`club::NATION`). Returns 0. Null news or nation: as in the original ("Error" box).
 /// Original: `News::send_to_nation_managers` (0x7863f0, news.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn send_to_nation_managers(this: usize, news: usize, nation: usize) -> u32 {
     if news == 0 || nation == 0 {
@@ -577,13 +587,14 @@ pub(crate) unsafe extern "thiscall" fn send_to_nation_managers(this: usize, news
     0
 }
 
-/// Sets the nation scope (+0xde = 2) and delivers the news (`deliver_to_manager`) to every active human manager with a club of the
-/// nation; the first refusal stops.
+/// Sets the nation scope (`news_item::REACH` = 2) and delivers the news (`exe::news_deliver_to_manager`) to every
+/// active human manager with a club of the nation; the first refusal stops.
 ///
-/// `News::send_to_nation_club_managers(news, nation)`: the news gets the nation scope (+0xde = 2) and goes (`deliver_to_manager`
-/// with 0) to each of the 16 human managers (the last 16 of [0xae23bc], 0x6e bytes) who are active (+0x5f = 1) with a
-/// club (+0x39) of the `nation` (+0x53); the first refused delivery (0) stops it. Returns 0. Null news or nation: as in
-/// the original ("Error" box).
+/// `News::send_to_nation_club_managers(news, nation)`: the news gets the nation scope (`news_item::REACH` = 2) and goes
+/// (`exe::news_deliver_to_manager` with 0) to each of the 16 human managers (the last 16 of `G_STAFF_TABLE`,
+/// `staff::SIZE` bytes) who are active (`.classification()` = 1) with a club (`.club_job()`) of the `nation`
+/// (`.nation()`); the first refused delivery (0) stops it. Returns 0. Null news or nation: as in the original ("Error"
+/// box).
 /// Original: `News::send_to_nation_club_managers` (0x786520, news.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn send_to_nation_club_managers(this: usize, news: usize, nation: usize) -> u32 {
     if news == 0 || nation == 0 {
@@ -637,8 +648,9 @@ pub(crate) unsafe fn inbox_news_item(news: usize, start: i32, k: i32) -> usize {
 /// Counts the unread news in a human manager's inbox, in total or for one category.
 ///
 /// Without a category (0): the entry's total (+8, negative becomes 0). With a category: of the 100 news items in the
-/// inbox (start at entry +0; −1 = empty, 0), the occupied ones (+0xd6) of the category (`get_category`) not yet read (+0xda =
-/// 0). Null manager or out of range: as in the original (error box).
+/// inbox (start at entry +0; −1 = empty, 0), the occupied ones (`news_item::ID`) of the category
+/// (`exe::newsitem_get_category`) not yet read (`news_item::READ` = 0). Null manager or out of range: as in the
+/// original (error box).
 /// Original: `News::count_unread` (0x786fe0, news.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn count_unread(news: usize, manager: usize, category: u32) -> i32 {
     let entry = match if manager == 0 { None } else { manager_inbox_entry(news, manager) } {
@@ -727,14 +739,14 @@ pub(crate) unsafe extern "stdcall" fn news_club_has_human_manager(club: usize) -
     1 // humano
 }
 
-/// Gives the default replies for the manager's club and national team (`auto_respond_all`) and empties his inbox (the 100 news
-/// items with +0xd6 = 0 and +0xda = 1).
+/// Gives the default replies for the manager's club and national team (`exe::news_auto_respond_all`) and empties his
+/// inbox (the 100 news items with `news_item::ID` = 0 and `news_item::READ` = 1).
 ///
-/// `News::clear_inbox(manager)`, from 0x6b28b0 and from loading the game (`load_game_data`): the default replies to the news of
-/// the manager's club (+0x39) and national team (+0x24) (`auto_respond_all`); then the human's inbox (12-byte record at [this+8],
-/// by id − [0xae2364] + 16): +4 = +0 and +8 = 0; with the first news item (+0, −1 none), the 100 news items of 0xdf
-/// bytes from it ([this]) with +0xd6 = 0 and +0xda = 1. No manager or a negative index: the error box (lines 0x24c1 and
-/// 0x24cc).
+/// `News::clear_inbox(manager)`, from 0x6b28b0 and from loading the game (`load_game_data`): the default replies to the
+/// news of the manager's club (+0x39) and national team (+0x24) (`exe::news_auto_respond_all`); then the human's inbox
+/// (12-byte record at [`news_fields::HUMAN_INBOXES`], by id − `G_STAFF_COUNT` + 16): +4 = +0 and +8 = 0; with the first
+/// news item (+0, −1 none), the 100 news items of 0xdf bytes from it ([this]) with `news_item::ID` = 0 and
+/// `news_item::READ` = 1. No manager or a negative index: the error box (lines 0x24c1 and 0x24cc).
 /// Original: `News::clear_inbox` (0x787630, news.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn clear_inbox(this: usize, manager: usize) {
     if manager == 0 {
@@ -766,11 +778,13 @@ pub(crate) unsafe extern "thiscall" fn clear_inbox(this: usize, manager: usize) 
     }
 }
 
-/// builds the news item: type (+0), important byte (+4), the 50 data slots cleared, today's date (+0xcd), byte
-/// [0xae2c88] at +0xd5, id and +0xda cleared; turned off (DESLIGADAS) from 2026-10-29 to 2026-10-31, when the test criterion changed and the list was emptied: with the detour the career in Rust mode
-/// left the reference be54a138 (bisection of batch 251's 39 routines; with `construct_news_item`, the news constructor, the game
-/// later crashed in `player_stats_reset_player` on a broken index); the cause (stack residue or a difference in the copy) is not isolated
-/// yet; the copy stays in the code and does not run
+/// builds the news item: type (+0), important byte (`news_item::IMPORTANT`), the 50 data slots (`news_item::DATA`)
+/// cleared, today's date (`news_item::DATE`), byte `G_CURRENT_DAY_SLICE` at `news_item::DAY_SLICE`, id
+/// (`news_item::ID`) and `news_item::READ` cleared; turned off (DESLIGADAS) from 2026-10-29 to 2026-10-31, when the
+/// test criterion changed and the list was emptied: with the detour the career in Rust mode left the reference be54a138
+/// (bisection of batch 251's 39 routines; with `construct_news_item`, the news constructor, the game later crashed in
+/// `player_stats_reset_player` on a broken index); the cause (stack residue or a difference in the copy) is not
+/// isolated yet; the copy stays in the code and does not run
 /// Original: `NewsItem::NewsItem` (0x77bbe0, news.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn construct_news_item(this: usize, kind: u32, importante: u32) -> usize {
     exe::date_date_54a110(this + news_item::DATE);
@@ -790,10 +804,12 @@ pub(crate) unsafe extern "thiscall" fn construct_news_item(this: usize, kind: u3
 /// Returns a new array with the human's inbox items, newest first, only those of one category when asked, and the
 /// count.
 ///
-/// `News::get_inbox_items(manager, count, category)`: a new vector of 100 news items (malloc `exe::crt_malloc` of 0x571c, on the
-/// first one found; `*count` = 0) with the news of the human's ring, from the newest to the oldest up to the empty
-/// slot, only those of the `category` (`get_category`) if it is not 0, copied (`news_operator`); `*count` adds one per news item.
-/// Returns the vector (0 if none; `*count` untouched). No manager or a manager of the machine: the "Error" box and 0.
+/// `News::get_inbox_items(manager, count, category)`: a new vector of 100 news items (malloc `exe::crt_malloc` of
+/// 0x571c, on the first one found; `*count` = 0) with the news of the human's ring (`news_fields::HUMAN_INBOXES`), from
+/// the newest to the oldest up to the empty slot (`news_item::ID` = 0), only those of the `category`
+/// (`exe::newsitem_get_category`) if it is not 0, copied (`exe::newsitem_operator_3d`); `*count` adds one per news
+/// item. Returns the vector (0 if none; `*count` untouched). No manager or a manager of the machine: the "Error" box
+/// and 0.
 /// Original: `News::get_inbox_items` (0x786960, news.cpp, thiscall, ret 0xc).
 pub(crate) unsafe extern "thiscall" fn get_inbox_items(this: usize, manager: usize, count: *mut i32, category: u32) -> usize {
     if manager == 0 {
@@ -879,10 +895,12 @@ pub(crate) unsafe extern "thiscall" fn set_news_field(t: usize, k: i8, value: u3
     1
 }
 
-/// Copies a news item (0xdf bytes): +0, +4, the 50 tokens (+5), the date (+0xcd), +0xd5, +0xd6, +0xda and +0xde.
+/// Copies a news item (0xdf bytes): +0, +4, the 50 tokens (+5), the date (`news_item::DATE`), `news_item::DAY_SLICE`,
+/// `news_item::ID`, `news_item::READ` and `news_item::REACH`.
 ///
 /// `NewsItem::operator=`: copies the news item (0xdf bytes) from `source`: +0 (dword), +4 (byte), the 50 tokens from +5
-/// (dwords, in order), the date at +0xcd, +0xd5 (byte), +0xd6 and +0xda (dwords) and +0xde (byte). Returns `this`.
+/// (dwords, in order), the date at `news_item::DATE`, `news_item::DAY_SLICE` (byte), `news_item::ID` and
+/// `news_item::READ` (dwords) and `news_item::REACH` (byte). Returns `this`.
 /// Original: `NewsItem::operator=` (0x786010, news.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn news_operator(this: usize, source: usize) -> usize {
     let d = |o: usize| write_u32(this + o, read_u32(source + o));

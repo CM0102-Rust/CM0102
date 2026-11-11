@@ -294,9 +294,10 @@ pub(crate) unsafe fn create_division_table(this: League, n: i16, file: usize, ro
 /// Builds the Series A table: 28 clubs, those whose national division is Series A, in database order; when full, TV
 /// pays 150,000 to each club (no prize fund).
 ///
-/// `BraNatFirst::create_table()`: Series A has 28 clubs (those with national division +0x57 = `[0x9cf9ec]`); when full,
-/// TV pays 150,000 to each club (League::pay_tv_rights `pay_tv_rights`: push 0; push 0x249f0; mov ecx, edi -> thiscall(league,
-/// amount, filter), ret 8; it sends the TV news) and returns 1. Source 0x98aa30, line 0x1a1.
+/// `BraNatFirst::create_table()`: Series A has 28 clubs (those with national division +0x57 =
+/// `[KEY_CLUB_COMP_BRAZILIAN_NATIONAL_FIRST_DIVISION]`); when full, TV pays 150,000 to each club (League::pay_tv_rights
+/// `exe::league_pay_tv_rights`: push 0; push 0x249f0; mov ecx, edi -> thiscall(league, amount, filter), ret 8; it sends
+/// the TV news) and returns 1. Source 0x98aa30, line 0x1a1.
 /// Original: `BraNatFirst::create_table` (0x42a480, bra_nat_first.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn bra_nat_first_create_table(this: usize) -> u32 {
     if create_division_table(League(this), 0x1c, 0x98aa30, 0x1a1, 0x57, KEY_CLUB_COMP_BRAZILIAN_NATIONAL_FIRST_DIVISION, 0, "cql_7 serie a cheia") == 0 {

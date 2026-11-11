@@ -281,13 +281,14 @@ pub(crate) unsafe fn spa_lower_is_in_comp(c: Club, g: usize) -> bool {
 }
 
 /// `SpaLower::SpaLower(year)` (SEH frame only on the exception path): the Spanish lower division, a background league
-/// with no discipline (created by the Primera when the nation does not have bit 4 of +0x11c).
-///
-/// The base (League::League `exe::new_league`: mov ecx -> thiscall, ret 0), the vtable 0x96fb1c, the year (+0x40), discipline
-/// rule 0xff (none) and the record of the competition of id [0x9cf6b0] (+4). Tries to load the saved state (`exe::league_load_from_temp_file`:
-/// push 1 -> thiscall, ret 4); otherwise, just the league (+0x44 = 0xff, +0x30 = −1, +0x2c = 0), the rules (`spa_lower_set_up_rules`),
-/// the table (`spa_lower_create_table`) and the fixtures (League::create_fixtures `create_fixtures`), all mov ecx -> thiscall, ret 0 (no stats
-/// nor predicted positions); each failure, the error box of its line (0x3f, 0x46, 0x4d of source 0xa82880) and the end.
+/// with no discipline (created by the Primera when the nation does not have bit 4 of +0x11c). The base (League::League
+/// `exe::new_league`: mov ecx -> thiscall, ret 0), the vtable 0x96fb1c, the year (`.year()`), discipline rule
+/// `discipline_rule::NONE` (0xff, none) and the record of the competition of id `KEY_CLUB_COMP_SPANISH_LOWER_DIVISION`
+/// (`league::COMPETITION`). Tries to load the saved state (`exe::league_load_from_temp_file`: push 1 -> thiscall, ret
+/// 4); otherwise, just the league (`.stage_index()` = `stage_index::MAIN` (0xff), `.current_stage()` = −1,
+/// `.stage_count()` = 0), the rules (`exe::spalower_set_up_rules`), the table (`exe::spalower_create_table`) and the
+/// fixtures (League::create_fixtures `exe::league_create_fixtures`), all mov ecx -> thiscall, ret 0 (no stats nor
+/// predicted positions); each failure, the error box of its line (0x3f, 0x46, 0x4d of source 0xa82880) and the end.
 /// Returns this.
 /// Original: `SpaLower::SpaLower` (0x851020, spa_lower.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn construct_spa_lower(this: usize, year: u32) -> usize {
@@ -379,10 +380,11 @@ pub(crate) unsafe fn for_each_spanish_b_team(g: usize, k: &mut u8, rows: i16, mu
 }
 
 /// the lower division has 22 clubs: first the Spanish B teams whose parent club is in the Primera, then those of the
-/// Segunda (database order); the rest come from the Segunda B clubs [inference: competitions [0x9cf62c..0x9cf638]] and
-/// the Spanish generic division that are not B teams, ordered by reputation with the best shuffled; each club placed
-/// keeps the competition at +0x60, but the Segunda B-team pass zeroes +0x60 of every Spanish side not entering it,
-/// including the Primera ones already placed [observed in the comparison]
+/// Segunda (database order); the rest come from the Segunda B clubs [inference: competitions
+/// `KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B1`..`KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B4`] and the Spanish generic
+/// division that are not B teams, ordered by reputation with the best shuffled; each club placed keeps the competition
+/// at `club::RESERVE_DIVISION`, but the Segunda B-team pass zeroes `club::RESERVE_DIVISION` of every Spanish side not
+/// entering it, including the Primera ones already placed [observed in the comparison]
 /// Original: `SpaLower::create_table` (0x8533d0, spa_lower.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u32 {
     let this = League(this);

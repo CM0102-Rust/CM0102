@@ -101,9 +101,10 @@ pub(crate) const FRENCH_CUP_ROUNDS: [FraCupCupRound; 9] = [
 /// 10/10 (no fixed weekday), played 6/11; 7th 12/11 and 27/11 (164 clubs enter, 184 teams); 8th 3/12 and 18/12; last
 /// 128 6/1 and 22/1 (18 enter); last 64 27/1 and 12/2; last 16 20/2 and 4/3; quarter-finals 5/3 and 19/3; semi-final
 /// 20/3 and 12/4; final drawn 13/4, played 6/5 at a neutral ground [inference: venue 4]; from the 7th round to the
-/// semi-final the lower-division club plays at home (+0xb = 1); the prize (+0x64) of 100 thousand in the last 16, 200
-/// thousand in the quarter-finals, 400 thousand in the semi-final, and in the final 1 million (+0x60) and 800 thousand
-/// (+0x64); category 4 up to the last 16 and 6 after
+/// semi-final the lower-division club plays at home (`cup_round::DRAW_RULES` = 1); the prize (`cup_round::LOSER_PRIZE`)
+/// of 100 thousand in the last 16, 200 thousand in the quarter-finals, 400 thousand in the semi-final, and in the final
+/// 1 million (`cup_round::WINNER_PRIZE`) and 800 thousand (`cup_round::LOSER_PRIZE`); category 4 up to the last 16 and
+/// 6 after
 /// Original: `FraCup::create_round_table` (0x5ba3f0, fra_cup.cpp, thiscall, ret 0x10).
 pub(crate) unsafe extern "thiscall" fn fra_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
     single_stage_round_table(Cup(this), stage, rounds, extra, out, &FRENCH_CUP_ROUNDS, 0x9ccb28, 0xa6, "cql_11 tabela da copa da franca")
@@ -217,9 +218,10 @@ pub(crate) unsafe fn french_cup_collect_entrants(this: Cup) -> (i32, i32) {
 
 /// rule: the Coupe de France takes 222 clubs, in this order (the order decides the entry round: the first 40 in the 6th
 /// round, the next 164 in the 7th and the last 18, the First Division, in the last 128): all clubs of division
-/// [0x9cf5d4] (the National [inference]); those of [0x9cf764] linked (+0x60) to [0x9cf5d8] (the CFA [inference]); the
-/// French ones of [0x9cf764] without a link; the French clubs with no division that are not national teams — these
-/// three groups up to 184 entrants in 2001 and 182 in other years; the Second and the First Division; with an
+/// `KEY_CLUB_COMP_FRENCH_NATIONAL` (the National [inference]); those of `KEY_CLUB_COMP_A_LOWER_DIVISION` linked
+/// (`club::RESERVE_DIVISION`) to `KEY_CLUB_COMP_FRENCH_CFA` (the CFA [inference]); the French ones of
+/// `KEY_CLUB_COMP_A_LOWER_DIVISION` without a link; the French clubs with no division that are not national teams —
+/// these three groups up to 184 entrants in 2001 and 182 in other years; the Second and the First Division; with an
 /// incomplete list it returns 0
 /// Original: `FraCup::collect_entrants` (0x5baa50, fra_cup.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn fra_cup_collect_entrants(this: usize) -> i32 {

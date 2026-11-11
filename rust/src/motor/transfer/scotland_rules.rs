@@ -58,12 +58,13 @@ pub(crate) unsafe extern "thiscall" fn scotland_rules_can_loan_player(_this: usi
     1
 }
 
-/// Returns the Scottish loan period: it starts next month; under 22 it ends in the season end exe::date_get_month(this year or
-/// next), otherwise three months later.
+/// Returns the Scottish loan period: it starts next month; under 22 it ends in the season end exe::date_get_month(this
+/// year or next), otherwise three months later.
 ///
 /// `SCOTLAND_RULES::get_loan_period(a1, a2, start_month, start_year, end_month, end_year, player)`: it starts in the
-/// following month; the end is the season end month of nation a1 (`contract_manager_season_end_month`) for those under 22 (+0x18), this year if
-/// the start comes before it, otherwise the following year; for the others, three months after the start.
+/// following month; the end is the season end month of nation a1 (`exe::contract_manager_season_end_month` on
+/// [`G_CONTRACT_MANAGER`]) for those under 22 (`age()`), this year if the start comes before it, otherwise the
+/// following year; for the others, three months after the start.
 /// Original: `SCOTLAND_RULES::get_loan_period` (0x7f6530, scotland_rules.cpp, thiscall, ret 0x1c).
 pub(crate) unsafe extern "thiscall" fn scotland_rules_get_loan_period(_this: usize, a1: usize, _a2: u32, start_month: *mut i8, start_year: *mut i16, end_month: *mut i8, end_year: *mut i16, player: usize) {
     let player = Staff(player);
@@ -95,11 +96,12 @@ pub(crate) unsafe extern "thiscall" fn scotland_rules_get_loan_period(_this: usi
 }
 
 /// Constructs the Scottish transfer rules (rule 21): one window, from 30 May (moved to the Saturday [inference]) to 30
-/// March (moved to the Thursday [inference]); dword +0x15 = 1.
+/// March (moved to the Thursday [inference]); dword `transfer_rules::SKIP_CONTRACT_TYPE_5_INELIGIBILITY` = 1.
 ///
 /// `SCOTLAND_RULES::SCOTLAND_RULES`; SEH frame only for the `new`, no destructor on the normal path. The Scotland
-/// transfer rules (rule 21): the base (`exe::new_transfer_rules`), the vtable 0x96f838, 1 window from `SCOTLAND_TRANSFER_WINDOWS` and
-/// dword +0x15 = 1. Returns the object.
+/// transfer rules (rule 21): the base (`exe::new_transfer_rules`, through `construct_nation_rules`), the vtable
+/// 0x96f838, 1 window from `SCOTLAND_TRANSFER_WINDOWS` and dword `transfer_rules::SKIP_CONTRACT_TYPE_5_INELIGIBILITY` =
+/// 1. Returns the object.
 /// Original: `SCOTLAND_RULES::SCOTLAND_RULES` (0x7f6390, scotland_rules.cpp, thiscall, ret 0x14).
 pub(crate) unsafe extern "thiscall" fn construct_scotland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     covered!("cqk_3 scotland");

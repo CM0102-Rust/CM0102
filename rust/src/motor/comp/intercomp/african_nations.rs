@@ -258,10 +258,11 @@ pub(crate) unsafe extern "thiscall" fn african_nations_advance_stage(this: usize
 /// Builds the group A table of the African Nations Cup. Rule: group A has four national teams, the first four of the
 /// draw list, in order; the managers get the draw news.
 ///
-/// Ret 0: `AfricanNations::init_group_a_table()`: group A with 4 teams (+0x3e), table +0xb1 (`exe::crt_malloc`(0xec): push 0xec;
-/// add esp, 4 -> cdecl; 4 rows of 0x3b bytes; out of memory: the box at line 0x1f1 and returns 0), each row i with
-/// national side i of the draw list (+0xee) (`init_table_row`: push 0; push 0; push national side; push i; mov ecx, this ->
-/// thiscall, ret 0x10), the group draw news (`send_group_draw_news`: mov ecx, this -> thiscall, ret 0) and returns 1.
+/// Ret 0: `AfricanNations::init_group_a_table()`: group A with 4 teams (`.set_club_count()`), table `.set_table()`
+/// (`exe::crt_malloc`(0xec): push 0xec; add esp, 4 -> cdecl; 4 rows of 0x3b bytes; out of memory: the box at line 0x1f1
+/// and returns 0), each row i with national side i of the draw list (`african_nations::DRAWN_CLUBS`)
+/// (`exe::league_init_table_row`: push 0; push 0; push national side; push i; mov ecx, this -> thiscall, ret 0x10), the
+/// group draw news (`exe::league_send_group_draw_news`: mov ecx, this -> thiscall, ret 0) and returns 1.
 /// Original: `AfricanNations::init_group_a_table` (0x4019c0, african_nations.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn init_group_a_table(this: usize) -> u32 {
     let this = League(this);
@@ -395,7 +396,7 @@ pub(crate) unsafe extern "thiscall" fn african_nations_create_schedule(this: usi
 
 /// rule: the African Nations Cup groups are single round robin, 3/1 points, tiebreak 1, 2, 3, two qualifiers per group,
 /// category 10, 7 substitutes and 3 changes; the date of 5 of month 9 of the year before the tournament on weekday 5
-/// [inference: the draw in the previous year] and +0xb8 = −1
+/// [inference: the draw in the previous year] and `.next_draw_year_offset()` = −1
 /// Original: `AfricanNations::set_up_rules` (0x401ab0, african_nations.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn african_nations_set_up_rules(this: usize) -> u32 {
     covered!("cqk_10 african cup rules");

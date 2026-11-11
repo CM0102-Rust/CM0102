@@ -10,9 +10,10 @@ pub(crate) unsafe extern "thiscall" fn fra_lge_cup_create_round_table(this: usiz
 }
 
 /// rule: the French League Cup takes 54 clubs, in this order (the first 16 in the preliminary round, the next 20 in the
-/// 1st round and the last 18 in the 2nd): those of division [0x9cf5d4] that did not come from [0x9cf5d8] (up to 16 in
-/// 2001 and 14 in other years), topped up to 16 with those of [0x9cf5d4] that came from [0x9cf5d8] (the promoted ones
-/// [inference]); the Second and the First Division; with an incomplete list it returns 0
+/// 1st round and the last 18 in the 2nd): those of division `KEY_CLUB_COMP_FRENCH_NATIONAL` that did not come from
+/// `KEY_CLUB_COMP_FRENCH_CFA` (up to 16 in 2001 and 14 in other years), topped up to 16 with those of
+/// `KEY_CLUB_COMP_FRENCH_NATIONAL` that came from `KEY_CLUB_COMP_FRENCH_CFA` (the promoted ones [inference]); the
+/// Second and the First Division; with an incomplete list it returns 0
 /// Original: `FraLgeCup::collect_entrants` (0x5bd160, fra_lge_cup.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn fra_lge_cup_collect_entrants(this: usize) -> i32 {
     french_league_cup_collect_entrants(Cup(this)).0

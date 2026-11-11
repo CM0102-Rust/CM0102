@@ -64,10 +64,11 @@ pub(crate) unsafe fn concacaf_club_lists() -> ConcacafClubLists {
 }
 
 /// rule: eight clubs. Two from Mexico (drawn among the 6 with the highest reputation), three from Central America
-/// (nation region 7, other than nation [0x9cf4f8]; among the top 9), one from the Caribbean (region 6; among the top 3)
-/// and two from the United States: with competition [0x9cf728] running [inference: the US Open Cup], the latest MLS
-/// champion and its champion (if the same club, the place goes to the MLS runner-up); without it, two MLS clubs among
-/// the top 3 by reputation. Up to 200 clubs per region and 12 from the MLS are considered
+/// (nation region 7, other than nation [`KEY_NATION_UNITED_STATES`]; among the top 9), one from the Caribbean (region
+/// 6; among the top 3) and two from the United States: with competition [`KEY_CLUB_COMP_US_OPEN_CUP`] running
+/// [inference: the US Open Cup], the latest MLS champion and its champion (if the same club, the place goes to the MLS
+/// runner-up); without it, two MLS clubs among the top 3 by reputation. Up to 200 clubs per region and 12 from the MLS
+/// are considered
 /// Original: `ConChamp::select_qualified_clubs` (0x4c11a0, con_champ.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: usize) -> u32 {
     let this = Cup(this);
@@ -112,9 +113,10 @@ pub(crate) unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: us
 /// qualified clubs and the predicted positions; every day, the cup update (draws and matches).
 ///
 /// Ret 8; virtual +0x14 of the cup: `ConChamp::update_for_date(today, stage)`. With the team table empty (the club of
-/// team 0 = 0) and stage ≠ 0: the qualified clubs (`con_champ_select_qualified_clubs`: mov ecx, this -> thiscall, ret 0; negative: the box at
-/// line 0x1ba and returns 0) and the predicted positions (virtual +0x5c). Then the cup update (`cup_update_for_date`: push stage;
-/// push today; mov ecx, this -> thiscall, ret 8), whose return value is returned.
+/// team 0 of `.team_table()` = 0) and stage ≠ 0: the qualified clubs (`exe::conchamp_select_qualified_clubs`: mov ecx,
+/// this -> thiscall, ret 0; negative: the box at line 0x1ba and returns 0) and the predicted positions
+/// (`comp_vtable::SET_PREDICTED_POSITIONS`). Then the cup update (`exe::cup_update_for_date`: push stage; push today;
+/// mov ecx, this -> thiscall, ret 8), whose return value is returned.
 /// Original: `ConChamp::update_for_date` (0x4c1620, con_champ.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn con_champ_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
     let this = Cup(this);
@@ -136,10 +138,11 @@ pub(crate) unsafe extern "thiscall" fn con_champ_update_for_date(this: usize, to
 // does not change.
 
 /// Sets up the rounds of the CONCACAF Champions' Cup. Rule: the cup prize fund is 2,000,000; the round table
-/// (three-round knockout) comes from virtual +0x3c.
+/// (three-round knockout) comes from `comp_vtable::CREATE_SCHEDULE`.
 ///
-/// Ret 0; virtual +0x8c: `ConChamp::set_up_rounds()`; returns 1. The prize fund (+0x28) of 2,000,000 and the round
-/// table (+0xa3) from virtual +0x3c (push 0; push &+0x3a; push &+0x3c; push −1; mov ecx, this -> thiscall, ret 0x10).
+/// Ret 0; virtual +0x8c: `ConChamp::set_up_rounds()`; returns 1. The prize fund (`.set_prize_fund()`) of 2,000,000 and
+/// the round table (`.set_round_table()`) from `comp_vtable::CREATE_SCHEDULE` (push 0; push &`cup::STAGE_LABEL`; push
+/// &`cup::ROUND_COUNT`; push −1; mov ecx, this -> thiscall, ret 0x10).
 /// Original: `ConChamp::set_up_rounds` (0x4c15f0, con_champ.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn con_champ_set_up_rounds(this: usize) -> u32 {
     let this = Cup(this);
@@ -157,9 +160,9 @@ pub(crate) unsafe extern "thiscall" fn con_champ_set_up_rounds(this: usize) -> u
 /// and played on 28/8, semi-final on 1/9 and final on 4/9; category 8, tie-break 3; no per-round prize (−1).
 ///
 /// Ret 0x10; virtual +0x3c: `ConChamp::create_round_table(stage, &rounds, &extra, &out)`: at stage −1, out (if
-/// requested) = 0, rounds = 3, extra = 0; the table (`exe::crt_malloc` of 0x138; out of memory: the box at line 0x97 and 0) with
-/// the 3 rounds and, in the first two, day 0 of the empty tie (`cup_set_round_match_day` with −1, −1, −1 and home 0; the original calls
-/// it between the match and the fields, which do not overlap). Outside −1, 0.
+/// requested) = 0, rounds = 3, extra = 0; the table (`exe::crt_malloc` of 0x138; out of memory: the box at line 0x97
+/// and 0) with the 3 rounds and, in the first two, day 0 of the empty tie (`exe::cup_set_round_match_day` with −1, −1,
+/// −1 and home 0; the original calls it between the match and the fields, which do not overlap). Outside −1, 0.
 /// Original: `ConChamp::create_round_table` (0x4c0f00, con_champ.cpp, thiscall, ret 0x10).
 pub(crate) unsafe extern "thiscall" fn con_champ_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
     let this = Cup(this);

@@ -58,11 +58,13 @@ pub(crate) unsafe fn match_man_fatal_error(row: u32) -> ! {
 }
 
 /// The end of the match day: frees the global list, the day's arrays and, for each match, the engine, the summary and
-/// the `+0x5f` object.
+/// the `day_match::SUMMARY` object.
 ///
-/// Frees the global list `[0xb67dc8]`, the two day arrays (`+1`, `+0xd`) and, for each match (`+0x19`, `0x69` bytes
-/// each, `+0x21` of them), the engine (`0x6b97a0` and freed; the match leaves `[0xde2f70]` via `0x90d6b0`), the summary
-/// (`+0x5b`) and the object at `+0x5f` (`0x453bc0`); finally the match array.
+/// Frees the global list `G_MATCH_DAY_PLAYER_INCIDENT_LIST`, the two day arrays (`+1`, `+0xd`) and, for each match
+/// (`match_day_fields::MATCHES`, `0x69` bytes each, `match_day_fields::MATCH_COUNT` of them), the engine
+/// (`day_match::ENGINE`: `exe::drop_cm3_match_engine` and freed; the match leaves `G_VIRTUAL_STAFF` via
+/// `exe::virtual_staff_release_fixture`), the summary (`day_match::SCOREBOARD`) and the object at `day_match::SUMMARY`
+/// (`exe::match_team_pair_destructor`); finally the match array.
 /// Original: `end_day` (0x6b4190, match_day.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn end_day(day: usize) {
     let list = read_usize(G_MATCH_DAY_PLAYER_INCIDENT_LIST);
@@ -113,9 +115,11 @@ pub(crate) unsafe extern "thiscall" fn end_day(day: usize) {
 /// Clears each of the day's matches' fields and picks the human's match (or the first marked one) for the screen.
 /// Returns 1 if there was one of the human's.
 ///
-/// With matches on the day (`+0x2b`), it clears the `0x40` bytes of each one (`+0xd`, `0x54` bytes, `+0x15` of them)
-/// from `+0x14` and picks the human's (`+0x10`; otherwise the first with `+0xc`) for the screen (`0x717cc0` and
-/// `0x7fc7e0` with `[0xb67a48]` on).
+/// With matches on the day (`match_day_fields::HAS_INTEREST`), it clears the `0x40` bytes of each one
+/// (`match_day_fields::COMPETITIONS`, `0x54` bytes, `match_day_fields::COMPETITION_COUNT` of them) from
+/// `day_competition::PANEL` and picks the human's (`day_competition::HAS_MARKED`; otherwise the first with
+/// `day_competition::INTERESTING`) for the screen (`exe::open_day_fixtures_screen` and `exe::screenmanager_monitor`
+/// with `G_MATCH_DAY_SCREEN_SHOWING_FLAG` on).
 /// Original: `pick_day_match` (0x6b42a0, match_day.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn pick_day_match(day: usize) -> u32 {
     if read_usize(day + match_day_fields::HAS_INTEREST) == 0 {
@@ -150,19 +154,22 @@ pub(crate) unsafe extern "thiscall" fn pick_day_match(day: usize) -> u32 {
 // match day releases engines and lists: no comparison of its own, validated by the career (Rust x
 // original), like the creation and the end of the engine. The calling routines are still compared.
 
-/// Starts the day's next match after the current one (`+0x2f`): skips the decided ones, those of a human club and those
-/// already started; creates the engine and prepares it; in the 1st pass with none, moves to the 2nd. Returns 1 if it
-/// started one.
+/// Starts the day's next match after the current one (`match_day_fields::CURRENT_MATCH`): skips the decided ones, those
+/// of a human club and those already started; creates the engine and prepares it; in the 1st pass with none, moves to
+/// the 2nd. Returns 1 if it started one.
 ///
-/// Starts the next match of the day (`+0x19`, `0x69` bytes each, `+0x21` of them) after the current one (`+0x2f`; -2 =
-/// finished). The current one still with an engine (`+0x57`): error `0x68d`. It skips those already decided (`+0x47`
-/// -2), those with no match set in the 2nd pass (`+0x33` 1 and `+0x63.+0x10` zero), those of a human club (`0x600a50`
-/// with `+0x44`/`+0x45`) and those already started (`+0x47` != -1, `+0x57`, `+0x53`).
+/// Starts the next match of the day (`match_day_fields::MATCHES`, `0x69` bytes each, `match_day_fields::MATCH_COUNT` of
+/// them) after the current one (`match_day_fields::CURRENT_MATCH`; -2 = finished). The current one still with an engine
+/// (`+0x57`): error `0x68d`. It skips those already decided (`day_match::HOME_GOALS` -2), those with no match set in
+/// the 2nd pass (`match_day_fields::PASS` 1 and `day_match::DAY_COMPETITION`.`+0x10` zero), those of a human club
+/// (`exe::human_manager_is_human_club` with `day_match::HOME_SIDE_MARK`/`day_match::AWAY_SIDE_MARK`) and those already
+/// started (`day_match::HOME_GOALS` != -1, `day_match::ENGINE`, `day_match::MARKED`).
 ///
-/// On the chosen one: takes it off queue `[0xde2f70]` (`0x90d2f0` with -3), creates the engine (`0xf63b` bytes,
-/// `0x6b7e50`; without it error `0x6b2` and it carries on) and prepares it (`0x6b7f20` with the fast mode from
-/// `0x6b66a0`); `+0x2f` = it, returns 1. With none: in the 1st pass (`+0x33` 1) it moves to 2 and starts again from the
-/// beginning; otherwise `+0x2f` = -2 and returns 0.
+/// On the chosen one: takes it off queue `G_VIRTUAL_STAFF` (`exe::virtual_staff_fill_fixture_squads` with -3), creates
+/// the engine (`0xf63b` bytes, `exe::new_cm3_match_engine`; without it error `0x6b2` and it carries on) and prepares it
+/// (`exe::cm3_match_engine_init_match` with the fast mode from `exe::match_day_can_quick_simulate`);
+/// `match_day_fields::CURRENT_MATCH` = it, returns 1. With none: in the 1st pass (`match_day_fields::PASS` 1) it moves
+/// to 2 and starts again from the beginning; otherwise `match_day_fields::CURRENT_MATCH` = -2 and returns 0.
 /// Original: `start_next_match` (0x6b5a70, match_day.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn start_next_match(day: usize) -> u32 {
     let read = |o: usize| read_i32(day + o);
@@ -214,15 +221,16 @@ pub(crate) unsafe extern "thiscall" fn start_next_match(day: usize) -> u32 {
     }
 }
 
-/// Moves the day's current match (`+0x2f`) forward: one engine step (1 in 3 or 6 calls, by the modes in `[0xae3138]`)
-/// or to the end; when it finishes, creates the summary, records it, frees the engine and takes it off the queue.
-/// Returns 1 if the match finished.
+/// Moves the day's current match (`match_day_fields::CURRENT_MATCH`) forward: one engine step (1 in 3 or 6 calls, by
+/// the modes in `G_CONFIG`) or to the end; when it finishes, creates the summary, records it, frees the engine and
+/// takes it off the queue. Returns 1 if the match finished.
 ///
-/// Without `ate_o_fim` (to the end), only 1 in every 3 (`0x40000` in `[0xae3138]+4`) or 6 (`0x80000`) calls, by counter
-/// `[0xb67a54]` (0..100), and one engine step (`0x6b98c0` with 1); with `ate_o_fim`, steps (-1) to the end. The state
-/// goes to `+0x67`; on finishing (2 or 8) it counts in `+0x25`, creates the summary (`+0x5f`, `0xd7a` bytes with 2
-/// objects of `0x625` at `+0x11f`; without it error `0x713`), records it (`0x7293f0`), frees the engine and takes the
-/// match off queue `[0xde2f70]` (`0x90d6b0`).
+/// Without `until_end` (to the end), only 1 in every 3 (`0x40000` in `G_CONFIG`+4) or 6 (`0x80000`) calls, by counter
+/// `G_STEP_BACKGROUND_MATCH_COUNTER` (0..100), and one engine step (`exe::cm3_match_engine_run_match_steps` with 1);
+/// with `until_end`, steps (-1) to the end. The state goes to `day_match::STATE`; on finishing (2 or 8) it counts in
+/// `match_day_fields::FINISHED_COUNT`, creates the summary (`day_match::SUMMARY`, `0xd7a` bytes with 2 objects of
+/// `0x625` at `match_record::HOME_TEAM`; without it error `0x713`), records it (`exe::match_stats_record_match`), frees
+/// the engine and takes the match off queue `G_VIRTUAL_STAFF` (`exe::virtual_staff_release_fixture`).
 /// Original: `step_day_match` (0x6b5ce0, match_day.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn step_day_match(day: usize, until_end: u32) -> u32 {
     let u = |p: usize, o: usize| read_usize(p + o);
@@ -295,17 +303,20 @@ pub(crate) unsafe extern "thiscall" fn step_day_match(day: usize, until_end: u32
 /// (method 1, or the away-game path) and runs the post-match: players, events, contracts, suspensions, states, the
 /// history and each side's club.
 ///
-/// The closing of day match `p` (`0x69` bytes): copies the `0x4f` bytes from p+4 to the fixture (`+0`) and, with a
-/// competition (`+0x14`), reads the round number of a human club (`[adadfc]` of the competition `+8`, `0x4a4850`,
-/// `+0x2d` above 1; as in the original, it looks only at the away club `+0x20` on both passes) and records the result:
-/// p+`0x47` = -3 (away game, `0x924050` with bits 12-13 of `+0x4d` and the copy with scores -1 in
-/// `0x5ab510`/`0x5aa680`) or method 1 of the competition.
+/// The closing of day match `p` (`0x69` bytes): copies the `0x4f` bytes from p+`day_match::FIXTURE_COPY` to the fixture
+/// (`+0`) and, with a competition (`fixture::COMPETITION`), reads the round number of a human club
+/// (`G_COMP_OBJECT_TABLE` of the competition `+8`, `exe::comp_stats_find_club_entry`, `.losing_run()` above 1; as in
+/// the original, it looks only at the away club `fixture::AWAY_CLUB` on both passes) and records the result:
+/// p+`day_match::HOME_GOALS` = -3 (away game, `exe::weather_post_abandoned_news` with bits 12-13 of `.squad_rules()`
+/// and the copy with scores -1 in `exe::fixture_manager_find_new_fixture_date`/`exe::fixture_manager_add_fixture`) or
+/// method 1 of the competition.
 ///
-/// Then the post-match with the summary (p+`0x5f`): players (`0x6b6cc0`), events (`0x6b74a0`), contracts (`0x4ca6d0`),
-/// suspensions (`0x55ca00`), `0x76b600` (except for -3), states (`0x62c080`) and, except for -3, the history
-/// (`[0xb74434]` method 1, outside `[0x9cf684]`), `0x7c0d70`, `0x8c39f0`, `0x444930`, `0x868830`, `0x4134c0`,
-/// `0x6951e0`, `0x59a5d0`, `0x7f8c00` and the club of each side (`0x6b79a0` with the round). Without `p`, error `0x73f`
-/// and 0.
+/// Then the post-match with the summary (p+`day_match::SUMMARY`): players
+/// (`exe::match_day_apply_post_match_player_changes`), events (`exe::match_day_process_player_incidents`), contracts
+/// (`0x4ca6d0`), suspensions (`0x55ca00`), `0x76b600` (except for -3), states (`0x62c080`) and, except for -3, the
+/// history (`G_RESERVE_COMP` method 1, outside `KEY_CLUB_COMP_RESERVE`), `0x7c0d70`, `0x8c39f0`, `0x444930`,
+/// `0x868830`, `0x4134c0`, `0x6951e0`, `0x59a5d0`, `0x7f8c00` and the club of each side
+/// (`FN_MATCH_DAY_POST_PLAYER_REACTION_NEWS` with the round). Without `p`, error `0x73f` and 0.
 /// Original: `close_day_match` (0x6b5f00, match_day.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn close_day_match(_day: usize, p: usize) -> u32 {
     let u = |q: usize, o: usize| *((q + o) as *const usize);
@@ -396,22 +407,29 @@ pub(crate) unsafe extern "thiscall" fn close_day_match(_day: usize, p: usize) ->
 /// match without an engine; finally closes each match, redoes the humans' stored tactics and frees the summaries.
 /// Returns 1.
 ///
-/// Convention: thiscall, `match_day.cpp`, ~3.3 KB. Plays day `dia` (`+0x19` matches of `0x69` bytes, `+0x21` of them,
-/// `+0x25` finished, `+0x34` the human's). It starts the next one (`0x6b5a70`). On a network (`[0xa5a390]`): for each
-/// pending match with a human (`+0x53`) it creates the humans' scoreboard (`+0x5b`, `0x11d` bytes), ties each human to
-/// his side (`0x765480` `+0xe2`/`+0xe6`, `0x4542f0`, `0x727f00`), stores the highest level (`0x5fcff0`) and passes it
-/// on (`0x5fd100`); then it notifies those not playing (`0x71b1b0`), releases the humans and plays their matches to the
+/// Convention: thiscall, `match_day.cpp`, ~3.3 KB. Plays day `day` (`match_day_fields::MATCHES` matches of `0x69`
+/// bytes, `match_day_fields::MATCH_COUNT` of them, `match_day_fields::FINISHED_COUNT` finished,
+/// `match_day_fields::HUMAN_MATCH` the human's). It starts the next one (`exe::match_day_start_next_background_match`).
+/// On a network (`G_MATCH_ENGINE_ENABLED`): for each pending match with a human (`day_match::MARKED`) it creates the
+/// humans' scoreboard (`day_match::SCOREBOARD`, `0x11d` bytes), ties each human to his side
+/// (`exe::get_human_manager_record` `+0xe2`/`+0xe6`, `exe::open_manager_club_screen`,
+/// `exe::match_screens_open_waiting_screen_for_slot`), stores the highest level
+/// (`exe::human_manager_get_commentary_speed`) and passes it on (`exe::human_manager_set_commentary_speed`); then it
+/// notifies those not playing (`exe::open_latest_scores_screen`), releases the humans and plays their matches to the
 /// end.
 ///
-/// Then, each match still without an engine (`+0x47` -1): with a human on a network, it moves the current one to the
-/// end (`0x6b5ce0`) and starts everything again; otherwise it creates the engine (`0x6b7e50`, `0x6b7f20`), plays to the
-/// end (`0x6b98c0` -1, counting in `+0x25`), creates the summary (`0xd7a` bytes), records it (`0x7293f0`), frees the
-/// engine and, if the engine was not in fast mode (`+0` of the engine zero), writes the score with the day's percentage
-/// on the bar (`0x66f4e0`, `0x802f80`).
+/// Then, each match still without an engine (`day_match::HOME_GOALS` -1): with a human on a network, it moves the
+/// current one to the end (`exe::match_day_step_background_match`) and starts everything again; otherwise it creates
+/// the engine (`exe::new_cm3_match_engine`, `exe::cm3_match_engine_init_match`), plays to the end
+/// (`exe::cm3_match_engine_run_match_steps` -1, counting in `match_day_fields::FINISHED_COUNT`), creates the summary
+/// (`0xd7a` bytes), records it (`exe::match_stats_record_match`), frees the engine and, if the engine was not in fast
+/// mode (`+0` of the engine zero), writes the score with the day's percentage on the bar (`FN_LANGLIB_SPRINTF`,
+/// `exe::screenmanager_send_network_status_message`).
 ///
-/// Finally it moves the current one (`0x6b5ce0` with 1), closes each match (`0x6b5f00`), redoes the humans' stored
-/// tactics (`0x5fbe20`, `0x5fbd00`, `0x5b5960`) and frees the summaries; with a score written, the date on the bar
-/// (`0x54ba20`).
+/// Finally it moves the current one (`exe::match_day_step_background_match` with 1), closes each match
+/// (`exe::match_day_apply_match_result`), redoes the humans' stored tactics (`exe::human_manager_select_tactic_slot`,
+/// `exe::human_manager_get_active_tactic`, `exe::formation_clear_marking_targets`) and frees the summaries; with a
+/// score written, the date on the bar (`exe::date_get_long_date_string`).
 /// Original: `play_the_day` (0x6b4360, match_day.cpp (~3.3 KB), thiscall).
 pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
     let u = |p: usize, o: usize| core::ptr::read_unaligned((p + o) as *const usize);
@@ -712,18 +730,23 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
 /// already decided ones, groups by list and by competition, points each match to its competition, creates the global
 /// list and works out the day's interest. Returns the day.
 ///
-/// Sets up day `dia` with the matches of date `data` in mode `modo` (0, 1 or 2; otherwise or with no date, error
-/// `0x93`). Zeroes the day (`+0` mode; arrays `+1` groups of 24 bytes, `+0xd` competitions of `0x54`, `+0x19` matches
-/// of `0x69`, each with capacity and count; `+0x2f` -1, `+0x33` 1).
+/// Sets up day `day` with the matches of date `data` in mode `mode` (0, 1 or 2; otherwise or with no date, error
+/// `0x93`). Zeroes the day (`+0` mode; arrays `match_day_fields::GROUPS` groups of 24 bytes,
+/// `match_day_fields::COMPETITIONS` competitions of `0x54`, `match_day_fields::MATCHES` matches of `0x69`, each with
+/// capacity and count; `+0x2f` -1, `match_day_fields::PASS` 1).
 ///
-/// For each of the `[0xb64738]` lists (`0x5ae6a0`): the pending matches (`+0x43` <= -1, except -2) go into the day
-/// (copy of `0x4f` bytes; `+0x67` -1), those decided earlier (`0x923630` bit 0) are recorded and marked -2 (`0x923cc0`,
-/// `0x5ab510`/`0x5aa680`), the others notified (`0x79c7b0`); the list's group (`0x48dcd0`) stores the range of its
-/// matches, which is sorted (qsort with `0x6b6510`) and split by competition (`+4` of the copy), and each match points
-/// to its own (`+0x63`).
+/// For each of the `G_KEY_NATION_ACTIVE_COUNT` lists (`exe::fix_man_get_fixture_list_for_date`): the pending matches
+/// (`fixture::HOME_GOALS` <= -1, except -2) go into the day (copy of `0x4f` bytes; `day_match::STATE` -1), those
+/// decided earlier (`exe::weather_check_postponement` bit 0) are recorded and marked -2
+/// (`exe::weather_post_postponed_news`,
+/// `exe::fixture_manager_find_new_fixture_date`/`exe::fixture_manager_add_fixture`), the others notified
+/// (`exe::officialsmanager_choose_match_official`); the list's group (`exe::comp_key_nation_entry_from_active_index`)
+/// stores the range of its matches, which is sorted (qsort with `0x6b6510`) and split by competition (`+4` of the
+/// copy), and each match points to its own (`+0x63`).
 ///
-/// Finally the global list `[0xb67dc8]` (`0x68d020`) and the day's interest (`0x6b5040`). The arrays grow 5 at a time
-/// (`0x945667`; out of memory, errors `0xd6`, `0xf4`, `0x140`).
+/// Finally the global list `G_MATCH_DAY_PLAYER_INCIDENT_LIST` (`exe::new_llist`) and the day's interest
+/// (`exe::match_day_refresh_human_interest_flags`). The arrays grow 5 at a time (`exe::crt_realloc`; out of memory,
+/// errors `0xd6`, `0xf4`, `0x140`).
 /// Original: `set_up_the_day` (0x6b3c10, match_day.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn set_up_the_day(day: usize, data: usize, mode: u32) -> usize {
     let por = |p: usize, o: usize, v: u32| write_u32(p + o, v);
@@ -1352,16 +1375,21 @@ pub(crate) unsafe fn contract_flags_region(person: usize, club: usize) -> Option
 /// The current human leaves the match he was watching; with no other human watching, the match runs to the end, is
 /// recorded and leaves the queue.
 ///
-/// The current human (`[0xb77c7a]`) leaves the match he was watching (called only when a network player leaves,
-/// `0x838c00`). His match (`[0xb74c26 + 0x300 × turn]`, `0x765480` → `+0xe2`): if another of the 16 humans (the last 16
-/// records of `[0xae23bc]`, 110 bytes, `+0x5f` active) watches the same one and it is his turn (`0x7fffa0` on the
-/// manager), it leaves silently; otherwise it removes the turn from the four arrays of the summary (`+0x5b`:
-/// `+5`/`+0x45`/`+0x85`/`+0xc5`, the counters `+0x105..+0x108`).
+/// The current human (`G_SCREEN_MANAGER_CURRENT_SLOT`) leaves the match he was watching (called only when a network
+/// player leaves, `0x838c00`). His match (`[0xb74c26 + 0x300 × turn]`, `exe::get_human_manager_record` →
+/// `human_manager_sheet::LIVE_MATCH`): if another of the 16 humans (the last 16 records of `G_STAFF_TABLE`, 110 bytes,
+/// `.classification()` active) watches the same one and it is his turn (`exe::screenmanager_find_manager_channel` on
+/// the manager), it leaves silently; otherwise it removes the turn from the four arrays of the summary
+/// (`day_match::SCOREBOARD`: `+5`/`+0x45`/`+0x85`/`+0xc5`, the counters from `match_spectators::IN_MATCH_COUNT`,
+/// +0x105..+0x108).
 ///
-/// Nobody else watching: it creates the engine (`+0x57`, `0xf63b` bytes, `0x6b7e50` + `0x6b7f20`; without it error
-/// `0xa4b`), runs to the end (`0x6b98c0` with −1; state `+0x67`, 2 or 8 count in `[[0xb67a50]+0x25]`), except for 8
-/// creates the summary (`+0x5f`, `0xd7a` bytes with 2 objects of `0x625` at `+0x11f`; without it error `0xa68`) and
-/// records it (`0x7293f0`), frees the engine and takes the match off queue `[0xde2f70]` (`0x90d6b0`).
+/// Nobody else watching: it creates the engine (`day_match::ENGINE`, `0xf63b` bytes, `exe::new_cm3_match_engine` +
+/// `exe::cm3_match_engine_init_match`; without it error `0xa4b`), runs to the end
+/// (`exe::cm3_match_engine_run_match_steps` with −1; state `day_match::STATE`, 2 or 8 count in `[G_MATCH_DAY]` +
+/// `match_day_fields::FINISHED_COUNT`), except for 8 creates the summary (`day_match::SUMMARY`, `0xd7a` bytes with 2
+/// objects of `0x625` at `match_record::HOME_TEAM`; without it error `0xa68`) and records it
+/// (`exe::match_stats_record_match`), frees the engine and takes the match off queue `G_VIRTUAL_STAFF`
+/// (`exe::virtual_staff_release_fixture`).
 /// Original: `match_day_drop_viewer_and_finish_match` (0x6b6970, match_day.cpp, cdecl).
 pub(crate) unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
     covered!("screens leave the watched match");
@@ -1450,10 +1478,11 @@ pub(crate) unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
 /// Finds in the fixture list the match of a statistics record (date, competition and club) and copies the fixture.
 /// Returns 1 if found.
 ///
-/// The fixture (`0x4f` bytes) of record `k` of the statistics index (`[this]`, 12 bytes: `+0` competition, `+4` one of
-/// the clubs, `+8`/`+0xa` the date): it asks the schedule `[0xae2a58]` (`0x5acbe0`) for the matches of that date and
-/// competition in a local list (`0x68d020`) and copies to `saida` the first one with club `+4` at home (`+0xc`) or away
-/// (`+0x10`). Index outside 0..`[this+0x1c]` or null output: the original routine runs (error box, 0).
+/// The fixture (`0x4f` bytes) of record `k` of the statistics index (`[stats]`, 12 bytes: `+0` competition, `+4` one of
+/// the clubs, `+8`/`match_stats_entry::YEAR` the date): it asks the schedule `G_FIXTURE_MANAGER`
+/// (`exe::fixture_manager_find_fixtures`) for the matches of that date and competition in a local list (`0x68d020`) and
+/// copies to `out` the first one with club `+4` at home (`fixture::HOME_CLUB_ID`) or away (`fixture::AWAY_CLUB_ID`).
+/// Index outside 0..`match_stats::CAPACITY` or null output: the original routine runs (error box, 0).
 /// Original: `Match_Stats::find_record_fixture` (0x729e30, match_stats.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn find_record_fixture(stats: usize, k: i32, out: usize) -> u32 {
     if k < 0 || k > read_i32(stats + match_stats::CAPACITY).wrapping_sub(1) || out == 0 {
@@ -1492,16 +1521,19 @@ pub(crate) unsafe extern "thiscall" fn find_record_fixture(stats: usize, k: i32,
 /// sounds, events, engine step, end, half time, goals, minute); records it and picks the day's human match. Returns 1
 /// if it changed.
 ///
-/// One step of human match `p` on a network, by the clock (`0x90c510`) and the humans' scoreboard (`+0x5b`: `+0` state,
-/// `+1` event, `+0x85` who has already seen it, `+0x105` humans, `+0x107` seen, `+0x108` pause, `+0x109` wait, `+0x10d`
-/// time, `+0x111` may advance, `+0x115` highlight). Without `p`, it moves the current one (`0x6b5ce0`) and starts the
-/// next (`0x6b5a70`).
+/// One step of human match `p` on a network, by the clock (`exe::utils_get_time_ms`) and the humans' scoreboard
+/// (`day_match::SCOREBOARD`: `+0` state, `+1` event, `match_spectators::SEEN` who has already seen it,
+/// `match_spectators::IN_MATCH_COUNT` humans, `match_spectators::SEEN_COUNT` seen, `match_spectators::COUNT` pause,
+/// `+0x109` wait, `+0x10d` time, `+0x111` may advance, `+0x115` highlight). Without `p`, it moves the current one
+/// (`exe::match_day_step_background_match`) and starts the next (`exe::match_day_start_next_background_match`).
 ///
-/// It waits for everyone to see the state; then the sounds (`0x6d8c70`) and the time; it shows the next event
-/// (`0x6d78b0`, highlight by table `0x6d5cd0`) or takes one engine step (`0x6b98c0` with 1) and sets the state: end
-/// (2/8), half time (4), goals on each side (`+0xf5bd`/`+0xf5f3` against the summary), highlight, `+0x8eb2`, the minute
-/// (`+0x8ed0` / 11) against the summary (wait `0x226` - 50 x `+0x51`); with a state, it records it (`0x729ff0`) and the
-/// day's human match (`+0x34`) becomes the one with the highest competition (`0x6b6570`) or the furthest along.
+/// It waits for everyone to see the state; then the sounds (`exe::match_events_is_line_finished`) and the time; it
+/// shows the next event (`exe::match_events_get_next_event`, highlight by table `exe::match_events_get_event_priority`)
+/// or takes one engine step (`exe::cm3_match_engine_run_match_steps` with 1) and sets the state: end (2/8), half time
+/// (4), goals on each side (`.score()`/`.score_side1()` against the summary), highlight, `.restart_type()`, the minute
+/// (`.clock()` / 11) against the summary (wait `0x226` - 50 x `match_record::SUB_TICK`); with a state, it records it
+/// (`exe::match_stats_fill_match_record`) and the day's human match (`match_day_fields::HUMAN_MATCH`) becomes the one
+/// with the highest competition (`exe::match_day_get_period_rank`) or the furthest along.
 /// Original: `network_step` (0x6b55c0, match_day.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn network_step(day: usize, p: usize) -> u32 {
     let u = |q: usize, o: usize| read_usize(q + o);
@@ -1638,12 +1670,15 @@ pub(crate) unsafe extern "thiscall" fn network_step(day: usize, p: usize) -> u32
 /// Each human confirms the network match; with all of them confirmed, creates the engine and prepares it for watching,
 /// or plays it to the end and records it.
 ///
-/// The current human (`[0xb77c7a]`) confirms match `p` on a network (humans' scoreboard `+0x5b`: `+0x45` who confirmed,
-/// `+0x105` humans, `+0x106` confirmed). With all: it creates the engine (`0x6b7e50`) and prepares it for watching
-/// (`0x6b7f20` with the last argument 1). If it is not one to be watched (returns 0), it plays to the end (counting in
-/// `[0xb67a50]+0x25`), creates the summary, records it (`0x7293f0`), frees the engine, takes it off the queue and sets
+/// The current human (`G_SCREEN_MANAGER_CURRENT_SLOT`) confirms match `p` on a network (humans' scoreboard
+/// `day_match::SCOREBOARD`: `match_spectators::CONFIRMED` who confirmed, `match_spectators::IN_MATCH_COUNT` humans,
+/// `match_spectators::CONFIRMED_COUNT` confirmed). With all: it creates the engine (`exe::new_cm3_match_engine`) and
+/// prepares it for watching (`exe::cm3_match_engine_init_match` with the last argument 1). If it is not one to be
+/// watched (returns 0), it plays to the end (counting in `[G_MATCH_DAY]` + `match_day_fields::FINISHED_COUNT`), creates
+/// the summary, records it (`exe::match_stats_record_match`), frees the engine, takes it off the queue and sets
 /// `+0x119`; if it is, it notifies the commentator (`+0x8f7a` = 3), creates the summary, records it for watching
-/// (`0x729ff0`) and returns 1. Errors `0x4b8` (no match), `0x4d0`, `0x4ea`, `0x511` (out of memory).
+/// (`exe::match_stats_fill_match_record`) and returns 1. Errors `0x4b8` (no match), `0x4d0`, `0x4ea`, `0x511` (out of
+/// memory).
 /// Original: `confirm_network_match` (0x6b5260, match_day.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn confirm_network_match(_day: usize, p: usize) -> u32 {
     let u = |q: usize, o: usize| read_usize(q + o);

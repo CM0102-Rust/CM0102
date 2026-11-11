@@ -16,11 +16,12 @@ pub(crate) unsafe extern "thiscall" fn jap_emp_cup_create_round_table(this: usiz
     build_single_stage_cup_rounds(Cup(this), stage, rounds, extra, out, &EMPERORS_CUP_ROUNDS, 0x9eab90, 0xa0, "cqn_11 tabela da copa do imperador")
 }
 
-/// rule: the Emperor's Cup takes 80 clubs: 47 from the regional divisions ([0x9cf678], sorted by reputation and
-/// shuffled), 2 from the university league ([0x9cf674] [inference]), 3 from the football league ([0x9cf670]
-/// [inference]) — those drawn from other Japanese divisions (up to 6) do not enter —, the J2 clubs (class 0) and the J1
-/// clubs with class = last season's position; the last 16 entries are sorted by class; if the lower divisions lack
-/// clubs, the error box
+/// rule: the Emperor's Cup takes 80 clubs: 47 from the regional divisions
+/// ([`KEY_CLUB_COMP_JAPANESE_ADMINISTRATIVE_DIVISION`], sorted by reputation and shuffled), 2 from the university
+/// league ([`KEY_CLUB_COMP_JAPANESE_UNIVERSITY_LEAGUE`] [inference]), 3 from the football league
+/// ([`KEY_CLUB_COMP_JAPANESE_FOOTBALL_LEAGUE`] [inference]) — those drawn from other Japanese divisions (up to 6) do
+/// not enter —, the J2 clubs (class 0) and the J1 clubs with class = last season's position; the last 16 entries are
+/// sorted by class; if the lower divisions lack clubs, the error box
 /// Original: `JapEmpCup::collect_entrants` (0x6624f0, jap_emp_cup.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn jap_emp_cup_collect_entrants(this: usize) -> i32 {
     collect_emperors_cup_entrants(Cup(this)).0

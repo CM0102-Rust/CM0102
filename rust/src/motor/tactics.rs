@@ -1,10 +1,12 @@
 use super::*;
 
-/// who takes set piece `tipo` (0..4) on `lado` (0..1): the cell (dword) in the club's tactics row (0x8982b0) at +0x601
-/// + row × 0x91 + 0x5e + (side + type × 2) × 4. Above [0xae2364] + 0x52d it becomes −1; negative, 0; a person (0x6e
-/// bytes at [0xae23bc]) without +0x61 clears the cell; from the club (+0x39), in a national team (`exe::database_is_national_team`) or with
-/// link `exe::nationalteams_is_national_or_all_star_team` they are returned; otherwise it clears. Null club, type or side out of range: the original (error
-/// box). Compared side by side (the cell)
+/// who takes set piece `kind` (0..4) on `side` (0..1): the cell (dword) in the club's tactics row
+/// (`FN_TACTICS_GET_CLUB_TACTICS_INDEX`) at `tactics_fields::ROWS` + row × 0x91 + `tactics_row::SET_PIECE_TAKERS` +
+/// (side + type × 2) × 4. Above `G_STAFF_COUNT` + 0x52d it becomes −1; negative, 0; a person (0x6e bytes at
+/// `G_STAFF_TABLE`) without `.player()` clears the cell; from the club (`.club_job()`), in a national team
+/// (`exe::database_is_national_team`) or with link `exe::nationalteams_is_national_or_all_star_team` they are returned;
+/// otherwise it clears. Null club, type or side out of range: the original (error box). Compared side by side (the
+/// cell)
 /// Original: `stored_taker` (0x897990, tactics.cpp (544 bytes, called by the taker choice 0x6ceb90), thiscall, ret 0x10).
 pub(crate) unsafe extern "thiscall" fn stored_taker(this: usize, club: usize, kind: u32, side: u32, human: u32) -> usize {
     let (t, l) = (kind as u8 as i8, side as u8 as i8);
@@ -48,16 +50,16 @@ pub(crate) unsafe extern "thiscall" fn stored_taker(this: usize, club: usize, ki
 }
 
 /// Saves or restores the club's 20 instructions (dwords of the tactics row + 2) in one of 16 slots of 0x5c bytes
-/// (+0x30; used count at +0x5f0), the current human's (`[0xb74c26 + [0xb77c7a] × 0x300]`; `[0xae2364]` − id − 1); when
-/// saving, the instructions become −1. Compared side by side (the slots and the row).
-///
-/// Ret 0x10: saves (`restore` 0) or restores (`restore` != 0) the club's 20 instructions (dwords at +0x601 + row × 0x91
-/// + 2, the row from 0x8982b0 with `person`) in one of the 16 spaces of 0x5c bytes starting at +0x30 (club +0x30,
-/// person +0x34, used +0x38, instructions +0x3c; used count at +0x5f0). The space is that of the human whose turn it is
-/// (`[0xb74c26 + [0xb77c7a] × 0x300]`): `[0xae2364]` - his id - 1, in 0..16. Saving (with `use`), marks the space and
-/// copies; then the 20 instructions become -1. Restoring with `use`, the space of the same club and person goes back to
-/// the table and is freed; without `use`, frees all the spaces of the club and person. Null club: the original routine
-/// (error box); row -1: 0; otherwise 1.
+/// (+0x30; used count at `tactics_fields::UNDO_COUNT`), the current human's (`[G_SCREEN_RECORDS_MANAGER +
+/// [G_SCREEN_MANAGER_CURRENT_SLOT] × 0x300]`; `G_STAFF_COUNT` − id − 1); when saving, the instructions become −1.
+/// Compared side by side (the slots and the row). Ret 0x10: saves (`volta` 0) or restores (`volta` != 0) the club's 20
+/// instructions (dwords at `tactics_fields::ROWS` + row × 0x91 + 2, the row from `FN_TACTICS_GET_CLUB_TACTICS_INDEX`
+/// with `person`) in one of the 16 spaces of 0x5c bytes starting at +0x30 (club +0x30, person +0x34, used +0x38,
+/// instructions +0x3c; used count at `tactics_fields::UNDO_COUNT`). The space is that of the human whose turn it is
+/// (`[G_SCREEN_RECORDS_MANAGER + [G_SCREEN_MANAGER_CURRENT_SLOT] × 0x300]`): `G_STAFF_COUNT` - his id - 1, in 0..16.
+/// Saving (with `usar`), marks the space and copies; then the 20 instructions become -1. Restoring with `usar`, the
+/// space of the same club and person goes back to the table and is freed; without `usar`, frees all the spaces of the
+/// club and person. Null club: the original routine (error box); row -1: 0; otherwise 1.
 /// Original: `store_instructions` (0x896fe0, tactics.cpp (624 bytes, called by the engine step 0x6b98c0 and others), thiscall, ret 0x10).
 pub(crate) unsafe extern "thiscall" fn store_instructions(this: usize, club: usize, person: u32, usar: u32, volta: u32) -> u32 {
     if club == 0 {
@@ -128,8 +130,8 @@ pub(crate) unsafe extern "thiscall" fn store_instructions(this: usize, club: usi
     1
 }
 
-/// copies the club's tactics row (0x91 bytes at +0x601, row from 0x8982b0) to the destination. Null club: the original
-/// (error box); row -1: 0. Compared side by side
+/// copies the club's tactics row (0x91 bytes at `tactics_fields::ROWS`, row from `FN_TACTICS_GET_CLUB_TACTICS_INDEX`)
+/// to the destination. Null club: the original (error box); row -1: 0. Compared side by side
 /// Original: `read_tactics_row` (0x8983f0, tactics.cpp, thiscall, ret 0xc).
 pub(crate) unsafe extern "thiscall" fn read_tactics_row(this: usize, club: usize, target: *mut u8, human: u32) -> u32 {
     if club == 0 {
@@ -145,8 +147,8 @@ pub(crate) unsafe extern "thiscall" fn read_tactics_row(this: usize, club: usize
     1
 }
 
-/// the reverse, writes the 0x91 bytes into the row (row -1 or beyond the total +0x605: 0). Called by `store_tactic`
-/// (`store_tactic`). Compared side by side
+/// the reverse, writes the 0x91 bytes into the row (row -1 or beyond the total `tactics_fields::ROW_COUNT`: 0). Called
+/// by `store_tactic` (`store_tactic`). Compared side by side
 /// Original: `write_tactics_row` (0x8984d0, tactics.cpp, thiscall, ret 0xc).
 pub(crate) unsafe extern "thiscall" fn write_tactics_row(this: usize, club: usize, source: *const u8, human: u32) -> u32 {
     if club == 0 {
@@ -760,18 +762,20 @@ pub(crate) fn at_least_one(x: i16) -> f64 {
 }
 
 /// At the end of a match with no human, adds to each club's tactic row (0x28 bytes) the games, wins, draws, losses,
-/// goals and points (3 per win, 1 per draw) and redoes the three double ratios (+0x10/+0x18/+0x20) that the AI
-/// formation choice reads.
-///
-/// Ret 4: `Tactics::record_tactic_result(match)`, from the end of each match in the engine loop (0x6ba9a0, with the
-/// aggregate score; fixture +0 ≠ −2). Null match: the box at line 0x1f9 and 0. Home side (+0x1c) or away side (+0x20)
-/// managed by a human (`exe::human_manager_is_human_club` with 0, 1, 0, 0; cdecl 5): 0. Otherwise, for each side (null club: the box at line
-/// 0x20a and continues), the match record for the club (`fill_match_record_from_fixture`, into a local record that starts with the default date
-/// `exe::date_date_54a110`) is added to the club's tactic row (tactic_stats_row): +2 matches, +4 wins (+3 points in +0xe), +6 draws
-/// (+1 point), +8 defeats, +0xa goals for (+0x19 of the record, signed), +0xc against (+0x1a); with p = matches, a =
-/// for, b = against and c = points (each at least 1), q = c/p, g = a/p, h = g·q², r = p/b: +0x10 = r·h·g, +0x18 =
-/// r·g·q²·q, +0x20 = r·r·h (the order of the x87 operations). The computer's formation choice (`exe::match_man_choose_computer_tactic`) reads +2 and
-/// the three ratios. Returns 1.
+/// goals and points (3 per win, 1 per draw) and redoes the three double ratios
+/// (`tactic_stats::ALL_OUT_ATTACK_SCORE`/`tactic_stats::ATTACK_SCORE`/`tactic_stats::DEFENSIVE_SCORE`) that the AI
+/// formation choice reads. Ret 4: `Tactics::record_tactic_result(game)`, from the end of each match in the engine loop
+/// (0x6ba9a0, with the aggregate score; fixture +0 ≠ −2). Null match: the box at line 0x1f9 and 0. Home side
+/// (`fixture::HOME_CLUB`) or away side (`fixture::HOME_CLUB` + 4) managed by a human
+/// (`exe::human_manager_is_human_club` with 0, 1, 0, 0; cdecl 5): 0. Otherwise, for each side (null club: the box at
+/// line 0x20a and continues), the match record for the club (`exe::fill_match_record_from_fixture`, into a local record
+/// that starts with the default date `exe::date_date_54a110`) is added to the club's tactic row (tactic_stats_row): +2
+/// matches, +4 wins (+3 points in `tactic_stats::POINTS`), +6 draws (+1 point), +8 defeats, `tactic_stats::GOALS_FOR`
+/// goals for (+0x19 of the record, signed), `tactic_stats::GOALS_AGAINST` against (+0x1a); with p = matches, a = for, b
+/// = against and c = points (each at least 1), q = c/p, g = a/p, h = g·q², r = p/b:
+/// `tactic_stats::ALL_OUT_ATTACK_SCORE` = r·h·g, `tactic_stats::ATTACK_SCORE` = r·g·q²·q,
+/// `tactic_stats::DEFENSIVE_SCORE` = r·r·h (the order of the x87 operations). The computer's formation choice
+/// (`exe::match_man_choose_computer_tactic`) reads +2 and the three ratios. Returns 1.
 /// Original: `Tactics::record_tactic_result` (0x896290, tactics.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn record_tactic_result(this: usize, game: usize) -> u32 {
     let game = Fixture(game);
@@ -826,11 +830,10 @@ pub(crate) unsafe extern "thiscall" fn record_tactic_result(this: usize, game: u
     1
 }
 
-/// Returns the captain stored (+0x52) in the club and team row of the tactics table; no row, 0.
-///
-/// Ret 8: `Tactics::get_captain(club, team)`, from the tactic screens (0x8a7440). Null club: the box at line 0x527 and
-/// 0. The club's exe::tactics_get_club_tactics_index(0x8982b0, thiscall(this, club, team), ret 8; −1: 0); returns dword +0x52 of the row's 0x91-byte
-/// record in the tactics table (+0x601).
+/// Returns the captain stored (`tactics_row::CAPTAIN`) in the club and team row of the tactics table; no row, 0. Ret 8:
+/// `Tactics::get_captain(club, team)`, from the tactic screens (0x8a7440). Null club: the box at line 0x527 and 0. The
+/// club's row (`exe::tactics_get_club_tactics_index`, thiscall(this, club, team), ret 8; −1: 0); returns dword
+/// `tactics_row::CAPTAIN` of the row's 0x91-byte record in the tactics table (`tactics_fields::ROWS`).
 /// Original: `Tactics::get_captain` (0x8976a0, tactics.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn get_captain(this: usize, club: usize, team: u32) -> u32 {
     if club == 0 {
@@ -844,11 +847,11 @@ pub(crate) unsafe extern "thiscall" fn get_captain(this: usize, club: usize, tea
     read_usize(read_usize(this + tactics_fields::ROWS).wrapping_add((k as isize * 0x91) as usize) + tactics_row::CAPTAIN) as u32
 }
 
-/// Writes the captain (+0x52) in the club and team row of the tactics table and returns 1; no row, 0.
-///
+/// Writes the captain (`tactics_row::CAPTAIN`) in the club and team row of the tactics table and returns 1; no row, 0.
 /// Ret 0xc: `Tactics::set_captain(club, &person, team)`, when applying the changes of the tactic screen (0x8a80d0).
-/// Null club: the box at line 0x579; null pointer: that of 0x581; 0. The club's row (0x8982b0; −1: 0); writes the
-/// pointed dword into +0x52 of the row's record (+0x601) and returns 1.
+/// Null club: the box at line 0x579; null pointer: that of 0x581; 0. The club's row
+/// (`exe::tactics_get_club_tactics_index`; −1: 0); writes the pointed dword into `tactics_row::CAPTAIN` of the row's
+/// record (`tactics_fields::ROWS`) and returns 1.
 /// Original: `Tactics::set_captain` (0x897880, tactics.cpp, thiscall, ret 0xc).
 pub(crate) unsafe extern "thiscall" fn set_captain(this: usize, club: usize, person: usize, team: u32) -> u32 {
     if club == 0 {
@@ -905,15 +908,15 @@ pub(crate) unsafe fn lineup_regions(this: usize, club: usize, team: u32) -> Vec<
 
 /// Removes a player from the selection: empties (−1) the selection slots holding the person; with roles, also the two
 /// extra slots and the set-piece takers; the undo copies of the club and team are dropped; 1 when removed from a slot
-/// or set piece.
-///
-/// Ret 0x10: `Tactics::remove_player_from_selection(club, person, team, roles)`, from the contracts (change of place in
-/// the squad, loan and its end), from leaving the squad, from the automatic line-up (`select_automatically`), from the national
-/// sides, from retirement and from the transfers. No tactic row (0x8982b0): 0. The 20 line-up slots (+2 of the row,
-/// ids) with the person (id at +0) become −1. With `roles`: the two extra slots (+0x56, +0x5a: `exe::tactics_get_playmaker` and `extra_tactic_slot`)
-/// and the takers of the five set pieces on both sides (`stored_taker` and `set_set_piece_taker`) that are that person are emptied. The
-/// undo copies of the club and team are dropped. Returns 1 if it removed the person from a slot or set piece. Null club
-/// or person: the original routine ("Error" box, 0).
+/// or set piece. Ret 0x10: `Tactics::remove_player_from_selection(club, person, team, papeis)`, from the contracts
+/// (change of place in the squad, loan and its end), from leaving the squad, from the automatic line-up
+/// (`select_automatically`), from the national sides, from retirement and from the transfers. No tactic row
+/// (`club_tactics_index`): 0. The 20 line-up slots (+2 of the row, ids) with the person (id at +0) become −1. With
+/// `papeis`: the two extra slots (+0x56, +0x5a: `exe::tactics_get_playmaker` and `exe::tactics_set_playmaker`) and the
+/// takers of the five set pieces on both sides (`exe::tactics_get_set_piece_taker` and
+/// `exe::tactics_set_set_piece_taker`) that are that person are emptied. The undo copies of the club and team are
+/// dropped (`drop_undo_copies`). Returns 1 if it removed the person from a slot or set piece. Null club or person: the
+/// original routine ("Error" box, 0).
 /// Original: `Tactics::remove_player_from_selection` (0x896c60, tactics.cpp, thiscall, ret 0x10).
 pub(crate) unsafe extern "thiscall" fn remove_player_from_selection(this: usize, club: usize, person: usize, team: u32, papeis: u32) -> u32 {
     if club == 0 || person == 0 {
@@ -954,12 +957,11 @@ pub(crate) unsafe extern "thiscall" fn remove_player_from_selection(this: usize,
     found
 }
 
-/// Swaps the ids of two selection slots (0..19) and drops the undo copies of the club and team.
-///
-/// Ret 0x10: `Tactics::swap_selection_slots(club, a, b, team)`, from the squad screen (0x46835e). Slots `a` and `b`
-/// (signed bytes, 0..19): swaps the ids of the two line-up slots (+2 + 4 × slot of the tactic row, `exe::utils_swap_bytes` with 4
-/// bytes) and the undo copies of the club and team are dropped; returns 1. No row (0x8982b0): 0. Null club or slot out
-/// of range: the original routine ("Error" box, 0).
+/// Swaps the ids of two selection slots (0..19) and drops the undo copies of the club and team. Ret 0x10:
+/// `Tactics::swap_selection_slots(club, a, b, team)`, from the squad screen (0x46835e). Slots `a` and `b` (signed
+/// bytes, 0..19): swaps the ids of the two line-up slots (`tactics_row::SELECTION` + 4 × slot of the tactic row,
+/// `exe::utils_swap_bytes` with 4 bytes) and the undo copies of the club and team are dropped (`drop_undo_copies`);
+/// returns 1. No row (`club_tactics_index`): 0. Null club or slot out of range: the original routine ("Error" box, 0).
 /// Original: `Tactics::swap_selection_slots` (0x8973e0, tactics.cpp, thiscall, ret 0x10).
 pub(crate) unsafe extern "thiscall" fn swap_selection_slots(this: usize, club: usize, a: u32, b: u32, team: u32) -> u32 {
     let (va, vb) = (a as u8 as i8, b as u8 as i8);
@@ -976,11 +978,11 @@ pub(crate) unsafe extern "thiscall" fn swap_selection_slots(this: usize, club: u
     1
 }
 
-/// Returns 1 when the current human holds the selection undo copy of this club and team.
-///
-/// Ret 8: `Tactics::has_selection_undo(club, team)`, from the squad screen (0x458a58). With copies (+0x5f0) and the
-/// human whose turn it is (`[0xb74c26 + 0x300 × (i16)[0xb77c7a]]`): his copy (index `[0xae2364]` − id − 1, from 0 to
-/// 15) exists (+8) and is of this club (+0) and team (+4): 1; otherwise 0.
+/// Returns 1 when the current human holds the selection undo copy of this club and team. Ret 8:
+/// `Tactics::has_selection_undo(club, team)`, from the squad screen (0x458a58). With copies
+/// (`tactics_fields::UNDO_COUNT`) and the human whose turn it is (`[0xb74c26 + 0x300 × (i16)[0xb77c7a]]`): his copy
+/// (index `G_STAFF_COUNT` − id − 1, from 0 to 15, in `tactics_fields::UNDO_SLOTS`) exists (`undo_slot::IN_USE`) and is
+/// of this club (+0) and team (`undo_slot::TEAM`): 1; otherwise 0.
 /// Original: `Tactics::has_selection_undo` (0x897250, tactics.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn has_selection_undo(this: usize, club: usize, team: u32) -> u32 {
     if read_u8(this + tactics_fields::UNDO_COUNT) == 0 {
@@ -1010,12 +1012,12 @@ pub(crate) unsafe fn tactics_cell(this: usize, k: i32, c: usize) -> usize {
 }
 
 /// The club's selection slot in the tactics table becomes empty (−1) and the stored slots of the same club and team are
-/// released.
-///
-/// Ret 0xc: `Tactics::clear_selection_slot(club, slot, team)`: slot (0..=19) of the club's line-up in the tactics table
-/// (row from 0x8982b0, dword at +2 + 4 × slot) becomes −1 and, with stored spaces (+0x5f0), those of the same club and
-/// team (16 spaces of 0x5c bytes starting at +0x30: club +0x30, team +0x34, used +0x38) are released (+0x38 = 0, +0x5f0
-/// − 1). Returns 1; no row, 0. Null club or slot out of range: the original routine (box).
+/// released. Ret 0xc: `Tactics::clear_selection_slot(club, slot, team)`: slot (0..=19) of the club's line-up in the
+/// tactics table (row from `club_tactics_row`, dword at +2 + 4 × slot) becomes −1 and, with stored spaces
+/// (`tactics_fields::UNDO_COUNT`), those of the same club and team (16 spaces of 0x5c bytes starting at
+/// `tactics_fields::UNDO_SLOTS`: club +0, team `undo_slot::TEAM`, used `undo_slot::IN_USE`) are released
+/// (`undo_slot::IN_USE` = 0, `tactics_fields::UNDO_COUNT` − 1). Returns 1; no row, 0. Null club or slot out of range:
+/// the original routine (box).
 /// Original: `Tactics::clear_selection_slot` (0x896e90, tactics.cpp, thiscall, ret 0xc).
 pub(crate) unsafe extern "thiscall" fn clear_selection_slot(this: usize, club: usize, slot: u32, team: u32) -> u32 {
     let v = slot as u8 as i8;
@@ -1041,13 +1043,11 @@ pub(crate) unsafe extern "thiscall" fn clear_selection_slot(this: usize, club: u
 }
 
 /// Stores the taker of a set piece (first or second choice); without a person, clears it and the second choice moves up
-/// to the first.
-///
-/// Ret 0x14: `Tactics::set_set_piece_taker(club, role, choice, person, team)`: taker `choice` (0..=1) of set piece
-/// `role` (0..=4) in the club's tactic row (0x8982b0; dword at +0x5e + 4 × (choice + 2 × role)). With `person` (pointer
-/// to the id), writes the id. Without it, the cell becomes −1 and, if it is the first choice, the next one with a taker
-/// (> −1) moves up to it and becomes −1. Returns 1; no row, 0. Null club, role or choice out of range: the original
-/// routine (box).
+/// to the first. Ret 0x14: `Tactics::set_set_piece_taker(club, role, choice, person, team)`: taker `choice` (0..=1) of
+/// set piece `role` (0..=4) in the club's tactic row (`club_tactics_row`; dword at +0x5e + 4 × (choice + 2 × role)).
+/// With `person` (pointer to the id), writes the id. Without it, the cell becomes −1 and, if it is the first choice,
+/// the next one with a taker (> −1) moves up to it and becomes −1. Returns 1; no row, 0. Null club, role or choice out
+/// of range: the original routine (box).
 /// Original: `Tactics::set_set_piece_taker` (0x897bb0, tactics.cpp, thiscall, ret 0x14).
 pub(crate) unsafe extern "thiscall" fn set_set_piece_taker(this: usize, club: usize, role: u32, choice: u32, person: usize, team: u32) -> u32 {
     let (p, e) = (role as u8 as i8, choice as u8 as i8);
@@ -1099,11 +1099,11 @@ pub(crate) unsafe extern "thiscall" fn formation_record(t: usize, f: i16, human:
 
 compare_value!(compare_formation_record, formation_record, IDX_FORMATION_RECORD, (f: i16, humano: u32) -> usize);
 
-/// Sets the two extra slots (+0x56, +0x5a) of the club's row.
-///
-/// Ret 0x10: the two extra slots (+0x56 and +0x5a) of the row of `club` in the tactics table (0x8982b0 with `human`; no
-/// row, 0): with `person`, `*person` goes into slot `which` 0/1; without it, the slot becomes −1 and, for slot 0, slot
-/// 1 moves down to 0 and becomes −1. Returns 1. Null `club` or `which` out of range: the original routine (error box).
+/// Sets the two extra slots (`tactics_row::PLAYMAKER`, `tactics_row::SECOND_PLAYMAKER`) of the club's row. Ret 0x10:
+/// the two extra slots (`tactics_row::PLAYMAKER` and `tactics_row::SECOND_PLAYMAKER`) of the row of `club` in the
+/// tactics table (`FN_TACTICS_GET_CLUB_TACTICS_INDEX` with `human`; no row, 0): with `person`, `*person` goes into slot
+/// `which` 0/1; without it, the slot becomes −1 and, for slot 0, slot 1 moves down to 0 and becomes −1. Returns 1. Null
+/// `club` or `which` out of range: the original routine (error box).
 /// Original: `extra_tactic_slot` (0x897ee0, tactics.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn extra_tactic_slot(t: usize, club: usize, which: i8, person: *const u32, human: u32) -> u32 {
     if club == 0 || !(0..=1).contains(&which) {
@@ -1133,14 +1133,15 @@ pub(crate) unsafe extern "thiscall" fn extra_tactic_slot(t: usize, club: usize, 
 
 /// Returns the club's tactic: for a human club (without +0x9a01 or with holiday option 2), the slot for the team and
 /// the manager's active block; otherwise, by the index in the club row, the preset block (below the preset count) or
-/// the club's own.
-///
-/// Ret 8: `Tactics::get_club_tactic(club, team)`, from the formation of each match (`exe::match_man_choose_computer_tactic`), from the player's
-/// weaknesses (`staff_get_player_weakness_flags`), from the media and from the screens. A human club (`exe::human_manager_is_human_club` with 1, 1) whose manager (+0xcf)
-/// does not have +0x9a01 (`exe::human_manager_is_on_holiday`) or has holiday option 2 (`exe::human_manager_get_holiday_option`): the slot for the team (`select_tactic_slot`) and his active
-/// block (`get_active_tactic`). For the others, the index (signed word) in the club's row (id × 0x91 in `[this+0x601]`): below the
-/// count of preset tactics (`[this+0x5fd]`) the preset block (`[this+0x5f9]`), otherwise its own (`[this+0x5f1]`, index
-/// − count); blocks of 0x18e3 bytes. Null club: the original routine ("Error" box, 0).
+/// the club's own. Ret 8: `Tactics::get_club_tactic(club, team)`, from the formation of each match
+/// (`exe::match_man_choose_computer_tactic`), from the player's weaknesses (`staff_get_player_weakness_flags`), from
+/// the media and from the screens. A human club (`exe::human_manager_is_human_club` with 1, 1) whose manager
+/// (`.manager()`) does not have +0x9a01 (`exe::human_manager_is_on_holiday`) or has holiday option 2
+/// (`exe::human_manager_get_holiday_option`): the slot for the team (`exe::human_manager_select_tactic_slot`) and his
+/// active block (`exe::human_manager_get_active_tactic`). For the others, the index (signed word) in the club's row (id
+/// × 0x91 in `tactics_fields::ROWS`): below the count of preset tactics (`tactics_fields::PRESET_TACTIC_COUNT`) the
+/// preset block (`tactics_fields::PRESET_TACTICS`), otherwise its own (`tactics_fields::CUSTOM_TACTICS`, index −
+/// count); blocks of `formation_fields::SIZE` (0x18e3) bytes. Null club: the original routine ("Error" box, 0).
 /// Original: `Tactics::get_club_tactic` (0x896660, tactics.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn get_club_tactic(this: usize, club: usize, team: u32) -> usize {
     let club = Club(club);
@@ -1167,11 +1168,10 @@ pub(crate) unsafe extern "thiscall" fn get_club_tactic(this: usize, club: usize,
     }
 }
 
-/// Returns the club's selection slot (0..19) holding the player, or 0xff.
-///
-/// Ret 0xc: the slot (0..19) of the club's line-up where the person is: the club's tactic row (0x8982b0 with `team`; -1
-/// returns 0) and the 20 slots (dwords at +0x601 + row × 0x91 + 2) compared with the id; not there: 0xff. Null club or
-/// person: the original routine (error box).
+/// Returns the club's selection slot (0..19) holding the player, or 0xff. Ret 0xc: the slot (0..19) of the club's
+/// line-up where the person is: the club's tactic row (`FN_TACTICS_GET_CLUB_TACTICS_INDEX` with `team`; -1 returns 0)
+/// and the 20 slots (dwords at `tactics_fields::ROWS` + row × 0x91 + 2) compared with the id; not there: 0xff. Null
+/// club or person: the original routine (error box).
 /// Original: `Tactics::find_selection_slot` (0x8972c0, tactics.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn find_selection_slot(tactic: usize, club: usize, person: *const i32, team: u32) -> u8 {
     if club == 0 || person.is_null() {
@@ -1190,12 +1190,12 @@ pub(crate) unsafe extern "thiscall" fn find_selection_slot(tactic: usize, club: 
     }
 }
 
-/// Stores the person in slot 0..19 of the club's row (0x8982b0) and clears the club's pending instructions.
-///
-/// Ret 0x10: writes `*person` into slot `slot` 0..19 of the row of `club` (0x8982b0 with `human`; no row, 0) and
-/// deletes, among the 16 pending instructions (+0x30, 0x5c bytes: club, human, active), the active ones of that club
-/// and `human`, decrementing counter +0x5f0. Returns 1. Null `club` or `person`, slot out of range: the original
-/// routine (error box).
+/// Stores the person in slot 0..19 of the club's row (`FN_TACTICS_GET_CLUB_TACTICS_INDEX`) and clears the club's
+/// pending instructions. Ret 0x10: writes `*person` into slot `slot` 0..19 of the row of `club`
+/// (`FN_TACTICS_GET_CLUB_TACTICS_INDEX` with `human`; no row, 0) and deletes, among the 16 pending instructions
+/// (`tactics_fields::UNDO_SLOTS`, 0x5c bytes: club, human `undo_slot::TEAM`, active `undo_slot::IN_USE`), the active
+/// ones of that club and `human`, decrementing counter `tactics_fields::UNDO_COUNT`. Returns 1. Null `club` or
+/// `person`, slot out of range: the original routine (error box).
 /// Original: `set_tactic_slot` (0x896a90, tactics.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn set_tactic_slot(t: usize, club: usize, slot: i8, person: *const u32, human: u32) -> u32 {
     if club == 0 || !(0..=19).contains(&slot) || person.is_null() {
@@ -1221,12 +1221,12 @@ pub(crate) unsafe extern "thiscall" fn set_tactic_slot(t: usize, club: usize, sl
     1
 }
 
-/// Returns the slot's person; without a record, or from another nation in a national side, the slot becomes −1.
-///
-/// Ret 0xc: the person (in `[0xae23bc]`, 0x6e bytes) of slot `slot` 0..19 of the row of `club`; 0 with no row or an
-/// empty (negative) slot. A slot with a person without a player sheet (+0x61), or, in a national side (`exe::database_is_national_team`), a
-/// person without a nation (+0x24) or from another nation (+0x53): the slot becomes −1 and returns 0. Null `club` or
-/// slot out of range: the original routine (error box).
+/// Returns the slot's person; without a record, or from another nation in a national side, the slot becomes −1. Ret
+/// 0xc: the person (in `G_STAFF_TABLE`, 0x6e bytes) of slot `slot` 0..19 of the row of `club`; 0 with no row or an
+/// empty (negative) slot. A slot with a person without a player sheet (`.player()`), or, in a national side
+/// (`exe::database_is_national_team`), a person without a nation (`.national_job()`) or from another nation (+0x53,
+/// read as `.three_letter_name()`): the slot becomes −1 and returns 0. Null `club` or slot out of range: the original
+/// routine (error box).
 /// Original: `tactic_slot_person` (0x8968f0, tactics.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn tactic_slot_person(t: usize, club: usize, slot: i8, human: u32) -> usize {
     let club = Club(club);

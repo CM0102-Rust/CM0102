@@ -33,11 +33,12 @@ pub(crate) unsafe fn write_i32_at(area: usize, desl: isize, v: i32) {
 
 /// Lays out the area grid: splits the area width and height by the column and row weights and sets up the scrollbar.
 ///
-/// It writes the area index into the owner widget (`+0x7c`, if there is one; and clears `+0xbe9`) and clears the first
-/// visible widget. Outside grid-only areas (flag `0x80000`), when there are columns and rows, it computes the margins
-/// (flag 1: 0; otherwise 2 at the sides and, at top and bottom, 2 with flag `0x10` or a single row, 8 for the others),
-/// turns on the scrollbar (`0x403600`) when the widgets exceed the rows, and splits the width and the height by the
-/// weights.
+/// It writes the area index (`area_fields::AREA_INDEX`) into the owner widget (`guio::POPUP_AREA_INDEX`, if there is
+/// one; and clears `area_fields::IS_OPEN`) and clears the first visible widget (`area_fields::FIRST_VISIBLE_ITEM`).
+/// Outside grid-only areas (`area_fields_flags::GRID_ONLY`), when there are columns and rows, it computes the margins
+/// (`area_fields_flags::NO_MARGINS`: 0; otherwise 2 at the sides and, at top and bottom, 2 with
+/// `area_fields_flags::THIN_VERTICAL_MARGINS` or a single row, 8 for the others), turns on the scrollbar
+/// (`exe::area_setup_scrollbar`) when the widgets exceed the rows, and splits the width and the height by the weights.
 ///
 /// More than 30 columns or rows: the original routine runs (error box, `Area.cpp 497` and `507`).
 /// Original: `Area::layout` (0x403350, Area.cpp, thiscall).
@@ -123,13 +124,13 @@ pub(crate) unsafe extern "thiscall" fn area_layout(area: usize) {
 
 /// Initialises the area: rectangle clamped to the screen, fields, cleared scrollbar and the column and row weights.
 ///
-/// An area that opens on top of a widget (`dono` ≠ -1): weight 1 in all 30 columns and rows, zero rectangle, 1 column
-/// and 0 rows. For the others: it orders x1/x2 and y1/y2 (swap `0x90ba90`), x1/y1 at least 0 and x2/y2 at most the
-/// screen (`0x31f`/`0x257` in the 800x600 exe; the 1920x1080 exe replaces these immediates, which are read here from
-/// the exe itself). It writes the fields, clears the scrollbar and, outside grid-only areas (`0x80000`), copies the
-/// weights (with 1..29 columns/rows and a pointer) or fills them with 1 (also with 30 or more: in that case the
-/// original overruns the 30-entry array, and so does this code). The visible rows are clamped at 30 (the grid size);
-/// the rest goes to the scrollbar.
+/// An area that opens on top of a widget (`owner` ≠ -1): weight 1 in all 30 columns and rows, zero rectangle, 1 column
+/// and 0 rows. For the others: it orders x1/x2 and y1/y2 (swap `exe::utils_swap_bytes`), x1/y1 at least 0 and x2/y2 at
+/// most the screen (`0x31f`/`0x257` in the 800x600 exe; the 1920x1080 exe replaces these immediates, which are read
+/// here from the exe itself). It writes the fields, clears the scrollbar (`area_fields::SCROLLBAR`) and, outside
+/// grid-only areas (`area_fields_flags::GRID_ONLY`), copies the weights (with 1..29 columns/rows and a pointer) or
+/// fills them with 1 (also with 30 or more: in that case the original overruns the 30-entry array, and so does this
+/// code). The visible rows are clamped at 30 (the grid size); the rest goes to the scrollbar.
 /// Original: `Area::init` (0x402ac0, Area.cpp, thiscall).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn init(
@@ -224,14 +225,16 @@ pub(crate) fn cap_area_rows(rows: u32) -> u32 {
 
 /// Draws the area: the panel, the grid lines or each visible widget in its cell, and the scrollbar.
 ///
-/// With `redesenhar`, it frees the saved image (`0x5e42b0`); an area that opens on top of a widget saves the background
-/// (`0x5e3dd0`); it draws the panel (`0x5e5df0`). Grid-only area (`0x80000`): the grid lines (`0x5e3730`, colour
-/// `[0xae317e]`) and that is all. For the others: it saves the scrollbar background, places each visible widget in its
-/// cell (the grids `+0x1c`/`+0x10c` and `+0x94`/`+0x184`, when the widget has no rectangle of its own at
-/// `+0x28`/`+0x30`) and draws it (`0x5ee590`) until it passes the last row; then the scrollbar (`0x403c80`).
+/// With `redraw`, it frees the saved image (`exe::gui_free_image`); an area that opens on top of a widget saves the
+/// background (`exe::gui_save_screen_image`); it draws the panel (`exe::gui_draw_panel`). Grid-only area
+/// (`area_fields_flags::GRID_ONLY`): the grid lines (`exe::graphics_draw_line`, colour `G_GUI_COLOUR_GREY`) and that is
+/// all. For the others: it saves the scrollbar background, places each visible widget in its cell (the grids
+/// `area_fields::COLUMN_STARTS`/`area_fields::COLUMN_ENDS` and `area_fields::ROW_STARTS`/`area_fields::ROW_ENDS`, when
+/// the widget has no rectangle of its own at `+0x28`/`+0x30`) and draws it (`exe::guio_draw`) until it passes the last
+/// row; then the scrollbar (`exe::area_draw_scrollbar`).
 ///
-/// Without a first visible widget (`+0xb76` = -1): the original routine runs (error box `Area.cpp 245` and the layout
-/// `0x403350`).
+/// Without a first visible widget (`area_fields::FIRST_VISIBLE_ITEM` = -1): the original routine runs (error box
+/// `Area.cpp 245` and the layout `0x403350`).
 /// Original: `Area::draw` (0x402e70, Area.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn draw(area: usize, redraw: u32) {
     if read_i16(area + area_fields::FIRST_VISIBLE_ITEM) == -1 {

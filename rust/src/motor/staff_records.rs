@@ -123,19 +123,23 @@ pub(crate) unsafe fn manager_rating_gains(t: Staff, club: Club, id_comp: usize) 
 /// dates. Called by the league champions at the end of each league (25 callers, one per league; 4 calls up to
 /// 2002-06-01).
 ///
-/// Null club or competition: the error box (line 0x21c); the competition without an object in [0xadadfc] (+ 4 × id):
-/// the error box (0x224). The reputation (up to weight × 500, +750 at most); with +0x57 and the club's +0x69 block:
-/// +0x7b goes up weight × 20 (below 150000 and below +0x73 + 500) and the block's +0x44 by 25 × (weight + 20) (below
-/// 120000). The players' threshold: ftol((+0x3e − 1) × the object's +0x3c × 0.33), in 16 bits.
+/// Null club or competition: the error box (line 0x21c); the competition without an object in `G_COMP_OBJECT_TABLE` (+
+/// 4 × id): the error box (0x224). The reputation (up to weight × 500, +750 at most); with `.division()` and the club's
+/// `.stadium()` block: `.max_attendance()` goes up weight × 20 (below 150000 and below `.attendance()` + 500) and the
+/// block's `.expansion_capacity()` by 25 × (weight + 20) (below 120000). The players' threshold: ftol((`.club_count()`
+/// − 1) × the object's `.legs()` × 0.33), in 16 bits.
 ///
-/// With a manager (+0xcf): his three ratings (+0xa weight × 400, +8 weight × k1, +0xc weight × k2 in the +0x69 record,
-/// if any) and the history (type 5: the club and the competition); his record (`get_manager_record` with create): +1 in +0x8c and
-/// weight × 5000 in +0xb6, +0xca and +0xba. The chairman (+0xbf).
+/// With a manager (`.manager()`): his three ratings (`non_player::CURRENT_REPUTATION` weight × 400,
+/// `non_player::HOME_REPUTATION` weight × k1, `non_player::WORLD_REPUTATION` weight × k2 in the `.non_player()` record,
+/// if any) and the history (type 5: the club and the competition); his record (`exe::staff_records_get_manager_record`
+/// with create): +1 in `.leagues_won()` and weight × 5000 in `.year_points()`, `.month_points()` and
+/// `.season_points()`. The chairman (`.chairman()`).
 ///
-/// The 50 in the squad (+0xd7) with a player sheet, valid, of the club (+0x39) and other than the manager: the average
-/// 2/1 (`get_stat` with 6.5) above the threshold gives the history, morale +20 (`staff_adjust_morale`) and +100 on the contract
-/// (`exe::contract_manager_get_contract_for_club`) with the renewal; otherwise morale +10 and +50 on the contract. The club's history (type 5); with the
-/// media ([0xb6b7c8]) and weight above 3, the praise (`queue_trophy_praise_story` with 1) and, above 12, with 3.
+/// The 50 in the squad (`.squad()`) with a player sheet, valid, of the club (`.club_job()`) and other than the manager:
+/// the average 2/1 (`exe::playerstats_get_stat` with 6.5) above the threshold gives the history, morale +20
+/// (`exe::staff_adjust_morale`) and +100 on the contract (`exe::contract_manager_get_contract_for_club`) with the
+/// renewal; otherwise morale +10 and +50 on the contract. The club's history (type 5); with the media (`G_MEDIA`) and
+/// weight above 3, the praise (`queue_trophy_praise_story` with 1) and, above 12, with 3.
 /// Original: `Staff_Records::add_league_champions_record` (0x868c50, staff_records.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, club: usize, comp: usize) {
     let comp = Competition(comp);
@@ -231,19 +235,24 @@ pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, 
     }
 }
 
-/// `Staff_Records::add_cup_winners_record(club, fixture, match)`: records the cup winner. SEH frame only for the local
-/// dates. Called by the cup finals (29 callers; 11 calls up to 2002-06-01).
+/// `Staff_Records::add_cup_winners_record(club, game, fixture)` (the club, the fixture and the match record): records
+/// the cup winner. SEH frame only for the local dates. Called by the cup finals (29 callers; 11 calls up to
+/// 2002-06-01).
 ///
-/// Nulls: the error box (line 0x51e). The reputation (as in the league); with a manager (+0xcf) who has a non-player
-/// record (+0x69): the three ratings of the club's side in the match (+0x188/+0x18a/+0x18c, side 0x625 × away; weight ×
-/// 400, × k1, × k2); the manager's history (type 0: the club and the competition of the fixture's +0x14); his record
-/// (`get_manager_record` with create): +1 in +0x8a and ftol(weight^4 × 0.5) (CRT pow 0x945ff0) in +0xb6, +0xca and, for a national
-/// team (`exe::database_is_national_team`), +0xbe, otherwise +0xba. The chairman (+0xbf) and the 20 of the line-up.
+/// Nulls: the error box (line 0x51e). The reputation (as in the league); with a manager (`.manager()`) who has a
+/// non-player record (`.non_player()`): the three ratings of the club's side in the match
+/// (`match_record::HOME_MANAGER_CURRENT_REPUTATION` and the next two words, side `match_record::SIDE_SIZE` × away;
+/// weight × 400, × k1, × k2); the manager's history (type 0: the club and the competition of the fixture's
+/// `.competition()`); his record (`exe::staff_records_get_manager_record` with create): +1 in `.cups_won()` and
+/// ftol(weight^4 × 0.5) (CRT pow 0x945ff0, `game_pow`) in `.year_points()`, `.month_points()` and, for a national team
+/// (`is_national_team`), `.national_season_points()`, otherwise `.season_points()`. The chairman (`.chairman()`) and
+/// the 20 of the line-up (`match_record::ROW_STAFF_ID`).
 ///
 /// The 50 in the squad while the reputation does not exceed weight × 400: with a player sheet, valid and other than the
-/// manager, morale +15 (`staff_adjust_morale`) and +100 on the contract; with contract status (+0x4f >> 4) 1-3 or 5, the renewal.
-/// The call-ups of the stored competition (0x76d940) end (`end_duty_for_competition`); the club's history (type 0); with the media and
-/// weight above 10, the praise (`queue_trophy_praise_story` with 1) and, with weight above 12 or reputation below 2500, with 3.
+/// manager, morale +15 (`exe::staff_adjust_morale`) and +100 on the contract; with contract status (`.squad_status()`
+/// >> 4) 1-3 or 5, the renewal. The call-ups of the stored competition (`exe::national_teams_is_finals_comp`) end
+/// (`exe::nationalteams_end_duty_for_competition`); the club's history (type 0); with the media and weight above 10,
+/// the praise (`queue_trophy_praise_story` with 1) and, with weight above 12 or reputation below 2500, with 3.
 /// Original: `Staff_Records::add_cup_winners_record` (0x86a800, staff_records.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, club: usize, game: usize, fixture: usize) {
     let fixture = MatchRecord(fixture);
@@ -412,9 +421,10 @@ pub(crate) unsafe fn compare_champion_update(name: &str, this: usize, club: Club
 /// `Staff_Records::clear_human_manager_record(person)`: clears a human manager's record. Called by the human manager's
 /// retirement (0x6b2b40) and by setup (0x82b9xx).
 ///
-/// A person among the 16 humans (id from [0xae2364] − 16 to [0xae2364]): his record in vector +8 (slot id − [0xae2364]
-/// + [0xae2368] + 16, 0xd2 bytes); otherwise, as in the original, the person itself. Zeroes the 0xd2 bytes and puts −1
-/// in +0x86, +0xc2, +0xc6, +0x4a, +0x5e and +0x72.
+/// A person among the 16 humans (id from `G_STAFF_COUNT` − 16 to `G_STAFF_COUNT`): his record in vector
+/// `staff_records_fields::MANAGER_RECORDS` (slot id − `G_STAFF_COUNT` + `G_NON_PLAYER_COUNT` + 16, 0xd2 bytes);
+/// otherwise, as in the original, the person itself. Zeroes the 0xd2 bytes and puts −1 in +0x86, +0xc2, +0xc6, +0x4a,
+/// +0x5e and +0x72.
 /// Original: `Staff_Records::clear_human_manager_record` (0x86fc70, staff_records.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn clear_human_manager_record(this: usize, person: usize) {
     let id = read_i32(person);
@@ -469,19 +479,23 @@ pub(crate) unsafe fn match_rating_for_manager(p: Fixture, side: u32, out: &mut u
     x / 100000
 }
 
-/// `Staff_Records::record_match_result(fixture, match)`: records a match in both managers' records. Called by the
-/// closing of the day's match (`close_day_match`), for each game.
+/// `Staff_Records::record_match_result(p, m)` (the fixture and the match): records a match in both managers' records.
+/// Called by the closing of the day's match (`close_day_match`), for each game.
 ///
-/// Match not played (+0x3a = 1): nothing. The records of the two managers (+0xcf of the home side +0x1c and of the away
-/// side +0x20; `get_manager_record` with create): +1 game (+0x8e); goals for (+0x96) and against (+0x9a) from the score
-/// (+0x47/+0x48, or +0x43/+0x44 with +0x47 = −1); win (+0x90, bonus 900), draw (+0x92, 300 for both) or loss (+0x94).
-/// Each one's rating (`get_fixture_match_importance` with 0 / 1, the opponent's reputation, the match points at +0x11f.. / +0x744..;
-/// importance × opponent reputation × weight × points) goes to +0xb6 and +0xca (month and year); in the club's league
-/// (+0x57 or +0x60 = the competition +0x14) also to the month's points (+0xce); for a national team (`exe::database_is_national_team`) to
-/// +0xbe, otherwise +0xba (season).
+/// Match not played (`.category()` = `match_category::FRIENDLY`): nothing. The records of the two managers (+0xcf of
+/// the home side `.home_club()` and of the away side `.away_club()`; `get_manager_record` with create, through
+/// `club_manager_record`): +1 game (`manager_record::GAMES`); goals for (`.goals_for()`) and against
+/// (`.goals_against()`) from the score (`.home_goals_extra_time()`/`.away_goals_extra_time()`, or
+/// `.home_goals()`/`.away_goals()` with `.home_goals_extra_time()` = −1); win (`manager_record::WINS`, bonus 900), draw
+/// (`manager_record::DRAWS`, 300 for both) or loss (`manager_record::LOSSES`). Each one's rating
+/// (`get_fixture_match_importance` with 0 / 1, the opponent's reputation, the match points at +0x11f.. / +0x744..;
+/// importance × opponent reputation × weight × points) goes to `.year_points()` and `.month_points()` (month and year);
+/// in the club's league (`.division()` or `.reserve_division()` = the competition `.competition()`) also to the month's
+/// points (`manager_record::MONTH_LEAGUE_POINTS`); for a national team (`is_national_team`) to
+/// `.national_season_points()`, otherwise `.season_points()` (season).
 ///
-/// Defect of the original, reproduced: for the away manager, +0xbe/+0xba receive the routine's [esp+0x10], which is the
-/// home manager's rating (or his bonus, without a record).
+/// Defect of the original, reproduced: for the away manager, `.national_season_points()`/`.season_points()` receive the
+/// routine's [esp+0x10], which is the home manager's rating (or his bonus, without a record).
 /// Original: `Staff_Records::record_match_result` (0x868830, staff_records.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn record_match_result(this: usize, p: usize, m: usize) {
     let p = Fixture(p);
@@ -576,8 +590,9 @@ pub(crate) unsafe extern "thiscall" fn record_match_result(this: usize, p: usize
 /// `Staff_Records::add_league_finish_records(league)`: at the end of the league, each club's final position in its
 /// manager's history. SEH frame only for the local date. Called by the completed league (`league_check_complete`).
 ///
-/// For each row of the table (`league_record`, up to +0x3e), the history of the club's manager (+0xcf; type 0xa: the club id,
-/// the competition of +4, the year +0x3a and the position k + 1), in the archive (0x58e340).
+/// For each row of the table (`exe::league_get_table_row`, up to `.club_count()`), the history of the club's manager
+/// (`.manager()`; type 0xa: the club id, the competition of `.competition()`, the year `.stage_id()` and the position k
+/// + 1), in the archive (0x58e340).
 /// Original: `Staff_Records::add_league_finish_records` (0x86a070, staff_records.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn add_league_finish_records(this: usize, league: usize) {
     let league = League(league);
@@ -609,8 +624,9 @@ pub(crate) static SUPPORTERS_PLAYER_OF_YEAR_DRY_RUN: AtomicBool = AtomicBool::ne
 /// frame only for the local date. Called by the end of season of the records (0x447880).
 ///
 /// The person's history (type 0x35: the club id, `a` as unsigned 16 bits and `b`), in the archive (0x58e340); then, if
-/// draw(21 − the person's +0x59) < draw(10), the person likes the club (`exe::staff_add_favoured_club` with draw(2)) and the club likes him
-/// (`club_add_favoured_staff` with draw(2)). Null person: the original (the error box and the read of the null person's +0x59).
+/// draw(21 − the person's `.loyalty()`) < draw(10), the person likes the club (`exe::staff_add_favoured_club` with
+/// draw(2)) and the club likes him (`exe::club_add_favoured_staff` with draw(2)). Null person: the original (the error
+/// box and the read of the null person's `.loyalty()`).
 /// Original: `Staff_Records::add_supporters_player_of_year_record` (0x86dc30, staff_records.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn add_supporters_player_of_year_record(this: usize, person: usize, club: usize, a: u32, b: u32) {
     let person = Staff(person);
@@ -792,20 +808,25 @@ pub(crate) unsafe fn days_between(a: usize, b: usize) -> i32 {
     exe::date_days_since(a, read_usize(b) as u32, read_usize(b + 4) as u32)
 }
 
-/// `Staff_Records::record_manager_job_change(manager, club, hired)`: closes the manager's current spell, opens the new
+/// `Staff_Records::record_manager_job_change(manager, club, signed)`: closes the manager's current spell, opens the new
 /// one when hired and counts the spells. SEH frame only for the local dates. Called by the manager's departure
 /// (`remove_club_manager`) and by the new manager (`reset_board_for_new_manager`).
 ///
-/// Outside a national team (`exe::database_is_national_team`), in the manager's record (`get_manager_record` with create), when the game start ([0xdd6ec8])
-/// is not after today: the current spell (+0x4a club, +0x4e start) closes; the shortest (+0x72, +0x76 start, +0x7e end)
-/// is replaced by the current one if there is none or if the current one is shorter (`exe::date_days_since`), or only has its end
-/// renewed if it is the same; the longest (+0x5e, +0x62, +0x6a) is replaced if the current one is longer (the end
-/// becomes +0x56) or if there is none (the end becomes today). Then +0x4a = −1 and, with hired = 1, the new spell (the
-/// club id, today, +0x56 = 13/11/1975 from `exe::date_date_549f70`) and +1 in +0xb4. For a national team, hired = 1: +1 in +0xb5.
+/// Outside a national team (`is_national_team`), in the manager's record (`exe::staff_records_get_manager_record` with
+/// create), when the game start (`G_GAME_START_DATE`) is not after today (`G_CURRENT_DATE`): the current spell
+/// (`manager_record::CURRENT_CLUB` club, `manager_record::CURRENT_CLUB_SINCE` start) closes; the shortest
+/// (`manager_record::SHORTEST_CLUB`, `manager_record::SHORTEST_START` start, `manager_record::SHORTEST_END` end) is
+/// replaced by the current one if there is none or if the current one is shorter (`exe::date_days_since`), or only has
+/// its end renewed if it is the same; the longest (`manager_record::LONGEST_CLUB`, `manager_record::LONGEST_START`,
+/// `manager_record::LONGEST_END`) is replaced if the current one is longer (the end becomes
+/// `manager_record::CURRENT_CLUB_END`) or if there is none (the end becomes today). Then `manager_record::CURRENT_CLUB`
+/// = −1 and, with signed = 1, the new spell (the club id, today, `manager_record::CURRENT_CLUB_END` = 13/11/1975 from
+/// `exe::date_date_549f70`) and +1 in `manager_record::CLUB_JOBS`. For a national team, signed = 1: +1 in
+/// `manager_record::NATIONAL_JOBS`.
 ///
-/// The histories: the manager's (type 0x96: club, hired), the club chairman's (+0xbf; type 0x97 with the manager and
-/// the three keys) and the club's (type 0x96 in +8, the manager, the keys and hired). Null manager or club: the error
-/// box (line 0x3b1).
+/// The histories: the manager's (type 0x96: club, signed), the club chairman's (`.chairman()`; type 0x97 with the
+/// manager and the three keys) and the club's (type 0x96 in +8, the manager, the keys and signed). Null manager or
+/// club: the error box (line 0x3b1).
 /// Original: `Staff_Records::record_manager_job_change` (0x869aa0, staff_records.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn record_manager_job_change(this: usize, manager: usize, club: usize, signed: u32) {
     let club = Club(club);
@@ -929,7 +950,7 @@ pub(crate) unsafe fn club_manager_record_global(club: Club) -> ManagerRecord {
 /// (`get_manager_of_year_candidates`): orders two clubs by their manager's league season points, highest first.
 ///
 /// The records of the two clubs' managers (club_manager_record_global); neither, 0; only `a`'s missing, 1; only `b`'s
-/// missing, −1; with both, `b`'s league season points (+0xba) minus `a`'s (more points first).
+/// missing, −1; with both, `b`'s league season points (`.season_points()`) minus `a`'s (more points first).
 /// Original: `staff_records_compare_clubs_by_manager_points` (0x870220, staff_records.cpp, cdecl).
 pub(crate) unsafe extern "C" fn staff_records_compare_clubs_by_manager_points(a: usize, b: usize) -> i32 {
     let (ca, cb) = (read_usize(a), read_usize(b));
@@ -1118,16 +1139,20 @@ pub(crate) unsafe fn apply_promotion(this: usize, club: Club, comp: Competition,
 
 /// `Staff_Records::add_promotion_record(club, comp, weight)`: records a promotion. SEH frame without a destructor.
 ///
-/// The club's reputation (+0x80) goes up 500 (up to 10000) and +0x7b goes up 10 × the competition's importance (+0x69)
-/// if it is below 150000 and below +0x73 + 500. The manager (+0xcf) with a non-player record: ratings +0xa, +8 and +0xc
-/// go up by the competition's importance (that of its club competition record +0x1c, if any) × 400, × 200/400
-/// (foreigner in the league with +0x42 = 1, `database_is_staff_foreign`) and × 200/400 (league with +0x42 = 1) × 10/61, with a minimum of
-/// importance × weight.
+/// The club's reputation (`.reputation()`) goes up 500 (up to 10000) and `.max_attendance()` goes up 10 × the
+/// competition's importance (`.reputation()`) if it is below 150000 and below `.attendance()` + 500. The manager
+/// (`.manager()`) with a non-player record: ratings `non_player::CURRENT_REPUTATION`, +8 and
+/// `non_player::WORLD_REPUTATION` go up by the competition's importance (that of its club competition record
+/// `.upper_division_id()`, if any; `competition::REPUTATION`) × 400, × 200/400 (foreigner in the league with
+/// `.club_sides()` = 1, `exe::database_is_staff_foreign`) and × 200/400 (league with `.club_sides()` = 1) × 10/61, with
+/// a minimum of importance × weight.
 ///
-/// The manager's and chairman's history (type 8), the manager's points (`get_manager_record`: +0xb6, +0xba, +0xca add importance ×
-/// weight × 25), morale +15 for each squad player (`staff_adjust_morale`), the contract bond (+0x44) +75 (−100..100) and the renewal
-/// (`contract_manager_offer_contract`) of the expiring contracts of types 1, 2, 3 and 5; finally the club's history (type 8). Null club or
-/// competition: the "Error" box (line 0x301).
+/// The manager's and chairman's (`.chairman()`) history (type 8), the manager's points
+/// (`exe::staff_records_get_manager_record`: `manager_record::YEAR_POINTS`, `manager_record::SEASON_POINTS`,
+/// `manager_record::MONTH_POINTS` add importance × weight × 25), morale +15 for each squad player
+/// (`staff_adjust_morale`), the contract bond (`.morale()`) +75 (−100..100) and the renewal
+/// (`contract_manager_offer_contract`) of the expiring contracts of types 1, 2, 3 and 5; finally the club's history
+/// (type 8). Null club or competition: the "Error" box (line 0x301).
 /// Original: `Staff_Records::add_promotion_record` (0x869480, staff_records.cpp, thiscall, ret 0xc).
 pub(crate) unsafe extern "thiscall" fn add_promotion_record(this: usize, club: usize, comp: usize, weight: u32) {
     covered!("cpq_3 promotion");
@@ -1244,11 +1269,13 @@ pub(crate) unsafe fn apply_relegation(this: usize, club: Club, comp: Competition
 
 /// `Staff_Records::add_relegation_record(club, comp)`: records a relegation. SEH frame without a destructor.
 ///
-/// The club's reputation (+0x80) drops 500 (minimum 750). The manager with a non-player record: ratings +0xa (−16), +8
-/// (−8 if a foreigner, `database_is_staff_foreign`, or −16) and +0xc (−8) × the competition's importance (+0x69), clamped to 1..10000; the
-/// manager's and chairman's history (type 9). Each squad player: morale −15 (`staff_adjust_morale`) and, by contract type (+0x4f >>
-/// 4): 1 and 2, reputations × 0.9 and the renewal (`contract_manager_offer_contract`) if expiring; 3 to 5, reputations × 0.95. Finally the
-/// club's history (type 9). Null club or competition: the "Error" box (line 0x476).
+/// The club's reputation (`.reputation()`) drops 500 (minimum 750). The manager with a non-player record: ratings
+/// `non_player::CURRENT_REPUTATION` (−16), +8 (−8 if a foreigner, `exe::database_is_staff_foreign`, or −16) and
+/// `non_player::WORLD_REPUTATION` (−8) × the competition's importance (`.reputation()`), clamped to 1..10000; the
+/// manager's and chairman's history (type 9). Each squad player: morale −15 (`staff_adjust_morale`) and, by contract
+/// type (`.squad_status()` >> 4): 1 and 2, reputations × 0.9 and the renewal (`contract_manager_offer_contract`) if
+/// expiring; 3 to 5, reputations × 0.95. Finally the club's history (type 9). Null club or competition: the "Error" box
+/// (line 0x476).
 /// Original: `Staff_Records::add_relegation_record` (0x86a1c0, staff_records.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn add_relegation_record(this: usize, club: usize, comp: usize) {
     covered!("cpq_3 relegation");
@@ -1289,9 +1316,11 @@ pub(crate) unsafe fn record_qualification(this: usize, club: Club, comp: Competi
 
 /// `Staff_Records::add_qualified_for_round_record(club, comp, stage, round, weight)`: SEH frame without a destructor.
 ///
-/// With a manager (+0xcf), his history (type 3: club, competition or −1, the signed stage and the base round `exe::comp_util_get_base_round_id`)
-/// and the points (`get_manager_record`): importance² × weight added to +0xb6 (year), +0xca (month) and, for a national team
-/// (`exe::database_is_national_team`), +0xbe (cup), or for a club +0xba (league). Null club: the "Error" box (line 0x703).
+/// With a manager (`.manager()`), his history (type 3: club, competition or −1, the signed stage and the base round
+/// `exe::comp_util_get_base_round_id`) and the points (`exe::staff_records_get_manager_record`): importance² × weight
+/// added to `manager_record::YEAR_POINTS` (year), `manager_record::MONTH_POINTS` (month) and, for a national team
+/// (`exe::database_is_national_team`), `manager_record::NATIONAL_SEASON_POINTS` (cup), or for a club
+/// `manager_record::SEASON_POINTS` (league). Null club: the "Error" box (line 0x703).
 /// Original: `Staff_Records::add_qualified_for_round_record` (0x86bdd0, staff_records.cpp, thiscall, ret 0x14).
 pub(crate) unsafe extern "thiscall" fn add_qualified_for_round_record(this: usize, club: usize, comp: usize, stage: u32, round: u32, weight: u32) {
     record_qualification(this, Club(club), Competition(comp), stage, round, weight, true)
@@ -1519,12 +1548,17 @@ pub(crate) unsafe fn record_transfer(this: usize, t: Offer, write: bool) {
 /// `Staff_Records::add_transfer_records(transfer)`: updates the buying and selling managers' records and the transfer
 /// histories. SEH frame without a destructor.
 ///
-/// The person's contract (`exe::contract_manager_get_contract`) goes to [0xae1080] and gives the seller (outside state 5); the offer's total value
-/// (`exe::transfer_offer_get_total_value` with 1, 0, 0, 1). The buyer's manager, when the offer type is for a player (+0x11, `exe::database_is_player_job`): in the
-/// record (`get_manager_record`) the biggest signing (+0..+0x24 if the value exceeds +0x18), the signings (+0xa0), the spending
-/// (+0xa4, 64 bits), the players given in exchange (+0xa2) and their value (+0x52 of each, in +0xac). The seller's
-/// manager, when the person's job is player (+0x3d): the biggest sale (+0x25..+0x49 if it exceeds +0x3d), the sales
-/// (+0xa2), the income (+0xac), the players received (+0xa0) and their value (+0xa4).
+/// The person's contract (`exe::contract_manager_get_contract`) goes to `G_CONTRACT_LOOKUP_RESULT` and gives the seller
+/// (outside state 5); the offer's total value (`exe::transfer_offer_get_total_value` with 1, 0, 0, 1). The buyer's
+/// manager (`club::MANAGER`), when the offer type is for a player (`.job_type()`, `exe::database_is_player_job`): in
+/// the record (`get_manager_record`) the biggest signing (+0..+0x24, from `manager_record::BIGGEST_PURCHASE_DATE` to
+/// `manager_record::BIGGEST_PURCHASE_BUYER`, if the value exceeds `manager_record::BIGGEST_PURCHASE_FEE`), the signings
+/// (`manager_record::PLAYERS_BOUGHT`), the spending (`manager_record::PURCHASES_TOTAL`, 64 bits), the players given in
+/// exchange (`manager_record::PLAYERS_SOLD`) and their value (`staff::VALUE` of each, in
+/// `manager_record::SALES_TOTAL`). The seller's manager, when the person's job is player (`staff::JOB_FOR_CLUB`): the
+/// biggest sale (`manager_record::BIGGEST_SALE_PERSON`..+0x49 if it exceeds `manager_record::BIGGEST_SALE_FEE`), the
+/// sales (`manager_record::PLAYERS_SOLD`), the income (`manager_record::SALES_TOTAL`), the players received
+/// (`manager_record::PLAYERS_BOUGHT`) and their value (`manager_record::PURCHASES_TOTAL`).
 ///
 /// The histories (types 0x64 buy, 0x65 sale, 0x66 transfer) of the buyer's manager, the seller's manager, the person
 /// and the exchange players, in the archive (0x58e340).
@@ -1556,8 +1590,9 @@ pub(crate) unsafe fn end_national_duty(club: Club, comp: usize) {
 
 /// `Staff_Records::add_knocked_out_record(club, comp, stage, round, _)`: SEH frame without a destructor.
 ///
-/// The manager's history (+0xcf; type 4: club, competition or −1, the signed stage and the base round `exe::comp_util_get_base_round_id`) and the
-/// end of the national team's call-ups in the stored competition. Null club: the "Error" box (line 0x73b).
+/// The manager's history (`.manager()`; type 4: club, competition or −1, the signed stage and the base round
+/// `exe::comp_util_get_base_round_id`) and the end of the national team's call-ups in the stored competition. Null
+/// club: the "Error" box (line 0x73b).
 /// Original: `Staff_Records::add_knocked_out_record` (0x86c000, staff_records.cpp, thiscall, ret 0x14).
 pub(crate) unsafe extern "thiscall" fn add_knocked_out_record(this: usize, club: usize, comp: usize, stage: u32, round: u32, _x: u32) {
     let club = Club(club);
@@ -1623,11 +1658,14 @@ pub(crate) unsafe fn date_month(data: usize) -> i16 {
     (exe::date_get_month(data) as i8) as i16
 }
 
-/// `Staff_Records::daily_update(date)`: if the date's month (`exe::date_get_month`) or year (+2) are not the stored ones (+0x14
-/// month, +0x16 year), zeroes the month's points (+0xca, +0xce) of every record and stores the new month and year.
+/// `Staff_Records::daily_update(date)`: if the date's month (`exe::date_get_month`) or year (+2) are not the stored
+/// ones (`staff_records_fields::CURRENT_MONTH` month, `staff_records_fields::CURRENT_YEAR` year), zeroes the month's
+/// points (`manager_record::MONTH_POINTS`, `manager_record::MONTH_LEAGUE_POINTS`) of every record
+/// (`staff_records_fields::MANAGER_RECORDS`) and stores the new month and year.
 ///
-/// On the first day of the year (day +0 = 0) passes the year's points (+0xb6) of each record with a person (+0x86) to
-/// the hall of fame (`exe::halloffame_add_calendar_year_entry` on [0xb5ded8]) and zeroes them.
+/// On the first day of the year (day +0 = 0) passes the year's points (`manager_record::YEAR_POINTS`) of each record
+/// with a person (`manager_record::OWNER`) to the hall of fame (`exe::halloffame_add_calendar_year_entry` on
+/// `G_HALL_OF_FAME`) and zeroes them.
 /// Original: `Staff_Records::daily_update` (0x86dda0, staff_records.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn staff_records_daily_update(this: usize, data: usize) {
     if date_month(data) as i32 != read_i16(this + staff_records_fields::CURRENT_MONTH) as u16 as i32 || read_i16(data + 2) != read_i16(this + staff_records_fields::CURRENT_YEAR) {
@@ -1661,10 +1699,12 @@ pub(crate) unsafe extern "thiscall" fn staff_records_daily_update(this: usize, d
 /// `Staff_Records::end_season_for_nation(entry)`: at the end of the competition's season passes its managers' league
 /// and cup points to the hall of fame and clears them.
 ///
-/// With the entry's competition (+0, id at its +0; no competition −1; no competition and +4 not equal to [0x9cfa10],
-/// nothing), for each record: league (+0xc2) of the competition: adds the cup (+0xbe) if it also belongs to that
-/// competition (+0xc6 = −1, +0xbe = 0), passes the points (+0xba) to the hall of fame (`exe::halloffame_add_league_entry`) if the competition
-/// keeps them (+0x11c), zeroes them and +0xc2 = −1; only the competition's cup: passes +0xbe, zeroes it and +0xc6 = −1.
+/// With the entry's competition (+0, id at its +0; no competition −1; no competition and +4 not equal to
+/// `KEY_CONTINENT_EUROPE`, nothing), for each record (`staff_records_fields::MANAGER_RECORDS`): league (+0xc2) of the
+/// competition: adds the cup (+0xbe) if it also belongs to that competition (+0xc6 = −1, +0xbe = 0), passes the points
+/// (`manager_record::SEASON_POINTS`) to the hall of fame (`exe::halloffame_add_league_entry` on `G_HALL_OF_FAME`) if
+/// the competition keeps them (`.league_selected()`), zeroes them and +0xc2 = −1; only the competition's cup: passes
+/// +0xbe, zeroes it and +0xc6 = −1.
 /// Original: `Staff_Records::end_season_for_nation` (0x86d6e0, staff_records.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn staff_records_end_season_for_nation(this: usize, entry: usize) {
     let p = read_usize(entry + 4);
@@ -1705,10 +1745,12 @@ pub(crate) unsafe extern "thiscall" fn staff_records_end_season_for_nation(this:
 
 /// `Staff_Records::find_manager_of_the_month(index)`: the league manager with the most points this month.
 ///
-/// In the league ([0xadadfc] by the index; +0x43 must be 2, otherwise the "Error" box and 0), among the clubs of the
-/// table (+0xb1, 0x3b bytes, count +0x3e) with a manager (+0xcf) at the club (+0x39) since two weeks ago (`exe::date_sub_weeks` of
-/// the game date; year +0x40 unsigned, day +0x3e signed), the one with the most points in the month (+0xce of the
-/// record `get_manager_record`, created if missing), only above 0. Returns the manager or 0.
+/// In the league (`G_COMP_OBJECT_TABLE` by the index; `.comp_type()` must be `comp_type::LEAGUE`, otherwise the "Error"
+/// box and 0), among the clubs of the table (`.table()`, `league_table_row::SIZE` bytes, count `.club_count()`) with a
+/// manager (`.manager()`) at the club (`.club_job()`) since two weeks ago (`exe::date_sub_weeks` of the game date; year
+/// `.date_joined_club_year()` unsigned, day `.date_joined_club()` signed), the one with the most points in the month
+/// (`.month_league_points()` of the record `exe::staff_records_get_manager_record`, created if missing), only above 0.
+/// Returns the manager or 0.
 /// Original: `Staff_Records::find_manager_of_the_month` (0x86f950, staff_records.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn find_manager_of_the_month(this: usize, index: i32) -> usize {
     let league = League(read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((index as usize).wrapping_mul(4))));
@@ -1751,9 +1793,10 @@ pub(crate) unsafe extern "thiscall" fn find_manager_of_the_month(this: usize, in
 /// `Staff_Records::get_manager_of_year_candidates(clubs, n)` (called by 0x768940; SEH frame without an object with a
 /// destructor): sorts the clubs and keeps up to three.
 ///
-/// The qsort of the `n` clubs (`staff_records_compare_clubs_by_manager_points`) and, in order, up to three whose manager (+0xcf) arrived (+0x3e) before today
-/// − 28 weeks (`exe::date_sub_weeks`; year unsigned, day signed) and has a record (`get_manager_record` with 1) with games (+0x8e), copied to
-/// the start of the vector itself. Returns how many.
+/// The qsort of the `n` clubs (`staff_records_compare_clubs_by_manager_points`) and, in order, up to three whose
+/// manager (`club::MANAGER`) arrived (`.date_joined_club()`) before today − 28 weeks (`FN_DATE_SUB_WEEKS`; year
+/// unsigned, day signed) and has a record (`exe::staff_records_get_manager_record` with 1) with games (`.games()`),
+/// copied to the start of the vector itself. Returns how many.
 /// Original: `Staff_Records::get_manager_of_year_candidates` (0x86fab0, staff_records.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn get_manager_of_year_candidates(this: usize, clubs: usize, n: u32) -> u8 {
     let weeks: unsafe extern "thiscall" fn(usize, *mut u8, u32) -> usize = core::mem::transmute(FN_DATE_SUB_WEEKS);
@@ -1785,16 +1828,21 @@ pub(crate) unsafe extern "thiscall" fn get_manager_of_year_candidates(this: usiz
 }
 
 /// `Staff_Records::get_manager_record(person, create)`: finds (or creates, or takes over) the manager's 210-byte record
-/// (vector +8).
+/// (vector `staff_records_fields::MANAGER_RECORDS`).
 ///
-/// Null person: the error box at line 0xf6e and 0. Free slot (+0x86 = −1): without `create`, 0; with it, the slot takes
-/// the id. Someone else's slot: zeroes the record of that person (−1 in +0x86, +0xc2, +0xc6, +0x4a, +0x5e, +0x72) and
-/// looks again.
+/// Null person: the error box at line 0xf6e and 0. Free slot (`manager_record::OWNER` = −1): without `create`, 0; with
+/// it, the slot takes the id. Someone else's slot: zeroes the record of that person (−1 in +0x86, +0xc2, +0xc6, +0x4a,
+/// +0x5e, +0x72) and looks again.
 ///
-/// Updates the nations of the club (+0x39) and of the national team (+0x24) in +0xc2/+0xc6, zeroing the points
-/// (+0xba/+0xbe) when they change. With the date of [0xdd6ec8] up to today: no spell (+0x4a = −1), opens the current
-/// club's one (since the person's +0x3e; +0x56 = the date 13/11/1975 from `exe::date_date_549f70`); the longest (+0x5e, +0x62..+0x6a)
-/// and the shortest (+0x72, +0x76..+0x7e) through `exe::date_days_since`, today's in +0x6a / +0x7e. Returns the record.
+/// Updates the nations of the club (`.club_job()`) and of the national team (`.national_job()`) in
+/// `manager_record::SEASON_NATION`/`manager_record::NATIONAL_NATION`, zeroing the points
+/// (`manager_record::SEASON_POINTS`/`manager_record::NATIONAL_SEASON_POINTS`) when they change. With the date of
+/// `G_GAME_START_DATE` up to today: no spell (`manager_record::CURRENT_CLUB` = −1), opens the current club's one (since
+/// the person's `staff::DATE_JOINED_CLUB`; `manager_record::CURRENT_CLUB_END` = the date 13/11/1975 from
+/// `exe::date_date_549f70`); the longest (`manager_record::LONGEST_CLUB`,
+/// `manager_record::LONGEST_START`..`manager_record::LONGEST_END`) and the shortest (`manager_record::SHORTEST_CLUB`,
+/// `manager_record::SHORTEST_START`..`manager_record::SHORTEST_END`) through `exe::date_days_since`, today's in
+/// `manager_record::LONGEST_END` / `manager_record::SHORTEST_END`. Returns the record.
 /// Original: `Staff_Records::get_manager_record` (0x86f5b0, staff_records.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn get_manager_record(this: usize, person: usize, create: u32) -> usize {
     let person = Staff(person);
@@ -1904,10 +1952,10 @@ pub(crate) unsafe extern "thiscall" fn get_manager_record(this: usize, person: u
 /// `Staff_Records::add_free_release_records(person)`: the free release histories. SEH frame only for the local date,
 /// with an empty destructor.
 ///
-/// The person's contract (`exe::contract_manager_get_contract`) goes to [0xae1080] and gives the club (0x245-byte record through +4). With a
-/// manager at the club (+0xcf), his history (type 0x68: the club, the person and her three ids +0x33 of +4, +8 and
-/// +0xc); then the person's (type 0x67: the club or −1), in the archive (0x58e340). Null person: the "Error" box (line
-/// 0x1010).
+/// The person's contract (`exe::contract_manager_get_contract`) goes to `G_CONTRACT_LOOKUP_RESULT` and gives the club
+/// (`club::SIZE`-byte record of `G_CLUB_TABLE` through `.club()`). With a manager at the club (`.manager()`), his
+/// history (type 0x68: the club, the person and her three ids +0x33 of +4, +8 and +0xc); then the person's (type 0x67:
+/// the club or −1), in the archive (0x58e340). Null person: the "Error" box (line 0x1010).
 /// Original: `Staff_Records::add_free_release_records` (0x86d800, staff_records.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn add_free_release_records(this: usize, person: usize) {
     covered!("cpr_9 released");
@@ -1932,13 +1980,13 @@ pub(crate) unsafe extern "thiscall" fn add_free_release_records(this: usize, per
     }
 }
 
-/// `Staff_Records::add_loan_records(person, from, club)` (called by `handle_player_accepted_terms`, the accepted transfer): the loan
-/// histories. SEH frame only for the local date, with an empty destructor.
+/// `Staff_Records::add_loan_records(person, of, club)` (called by `handle_player_accepted_terms`, the accepted
+/// transfer): the loan histories. SEH frame only for the local date, with an empty destructor.
 ///
-/// With the club and its manager (+0xcf), the manager's history (type 0x69: the club, the person and her three ids
-/// +0x33 of +4, +8 and +0xc, and the id of `from`); then, in the same entry, the person's (type 0x6a: the club and the
-/// id of `from`), in the archive (0x58e340). The club is read before the person check, as in the original; null person:
-/// the "Error" box (line 0x1010).
+/// With the club and its manager (`.manager()`), the manager's history (type 0x69: the club, the person and her three
+/// ids +0x33 of +4, +8 and +0xc, and the id of `of`); then, in the same entry, the person's (type 0x6a: the club and
+/// the id of `of`), in the archive (0x58e340). The club is read before the person check, as in the original; null
+/// person: the "Error" box (line 0x1010).
 /// Original: `Staff_Records::add_loan_records` (0x86da20, staff_records.cpp, thiscall, ret 0xc).
 pub(crate) unsafe extern "thiscall" fn add_loan_records(this: usize, person: usize, of: usize, club: usize) {
     let club = Club(club);
@@ -1964,8 +2012,9 @@ pub(crate) unsafe extern "thiscall" fn add_loan_records(this: usize, person: usi
     }
 }
 
-/// `Staff_Records::rewind_staff_history(person)`: the person's history list (the 8-byte pair at [+0xc] + 8 × id) drops
-/// the last entry (0x58f110 on [this]: the second offset, +4 of the pair, = −1).
+/// `Staff_Records::rewind_staff_history(person)`: the person's history list (the 8-byte pair at
+/// [`staff_records_fields::PERSON_HISTORY_LISTS`] + 8 × id) drops the last entry (`exe::file_llist_reset_last_offset`
+/// on [this]: the second offset, +4 of the pair, = −1).
 ///
 /// Null person: the original (fatal box: the game ends).
 /// Original: `Staff_Records::rewind_staff_history` (0x86fb80, staff_records.cpp, thiscall, ret 4).
@@ -1978,17 +2027,20 @@ pub(crate) unsafe extern "thiscall" fn rewind_staff_history(this: usize, person:
     exe::file_llist_reset_last_offset(read_usize(this), par, par + 4); // the last offset
 }
 
-/// `Staff_Records::add_year_award_record(p, club, award, a4, a5, credit)`: records a year award. SEH frame without a
+/// `Staff_Records::add_year_award_record(p, club, prize, a4, a5, credito)`: records a year award. SEH frame without a
 /// destructor. Called by the recording of the year award winners (YEAR_AWARD::record_winners 0x9302f0: the first, the
 /// second and the third).
 ///
 /// Entry 0x34 of the person's history (game date, club or −1, the award id, a4 in the word, a5 and the credit as signed
-/// bytes; 0x58e340). Manager (+0x3d or +0x28 = 5 or 0xc): +1 in the word +0x9e of his record (`get_manager_record`).
+/// bytes; 0x58e340). Manager (`.job_for_club()` or `.job_for_nation()` = 5 or 0xc): +1 in the word
+/// `manager_record::AWARDS` of his record (`get_manager_record`).
 ///
-/// A player with a player sheet (+0x61) and a contract (`exe::contract_manager_get_contract`, other than type 5) with the club (`exe::contract_manager_get_contract_for_club`): with the
-/// transfer manager, a contract of more than 300 days and the player on the club's list (`exe::shortlist_manager_find_club_shortlist_entry`), the renewal
-/// (`contract_manager_offer_contract`); then, only with credit 1, without the contract's +0x45 flag, with +0x59 above 15 and +0x5b above 10, if
-/// draw(+0x59) is above 5 (a draw by loyalty): the news of thanks to the manager (`exe::news_post_player_credits_manager_for_award`). No person or no award: the
+/// A player with a player sheet (`.player()`) and a contract (`exe::contract_manager_get_contract`, other than type 5)
+/// with the club (`exe::contract_manager_get_contract_for_club`): with the transfer manager, a contract of more than
+/// 300 days and the player on the club's list (`exe::shortlist_manager_find_club_shortlist_entry`), the renewal
+/// (`contract_manager_offer_contract`); then, only with credit 1, without the contract's `.grievances()` flag, with
+/// `.loyalty()` above 15 and `.professionalism()` above 10, if draw(`.loyalty()`) is above 5 (a draw by loyalty): the
+/// news of thanks to the manager (`exe::news_post_player_credits_manager_for_award`). No person or no award: the
 /// original ("Error" box).
 /// Original: `Staff_Records::add_year_award_record` (0x86c390, staff_records.cpp, thiscall, ret 0x18).
 pub(crate) unsafe extern "thiscall" fn add_year_award_record(this: usize, p: usize, club: usize, prize: usize, a4: u32, a5: u32, credito: u32) {
@@ -1998,12 +2050,12 @@ pub(crate) unsafe extern "thiscall" fn add_year_award_record(this: usize, p: usi
     add_year_award(this, Staff(p), club, prize, a4, a5, credito, true)
 }
 
-/// `Staff_Records::add_first_cap_record(person, opponent)` (called by the international result `record_international_result`): the first cap
-/// history. SEH frame only for the local date, with an empty destructor.
+/// `Staff_Records::add_first_cap_record(person, opponent)` (called by the international result
+/// `record_international_result`): the first cap history. SEH frame only for the local date, with an empty destructor.
 ///
-/// The person's history (type 6: the contracting club +0x39 or −1, the opponent's id in the match and the age +0x18,
-/// signed), in the archive (0x58e340). The club is read before the person check, as in the original; null person: the
-/// "Error" box (line 0x1010).
+/// The person's history (type 6: the contracting club `.club_job()` or −1, the opponent's id in the match and the age
+/// `.age()`, signed), in the archive (0x58e340). The club is read before the person check, as in the original; null
+/// person: the "Error" box (line 0x1010).
 /// Original: `Staff_Records::add_first_cap_record` (0x86cc50, staff_records.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn add_first_cap_record(this: usize, person: usize, opponent: usize) {
     let person = Staff(person);
@@ -2021,16 +2073,19 @@ pub(crate) unsafe extern "thiscall" fn add_first_cap_record(this: usize, person:
     }
 }
 
-/// `Staff_Records::add_month_award_record(p, club, award, a4, a5)`: writes the winner's 0x33 history entry. SEH frame
+/// `Staff_Records::add_month_award_record(p, club, prize, a4, a5)`: writes the winner's 0x33 history entry. SEH frame
 /// without a destructor.
 ///
 /// Entry 0x33 of the person's history (game date, club or −1, the award id, a4 in the byte, a5 in the word; 0x58e340).
-/// Manager (+0x3d or +0x28 = 5 or 0xc): +1 in the word +0x9e of his record (`get_manager_record`).
+/// Manager (`.job_for_club()` or `.job_for_nation()` = 5 or 0xc): +1 in the word `manager_record::AWARDS` of his record
+/// (`get_manager_record`).
 ///
-/// A player with a player sheet (+0x61) and a contract (`exe::contract_manager_get_contract`, other than type 5) with the club (`exe::contract_manager_get_contract_for_club`): with the
-/// transfer manager, a contract of more than 300 days and the player on the club's list (`exe::shortlist_manager_find_club_shortlist_entry`), the renewal
-/// (`contract_manager_offer_contract`); then, without the contract's +0x45 flag, with +0x59 above 15 and +0x5b above 10, if draw(+0x59) is above
-/// 5: the news of thanks to the manager (`exe::news_post_player_credits_manager_for_award`). No person or no award: the original ("Error" box).
+/// A player with a player sheet (`.player()`) and a contract (`exe::contract_manager_get_contract`, other than type 5)
+/// with the club (`exe::contract_manager_get_contract_for_club`): with the transfer manager, a contract of more than
+/// 300 days and the player on the club's list (`exe::shortlist_manager_find_club_shortlist_entry`), the renewal
+/// (`contract_manager_offer_contract`); then, without the contract's `.grievances()` flag, with `.loyalty()` above 15
+/// and `.professionalism()` above 10, if draw(`.loyalty()`) is above 5: the news of thanks to the manager
+/// (`exe::news_post_player_credits_manager_for_award`). No person or no award: the original ("Error" box).
 /// Original: `Staff_Records::add_month_award_record` (0x86c8c0, staff_records.cpp, thiscall, ret 0x14).
 pub(crate) unsafe extern "thiscall" fn add_month_award_record(this: usize, p: usize, club: usize, prize: usize, a4: u32, a5: u32) {
     if p == 0 || prize == 0 {

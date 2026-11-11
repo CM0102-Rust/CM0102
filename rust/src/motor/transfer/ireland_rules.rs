@@ -15,8 +15,9 @@ pub(crate) unsafe extern "thiscall" fn construct_ireland_rules(this: usize, a1: 
 /// Refuses a loan with five loans this season (0x1e) and between clubs of the same division (0x1d).
 ///
 /// `IRELAND_RULES::can_loan_player(club, player, message, reason)`: five loans in the season (the 16-byte count at
-/// [[0xde1f54] + 0x91c]): 0x1e; with a contract, the requesting club and the owner in the same division (+0x57, without
-/// checking for null, as in the original): 0x1d, with the nation's name.
+/// [[`G_TRANSFER_MANAGER`] + `transfer_manager_fields::SEASON_LOAN_COUNTS`]): 0x1e; with a contract
+/// (`loan_owner_club`), the requesting club and the owner in the same division (`division()`, without checking for
+/// null, as in the original): 0x1d, with the nation's name (`refuse_loan`).
 /// Original: `IRELAND_RULES::can_loan_player` (0x63c3d0, ireland_rules.cpp, thiscall, ret 0x10).
 pub(crate) unsafe extern "thiscall" fn ireland_rules_can_loan_player(this: usize, club: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
     let club = Club(club);

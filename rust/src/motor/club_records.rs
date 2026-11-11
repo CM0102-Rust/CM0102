@@ -160,14 +160,17 @@ pub(crate) unsafe fn league_stage_chain(liga0: League) -> Vec<usize> {
 /// each club's best and worst league position for the season and, with the second argument, all time (queueing the news
 /// item for a human club or national side).
 ///
-/// A null league, or one whose +0x44 is not 0xff, gives the error boxes and 0. In each league of the chain
-/// (league_stage_chain) it sorts the table (`sort_table`) and, for each row that has games (+0x11) and a club, through the
-/// season records (`get_season_record`) and the all-time records (`get_all_time_record`, created when missing): best position (type 1,
-/// `exe::club_records_record_type_applies`) and worst (type 2). The position is written when there is no record yet (−1), when the competition (the id
-/// of the first league) has a higher reputation (best) or a lower one (worst), or when it is the same competition with
-/// a better or worse position: it stores the position (+0/+7), the competition (+1/+8) and the year (+5/+0xc; 0 for the
-/// season, `key_nation_get_club_season_year` for all time). For all time (with `all_time`; an id above [0xae2378] also counts as "no record"),
-/// the news queue (club_records_queue_record_news). Returns 1.
+/// A null league, or one whose stage index (`stage_index()`) is not `stage_index::MAIN`, gives the error boxes and 0.
+/// In each league of the chain (`league_stage_chain`) it sorts the table (`exe::league_sort_table`) and, for each row
+/// that has games (`played()`) and a club, through the season records (`club_season_record`) and the all-time records
+/// (`club_all_time_record`, created when missing): best position (type 1, `exe::club_records_record_type_applies`) and
+/// worst (type 2). The position is written when there is no record yet (−1), when the competition (the id of the first
+/// league) has a higher reputation (best) or a lower one (worst), or when it is the same competition with a better or
+/// worse position: it stores the position (+0 / `club_record::WORST_POSITION`), the competition
+/// (`club_record::BEST_POSITION_COMP` / `club_record::WORST_POSITION_COMP`) and the year
+/// (`club_record::BEST_POSITION_YEAR` / `club_record::WORST_POSITION_YEAR`; 0 for the season,
+/// `exe::key_nation_get_club_season_year` for all time). For all time (with `always`; an id above [`G_CLUB_COMP_COUNT`]
+/// also counts as "no record"), the news queue (`club_records_queue_record_news`). Returns 1.
 /// Original: `Club_Records::update_league_position_records` (0x447430, club_records.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn update_league_position_records(this: usize, liga0: usize, always: u32) -> u32 {
     let liga0 = League(liga0);
@@ -235,11 +238,15 @@ pub(crate) static RECORD_NEWS_DRY_RUN: AtomicBool = AtomicBool::new(false);
 /// `Club_Records::send_record_news()` (SEH frame without a destructor): delivers the news item of each queued record
 /// (human club or national side) and empties the queue.
 ///
-/// Without a queue (+0x24), returns 1. For each record in the queue (6 bytes: club id, type, period at +5) of a human
-/// club (`news_club_has_human_manager`) or a national side (`exe::database_is_national_team`): the news item 0x3e8 (local) is filled by `exe::club_records_write_record_news_fields` with the season
-/// record (period 2, `get_season_record`) or the all-time record (`get_all_time_record`), without creating them; it is delivered to the nation
-/// (`send_to_nation_managers`) of the national side or to the club's manager (`send_to_club_manager`). A queue with capacity (+0x28) of 100 or more is
-/// freed (`exe::crt_free`) and +0x24/+0x28 are zeroed. The count (+0x2c) goes back to 0. Returns 1.
+/// Without a queue (`club_records_fields::NEWS_QUEUE`), returns 1. For each record in the queue (6 bytes: club id, type
+/// at `record_news_item::RECORD_TYPE`, period at `record_news_item::PERIOD`) of a human club
+/// (`FN_NEWS_CLUB_HAS_HUMAN_MANAGER`) or a national side (`exe::database_is_national_team`): the news item 0x3e8
+/// (local) is filled by `exe::club_records_write_record_news_fields` with the season record (period 2,
+/// `club_season_record`) or the all-time record (`club_all_time_record`), without creating them; it is delivered to the
+/// nation (`exe::news_send_to_nation_managers`) of the national side or to the club's manager
+/// (`exe::news_send_to_club_manager`). A queue with capacity (`club_records_fields::NEWS_QUEUE_CAPACITY`) of 100 or
+/// more is freed (`exe::crt_free`) and `NEWS_QUEUE`/`NEWS_QUEUE_CAPACITY` are zeroed. The count
+/// (`club_records_fields::NEWS_QUEUE_COUNT`) goes back to 0. Returns 1.
 /// Original: `Club_Records::send_record_news` (0x448e30, club_records.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn send_record_news(this: usize) -> u32 {
     if read_usize(this + club_records_fields::NEWS_QUEUE) == 0 {
@@ -308,15 +315,18 @@ pub(crate) unsafe fn fan_rating(p: Staff, club: Club, st: usize) -> f64 {
 }
 
 /// `Club_Records::pick_fans_player_of_year(club, record)`: picks the fans' player of the year from the club's squad:
-/// the best score among the players with games above the minimum; stores his reference at record +0x371 and returns 1,
-/// or 0.
+/// the best score among the players with games above the minimum; stores his reference at `club_record::FANS_PLAYER` of
+/// the record and returns 1, or 0.
 ///
-/// Without games (signed +0x10 of the club's 106-byte entry in [this+0x1c]) and with reputation (+0x80) below 3000,
-/// returns 0. With the factor 0.6, falling by 0.1 while nobody has been chosen and it is above 0.2: the minimum number
-/// of games is +0x10 × factor (_ftol); among the 50 squad slots (+0xd7), the players (+0x61, id below [0xae2364]) of
-/// the club (+0x39) with statistic 6 (`get_category_record` over [0xb74350]) whose games are above 0 and above the minimum (signed
-/// 16 bits), the one with the highest score (`fan_rating`: average + 0.025 × +2 + 1/60 × +6, club and player likes; it
-/// must be above −1000). Nobody: 0; otherwise his reference (`fill_staff_name_ref`) at record +0x371 and 1.
+/// Without games (signed `club_record_entry::SEASON_GAMES` of the club's 106-byte entry in [this +
+/// `club_records_fields::CLUB_ENTRIES`]) and with reputation (`reputation()`) below 3000, returns 0. With the factor
+/// 0.6, falling by 0.1 (`rdata::F64_0_1`) while nobody has been chosen and it is above 0.2 (`rdata::F64_0_2`): the
+/// minimum number of games is `SEASON_GAMES` × factor (`ftol`); among the 50 squad slots (`squad()`), the players
+/// (`player()`, id below [`G_STAFF_COUNT`]) of the club (`club_job()`) with statistic 6
+/// (`exe::playerstats_get_category_record` over [`G_PLAYER_STATS`]) whose games are above 0 and above the minimum
+/// (signed 16 bits), the one with the highest score (`fan_rating`: average + 0.025 × +2 + 1/60 × +6, club and player
+/// likes; it must be above −1000). Nobody: 0; otherwise his reference (`exe::fill_staff_name_ref`) at
+/// `club_record::FANS_PLAYER` of the record and 1.
 /// Original: `Club_Records::pick_fans_player_of_year` (0x452da0, club_records.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn pick_fans_player_of_year(this: usize, club: usize, record: usize) -> u32 {
     let club = Club(club);
@@ -390,13 +400,17 @@ pub(crate) unsafe fn copy_transfer_record(a: usize, o: usize, d: usize) {
 /// `Club_Records::update_transfer_fee_records(transfer)`: updates the buyer's paid record and the seller's received
 /// record, for the season and all time (fee, reference, other club, date, loan).
 ///
-/// The person (+0xc) and the buying club (+8); the person's contract (`exe::contract_manager_get_contract` over [0xae1050], kept in [0xae1080])
-/// gives the seller (+4). The buyer's season (`get_season_record`) and all-time (`get_all_time_record`) records are fetched (created when
-/// missing); without a seller, returns 1. A fee (+0x1b) above the season paid record (+0x313) becomes the record: the
-/// fee, the person's reference (`fill_staff_name_ref`), the seller, today's date and the loan flag (+4 ≠ 0); if it is above the
-/// all-time record it is copied there, and if it passes 1000 × (reputation + 300): the record goes to the news queue
-/// (`queue_record_news`, 0x1c, if it is not there yet) and the manager (+0xbf) comes to favour the person (`staff_add_favoured_staff`, forced). The
-/// same for the seller in the received record (+0x33c; the queue with 0x1d, without the favouring). Returns 1.
+/// The person (`target_staff_id()`) and the buying club (`buyer_club_id()`); the person's contract
+/// (`exe::contract_manager_get_contract` over [`G_CONTRACT_MANAGER`], kept in [`G_CONTRACT_LOOKUP_RESULT`]) gives the
+/// seller (`club()`). The buyer's season (`exe::club_records_get_season_record`) and all-time
+/// (`exe::club_records_get_all_time_record`) records are fetched (created when missing); without a seller, returns 1. A
+/// fee (`fee()`) above the season paid record (`club_record::FEE_PAID`) becomes the record: the fee, the person's
+/// reference (`exe::fill_staff_name_ref`, at `FEE_PAID_HOLDER`), the seller (`FEE_PAID_OTHER_CLUB_ID`), today's date
+/// (`FEE_PAID_DATE`) and the loan flag (`FEE_PAID_FLAG`: `exchange_players()` ≠ 0); if it is above the all-time record
+/// it is copied there, and if it passes 1000 × (reputation + 300) (`is_big_transfer`): the record goes to the news
+/// queue (`exe::club_records_queue_record_news`, 0x1c, if it is not there yet) and the manager (`chairman()`) comes to
+/// favour the person (`exe::staff_add_favoured_staff`, forced). The same for the seller in the received record
+/// (`club_record::FEE_RECEIVED`; the queue with 0x1d, without the favouring). Returns 1.
 /// Original: `Club_Records::update_transfer_fee_records` (0x448760, club_records.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, t: usize) -> u32 {
     let t = Offer(t);
@@ -458,15 +472,18 @@ pub(crate) unsafe fn is_record_news_queued(this: usize, id: usize, kind: u8) -> 
 }
 
 /// `Club_Records::add_transfer_totals(fee, buyer, seller)`: adds the fee to the seller's season income and the buyer's
-/// season spending, raises the all-time records and queues the record news (0x1f, 0x1e) above (+0x80 + 500) × 1000.
+/// season spending, raises the all-time records and queues the record news (0x1f, 0x1e) above (`reputation()` + 500) ×
+/// 1000.
 ///
-/// The seller adds `fee` to the income for the season (+0x36b of the season record `get_season_record`; −1 = nothing yet: the fee
-/// is stored) and zeroes the year (+0x36f); above the all-time record (`get_all_time_record`, same field), the record becomes the
-/// season one with the club's season year (`key_nation_get_club_season_year`), and with the total at least (club +0x80 + 500) × 1000 and the
-/// year different from the record's, the record news item 0x1f (`queue_record_news`) if it is not in the queue yet. The buyer does
-/// the same for spending (+0x365, year +0x369, news 0x1e), but the minimum is checked against the OLD record and
-/// without the year. The records are created when missing (second argument 1). A null buyer or seller: nothing, 1.
-/// Returns 1.
+/// The seller adds `value` to the income for the season (`club_record::TRANSFER_INCOME` of the season record
+/// `exe::club_records_get_season_record`; −1 = nothing yet: the fee is stored) and zeroes the year
+/// (`club_record::TRANSFER_INCOME_YEAR`); above the all-time record (`exe::club_records_get_all_time_record`, same
+/// field), the record becomes the season one with the club's season year (`exe::key_nation_get_club_season_year`), and
+/// with the total at least (club `reputation()` + 500) × 1000 and the year different from the record's, the record news
+/// item 0x1f (`exe::club_records_queue_record_news`) if it is not in the queue yet. The buyer does the same for
+/// spending (`club_record::TRANSFER_SPENDING`, year `club_record::TRANSFER_SPENDING_YEAR`, news 0x1e), but the minimum
+/// is checked against the OLD record and without the year. The records are created when missing (second argument 1). A
+/// null buyer or seller: nothing, 1. Returns 1.
 /// Original: `Club_Records::add_transfer_totals` (0x448ad0, club_records.cpp, thiscall, ret 0xc).
 pub(crate) unsafe extern "thiscall" fn add_transfer_totals(this: usize, value: i32, buyer: usize, seller: usize) -> u32 {
     let seller = Club(seller);
@@ -513,13 +530,14 @@ pub(crate) unsafe extern "thiscall" fn add_transfer_totals(this: usize, value: i
 }
 
 /// `club_records_update_career_records(player, club, games, goals)`: updates the club's all-time league appearances
-/// (+0x247) and goals (+0x261) records, with the player reference (`fill_staff_name_ref`), when the record type applies to the club
-/// (`exe::club_records_record_type_applies`).
+/// (+0x247) and goals (+0x261) records, with the player reference (`exe::fill_staff_name_ref`), when the record type
+/// applies to the club (`exe::club_records_record_type_applies`).
 ///
-/// In the club's all-time records (`get_all_time_record`, created when missing), if type 0x17 applies to the club (`exe::club_records_record_type_applies`) and
-/// `games` beats the record (+0x247; −1 = no record), the record = `games` and the player's reference goes to +0x249
-/// (`fill_staff_name_ref`); the same with type 0x18 and `goals` (+0x261, reference +0x263). Returns 1. A null player or club, or no
-/// record: the "Error" box (lines 0x6fa and 0x702) and 0.
+/// In the club's all-time records (`exe::club_records_get_all_time_record`, created when missing), if type 0x17 applies
+/// to the club (`exe::club_records_record_type_applies`) and `games` beats the record (+0x247; −1 = no record), the
+/// record = `games` and the player's reference goes to +0x249 (`exe::fill_staff_name_ref`); the same with type 0x18 and
+/// `goals` (+0x261, reference +0x263). Returns 1. A null player or club, or no record: the "Error" box (lines 0x6fa and
+/// 0x702) and 0.
 /// Original: `club_records_update_career_records` (0x448cb0, club_records.cpp, thiscall, ret 0x10).
 pub(crate) unsafe extern "thiscall" fn club_records_update_career_records(this: usize, player: usize, club: usize, games: u32, goals: u32) -> u32 {
     if player == 0 || club == 0 {
@@ -546,12 +564,15 @@ pub(crate) unsafe extern "thiscall" fn club_records_update_career_records(this: 
 /// `Club_Records::update_season_rating_record(club)`: the squad player with the best average rating (statistic 0x11)
 /// among those who played at least half the games becomes the season rating record.
 ///
-/// With games in the season (byte +0x10 of the club's entry, [this+0x1c] + id × 0x6a) and the season record (`get_season_record`,
-/// without creating), the record rating (+0x1f1) goes back to −1.0 and, over the 50 squad slots (+0xd7), the player
-/// (not a human manager: id < [0xae2364]) with statistics (+0x61) at the club (+0x39 = the club or the one linked to
-/// it, `exe::club_get_linked_b_team`) and a season statistics record (`get_category_record`, type 6) who played at least half the games (statistic 1,
-/// truncated, `player_statistic` with 6.5) and has the highest average (statistic 0x11) becomes the record: the rating (+0x1f1,
-/// float), the games (+0x20d), the reference (+0x1f5, `fill_staff_name_ref`) and +0x20e = 0. Returns 1 if someone became the record.
+/// With games in the season (byte `club_record_entry::SEASON_GAMES` of the club's entry, [this +
+/// `club_records_fields::CLUB_ENTRIES`] + id × 0x6a) and the season record (`exe::club_records_get_season_record`,
+/// without creating), the record rating (`club_record::SEASON_RATING`) goes back to −1.0 and, over the 50 squad slots
+/// (`squad()`), the player (not a human manager: id < [`G_STAFF_COUNT`]) with statistics (`player()`) at the club
+/// (`club_job()` = the club or the one linked to it, `exe::club_get_linked_b_team`) and a season statistics record
+/// (`exe::playerstats_get_category_record`, type 6) who played at least half the games (statistic 1, truncated,
+/// `exe::player_stats_get_record_value` with 6.5) and has the highest average (statistic 0x11) becomes the record: the
+/// rating (`SEASON_RATING`, float), the games (`club_record::SEASON_RATING_GAMES`), the reference (`SEASON_RATING` + 4,
+/// `exe::fill_staff_name_ref`) and `club_record::SEASON_RATING_YEAR` = 0. Returns 1 if someone became the record.
 /// Without games or without a record: 0. A null club: the original routine (box 0x16f2, 0).
 /// Original: `Club_Records::update_season_rating_record` (0x452a90, club_records.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn update_season_rating_record(this: usize, club: usize) -> u32 {
@@ -615,12 +636,15 @@ pub(crate) unsafe fn records_out_of_memory(row: u32) -> ! {
     fatal_exit()
 }
 
-/// `Club_Records::get_all_time_record(club, create)`: returns the club's all-time records: index +0 of its entry
-/// ([this+0x1c] + id × 0x6a) into the vector [this+4] of 0x38b-byte records.
+/// `Club_Records::get_all_time_record(club, create)`: returns the club's all-time records: index +0 of its entry ([this
+/// + `club_records_fields::CLUB_ENTRIES`] + id × 0x6a, `club_records_entry`) into the vector [this +
+/// `club_records_fields::ALL_TIME_RECORDS`] of 0x38b-byte records.
 ///
-/// Without an index (−1) and with `create`: the new index is the count (+0xc, which goes up), the vector grows by 50 at
-/// a time (capacity +8, realloc `exe::crt_realloc`; without memory, box 0x1694 and the end) and the record is reset (`reset_records`).
-/// Returns the record, or 0 without an index. A null club: the original routine (box 0x1680, 0).
+/// Without an index (−1) and with `create`: the new index is the count (`club_records_fields::ALL_TIME_COUNT`, which
+/// goes up), the vector grows by 50 at a time (capacity `club_records_fields::ALL_TIME_CAPACITY`, realloc
+/// `exe::crt_realloc`; without memory, box 0x1694 and the end, `records_out_of_memory`) and the record is reset
+/// (`exe::season_history_entry_clear`). Returns the record, or 0 without an index. A null club: the original routine
+/// (box 0x1680, 0).
 /// Original: `Club_Records::get_all_time_record` (0x452710, club_records.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn get_all_time_record(this: usize, club: usize, create: u32) -> usize {
     if club == 0 {
@@ -651,8 +675,9 @@ pub(crate) unsafe extern "thiscall" fn get_all_time_record(this: usize, club: us
 }
 
 /// `Club_Records::get_season_record(club, create)`: the same as `get_all_time_record` for the season records: index +4
-/// of the entry, vector [this+0x10], capacity +0x14, count +0x18 (without memory, box 0x16c9 and the end). A null club:
-/// the original routine (box 0x16b5, 0).
+/// of the entry, vector [this + `club_records_fields::SEASON_RECORDS`], capacity
+/// `club_records_fields::SEASON_CAPACITY`, count `club_records_fields::SEASON_COUNT` (without memory, box 0x16c9 and
+/// the end). A null club: the original routine (box 0x16b5, 0).
 /// Original: `Club_Records::get_season_record` (0x4528d0, club_records.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn get_season_record(this: usize, club: usize, create: u32) -> usize {
     if club == 0 {
@@ -682,11 +707,13 @@ pub(crate) unsafe extern "thiscall" fn get_season_record(this: usize, club: usiz
     read_usize(this + club_records_fields::SEASON_RECORDS).wrapping_add((i as usize).wrapping_mul(0x38b))
 }
 
-/// `Club_Records::queue_record_news(id, type)`: appends (club id at +0, record type at +4; byte +5 is left as it is) to
-/// the 6-byte vector [this+0x24] of record news, read by `send_record_news`.
+/// `Club_Records::queue_record_news(id, type)`: appends (club id at +0, record type at `record_news_item::RECORD_TYPE`;
+/// byte +5 is left as it is) to the 6-byte vector [this + `club_records_fields::NEWS_QUEUE`] of record news, read by
+/// `send_record_news`.
 ///
-/// When full (count +0x2c = capacity +0x28) it grows by 5 at a time (realloc `exe::crt_realloc`); without memory, box 0x174f and
-/// returns 0 (the game goes on, without the vector). Returns 1.
+/// When full (count `club_records_fields::NEWS_QUEUE_COUNT` = capacity `club_records_fields::NEWS_QUEUE_CAPACITY`) it
+/// grows by 5 at a time (realloc `exe::crt_realloc`); without memory, box 0x174f and returns 0 (the game goes on,
+/// without the vector). Returns 1.
 /// Original: `Club_Records::queue_record_news` (0x452cb0, club_records.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn queue_record_news(this: usize, id: u32, kind: u32) -> u32 {
     covered!("cpk_1 record news");
@@ -727,11 +754,12 @@ pub(crate) unsafe fn check_record_plan(name: &str, club: usize, e: usize, count:
     });
 }
 
-/// `Club_Records::offer_breaks_fee_record(offer, require)`: tells whether the offer fee (+0x1b) beats the fee-paid
-/// record of the buying club (+8; the all-time records through `get_all_time_record`, creating them if needed).
+/// `Club_Records::offer_breaks_fee_record(offer, require)`: tells whether the offer fee (`fee()`) beats the fee-paid
+/// record of the buying club (`buyer_club_id()`; the all-time records through `exe::club_records_get_all_time_record`,
+/// creating them if needed).
 ///
-/// It must be at least 50 × reputation (+0x80) + 500,000; with `require`, also at least reputation² × the constant
-/// 0x967880 (_ftol); and above zero and above the record (+0x313). A null offer: 0.
+/// It must be at least 50 × reputation (`reputation()`) + 500,000; with `exigir`, also at least reputation² × the
+/// constant `rdata::F64_0_1` (`ftol`); and above zero and above the record (`club_record::FEE_PAID`). A null offer: 0.
 /// Original: `Club_Records::offer_breaks_fee_record` (0x4486c0, club_records.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn offer_breaks_fee_record(this: usize, offer: usize, exigir: u32) -> u8 {
     let offer = Offer(offer);
@@ -754,8 +782,9 @@ pub(crate) unsafe extern "thiscall" fn offer_breaks_fee_record(this: usize, offe
     (value != 0 && value > read_usize(rec + club_record::FEE_PAID) as i32) as u8
 }
 
-/// `transfer_fee_record_construct`: constructs the highest transfer fee paid record: the dates at +0x14 and +0x20
-/// (`exe::date_date_54a110`).
+/// `transfer_fee_record_construct`: constructs the highest transfer fee paid record: the dates at
+/// `transfer_fee_record::HOLDER_DATE` and `transfer_fee_record::DATE` (`exe::date_date_54a110`, through
+/// `init_default_date`).
 ///
 /// The original's SEH frame only covers the 2nd date (`exe::date_date_54a110` does not fail). Returns `this`.
 /// Original: `transfer_fee_record_construct` (0x4485d0, club_records.cpp, thiscall).
@@ -765,7 +794,8 @@ pub(crate) unsafe extern "thiscall" fn transfer_fee_record_construct(this: usize
     this
 }
 
-/// constructs the highest fee received record: the dates at +0x14 and +0x20 (`exe::date_date_54a110`)
+/// constructs the highest fee received record: the dates at `transfer_fee_record::HOLDER_DATE` and
+/// `transfer_fee_record::DATE` (`exe::date_date_54a110`, through `init_default_date`)
 /// Original: `transfer_fee_record_construct_2` (0x448620, club_records.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn transfer_fee_record_construct_2(this: usize) -> usize {
     init_default_date(this + transfer_fee_record::HOLDER_DATE);
@@ -813,7 +843,8 @@ pub(crate) unsafe extern "thiscall" fn winless_run_record_construct(this: usize)
     this
 }
 
-/// constructs the goals in a match record: the holder date (+0x11) and the match date (+0x19) (`exe::date_date_54a110`)
+/// constructs the goals in a match record: the holder date (`goals_in_match_record::HOLDER_DATE`) and the match date
+/// (`goals_in_match_record::MATCH`) (`exe::date_date_54a110`, through `init_default_date`)
 /// Original: `goals_in_match_record_construct` (0x450c10, club_records.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn goals_in_match_record_construct(this: usize) -> usize {
     init_default_date(this + goals_in_match_record::HOLDER_DATE);
@@ -821,7 +852,8 @@ pub(crate) unsafe extern "thiscall" fn goals_in_match_record_construct(this: usi
     this
 }
 
-/// constructs the youngest player record: the age (+0), the holder date (+0x18) and the match date (+0x20) (`exe::date_date_54a110`)
+/// constructs the youngest player record: the age (+0), the holder date (`age_record::HOLDER_DATE`) and the match date
+/// (`age_record::MATCH_DATE`) (`exe::date_date_54a110`, through `init_default_date`)
 /// Original: `youngest_player_record_construct` (0x450c70, club_records.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn youngest_player_record_construct(this: usize) -> usize {
     init_default_date(this); // the age of the youngest
@@ -831,7 +863,8 @@ pub(crate) unsafe extern "thiscall" fn youngest_player_record_construct(this: us
 }
 
 /// `oldest_player_record_construct`: constructs the oldest player record: the age (+0), the record holder's date
-/// (+0x18) and the match date (+0x20) (`exe::date_date_54a110`).
+/// (`age_record::HOLDER_DATE`) and the match date (`age_record::MATCH_DATE`) (`exe::date_date_54a110`, through
+/// `init_default_date`).
 ///
 /// The original's SEH frame is not needed (`exe::date_date_54a110` does not fail). Returns `this`.
 /// Original: `oldest_player_record_construct` (0x450cd0, club_records.cpp, thiscall).
@@ -847,7 +880,8 @@ pub(crate) unsafe fn assign_record_holder(target: usize, source: usize) {
     exe::record_holder_assign(target, source);
 }
 
-/// copies the rating record (0x1f bytes): the rating (+0), the holder (+4, through `record_holder_assign`), +0x1c and +0x1d
+/// copies the rating record (0x1f bytes): the rating (+0), the holder (`rating_record::HOLDER`, through
+/// `assign_record_holder`), `rating_record::GAMES` and `rating_record::YEAR`
 /// Original: `rating_record_assign` (0x448230, club_records.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn rating_record_assign(this: usize, source: usize) -> usize {
     write_u32(this, read_u32(source)); // a nota
@@ -857,7 +891,8 @@ pub(crate) unsafe extern "thiscall" fn rating_record_assign(this: usize, source:
     this
 }
 
-/// copies the man of the match record (0x1b bytes): the count (+0), the holder (+1) and the year (+0x19)
+/// copies the man of the match record (0x1b bytes): the count (+0), the holder (`man_of_match_record::HOLDER`, through
+/// `assign_record_holder`) and the year (`man_of_match_record::YEAR`)
 /// Original: `man_of_match_record_assign` (0x4484d0, club_records.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn man_of_match_record_assign(this: usize, source: usize) -> usize {
     write_u8(this, read_u8(source)); // the man-of-the-match count
@@ -866,7 +901,8 @@ pub(crate) unsafe extern "thiscall" fn man_of_match_record_assign(this: usize, s
     this
 }
 
-/// copies the discipline record (0x1c bytes): yellows (+0), reds (+1), the holder (+2) and the year (+0x1a)
+/// copies the discipline record (0x1c bytes): yellows (+0), reds (`club_discipline_record::RED_CARDS`), the holder
+/// (`club_discipline_record::HOLDER`, through `assign_record_holder`) and the year (`club_discipline_record::YEAR`)
 /// Original: `discipline_record_assign` (0x448500, club_records.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn discipline_record_assign(this: usize, source: usize) -> usize {
     write_u8(this, read_u8(source));
@@ -876,7 +912,8 @@ pub(crate) unsafe extern "thiscall" fn discipline_record_assign(this: usize, sou
     this
 }
 
-/// copies the count record (0x1a bytes): the count (+0, word) and the holder (+2, through `record_holder_assign`)
+/// copies the count record (0x1a bytes): the count (+0, word) and the holder (`count_record::HOLDER`, through
+/// `exe::record_holder_assign`)
 /// Original: `count_record_assign` (0x448530, club_records.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn count_record_assign(this: usize, source: usize) -> usize {
     write_u16(this, read_u16(source)); // a contagem
@@ -884,7 +921,8 @@ pub(crate) unsafe extern "thiscall" fn count_record_assign(this: usize, source: 
     this
 }
 
-/// copies the fans player record (0x1a bytes): the holder (+0) and the year (+0x18)
+/// copies the fans player record (0x1a bytes): the holder (+0, through `exe::record_holder_assign`) and the year
+/// (`fans_player_record::YEAR`)
 /// Original: `fans_player_record_assign` (0x4485b0, club_records.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn fans_player_record_assign(this: usize, source: usize) -> usize {
     exe::record_holder_assign(this, source);
@@ -897,14 +935,16 @@ pub(crate) unsafe fn init_default_date(a: usize) {
     exe::date_date_54a110(a);
 }
 
-/// constructs the tally record: the holder date at +0x11 (`exe::date_date_54a110`)
+/// constructs the tally record: the holder date at `tally_record::HOLDER_DATE` (`exe::date_date_54a110`, through
+/// `init_default_date`)
 /// Original: `tally_record_construct` (0x450c60, club_records.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn tally_record_construct(this: usize) -> usize {
     init_default_date(this + tally_record::HOLDER_DATE); // the date of the occurrences
     this
 }
 
-/// constructs the count record: the holder date at +0x12 (`exe::date_date_54a110`)
+/// constructs the count record: the holder date at `count_record::HOLDER_DATE` (`exe::date_date_54a110`, through
+/// `init_default_date`)
 /// Original: `count_record_construct` (0x450d30, club_records.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn count_record_construct(this: usize) -> usize {
     init_default_date(this + count_record::HOLDER_DATE); // the counting date
@@ -912,8 +952,9 @@ pub(crate) unsafe extern "thiscall" fn count_record_construct(this: usize) -> us
 }
 
 /// `transfer_fee_record_assign`: copies the transfer fee record (0x29 bytes) from `source`: five dwords (+0..+0x10: the
-/// fee, the player, the other club...), the date at +0x14, the dword +0x1c, the date at +0x20 and the part-exchange
-/// flag (+0x28). Returns `this`.
+/// fee, the player, the other club...), the date at `transfer_fee_record::HOLDER_DATE`, the dword
+/// `transfer_fee_record::OTHER_CLUB_ID`, the date at `transfer_fee_record::DATE` and the part-exchange flag
+/// (`transfer_fee_record::FLAG`). Returns `this`.
 /// Original: `transfer_fee_record_assign` (0x448550, club_records.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn transfer_fee_record_assign(this: usize, source: usize) -> usize {
     let d = |o: usize| write_u32(this + o, read_u32(source + o));
@@ -928,7 +969,8 @@ pub(crate) unsafe extern "thiscall" fn transfer_fee_record_assign(this: usize, s
 }
 
 /// `goals_in_match_record_assign`: copies the goals-in-a-match record (0x38 bytes) from `source`: the goals (+0, byte),
-/// the record holder at +1 (`record_holder_assign`) and the match record at +0x19 (`match_record_assign`, both already in Rust). Returns `this`.
+/// the record holder at `goals_in_match_record::HOLDER` (`exe::record_holder_assign`) and the match record at
+/// `goals_in_match_record::MATCH` (`exe::match_record_assign`, both already in Rust). Returns `this`.
 /// Original: `goals_in_match_record_assign` (0x451570, club_records.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn goals_in_match_record_assign(this: usize, source: usize) -> usize {
     write_u8(this, read_u8(source)); // the goals
@@ -957,8 +999,10 @@ pub(crate) unsafe extern "thiscall" fn record_holder_assign(this: usize, source:
 
 /// Copies the match record (0x1f bytes) from `source`: the date, the opponent, the score and the fixture fields.
 ///
-/// The date at +0, then +8 (dword), +0xc and +0xe (words), +0x10 (byte), +0x11 and +0x15 (dwords), +0x19 and +0x1a
-/// (bytes) and +0x1b (dword). Returns `this`.
+/// The date at +0 (`copy_record_date`), then +8 (dword), `club_match_record::ROUND_PREFIX` and
+/// `club_match_record::ROUND_NAME` (words), `club_match_record::VENUE` (byte), `club_match_record::CLUB_ID` and
+/// `club_match_record::OPPONENT_ID` (dwords), `club_match_record::GOALS_FOR` and `club_match_record::GOALS_AGAINST`
+/// (bytes) and `club_match_record::MATCH_STATS_SLOT` (dword). Returns `this`.
 /// Original: `match_record_assign` (0x448110, club_records.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn match_record_assign(this: usize, source: usize) -> usize {
     let d = |o: usize| write_u32(this + o, read_u32(source + o));
@@ -1012,7 +1056,7 @@ pub(crate) unsafe extern "C" fn reset_records(r: usize) -> u32 {
     1
 }
 
-/// builds the record holder: only the date at +0x10 (`exe::date_date_54a110`)
+/// builds the record holder: only the date at `record_holder::DATE` (`exe::date_date_54a110`)
 /// Original: `record_holder_construct` (0x450d40, club_records.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn record_holder_construct(this: usize) -> usize {
     exe::date_date_54a110(this + record_holder::DATE); // the record holder’s date

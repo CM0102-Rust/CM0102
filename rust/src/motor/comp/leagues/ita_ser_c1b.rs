@@ -24,10 +24,9 @@ pub(crate) unsafe extern "thiscall" fn construct_ita_ser_c1b(this: usize, year: 
     construct_italian_division(League(this), year, record, &SERIE_C1B_DIVISION)
 }
 
-/// `ItaSerC1b::set_up_rules()`: Serie C1/B (18 clubs), set up like C1/A.
-///
-/// Above it the id of [0x9cf578], and below it C2/A ([0x9cf580]) when the nation has its lower divisions loaded (bit 4
-/// of the nation's +0x11c [inference]), otherwise −1.
+/// `ItaSerC1b::set_up_rules()`: Serie C1/B (18 clubs), set up like C1/A. Above it the id of
+/// `KEY_CLUB_COMP_ITALIAN_SERIE_C1_A`, and below it C2/A (`KEY_CLUB_COMP_ITALIAN_SERIE_C2_A`) when the nation has its
+/// lower divisions loaded (bit 4 of the nation's `.league_selected()` [inference]), otherwise −1.
 /// Original: `ItaSerC1b::set_up_rules` (0x64f920, ita_ser_c1b.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn ita_ser_c1b_set_up_rules(this: usize) -> u32 {
     covered!("cqi_6 c1b rules");

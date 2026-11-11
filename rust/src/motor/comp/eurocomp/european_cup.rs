@@ -7,44 +7,39 @@ pub(crate) unsafe fn club_nation(club: Club) -> usize {
 
 /// Draws the Champions League first group phase: the 32 clubs sorted by pot, same-nation partners in opposite halves,
 /// the draw of the 8 groups pot by pot, the swap of same-nation clubs within a group, the coefficient, the 1,800,000
-/// prize and its news, the 8 stages, and the third qualifying round losers into the UEFA Cup.
-///
-/// SEH frame only for the stage's `new`: no destructor on the normal path. `EuropeanCup::draw_phase1_groups()`, called
-/// from the Champions League's next-stage routine (`european_cup_advance_stage`, stage 0).
-///
-/// 1) The list of the 32 (`exe::crt_calloc`(0x20, 9): push 9; push 0x20; add esp, 8 -> cdecl; 9 bytes: +0 the club, +4 the
-/// same-nation partner, +8 the half: 1 groups A..D, 2 groups E..H; out of memory, the error box at line 0x4cc): the
-/// first 16 of table `[+0x14]` (6 bytes) and the teams of table `[+0xa7]` (6 bytes) with +5 = 1 (the third qualifying
-/// round winners). Fewer than 32: the error box at line 0x4ee, +0x30 = −1, the list freed and +0xb1 = 0.
-///
-/// 2) The list is sorted by pot (qsort `exe::crt_qsort` with `european_cup_compare_clubs_by_seed`: the club's +0x1df and the reputation) and each club
-/// without a partner gets the first following club without a partner from the same nation (the two point at each
-/// other).
-///
-/// 3) The groups (`exe::crt_calloc`(0x20, 4): 8 groups × 4 pots; out of memory, the error box at line 0x515 and the game stops):
-/// for each pot of 8 (k = 0..3), 4 slots start free in each half, minus those already marked; 8 times a club of the pot
-/// is drawn (`exe::utils_random`(8) + 8k, drawn again while the slot is already taken); without a half, one is drawn
-/// (`exe::utils_random`(free A + free B) < free B: the second) and the partner, if it is in the same pot, is put in the other half
-/// (with no slot there, it is not marked); the club enters the first group of the half with the pot free.
-///
-/// 4) In each half and pot, a club with another club of the same nation in its group swaps places with the same-pot
-/// club of the first other group in the half without its nation.
-///
-/// 5) Each group: the 4 clubs earn 1 point of the nation coefficient (0x9058b0 on `[0xde1f58]`: push 1; push nation ->
-/// thiscall, ret 8), the 1,800,000 prize (`get_club_finance` on `[0xae2a38]` push club -> thiscall, ret 4; `add_prize_money` push amount;
-/// mov ecx, finances -> thiscall, ret 4) and the prize news (`send_prize_money_news`: push −2; push 0; push 0x449; push −1; push 0;
-/// push amount; push club; mov ecx, this -> thiscall, ret 0x1c); the round table from method +0x3c (push 0; push &id;
-/// push &rounds; push g; mov ecx, this -> thiscall, ret 0x10); the stage (`exe::crt_operator_new`(0xee) and the League_Stage
-/// constructor 0x68b100: this, 4, the group, 2, +4, the table, the rounds (word), 3, 1, 8, &{4,1,2,0}, &{2,0,0,0}, the
-/// year (word), g, the id (word), 0xf, 2, 0, 8, −1, 0, 2; the original pushes the year with garbage in the high bytes
-/// of edx, which the constructor does not read: the copy passes the clean year) into `[+0xc][g]` (without a stage, the
-/// error box at line 0x5c9 and it returns, without freeing the table or the groups); the round table freed, +0x30 = g
-/// and the group news (`send_group_draw_news`).
-///
-/// 6) The groups are freed; the teams of +0xa7 with +5 = 2 (the third qualifying round losers) go to the UEFA Cup
-/// (`[[0xadadfc] + 4 × [0x9cf6f0]]`; without it, the error box at line 0x5d8): into the last 24 slots of its +0xa7
-/// table (from +0x3e − 24), with +4 and +5 cleared, into its +0x14 table with status 5 (+0x36 goes up) and with the
-/// club's European competition (+0x1db) = `[0x9cf6f0]`; then the UEFA Cup's predicted positions (its method +0x5c).
+/// prize and its news, the 8 stages, and the third qualifying round losers into the UEFA Cup. SEH frame only for the
+/// stage's `new`: no destructor on the normal path. `EuropeanCup::draw_phase1_groups()`, called from the Champions
+/// League's next-stage routine (`european_cup_advance_stage`, stage 0). 1) The list of the 32 (`exe::crt_calloc`(0x20,
+/// 9): push 9; push 0x20; add esp, 8 -> cdecl; 9 bytes: +0 the club, +4 the same-nation partner, +8 the half: 1 groups
+/// A..D, 2 groups E..H; out of memory, the error box at line 0x4cc): the first 16 of table `.entrant_book()` (6 bytes)
+/// and the teams of table `.team_table()` (6 bytes) with +5 = 1 (the third qualifying round winners). Fewer than 32:
+/// the error box at line 0x4ee, `.current_stage()` = −1, the list freed and `.run_by_stages()` = 0. 2) The list is
+/// sorted by pot (qsort `exe::crt_qsort` with `european_cup_compare_clubs_by_seed`: the club's `club::EURO_SEEDING` and
+/// the reputation) and each club without a partner gets the first following club without a partner from the same nation
+/// (the two point at each other). 3) The groups (`exe::crt_calloc`(0x20, 4): 8 groups × 4 pots; out of memory, the
+/// error box at line 0x515 and the game stops): for each pot of 8 (k = 0..3), 4 slots start free in each half, minus
+/// those already marked; 8 times a club of the pot is drawn (`exe::utils_random`(8) + 8k, drawn again while the slot is
+/// already taken); without a half, one is drawn (`exe::utils_random`(free A + free B) < free B: the second) and the
+/// partner, if it is in the same pot, is put in the other half (with no slot there, it is not marked); the club enters
+/// the first group of the half with the pot free. 4) In each half and pot, a club with another club of the same nation
+/// in its group swaps places with the same-pot club of the first other group in the half without its nation. 5) Each
+/// group: the 4 clubs earn 1 point of the nation coefficient (`exe::uefaseeding_add_nation_points` on `G_UEFA_SEEDING`:
+/// push 1; push nation -> thiscall, ret 8), the 1,800,000 prize (`exe::financetable_get_club_finance` on
+/// `G_FINANCE_TABLE` push club -> thiscall, ret 4; `exe::finance_add_prize_money` push amount; mov ecx, finances ->
+/// thiscall, ret 4) and the prize news (`exe::comp_send_prize_money_news`: push −2; push 0; push 0x449; push −1; push
+/// 0; push amount; push club; mov ecx, this -> thiscall, ret 0x1c); the round table from method
+/// `comp_vtable::CREATE_SCHEDULE` (push 0; push &id; push &rounds; push g; mov ecx, this -> thiscall, ret 0x10); the
+/// stage (`exe::crt_operator_new`(0xee) and the League_Stage constructor `FN_LEAGUE_STAGE_LEAGUE_STAGE`: this, 4, the
+/// group, 2, +4, the table, the rounds (word), 3, 1, 8, &{4,1,2,0}, &{2,0,0,0}, the year (word), g, the id (word), 0xf,
+/// 2, 0, 8, −1, 0, 2; the original pushes the year with garbage in the high bytes of edx, which the constructor does
+/// not read: the copy passes the clean year) into `.stages()`[g] (without a stage, the error box at line 0x5c9 and it
+/// returns, without freeing the table or the groups); the round table freed, `.current_stage()` = g and the group news
+/// (`exe::league_send_group_draw_news`). 6) The groups are freed; the teams of `.team_table()` with +5 = 2 (the third
+/// qualifying round losers) go to the UEFA Cup (`[G_COMP_OBJECT_TABLE + 4 × [KEY_CLUB_COMP_UEFA_CUP]]`; without it, the
+/// error box at line 0x5d8): into the last 24 slots of its `.team_table()` (from `.team_count()` − 24), with +4 and +5
+/// cleared, into its `.entrant_book()` with status 5 (`.entrant_count()` goes up) and with the club's European
+/// competition (`club::CONTINENTAL_COMP_ID`) = `KEY_CLUB_COMP_UEFA_CUP`; then the UEFA Cup's predicted positions (its
+/// method `comp_vtable::SET_PREDICTED_POSITIONS`).
 /// Original: `EuropeanCup::draw_phase1_groups` (0x585290, european_cup.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
     let this = Cup(this);
@@ -291,7 +286,8 @@ pub(crate) unsafe fn group_draw_clubs(this: Cup) -> Vec<usize> {
     v
 }
 
-/// the pot comparison: the club's European seed (+0x1df), and on a tie the higher reputation first
+/// the pot comparison: the club's European seed (`club::EURO_SEEDING`), and on a tie the higher reputation
+/// (`club::REPUTATION`) first
 /// Original: `european_cup_compare_clubs_by_seed` (0x586f60, european_cup.cpp, cdecl).
 pub(crate) unsafe extern "C" fn european_cup_compare_clubs_by_seed(a: *const usize, b: *const usize) -> i32 {
     let (x, y) = (*a, *b);
@@ -372,15 +368,16 @@ pub(crate) unsafe fn planned_final_positions(this: Cup, knockout: usize, nm: i16
 }
 
 /// Sets the Champions League predicted positions: the entrants sorted by strength, each one's predicted position taken
-/// from the knockout from the final back, the second and first group phases and the qualifying rounds.
-///
-/// Method +0x5c of the Champions League: `EuropeanCup::rank_teams()`. Without statistics (+8): the error box at line
-/// 0x81b. The entrants of table `[+0x14]` (6 bytes, +0x36 of them) go into an array (`exe::crt_malloc`; out of memory, the error
-/// box at line 0x823), sorted by strength (`comp_util_sort_clubs_by_strength`: push n; push array; add esp, 8 -> cdecl); the knockout table from
-/// method +0x3c (push 0; push &id; push &rounds; push 0xc; mov ecx -> thiscall, ret 0x10), freed afterwards; each
-/// entrant's position, in array order, through `set_club_final_position` (push position; push club; mov ecx, `[+8]` -> thiscall, ret 8;
-/// the original pushes the stack dword with the position in the low byte and garbage in the others, and `set_club_final_position` writes
-/// only the byte: the copy passes the clean byte) following the plan in `planned_final_positions`; the array freed.
+/// from the knockout from the final back, the second and first group phases and the qualifying rounds. Method +0x5c of
+/// the Champions League: `EuropeanCup::rank_teams()`. Without statistics (+8): the error box at line 0x81b. The
+/// entrants of table `.entrant_book()` (6 bytes, `.entrant_count()` of them) go into an array (`exe::crt_malloc`; out
+/// of memory, the error box at line 0x823), sorted by strength (`exe::comp_util_sort_clubs_by_strength`: push n; push
+/// array; add esp, 8 -> cdecl); the knockout table from method `comp_vtable::CREATE_SCHEDULE` (push 0; push &id; push
+/// &rounds; push 0xc; mov ecx -> thiscall, ret 0x10), freed afterwards; each entrant's position, in array order,
+/// through `exe::comp_stats_set_club_final_position` (push position; push club; mov ecx, `[+8]` -> thiscall, ret 8; the
+/// original pushes the stack dword with the position in the low byte and garbage in the others, and
+/// `exe::comp_stats_set_club_final_position` writes only the byte: the copy passes the clean byte) following the plan
+/// in `planned_final_positions`; the array freed.
 /// Original: `EuropeanCup::rank_teams` (0x586900, european_cup.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn european_cup_rank_teams(this: usize) {
     let this = Cup(this);
@@ -425,38 +422,31 @@ pub(crate) unsafe fn copy_group_entry(para: usize, of: usize) {
 
 /// Draws the Champions League second group phase: the 16 qualifiers sorted, the same-group pairs, each one's group
 /// choice (shuffled order, fewest teams, no same first-phase group nor nation), the redraw up to 20 times, the
-/// coefficient, the 1,200,000 prize and its news, stages 8 to 11 and the third places into the UEFA Cup.
-///
-/// SEH frame only for the stage's `new`: no destructor on the normal path. `EuropeanCup::draw_phase2_groups(attempt)`,
-/// called from the Champions League's next-stage routine (`european_cup_advance_stage`, stage 8, attempt 0).
-///
-/// 1) The 16 qualifiers (`exe::crt_calloc`(0x10, 7); out of memory, the error box at line 0x61c): from each first-phase group b
-/// (`[+0xc][b]`) the first and second of the table (`league_record` push 0 / push 1; mov ecx, stage -> thiscall, ret 4), with
-/// group b and 0/1; +4 counts the clubs in the list from the same nation (itself included); the list is sorted (qsort
-/// `exe::crt_qsort` with `european_cup_compare_phase2_draw_entries`) and each club's bookings are cleared in the competition's governing body (`exe::rulingbody_reset_bookings_for_club`, as in
-/// the World Cup draw).
-///
+/// coefficient, the 1,200,000 prize and its news, stages 8 to 11 and the third places into the UEFA Cup. SEH frame only
+/// for the stage's `new`: no destructor on the normal path. `EuropeanCup::draw_phase2_groups(attempt)`, called from the
+/// Champions League's next-stage routine (`european_cup_advance_stage`, stage 8, attempt 0). 1) The 16 qualifiers
+/// (`exe::crt_calloc`(0x10, 7); out of memory, the error box at line 0x61c): from each first-phase group b
+/// (`.stages()`[b]) the first and second of the table (`exe::league_get_table_row` push 0 / push 1; mov ecx, stage ->
+/// thiscall, ret 4), with group b and 0/1; +4 counts the clubs in the list from the same nation (itself included); the
+/// list is sorted (qsort `exe::crt_qsort` with `european_cup_compare_phase2_draw_entries`) and each club's bookings are
+/// cleared in the competition's governing body (`exe::rulingbody_reset_bookings_for_club`, as in the World Cup draw).
 /// 2) The pairs from the same first-phase group (two cleared lists of 16; out of memory, the error boxes 0x649 and
 /// 0x651): each club still in the list goes to slot k (winner) or k + 1 (runner-up) and the other club of its group to
-/// the other one; k goes up by 2.
-///
-/// 3) Each of the 16, in pair order: the order of the 4 groups is shuffled (5 swaps of `exe::utils_random`(4) and `exe::utils_random`(4));
-/// the group with fewest teams among those that have a free slot in its half (winners in slots 0/1, runners-up in 2/3)
-/// and have no team from the same first-phase group nor from the same nation receives the club.
-///
-/// 4) If a club is left without a group: with attempt < 20, the lists are freed and the draw is run again with attempt
-/// + 1 (the call nests inside this one); on the 20th, each leftover takes the first free slot (the club stays in the
-/// pairs list).
-///
-/// 5) Each group h (0..3): the 4 clubs earn 1 coefficient point, the 1,200,000 prize and the news (`send_prize_money_news` with round
-/// 0x44a); stage h + 8 (method +0x3c, `exe::crt_operator_new`(0xee) and the constructor 0x68b100 with the same arguments as the
-/// first-phase draw, the list of the 4 clubs copied into a 0x40-byte array (`exe::crt_malloc`); without a stage, the error box
-/// at line 0x715), +0x30 = h + 8 and the group news. The four lists are freed.
-///
-/// 6) The first-phase third places (`league_record` push 2) go to the UEFA Cup (`[[0xadadfc] + 4 × [0x9cf6f0]]`; without it,
-/// the error box at line 0x729): into the last 8 slots of its +0xa7 table, from back to front, into the +0x14 table
-/// with status 5 and with the club's European competition = the UEFA Cup; the fourth places (push 3) are left without a
-/// European competition (−1); then the UEFA Cup's predicted positions (method +0x5c).
+/// the other one; k goes up by 2. 3) Each of the 16, in pair order: the order of the 4 groups is shuffled (5 swaps of
+/// `exe::utils_random`(4) and `exe::utils_random`(4)); the group with fewest teams among those that have a free slot in
+/// its half (winners in slots 0/1, runners-up in 2/3) and have no team from the same first-phase group nor from the
+/// same nation receives the club. 4) If a club is left without a group: with attempt < 20, the lists are freed and the
+/// draw is run again with attempt + 1 (the call nests inside this one); on the 20th, each leftover takes the first free
+/// slot (the club stays in the pairs list). 5) Each group h (0..3): the 4 clubs earn 1 coefficient point, the 1,200,000
+/// prize and the news (`exe::comp_send_prize_money_news` with round 0x44a); stage h + 8 (method
+/// `comp_vtable::CREATE_SCHEDULE`, `exe::crt_operator_new`(0xee) and the constructor `FN_LEAGUE_STAGE_LEAGUE_STAGE`
+/// with the same arguments as the first-phase draw, the list of the 4 clubs copied into a 0x40-byte array
+/// (`exe::crt_malloc`); without a stage, the error box at line 0x715), `.current_stage()` = h + 8 and the group news.
+/// The four lists are freed. 6) The first-phase third places (`exe::league_get_table_row` push 2) go to the UEFA Cup
+/// (`[G_COMP_OBJECT_TABLE + 4 × [KEY_CLUB_COMP_UEFA_CUP]]`; without it, the error box at line 0x729): into the last 8
+/// slots of its `.team_table()`, from back to front, into the `.entrant_book()` with status 5 and with the club's
+/// European competition = the UEFA Cup; the fourth places (push 3) are left without a European competition (−1); then
+/// the UEFA Cup's predicted positions (method `comp_vtable::SET_PREDICTED_POSITIONS`).
 /// Original: `EuropeanCup::draw_phase2_groups` (0x585ab0, european_cup.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, attempt: u32) {
     let this = Cup(this);
@@ -683,12 +673,11 @@ pub(crate) unsafe fn second_stage_clubs(this: Cup) -> Vec<usize> {
     v
 }
 
-/// The comparison for the second-phase qualifiers: more same-nation clubs first, then the higher nation word +0x8e,
-/// then the group winner before the runner-up.
-///
-/// `european_cup_compare_phase2_draw_entries(a, b)`, the qsort comparison of the qualifiers (`draw_phase2_groups`): b's same-nation
-/// count (+4) minus a's; on a tie: the nation's word +0x8e (the club's +0x53) of b minus a's; on a tie: a's +6 (the
-/// runner-up flag) minus b's.
+/// The comparison for the second-phase qualifiers: more same-nation clubs first, then the higher nation word
+/// `nation::REPUTATION`, then the group winner before the runner-up. `european_cup_compare_phase2_draw_entries(a, b)`,
+/// the qsort comparison of the qualifiers (`draw_phase2_groups`): b's same-nation count (+4) minus a's; on a tie: the
+/// nation's word `nation::REPUTATION` (the club's `club::NATION`) of b minus a's; on a tie: a's +6 (the runner-up flag)
+/// minus b's.
 /// Original: `european_cup_compare_phase2_draw_entries` (0x5871e0, european_cup.cpp, cdecl).
 pub(crate) unsafe extern "C" fn european_cup_compare_phase2_draw_entries(a: usize, b: usize) -> i32 {
     let r = read_u8(b + 4) as i8 as i32 - read_u8(a + 4) as i8 as i32;
@@ -728,30 +717,25 @@ pub(crate) unsafe fn leave_euro_competition(club: Club) {
     write_i32(club.addr() + club::CONTINENTAL_COMP_ID, -1);
 }
 
-/// Updates the staff records by outcome and stage: in qualifying, the qualified (`add_qualified_for_round_record`) or knocked-out (`add_knocked_out_record`)
-/// record weighted by round (`comp_util_scale_by_round`); in the group stages, qualified (6) or failed to qualify (0xfe, `add_failed_to_qualify_record`); in
-/// the knockout, winners (`add_cup_winners_record`), runners-up (`add_cup_runners_up_record`), qualified or knocked out; whoever leaves gets +0x1db = -1;
-/// returns 0.
-///
-/// `EuropeanCup::update_staff_records_for_status(club, outcome, stage, _, fixture, final)`, the Champions League's
-/// virtual +0x44. Returns 0. Comp = +4.
-///
-/// - In qualifying (stage 0xff): outcome 0 or 1, the qualification by the fixture's round (+0x34): in round 0, with
-/// stage +0x3a and the +0x6f of the first round (+0xa3) and the weight `comp_util_scale_by_round`(1, 0x14, 0, 2); in any other, 0x41c, 0
-/// and `comp_util_scale_by_round`(1, 0x14, round, 2). Outcome 0xff or 2: the elimination (`add_knocked_out_record`) with the fixture's +0x32 and +0x30
-/// and the weight `comp_util_scale_by_round`(1, 0x14, round, 2), and the club leaves (+0x1db = −1).
-///
-/// - In phase 1 (stage < 8): 6, the qualification (0x44a, −1, 0x32); 0xfe, the non-qualification (0x449, 0x32) and the
-/// club leaves.
-///
-/// - In phase 2 (8 to 11): 6, the qualification (0, 0x78, 0x32); 0xfe, the non-qualification (0x44a, 0x32) and the club
-/// leaves.
-///
-/// - In the knockout (12): 1, the title (Staff_Records::add_cup_winners_record `add_cup_winners_record`, thiscall(records, club,
-/// fixture, final), ret 0xc) and the club leaves; 2, runner-up (`add_cup_runners_up_record`, likewise) and the club leaves; 0, the
-/// qualification (0, the +0x6f of the fixture's round in the knockout stage's round table (`[+0xc]` + 0x30, +0xa3, 0x68
-/// bytes), `comp_util_scale_by_round`(0x4b, 0x64, round, 2)); 0xff, the elimination (0, the fixture's +0x30, `comp_util_scale_by_round`(0x4b, 0x64, round,
-/// 2)) and the club leaves.
+/// Updates the staff records by outcome and stage: in qualifying, the qualified (`european_cup_add_qualified_record`)
+/// or knocked-out (`european_cup_add_knocked_out_record`) record weighted by round (`scale_by_round`); in the group
+/// stages, qualified (6) or failed to qualify (0xfe, `european_cup_add_failed_to_qualify_record`); in the knockout,
+/// winners (`exe::staff_records_add_cup_winners_record`), runners-up (`exe::staff_records_add_cup_runners_up_record`),
+/// qualified or knocked out; whoever leaves gets `club::CONTINENTAL_COMP_ID` = -1 (`leave_euro_competition`); returns
+/// 0. `EuropeanCup::update_staff_records_for_status(club, outcome, stage, _a, game, end)`, the Champions League's
+/// virtual +0x44. Returns 0. Comp = +4. - In qualifying (stage 0xff): outcome 0 or 1, the qualification by the
+/// fixture's round (`fixture::ROUND_NUMBER`): in round 0, with `.stage_label()` and the `cup_round::ROUND_CODE` + 0x68
+/// (+0x6f) of the round table (`.round_table()`) and the weight `scale_by_round`(1, 0x14, 0, 2); in any other, 0x41c, 0
+/// and `scale_by_round`(1, 0x14, round, 2). Outcome 0xff or 2: the elimination (`european_cup_add_knocked_out_record`)
+/// with the fixture's `fixture::ROUND_PREFIX` and `fixture::ROUND_NAME` and the weight `scale_by_round`(1, 0x14, round,
+/// 2), and the club leaves (`club::CONTINENTAL_COMP_ID` = −1). - In phase 1 (stage < 8): 6, the qualification (0x44a,
+/// −1, 0x32); 0xfe, the non-qualification (0x449, 0x32) and the club leaves. - In phase 2 (8 to 11): 6, the
+/// qualification (0, 0x78, 0x32); 0xfe, the non-qualification (0x44a, 0x32) and the club leaves. - In the knockout
+/// (12): 1, the title (`exe::staff_records_add_cup_winners_record`, thiscall(records, club, game, end), ret 0xc) and
+/// the club leaves; 2, runner-up (`exe::staff_records_add_cup_runners_up_record`, likewise) and the club leaves; 0, the
+/// qualification (0, the `cup_round::ROUND_CODE` + 0x68 of the fixture's round in the knockout stage's round table
+/// (`.stages()` + 0x30, `.round_table()`, `cup_round::SIZE` bytes), `scale_by_round`(0x4b, 0x64, round, 2)); 0xff, the
+/// elimination (0, the fixture's `fixture::ROUND_NAME`, `scale_by_round`(0x4b, 0x64, round, 2)) and the club leaves.
 /// Original: `EuropeanCup::update_staff_records_for_status` (0x584ae0, european_cup.cpp, thiscall, ret 0x18).
 pub(crate) unsafe extern "thiscall" fn european_cup_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, _a: u32, game: usize, end: u32) -> u32 {
     let this = Cup(this);
@@ -854,18 +838,21 @@ pub(crate) unsafe fn second_stage_group_club(this: Cup, g: i8, k: u32) -> Club {
     Club(read_usize(exe::league_get_table_row(read_usize(this.stages() + 0x20 + 4 * (g as i32 as usize)), (k) as i32)))
 }
 
-/// Draws the order of the 4 phase 2 groups (`exe::utils_random`) and pairs the quarter-finals (1st of a v 2nd of b, 2nd of a v 1st
-/// of b, same for c and d), resets the 8 clubs' bookings (`exe::rulingbody_reset_bookings_for_club`), creates the knockout stage (`construct_cup_stage`) in slot
-/// +0x30, drops the 3rd and 4th of each group (+0x1db = -1), sets up the round (`set_up_round`) and sets +0x30 = 12.
-///
-/// `EuropeanCup::draw_quarter_finals()`, called from the next-stage routine `european_cup_advance_stage` at stage 12. The list of the 8
-/// (calloc `exe::crt_calloc` of 8 × 4; out of memory: the error box at line 0x762) with the drawn groups a, b, c and d: 1st of a
-/// × 2nd of b, 2nd of a × 1st of b, 1st of c × 2nd of d and 2nd of c × 1st of d. Each one goes through `exe::rulingbody_reset_bookings_for_club`
-/// (thiscall(the object `[[0xae28f0]]` + 4 × +0x50, club), ret 4). The virtual +0x3c (create_round_table: stage 12) and
-/// the knockout stage (operator new `exe::crt_operator_new` of 0xb2; Cup_Stage::Cup_Stage `construct_cup_stage` with the cup, 8, the list, the
-/// rounds, +4, the table, +0x40, 0xc, 2, the extra, 0x14, 1, 0, 0, 0) into slot `[+0xc]` + 0x30; the list and the table
-/// freed (`exe::crt_free`). Without a stage: the error box at line 0x78a. Otherwise the 3rd and 4th of each phase 2 group
-/// leave (+0x1db = −1), the round is set up (Cup::set_up_round `set_up_round`, thiscall(stage, 0)) and +0x30 = 12.
+/// Draws the order of the 4 phase 2 groups (`exe::utils_random`) and pairs the quarter-finals (1st of a v 2nd of b, 2nd
+/// of a v 1st of b, same for c and d), resets the 8 clubs' bookings (`exe::rulingbody_reset_bookings_for_club`),
+/// creates the knockout stage (`FN_CUP_STAGE_CUP_STAGE`) in slot `.stages()` + 0x30, drops the 3rd and 4th of each
+/// group (`club::CONTINENTAL_COMP_ID` = -1, `leave_euro_competition`), sets up the round (`exe::cup_set_up_round`) and
+/// sets `.current_stage()` = 12. `EuropeanCup::draw_quarter_finals()`, called from the next-stage routine
+/// `european_cup_advance_stage` at stage 12. The list of the 8 (calloc `exe::crt_calloc` of 8 × 4; out of memory: the
+/// error box at line 0x762) with the drawn groups a, b, c and d: 1st of a × 2nd of b, 2nd of a × 1st of b, 1st of c ×
+/// 2nd of d and 2nd of c × 1st of d. Each one goes through `exe::rulingbody_reset_bookings_for_club` (thiscall(the
+/// object `[[G_DISCIPLINE]]` + 4 × `.discipline_index()`, club), ret 4). The virtual `comp_vtable::CREATE_SCHEDULE`
+/// (create_round_table: stage 12) and the knockout stage (operator new `exe::crt_operator_new` of 0xb2;
+/// Cup_Stage::Cup_Stage `FN_CUP_STAGE_CUP_STAGE` with the cup, 8, the list, the rounds, +4, the table, `.year()`, 0xc,
+/// 2, the extra, 0x14, 1, 0, 0, 0) into slot `.stages()` + 0x30; the list and the table freed (`exe::crt_free`).
+/// Without a stage: the error box at line 0x78a. Otherwise the 3rd and 4th of each phase 2 group leave
+/// (`club::CONTINENTAL_COMP_ID` = −1), the round is set up (Cup::set_up_round `exe::cup_set_up_round`, thiscall(stage,
+/// 0)) and `.current_stage()` = 12.
 /// Original: `EuropeanCup::draw_quarter_finals` (0x586330, european_cup.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn draw_quarter_finals(this: usize) {
     let this = Cup(this);
@@ -932,14 +919,14 @@ pub(crate) unsafe fn active_entrants(this: Cup, without_7: bool, v: *mut usize) 
     n
 }
 
-/// Allocates the list (0x11c bytes) of the entrants (+0x14) still in the cup (+0x1db = its id): kind 1 without the
-/// round 7 entries, kind 2 all, kind 3 at stage 11; otherwise the competition's own (`comp_collect_club_list`); returns the count.
-///
-/// `EuropeanCup::collect_club_list(&list, kind)`, the Champions League's virtual +0x58. Kind 1: the entrants still in,
-/// except those of round 7; kind 2: all those still in; kind 3 at stage 11: those still in; in any other case the
-/// competition's one (Comp::collect_club_list `comp_collect_club_list`, thiscall(this, &list, 0), ret 8). The list (malloc `exe::crt_malloc` of
-/// 0x11c bytes; out of memory: the error box at line 0x7b5, 0x7cf or 0x7e9, null list and 0) goes into `list`; returns
-/// the count in the low word (the high word is the list pointer's).
+/// Allocates the list (0x11c bytes) of the entrants (`.entrant_book()`) still in the cup (`club::CONTINENTAL_COMP_ID` =
+/// its id): kind 1 without the round 7 entries, kind 2 all, kind 3 at stage 11; otherwise the competition's own
+/// (`exe::comp_collect_club_list`); returns the count. `EuropeanCup::collect_club_list(&out, kind)`, the Champions
+/// League's virtual +0x58. Kind 1: the entrants still in, except those of round 7; kind 2: all those still in; kind 3
+/// at stage 11 (`.current_stage()`): those still in; in any other case the competition's one (Comp::collect_club_list
+/// `exe::comp_collect_club_list`, thiscall(this, &out, 0), ret 8). The list (malloc `exe::crt_malloc` of 0x11c bytes;
+/// out of memory: the error box at line 0x7b5, 0x7cf or 0x7e9, null list and 0) goes into `out`; returns the count in
+/// the low word (the high word is the list pointer's).
 /// Original: `EuropeanCup::collect_club_list` (0x586660, european_cup.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn european_cup_collect_club_list(this: usize, out: usize, kind: u32) -> u32 {
     let this = Cup(this);
@@ -1038,9 +1025,9 @@ pub(crate) unsafe fn fill_champions_league_entrants(t: usize) -> i32 {
     n1 + n2 + n3 + n4
 }
 
-/// allocates the 71-entry list of 6-byte entries (+0x14) and fills it with the Champions League clubs (+0x1db =
-/// [0x9cf6e8]) by band (+0x1df): 1 up to 16 (round 7), 2 up to 18 (8), 3 up to 19 (0xd), 4 up to 18 (0); short of 71,
-/// +0x36 = 0 and returns 0
+/// allocates the 71-entry list of 6-byte entries (`.entrant_book()`) and fills it with the Champions League clubs
+/// (`club::CONTINENTAL_COMP_ID` = `KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE`) by band (`club::EURO_SEEDING`): 1 up
+/// to 16 (round 7), 2 up to 18 (8), 3 up to 19 (0xd), 4 up to 18 (0); short of 71, `.entrant_count()` = 0 and returns 0
 /// Original: `EuropeanCup::collect_entrants` (0x584fa0, european_cup.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn european_cup_collect_entrants(this: usize) -> u32 {
     let this = Cup(this);
@@ -1086,8 +1073,8 @@ pub(crate) unsafe fn fill_qualifying_table(this: Cup, t: usize) {
     }
 }
 
-/// allocates the 55 qualifying rows (+0xa7, +0x3e = 55): row i takes the club of entry 70 - i and its entry round (8 ->
-/// 2, 0xd -> 1, other -> 0); out of memory, -1
+/// allocates the 55 qualifying rows (`.team_table()`, `.team_count()` = 55): row i takes the club of entry 70 - i and
+/// its entry round (8 -> 2, 0xd -> 1, other -> 0); out of memory, -1
 /// Original: `EuropeanCup::build_qualifying_entry_table` (0x584990, european_cup.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn build_qualifying_entry_table(this: usize) -> i32 {
     let this = Cup(this);
@@ -1102,13 +1089,12 @@ pub(crate) unsafe extern "thiscall" fn build_qualifying_entry_table(this: usize)
     1
 }
 
-/// Moves to the next stage (+0x30) and draws the phase 1 groups (stage 0), the phase 2 groups (8) or the quarter-finals
-/// (12); at the last stage, the error box.
-///
-/// `EuropeanCup::advance_stage()` (the virtual +0x28, from the cup pass 0x51f904). At the last stage (+0x30 ≥ +0x2c −
-/// 1, signed): the error box at line 0x495. Otherwise +0x30 + 1 and, at stage 0, the phase 1 group draw (`draw_phase1_groups`,
-/// thiscall(this)); at 8, the phase 2 draw (`draw_phase2_groups`, thiscall(this, 0), ret 4); at 12, the quarter-finals (`draw_quarter_finals`,
-/// thiscall(this)). The caller does not read the return value.
+/// Moves to the next stage (`.current_stage()`) and draws the phase 1 groups (stage 0), the phase 2 groups (8) or the
+/// quarter-finals (12); at the last stage, the error box. `EuropeanCup::advance_stage()` (the virtual +0x28, from the
+/// cup pass 0x51f904). At the last stage (`.current_stage()` ≥ `.stage_count()` − 1, signed): the error box at line
+/// 0x495. Otherwise `.current_stage()` + 1 and, at stage 0, the phase 1 group draw (`draw_phase1_groups`,
+/// thiscall(this)); at 8, the phase 2 draw (`draw_phase2_groups`, thiscall(this, 0), ret 4); at 12, the quarter-finals
+/// (`draw_quarter_finals`, thiscall(this)). The caller does not read the return value.
 /// Original: `EuropeanCup::advance_stage` (0x5851d0, european_cup.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn european_cup_advance_stage(this: usize) {
     let this = Cup(this);
@@ -1167,9 +1153,10 @@ pub(crate) unsafe fn european_cup_send_prize_money_news(this: usize, club: Club,
     exe::comp_send_prize_money_news(this, club, (value) as i32, (0) as i32, -1, 0, game, -2);
 }
 
-/// by the score (+0x47/+0x48, or +0x43/+0x44), 2 UEFA coefficient points to the winner's nation or 1 each on a draw
-/// (0x9058b0); in the group stage (+0x42 from 0 to 11), 200 thousand to the winner or 100 thousand each, with the prize
-/// news item (`send_prize_money_news`); then the cup base (`exe::cup_process_fixture`)
+/// by the score (`.home_goals_extra_time()`/`.away_goals_extra_time()`, or `.home_goals()`/`.away_goals()`), 2 UEFA
+/// coefficient points to the winner's nation or 1 each on a draw (`add_uefa_coefficient`); in the group stage
+/// (`.stage_index()` from 0 to 11), 200 thousand to the winner or 100 thousand each, with the prize news item
+/// (`european_cup_send_prize_money_news`); then the cup base (`exe::cup_process_fixture`)
 /// Original: `EuropeanCup::process_fixture` (0x583b10, european_cup.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn process_fixture(this: usize, game: usize, arg: u32) {
     let game = Fixture(game);
@@ -1226,14 +1213,14 @@ pub(crate) unsafe fn nation_coefficient_word(club: Club) -> usize {
     table.wrapping_add((read_u8(s + club::EURO_SEEDING) as i8 as isize * 18) as usize + uefa_seeding_nation::SEASON_POINTS)
 }
 
-/// Converts the three progress codes by stage (qualifying, phase 1, phase 2) and writes them to +0x73..+0x75 of the
-/// club's competition stats entry.
-///
-/// `EuropeanCup::set_club_progress(club, stage, p1, p2, p3)` (the virtual +0x68, from the cup base `record_team_progress`): converts
-/// the three progress codes by stage and writes them into the club's record in the competition statistics (`exe::comp_stats_find_club_entry` on
-/// +8, without checking for null, as the original) +0x73 ← p1, +0x74 ← p2, +0x75 ← p3. Stage −1 (qualifying): 1 → 0x19
-/// (p2: 1), 17 → 0x21, 33 → 0x31, 47 → 0x3f; stage below 8 (signed): 1 and 2 → 1 (p3: 0xd), 3 → 0x11, 4 → 0x19; below
-/// 12: 1 and 2 → 1 (p3: 7), 3 → 9, 4 → 0xd; the other codes and the stages from 12 on pass through unchanged.
+/// Converts the three progress codes by stage (qualifying, phase 1, phase 2) and writes them to `.current_position()`,
+/// `.best_position()` and `.worst_position()` of the club's competition stats entry.
+/// `EuropeanCup::set_club_progress(club, stage, p1, p2, p3)` (the virtual +0x68, from the cup base
+/// `record_team_progress`): converts the three progress codes by stage and writes them into the club's record in the
+/// competition statistics (`exe::comp_stats_find_club_entry` on +8, without checking for null, as the original)
+/// `.current_position()` ← p1, `.best_position()` ← p2, `.worst_position()` ← p3. Stage −1 (qualifying): 1 → 0x19 (p2:
+/// 1), 17 → 0x21, 33 → 0x31, 47 → 0x3f; stage below 8 (signed): 1 and 2 → 1 (p3: 0xd), 3 → 0x11, 4 → 0x19; below 12: 1
+/// and 2 → 1 (p3: 7), 3 → 9, 4 → 0xd; the other codes and the stages from 12 on pass through unchanged.
 /// Original: `EuropeanCup::set_club_progress` (0x586c00, european_cup.cpp, thiscall, ret 0x14).
 pub(crate) unsafe extern "thiscall" fn european_cup_set_club_progress(this: usize, club: usize, stage: u32, p1: u32, p2: u32, p3: u32) {
     let e = CompStatsClub(exe::comp_stats_find_club_entry(read_usize(this + 8), club));
@@ -1273,18 +1260,17 @@ pub(crate) unsafe extern "thiscall" fn european_cup_set_club_progress(this: usiz
 
 /// Builds the round table: in the group stages, the 6-round schedule (phase 1 dates in September and October and phase
 /// 2 from November to March, by half) with fixture 0 of each round empty; the qualifying rounds and the knockout stay
-/// with the original.
-///
-/// Method +0x3c of the Champions League, SEH frame for the local dates with no destructor on the normal path:
-/// `EuropeanCup::create_round_table(stage, &rounds, &id, &is_league)`, called from the group draws (`draw_phase1_groups`, `draw_phase2_groups`)
-/// and the predicted positions (`european_cup_rank_teams`). In the group stages (char 0..11, and the negatives below −1, which fall into
-/// the same branch): is_league (if requested) = 1, rounds = 6, id = 0x43d + stage; the table of 6 rounds of 0x41 bytes
-/// (`exe::crt_malloc`(0x186); out of memory, the error box at line 0x17a or 0x1aa and it returns 0); in the second phase,
-/// beforehand, the date of 1 March of the following year moved to the Tuesday (`exe::date_date_549f70`), one day earlier (0x54c8e0,
-/// which writes its static date) and the copy (`exe::date_operator_3d`), unused afterwards (the copy calls them the same way); the
-/// dates of `GROUP_STAGE_DATES` (`league_round_set_date` with the cup's year +0x40) and fixture 0 of each round empty (`store_round_match` with
-/// −1). The qualifying rounds (−1) and the knockout (12 onwards): the original through the trampoline. Returns the
-/// table.
+/// with the original. Method +0x3c of the Champions League, SEH frame for the local dates with no destructor on the
+/// normal path: `EuropeanCup::create_round_table(stage, &rounds, &id, &league)`, called from the group draws
+/// (`draw_phase1_groups`, `draw_phase2_groups`) and the predicted positions (`european_cup_rank_teams`). In the group
+/// stages (char 0..11, and the negatives below −1, which fall into the same branch): league (if requested) = 1, rounds
+/// = 6, id = 0x43d + stage; the table of 6 rounds of 0x41 bytes (`exe::crt_malloc`(0x186); out of memory, the error box
+/// at line 0x17a or 0x1aa and it returns 0); in the second phase, beforehand, the date of 1 March of the following year
+/// moved to the Tuesday (`exe::date_date_549f70`), one day earlier (`exe::date_sub_days`, which writes its static date)
+/// and the copy (`exe::date_operator_3d`), unused afterwards (the copy calls them the same way); the dates of
+/// `GROUP_STAGE_DATES` (`exe::league_round_set_date` with the cup's year `.year()`) and fixture 0 of each round empty
+/// (`exe::league_round_set_match_slot` with −1). The qualifying rounds (−1) and the knockout (12 onwards): the original
+/// through the trampoline. Returns the table.
 /// Original: `EuropeanCup::create_round_table` (0x583c50, european_cup.cpp, thiscall, ret 0x10).
 pub(crate) unsafe extern "thiscall" fn european_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, id: *mut i16, league: *mut i32) -> usize {
     let this = Cup(this);

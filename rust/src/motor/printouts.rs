@@ -3,11 +3,12 @@ use super::*;
 /// Picks a random pundit: type 1 on Sunday becomes 7; local types (2, 4): the club's pundits; the others: of the type
 /// and nation (−1 any); up to 20, random(n) and the id, or −1.
 ///
-/// Ret 0xc; 0x1094-byte frame through 0x945610: `PunditList::pick_random_pundit(club, type, nation)`, from the press
-/// stories (`exe::media_create_player_media_story`, 0x733a60) and from the news texts. Type 1 on Sunday (0x54a3f0 = 6) becomes 7. Types 2 and 4
-/// (local): those of list `[this+4]` whose +0xcb is the id of `[[club+0x69]+0x38]` (none: −1); the others: those of
-/// list `[this]` of the type (+0xca) and the nation (+0xcf; −1 accepts any). Up to 20; none: −1; otherwise the id (word
-/// +0, signed) of one of them by random(n).
+/// Ret 0xc; 0x1094-byte frame through 0x945610: `PunditList::pick_random_pundit(club, kind, nation)`, from the press
+/// stories (`exe::media_create_player_media_story`, 0x733a60) and from the news texts. Type 1 on Sunday
+/// (`exe::date_get_weekday` = 6) becomes 7. Types 2 and 4 (local): those of list `[this+4]` whose `pundit::CITY_ID` is
+/// the id of the city of the club's `.stadium()` (`.city()`) (none: −1); the others: those of list `[this]` of the type
+/// (`pundit::MEDIA_TYPE`) and the nation (`pundit::NATION_ID`; −1 accepts any). Up to 20; none: −1; otherwise the id
+/// (word +0, signed) of one of them by random(n).
 /// Original: `PunditList::pick_random_pundit` (0x7dab90, printouts.cpp, thiscall, ret 0xc).
 pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, club: usize, kind: u32, nation: i32) -> i32 {
     let club = Club(club);
@@ -100,11 +101,13 @@ pub(crate) fn default_media_name(kind: i8) -> usize {
     }
 }
 
-/// Returns the name (+2) and flag (+0xd3) of the pundit with the id, or the default outlet type name and flag 0.
+/// Returns the name (+2) and flag (`pundit::GENDER`) of the pundit with the id, or the default outlet type name and
+/// flag 0.
 ///
-/// Ret 0x10: `PunditList::get_pundit_name(type, id, name, flag)`, from the news texts. Without `name`: flag 0. Id −1:
+/// Ret 0x10: `PunditList::get_pundit_name(kind, id, name, mark)`, from the news texts. Without `name`: flag 0. Id −1:
 /// the type's default name and flag 0. Otherwise the pundit with the id (word +0) in list `[this+4]` (types 2 and 4) or
-/// `[this]`: the name (+2, sprintf "%s" 0x944c9f) and the flag (+0xd3); without him, the default name and flag 0.
+/// `[this]`: the name (+2, sprintf "%s" `FN_CRT_SPRINTF`) and the flag (`pundit::GENDER`); without him, the default
+/// name and flag 0.
 /// Original: `PunditList::get_pundit_name` (0x7dad20, printouts.cpp, thiscall, ret 0x10).
 pub(crate) unsafe extern "thiscall" fn get_pundit_name(this: usize, kind: u32, id: u32, name: usize, mark: *mut u8) {
     if name == 0 {

@@ -138,15 +138,17 @@ pub(crate) unsafe extern "thiscall" fn init_default_table(this: usize) {
     }
 }
 
-/// `HostCountry::post_host_news(list)`: posts the news of changed hosts. Called by the hosts calendar `host_country_daily_update`; SEH
-/// frame only for the local news, no destructor.
+/// `HostCountry::post_host_news(list)`: posts the news of changed hosts. Called by the hosts calendar
+/// `host_country_daily_update`; SEH frame only for the local news, no destructor.
 ///
-/// For each entry of the list (cursor reset, `next_list_item`), except the chosen bid (or the fixed default) of the edition 8
-/// years ahead ([0xae2c92] + 8), the Olympics ([0x9cf7a0]) and the 2006 World Cup in Germany ([0x9cf79c], 0x7d6,
-/// [0x9cf314]): with voting open (−1), news 4 (the bids: competition, year and the six nations); otherwise news 5 (the
-/// chosen bid: competition, year and its two hosts, the first one in the fixed default), built by `construct_news_item`/`set_news_field` and
-/// delivered to the managers of the competition's exe::news_send_to_continent_managers(table [0xae23d0], 0x6b bytes, +0x59; `send_to_continent_managers`) or to
-/// everyone (`send_to_all_managers`).
+/// For each entry of the list (cursor reset, `llist::CURSOR`; `exe::llist_get_next`), except the chosen bid
+/// (`host_entry::CHOSEN_BID`, or the fixed default) of the edition 8 years ahead (`G_CURRENT_DATE_YEAR` + 8), the
+/// Olympics (`KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES`) and the 2006 World Cup in Germany
+/// (`KEY_CLUB_COMP_FIFA_WORLD_CUP`, 0x7d6, `KEY_NATION_GERMANY`): with voting open (−1), news 4 (the bids: competition,
+/// year and the six nations); otherwise news 5 (the chosen bid: competition, year and its two hosts, the first one in
+/// the fixed default), built by `exe::new_newsitem`/`exe::newsitem_set_slot` and delivered to the managers of the
+/// competition's continent (table `G_CLUB_COMP_TABLE`, 0x6b bytes, `competition::CONTINENT`;
+/// `exe::news_send_to_continent_managers`) or to everyone (`exe::news_send_to_all_managers`).
 /// Original: `HostCountry::post_host_news` (0x5faec0, host_country.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn post_host_news(_this: usize, list: usize) {
     covered!("cqo_3 hosts news");

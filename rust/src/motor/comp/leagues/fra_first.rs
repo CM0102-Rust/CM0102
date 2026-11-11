@@ -15,33 +15,37 @@ pub(crate) unsafe fn new_marker_comp(vtabela: usize, g: usize) -> usize {
     c
 }
 
-/// Builds the French first division: discipline `0xc`; two placeholder competitions (the CFA and the lower division)
-/// with no matches of their own; in a new career, clubs of the CFA and of the lower division move to the generic
-/// division; then the rules, the table, the fixtures, the order, the statistics and the predicted positions; at last it
-/// builds the CFA (4 groups of 18) and the lower division (2 groups of 20), which leave their matches in the calendar,
-/// and frees both objects. Returns this.
+/// Builds the French first division: discipline `discipline_rule::FRANCE`; two placeholder competitions (the CFA and
+/// the lower division) with no matches of their own; in a new career, clubs of the CFA and of the lower division move
+/// to the generic division; then the rules, the table, the fixtures, the order, the statistics and the predicted
+/// positions; at last it builds the CFA (4 groups of 18) and the lower division (2 groups of 20), which leave their
+/// matches in the calendar, and frees both objects. Returns this.
 ///
 /// Convention: thiscall, ret 8, `fra_first.cpp`, 988 bytes, SEH frame only for the operator new calls.
-/// `FraFirst::FraFirst(ano, registro)` (year, record): the base (League::League `0x682200`: mov ecx -> thiscall, ret
-/// 0), the vtable `0x96aa24`, the year (`+0x40`, word), the record (`+4`) and discipline `0xc` (`+0x50`); at `+0xee`
-/// and `+0xf2` the placeholder competitions of the CFA (vtable `0x96a994`, id `[0x9cf5d8]`) and of the lower division
-/// (`0x96a904`, id `[0x9cf548]`).
+/// `FraFirst::FraFirst(year, record)`: the base (League::League `exe::new_league`: mov ecx -> thiscall, ret 0), the
+/// vtable `0x96aa24`, the year (`.set_year()`, word), the record (`league::COMPETITION`) and discipline
+/// `discipline_rule::FRANCE` (`.set_discipline_rule()`); at `fra_first::CFA_MARKER` and `fra_first::LOWER_MARKER` the
+/// placeholder competitions of the CFA (vtable `0x96a994`, id `KEY_CLUB_COMP_FRENCH_CFA`) and of the lower division
+/// (`0x96a904`, id `KEY_CLUB_COMP_FRENCH_LOWER_DIVISION`).
 ///
-/// It tries to load from the temporary file (League::load_from_temp_file `0x687b10`: push 1; mov ecx -> thiscall, ret
-/// 4): if loaded, done. Otherwise, the new league: each club (the first `[0xae235c]` − 2 × `[0xae2350]` of
-/// `[0xae23b4]`, `0x245` bytes; the count recomputed on every pass) whose competition (`+0x57`) is the CFA moves to the
-/// generic division (record with id `[0x9cf764]`) with the CFA as reserve competition (`+0x60`) [inference: the B sides
-/// of the professional clubs]; a lower-division club moves to the generic division with no reserve (`+0x60` = 0).
+/// It tries to load from the temporary file (League::load_from_temp_file `exe::league_load_from_temp_file`: push 1; mov
+/// ecx -> thiscall, ret 4): if loaded, done. Otherwise, the new league: each club (the first `G_CLUB_COUNT` − 2 ×
+/// `G_NATION_COUNT` of `G_CLUB_TABLE`, `club::SIZE` bytes; the count recomputed on every pass) whose competition
+/// (`club::DIVISION`) is the CFA moves to the generic division (record with id `KEY_CLUB_COMP_A_LOWER_DIVISION`) with
+/// the CFA as reserve competition (`+0x60`) [inference: the B sides of the professional clubs]; a lower-division club
+/// moves to the generic division with no reserve (`+0x60` = 0).
 ///
-/// Then stage `0xff` (`+0x44`), current stage −1 (`+0x30`), no stages (`+0x2c`, `+0xc`); the rules (`0x5bc410`), the
-/// table (`0x5bc2b0`), the fixtures (League::create_fixtures `0x6835c0`), the order (League::sort_table `0x6827d0`:
-/// push 0 -> thiscall, ret 4), the statistics (operator new of `0x5ce` and Comp_Stats::Comp_Stats `0x49ee70`: push
-/// league; mov ecx, new -> thiscall, ret 4) at `+8` and the predicted positions (`0x68a850`: mov ecx -> thiscall, ret
-/// 0); each step that fails shows the box of its line (`0x65`, `0x6c`, `0x73`, `0x7c`, `0x83`) and ends.
+/// Then stage `stage_index::MAIN` (`.set_stage_index()`), current stage −1 (`.set_current_stage()`), no stages
+/// (`.set_stage_count()`, `.set_stages()`); the rules (`exe::frafirst_set_up_rules`), the table
+/// (`exe::frafirst_create_table`), the fixtures (League::create_fixtures `exe::league_create_fixtures`), the order
+/// (League::sort_table `exe::league_sort_table`: push 0 -> thiscall, ret 4), the statistics (operator new of `0x5ce`
+/// and Comp_Stats::Comp_Stats `exe::new_comp_stats`: push league; mov ecx, new -> thiscall, ret 4) at
+/// `.set_comp_stats()` and the predicted positions (`exe::league_set_predicted_positions`: mov ecx -> thiscall, ret 0);
+/// each step that fails shows the box of its line (`0x65`, `0x6c`, `0x73`, `0x7c`, `0x83`) and ends.
 ///
-/// Finally, the two background leagues: the CFA (operator new of `0xee`; FraCfa::FraCfa `0x5b91c0`: push year; mov ecx
-/// -> thiscall, ret 4) and the lower division (`0x5bd600`, the same), which leave their matches in the game calendar,
-/// and are destroyed (virtual 0 with 1: push 1; mov ecx -> thiscall, ret 4).
+/// Finally, the two background leagues: the CFA (operator new of `0xee`; FraCfa::FraCfa `exe::new_fracfa`: push year;
+/// mov ecx -> thiscall, ret 4) and the lower division (`exe::new_fralower`, the same), which leave their matches in the
+/// game calendar, and are destroyed (virtual 0 with 1: push 1; mov ecx -> thiscall, ret 4).
 /// Original: `FraFirst::FraFirst` (0x5bb160, fra_first.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn construct_fra_first(this: usize, year: u32, record: usize) -> usize {
     let this = League(this);
@@ -956,9 +960,9 @@ pub(crate) unsafe fn fra_first_fill_league_table(this: League, file: usize, row:
 /// Creates the French top-division table: 18 clubs in the 2001 season and 20 afterwards; prize fund of 200,000 per
 /// place; TV pays 6,000,000 to each club.
 ///
-/// `FraFirst::create_table()`: 18 clubs in the 2001 season (`+0x40` = `0x7d1`) and 20 afterwards (`[0x9cf5cc]`),
-/// `+0xa7` = −1; once filled, the fund by the 200,000 share and the TV money of 6,000,000 to each club; returns 1 (0 if
-/// it could not fill). Source `0x9ccb5c`, line `0x1d3`.
+/// `FraFirst::create_table()`: 18 clubs in the 2001 season (`.year()` = `0x7d1`) and 20 afterwards
+/// (`KEY_CLUB_COMP_FRENCH_FIRST_DIVISION`), `.set_games_per_club()` = −1; once filled, the fund by the 200,000 share
+/// and the TV money of 6,000,000 to each club; returns 1 (0 if it could not fill). Source `0x9ccb5c`, line `0x1d3`.
 /// Original: `FraFirst::create_table` (0x5bc2b0, fra_first.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn fra_first_create_table(this: usize) -> u32 {
     let this = League(this);

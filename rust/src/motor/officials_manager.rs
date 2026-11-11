@@ -1,8 +1,9 @@
 use super::*;
 
-/// adds the grade to the referee's record (17 bytes at [this] + id × 17, id in 0..[0xae2390]): +0xf the cards, words +8
-/// and +0xa the fouls and the grade, +0x10 the last grade, +0xc the matches and +4 the average (+0xa / +0xc, float).
-/// Compared side by side (the record)
+/// adds the grade to the referee's record (17 bytes at [this] + id × 17, id in 0..`G_OFFICIAL_COUNT`):
+/// `official_stats::CARDS` the cards, words +8 and `official_stats::GRADE_SUM` the fouls and the grade,
+/// `official_stats::LAST_GRADE` the last grade, `official_stats::MATCHES` the matches and +4 the average
+/// (`official_stats::GRADE_SUM` / `official_stats::MATCHES`, float). Compared side by side (the record)
 /// Original: `record_referee_grade` (0x79ce10, officials_manager.cpp (208 bytes), thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn record_referee_grade(this: usize, r: *const u8) {
     let base = *(this as *const usize);
@@ -64,18 +65,21 @@ pub(crate) unsafe fn crt_free(p: usize) {
 
 /// Sets up the referees on a new game: reviews them, sorts them by nation and quality, keeps 6 per nation (61 in some
 /// nations), builds the per-nation blocks with one slot per league, draws the missing referees and shares the nation's
-/// referees among the slots.
-///
-/// `OfficialsManager::set_up_officials()`, from the constructor (0x79b580) on a new game. It reviews the records
-/// (`officials_manager_validate_officials`), sorts them by nation and quality (qsort `officials_manager_compare_nation_then_quality_desc`) and, per nation, keeps the first 6 (nation with +0x11c
-/// zero) or 61 (the first of each nation after the first one is not kept: the count restarts on it), copied (`officials_manager_operator`)
-/// into a new table; the per-nation blocks (this+0xc, 0x102 bytes: +0 the nation, +4 the referees, +8 the first, +0xc
-/// the demand, +0x10 the competitions and 15 slots of 16 bytes at +0x12): each league (`exe::comp_util_is_league_division`, not a friendly
-/// `exe::friendly_is_friendly_competition`, with nation +0x5d) gets a slot with the demand (+0x3e of the competition) / 2 + 10; a nation with
-/// competitions asks for the largest × the number and, if short, draws the missing ones (`officials_manager_add_random_officials`); without
-/// competitions and with fewer than 5, it draws up to the nation's +0x8e (1..5). The indexes (+0), the first of each
-/// nation and, per nation, the slots sorted (qsort `officials_manager_compare_comp_level`) with each one's share; this+4 the count and this+8 the
-/// flags (calloc).
+/// referees among the slots. `OfficialsManager::set_up_officials()`, from the constructor (0x79b580) on a new game. It
+/// reviews the records (`officials_manager_validate_officials`), sorts them by nation and quality (qsort
+/// `officials_manager_compare_nation_then_quality_desc`) and, per nation, keeps the first 6 (nation with
+/// `nation::LEAGUE_SELECTED` zero) or 61 (the first of each nation after the first one is not kept: the count restarts
+/// on it), copied (`officials_manager_operator`) into a new table; the per-nation blocks
+/// (`officials_manager_fields::NATION_BLOCKS`, 0x102 bytes: +0 the nation, `officials_nation_block::REFEREE_COUNT` the
+/// referees, `officials_nation_block::FIRST_REFEREE` the first, `officials_nation_block::DEMAND` the demand,
+/// `officials_nation_block::COMP_COUNT` the competitions and 15 slots of 16 bytes at
+/// `officials_nation_block::COMP_SLOTS`): each league (`exe::comp_util_is_league_division`, not a friendly
+/// `exe::friendly_is_friendly_competition`, with nation `nation()`) gets a slot with the demand (`league::CLUB_COUNT`
+/// of the competition) / 2 + 10; a nation with competitions asks for the largest × the number and, if short, draws the
+/// missing ones (`officials_manager_add_random_officials`); without competitions and with fewer than 5, it draws up to
+/// the nation's `nation::REPUTATION` (1..5). The indexes (+0), the first of each nation and, per nation, the slots
+/// sorted (qsort `officials_manager_compare_comp_level`) with each one's share; `officials_manager_fields::BUSY_COUNT`
+/// the count and `officials_manager_fields::BUSY_FLAGS` the flags (calloc).
 /// Original: `OfficialsManager::set_up_officials` (0x79bf60, officials_manager.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
     exe::officials_manager_validate_officials();
@@ -226,10 +230,10 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
 }
 
 /// Orders a nation's referee slots by competition level (the invalid ones last or first), tie by id.
-///
-/// `officials_manager_compare_comp_level(a, b)` (cdecl), the order of a nation's competition slots (qsort of `set_up_officials`,
-/// 16-byte entries with the competition at +0xc): `a`'s competition outside 0..[0xae2378]: 1; `b`'s outside: −1; by
-/// level (+0x69, word, of the 0x6b-byte competition in [0xae23d0]); same level: the difference of the ids.
+/// `officials_manager_compare_comp_level(a, b)` (cdecl), the order of a nation's competition slots (qsort of
+/// `set_up_officials`, 16-byte entries with the competition at `officials_comp_slot::COMP_ID`): `a`'s competition
+/// outside 0..`G_CLUB_COMP_COUNT`: 1; `b`'s outside: −1; by level (`competition::REPUTATION`, word, of the 0x6b-byte
+/// competition in `G_CLUB_COMP_TABLE`); same level: the difference of the ids.
 /// Original: `officials_manager_compare_comp_level` (0x79d410, officials_manager.cpp, cdecl).
 pub(crate) unsafe extern "C" fn officials_manager_compare_comp_level(a: usize, b: usize) -> i32 {
     let (ca, cb) = (read_i32(a + officials_comp_slot::COMP_ID), read_i32(b + officials_comp_slot::COMP_ID));
@@ -308,18 +312,18 @@ pub(crate) unsafe fn officials_manager_club_nation_id(club: Club) -> Option<i32>
 }
 
 /// Chooses a match referee: the referee range for the competition, a random one in it and the next free one.
-///
-/// `OfficialsManager::choose_match_official(match, out)`, from setting up the day (`set_up_the_day`, output at +0x2e of the
-/// match). Removed match (−2): 0 (eax 0xffffff00, as in the original). The referee range: without a competition, the
-/// home club's nation (+0x1c, +0x53) or a random one; a friendly (`exe::friendly_is_friendly_competition` on [0xae2c74]), the home club's; a
-/// competition without an object ([0xadadfc]), as without a competition; a competition of types 2 and 4 (+0x42), the
-/// top quarter (ftol of 0.75 and 0.25 of the count) of the first nation, starting from a random one, of the continent
-/// (+0x59 of the competition, or +0x71 of the home club's nation, of the away club's, or a random one) that is not that
-/// of either club (a neutral nation); in the others, the competition's range in its nation's block (+0x5d; or the home
-/// club's, the away club's, or a random one), the last that matches, or the whole block. Count 1: the first; otherwise
-/// first + random(count − 1). Busy (the byte of the referee's id in [this+8]): the next in the range, wrapping around;
-/// all busy, the drawn one. Writes the index (word) and returns 1 in al (the rest of eax with the index, as in the
-/// original).
+/// `OfficialsManager::choose_match_official(game, out)`, from setting up the day (`set_up_the_day`, output at +0x2e of
+/// the match). Removed match (−2): 0 (eax 0xffffff00, as in the original). The referee range: without a competition,
+/// the home club's nation (`home_club()`, `nation()`) or a random one; a friendly
+/// (`FN_FRIENDLY_IS_FRIENDLY_COMPETITION` on `G_FRIENDLY`), the home club's; a competition without an object
+/// (`G_COMP_OBJECT_TABLE`), as without a competition; a competition of types 2 and 4 (`club_sides()`), the top quarter
+/// (ftol of 0.75 and 0.25 of the count) of the first nation, starting from a random one, of the continent
+/// (`continent()` of the competition, or `nation::CONTINENT` of the home club's nation, of the away club's, or a random
+/// one) that is not that of either club (a neutral nation); in the others, the competition's range in its nation's
+/// block (`nation()`; or the home club's, the away club's, or a random one), the last that matches, or the whole block.
+/// Count 1: the first; otherwise first + random(count − 1). Busy (the byte of the referee's id in
+/// `officials_manager_fields::BUSY_FLAGS`): the next in the range, wrapping around; all busy, the drawn one. Writes the
+/// index (word) and returns 1 in al (the rest of eax with the index, as in the original).
 /// Original: `OfficialsManager::choose_match_official` (0x79c7b0, officials_manager.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: usize, out: usize) -> u32 {
     let game = Fixture(game);
@@ -440,11 +444,10 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
     (k as u32 & 0xffff_ff00) | 1
 }
 
-/// Clears the daily referee busy bytes.
-///
-/// `OfficialsManager::clear_busy_flags`, in the day loop (0x5cccd0) and in the run up to the start date (0x5cc850):
-/// zeroes the [this+4] busy bytes at [this+8] (the count and the vector re-read at each step). Returns the count (0 if
-/// not positive), like the original's eax.
+/// Clears the daily referee busy bytes. `OfficialsManager::clear_busy_flags`, in the day loop (0x5cccd0) and in the run
+/// up to the start date (0x5cc850): zeroes the `officials_manager_fields::BUSY_COUNT` busy bytes at
+/// `officials_manager_fields::BUSY_FLAGS` (the count and the vector re-read at each step). Returns the count (0 if not
+/// positive), like the original's eax.
 /// Original: `OfficialsManager::clear_busy_flags` (0x79bf40, officials_manager.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn clear_busy_flags(this: usize) -> u32 {
     let mut i = 0i32;
@@ -456,17 +459,18 @@ pub(crate) unsafe extern "thiscall" fn clear_busy_flags(this: usize) -> u32 {
 }
 
 /// At each league's season start, replaces the referees of its range over 45 (or over 40, one in three) with new random
-/// ones and clears the range's statistics rows.
-///
-/// `OfficialsManager::renew_officials(comp)`, at the start of each league's season (83 callers). Without a competition,
-/// without an object ([0xadadfc]), of types 4 and 2 (+0x42), or without a exe::comp_util_is_league_division(`exe::comp_util_is_league_division`): 0. The competition's range
-/// in its nation's block (+0x5d, or a random one), the first that matches, or the whole block. Each referee of the
-/// range (0x2b-byte records in [0xae23e8]; null record: the "Error" box): over 45 years old (the year as a byte, minus
-/// 1 before his birthday), or over 40 and random(3) zero, becomes another: two names from his nation (`database_pick_first_name_for_nation`, +4 and
-/// +8), +0x25 random(16) + 5 (or, with random(10) zero, random(11) + random(11)), the year (+0xe) game year − 27 +
-/// random(5) and the day (+0xc) random(340). Then it zeroes the statistics rows (17 bytes at [this]) of each referee of
-/// the range (+4, +8, +0xa, +0xc, +0xf; the `add eax, 0x11` at 0x79d149 stays inside the loop). Returns 1 (only al
-/// counts).
+/// ones and clears the range's statistics rows. `OfficialsManager::renew_officials(comp)`, at the start of each
+/// league's season (83 callers). Without a competition, without an object (`G_COMP_OBJECT_TABLE`), of types 4 and 2
+/// (`club_sides()`), or without `exe::comp_util_is_league_division`: 0. The competition's range in its nation's block
+/// (`nation()`, or a random one), the first that matches, or the whole block. Each referee of the range (0x2b-byte
+/// records in `G_OFFICIAL_TABLE`; null record: the "Error" box): over 45 years old (the year as a byte, minus 1 before
+/// his birthday), or over 40 and random(3) zero, becomes another: two names from his nation
+/// (`exe::database_pick_first_name_for_nation`, `set_first_name` and `set_second_name`), `set_discipline` random(16) +
+/// 5 (or, with random(10) zero, random(11) + random(11)), the year (`set_birth_year`) game year − 27 + random(5) and
+/// the day (`set_birth_day`) random(340). Then it zeroes the statistics rows (17 bytes at [this]) of each referee of
+/// the range (`official_stats::AVERAGE_GRADE`, `official_stats::FOULS`, `official_stats::GRADE_SUM`,
+/// `official_stats::MATCHES`, `official_stats::CARDS`; the `add eax, 0x11` at 0x79d149 stays inside the loop). Returns
+/// 1 (only al counts).
 /// Original: `OfficialsManager::renew_officials` (0x79cee0, officials_manager.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize) -> u8 {
     let comp = Competition(comp);
@@ -565,14 +569,13 @@ pub(crate) unsafe fn generate_official(r: usize, nation: Nation) {
 }
 
 /// Reallocates the referee table, generates `count` new referees of the nation and sorts the table by nation and
-/// quality.
-///
-/// `officials_manager_add_random_officials(count, nation)` (thiscall with this unused, ret 8), from setting up the
-/// referees of a new game (`set_up_officials`, in nations with few referees). A nation without a continent (+0x71): nothing. It
-/// reallocates the table ([0xae23e8], `exe::crt_realloc`) to [0xae2390] + count records (out of memory: error and the game
-/// stops), generates `count` new records at the end (generate_official: names by weight, random ratings and attributes,
-/// born in the 1960s), adds the count to [0xae2390] and sorts the whole table (qsort `exe::crt_qsort` with `officials_manager_compare_nation_then_quality_asc`: nation,
-/// +0x28 × 50 + +0x22, id).
+/// quality. `officials_manager_add_random_officials(count, nation)` (thiscall with this unused, ret 8), from setting up
+/// the referees of a new game (`set_up_officials`, in nations with few referees). A nation without a continent
+/// (`continent()`): nothing. It reallocates the table (`G_OFFICIAL_TABLE`, `exe::crt_realloc`) to `G_OFFICIAL_COUNT` +
+/// count records (out of memory: error and the game stops), generates `count` new records at the end
+/// (generate_official: names by weight, random ratings and attributes, born in the 1960s), adds the count to
+/// `G_OFFICIAL_COUNT` and sorts the whole table (qsort `exe::crt_qsort` with
+/// `officials_manager_compare_nation_then_quality_asc`: nation, +0x28 × 50 + +0x22, id).
 /// Original: `officials_manager_add_random_officials` (0x79c5c0, officials_manager.cpp, thiscall (this sem uso), ret 8).
 pub(crate) unsafe extern "thiscall" fn officials_manager_add_random_officials(_this: usize, count: i32, nation: usize) {
     let nation = Nation(nation);
@@ -612,15 +615,15 @@ pub(crate) unsafe fn fix_official_attribute(e: usize, o: usize, f: impl FnOnce()
 }
 
 /// Repairs each referee record: the nation from the names, out-of-range ratings and attributes drawn again, and a
-/// too-old birth date.
-///
-/// `officials_manager_validate_officials()` (cdecl), at the start of setting up the referees of a new game (`set_up_officials`).
-/// For each of the [0xae2390] records (0x2b bytes in [0xae23e8]): without a nation (+0x16), the one from the nation
-/// table by the index (+0x37) of the first name (+4), of the second (+8), or a random one; the words +0x22, +0x1e and
-/// +0x20 outside 1..200: random(80) + 1 plus the nation's byte +0x8e (+0x22) or 4 times it (+0x1e, +0x20; the redone
-/// +0x20 is at least +0x1e); the bytes +0x24..+0x2a outside 1..20 drawn by the bands of +0x1e (above 120, above 80);
-/// born before the date `exe::date_date_549f70`(1, 1, 1910, −1) (year unsigned, then the day signed), year 1960 + random(10) and day
-/// random(300) + 1.
+/// too-old birth date. `officials_manager_validate_officials()` (cdecl), at the start of setting up the referees of a
+/// new game (`set_up_officials`). For each of the `G_OFFICIAL_COUNT` records (0x2b bytes in `G_OFFICIAL_TABLE`):
+/// without a nation (`official::NATION`), the one from the nation table by the index (`names::NATION`) of the first
+/// name (+4), of the second (+8), or a random one; the words `official::REPUTATION`, `official::CURRENT_ABILITY` and
+/// `official::POTENTIAL_ABILITY` outside 1..200: random(80) + 1 plus the nation's byte `nation::REPUTATION`
+/// (`official::REPUTATION`) or 4 times it (`official::CURRENT_ABILITY`, `official::POTENTIAL_ABILITY`; the redone
+/// `official::POTENTIAL_ABILITY` is at least `official::CURRENT_ABILITY`); the bytes +0x24..+0x2a outside 1..20 drawn
+/// by the bands of `official::CURRENT_ABILITY` (above 120, above 80); born before the date `exe::date_date_549f70`(1,
+/// 1, 1910, −1) (year unsigned, then the day signed), year 1960 + random(10) and day random(300) + 1.
 /// Original: `officials_manager_validate_officials` (0x79caa0, officials_manager.cpp, cdecl).
 pub(crate) unsafe extern "C" fn officials_manager_validate_officials() {
     let base = read_usize(G_OFFICIAL_TABLE);
@@ -692,11 +695,11 @@ pub(crate) unsafe extern "C" fn officials_manager_validate_officials() {
     }
 }
 
-/// Copies a 0x2b-byte referee record field by field, the date through the date copy.
-///
-/// `Official::operator=(src)`, from setting up the referees of a new game (`set_up_officials`, the records that are kept). Copies
-/// the 0x2b-byte record field by field (+0, +4, +8; the date at +0xc through `exe::date_operator_3d`; +0x14, +0x16, +0x1a, +0x1e,
-/// +0x20, +0x22, the bytes +0x24..+0x2a). Returns `this`.
+/// Copies a 0x2b-byte referee record field by field, the date through the date copy. `Official::operator=(src)`, from
+/// setting up the referees of a new game (`set_up_officials`, the records that are kept). Copies the 0x2b-byte record
+/// field by field (+0, +4, +8; the date at `official::BIRTH_DAY` through `exe::date_operator_3d`;
+/// `official::YEAR_OF_BIRTH`, `official::NATION`, `official::CITY`, +0x1e, +0x20, +0x22, the bytes +0x24..+0x2a).
+/// Returns `this`.
 /// Original: `Official::operator=` (0x79c530, officials_manager.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn officials_manager_operator(this: usize, src: usize) -> usize {
     for o in [0usize, 4, 8] {
@@ -717,12 +720,12 @@ pub(crate) unsafe extern "thiscall" fn officials_manager_operator(this: usize, s
 }
 
 /// Writes the referees and their statistics into the off.dat item of the save.
-///
-/// `OfficialsManager::save_official_stats(save)`: writes into the `off.dat` item the number of referees [0xae2390], the
-/// 0x11-byte records from [+0] (one per referee), the number of nations [0xae2350], the 0x102-byte records from [+0xc]
-/// (one per nation) and one byte per referee from [+8]; returns 1 (in the low byte). No container or an error on
-/// opening: the "Error" box (officials_manager.cpp 0x142, 0x14a) and 0; no referees or an error on writing: the box
-/// (0x150, 0x156, 0x15c, 0x164, 0x16c, 0x174), it closes the item and 0.
+/// `OfficialsManager::save_official_stats(save)`: writes into the `off.dat` item the number of referees
+/// `G_OFFICIAL_COUNT`, the 0x11-byte records from [+0] (one per referee), the number of nations `G_NATION_COUNT`, the
+/// 0x102-byte records from `officials_manager_fields::NATION_BLOCKS` (one per nation) and one byte per referee from
+/// `officials_manager_fields::BUSY_FLAGS`; returns 1 (in the low byte). No container or an error on opening: the
+/// "Error" box (officials_manager.cpp 0x142, 0x14a) and 0; no referees or an error on writing: the box (0x150, 0x156,
+/// 0x15c, 0x164, 0x16c, 0x174), it closes the item and 0.
 /// Original: `OfficialsManager::save_official_stats` (0x79bb80, officials_manager.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn save_official_stats(this: usize, save: usize) -> u8 {
     const FONTE: usize = 0xa6a22c;

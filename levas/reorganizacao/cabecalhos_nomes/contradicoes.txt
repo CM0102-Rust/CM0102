@@ -1,0 +1,94 @@
+== lote 1 (147 cabecalhos, 134 reescritos)
+european_cup_update_staff_records_for_status: "+0x6f of the first round" but code reads ROUND_CODE + 0x68 (round 1 = second)
+sign_contract: header "100 days (date_sub_weeks)", code subtracts 0x64 weeks
+contract_manager_offer_contract: "today + 150 days" but code uses G_CONTRACT_DATE_PLUS_365_DAYS + 0x96; "flagged regen" tested by staff_state_status_flags::RETIREMENT_STATE
+update_after_match: "average rating - 1" but code subtracts rdata::F64_0_05
+post_wants_new_contract_news: "adaptability (+0x59)" is staff::LOYALTY; transfer-list check is exe::transfer_manager_is_queued_for_free_transfer
+handle_transfer_request: +0x59 "temperament" is .loyalty(); +0x44 "request strength" is contract::MORALE
+resubmit_held_offers: club (+0x24)/offer (+0x5d) are .serial() / contract_offer::TRANSFER_OFFER_SERIAL
+record_international_result: match count +2 only in the real-international branch
+national_team_ages: header says Olympic/youth, the 9 keys are the main finals
+release_competitions_of_continent: [0x9cfa10] is KEY_CONTINENT_EUROPE, a continent
+tactic_slot_person: Nation(p.national_job()).three_letter_name() reads club::NATION (+0x53) through the wrong type (same offset)
+eng_second_create_play_off_stage: +0x3a extra goes to the stage constructor, not stored in this
+add_contract_offer: 0x68d0d0 is llist_add_tail
+== lote 6 (208, 173 reescritos)
+update_transfer_fee_records: "the manager (+0xbf)" is chairman() (club::CHAIRMAN)
+club_uses_squad_numbers: object from G_COMP_OBJECT_TABLE is a League (+0x52 league::SQUAD_FLAGS) but the body wraps it as Competition and reads short_gender_name() (wrong type in the body)
+database_player_initialisation: +0xb/+9/+0xd "abilities" are player_sheet CURRENT/HOME/WORLD_REPUTATION (x50 at the end)
+database_get_staff_reputation_for_viewer: header +9 current/+0xb national; fields.rs +9 HOME_REPUTATION, +0xb CURRENT_REPUTATION (one of them is swapped)
+cqt4_update_average_attendance: header +0x72 predicted/+0x73 final; accessors final_position() (+0x72) and current_position() (+0x73)
+database_trim_club_table: header says falls back to the original without memory; body only returns
+database_staff_matches_names: cites exe::date_operator_3d_3d, body compares the date words directly
+== lote 4 (134, 119 reescritos)
+awol_daily_update, report_poor_fitness: "morale" +0x44 is player_sheet::WORK_RATE (rewritten "work rate")
+awol_post_missed_training_news: "player has a nation (+0x53)" reads club::NATION
+create_fixtures: nation +0x24 / club of that nation (+0x69) are fixed_stadium_id() and club::STADIUM
+get_condition, init_records/injury_reset_player: form/condition swapped (+8 FORM, +0xa CONDITION)
+post_due_recovery_news: "days out (+0x2a)" is training_return_days(); days_out is +0x28
+injury_post_injury_news: "potential (+0xd)" is world_reputation()
+regenerate_as_youth_player: nation reputation <100/350 is nation::NUMBER_STAFF; "assistant manager" is club::CHAIRMAN interference()
+player_regen_post_retirement_news: slot 9 "reputation" gets int_apps()
+player_regen_check_*, score_non_player_candidate: "ability (+0xb)" is current_reputation(); ability is current_ability() (+5)
+player_regen_post_youth_promotion_news, score_club_for_player: "strength/youth (+0x7f)" is club.training()
+illness_outbreak::CLUB_ID (+0xd) holds the match id (club at +9): field name likely wrong
+roll_recurring_injury: header still says DESLIGADAS / copy does not run: stale
+== lote 5 (173, 157 reescritos)
+DEFEITO REAL (corrigido): match_screens::refresh_match_stats_values chamava read_i8(0x127 + 0) etc. desde a rodada 24 (2e5b6f42): a closure local byte(k, d) foi tomada pelo ajudante byte(p, off); 14 celulas da tela de estatisticas nao eram escritas e a leitura em endereco baixo derruba o jogo
+find_friendly_opponent / find_tour_opponent: "same city (+0x57)" but body compares .division()
+is_watching_fixture: +0x3f "competition"/+0 "club" are .time_slice()/.comp_id(); human_manager_record::WATCHED_FIXTURE comment says HOME_CLUB_ID but compared to comp_id
+get_contract_satisfaction: "adaptability (+0x59)" is .loyalty()
+staff_criterion: "functions in [t+0x45]" is .grievances(); "club's reputation"/"age" are player's current_reputation and staff::TEMPERAMENT
+check_postponement: +0x4d "uncovered stadium" named stadium::UNDER_SOIL_HEATING
+check_transfer_request_withdrawal: +0x44 "happiness" is set_morale(); happiness +0x3d
+0x2db0 has two names: commentary_queue::VOLUME and match_events_fields::COMMENTARY_SPEED
+intl_date_entry::WEEKDAY (+1) gets the day in build_international_date_table: maybe swapped
+== lote 3 (159, 141 reescritos)
+match_day::end_day: +0x5b "summary"/+0x5f "object" are day_match::SCOREBOARD/SUMMARY
+match_day::find_record_fixture: "+0 competition, +4 club" but match_stats_entry +0 = HOME_CLUB_ID
+scout_manager::send_scout_report_news: header +0xc of each record, body reads p + SCOUT_NAME_REF + 0xc (+0x43): one is wrong; +0x1f "the scout" named scout_report::PLAYER_NAME_REF
+media::post_financial_trouble_news: +0x38 of the stadium read as player_sheet::PENALTIES (wrong name)
+media::queue_sale_unrest_story: teammate param named comp tested with competition::FOREGROUND_COLOUR (wrong name/type)
+match_day::close_day_match: "round number" (+0x2d) is .losing_run()
+media::pick_former_international_pundit / pick_rival_manager_id: +0x61/+0x69 "contract" are staff::PLAYER / .non_player()
+== lote 7 (142, 131 reescritos)
+fin_prm::season_end_club_update: "league size (+0x69)" is .division().reputation()
+fin_prm::get_max_wage: limit applies to non_player without player
+fin_prm add_weekly_merchandising_income/try_board_debt_payment/try_cash_injection: +0xbf "club"/+0x69 "stadium" are .chairman()/.non_player()
+fin_prm::try_finance_boost_event: +0x20 is player_sheet::BRAVERY in one place and non_player::RESOURCES in another; .goalkeeper() used as chairman's +0xf
+fin_prm::process_match_income: header "/4 unless both +0x64 = 1", body /4 when neither is PROFESSIONAL
+fin_prm::sell_season_tickets: header "into +0x15c", body adds season, month and balance
+fin_prm::update_wage_bill: writes +0xc with this.set_stages() because this is typed League (wrong type in code)
+manager_manager::update_board_confidence_after_match: "ratings" are .home_shots()/.home_shots_on_target()
+manager_manager::board_named_players_after_match: .chairman() called "manager"; [0xae1080] is G_CONTRACT_LOOKUP_RESULT
+manager_manager::add_job_vacancy: "ranking" is .number_staff()
+manager_manager::consider_sacking_manager: "position (+4)" is .matches_played()
+manager_manager get_departure_reason/resolve_board_ultimatum: "matches" is .winless_run()
+manager_manager::init_club_board_records: "person with a club (+0x24)" uses .national_job()/.job_for_nation()
+manager_manager::assess_transfer_deal: "already assessed (+0x1f)" is .offer_type()
+shortlist_manager::make_club_bids: "England [0x9cf300]" is KEY_NATION_FRANCE; outgoing loan is .national_job()/job_kind::MANAGER
+shortlist_manager::value_player_for_club: "consistency (+0x2d)" is .injury_proneness()
+shortlist_manager::suspend_clubs_shortlisting_player: "state (+8)" is club_shortlist::DAYS
+shortlist_manager::is_staff_suitable_for_job: "one of their three" are preferences::STAFF_DISLIKED_CLUBS1..3
+shortlist_manager_remove_from_transfer_list: header text mangled by an earlier mechanical change
+== lote 0 (180, 150 reescritos)
+game_check_players_missing_training: "link +0x44" (morale) but body reads player().work_rate()
+competition_weight: header talks of competitions, body uses nation/second_nation, KEY_NATION_SWEDEN/NORWAY/DENMARK/BELGIUM and languages
+key_nation_get_club_season_year: "start day" is key_nation_record::SEASON_END_DAY
+add_league_finish_records: "year +0x3a" is .stage_id()
+record_match_result: "not played (+0x3a = 1)" compares match_category::FRIENDLY
+send_to_club_manager, construct_news_item, roll_recurring_injury: headers still say DESLIGADAS (stale)
+add_cup_winners_record: param names game/fixture swapped vs meaning
+field_by_position: header incomplete (also returns moment_positioning/marking)
+== lote 2 (258, 226 reescritos)
+check_squad_limits: header "not of type 0xb/0xf/0xd", body picks only those types
+club_rejects_offer: "selling club (id = +8)" is buyer_club_id(), body writes REFUSED_BY_BUYER
+update_work_permit_on_move: "neither has flag 0xe", body tests not both UK_AND_IRELAND
+is_work_permit_granted: "offer wage (+0xc)" read as offer::TARGET_STAFF_ID on a Contract (wrong type name); "potential (+0xd)" is world_reputation()
+get_exchange_negotiations_for_player: manager typed Staff, common_name()/staff::DATE_OF_BIRTH used for +0xc/+0x10 (wrong names)
+map_fixture_tree: "team of nation +0x24" compares club stadium with venue_stadium_id()
+calculate_match_attendance: "number of clubs (+0x69)" is reputation(); get_club_target_rating "money (+0x77)" is min_attendance(), "nation (+0x57)" is division()
+check_matchday_squad_limit: "age (+0x18)" is year_of_birth()
+accept_transfer_bid: "Loan (+0x11 = 0xb)" is job_kind::PLAYER
+position_mask: "+0x14 midfielder" is ATTACKING_MIDFIELDER
+get_offer_response_delay / get_travel_distance_factor: rdata mapping by order of use, to check

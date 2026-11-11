@@ -11,20 +11,23 @@ pub(crate) unsafe fn conmebol_merc_drawn_club(this: League, k: usize) -> usize {
 /// to 3) and groups 2 to 5 are stages (4g + 4 to 4g + 7); the 5 winners and the 3 best runners-up go to the
 /// quarter-finals.
 ///
-/// First the turn of the season: on 1 June of today's year (the date from `exe::date_date_549f70`(1, 5, year, −1): lea ecx, local;
-/// push −1; push year; push 5; push 1 -> thiscall, ret 0x10, pure: the day of the year from the month tables, the month
-/// counted from 0), if the cup's year (+0x40, signed) is not today's, virtual +8 (the new season: mov ecx, this ->
-/// thiscall, ret 0).
+/// First the turn of the season: on 1 June of today's year (the date from `exe::date_date_549f70`(1, 5, year, −1): lea
+/// ecx, local; push −1; push year; push 5; push 1 -> thiscall, ret 0x10, pure: the day of the year from the month
+/// tables, the month counted from 0), if the cup's year (`.year()`, signed) is not today's, virtual
+/// `comp_vtable::START_NEW_SEASON` (the new season: mov ecx, this -> thiscall, ret 0).
 ///
-/// When the draw has not been done (+0x45 = 0) and with `full`, on the draw day (the date from 0x549ef0(+0xb6, +0xb8 +
-/// +0x40): the day of the year and the relative year; compared with today's, +0 the day of the year and +2 the year,
-/// unsigned): the clubs (`conmebol_merc_select_invited_clubs`, the 20 invited clubs shuffled: mov ecx, this -> thiscall, ret 0), the group 1 table
-/// (`conmebol_merc_create_first_group_table`, thiscall, ret 0; 0: the box of line 0x396), the fixtures (`create_fixtures` League::create_fixtures, thiscall, ret
-/// 0; 0: the box of line 0x39b), the sorted table (`sort_table` push 0; mov ecx -> thiscall, ret 4; 0: the box of line
-/// 0x3a1), the stages of groups 0..3 (`conmebol_merc_create_group_stage`: push g; mov ecx -> thiscall, ret 4), the predicted positions (virtual
-/// +0x5c, thiscall, ret 0), the list +0xee freed (`exe::crt_free`: push; add esp, 4 -> cdecl) and zeroed, and +0x45 = 1. An
-/// error gives the box of its line and goes on. Then the league day (`league_update_for_date`: push full; push today; mov ecx, this ->
-/// thiscall, ret 8), whose return value it passes on.
+/// When the draw has not been done (`.active()` = 0) and with `full`, on the draw day (the date from
+/// 0x549ef0(`.next_draw_day()`, `.next_draw_year_offset()` + `.year()`): the day of the year and the relative year;
+/// compared with today's, +0 the day of the year and +2 the year, unsigned): the clubs
+/// (`exe::conmebolmerc_select_invited_clubs`, the 20 invited clubs shuffled: mov ecx, this -> thiscall, ret 0), the
+/// group 1 table (`exe::conmebolmerc_create_first_group_table`, thiscall, ret 0; 0: the box of line 0x396), the
+/// fixtures (`exe::league_create_fixtures` League::create_fixtures, thiscall, ret 0; 0: the box of line 0x39b), the
+/// sorted table (`exe::league_sort_table` push 0; mov ecx -> thiscall, ret 4; 0: the box of line 0x3a1), the stages of
+/// groups 0..3 (`exe::conmebolmerc_create_group_stage`: push g; mov ecx -> thiscall, ret 4), the predicted positions
+/// (virtual `comp_vtable::SET_PREDICTED_POSITIONS`, thiscall, ret 0), the list `conmebol_merc::DRAWN_CLUBS` freed
+/// (`exe::crt_free`: push; add esp, 4 -> cdecl) and zeroed, and `.set_active(1)`. An error gives the box of its line
+/// and goes on. Then the league day (`exe::league_update_for_date`: push full; push today; mov ecx, this -> thiscall,
+/// ret 8), whose return value it passes on.
 /// Original: `ConmebolMerc::update_for_date` (0x4c5c90, conmebol_merc.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn conmebol_merc_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let this = League(this);
@@ -81,10 +84,11 @@ pub(crate) unsafe fn is_rollover_day(this: League, today: usize) -> bool {
 /// Builds the table of group 1 of the Copa Mercosur. Rule: group 1 has 4 clubs, the first 4 drawn, each in the row of
 /// its order; human managers get the group draw news.
 ///
-/// 4 teams (+0x3e), the table +0xb1 (`exe::crt_malloc`(0xec): push 0xec; add esp, 4 -> cdecl; 4 rows of 0x3b bytes; without
-/// memory, the box of line 0x155 and returns 0), each row i with drawn club i (+0xee) (`init_table_row` League::init_table_row:
-/// push 0; push 0; push club; push i; mov ecx, this -> thiscall, ret 0x10), the group draw news (`send_group_draw_news`: mov ecx,
-/// this -> thiscall, ret 0), and returns 1. The same body as `init_group_a_table` of the African Cup (only the file and the box
+/// 4 teams (`.set_club_count()`), the table `.set_table()` (`exe::crt_malloc`(0xec): push 0xec; add esp, 4 -> cdecl; 4
+/// rows of 0x3b bytes; without memory, the box of line 0x155 and returns 0), each row i with drawn club i
+/// (`conmebol_merc::DRAWN_CLUBS`) (`exe::league_init_table_row` League::init_table_row: push 0; push 0; push club; push
+/// i; mov ecx, this -> thiscall, ret 0x10), the group draw news (`exe::league_send_group_draw_news`: mov ecx, this ->
+/// thiscall, ret 0), and returns 1. The same body as `init_group_a_table` of the African Cup (only the file and the box
 /// line change).
 /// Original: `ConmebolMerc::create_first_group_table` (0x4c4e60, conmebol_merc.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_first_group_table(this: usize) -> u32 {
@@ -114,15 +118,18 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_first_group_table(th
 /// groups is a league stage with the next 4 drawn clubs (4g + 4 to 4g + 7), the cup's rules and year and the cup's
 /// round table for the group; human managers get the news.
 ///
-/// SEH frame only for the stage's new: no destructor on the normal path. The teams go into a vector of +0x3e pointers
-/// (`exe::crt_malloc`(+0x3e << 2): push; add esp, 4 -> cdecl; without memory, the box of line 0x1fb and 0): drawn clubs 4g + 4
-/// to 4g + 7 (+0xee); the round table through virtual +0x3c (push 0; push &id; push &rounds; push g; mov ecx, this ->
-/// thiscall, ret 0x10); the stage (`exe::crt_operator_new`(0xee) push; add esp, 4 -> cdecl; the League_Stage constructor 0x68b100,
-/// thiscall, ret 0x58, 22 arguments: the cup, the teams (+0x3e, word), the vector, +0x3c (word), +4, the round table,
-/// the rounds (word), +0xc2, +0xc3, +0xc4, &+0xc5, &+0xbe, the year +0x40 (word), g, the id (word), +0x51, 2, 0, +0xd9
-/// (word), −1, 0, 2; the original pushes the words and bytes with garbage in the high bytes, which the constructor does
-/// not read: the port passes clean values) in [+0xc][g]; the vector and the round table freed (`exe::crt_free`). Without a
-/// stage: the box of line 0x211 and 0. With it: the group news (`send_group_draw_news` on the stage), +0x30 = g and 1.
+/// SEH frame only for the stage's new: no destructor on the normal path. The teams go into a vector of `.club_count()`
+/// pointers (`exe::crt_malloc`(`.club_count()` << 2): push; add esp, 4 -> cdecl; without memory, the box of line 0x1fb
+/// and 0): drawn clubs 4g + 4 to 4g + 7 (`conmebol_merc::DRAWN_CLUBS`); the round table through virtual
+/// `comp_vtable::CREATE_SCHEDULE` (push 0; push &id; push &rounds; push g; mov ecx, this -> thiscall, ret 0x10); the
+/// stage (`exe::crt_operator_new`(0xee) push; add esp, 4 -> cdecl; the League_Stage constructor
+/// `FN_LEAGUE_STAGE_LEAGUE_STAGE`, thiscall, ret 0x58, 22 arguments: the cup, the teams (`.club_count()`, word), the
+/// vector, `.legs()` (word), `.competition()`, the round table, the rounds (word), `.win_points()`, `.draw_points()`,
+/// `.match_category()`, &`league::TIEBREAKS`, &`league::PROMOTED_COUNT`, the year `.year()` (word), g, the id (word),
+/// `.importance()`, 2, 0, `.league_flags()` (word), −1, 0, 2; the original pushes the words and bytes with garbage in
+/// the high bytes, which the constructor does not read: the port passes clean values) in `.stages()`[g]; the vector and
+/// the round table freed (`exe::crt_free`). Without a stage: the box of line 0x211 and 0. With it: the group news
+/// (`exe::league_send_group_draw_news` on the stage), `.set_current_stage(g)` and 1.
 /// Original: `ConmebolMerc::create_group_stage` (0x4c51d0, conmebol_merc.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_group_stage(this: usize, g: i32) -> u32 {
     let this = League(this);

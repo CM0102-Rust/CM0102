@@ -384,8 +384,8 @@ pub(crate) unsafe fn create_playoff_stage(this: League, rows: [usize; 4], file: 
 }
 
 /// builds the play-off stage with the 6th, 3rd, 5th and 4th of the table (ties 6th v 3rd and 5th v 4th), the round
-/// table from virtual +0x3c and +0x3a = 0xa0; puts the stage in the first slot (+0xc) and sets up the round (`set_up_round`);
-/// out of memory, the error box (lines 0x2f0 and 0x306)
+/// table from virtual `comp_vtable::CREATE_SCHEDULE` and +0x3a = 0xa0; puts the stage in the first slot (`.stages()`)
+/// and sets up the round (`exe::cup_set_up_round`); out of memory, the error box (lines 0x2f0 and 0x306)
 /// Original: `EngFirst::create_playoff_stage` (0x573080, eng_first.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn eng_first_create_playoff_stage(this: usize) {
     create_playoff_stage(League(this), [5, 2, 4, 3], 0x9c4374, 0x2f0, 0x306, Some(0xa0), "cpz_1 mata-mata da first"); // cpz1: 6º × 3º e 5º × 4º da First
@@ -422,8 +422,8 @@ pub(crate) unsafe fn compare_playoff_stage(name: &str, this: League, rows: [usiz
     SCOREBOARD.record(same, || format!("{}({:#x}) plan={:x?} stage={:#x} list={:x?} +0x3e={} n={}", name, this.addr(), plan, stage.addr(), found, stage.team_count(), n));
 }
 
-/// at the last stage (+0x30 >= +0x2c - 1) the error box (line 0x2ce); otherwise +0x30 + 1 and, on reaching 0, the
-/// play-offs (`eng_first_create_playoff_stage`)
+/// at the last stage (`.current_stage()` >= `.stage_count()` - 1) the error box (line 0x2ce); otherwise
+/// `.current_stage()` + 1 and, on reaching 0, the play-offs (`eng_first_create_playoff_stage`)
 /// Original: `EngFirst::advance_stage` (0x572ff0, eng_first.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn eng_first_advance_stage(this: usize) {
     advance_league_stage(League(this), 0x9c4374, 0x2ce, 0x573080, "cpz_3 mata-mata da first")
@@ -439,8 +439,9 @@ pub(crate) unsafe extern "thiscall" fn construct_eng_first(this: usize, year: u3
 /// play-offs, the bottom 3 go down to the Second; 5 substitutes and 3 substitutions; 2 rounds, 3 points.
 ///
 /// `EngFirst::set_up_rules()`: the common rules, 2 promoted directly (`+0xbe`), 4 to the promotion play-off (`+0xbf`,
-/// 3rd to 6th), no relegation play-off (`+0xc0`), 3 relegated (`+0xc1`), the Premier above (`+0x1c` = `[0x9cf5bc]`) and
-/// the Second below (`+0x20` = `[0x9cf5c4]`), 5 substitutes on the bench (`+0x49`) and 3 substitutions (`+0x4a`).
+/// 3rd to 6th), no relegation play-off (`+0xc0`), 3 relegated (`+0xc1`), the Premier above (`+0x1c` =
+/// `KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION`) and the Second below (`+0x20` = `KEY_CLUB_COMP_ENGLISH_SECOND_DIVISION`),
+/// 5 substitutes on the bench (`+0x49`) and 3 substitutions (`+0x4a`).
 /// Original: `EngFirst::set_up_rules` (0x572d90, eng_first.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn eng_first_set_up_rules(this: usize) -> u32 {
     covered!("cqi_4 first division rules");
@@ -463,8 +464,9 @@ pub(crate) unsafe extern "thiscall" fn eng_first_create_table(this: usize) -> u3
     })
 }
 
-/// writes stage, best and worst in the club stats entry (+0x73..+0x75): in the league, best 3 to 6 becomes 3 and worst
-/// 3 to 6 becomes 6; in the play-offs (stage 0), 1, 2 and 3 become 3, 4 and 5
+/// writes stage, best and worst in the club stats entry (`.set_current_position()`, `.set_best_position()`,
+/// `.set_worst_position()`): in the league, best 3 to 6 becomes 3 and worst 3 to 6 becomes 6; in the play-offs (stage
+/// 0), 1, 2 and 3 become 3, 4 and 5
 /// Original: `EngFirst::set_club_progress` (0x573260, eng_first.cpp, thiscall, ret 0x14).
 pub(crate) unsafe extern "thiscall" fn eng_first_set_club_progress(this: usize, club: usize, stage: u32, current: u32, best: u32, worst: u32) {
     set_club_stage_status(this, club, stage as u8, current as u8, best as u8, worst as u8, 3, 6)

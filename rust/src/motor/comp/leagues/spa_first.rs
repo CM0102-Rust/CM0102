@@ -397,12 +397,15 @@ pub(crate) unsafe fn spa_first_compare_league_rules(name: &str, this: League, wr
 /// Creates the La Primera table of 20 clubs; first the clubs of the Spanish lower division move to the generic lower
 /// division; prize fund of 250,000 per place; TV pays 5,000,000 to each club.
 ///
-/// `SpaFirst::create_table()`. +0x3e = 20 and the table (malloc `exe::crt_malloc` of 0x49c; out of memory: the box with source
-/// 0xa82844, line 0x250, and 0). Before filling, the clubs of the Spanish lower division ([0x9cf6b0]) move to the
-/// generic lower division (+0x57 = the record of [0x9cf764]). Then the Primera clubs ([0x9cf624]) in database order,
-/// each in the next row (League::init_table_row `init_table_row`: thiscall(league, row, club, 0, 0), ret 0x10), until full (not
-/// filled: 0). Full: the prize fund (+0x28 = League::calc_prize_fund `calc_prize_fund` with the share of 250,000), +0xe1 = 1,
-/// the TV money of 5,000,000 to each club (`pay_tv_rights`: thiscall(league, value, 0), ret 8) and 1.
+/// `SpaFirst::create_table()`. `set_club_count(20)` and the table (`set_table`, malloc `exe::crt_malloc` of 0x49c; out
+/// of memory: the box with source 0xa82844, line 0x250, and 0). Before filling, the clubs of the Spanish lower division
+/// ([`KEY_CLUB_COMP_SPANISH_LOWER_DIVISION`]) move to the generic lower division (`club::DIVISION` = the record of
+/// [`KEY_CLUB_COMP_A_LOWER_DIVISION`], `comp_record_of`). Then the Primera clubs
+/// ([`KEY_CLUB_COMP_SPANISH_FIRST_DIVISION`]) in database order, each in the next row (League::init_table_row
+/// `exe::league_init_table_row`: thiscall(league, row, club, 0, 0), ret 0x10), until full (not filled: 0). Full: the
+/// prize fund (`set_prize_fund` with League::calc_prize_fund `exe::league_calc_prize_fund` with the share of 250,000),
+/// `set_prize_mode(1)`, the TV money of 5,000,000 to each club (`exe::league_pay_tv_rights`: thiscall(league, value,
+/// 0), ret 8) and 1.
 /// Original: `SpaFirst::create_table` (0x84fc70, spa_first.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u32 {
     let this = League(this);
@@ -456,11 +459,12 @@ pub(crate) unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u3
 /// Writes the club's current, best and worst possible position into La Primera statistics; places 17 and 18 become 16
 /// for the best and 19 for the worst.
 ///
-/// `SpaFirst::set_club_progress(club, stage, current, best, worst)`, virtual +0x68 (from `update_positions_and_status` for each table row):
-/// in the club's entry in the statistics (Comp_Stats::find_club_entry `exe::comp_stats_find_club_entry`: thiscall(+8, club), ret 4) it writes
-/// the current position (+0x73), the best possible (+0x74; 17 and 18 become 16) and the worst (+0x75; 17 and 18 become
-/// 19): the 17 to 18 band of the Primera does not count as a band of its own [inference: positions 17 to 18 join the
-/// neighbouring band above for the best and the one below for the worst].
+/// `SpaFirst::set_club_progress(club, stage, current, best, worst)`, virtual +0x68 (from `update_positions_and_status`
+/// for each table row): in the club's entry in the statistics (Comp_Stats::find_club_entry
+/// `exe::comp_stats_find_club_entry`: thiscall(+8, club), ret 4) it writes the current position
+/// (`set_current_position`), the best possible (`set_best_position`; 17 and 18 become 16) and the worst
+/// (`set_worst_position`; 17 and 18 become 19): the 17 to 18 band of the Primera does not count as a band of its own
+/// [inference: positions 17 to 18 join the neighbouring band above for the best and the one below for the worst].
 /// Original: `SpaFirst::set_club_progress` (0x850880, spa_first.cpp, thiscall, ret 0x14).
 pub(crate) unsafe extern "thiscall" fn spa_first_set_club_progress(this: usize, club: usize, _stage: u32, current: u32, best: u32, worst: u32) {
     let e = CompStatsClub(exe::comp_stats_find_club_entry(read_usize(this + 8), club));

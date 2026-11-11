@@ -177,13 +177,15 @@ pub(crate) unsafe extern "thiscall" fn set_place_counts(this: usize) {
 
 /// `uefa_find_nth_unplaced_club_of_nation` (`this` is not read): in the European club table sorted by nation, returns
 /// the nth club of the nation, skipping on request those already holding a European place and those with a human
-/// manager; this is how each place goes to the nation's next club (the order within the nation comes from `collect_european_clubs`).
+/// manager; this is how each place goes to the nation's next club (the order within the nation comes from
+/// `collect_european_clubs`).
 ///
-/// In the European clubs table (12-byte records sorted by nation, `collect_european_clubs`: +0 the club, +4 the nation id, +8, +9,
-/// +0xb), the binary search (bsearch `exe::crt_bsearch` with 0x905ce0; the key has only the nation and +8 = 0xff, so only the
-/// nation counts) finds a club of the nation; it steps back to the nation's first one; it walks to the `n`th (char, 1 =
-/// the first) that counts, skipping, if asked, those that already have a place in the European cups (+0x1db ≠ −1) and
-/// those with a human manager (`exe::human_manager_is_human_club`(club, 0, 1, 0, 0)). The last record of the table is never examined by the loop:
+/// In the European clubs table (12-byte records sorted by nation, `collect_european_clubs`: +0 the club, +4 the nation
+/// id, +8, +9, +0xb), the binary search (bsearch `FN_CRT_BSEARCH` with 0x905ce0; the key has only the nation and +8 =
+/// 0xff, so only the nation counts) finds a club of the nation; it steps back to the nation's first one; it walks to
+/// the `n`th (char, 1 = the first) that counts, skipping, if asked (`without_slot`), those that already have a place in
+/// the European cups (`.continental_comp_id()` ≠ −1) and (`without_human`) those with a human manager
+/// (`exe::human_manager_is_human_club`(club, 0, 1, 0, 0)). The last record of the table is never examined by the loop:
 /// if it gets there with the count at zero, that one is chosen without the tests. Returns the club if it belongs to the
 /// nation, otherwise 0.
 /// Original: `uefa_find_nth_unplaced_club_of_nation` (0x9050d0, uefa_seeding.cpp, thiscall, ret 0x18 (this não lido)).
@@ -258,15 +260,18 @@ pub(crate) unsafe fn assign_comp_place(this: usize, c: Club, comp: u32, stage: u
 /// European place, sorted by nation and, within it, by division, position and reputation; in 2001 euro.cfg can move
 /// clubs to the front of their nation.
 ///
-/// It allocates 12 bytes per club in the game (`exe::crt_malloc`; without memory, the box of line 0x2ed and returns 0) and
-/// stores the pointer in `*out`; for each club (0x245-byte records in [0xae23b4], [0xae235c] clubs) with a nation, that
-/// is not a national side (`exe::database_is_national_team`) and whose nation is in Europe (continent +0x71 with the id of [0x9cfa10]): it
-/// clears the European place (+0x1db = −1 and the dword of the club's row in [0xae2d14], 6 bytes per club, = −1) and
-/// writes the record (+0 the club, +4 the nation id, +8 the reputation +0x80 / 500, +9 the +0x69 of the division +0x5b
-/// [inference: the division's level], +0xb the +0x5f [inference: the position in it]; without a division, −1 and 0x7f;
-/// with the row of a competition without +0x11c, the row and the club's +0x5f are zeroed). Sorts by nation (qsort
-/// `exe::crt_qsort` with 0x905ce0) and, in 2001, applies the euro.cfg order (`exe::uefaseeding_apply_euro_cfg_order`, original). Returns the number of clubs
-/// (only the low 16 bits count: the caller reads si).
+/// It allocates 12 bytes per club in the game (`exe::crt_malloc`; without memory, the box of line 0x2ed and returns 0)
+/// and stores the pointer in `*out`; for each club (`club::SIZE`-byte records in `G_CLUB_TABLE`, `G_CLUB_COUNT` clubs)
+/// with a nation (`club::NATION`), that is not a national side (`exe::database_is_national_team`) and whose nation is
+/// in Europe (`.continent()` with the id of `KEY_CONTINENT_EUROPE`): it clears the European place
+/// (`club::CONTINENTAL_COMP_ID` = −1 and the dword of the club's row in `G_CLUB_STATE_TABLE`, 6 bytes per club, = −1)
+/// and writes the record (+0 the club, +4 the nation id, +8 the reputation `club::REPUTATION` / 500, +9 the
+/// `.reputation()` of the division `club::LAST_DIVISION` [inference: the division's level],
+/// `european_club_entry::LAST_POSITION` the `club::LAST_POSITION` [inference: the position in it]; without a division,
+/// −1 and 0x7f; with the row of a competition without `.league_selected()`, the row and the club's
+/// `club::LAST_POSITION` are zeroed). Sorts by nation (qsort `exe::crt_qsort` with 0x905ce0) and, in 2001
+/// (`uefa_seeding::SEASON_YEAR`), applies the euro.cfg order (`exe::uefaseeding_apply_euro_cfg_order`, original).
+/// Returns the number of clubs (only the low 16 bits count: the caller reads si).
 /// Original: `UefaSeeding::collect_european_clubs` (0x904040, uefa_seeding.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn collect_european_clubs(this: usize, out: *mut usize) -> u32 {
     let t = exe::crt_malloc((read_u32(G_CLUB_COUNT) as i32).wrapping_mul(12) as u32);
@@ -680,14 +685,18 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs
 }
 
 /// `UefaSeeding::pick_english_intertoto_club` (SEH frame for the local news item, no destructor on the normal path):
-/// picks England's Intertoto club, with the news to the division. In 2001 England uses the table (`assign_intertoto_places`).
+/// picks England's Intertoto club, with the news to the division. In 2001 England uses the table
+/// (`assign_intertoto_places`).
 ///
-/// In 2001, or without the Premier League ([0xadadfc] + [0x9cf5bc] × 4), returns 0. Otherwise it fills the volunteers
-/// list (+0x43b, 30 ids, allocated with 0x78 bytes; +0x43f the count) up to 6, drawing Premier clubs (`exe::utils_random` with
-/// +0x3e, up to 80 draws) without a human manager and without a European place; it picks the volunteer without a place
-/// from the highest division (the Premier's counts +4 + +0x5f; the others +30, i.e. the best placed [inference:
-/// +0x5f]); with none, it draws Premier clubs until one without a place. Delivers news item 0x17 with the club
-/// (`construct_news_item`, `set_news_field`, `send_to_division_managers` to the Premier division) and returns the club.
+/// In 2001 (`G_CURRENT_DATE_YEAR`), or without the Premier League (`G_COMP_OBJECT_TABLE` +
+/// `KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION` × 4), returns 0. Otherwise it fills the volunteers list
+/// (`uefa_seeding::INTERTOTO_VOLUNTEERS`, 30 ids, allocated with 0x78 bytes; `uefa_seeding::INTERTOTO_VOLUNTEER_COUNT`
+/// the count) up to 6, drawing Premier clubs (`exe::utils_random` with `.club_count()`, up to 80 draws) without a human
+/// manager and without a European place (`club::CONTINENTAL_COMP_ID`); it picks the volunteer without a place from the
+/// highest division (the Premier's (`club::LAST_DIVISION` = `.competition()`) counts `club::LAST_POSITION`; the others
+/// +30, i.e. the best placed [inference: `club::LAST_POSITION`]); with none, it draws Premier clubs until one without a
+/// place. Delivers news item 0x17 with the club (`exe::new_newsitem`, `exe::newsitem_set_slot`,
+/// `exe::news_send_to_division_managers` to the Premier division) and returns the club.
 /// Original: `UefaSeeding::pick_english_intertoto_club` (0x903890, uefa_seeding.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn pick_english_intertoto_club(this: usize) -> usize {
     if read_i16(G_CURRENT_DATE_YEAR) == 0x7d1 {
@@ -766,12 +775,17 @@ pub(crate) unsafe extern "thiscall" fn pick_english_intertoto_club(this: usize) 
 /// `UefaSeeding::update_season` (SEH frame for the local news item, no destructor on the normal path), called by the
 /// European cups: the seeding calendar.
 ///
-/// Without `daily`: when the game year ([0xae2c92]) differs from +0x439, it stores the year and redoes the seeding: the
-/// coefficients (`roll_coefficients`), the places per nation (`set_place_counts`), the clubs table (`collect_european_clubs`; empty, the box of line 0x2b7),
-/// the Champions League (`assign_champions_league_places`), UEFA Cup (`assign_uefa_cup_places`) and Intertoto (`assign_intertoto_places`) places, frees the table and delivers
-/// the qualifiers news (`exe::uefa_post_qualifiers_news`). With `daily`: on day 100 of the year, with the Premier League and the Intertoto in
-/// the game, news item 0x16 asking for volunteers (with the year) to each human manager of a Premier club (without the
-/// Premier, it returns with nothing else); and the European registration deadline (`exe::uefa_check_registration_deadlines`).
+/// Without `diario`: when the game year (`G_CURRENT_DATE_YEAR`) differs from `uefa_seeding::SEASON_YEAR`, it stores the
+/// year and redoes the seeding: the coefficients (`exe::uefaseeding_roll_coefficients`), the places per nation
+/// (`exe::uefaseeding_set_place_counts`), the clubs table (`exe::uefaseeding_collect_european_clubs`; empty, the box of
+/// line 0x2b7), the Champions League (`exe::uefaseeding_assign_champions_league_places`), UEFA Cup
+/// (`exe::uefaseeding_assign_uefa_cup_places`) and Intertoto (`exe::uefaseeding_assign_intertoto_places`) places, frees
+/// the table and delivers the qualifiers news (`exe::uefa_post_qualifiers_news`). With `diario`: on day 100 of the year
+/// (`G_CURRENT_DATE`), with the Premier League (`KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION`) and the Intertoto
+/// (`KEY_CLUB_COMP_INTER_TOTO_CUP`) in the game (`G_COMP_OBJECT_TABLE`), news item 0x16 asking for volunteers (with the
+/// year) to each human manager of a Premier club (`exe::news_club_has_human_manager`, `exe::news_send_to_club_manager`)
+/// (without the Premier, it returns with nothing else); and the European registration deadline
+/// (`exe::uefa_check_registration_deadlines`).
 /// Original: `UefaSeeding::update_season` (0x9035a0, uefa_seeding.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn update_season(this: usize, diario: u32) {
     if diario == 0 {
@@ -844,10 +858,11 @@ pub(crate) unsafe fn uefa_seeding_crt_fclose(f: usize) {
 
 /// `UefaSeeding::save_to_temp_file`: writes `CM3_TEMP\uefa_seeding.tmp`.
 ///
-/// The country count (+0x438, i8), the 0x12-byte records from +0, +0x439 (u16), the count +0x43f (i8) and, if not zero,
-/// that many u32 from [+0x43b], and the 50 fixed 0xc-byte records from +0x440. An error opening or writing: the "Error"
-/// box (uefa_seeding.cpp 0x64f, 0x657, 0x660, 0x668, 0x66f, 0x679, 0x682), without closing the file (as the original
-/// does).
+/// The country count (`uefa_seeding::NATION_COUNT`, i8), the 0x12-byte records from +0, `uefa_seeding::SEASON_YEAR`
+/// (u16), the count `uefa_seeding::INTERTOTO_VOLUNTEER_COUNT` (i8) and, if not zero, that many u32 from
+/// [`uefa_seeding::INTERTOTO_VOLUNTEERS`], and the 50 fixed 0xc-byte records from `uefa_seeding::CUP_FINALS`. An error
+/// opening or writing: the "Error" box (uefa_seeding.cpp 0x64f, 0x657, 0x660, 0x668, 0x66f, 0x679, 0x682), without
+/// closing the file (as the original does).
 /// Original: `UefaSeeding::save_to_temp_file` (0x905510, uefa_seeding.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn uefa_seeding_save_to_temp_file(this: usize) {
     const FONTE: usize = 0xaa1a1c;

@@ -14,23 +14,27 @@ pub(crate) unsafe fn fix_man_is_human_club(club: usize) -> bool {
 /// labels.
 ///
 /// `FIXTURE_MANAGER::daily_update()`, from the day loop (0x5cc850); SEH frame with no destructor on the normal path
-/// (the local dates). By today's weekday (`exe::date_get_weekday` on 0xae2c90):
+/// (the local dates). By today's weekday (`exe::date_get_weekday` on `G_CURRENT_DATE`):
 ///
-/// 1. days 2 and 3: the reserve fixtures for 3 days ahead (`exe::date_add_days` + `exe::reservecomp_schedule_reserve_fixtures`: push &date; mov ecx, [0xb74434] ->
-/// thiscall, ret 4) and, on day 3, also for tomorrow;
+/// 1. days 2 and 3: the reserve fixtures for 3 days ahead (`exe::date_add_days` +
+/// `exe::reservecomp_schedule_reserve_fixtures`: push &date; mov ecx, [`G_RESERVE_COMP`] -> thiscall, ret 4) and, on
+/// day 3, also for tomorrow;
 ///
-/// 2. the fixture news queue ([+0x1128], a list): each news item goes to the manager of the club in slot 0 if slot 0xe
-/// asks for it and to the manager of the club in slot 1 if slot 0xf asks for it (`get_slot`: push k; mov ecx, news ->
-/// thiscall, ret 4; `send_to_club_manager`: push club; push news; mov ecx, [0xb7431c] -> thiscall, ret 8); the list is destroyed
-/// (`exe::drop_llist` + `exe::crt_operator_delete`) and [+0x1128] becomes 0;
+/// 2. the fixture news queue (`fixture_manager::MOVED_NEWS_QUEUE`, a list): each news item goes to the manager of the
+/// club in slot 0 if slot 0xe asks for it and to the manager of the club in slot 1 if slot 0xf asks for it
+/// (`exe::newsitem_get_slot`: push k; mov ecx, news -> thiscall, ret 4; `exe::news_send_to_club_manager`: push club;
+/// push news; mov ecx, [`G_NEWS`] -> thiscall, ret 8); the list is destroyed (`exe::drop_llist` +
+/// `exe::crt_operator_delete`) and `fixture_manager::MOVED_NEWS_QUEUE` becomes 0;
 ///
 /// 3. days 5 and 6, if yesterday is in the same year: in yesterday's lists (the 3 slices, the key nations up to
-/// [0xb64738]), from back to front, the friendlies ([0x9cf684], type +0x3a = 1) between two clubs without a human
-/// manager leave the list (`exe::llist_get_prev` + `exe::llist_remove_node`); the first fixture that is not a friendly of that type ends the list;
+/// `G_KEY_NATION_ACTIVE_COUNT`), from back to front, the friendlies (`KEY_CLUB_COMP_RESERVE`, `fixture::CATEGORY` = 1)
+/// between two clubs without a human manager leave the list (`exe::llist_get_prev` + `exe::llist_remove_node`); the
+/// first fixture that is not a friendly of that type ends the list;
 ///
-/// 4. the leg check list ([0xae2a48]): each entry whose cup (or its stage +4) has +0x43 = 1 labels the following
-/// fixtures of the round (`exe::cup_label_round_extra_fixtures`: push +0xb; push +7; push round; ecx = the cup -> thiscall, ret 0xc); the list is
-/// emptied (`manager_manager_clear`).
+/// 4. the leg check list (`G_FIXTURE_LEGS_LIST`): each entry whose cup (or its stage +4) has `cup::COMP_TYPE` = 1
+/// labels the following fixtures of the round (`exe::cup_label_round_extra_fixtures`: push
+/// `fixture_leg_check::AWAY_CLUB_ID`; push +7; push round; ecx = the cup -> thiscall, ret 0xc); the list is emptied
+/// (`exe::llist_clear`).
 /// Original: `FIXTURE_MANAGER::daily_update` (0x5aaf00, fix_man.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn fix_man_daily_update(this: usize) {
     let (mut a, mut b, mut c) = ([0u8; 8], [0u8; 8], [0u8; 8]);
@@ -128,12 +132,13 @@ pub(crate) unsafe extern "thiscall" fn fix_man_daily_update(this: usize) {
 /// Returns the fixture list for a year, day, slice and key nation, switching the other year block to the requested year
 /// or creating it.
 ///
-/// `FIXTURE_MANAGER::get_fixture_list(year, day, slice, type)`; SEH frame with no destructor on the normal path. The
+/// `FIXTURE_MANAGER::get_fixture_list(year, day, slice, kind)`; SEH frame with no destructor on the normal path. The
 /// list of fixtures of the year, day (word), slice (byte) and key nation (signed byte) in the chain of year blocks. By
-/// the block's year (+0x1130): if the other block (+0x112c) is not of that year, it is switched to the year (`set_year`:
-/// push year; ecx = the other -> thiscall, ret 4); without the other block, a new block (`exe::crt_operator_new`, 0x1184 bytes;
-/// `exe::new_fixture_manager`: push 0; push this; push year; ecx = the new one -> thiscall, ret 0xc) goes into +0x112c; out of memory,
-/// the box for line 0x681 and 0. The list: [[block + (day·3 + slice)·4] + type·4].
+/// the block's year (`fixture_manager::YEAR`): if the other block (`fixture_manager::OTHER_YEAR`) is not of that year,
+/// it is switched to the year (`exe::fixture_manager_set_year`: push year; ecx = the other -> thiscall, ret 4); without
+/// the other block, a new block (`exe::crt_operator_new`, 0x1184 bytes; `exe::new_fixture_manager`: push 0; push this;
+/// push year; ecx = the new one -> thiscall, ret 0xc) goes into `fixture_manager::OTHER_YEAR`; out of memory, the box
+/// for line 0x681 and 0. The list: [[block + (day·3 + slice)·4] + kind·4].
 /// Original: `FIXTURE_MANAGER::get_fixture_list` (0x5abf10, fix_man.cpp, thiscall, ret 0x10).
 pub(crate) unsafe extern "thiscall" fn get_fixture_list(this: usize, year: u32, day: u32, slice: u32, kind: u32) -> usize {
     let mut b = this;
@@ -159,15 +164,17 @@ pub(crate) unsafe extern "thiscall" fn get_fixture_list(this: usize, year: u32, 
 /// Reads fixtures_<year>.tmp: each 0x4f-byte fixture gets its club, competition and stadium pointers and goes into the
 /// list of its day, slice and key nation.
 ///
-/// `FIXTURE_MANAGER::load_fixtures()`. The name `fixtures_<year>.tmp` at +0x1133 (0x944c9f) and, with a year (+0x1130,
-/// unsigned) from 1980 on and the file in CM3_TEMP (`exe::utils_build_file_path`: push name; push "CM3_TEMP"; add esp, 8 -> cdecl; `exe::crt_fopen`
-/// fopen with "rb"), the count (dword) and the 0x4f-byte fixtures (`exe::crt_fread` fread; on failure, the box for line 0x730
-/// or 0x73e and the file is closed): the club ids (+0xc, +0x10 → +0x1c, +0x20), the competition id (+0 → +0x14, 0x6b
-/// bytes in [0xae23d0]) and the stadium id (+4 → +0x18, 0x4e bytes in [0xae23b0], 0 outside [0xae2358]) become pointers
-/// (id -1: the game stops, lines 0x74b, 0x751, 0x758), and the fixture goes (0x68d0d0: push 0x4f; push &fixture; ecx =
-/// the list -> thiscall, ret 8; on failure, the game stops, 0x785) into the list of the fixture's day (+0x2a), slice
-/// (+0x3f) and key exe::comp_active_key_nation_of_fixture(`comp_active_key_nation_of_fixture`: push &fixture; push competition; add esp, 8 -> cdecl). At the end, fclose
-/// (`exe::crt_fclose`).
+/// `FIXTURE_MANAGER::load_fixtures()`. The name `fixtures_<year>.tmp` at `fixture_manager::FILE_NAME`
+/// (`FN_CRT_SPRINTF`) and, with a year (`fixture_manager::YEAR`, unsigned) from 1980 on and the file in CM3_TEMP
+/// (`exe::utils_build_file_path`: push name; push "CM3_TEMP"; add esp, 8 -> cdecl; `exe::crt_fopen` fopen with "rb"),
+/// the count (dword) and the 0x4f-byte fixtures (`exe::crt_fread` fread; on failure, the box for line 0x730 or 0x73e
+/// and the file is closed): the club ids (`.home_club_id()`, `.away_club_id()` → `.set_home_club()`,
+/// `.set_away_club()`), the competition id (+0 → `.set_competition()`, 0x6b bytes in `G_CLUB_COMP_TABLE`) and the
+/// stadium id (`.stadium_id()` → `.set_stadium()`, 0x4e bytes in `G_STADIUM_TABLE`, 0 outside `G_STADIUM_COUNT`) become
+/// pointers (id -1: the game stops, lines 0x74b, 0x751, 0x758), and the fixture goes (`exe::llist_add_tail`: push 0x4f;
+/// push &fixture; ecx = the list -> thiscall, ret 8; on failure, the game stops, 0x785) into the list of the fixture's
+/// day (`.day()`), slice (`.time_slice()`) and key nation (`exe::comp_active_key_nation_of_fixture`: push &fixture;
+/// push competition; add esp, 8 -> cdecl). At the end, fclose (`exe::crt_fclose`).
 /// Original: `FIXTURE_MANAGER::load_fixtures` (0x5ac3b0, fix_man.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn load_fixtures(this: usize) {
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
@@ -321,19 +328,23 @@ pub(crate) unsafe fn default_clash_severity(grav: *mut i32, twenty: bool) {
 /// Collects the clashes of a fixture on its day plus an offset: forbidden dates, fixtures of the same club or stadium,
 /// national teams and big clubs, and fixtures already played.
 ///
-/// `FIXTURE_MANAGER::collect_day_clashes(fixture, severity, list, nations, n, date, offset)`; SEH frame only for the
-/// dates. Used for a fixture's clashes (`find_fixture_clashes`) on day `date` + offset (`exe::date_add_days`: push 16-bit n; push &local; ecx =
-/// date -> thiscall, ret 8). A cup (+0x3a = 1) only on the day itself. On the day itself, the forbidden dates give 19
-/// and return: 25 December (except in the competitions of the nation of [0x9cf36c]), Sunday in those of the nation of
-/// [0x9cf3e4] (`exe::date_get_weekday`: ecx = date -> thiscall), 10 to 20 April in those of [0x9cf31c] (the dates through `exe::date_date_549f70`: 4
-/// pushes -> thiscall); 17 May with a club of nation [0x9cf408] (also with an offset, without returning, if it is the
-/// day itself). Then, for each nation in `nations` (except the 0xff ones) and each of the 3 slices, the day list
-/// (`get_fixture_list`: ecx = manager; 4 pushes -> thiscall, ret 0x10) with the cursor at the start: each fixture in it
-/// (`next_list_item`) that shares a club and slice (+0x40/+0x41) goes in by type; a club in another slice goes in with 0x14 or
-/// 1 by +0x3f and by type 1; the same stadium (+0x18) outside the competition of [0x9cf76c], likewise; the national
-/// teams of the clubs' nation (`exe::database_get_national_team`: push; add esp, 4 -> cdecl) and the clubs with reputation above 5000 by the
-/// competition rule (+0x60); fixtures of the competition of [0x9cf690] with a club of the league of [0x9cf590] give 19;
-/// a fixture already played (+0x43) gives 0x16. Missing club: the box and the game ends (as in the original).
+/// `FIXTURE_MANAGER::collect_day_clashes(game, grav, list, nations, n, data, desloc)`; SEH frame only for the dates.
+/// Used for a fixture's clashes (`find_fixture_clashes`) on day `data` + `desloc` (`exe::date_add_days`: push 16-bit n;
+/// push &local; ecx = date -> thiscall, ret 8). A cup (`.category()` = 1) only on the day itself. On the day itself,
+/// the forbidden dates give 19 and return: 25 December (except in the competitions of the nation of
+/// `KEY_NATION_JAPAN`), Sunday in those of the nation of `KEY_NATION_NORTHERN_IRELAND` (`exe::date_get_weekday`: ecx =
+/// date -> thiscall), 10 to 20 April in those of `KEY_NATION_GREECE` (the dates through `exe::date_date_549f70`: 4
+/// pushes -> thiscall); 17 May with a club of nation `KEY_NATION_NORWAY` (also with an offset, without returning, if it
+/// is the day itself). Then, for each nation in `nations` (except the 0xff ones) and each of the 3 slices, the day list
+/// (`exe::fixture_manager_get_fixture_list`: ecx = manager; 4 pushes -> thiscall, ret 0x10) with the cursor at the
+/// start: each fixture in it (`exe::llist_get_next`) that shares a club and slice
+/// (`fixture::HOME_SIDE_MARK`/`fixture::AWAY_SIDE_MARK`) goes in by type; a club in another slice goes in with 0x14 or
+/// 1 by `fixture::TIME_SLICE` and by type 1; the same stadium (`fixture::STADIUM`) outside the competition of
+/// `KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION`, likewise; the national teams of the clubs' nation
+/// (`exe::database_get_national_team`: push; add esp, 4 -> cdecl) and the clubs with `.reputation()` above 5000 by the
+/// competition rule (+0x60, `comp_clash_rule`); fixtures of the competition of `KEY_CLUB_COMP_AMERICAN_MLS_ALL_STARS`
+/// with a club of the league of `KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE` give 19; a fixture already played
+/// (`fixture::HOME_GOALS`) gives 0x16. Missing club: the box and the game ends (as in the original).
 /// Original: `FIXTURE_MANAGER::collect_day_clashes` (0x5adba0, fix_man.cpp, thiscall, ret 0x1c).
 pub(crate) unsafe extern "thiscall" fn collect_day_clashes(this: usize, game: usize, grav: *mut i32, list: usize, nations: usize, n: u32, data: usize, desloc: u32) {
     let game = Fixture(game);
@@ -490,19 +501,23 @@ pub(crate) unsafe extern "thiscall" fn collect_day_clashes(this: usize, game: us
 /// Finds a fixture's clashes: builds the nations to check, creates the clash list and collects the clashes of the
 /// surrounding days; returns the severity and the list, or 0 with no clash.
 ///
-/// `FIXTURE_MANAGER::find_fixture_clashes(fixture, severity, two_days)`, used by the calendar (`add_fixture`, `find_new_fixture_date`,
-/// `resolve_same_day_clash`, `move_nearby_club_fixtures`); SEH frame for the new list. Without a fixture or without an output: the box (as in the
-/// original). It zeroes the output; the nations to check, without repeats: 0 to 6, the fixture's key nation (`comp_active_key_nation_of_fixture`:
-/// 2 pushes; add esp, 8 -> cdecl), those of the two clubs' leagues, the stadium's (`comp_active_key_nation_of_stadium`: push; add esp, 4 ->
-/// cdecl), the partners (`fix_man_get_partner_key_nation_index`: push; add esp, 4 -> cdecl) and, with a home national team (`exe::database_is_national_team`), those of the
-/// two national teams (`comp_active_key_nation_of_club`: push; add esp, 4 -> cdecl). Key 3 or 5 outside the competition of [0x9cf7bc] turns off
-/// the two days before. The new list (new 0xe: `exe::crt_operator_new`, push; add esp, 4 -> cdecl; `exe::new_llist`: ecx = block -> thiscall;
-/// out of memory, the box and 0) and the clashes of each day (`collect_day_clashes`: ecx = this; 7 pushes -> thiscall, ret 0x1c)
-/// from the fixture's date (0x549ef0: push +0x28; push +0x2a; ecx = local -> thiscall): below type 0x17, the two days
-/// before (with the flag) and the day before; the day itself and the day after; again the two days before with the
-/// flag. With no clash: the list is destroyed and freed (`exe::drop_llist`: ecx = list -> thiscall; `exe::crt_operator_delete`: push; add esp, 4
-/// -> cdecl), 0x15 in the output if the national team forbids it (`can_schedule_club_fixture`: ecx = [0xb74318]; push fixture -> thiscall,
-/// ret 4) and 0. Otherwise the severity in the output and the list.
+/// `FIXTURE_MANAGER::find_fixture_clashes(game, out, two_days)`, used by the calendar (`add_fixture`,
+/// `find_new_fixture_date`, `resolve_same_day_clash`, `move_nearby_club_fixtures`); SEH frame for the new list. Without
+/// a fixture or without an output: the box (as in the original). It zeroes the output; the nations to check, without
+/// repeats: 0 to 6, the fixture's key nation (`exe::comp_active_key_nation_of_fixture`: 2 pushes; add esp, 8 -> cdecl),
+/// those of the two clubs' leagues, the stadium's (`exe::comp_active_key_nation_of_stadium`: push; add esp, 4 ->
+/// cdecl), the partners (`exe::fix_man_get_partner_key_nation_index`: push; add esp, 4 -> cdecl) and, with a home
+/// national team (`exe::database_is_national_team`), those of the two national teams
+/// (`exe::comp_active_key_nation_of_club`: push; add esp, 4 -> cdecl). Key 3 or 5 outside the competition of
+/// `KEY_CLUB_COMP_FIFA_CLUB_WORLD_CHAMPIONSHIP` turns off the two days before. The new list (new 0xe:
+/// `exe::crt_operator_new`, push; add esp, 4 -> cdecl; `exe::new_llist`: ecx = block -> thiscall; out of memory, the
+/// box and 0) and the clashes of each day (`exe::fixture_manager_collect_day_clashes`: ecx = this; 7 pushes ->
+/// thiscall, ret 0x1c) from the fixture's date (`exe::new_date`: push `.year()`; push `.day()`; ecx = local ->
+/// thiscall): below `.category()` 0x17, the two days before (with the flag) and the day before; the day itself and the
+/// day after; again the two days before with the flag. With no clash: the list is destroyed and freed
+/// (`exe::drop_llist`: ecx = list -> thiscall; `exe::crt_operator_delete`: push; add esp, 4 -> cdecl), 0x15 in the
+/// output if the national team forbids it (`exe::nationalteams_can_schedule_club_fixture`: ecx = [`G_NATIONAL_TEAMS`];
+/// push fixture -> thiscall, ret 4) and 0. Otherwise the severity in the output and the list.
 /// Original: `FIXTURE_MANAGER::find_fixture_clashes` (0x5ad780, fix_man.cpp, thiscall, ret 0xc).
 pub(crate) unsafe extern "thiscall" fn find_fixture_clashes(this: usize, game: usize, out: *mut i32, two_days: u32) -> usize {
     let game = Fixture(game);
@@ -586,13 +601,15 @@ pub(crate) unsafe extern "thiscall" fn find_fixture_clashes(this: usize, game: u
     list
 }
 
-/// Clears the leg check list at 0xae2a48 and refills it with the 15-byte records of check_fixture_legs.tmp.
+/// Clears the leg check list at `G_FIXTURE_LEGS_LIST` and refills it with the 15-byte records of
+/// check_fixture_legs.tmp.
 ///
-/// `fix_man_load_fixture_leg_checks()` (cdecl), from the construction of the main calendar (`exe::new_fixture_manager`, on load and on
-/// game creation): empties the leg check list [0xae2a48] (`manager_manager_clear`: ecx = list -> thiscall) and rebuilds it with the
-/// 15-byte records of check_fixture_legs.tmp in the temporary folder (`exe::utils_build_file_path`: 2 pushes; add esp, 8 -> cdecl; fopen
-/// `exe::crt_fopen` "rb", fread `exe::crt_fread`, fclose `exe::crt_fclose`: cdecl), using the 16-bit count at the start; a short record: the box
-/// (line 0x10b9) and whatever was left in the record goes in (0x68d0d0).
+/// `fix_man_load_fixture_leg_checks()` (cdecl), from the construction of the main calendar (`exe::new_fixture_manager`,
+/// on load and on game creation): empties the leg check list `G_FIXTURE_LEGS_LIST` (`exe::llist_clear`: ecx = list ->
+/// thiscall) and rebuilds it with the 15-byte records of check_fixture_legs.tmp in the temporary folder
+/// (`exe::utils_build_file_path`: 2 pushes; add esp, 8 -> cdecl; fopen `exe::crt_fopen` "rb", fread `exe::crt_fread`,
+/// fclose `exe::crt_fclose`: cdecl), using the 16-bit count at the start; a short record: the box (line 0x10b9) and
+/// whatever was left in the record goes in (`exe::llist_add_tail`).
 /// Original: `fix_man_load_fixture_leg_checks` (0x5af390, fix_man.cpp, cdecl).
 pub(crate) unsafe extern "C" fn fix_man_load_fixture_leg_checks() {
     exe::llist_clear(G_FIXTURE_LEGS_LIST);
@@ -686,16 +703,18 @@ pub(crate) unsafe fn free_list(l: usize) {
 /// Finds a new date for a fixture: within a window by fixture type, it tries weekdays in a fixed order and keeps the
 /// first date with no (or tolerable) clash; otherwise 2 days later.
 ///
-/// `FIXTURE_MANAGER::find_new_fixture_date(fixture)`, used by calendar entry (`add_fixture`), by same-day clashes (`resolve_same_day_clash`)
-/// and by rescheduling (`move_nearby_club_fixtures`); SEH frame only for the dates. Without a fixture: the box (as in the original). If
-/// the units digit of the round (+0x30, `exe::comp_util_get_round_variant`: push; add esp, 4 -> cdecl) is 3 or 4, the fixture's 15-byte record
-/// goes into the leg check list [0xae2a48] (0x68d0d0). The window by type (+0x3a): 2, up to the date at +0x24/+0x26
-/// (without it, the box and 2 weeks), starting 4 weeks later (if the end is more than 20 weeks away) or 3 days later; 4
-/// and 6, from 3 days to 2 weeks; 5, from 0 to 1 week; 7, 8 and 10, from 3 days before to 1 week; the others, none. In
-/// two passes (the second checking the two days before), through the weekdays in the order 2, 1, 5, 6, 0, 3, 4, every 4
-/// days of the window: the target day (`exe::date_get_nearest_weekday`) from 2 days after today and inside the window becomes the date (+0x28,
-/// +0x2a) and the time slot (+0x3f, `get_time_slice`); with no clash (`find_fixture_clashes`), or with severity 1 or below the type, it
-/// stays. Not found: 2 days after the fixture's date (or after today, if it has already passed).
+/// `FIXTURE_MANAGER::find_new_fixture_date(game)`, used by calendar entry (`add_fixture`), by same-day clashes
+/// (`resolve_same_day_clash`) and by rescheduling (`move_nearby_club_fixtures`); SEH frame only for the dates. Without
+/// a fixture: the box (as in the original). If the units digit of the round (`.round_name()`,
+/// `exe::comp_util_get_round_variant`: push; add esp, 4 -> cdecl) is 3 or 4, the fixture's 15-byte record goes into the
+/// leg check list `G_FIXTURE_LEGS_LIST` (`exe::llist_add_tail`). The window by type (`.category()`): 2, up to the date
+/// at `.next_round_year()`/`.next_round_day()` (without it, the box and 2 weeks), starting 4 weeks later (if the end is
+/// more than 20 weeks away) or 3 days later; 4 and 6, from 3 days to 2 weeks; 5, from 0 to 1 week; 7, 8 and 10, from 3
+/// days before to 1 week; the others, none. In two passes (the second checking the two days before), through the
+/// weekdays in the order 2, 1, 5, 6, 0, 3, 4, every 4 days of the window: the target day (`nearest_weekday`) from 2
+/// days after today and inside the window becomes the date (`.set_year()`, `.set_day()`) and the time slot
+/// (`.set_time_slice()`, `fixture_time_slice`); with no clash (`fix_man_find_fixture_clashes`), or with severity 1 or
+/// below the type, it stays. Not found: 2 days after the fixture's date (or after today, if it has already passed).
 /// Original: `FIXTURE_MANAGER::find_new_fixture_date` (0x5ab510, fix_man.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn find_new_fixture_date(this: usize, game: usize) {
     let game = Fixture(game);
@@ -808,20 +827,29 @@ pub(crate) unsafe extern "thiscall" fn find_new_fixture_date(this: usize, game: 
 /// home club's preferred day, resolves clashes, handles national team fixtures and neighbours, and puts the fixture in
 /// the day list or in the other year's block.
 ///
-/// `FIXTURE_MANAGER::add_fixture(fixture, reset)`, used by the cups, leagues, friendlies and rescheduling (20 callers);
-/// SEH frame for the dates and the new manager. `reset` zeroes the count of chained reschedulings (word [0xae2a40]). It
-/// fixes the stage (`mark_calendar_year`: push; add esp, 4 -> cdecl), +0x2e = −1; a fixture whose date has already passed and is
-/// not played: new date (`find_new_fixture_date`). A league fixture of the home club's league (+0x57 or +0x60) with no round (+0x30,
-/// +0x32) and no stage (+0x3b), once (bit 0x800 of +0x4d): on Saturday or Sunday, it moves to the home club's preferred
-/// day (+0x72: 4, 5 or 6) if there is no clash there. With fewer than 10 chained reschedulings, the clashes (`find_fixture_clashes`):
-/// severity 0x14, the same-day clash (`resolve_same_day_clash`) and 1; a cup or type 9 refused by the competition (+0x64): 0; severity
-/// at least the type: 0 if the fixture's national team has a call-up ([0xb74434], 0x7e6f20), otherwise a new date and
-/// it goes in again; otherwise it goes in (`insert_fixture`) and the clashing fixtures leave: the friendlies (`exe::friendly_is_friendly_competition`/`on_friendly_fixture_cancelled`
-/// on [0xae2c74]), type 9 (`remove_fixture`), the others rescheduled (`remove_fixture`, `find_new_fixture_date`, `add_fixture`) with the news (`queue_fixture_moved_news` on
-/// [0xae2a58]). In the block's year (+0x1130): the key nation (`comp_active_key_nation_of_fixture`), the order (`add_away_trip_illness_risk`), the national team
-/// fixtures (`exe::reservecomp_add_b_or_under21_fixture` on [0xb74434], `select_squads_for_fixture` on [0xb74318]), the neighbours (`move_nearby_club_fixtures`, key 3 or 5); if it did not go
-/// in, into the list of the day, slice and key (0x68d0d0). Outside the year, into the other year's block (+0x112c:
-/// `set_year` for the year, or a new one of 0x1184 bytes, `exe::new_fixture_manager`; out of memory, the box and 0).
+/// `FIXTURE_MANAGER::add_fixture(game, clear)`, used by the cups, leagues, friendlies and rescheduling (20 callers);
+/// SEH frame for the dates and the new manager. `clear` zeroes the count of chained reschedulings (word
+/// `G_ADD_FIXTURE_RETRY_COUNT`). It fixes the stage (`exe::fix_man_record_club_fixture_years`: push; add esp, 4 ->
+/// cdecl), `.set_referee(−1)`; a fixture whose date has already passed and is not played: new date
+/// (`exe::fixture_manager_find_new_fixture_date`). A league fixture of the home club's league (`.division()` or
+/// `.reserve_division()`) with no round (`.round_name()`, `.round_prefix()`) and no stage (`.stage()`), once (bit 0x800
+/// of `.squad_rules()`): on Saturday or Sunday, it moves to the home club's preferred day (`.match_day()`: 4, 5 or 6)
+/// if there is no clash there. With fewer than 10 chained reschedulings, the clashes (`fix_man_find_fixture_clashes`):
+/// severity 0x14, the same-day clash (`exe::fixture_manager_resolve_same_day_clash`) and 1; a cup or type 9 refused by
+/// the competition (`comp_vtable::ACCEPTS_FIXTURE`): 0; severity at least the type: 0 if the fixture's national team
+/// has a call-up (`exe::comp_is_reserve_or_minor_comp` on [`G_RESERVE_COMP`]), otherwise a new date and it goes in
+/// again; otherwise it goes in (`exe::fixture_manager_insert_fixture`) and the clashing fixtures leave: the friendlies
+/// (`FN_FRIENDLY_IS_FRIENDLY_COMPETITION`/`exe::friendly_on_friendly_fixture_cancelled` on [`G_FRIENDLY`]), type 9
+/// (`exe::fixture_manager_remove_fixture`), the others rescheduled (`exe::fixture_manager_remove_fixture`,
+/// `exe::fixture_manager_find_new_fixture_date`, `exe::fixture_manager_add_fixture`) with the news
+/// (`FN_FIXTURE_MANAGER_QUEUE_FIXTURE_MOVED_NEWS` on [`G_FIXTURE_MANAGER`]). In the block's year
+/// (`fixture_manager::YEAR`): the key nation (`exe::comp_active_key_nation_of_fixture`), the order
+/// (`exe::fixture_manager_add_away_trip_illness_risk`), the national team fixtures
+/// (`exe::reservecomp_add_b_or_under21_fixture` on [`G_RESERVE_COMP`], `exe::nationalteams_select_squads_for_fixture`
+/// on [`G_NATIONAL_TEAMS`]), the neighbours (`exe::fixture_manager_move_nearby_club_fixtures`, key 3 or 5); if it did
+/// not go in, into the list of the day, slice and key (`exe::llist_add_tail`). Outside the year, into the other year's
+/// block (`fixture_manager::OTHER_YEAR`: `exe::fixture_manager_set_year` for the year, or a new one of 0x1184 bytes,
+/// `exe::new_fixture_manager`; out of memory, the box and 0).
 /// Original: `FIXTURE_MANAGER::add_fixture` (0x5aa680, fix_man.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn add_fixture(this: usize, game: usize, clear: u32) -> u32 {
     let game = Fixture(game);
@@ -995,15 +1023,18 @@ pub(crate) unsafe extern "thiscall" fn add_fixture(this: usize, game: usize, cle
 /// if needed, destroys the 366 days' lists, switches the year and leap flag, creates new lists and loads the new year's
 /// fixtures.
 ///
-/// `FIXTURE_MANAGER::set_year(year)`, used by calendar entry (`add_fixture`, the other year's block), by saving and removing
-/// fixtures and by the friendlies; SEH frame for the new blocks. If the same year (word, +0x1130): returns 1.
-/// Otherwise: it writes the year's fixtures (`exe::fixture_manager_save_fixtures`: ecx = block; push 0 -> thiscall; on failure, the box and 0); if
-/// the other block (+0x112c) is in the requested year, it moves to the year neighbouring this one's (`set_year` on it);
-/// it destroys and frees the lists of the 366 days × 3 slices × key nations ([0xb64738], signed byte; `exe::drop_llist`,
-/// `exe::crt_operator_delete`); the other block in the requested year, if this is the main one (+0x1183), is destroyed and freed
-/// (`exe::drop_fixture_manager`: ecx = block -> thiscall; `exe::crt_operator_delete`); the new year, leap flag at +0x1132 (`exe::date_is_leap_year`: push year; add esp, 4
-/// -> cdecl), the new lists (new 0xe: `exe::crt_operator_new`, push; add esp, 4 -> cdecl; `exe::new_llist`: ecx = block -> thiscall; out of
-/// memory, the box and 0) and the loading of the year's fixtures (`load_fixtures`: ecx = block -> thiscall). Returns 1.
+/// `FIXTURE_MANAGER::set_year(year)`, used by calendar entry (`add_fixture`, the other year's block), by saving and
+/// removing fixtures and by the friendlies; SEH frame for the new blocks. If the same year (word,
+/// `fixture_manager::YEAR`): returns 1. Otherwise: it writes the year's fixtures (`exe::fixture_manager_save_fixtures`:
+/// ecx = block; push 0 -> thiscall; on failure, the box and 0); if the other block (`fixture_manager::OTHER_YEAR`) is
+/// in the requested year, it moves to the year neighbouring this one's (`exe::fixture_manager_set_year` on it); it
+/// destroys and frees the lists of the 366 days × 3 slices × key nations (`G_KEY_NATION_ACTIVE_COUNT`, signed byte;
+/// `exe::drop_llist`, `exe::crt_operator_delete`); the other block in the requested year, if this is the main one
+/// (`fixture_manager::IS_PRIMARY`), is destroyed and freed (`exe::drop_fixture_manager`: ecx = block -> thiscall;
+/// `exe::crt_operator_delete`); the new year, leap flag at `fixture_manager::LEAP_YEAR` (`exe::date_is_leap_year`: push
+/// year; add esp, 4 -> cdecl), the new lists (new 0xe: `exe::crt_operator_new`, push; add esp, 4 -> cdecl;
+/// `exe::new_llist`: ecx = block -> thiscall; out of memory, the box and 0) and the loading of the year's fixtures
+/// (`exe::fixture_manager_load_fixtures`: ecx = block -> thiscall). Returns 1.
 /// Original: `FIXTURE_MANAGER::set_year` (0x5aa2d0, fix_man.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn set_year(this: usize, year: u32) -> u32 {
     let a = year as u16;
@@ -1083,12 +1114,14 @@ pub(crate) unsafe fn open_temp_file(name: usize, mode: usize) -> usize {
     exe::crt_fopen(exe::utils_build_file_path(0x987da0, name), mode)
 }
 
-/// Writes the club dates table [0xae2a5c], one word per club ([0xae235c]), into CM3_TEMP\club_dates.tmp.
+/// Writes the club dates table `G_CLUB_FIXTURE_YEAR_TABLE`, one word per club ([0xae235c]), into
+/// CM3_TEMP\club_dates.tmp.
 ///
-/// `fix_man_save_club_dates()` (cdecl), from the calendar save (FIXTURE_MANAGER::save `exe::fixture_manager_save_fixtures`, 0x5ac394): without the
-/// club dates table ([0xae2a5c]), the "Error" box for line 0x1011 (fix_man.cpp). It writes into CM3_TEMP\club_dates.tmp
-/// ("wb") one word per club ([0xae235c] of them, fwrite `exe::crt_fwrite`); a short write: the box for line 0x101b; then it
-/// closes the file. If the file does not open: nothing.
+/// `fix_man_save_club_dates()` (cdecl), from the calendar save (FIXTURE_MANAGER::save
+/// `exe::fixture_manager_save_fixtures`, 0x5ac394): without the club dates table (`G_CLUB_FIXTURE_YEAR_TABLE`), the
+/// "Error" box for line 0x1011 (fix_man.cpp). It writes into CM3_TEMP\club_dates.tmp ("wb") one word per club
+/// ([0xae235c] of them, fwrite `exe::crt_fwrite`); a short write: the box for line 0x101b; then it closes the file. If
+/// the file does not open: nothing.
 /// Original: `fix_man_save_club_dates` (0x5af040, fix_man.cpp, cdecl).
 pub(crate) unsafe extern "C" fn fix_man_save_club_dates() {
     if read_usize(G_CLUB_FIXTURE_YEAR_TABLE) == 0 {
@@ -1105,14 +1138,14 @@ pub(crate) unsafe extern "C" fn fix_man_save_club_dates() {
     uefa_seeding_crt_fclose(f);
 }
 
-/// Allocates the club dates table [0xae2a5c] (one word per club) and reads it from CM3_TEMP\club_dates.tmp, or zeroes
-/// it without the file.
+/// Allocates the club dates table `G_CLUB_FIXTURE_YEAR_TABLE` (one word per club) and reads it from
+/// CM3_TEMP\club_dates.tmp, or zeroes it without the file.
 ///
-/// `fix_man_load_club_dates()` (cdecl), from the calendar constructor (`exe::new_fixture_manager`, 0x5a9e38: on a new career and on
-/// loading the save). With the table already allocated ([0xae2a5c]), the "Error" box for line 0xfe4. It allocates one
-/// word per club (malloc `exe::crt_malloc` of 2 × [0xae235c]; out of memory, the box for line 0xfec); reads from
-/// CM3_TEMP\club_dates.tmp ("rb", fread `exe::crt_fread`; a short read: the box for line 0xff6) and closes it; without the file
-/// (a new career), it zeroes the table.
+/// `fix_man_load_club_dates()` (cdecl), from the calendar constructor (`exe::new_fixture_manager`, 0x5a9e38: on a new
+/// career and on loading the save). With the table already allocated (`G_CLUB_FIXTURE_YEAR_TABLE`), the "Error" box for
+/// line 0xfe4. It allocates one word per club (malloc `exe::crt_malloc` of 2 × [0xae235c]; out of memory, the box for
+/// line 0xfec); reads from CM3_TEMP\club_dates.tmp ("rb", fread `exe::crt_fread`; a short read: the box for line 0xff6)
+/// and closes it; without the file (a new career), it zeroes the table.
 /// Original: `fix_man_load_club_dates` (0x5aee90, fix_man.cpp, cdecl).
 pub(crate) unsafe extern "C" fn fix_man_load_club_dates() {
     if read_usize(G_CLUB_FIXTURE_YEAR_TABLE) != 0 {
@@ -1136,13 +1169,14 @@ pub(crate) unsafe extern "C" fn fix_man_load_club_dates() {
     uefa_seeding_crt_fclose(f);
 }
 
-/// Writes the leg check list [0xae2a48] into CM3_TEMP\check_fixture_legs.tmp: the count (2 bytes) and the 15-byte
-/// items.
+/// Writes the leg check list `G_FIXTURE_LEGS_LIST` into CM3_TEMP\check_fixture_legs.tmp: the count (2 bytes) and the
+/// 15-byte items.
 ///
-/// `fix_man_save_fixture_leg_checks()` (cdecl), from the calendar save (0x5ac399): with the leg check list ([0xae2a48],
-/// LLIST) empty (the count word zero), nothing. It writes into CM3_TEMP\check_fixture_legs.tmp ("wb") the count (2
-/// bytes) and, from the start of the list (cursor +0xa ← head +2), each 15-byte item (`next_list_item`; a short write: the
-/// "Error" box for line 0x10e0, and it carries on); then it closes the file. If the file does not open: nothing.
+/// `fix_man_save_fixture_leg_checks()` (cdecl), from the calendar save (0x5ac399): with the leg check list
+/// (`G_FIXTURE_LEGS_LIST`, LLIST) empty (the count word zero), nothing. It writes into CM3_TEMP\check_fixture_legs.tmp
+/// ("wb") the count (2 bytes) and, from the start of the list (cursor `G_FIXTURE_LEGS_LIST_CURSOR` ← head
+/// `G_FIXTURE_LEGS_LIST_HEAD`), each 15-byte item (`exe::llist_get_next`; a short write: the "Error" box for line
+/// 0x10e0, and it carries on); then it closes the file. If the file does not open: nothing.
 /// Original: `fix_man_save_fixture_leg_checks` (0x5af4a0, fix_man.cpp, cdecl).
 pub(crate) unsafe extern "C" fn fix_man_save_fixture_leg_checks() {
     let count = read_usize(G_FIXTURE_LEGS_LIST);
@@ -1174,17 +1208,22 @@ pub(crate) static SAME_DAY_CLASH_DRY_RUN: AtomicBool = AtomicBool::new(false);
 /// Resolves a new fixture falling on the same day as another: the one with higher priority stays and the other is moved
 /// to a new date, with the rescheduling news.
 ///
-/// `FIXTURE_MANAGER::resolve_same_day_clash(fixture, clashes)`; SEH frame with no destructor on the normal path. The
-/// new fixture `fixture` falls on the same day as another, the first of the `clashes` list (cursor +0xa goes back to
-/// the start +2 and `next_list_item` reads it); without either of them, the box for line 0xde6 and it returns 1. It copies both
-/// (0x4f bytes) and finds the target weekday from the date of the list's fixture (+0x2a, +0x28; 0x549ef0, `exe::date_operator_3d`,
-/// `exe::date_get_weekday`): days 0 and 5 of `exe::date_get_weekday` go to 6, 1 and 3 to 2, 2 to 1, 4 and 6 to 5 (`exe::date_get_nearest_weekday` gives the date). Each
-/// one's priority is its competition's (+0x69 of +0x14), +0x15 (21) with a national team at home (+0x1c, `exe::database_is_national_team`); the
-/// list's fixture leaves the day when the new one's priority is higher (or equal, with the new one's home club
-/// reputation +0x80 higher) and it has not been played yet (+0x43 = 0xff): it is removed from the calendar (`remove_fixture`)
-/// and the new one goes in (`add_fixture`); otherwise the new one leaves. The one that leaves gets the new date; with a
-/// clash there (`find_fixture_clashes`, the list destroyed and freed: `exe::drop_llist`, `exe::crt_operator_delete`), a fixed fixture (+0x3a = 1) returns 0,
-/// otherwise `find_new_fixture_date` finds another date; it goes into the calendar (`add_fixture`) with the rescheduling news (`queue_fixture_moved_news`,
+/// `FIXTURE_MANAGER::resolve_same_day_clash(game, conflitos)`; SEH frame with no destructor on the normal path. The new
+/// fixture `game` falls on the same day as another, the first of the `conflitos` list (cursor `llist::CURSOR` goes back
+/// to the start +2 and `exe::llist_get_next` reads it); without either of them, the box for line 0xde6 and it returns
+/// 1. It copies both (0x4f bytes) and finds the target weekday from the date of the list's fixture (`fixture::DAY`,
+/// `fixture::YEAR`; `FN_DATE_DATE`, `exe::date_operator_3d`, `exe::date_get_weekday`): days 0 and 5 of
+/// `exe::date_get_weekday` go to 6, 1 and 3 to 2, 2 to 1, 4 and 6 to 5 (`exe::date_get_nearest_weekday` gives the
+/// date). Each one's priority is its competition's (`competition::REPUTATION` of `fixture::COMPETITION`), +0x15 (21)
+/// with a national team at home (`fixture::HOME_CLUB`, `exe::database_is_national_team`); the list's fixture leaves the
+/// day when the new one's priority is higher (or equal, with the new one's home club reputation `club::REPUTATION`
+/// higher) and it has not been played yet (`.home_goals()` = 0xff): it is removed from the calendar
+/// (`exe::fixture_manager_remove_fixture`) and the new one goes in (`exe::fixture_manager_add_fixture`); otherwise the
+/// new one leaves. The one that leaves gets the new date; with a clash there
+/// (`exe::fixture_manager_find_fixture_clashes`, the list destroyed and freed: `exe::drop_llist`,
+/// `exe::crt_operator_delete`), a fixed fixture (`fixture::CATEGORY` = 1) returns 0, otherwise
+/// `exe::fixture_manager_find_new_fixture_date` finds another date; it goes into the calendar
+/// (`exe::fixture_manager_add_fixture`) with the rescheduling news (`exe::fixture_manager_queue_fixture_moved_news`,
 /// caused by the other one). Returns 1.
 /// Original: `FIXTURE_MANAGER::resolve_same_day_clash` (0x5ae380, fix_man.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn resolve_same_day_clash(this: usize, game: usize, conflitos: usize) -> u32 {
@@ -1266,21 +1305,23 @@ pub(crate) unsafe extern "thiscall" fn resolve_same_day_clash(this: usize, game:
     1
 }
 
-/// Returns the club's first year with fixtures: 2001, or 2002 by bit 0 of its word in [0xae2a5c].
+/// Returns the club's first year with fixtures: 2001, or 2002 by bit 0 of its word in `G_CLUB_FIXTURE_YEAR_TABLE`.
 ///
 /// `FIXTURE_MANAGER::get_club_first_fixture_year(&id)`; this is not read. The first year with fixtures of club `[id]`:
-/// 2001, or 2002 with bit 0 of its word in [0xae2a5c]. Returns `ax` (the screen caller compares 16 bits).
+/// 2001, or 2002 with bit 0 of its word in `G_CLUB_FIXTURE_YEAR_TABLE`. Returns `ax` (the screen caller compares 16
+/// bits).
 /// Original: `FIXTURE_MANAGER::get_club_first_fixture_year` (0x5aee40, fix_man.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn get_club_first_fixture_year(_this: usize, id: usize) -> u16 {
     let b = *((read_usize(G_CLUB_FIXTURE_YEAR_TABLE) as isize).wrapping_add((*(id as *const i32) as isize).wrapping_mul(2)) as *const u8);
     0x7d1 + (b & 1) as u16
 }
 
-/// Returns the club's last year with fixtures: its word in [0xae2a5c] without bit 0, or the current year.
+/// Returns the club's last year with fixtures: its word in `G_CLUB_FIXTURE_YEAR_TABLE` without bit 0, or the current
+/// year.
 ///
 /// `FIXTURE_MANAGER::get_club_last_fixture_year(&id)`; this is not read. The club's last year with fixtures: its word
-/// in [0xae2a5c] without bit 0 (halved); with no year, the current year [0xae2c92]. Returns `ax` (the screen caller
-/// keeps 16 bits).
+/// in `G_CLUB_FIXTURE_YEAR_TABLE` without bit 0 (halved); with no year, the current year `G_CURRENT_DATE_YEAR`. Returns
+/// `ax` (the screen caller keeps 16 bits).
 /// Original: `FIXTURE_MANAGER::get_club_last_fixture_year` (0x5aee60, fix_man.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn get_club_last_fixture_year(_this: usize, id: usize) -> u16 {
     let w = core::ptr::read_unaligned((read_usize(G_CLUB_FIXTURE_YEAR_TABLE) as isize).wrapping_add((*(id as *const i32) as isize).wrapping_mul(2)) as *const u16);
@@ -1394,12 +1435,13 @@ pub(crate) unsafe fn copy_first_fixture(l: usize, f1: &mut [u8; 0x4f], f2: &mut 
 /// For a non-friendly fixture, moves the clubs' fixtures two days before one day earlier and those two days after one
 /// day later, if the new date is free, with the news.
 ///
-/// `FIXTURE_MANAGER::move_nearby_club_fixtures(fixture)`, from adding the fixture (`add_fixture`); SEH for the local list
-/// and the dates. A fixture of a friendly competition (+0x14, `exe::friendly_is_friendly_competition`): nothing. For both clubs (+0x1c, +0x20) of a
-/// nation (+0x53) with the flag +0x11c: the club's first fixture two days before (`find_fixtures`, side 1), not a friendly and
-/// with +0x43 = 0xff, moves to one day before it; the first fixture two days after, not a friendly, moves to one day
-/// after it. Only if the new date has no other fixture (`find_fixture_clashes`): it removes (`remove_fixture`), adds (`add_fixture`, 0) and posts
-/// the rescheduled fixture news (`queue_fixture_moved_news`, with the fixture as the cause).
+/// `FIXTURE_MANAGER::move_nearby_club_fixtures(game)`, from adding the fixture (`add_fixture`); SEH for the local list
+/// and the dates. A fixture of a friendly competition (`.competition()`, `fix_man_is_friendly_comp`): nothing. For both
+/// clubs (+0x1c, +0x20) of a nation (`.nation()`) with the flag `.league_selected()`: the club's first fixture two days
+/// before (`find_club_fixtures_between`, side 1), not a friendly and with +0x43 = 0xff, moves to one day before it; the
+/// first fixture two days after, not a friendly, moves to one day after it. Only if the new date has no other fixture
+/// (`new_date_has_clash`): it removes (`fix_man_remove_fixture`), adds (`fix_man_add_fixture`, 0) and posts the
+/// rescheduled fixture news (`fix_man_queue_fixture_moved_news`, with the fixture as the cause).
 /// Original: `FIXTURE_MANAGER::move_nearby_club_fixtures` (0x5ae9d0, fix_man.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn move_nearby_club_fixtures(this: usize, game: usize) {
     let game = Fixture(game);
@@ -1480,10 +1522,11 @@ pub(crate) unsafe extern "thiscall" fn move_nearby_club_fixtures(this: usize, ga
 /// Reschedules the club's fixtures from one day before to one day after a national team date: each removed fixture gets
 /// a new date, is added back and posts the news with the old date.
 ///
-/// `FIXTURE_MANAGER::reschedule_club_fixtures_near_date(club, date)`, from the national team call-ups (0x777940: a club
+/// `FIXTURE_MANAGER::reschedule_club_fixtures_near_date(club, data)`, from the national team call-ups (0x777940: a club
 /// with more than two players called up); SEH for the local list. The club's fixtures (the id in `*club`) from one day
-/// before to one day after the date (`find_fixtures`, side 1); each one that leaves the calendar (`remove_fixture`) gets a new date
-/// (`find_new_fixture_date`), goes back (`add_fixture`, 1) and posts the news with the old date (`queue_fixture_moved_news`, no cause).
+/// before to one day after the date (`find_club_fixtures_between`, side 1); each one that leaves the calendar
+/// (`fix_man_remove_fixture`) gets a new date (`exe::fixture_manager_find_new_fixture_date`), goes back
+/// (`fix_man_add_fixture`, 1) and posts the news with the old date (`fix_man_queue_fixture_moved_news`, no cause).
 /// Original: `FIXTURE_MANAGER::reschedule_club_fixtures_near_date` (0x5abb10, fix_man.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn reschedule_club_fixtures_near_date(this: usize, club: usize, data: usize) {
     let mut l = [0u8; 0xe];
@@ -1547,12 +1590,14 @@ pub(crate) unsafe fn find_queued_fixture_news(l: usize, f: usize) -> usize {
 /// Queues the "fixture moved" news: updates the new date of an existing news item for the same fixture, or queues news
 /// 1 with the fixture and the cause or the old date.
 ///
-/// `FIXTURE_MANAGER::queue_fixture_moved_news(fixture, cause, old date)`, from the reschedulings (`add_fixture`, `reschedule_club_fixtures_near_date`,
-/// `resolve_same_day_clash`, `move_nearby_club_fixtures`); SEH for the local news. The queue at +0x1128 (created the first time: `exe::crt_operator_new` and `exe::new_llist`):
-/// if there is already news for the same fixture, it only changes the new date (data 5 and 6); otherwise news 1: the
-/// fixture (+0xc, +0x10, +0, +0x32, +0x30, the new date +0x2a/+0x28, +0x40, +0x41) and the cause (the same fields of it
-/// in data 7 to 0xd) or, with no cause, −1 and the old date (data 0xc and 0xd); it goes into the queue (0x68d0d0,
-/// 0xdf).
+/// `FIXTURE_MANAGER::queue_fixture_moved_news(f, causa, old)`, from the reschedulings (`add_fixture`,
+/// `reschedule_club_fixtures_near_date`, `resolve_same_day_clash`, `move_nearby_club_fixtures`); SEH for the local
+/// news. The queue at `fixture_manager::MOVED_NEWS_QUEUE` (created the first time: `exe::crt_operator_new` and
+/// `exe::new_llist`): if there is already news for the same fixture, it only changes the new date (data 5 and 6);
+/// otherwise news 1: the fixture (`fixture::HOME_CLUB_ID`, `fixture::AWAY_CLUB_ID`, +0, `fixture::ROUND_PREFIX`,
+/// `fixture::ROUND_NAME`, the new date `.day()`/`.year()`, `.home_side_mark()`, `.away_side_mark()`) and the cause (the
+/// same fields of it in data 7 to 0xd) or, with no cause, −1 and the old date (data 0xc and 0xd); it goes into the
+/// queue (`exe::llist_add_tail`, 0xdf).
 /// Original: `FIXTURE_MANAGER::queue_fixture_moved_news` (0x5aac70, fix_man.cpp, thiscall, ret 0xc).
 pub(crate) unsafe extern "thiscall" fn queue_fixture_moved_news(this: usize, f: usize, causa: usize, old: usize) {
     let f = Fixture(f);
@@ -1677,9 +1722,9 @@ pub(crate) unsafe extern "thiscall" fn find_stored_fixture(this: usize, f: usize
 
 /// Finds (or creates) the fixture's year block and appends a copy of the fixture to its day, slice and key-nation list.
 ///
-/// `FIXTURE_MANAGER::insert_fixture(fixture)`: appends a copy of the fixture's 0x4f bytes (0x68d0d0) to the list of its
-/// day, slice and key nation in the year block (through the chain). Out of memory for the block: the box (line 0x3ff);
-/// a failed copy: the box (line 0x3eb).
+/// `FIXTURE_MANAGER::insert_fixture(f)`: appends a copy of the fixture's 0x4f bytes (`exe::llist_add_tail`) to the list
+/// of its day, slice and key nation in the year block (through the chain). Out of memory for the block: the box (line
+/// 0x3ff); a failed copy: the box (line 0x3eb).
 /// Original: `FIXTURE_MANAGER::insert_fixture` (0x5ab230, fix_man.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn insert_fixture(this: usize, f: usize) {
     let b = calendar_year_block(this, Fixture(f));
@@ -1695,9 +1740,9 @@ pub(crate) unsafe extern "thiscall" fn insert_fixture(this: usize, f: usize) {
 
 /// Removes the first item with the same bytes from the fixture's day, slice and key-nation list; returns 1 if removed.
 ///
-/// `FIXTURE_MANAGER::remove_fixture(fixture)`: removes from the list of the fixture's day, slice and key nation (in the
-/// year block, through the chain) the first item with the same bytes (`manager_manager_remove`). Returns 1 if removed, 0 if not; out of
-/// memory for the block: the box (line 0x5ef) and 0.
+/// `FIXTURE_MANAGER::remove_fixture(f)`: removes from the list of the fixture's day, slice and key nation (in the year
+/// block, through the chain) the first item with the same bytes (`exe::llist_remove`). Returns 1 if removed, 0 if not;
+/// out of memory for the block: the box (line 0x5ef) and 0.
 /// Original: `FIXTURE_MANAGER::remove_fixture` (0x5abc30, fix_man.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn remove_fixture(this: usize, f: usize) -> u32 {
     let b = calendar_year_block(this, Fixture(f));
@@ -1763,11 +1808,12 @@ pub(crate) unsafe fn fixture_matches_filter(f: Fixture, club: u32, comp: u32, ki
 /// Counts (and copies into the list, if given) the calendar fixtures between two dates in the key-nation lists of the
 /// club or competition, with type, club side and competition filters.
 ///
-/// `FIXTURE_MANAGER::find_fixtures(day0, year0, day1, year1, club, list, comp, type, side)`: counts (and, with `list`,
-/// copies into it) the calendar fixtures between (day0, year0) and (day1, year1) inclusive, day by day (366 per year),
-/// in the three slices of each day and in the key-nation lists: the club's (index into [0xae23b4], 0x245 bytes; a
-/// national team `exe::database_is_national_team`: nations 0 and 1; otherwise 2..7, the one from `comp_active_key_nation_of_club` and the partner `fix_man_get_partner_key_nation_index`, without
-/// repeats) or only the competition's (`comp_active_key_nation_of_fixture`). Filters: type (0xfe any), club side (0xff any) and competition (−1
+/// `FIXTURE_MANAGER::find_fixtures(dia0, ano0, dia1, ano1, club, list, comp, kind, side)`: counts (and, with `list`,
+/// copies into it) the calendar fixtures between (dia0, ano0) and (dia1, ano1) inclusive, day by day (366 per year), in
+/// the three slices of each day and in the key-nation lists: the club's (index into [0xae23b4], 0x245 bytes; a national
+/// team `exe::database_is_national_team`: nations 0 and 1; otherwise 2..7, the one from
+/// `exe::comp_active_key_nation_of_club` and the partner `exe::fix_man_get_partner_key_nation_index`, without repeats)
+/// or only the competition's (`comp_key_nation`). Filters: kind (0xfe any), club side (0xff any) and competition (−1
 /// any). Returns the count (word); a failed copy shows the box (line 0x93b) and stops there. Hot (288 thousand calls up
 /// to 2002-06-01): no counter.
 /// Original: `FIXTURE_MANAGER::find_fixtures` (0x5acbe0, fix_man.cpp, thiscall, ret 0x24).
@@ -1837,11 +1883,11 @@ pub(crate) unsafe extern "thiscall" fn find_fixtures(this: usize, dia0: u32, ano
 /// Copies into the list the fixtures of one day and slice for the requested competition, round and type, and returns
 /// how many.
 ///
-/// `FIXTURE_MANAGER::collect_comp_fixtures_on_day(year, day, slice, comp, round, type, list)` (from the leagues' TV
+/// `FIXTURE_MANAGER::collect_comp_fixtures_on_day(year, day, slice, comp, round, kind, list)` (from the leagues' TV
 /// postponement and from moving cup rounds to the fixed dates): copies into `list` the fixtures of the day and slice,
-/// in the list of the competition's key nation (`comp_active_key_nation_of_fixture`; −1: nation 0), of the competition (+0; −1 any), of the round
-/// (+0x34, word; −1 any) and of the type (+0x42; 0xfe any). Returns how many (word); a failed copy shows the box (line
-/// 0x634) and stops there.
+/// in the list of the competition's key nation (`comp_key_nation`; −1: nation 0), of the competition (+0; −1 any), of
+/// the round (`fixture::ROUND_NUMBER`, word; −1 any) and of the kind (`fixture::STAGE_INDEX`; 0xfe any). Returns how
+/// many (word); a failed copy shows the box (line 0x634) and stops there.
 /// Original: `FIXTURE_MANAGER::collect_comp_fixtures_on_day` (0x5abd90, fix_man.cpp, thiscall, ret 0x1c).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn collect_comp_fixtures_on_day(this: usize, year: u32, day: u32, slice: u32, comp: u32, round: u32,
@@ -1878,10 +1924,10 @@ pub(crate) unsafe extern "thiscall" fn collect_comp_fixtures_on_day(this: usize,
 
 /// Tells whether the competition has a fixture on the date in any of the three calendar slices.
 ///
-/// `fix_man_comp_has_fixture_on_date(date, comp)` (stdcall, ret 8; the `ecx` = [0xae2a58] set by the caller is not
-/// used), from the European Championship qualifiers (0x57fd60): 1 if the competition has a fixture (+0 = comp) on the
-/// date in any of the three slices of the calendar [0xae2a58], in its key nation's list (`comp_active_key_nation_of_fixture`). Competition −1 or
-/// below: 0; null date: the box (line 0xe89) and 0.
+/// `fix_man_comp_has_fixture_on_date(data, comp)` (stdcall, ret 8; the `ecx` = [`G_FIXTURE_MANAGER`] set by the caller
+/// is not used), from the European Championship qualifiers (0x57fd60): 1 if the competition has a fixture (+0 = comp)
+/// on the date in any of the three slices of the calendar [`G_FIXTURE_MANAGER`], in its key nation's list
+/// (`comp_key_nation`). Competition −1 or below: 0; null date: the box (line 0xe89) and 0.
 /// Original: `fix_man_comp_has_fixture_on_date` (0x5ae6d0, fix_man.cpp, stdcall, ret 8).
 pub(crate) unsafe extern "stdcall" fn fix_man_comp_has_fixture_on_date(data: usize, comp: u32) -> u8 {
     if (comp as i32) <= -1 {
@@ -1975,17 +2021,18 @@ pub(crate) unsafe fn fixture_matches_next_filter(f: Fixture, comp: i32, stage: i
 /// Finds the next (or previous) fixture from a year/day/slice cursor, inclusive, matching the competition, stage and
 /// two club filters; writes the cursor back and returns the fixture, or 0.
 ///
-/// `FIXTURE_MANAGER::find_next_fixture(year*, day*, slice*, forward, comp, stage, club_a, club_b, ...)`: the fixture
-/// after (or before, `forward` 0) the cursor (year, day, slice), the cursor itself included, that passes the filter
-/// (fixture_matches_next_filter: competition +0, stage +0x34 and the two clubs +0xc/+0x10, each -1 = any). The group of
-/// lists comes from `comp_active_key_nation_of_fixture` (the competition of table [0xae23d0] + 107 × comp, 0). Forward: slices up to 2, days up to
-/// 365 (0x16e exclusive), following years from day 0 (the slice only goes back to 0 when the day turns); backward:
-/// slices down to 0, then 2, days down to 0, previous years from day 0x16d. Five years from the cursor's year (forward:
-/// signed less than unsigned; backward: signed), 0. Found: it writes the cursor (day, year and the slice as a byte) and
-/// returns the fixture. The last 3 arguments are not read. The original passes `get_fixture_list` the year, day and slice with
-/// the high half of locals that were never written (garbage), but it and what it calls (`set_year`, `exe::new_fixture_manager`, `exe::date_is_leap_year`)
-/// only use the word/byte: the port passes zero. Used in the cup draws (Cup.cpp 0x519d90, `exe::cup_process_fixture`, `exe::cup_label_round_extra_fixtures`). No SEH,
-/// no box (`get_fixture_list`'s only when out of memory).
+/// `FIXTURE_MANAGER::find_next_fixture(pano, pdia, pfatia, adiante, comp, stage, club, club_b, ...)`: the fixture after
+/// (or before, `adiante` 0) the cursor (year, day, slice), the cursor itself included, that passes the filter
+/// (`fixture_matches_next_filter`: competition +0, stage +0x34 and the two clubs +0xc/+0x10, each -1 = any). The group
+/// of lists comes from `exe::comp_active_key_nation_of_fixture` (the competition of table `G_CLUB_COMP_TABLE` + 107 ×
+/// comp, 0). Forward: slices up to 2, days up to 365 (0x16e exclusive), following years from day 0 (the slice only goes
+/// back to 0 when the day turns); backward: slices down to 0, then 2, days down to 0, previous years from day 0x16d.
+/// Five years from the cursor's year (forward: signed less than unsigned; backward: signed), 0. Found: it writes the
+/// cursor (day, year and the slice as a byte) and returns the fixture. The last 3 arguments are not read. The original
+/// passes `get_fixture_list` the year, day and slice with the high half of locals that were never written (garbage),
+/// but it and what it calls (`set_year`, `exe::new_fixture_manager`, `exe::date_is_leap_year`) only use the word/byte:
+/// the port passes zero. Used in the cup draws (Cup.cpp 0x519d90, `exe::cup_process_fixture`,
+/// `exe::cup_label_round_extra_fixtures`). No SEH, no box (`get_fixture_list`'s only when out of memory).
 /// Original: `FIXTURE_MANAGER::find_next_fixture` (0x5ac920, fix_man.cpp, thiscall, ret 0x2c).
 pub(crate) unsafe extern "thiscall" fn find_next_fixture(this: usize, pano: *mut u16, pdia: *mut u16, pfatia: *mut u8, adiante: u32,
     comp: i32, stage: i32, club: i32, club_b: i32, _a9: u32, _a10: u32, _a11: u32) -> usize {
@@ -2053,12 +2100,14 @@ pub(crate) unsafe extern "thiscall" fn find_next_fixture(this: usize, pano: *mut
 
 /// Returns 1 when a fixture in the day lists uses the stadium, in the given slice or in slices 0 to 2 (slice -1).
 ///
-/// `FIXTURE_MANAGER::is_stadium_in_use(stadium, day, year, slice)`: 1 if any fixture (+0x18 = the stadium, not null) in
-/// the day's lists uses the stadium. The groups: 0 to 7 and the stadium's (`comp_active_key_nation_of_stadium`, byte), the latter skipped if it
-/// repeats one of the eight. Slice -1 (byte): slices 0 to 2, otherwise only that one. The slice goes to `get_fixture_list` in the
-/// low byte of the year argument (the original keeps the loop there: the 3 high bytes are the year's). Null stadium: 0.
-/// Used when scheduling friendlies (friendly.cpp `add_friendly_match`, 0x5c75a0) and in `exe::reservecomp_schedule_reserve_fixtures`, `exe::reservecomp_add_b_or_under21_fixture`. No SEH, no locals
-/// without a value.
+/// `FIXTURE_MANAGER::is_stadium_in_use(stadium, day, year, slice)`: 1 if any fixture (`fixture::STADIUM` = the stadium,
+/// not null) in the day's lists uses the stadium. The groups: 0 to 7 and the stadium's
+/// (`exe::comp_active_key_nation_of_stadium`, byte), the latter skipped if it repeats one of the eight. Slice -1
+/// (byte): slices 0 to 2, otherwise only that one. The slice goes to `get_fixture_list_rewound` in the low byte of the
+/// year argument (the original keeps the loop there: the 3 high bytes are the year's). Null stadium: 0. Used when
+/// scheduling friendlies (friendly.cpp `add_friendly_match`, 0x5c75a0) and in
+/// `exe::reservecomp_schedule_reserve_fixtures`, `exe::reservecomp_add_b_or_under21_fixture`. No SEH, no locals without
+/// a value.
 /// Original: `FIXTURE_MANAGER::is_stadium_in_use` (0x5ae870, fix_man.cpp, thiscall, ret 0x10).
 pub(crate) unsafe extern "thiscall" fn is_stadium_in_use(this: usize, stadium: usize, day: u32, year: u32, slice: u32) -> u32 {
     if stadium == 0 {
@@ -2118,8 +2167,9 @@ pub(crate) unsafe fn call_original_with_year(o: usize, this: usize, year: u32) -
 /// Returns the fixture's time slice (1 weekend, 2 otherwise) by the competition's nation and the weekday.
 ///
 /// `this` is not read. The time slice of a fixture of competition `comp` on day `day` (word): the Netherlands, Ireland,
-/// Belgium and France (nation id +0x5d in [0x9cf338], [0x9cf2dc], [0x9cf244], [0x9cf300]) only have 1 on day 6; the
-/// others, 1 on days 5 and 6; otherwise 2. Returns only `al`.
+/// Belgium and France (the id of `.nation()` in `KEY_NATION_HOLLAND`, `KEY_NATION_REPUBLIC_OF_IRELAND`,
+/// `KEY_NATION_BELGIUM`, `KEY_NATION_FRANCE`) only have 1 on day 6; the others, 1 on days 5 and 6; otherwise 2. Returns
+/// only `al`.
 /// Original: `FIXTURE_MANAGER::get_time_slice` (0x5af2f0, fix_man.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn get_time_slice(_this: usize, comp: usize, day: u32) -> u8 {
     let comp = Competition(comp);
@@ -2138,10 +2188,10 @@ pub(crate) unsafe extern "thiscall" fn get_time_slice(_this: usize, comp: usize,
 
 /// With the stadium in a third-world country, gives the visiting clubs the illness risk on the day before the fixture.
 ///
-/// `FIXTURE_MANAGER::add_away_trip_illness_risk(fixture)`; `this` is not used. With the fixture's stadium (+0x18), its
-/// city (+0x38) and the city's nation (+0x1f) in a third-world country (+0x7e = 3), each visiting club from another
-/// nation (+0x53) — the home club (+0x1c, id +0xc) and the away club (+0x20, id +0x10) — gets the illness risk on the
-/// day before the fixture.
+/// `FIXTURE_MANAGER::add_away_trip_illness_risk(f)`; `this` is not used. With the fixture's stadium (`.stadium()`), its
+/// city (`stadium::CITY`) and the city's nation (`city::NATION`) in a third-world country (`.state_of_development()` =
+/// 3), each visiting club from another nation (`.nation()`) — the home club (`.home_club()`, id `.home_club_id()`) and
+/// the away club (`.away_club()`, id `.away_club_id()`) — gets the illness risk on the day before the fixture.
 /// Original: `FIXTURE_MANAGER::add_away_trip_illness_risk` (0x5ab3c0, fix_man.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn add_away_trip_illness_risk(_this: usize, f: usize) {
     let f = Fixture(f);
@@ -2177,10 +2227,10 @@ pub(crate) unsafe extern "thiscall" fn add_away_trip_illness_risk(_this: usize, 
 
 /// For an English or Welsh club, returns the active key-nation index of the other nation; otherwise 0xff.
 ///
-/// `fix_man_get_partner_key_nation_index(club)` (cdecl), from the fixture searches `find_fixtures`, 0x5acee0 and `find_fixture_clashes`: for
-/// a club from England ([0x9cf2e4]) or Wales ([0x9cf510]) (nation +0x53, id +0), the index of the other nation's active
-/// key nation (the 35 records of 72 bytes at 0xb63d60: +0 the nation, active at +0x11c, +0x14 the index); otherwise
-/// 0xff.
+/// `fix_man_get_partner_key_nation_index(club)` (cdecl), from the fixture searches `find_fixtures`, 0x5acee0 and
+/// `find_fixture_clashes`: for a club from England (`KEY_NATION_ENGLAND`) or Wales (`KEY_NATION_WALES`) (`.nation()`,
+/// id +0), the index of the other nation's active key nation (the 35 records of 72 bytes at `G_LEAGUE_TABLE`: +0 the
+/// nation, active at `.league_selected()`, +0x14 the index); otherwise 0xff.
 /// Original: `fix_man_get_partner_key_nation_index` (0x5af5b0, fix_man.cpp, cdecl).
 pub(crate) unsafe extern "C" fn fix_man_get_partner_key_nation_index(club: usize) -> u8 {
     let club = Club(club);
@@ -2206,15 +2256,15 @@ pub(crate) unsafe extern "C" fn fix_man_get_partner_key_nation_index(club: usize
     0xff
 }
 
-/// Returns the fixture list (`get_fixture_list` of the manager [0xae2a58]) for the year (+2) and day (+0) of the date, in the
-/// given slice and group.
+/// Returns the fixture list (`exe::fixture_manager_get_fixture_list` of the manager [`G_FIXTURE_MANAGER`]) for the year
+/// (+2) and day (+0) of the date, in the given slice and group.
 ///
-/// `get_fixture_list_for_date(date, slice, group)` (stdcall, ret 0xc): the fixture list from `get_fixture_list` of the manager
-/// [0xae2a58] for the year (+2) and day (+0) of the date. The year argument carries in its high half that of the date
-/// pointer (`mov ax, [eax+2]`), which is reproduced; the day argument carries the caller's ecx high half, which
-/// `get_fixture_list` discards (`and 0xffff`): the port passes zero. Used on match days (set_up_the_day `set_up_the_day`, Rust, each list
-/// of the day), in the friendlies (0x5cbf3e), in the human manager (0x5fe83a), in the media (0x7776a8) and in 0x7e6498,
-/// 0x7e6ac9.
+/// `get_fixture_list_for_date(data, slice, group)` (stdcall, ret 0xc): the fixture list from
+/// `exe::fixture_manager_get_fixture_list` of the manager [`G_FIXTURE_MANAGER`] for the year (+2) and day (+0) of the
+/// date. The year argument carries in its high half that of the date pointer (`mov ax, [eax+2]`), which is reproduced;
+/// the day argument carries the caller's ecx high half, which `get_fixture_list` discards (`and 0xffff`): the port
+/// passes zero. Used on match days (set_up_the_day `set_up_the_day`, Rust, each list of the day), in the friendlies
+/// (0x5cbf3e), in the human manager (0x5fe83a), in the media (0x7776a8) and in 0x7e6498, 0x7e6ac9.
 /// Original: `FIXTURE_MANAGER::get_fixture_list_for_date` (0x5ae6a0, fix_man.cpp, stdcall, ret 0xc).
 pub(crate) unsafe extern "stdcall" fn get_fixture_list_for_date(data: usize, slice: u32, group: u32) -> usize {
     let year = (data as u32 & 0xffff_0000) | read_u16(data + 2) as u32;
@@ -2224,10 +2274,10 @@ pub(crate) unsafe extern "stdcall" fn get_fixture_list_for_date(data: usize, sli
 
 /// Marks the fixture's year in both clubs' entries of the club dates table (year × 2 + bit, 2001 rule).
 ///
-/// (cdecl) Marks the year (+0x28, word) of fixture `fixture` in the entries of the two clubs (+0xc and +0x10) of the
-/// table [0xae2a5c] (words: year × 2 + bit 0). Empty entry: bit 0 is set, or the entry is zeroed in 2001, and the year
-/// goes in; otherwise in 2001 bit 0 is cleared and the year goes up if larger. Null table: as in the original (error
-/// box).
+/// (cdecl) Marks the year (`.year()`, word) of fixture `game` in the entries of the two clubs (+0xc and +0x10) of the
+/// table `G_CLUB_FIXTURE_YEAR_TABLE` (words: year × 2 + bit 0). Empty entry: bit 0 is set, or the entry is zeroed in
+/// 2001, and the year goes in; otherwise in 2001 bit 0 is cleared and the year goes up if larger. Null table: as in the
+/// original (error box).
 /// Original: `mark_calendar_year` (0x5af180, fix_man.cpp, cdecl).
 pub(crate) unsafe extern "C" fn mark_calendar_year(game: usize) {
     let game = Fixture(game);

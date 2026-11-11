@@ -346,11 +346,12 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_update_for_date(this: usize,
 /// Rule: group 1 of the Copa Merconorte has 4 clubs, the first 4 drawn, each in the row of its order; human managers
 /// get the group draw news.
 ///
-/// The table of the Merconorte's first group: 4 teams (+0x3e), the table +0xb1 (`exe::crt_malloc`(0xec): push 0xec; add esp, 4
-/// -> cdecl; 4 rows of 0x3b bytes; out of memory, the error box at line 0x145 and returns 0), each row i with drawn
-/// club i (+0xee) (`init_table_row` League::init_table_row: push 0; push 0; push club; push i; mov ecx, this -> thiscall, ret
-/// 0x10), the group draw news (`send_group_draw_news`: mov ecx, this -> thiscall, ret 0) and returns 1. The same body as `init_group_a_table` of
-/// the African Cup (only the file and the error box line change).
+/// The table of the Merconorte's first group: 4 teams (`.set_club_count(4)`), the table `.set_table()`
+/// (`exe::crt_malloc`(0xec): push 0xec; add esp, 4 -> cdecl; 4 rows of 0x3b bytes; out of memory, the error box at line
+/// 0x145 and returns 0), each row i with drawn club i (`con_merc_cup_drawn_club`) (`exe::league_init_table_row`
+/// League::init_table_row: push 0; push 0; push club; push i; mov ecx, this -> thiscall, ret 0x10), the group draw news
+/// (`exe::league_send_group_draw_news`: mov ecx, this -> thiscall, ret 0) and returns 1. The same body as
+/// `init_group_a_table` of the African Cup (only the file and the error box line change).
 /// Original: `ConMercCup::create_first_group_table` (0x4c1de0, con_merc_cup.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_first_group_table(this: usize) -> u32 {
     let this = League(this);
@@ -379,15 +380,17 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_first_group_table(thi
 /// 7), the cup's rules and year and the cup's round table for the group; human managers get the news.
 ///
 /// SEH frame only for the stage's new: no destructor on the normal path. Builds the stage of group g + 1 (g from 0 to
-/// 2, on the draw day). The teams in a vector of 4 pointers (`exe::crt_malloc`(0x10): push; add esp, 4 -> cdecl; out of memory,
-/// the error box at line 0x1e9 and 0): drawn clubs 4g + 4 to 4g + 7 (+0xee); the round table through virtual +0x3c
-/// (push 0; push &id; push &rounds; push g; mov ecx, this -> thiscall, ret 0x10); the stage (`exe::crt_operator_new`(0xee) push; add
-/// esp, 4 -> cdecl; the League_Stage constructor 0x68b100, thiscall, ret 0x58, 22 arguments: the cup, the teams (4),
-/// the vector, +0x3c (word), +4, the round table, the rounds (word), +0xc2, +0xc3, +0xc4, &+0xc5, &+0xbe, the year
-/// +0x40 (word), g, the id (word), +0x51, 2, 0, +0xd9 (word), −1, 0, 2; the original pushes the words and bytes with
-/// garbage in the high bytes, which the constructor does not read: the copy passes clean values) into [+0xc][g]; the
-/// vector and the round table freed (`exe::crt_free`). No stage: the error box at line 0x1ff and 0. With it: the group news
-/// (`send_group_draw_news` on the stage), +0x30 = g and 1.
+/// 2, on the draw day). The teams in a vector of 4 pointers (`exe::crt_malloc`(0x10): push; add esp, 4 -> cdecl; out of
+/// memory, the error box at line 0x1e9 and 0): drawn clubs 4g + 4 to 4g + 7 (`con_merc_cup_drawn_club`); the round
+/// table through virtual `comp_vtable::CREATE_SCHEDULE` (push 0; push &id; push &rounds; push g; mov ecx, this ->
+/// thiscall, ret 0x10); the stage (`exe::crt_operator_new`(0xee) push; add esp, 4 -> cdecl; the League_Stage
+/// constructor `FN_LEAGUE_STAGE_LEAGUE_STAGE`, thiscall, ret 0x58, 22 arguments: the cup, the teams (4), the vector,
+/// `.legs()` (word), `.competition()`, the round table, the rounds (word), `.win_points()`, `.draw_points()`,
+/// `.match_category()`, &`league::TIEBREAKS`, &`league::PROMOTED_COUNT`, the year `.year()` (word), g, the id (word),
+/// `.importance()`, 2, 0, `.league_flags()` (word), −1, 0, 2; the original pushes the words and bytes with garbage in
+/// the high bytes, which the constructor does not read: the copy passes clean values) into `.stages()`[g]; the vector
+/// and the round table freed (`exe::crt_free`). No stage: the error box at line 0x1ff and 0. With it: the group news
+/// (`exe::league_send_group_draw_news` on the stage), `.set_current_stage(g)` and 1.
 /// Original: `ConMercCup::create_group_stage` (0x4c2140, con_merc_cup.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_group_stage(this: usize, g: i32) -> u32 {
     let this = League(this);

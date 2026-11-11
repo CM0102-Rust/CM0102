@@ -49,11 +49,11 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_for_date(this: usiz
 /// Builds the table of the first group of the Copa Libertadores. Rule: group 1 has 4 clubs, the first 4 drawn, each in
 /// the row of its order; human managers get the group draw news.
 ///
-/// Ret 0: 4 teams (+0x3e), table +0xb1 (`exe::crt_malloc`(0xec): push 0xec; add esp, 4 -> cdecl; 4 rows of 0x3b bytes; out of
-/// memory: the box at line 0x16f and returns 0), each row i with drawn club i (+0xee) (`init_table_row` League::init_table_row:
-/// push 0; push 0; push club; push i; mov ecx, this -> thiscall, ret 0x10), the group draw news (`send_group_draw_news`: mov ecx,
-/// this -> thiscall, ret 0) and returns 1. The same body as `init_group_a_table` of the African Nations Cup (only the file and the
-/// box line change).
+/// Ret 0: 4 teams (`set_club_count`), table `set_table` (`exe::crt_malloc`(0xec): push 0xec; add esp, 4 -> cdecl; 4
+/// rows of 0x3b bytes; out of memory: the box at line 0x16f and returns 0), each row i with drawn club i
+/// (`conmebol_liber_drawn_club`) (`exe::league_init_table_row`: push 0; push 0; push club; push i; mov ecx, this ->
+/// thiscall, ret 0x10), the group draw news (`exe::league_send_group_draw_news`: mov ecx, this -> thiscall, ret 0) and
+/// returns 1. The same body as `init_group_a_table` of the African Nations Cup (only the file and the box line change).
 /// Original: `ConmebolLiber::build_first_group_table` (0x4c37a0, conmebol_liber.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn build_first_group_table(this: usize) -> u32 {
     let this = League(this);
@@ -82,16 +82,19 @@ pub(crate) unsafe extern "thiscall" fn build_first_group_table(this: usize) -> u
 /// drawn clubs (4g + 4 to 4g + 7), the cup's rules and year and the cup's round table for the group; human managers get
 /// the news.
 ///
-/// Ret 4; SEH frame only for the stage's exe::crt_operator_new(no destructor on the normal path): the stage of group g + 1 (g from 0 to
-/// 6, from the draw day). The teams in a vector of +0x3e pointers (`exe::crt_malloc`(+0x3e << 2): push; add esp, 4 -> cdecl; out
-/// of memory: the box at line 0x218 and 0): drawn clubs 4g + 4 to 4g + 7 (+0xee); the round table through virtual +0x3c
-/// (push 0; push &id; push &rounds; push g; mov ecx, this -> thiscall, ret 0x10); the stage (`exe::crt_operator_new`(0xee) push; add
-/// esp, 4 -> cdecl; the League_Stage constructor 0x68b100, thiscall, ret 0x58, 22 arguments: the cup, the teams (+0x3e,
-/// word), the vector, +0x3c (word), +4, the round table, the rounds (word), +0xc2, +0xc3, +0xc4, &+0xc5, &+0xbe, the
-/// year +0x40 (word), g, the id (word), +0x51, 2, 0, +0xd9 (word), −1, 0, 2; the original pushes the words and bytes
-/// with garbage in the high bytes, which the constructor does not read: the copy passes clean values) in `[+0xc][g]`;
-/// the vector and the round table are freed (`exe::crt_free`). No stage: the box at line 0x22e and 0. With it: the group news
-/// (`send_group_draw_news` on the stage), +0x30 = g and 1.
+/// Ret 4; SEH frame only for the stage's `exe::crt_operator_new` (no destructor on the normal path): the stage of group
+/// g + 1 (g from 0 to 6, from the draw day). The teams in a vector of `club_count()` pointers
+/// (`exe::crt_malloc`(`club_count()` << 2): push; add esp, 4 -> cdecl; out of memory: the box at line 0x218 and 0):
+/// drawn clubs 4g + 4 to 4g + 7 (`conmebol_liber_drawn_club`); the round table through virtual
+/// `comp_vtable::CREATE_SCHEDULE` (push 0; push &id; push &rounds; push g; mov ecx, this -> thiscall, ret 0x10); the
+/// stage (`exe::crt_operator_new`(0xee) push; add esp, 4 -> cdecl; the League_Stage constructor
+/// `FN_LEAGUE_STAGE_LEAGUE_STAGE`, thiscall, ret 0x58, 22 arguments: the cup, the teams (`club_count()`, word), the
+/// vector, `legs()` (word), `competition()`, the round table, the rounds (word), `win_points()`, `draw_points()`,
+/// `match_category()`, &`league::TIEBREAKS`, &`league::PROMOTED_COUNT`, the year `year()` (word), g, the id (word),
+/// `importance()`, 2, 0, `league_flags()` (word), −1, 0, 2; the original pushes the words and bytes with garbage in the
+/// high bytes, which the constructor does not read: the copy passes clean values) in `stages()[g]`; the vector and the
+/// round table are freed (`exe::crt_free`). No stage: the box at line 0x22e and 0. With it: the group news
+/// (`exe::league_send_group_draw_news` on the stage), `set_current_stage(g)` and 1.
 /// Original: `ConmebolLiber::create_group_stage` (0x4c3b10, conmebol_liber.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn conmebol_liber_create_group_stage(this: usize, g: i32) -> u32 {
     let this = League(this);
@@ -294,11 +297,12 @@ pub(crate) unsafe fn libertadores_entrants(this: usize, max: i32, out: &mut [usi
 /// continental competition (the mark comes from league qualification), in database order, then shuffled (96 random
 /// swaps) for the groups; any other count is an error (the box).
 ///
-/// Ret 0: `ConmebolLiber::select_qualified_clubs()`: +0xf2 = 32 and the list +0xee (`exe::crt_malloc`(0x80): push 0x80; add esp,
-/// 4 -> cdecl; out of memory: the box at line 0x285 and returns 0) with the clubs, in database order, whose season
-/// competition (+0x1db) is the Libertadores, up to 32; fewer than 32: the box at line 0x297 and returns 0; otherwise
-/// the list is shuffled (`comp_util_shuffle_pointer_array`(list, 32): push n; push list; add esp, 8 -> cdecl; 3 × 32 random swaps) and returns
-/// 1.
+/// Ret 0: `ConmebolLiber::select_qualified_clubs()`: `conmebol_liber::DRAWN_CLUB_COUNT` = 32 and the list
+/// `conmebol_liber::DRAWN_CLUBS` (`exe::crt_malloc`(0x80): push 0x80; add esp, 4 -> cdecl; out of memory: the box at
+/// line 0x285 and returns 0) with the clubs, in database order, whose season competition (`club::CONTINENTAL_COMP_ID`,
+/// `libertadores_entrants`) is the Libertadores, up to 32; fewer than 32: the box at line 0x297 and returns 0;
+/// otherwise the list is shuffled (`exe::comp_util_shuffle_pointer_array`(list, 32): push n; push list; add esp, 8 ->
+/// cdecl; 3 × 32 random swaps) and returns 1.
 /// Original: `ConmebolLiber::select_qualified_clubs` (0x4c3f40, conmebol_liber.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn conmebol_liber_select_qualified_clubs(this: usize) -> u32 {
     write_u32(this + conmebol_liber::DRAWN_CLUB_COUNT, 0x20);
@@ -325,9 +329,9 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_select_qualified_clubs(thi
 /// rule: in the seven groups (stages 0 to 6), a club going through gets the qualification record (weight 40) and one
 /// going out the failed-to-qualify record (weight 40); in the knockout (stage 7), a club going through gets the
 /// qualification by round (weight 50 to 100), one going out the knocked-out record; the winner gets the title record
-/// and goes to the Intercontinental Cup, in the South American place (place 0 if a club of continent [0x9cfa1c] is
-/// there, otherwise place 1), with the Intercontinental season archive and predicted positions; the runner-up gets the
-/// runner-up record
+/// and goes to the Intercontinental Cup, in the South American place (place 0 if a club of continent
+/// `KEY_CONTINENT_SOUTH_AMERICA` is there, otherwise place 1), with the Intercontinental season archive and predicted
+/// positions; the runner-up gets the runner-up record
 /// Original: `ConmebolLiber::update_staff_records_for_status` (0x4c4080, conmebol_liber.cpp, thiscall, ret 0x18).
 pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, _a4: u32, game: usize, a6: u32) -> u32 {
     let this = League(this);
@@ -416,9 +420,9 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_create_schedule(this: usiz
         "cqo_13 grupos da libertadores", "cqo_13 mata-mata da libertadores")
 }
 
-/// rule: the Libertadores knockout has 16 clubs: the top 2 (+0xbe) of each of the 8 groups (group 1 in table order, the
-/// others by position in each stage's table), in a cup stage (stage 7) with the cup's round table and year; the first
-/// round is drawn at once
+/// rule: the Libertadores knockout has 16 clubs: the top 2 (`promoted_count()`) of each of the 8 groups (group 1 in
+/// table order, the others by position in each stage's table), in a cup stage (stage 7) with the cup's round table and
+/// year; the first round is drawn at once
 /// Original: `ConmebolLiber::create_knockout_stage` (0x4c3d10, conmebol_liber.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn conmebol_liber_create_knockout_stage(this: usize) {
     build_knockout_stage(League(this), 0x10, 7, 7, 0x9a7de4, 0x24c, 0x26a, "cqs_10 classificados da libertadores");

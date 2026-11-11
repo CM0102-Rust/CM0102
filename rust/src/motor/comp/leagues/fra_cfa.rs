@@ -256,8 +256,9 @@ pub(crate) unsafe fn create_c1_schedule(this: League, stage: u32, rounds: *mut i
 
 /// the rules of the two French background leagues: home and away, 3 points a win and 1 a draw, tie-breaks 4, 1, 2
 /// [inference: position, goal difference, goals], no promotion, play-off or relegation places, rule bits 0x43 (a
-/// champion, top places as promotion and fixed round order); the league above gets the id at [0x9cf624] (the same
-/// global the Spanish Segunda uses for the Primera) [inference: an original slip, harmless since there is no promotion]
+/// champion, top places as promotion and fixed round order); the league above gets the id at
+/// `KEY_CLUB_COMP_SPANISH_FIRST_DIVISION` (the same global the Spanish Segunda uses for the Primera) [inference: an
+/// original slip, harmless since there is no promotion]
 /// Original: `FraCfa::set_up_rules` (0x5ba0a0, fra_cfa.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn fra_cfa_set_up_rules(this: usize) -> u32 {
     let this = League(this);

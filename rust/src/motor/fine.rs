@@ -19,14 +19,15 @@ pub(crate) static FINE_NEWS_DRY_RUN: AtomicBool = AtomicBool::new(false);
 pub(crate) static FINE_NEWS_WOULD_BUILD: AtomicBool = AtomicBool::new(false);
 
 /// Posts the news of a fined player's reaction: for a player under contract at a human club, news 0xbc6 with reason,
-/// reaction, random(2), personality, period, contract type, future transfer and effects.
-///
-/// SEH frame for the local news item, no destructor. `post_fine_reaction_news(player, reason, reaction, period,
-/// effects)`, called from the fine (0x5a5980, five calls). No player, no contract (0x4cf5a0, on `[0xae1080]`), no club
-/// of his or no club contract (`exe::contract_manager_get_contract_for_club`): nothing; player of a club (+0x39) without a human (`news_club_has_human_manager`): nothing. News
-/// 0xbc6 to the contract's club: the player (id and keys), reason, reaction, random(2), the personality (+0x5d + +0x5b
-/// below 12, +0x59 below 6 and reputation +0xb above 5250), period 1, the type 7 contract (+0x4f), the future transfer
-/// (`get_future_transfer`), the effects and the game by the type (+0x4f 1 with more than 23 years, or 2).
+/// reaction, random(2), personality, period, contract type, future transfer and effects. SEH frame for the local news
+/// item, no destructor. `post_fine_reaction_news(player, reason, reaction, deadline, efeitos)`, called from the fine
+/// (0x5a5980, five calls). No player, no contract (`exe::contract_manager_get_contract`, on
+/// `G_CONTRACT_LOOKUP_RESULT`), no club of his or no club contract (`exe::contract_manager_get_contract_for_club`):
+/// nothing; player of a club (`club_job()`) without a human (`club_has_human_manager`): nothing. News 0xbc6 to the
+/// contract's club: the player (id and keys), reason, reaction, random(2), the personality (`temperament()` +
+/// `professionalism()` below 12, `loyalty()` below 6 and reputation `current_reputation()` above 5250), period 1, the
+/// type 7 contract (`squad_status()`), the future transfer (`exe::transfer_manager_get_future_transfer`), the effects
+/// and the game by the type (`squad_status()` 1 with more than 23 years, or 2).
 /// Original: `post_fine_reaction_news` (0x5a74b0, Fine.cpp, stdcall, ret 0x14).
 pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, reason: u32, reaction: u32, deadline: u32, efeitos: u32) {
     let player = Staff(player);
@@ -78,12 +79,11 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, rea
 }
 
 /// Posts the coach's feedback on a fine: with player and coach both having a record and a nation, and the player having
-/// a club, news 0x1394 with the outcome and random(5).
-///
-/// SEH frame for the local news item, no destructor. `post_coach_fine_feedback_news(player, coach, outcome)`, called
-/// from the fines' daily pass (0x5a5820: the feedback marked as due, more than 30 days at the club and no serious
-/// injury; the original leaves the Fine in ecx). Both with a record (+0x61) and a nation (+0x1a), the player with a
-/// club (+0x39): news 0x1394 (the player and the coach, id and keys; the outcome; random(5)) to the player's club.
+/// a club, news 0x1394 with the outcome and random(5). SEH frame for the local news item, no destructor.
+/// `post_coach_fine_feedback_news(player, coach, outcome)`, called from the fines' daily pass (0x5a5820: the feedback
+/// marked as due, more than 30 days at the club and no serious injury; the original leaves the Fine in ecx). Both with
+/// a record (`player()`) and a nation (`nation()`), the player with a club (`club_job()`): news 0x1394 (the player and
+/// the coach, id and keys; the outcome; random(5)) to the player's club.
 /// Original: `post_coach_fine_feedback_news` (0x5a7f20, Fine.cpp, stdcall, ret 0xc).
 pub(crate) unsafe extern "stdcall" fn post_coach_fine_feedback_news(player: usize, coach: usize, outcome: u32) {
     let coach = Staff(coach);

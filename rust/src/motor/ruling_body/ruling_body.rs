@@ -37,14 +37,13 @@ pub(crate) fn ban_days(code: i32, e: i8) -> Option<u16> {
 }
 
 /// Builds the red card ban: the matches or days from the offence code (9 to 12) and the body's scale, today's date and
-/// the player; 0 when there is no ban.
-///
-/// Ret 0xc: `record.make_points_ban(player, by_matches)`, from each country's bodies (rb_*.cpp, when
-/// processing a match's red card): the offence code (+0x2e with +0x2c = 0, +0x2f with +0x2c = 1; another type: 0)
-/// gives, through the body's scale (+6), the matches (by_matches ≠ 0; the days stay 0xffff) or the days (the matches
-/// stay 0xff) of the ban. In the record: +0 matches, +1 = 0, +2 days, +4 today's date (`[0xae2c90]`, `exe::date_operator_3d`), +0x10 =
-/// 3, +0x1c the player's id (+0), +0x6f = (+0x48 of the player == 0). Returns 1; with no ban, 0 without writing
-/// anything.
+/// the player; 0 when there is no ban. Ret 0xc: `make_points_ban(r, j, by_games)` (record, player, by matches), from
+/// each country's bodies (rb_*.cpp, when processing a match's red card): the offence code (`first_card_offence()` with
+/// `yellow_cards()` = 0, `second_card_offence()` with `yellow_cards()` = 1; another type: 0) gives, through the body's
+/// scale (+6), the matches (`by_games` ≠ 0; the days stay 0xffff) or the days (the matches stay 0xff) of the ban. In
+/// the record: +0 matches, +1 = 0, +2 days, +4 today's date (`G_CURRENT_DATE`, `exe::date_operator_3d`),
+/// `ban_record::REASON` = 3, `pending_ban::PERSON_ID` the player's id (+0), +0x6f = (+0x48 of the player == 0). Returns
+/// 1; with no ban, 0 without writing anything.
 /// Original: `RulingBody::make_points_ban` (0x7e8e10, ruling_body.cpp, thiscall, ret 0xc).
 pub(crate) unsafe extern "thiscall" fn make_points_ban(this: usize, r: usize, j: usize, by_games: u32) -> u32 {
     let j = MatchRecordRow(j);
@@ -78,15 +77,15 @@ pub(crate) unsafe extern "thiscall" fn make_points_ban(this: usize, r: usize, j:
 }
 
 /// At the new season, releases bans 2 (or 4) years old, frees the entries without a ban, clears the bookings of the
-/// others and compacts the table.
-///
-/// Ret 0: `RulingBody::start_new_season()`: for each occupied disciplinary entry (14 bytes in `[this+0xb]`, count
-/// +0x13; id −1 is a free slot): with a ban (+6, signed index into the 20-byte discipline table `[[0xae28f0]+4]`) 2 or
-/// more years old (4 if the body has neither +0x17 nor +0x1b; the ban year in +6 against today's `[0xae2c92]`),
-/// releases the ban (`release_ban`) and frees the entry; without a ban, frees the entry; otherwise zeroes the bookings (+4,
-/// +5, +8 and the low 6 bits of +0xd). Freeing: the player's stored slot in the body (`find_held_ban` through slot +4) with
-/// the same +5 gets −1 in +6; without it, writes the slot (`discipline_set_slot`, type +5, −1); the entry's id becomes −1. At the
-/// end compacts the entries (`compact_entries`, in this batch).
+/// others and compacts the table. Ret 0: `RulingBody::start_new_season()`: for each occupied disciplinary entry (14
+/// bytes in `ruling_body::ENTRIES`, count `ruling_body::ENTRY_COUNT`; id −1 is a free slot): with a ban (+6, signed
+/// index into the 20-byte discipline table `[[G_DISCIPLINE]+4]`) 2 or more years old (4 if the body has neither
+/// `ruling_body::NATION_ID` nor `ruling_body::CONTINENT_ID`; the ban year in +6 against today's `G_CURRENT_DATE_YEAR`),
+/// releases the ban (`release_ban`) and frees the entry; without a ban, frees the entry; otherwise zeroes the bookings
+/// (+4, +5, +8 and the low 6 bits of `ruling_body_entry::SEASON_FLAGS`). Freeing: the player's stored slot in the body
+/// (`find_held_ban` through slot +4) with the same +5 gets −1 in +6; without it, writes the slot
+/// (`discipline_set_slot`, type +5, −1); the entry's id becomes −1. At the end compacts the entries (`compact_entries`,
+/// in this batch).
 /// Original: `RulingBody::start_new_season` (0x7e7ed0, ruling_body.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize) {
     covered!("cpu_10 new season");
@@ -138,13 +137,12 @@ pub(crate) unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize)
 // simplification: the copy carries the ”cpu_10 nova temporada” counter to prove in Rust mode; the compaction (compared) checks the end.
 
 /// Removes the free entries from the body's discipline table, fixes the stored index of each moved player and
-/// reallocates with 100 spare rows.
-///
-/// Ret 0: `RulingBody::compact_entries()`: removes the free entries (id −1) from the 14-byte table `[this+0xb]`,
-/// bringing the occupied ones to the front; each one that moves fixes the player's stored index (`find_held_ban` through slot
-/// +4: with the same +5, the new index in +6; without it, `discipline_set_slot` with type +5 and the index). Count +0x13 = n,
-/// capacity +0xf = n + 100 and reallocates (`exe::crt_realloc`) with (n + 100) × 14 bytes; out of memory, the box (line 0x594)
-/// and continues.
+/// reallocates with 100 spare rows. Ret 0: `RulingBody::compact_entries()`: removes the free entries (id −1) from the
+/// 14-byte table `ruling_body::ENTRIES`, bringing the occupied ones to the front; each one that moves fixes the
+/// player's stored index (`find_held_ban` through slot +4: with the same +5, the new index in +6; without it,
+/// `discipline_set_slot` with type +5 and the index). Count `ruling_body::ENTRY_COUNT` = n, capacity
+/// `ruling_body::ENTRY_CAPACITY` = n + 100 and reallocates (`exe::crt_realloc`) with (n + 100) × 14 bytes; out of
+/// memory, the box (line 0x594) and continues.
 /// Original: `RulingBody::compact_entries` (0x7e9050, ruling_body.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn compact_entries(this: usize) {
     let mut target = read_usize(this + ruling_body::ENTRIES);

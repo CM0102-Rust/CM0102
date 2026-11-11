@@ -251,14 +251,15 @@ pub(crate) const REGION_NAMES: [(usize, usize); 14] = [
 /// translated adjective or noun by form.
 ///
 /// `get_region_name(region, text, size, form)`: clears the text and writes the name of the region (1..14, signed byte).
-/// Form (byte) other than 0xff with language (`exe::langlib_get_language`) 4, 5 or 9: the text from the language's table, read by address
-/// (`[0x9d0518 + 4 × (4 × region + f)]`, `[0x9d06d4 + 4 × (5 × region + f)]`, `[0x9d05f8 + 4 × (4 × region + f)]`, with
-/// f the adjective form from `get_adjective_form_index`, already in Rust, called through the game's address), copied. Otherwise, through
-/// 0x66f4e0: in languages 2, 4, 5 and 9 the adjective with form 0xff and the noun with the others; in the rest the
-/// opposite; the Caribbean: "Caribbean" in languages 2, 4, 5 and 9, otherwise the region texts (form 0xff) or
-/// regionality texts, with the empty string 0xad9c64. Returns 1. Null text, region out of range or size (signed short)
-/// < 100: the original (error box). Used in the region order (`get_regions_sorted_by_name`, in Rust), in the player search (player_search,
-/// search_screens) and in screens without a module (0x7db360, 0x7e13d0, 0x7e29e0).
+/// Form (byte) other than 0xff with language (`FN_LANGLIB_GET_LANGUAGE`) 4, 5 or 9: the text from the language's table,
+/// read by address (`[0x9d0518 + 4 × (4 × region + f)]`, `[0x9d06d4 + 4 × (5 × region + f)]`, `[0x9d05f8 + 4 × (4 ×
+/// region + f)]`, with f the adjective form from `exe::get_adjective_form_index`, already in Rust, called through the
+/// game's address), copied. Otherwise, through `FN_LANGLIB_SPRINTF`: in languages 2, 4, 5 and 9 the adjective with form
+/// 0xff and the noun with the others; in the rest the opposite; the Caribbean: "Caribbean" in languages 2, 4, 5 and 9,
+/// otherwise the region texts (form 0xff) or regionality texts, with the empty string 0xad9c64. Returns 1. Null text,
+/// region out of range or size (signed short) < 100: the original (error box). Used in the region order
+/// (`get_regions_sorted_by_name`, in Rust), in the player search (player_search, search_screens) and in screens without
+/// a module (0x7db360, 0x7e13d0, 0x7e29e0).
 /// Original: `get_region_name` (0x616f20, index.cpp, cdecl).
 pub(crate) unsafe extern "C" fn get_region_name(region: u32, text: usize, size: u32, form: u32) -> u32 {
     let r = region as u8 as i8;
@@ -332,15 +333,17 @@ pub(crate) const CONTINENT_NAMES_LANGUAGE_4: [[usize; 5]; 6] = [
     [0x9d0e10, 0x9d0e00, 0x9d0df0, 0x9d0de0, 0x9d0de0],
 ];
 
-/// Writes the continent adjective: the record's own (+0x23) or, in languages 9, 5 and 4, the text by continent and
-/// adjective form.
+/// Writes the continent adjective: the record's own (`continent::ADJECTIVE`) or, in languages 9, 5 and 4, the text by
+/// continent and adjective form.
 ///
 /// The community map gives 629 bytes; the routine runs to 0x6181c5: 2518. `get_continent_adjective(continent, text,
-/// size, form)`: clears the text and copies the continent's adjective. Form (byte) 0 or language (`exe::langlib_get_language`) other than
-/// 9, 5 and 4: the record's own adjective (+0x23). Otherwise the language's text by continent (id +0 compared with the
-/// keys `[0x9cfa08..0x9cfa18]`, in that order) and by the adjective form (`get_adjective_form_index`, already in Rust, through the game's
-/// address). Returns 1. Null continent or text, or size (signed short) < 50: the original (0). Used in the search
-/// (find_screens), the Menubar, the day's matches (`open_day_fixtures_screen`, in Rust) and 0x7dd400.
+/// size, form)`: clears the text and copies the continent's adjective. Form (byte) 0 or language
+/// (`FN_LANGLIB_GET_LANGUAGE`) other than 9, 5 and 4: the record's own adjective (`continent::ADJECTIVE`). Otherwise
+/// the language's text by continent (id +0 compared with the keys `KEY_CONTINENT_AFRICA`, `KEY_CONTINENT_ASIA`,
+/// `KEY_CONTINENT_EUROPE`, `KEY_CONTINENT_NORTH_AMERICA`, `KEY_CONTINENT_OCEANIA`, in that order) and by the adjective
+/// form (`FN_GET_ADJECTIVE_FORM_INDEX`, already in Rust, through the game's address). Returns 1. Null continent or
+/// text, or size (signed short) < 50: the original (0). Used in the search (find_screens), the Menubar, the day's
+/// matches (`open_day_fixtures_screen`, in Rust) and 0x7dd400.
 /// Original: `get_continent_adjective` (0x6177f0, index.cpp, cdecl).
 pub(crate) unsafe extern "C" fn get_continent_adjective(continent: usize, text: usize, size: u32, form: u32) -> u32 {
     if continent == 0 || text == 0 || (size as u16 as i16) < 0x32 {

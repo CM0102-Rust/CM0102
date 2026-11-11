@@ -8,17 +8,18 @@ pub(crate) unsafe fn player_search_contract_club(person: Staff) -> usize {
     if !c.is_null() { (friendly_club_by_id(c.club())).addr() } else { 0 }
 }
 
-/// `player_search_record_scouted_club_match(match, result)`, called by the watched match (`player_search_scout_match`) when the list
-/// follows a club (+0x190) that plays in it: records the match in the watched club's player histories.
-///
+/// `player_search_record_scouted_club_match(game, result)`, called by the watched match (`player_search_scout_match`)
+/// when the list follows a club (+0x190) that plays in it: records the match in the watched club's player histories.
 /// `this` is the record of the watched club ([list+0x170]: +0 the club id, 50 slots of 0x1a2 bytes from +4). First the
-/// slots of those who left the club are cleared (id −1, the counter +4 and bytes +0x1a0/+0x1a1 zeroed); then, on the
-/// club's side of the result (+0x190, 20 records of 0x49, the away side at 0x625), each player who played (+4 ≠ −1;
-/// substitutes beyond the 11th only with a rating, +0x32) gets a line in the 10-match history of his slot (`player_search_find_or_claim_player_slot`
-/// with 1; without a slot, the box of line 0x2065): goals, rating, date, opponent, score, competition, the side
-/// (`comp_util_get_fixture_venue_side`) and the statistics; the type +0x2e (1 starter, 2 substitute, 5/6 with the rating from +0x30) and the
-/// rating +0x15. With the manager of a human club and the attribute masks set, the manager comes to know the player
-/// (`exe::fog_of_war_map_raise_knowledge`, which draws).
+/// slots of those who left the club are cleared (id −1, the counter +4 and bytes
+/// `scouted_player_slot::HISTORY_START`/`scouted_player_slot::HISTORY_COUNT` zeroed); then, on the club's side of the
+/// result (`match_record::ROW_STAFF_ID`, 20 records of `match_record_row::SIZE`, the away side at
+/// `match_record::SIDE_SIZE`), each player who played (+4 ≠ −1; substitutes beyond the 11th only with a rating,
+/// `minute_on()`) gets a line in the 10-match history of his slot (`player_search_find_or_claim_player_slot` with 1;
+/// without a slot, the box of line 0x2065): goals, rating, date, opponent, score, competition, the side
+/// (`comp_util_get_fixture_venue_side`) and the statistics; the type +0x2e (1 starter, 2 substitute, 5/6 with the
+/// rating from `minute_off()`) and the rating +0x15. With the manager of a human club and the attribute masks set, the
+/// manager comes to know the player (`exe::fog_of_war_map_raise_knowledge`, which draws).
 /// Original: `player_search_record_scouted_club_match` (0x7bd310, player_search.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn player_search_record_scouted_club_match(this: usize, game: usize, result: usize) {
     let result = MatchRecord(result);
@@ -398,13 +399,14 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: Fixture, result: usize,
 }
 
 /// `PLAYER_SEARCH::contains_player(person)` (SEH frame only for the two local dates, no destructor), called from the
-/// human manager's scout list (`is_player_shortlisted`, which the player assessment and the interested clubs consult every day) and
-/// from screens: looks the player up in the search results and returns 1 when found and not marked as removed.
-///
-/// The local 0x2d-byte key starts with the two default dates (+0x10 and +0x18, `exe::date_date_54a110`); a null person: the box of
-/// line 0x33e and 0. Without results (+0x1f6 = count): 0. The reference to the person's name in the key (`fill_staff_name_ref`: +0xc
-/// the id, the only field the comparison 0x7bce50 reads) and the binary search in the results (`exe::crt_bsearch` with the vector
-/// +0x1ee, the count, 0x2d and 0x7bce50); found and without the removed flag (bit 0 of +0x20), 1; otherwise 0.
+/// human manager's scout list (`is_player_shortlisted`, which the player assessment and the interested clubs consult
+/// every day) and from screens: looks the player up in the search results and returns 1 when found and not marked as
+/// removed. The local 0x2d-byte key starts with the two default dates (+0x10 and `search_result::LAST_UPDATE_DATE`,
+/// `exe::date_date_54a110`); a null person: the box of line 0x33e and 0. Without results
+/// (`player_search_fields::RESULT_COUNT` = count): 0. The reference to the person's name in the key
+/// (`exe::fill_staff_name_ref`: +0xc the id, the only field the comparison 0x7bce50 reads) and the binary search in the
+/// results (`exe::crt_bsearch` with the vector `player_search_fields::RESULTS`, the count, 0x2d and 0x7bce50); found
+/// and without the removed flag (`search_result_flags::REMOVED` of `search_result::FLAGS`), 1; otherwise 0.
 /// Original: `PLAYER_SEARCH::contains_player` (0x7af600, player_search.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn contains_player(this: usize, person: usize) -> u32 {
     let mut key = [0u8; 0x30];
@@ -447,12 +449,11 @@ pub(crate) unsafe fn set_search_scout(l: usize, scout: usize) {
     exe::player_search_set_scout(l, scout);
 }
 
-/// `player_search_find_or_claim_player_slot(person, claim)`: returns the player's slot among the 50 of the watched
-/// club's record (0x1a2 bytes from +4: +0 the id, −1 free), called by its match (`player_search_record_scouted_club_match`) and by the screens
-/// (`find_club_search_entry`).
-///
-/// The slot with the person's id; otherwise, with `claim`, the first free one gets the id (null person: −1), zeroes
-/// word +4 and bytes +0x1a0 and +0x1a1 and is returned (none free: the box of line 0x210d and 0); without `claim`, 0.
+/// `player_search_find_or_claim_player_slot(person, reservar)`: returns the player's slot among the 50 of the watched
+/// club's record (0x1a2 bytes from +4: +0 the id, −1 free), called by its match
+/// (`player_search_record_scouted_club_match`) and by the screens (`find_club_search_entry`). The slot with the
+/// person's id; otherwise, with `reservar`, the first free one gets the id (null person: −1), zeroes word +4 and bytes
+/// +0x1a0 and +0x1a1 and is returned (none free: the box of line 0x210d and 0); without `reservar`, 0.
 /// Original: `player_search_find_or_claim_player_slot` (0x7bd700, player_search.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn player_search_find_or_claim_player_slot(this: usize, person: usize, reservar: u32) -> usize {
     if person == 0 {
@@ -488,16 +489,17 @@ pub(crate) unsafe extern "thiscall" fn player_search_find_or_claim_player_slot(t
 
 /// `player_search_get_club_target_rating(club, *base, *forced)` (cdecl): the rating the club looks for in players: a
 /// base from reputation, money, nation and league, by bands, and adjustments for squad size and wealth; at least 500.
-///
-/// The base (without `forced`): the reputation (+0x80), the money one (+0x77 × 0.43 − 430, up to 10000, if greater than
-/// the reputation), the nation one (+0x57: +0x69 × 500, if greater than reputation / 500) and the league one (+0x1db in
-/// [0xae23d0], 0x6b bytes: +0x69 × 600, likewise), weighted and / 16; half at a non-professional club (+0x64 ≠ 1). The
-/// rating comes from the base by bands (up to 3000, 5000, 7000, 9000 and above). Without `forced`, by the squad
-/// (`database_count_club_squad`) and the wealth band of the finances (`get_club_finance` of [0xae2a38], `get_wealth_band`) for clubs with a nation in
-/// [0xadadfc]: a short squad (< 16) halves; < 20 halves, or 2/3 for the poor; otherwise it shrinks by the shortage of
-/// players compared with the nation (+0x69 × 1.35 + 20) and wealth pulls it (−2..2: × 0.909 or − 1000, × 0.952 or −
-/// 500, nothing, × 1.0125 or + 125, × 1.025 or + 250). At least 500. The base goes into `*base` (if not null). The
-/// floating-point arithmetic is in f64 (the game's x87 at 53 bits).
+/// The base (without `forced`): the reputation (`reputation()`), the money one (`min_attendance()` × 0.43 − 430, up to
+/// 10000, if greater than the reputation), the nation one (`division()`: `competition::REPUTATION` × 500, if greater
+/// than reputation / 500) and the league one (`continental_comp_id()` in `G_CLUB_COMP_TABLE`, 0x6b bytes:
+/// `reputation()` × 600, likewise), weighted and / 16; half at a non-professional club (`professional_status()` ≠
+/// `professional_status::PROFESSIONAL`). The rating comes from the base by bands (up to 3000, 5000, 7000, 9000 and
+/// above). Without `forced`, by the squad (`database_count_club_squad`) and the wealth band of the finances
+/// (`exe::financetable_get_club_finance` of `G_FINANCE_TABLE`, `exe::finance_get_wealth_band`) for clubs with a nation
+/// in `G_COMP_OBJECT_TABLE`: a short squad (< 16) halves; < 20 halves, or 2/3 for the poor; otherwise it shrinks by the
+/// shortage of players compared with the nation (`competition::REPUTATION` × 1.35 + 20) and wealth pulls it (−2..2: ×
+/// 0.909 or − 1000, × 0.952 or − 500, nothing, × 1.0125 or + 125, × 1.025 or + 250). At least 500. The base goes into
+/// `*base` (if not null). The floating-point arithmetic is in f64 (the game's x87 at 53 bits).
 /// Original: `player_search_get_club_target_rating` (0x7bca90, player_search.cpp, cdecl).
 pub(crate) unsafe extern "C" fn player_search_get_club_target_rating(club: usize, base: *mut i32, forced: *const i16) -> i32 {
     let club = Club(club);
@@ -639,9 +641,10 @@ pub(crate) unsafe extern "thiscall" fn player_search_slot_sum_goals(this: usize)
     s
 }
 
-/// `PLAYER_SEARCH::get_scout`: returns the search's scout: the index at +0x180 (> −1) in the people vector [0xae23bc]
-/// (110 bytes), if it still matches the stored names and date (`database_staff_matches_names` with +0x174, +0x178, +0x17c and the date at
-/// +0x184); otherwise 0.
+/// `PLAYER_SEARCH::get_scout`: returns the search's scout: the index at `player_search_fields::SCOUT_ID` (> −1) in the
+/// people vector `G_STAFF_TABLE` (`staff::SIZE` bytes), if it still matches the stored names and date
+/// (`exe::database_staff_matches_names` with `player_search_fields::SCOUT_NAME_REF`, `SCOUT_NAME_REF` + 4,
+/// `SCOUT_NAME_REF` + 8 and the date at `SCOUT_NAME_REF` + 0x10); otherwise 0.
 /// Original: `PLAYER_SEARCH::get_scout` (0x7ae950, player_search.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn get_scout(this: usize) -> usize {
     let i = read_u32(this + player_search_fields::SCOUT_ID) as i32;
@@ -684,11 +687,11 @@ pub(crate) unsafe extern "thiscall" fn set_list_type(search: usize, kind: i8) ->
     1
 }
 
-/// `PLAYER_SEARCH::set_scout(scout)`: sets a new scout.
-///
-/// If the scout changes (the current one through `get_scout`), it stores his ids at +0x174 (`fill_staff_name_ref`) or, without a scout,
-/// the index +0x180 = −1; and the nation (+0x18c), region (+0x194) and competition (+0x195) assignments go back to −1.
-/// Returns 1.
+/// `PLAYER_SEARCH::set_scout(scout)`: sets a new scout. If the scout changes (the current one through `get_scout`), it
+/// stores his ids at `player_search_fields::SCOUT_NAME_REF` (`exe::fill_staff_name_ref`) or, without a scout, the index
+/// `player_search_fields::SCOUT_ID` = −1; and the nation (`player_search_fields::ASSIGNED_NATION`), region
+/// (`player_search_fields::ASSIGNED_REGION`) and competition (`player_search_fields::ASSIGNED_COMP`) assignments go
+/// back to −1. Returns 1.
 /// Original: `PLAYER_SEARCH::set_scout` (0x7ae8a0, player_search.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn set_scout(this: usize, scout: usize) -> u32 {
     if scout == get_scout(this) {
@@ -716,9 +719,11 @@ pub(crate) unsafe extern "thiscall" fn set_manager(search: usize, person: usize)
 }
 
 /// `PLAYER_SEARCH::get_scout_assignment(club, nation, region, comp, base, opponent)`: with the scout checked, if any
-/// assignment is set (club +0x190, nation +0x18c, region +0x194 byte, competition +0x195 above −1; base +0x199,
-/// opponent +0x19d non-null), copies the six to the outputs and returns 1; none: 0. A scout that does not check out:
-/// the original routine ("Error" box and 0).
+/// assignment is set (club `player_search_fields::ASSIGNED_CLUB`, nation `player_search_fields::ASSIGNED_NATION`,
+/// region `player_search_fields::ASSIGNED_REGION` byte, competition `player_search_fields::ASSIGNED_COMP` above −1;
+/// base `player_search_fields::ASSIGNED_BASE`, opponent `player_search_fields::ASSIGNED_OPPONENT` non-null), copies the
+/// six to the outputs and returns 1; none: 0. A scout that does not check out: the original routine ("Error" box and
+/// 0).
 /// Original: `PLAYER_SEARCH::get_scout_assignment` (0x7aefd0, player_search.cpp, thiscall, ret 0x18).
 pub(crate) unsafe extern "thiscall" fn get_scout_assignment(this: usize, club: *mut u32, nation: *mut u32, region: *mut u8, comp: *mut u32, base: *mut u32, opponent: *mut u32) -> u32 {
     if check_search_scout(this).is_none() {
@@ -742,15 +747,19 @@ pub(crate) unsafe extern "thiscall" fn get_scout_assignment(this: usize, club: *
     1
 }
 
-/// `PLAYER_SEARCH::scout_covers_nation(nation)`: tells whether the scout search (type +0xa = 4) with the scout checked
-/// (index +0x180 > −1 and `database_staff_matches_names` with the names +0x174..+0x17c and the date +0x184) and with a club (+0x39) covers
-/// `nation`.
-///
-/// With an assignment set (`get_scout_assignment`, which copies the assignments +0x18c..+0x19d onto themselves): the nation of the
-/// assignment's club (+0x53 of club +0x190), the assignment's nation (+0x18c = id +0 of the nation), the region
-/// (+0x194, signed byte, = +0x76 of the nation), or with the base (+0x199) the same region. Without an assignment: both
-/// nations with +0x7f = 2, the same region (+0x76) as the club's nation, the nation not foreign to the scout (`database_is_staff_foreign`
-/// with 1) or the club's scouts covering the nation (`can_club_scout_nation` of [0xb74448]). Returns 1 or 0.
+/// `PLAYER_SEARCH::scout_covers_nation(nation)`: tells whether the scout search (type `player_search_fields::LIST_TYPE`
+/// = 4) with the scout checked (index `player_search_fields::SCOUT_ID` > −1 and `exe::database_staff_matches_names`
+/// with the names `player_search_fields::SCOUT_NAME_REF`..`SCOUT_NAME_REF` + 8 and the date `SCOUT_NAME_REF` + 0x10)
+/// and with a club (`staff::CLUB_JOB`) covers `nation`. With an assignment set
+/// (`exe::player_search_get_scout_assignment`, which copies the assignments
+/// `player_search_fields::ASSIGNED_CLUB`..`player_search_fields::ASSIGNED_OPPONENT` onto themselves): the nation of the
+/// assignment's club (`club::NATION` of club `player_search_fields::ASSIGNED_CLUB`), the assignment's nation
+/// (`player_search_fields::ASSIGNED_NATION` = id +0 of the nation), the region
+/// (`player_search_fields::ASSIGNED_REGION`, signed byte, = `actual_region()` of the nation), or with the base
+/// (`player_search_fields::ASSIGNED_BASE`) the same region. Without an assignment: both nations with
+/// `group_membership()` = `nation_group::EEC`, the same region (`actual_region()`) as the club's nation, the nation not
+/// foreign to the scout (`database_is_staff_foreign` with 1) or the club's scouts covering the nation
+/// (`exe::scout_manager_can_club_scout_nation` of `G_SCOUT_MANAGER`). Returns 1 or 0.
 /// Original: `PLAYER_SEARCH::scout_covers_nation` (0x7b7490, player_search.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn scout_covers_nation(this: usize, nation: usize) -> u32 {
     let nation = Nation(nation);

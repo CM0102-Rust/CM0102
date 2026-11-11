@@ -276,9 +276,10 @@ pub(crate) unsafe extern "thiscall" fn position_place_players(this: usize, j: us
     *out_y = v;
 }
 
-/// side 1, largest y (0x103) among the active ones starting from 6, plus 1, at 0x8eaf; side 0, smallest y starting from
-/// 5, minus 1, at 0x8eb0 (the fields read by `side_difference` and `player_difference`). Active: position >= 0 and
-/// `player_table` != 1. The original has both 20-player loops unrolled (1.7 KB)
+/// side 1, largest y (`match_player::CELL_Y`) among the active ones starting from 6, plus 1, at `engine::OFFSIDE_LINE`;
+/// side 0, smallest y starting from 5, minus 1, at `.set_offside_line_side1()` (the fields read by `side_difference`
+/// and `player_difference`). Active: position (`match_player::POSITION`) >= 0 and `exe::match_player_get_position` !=
+/// 1. The original has both 20-player loops unrolled (1.7 KB)
 /// Original: `defensive_lines` (0x6c3aa0, offside, thiscall).
 pub(crate) unsafe extern "thiscall" fn defensive_lines(this: usize) {
     let this = Engine(this);
@@ -293,8 +294,8 @@ pub(crate) unsafe extern "thiscall" fn defensive_lines(this: usize) {
 
 /// ranges by the attributes and, by the tactical role (bits 1, 2, 4, 8, 0x10, 0x20, 0x40 of `table_a`; "strong" = bits
 /// 0x880 of the whole word), draws from 1/75 to 1/1000, floating-point ratios between attributes and the side's state
-/// (0xf5bd/0xf5f3). Transcribed block by block, with the original's addresses in the comments; the shared endings
-/// became local functions
+/// (`.score()`/`.score_side1()`). Transcribed block by block, with the original's addresses in the comments; the shared
+/// endings became local functions
 /// Original: `update_player` (0x6f4aa0, 2.8 KB, 908 instructions. Counter 0x2b (decreases down to 0); float 0x1a2 (× 0.85, floor 2 × (25 − the person's attribute 0x5d), ceiling 100); word 0x35 (disposition, ~4,000 to ~8,750), thiscall).
 pub(crate) unsafe extern "thiscall" fn update_player(this: usize) {
     let this = MatchPlayer(this);
@@ -688,7 +689,7 @@ pub(crate) unsafe extern "thiscall" fn store_extremes(this: usize) {
     }
 }
 
-/// the player's word 0x19a
+/// the player's word `.facing()`
 /// Original: `direction` (0x6f4a30, thiscall, `ax`).
 pub(crate) unsafe extern "thiscall" fn direction(this: usize) -> u16 {
     let this = MatchPlayer(this);
@@ -700,14 +701,14 @@ pub(crate) unsafe extern "thiscall" fn clear_stored(this: usize, side_b: u8) {
     write_u32(this + if side_b == 0 { 0xf59e } else { 0xf5a2 }, 0);
 }
 
-/// x (0x102) outside 2..=6
+/// x (`.cell_x()`) outside 2..=6
 /// Original: `x_off_centre` (0x70df20, thiscall, `al`).
 pub(crate) unsafe extern "thiscall" fn x_off_centre(this: usize) -> u8 {
     let this = MatchPlayer(this);
     !(2..=6).contains(&this.cell_x()) as u8
 }
 
-/// player == motor[0xf582]
+/// player == `engine.ball_holder()`
 /// Original: `is_the_stored` (0x7103c0, thiscall, `al`).
 pub(crate) unsafe extern "thiscall" fn is_the_stored(this: usize) -> u8 {
     let this = MatchPlayer(this);
@@ -744,7 +745,7 @@ pub(crate) unsafe extern "thiscall" fn table_a_1a(this: usize, player: usize) ->
     *table.add(position as usize)
 }
 
-/// 0x8ed4 outside 0x1ef/0x3de and bit 0x80 of the match's byte 0x38
+/// `.period_end()` outside 0x1ef/0x3de and bit 0x80 of the match's byte `.tie_rules()`
 /// Original: `marked_moment` (0x6d4250, thiscall, `eax`).
 pub(crate) unsafe extern "thiscall" fn marked_moment(this: usize) -> u32 {
     let this = Engine(this);
@@ -787,7 +788,7 @@ pub(crate) unsafe extern "thiscall" fn near_goal(this: usize) -> u8 {
     ((l == 1 && y < 4) || (l == 0 && y > 7)) as u8
 }
 
-/// 0x475a..=0x4769
+/// `.set_pending_play_kind()` (0x475a)..=`.set_pending_play_serious()` (0x4769)
 /// Original: `clear_move` (0x6bba10, thiscall).
 pub(crate) unsafe extern "thiscall" fn clear_move(this: usize) {
     let this = Engine(this);
@@ -812,7 +813,7 @@ pub(crate) unsafe extern "thiscall" fn add_disposition(this: usize, side_b: i8, 
     }
 }
 
-/// word 0x1bc
+/// word `match_player::STARTING_POSITION`
 /// Original: `read_1bc` (0x717400, thiscall, `ax`).
 pub(crate) unsafe extern "thiscall" fn read_1bc(this: usize) -> u16 {
     read_u16(this + match_player::STARTING_POSITION)
@@ -992,10 +993,11 @@ pub(crate) unsafe extern "thiscall" fn adjust_17(this: usize, delta: i8) -> u8 {
 /// The player takes the ball: releases the previous owner's, credits the pass (counter and disposition by zone),
 /// records possession and the ball on his square.
 ///
-/// It releases the previous owner's ball (`0xf582`, the same writes as `release_ball`), clears the play state, credits
-/// the pass (`0xf576`, same side: counter `0x2` and disposition + `0x6c`/`0x60`/`0x96`/`0x78` according to role and
-/// zone), records the new owner, the ball on his square, the side in possession (`0x1a5` + side) and the possession
-/// count (`0x8d46` + side). The engine is re-read on every access, as in the original.
+/// It releases the previous owner's ball (`engine::BALL_HOLDER`, the same writes as `release_ball`), clears the play
+/// state, credits the pass (`engine::PASSER`, same side: counter `0x2` and disposition + `0x6c`/`0x60`/`0x96`/`0x78`
+/// according to role and zone), records the new owner, the ball on his square, the side in possession
+/// (`engine::SIDE_PLAYED_BALL` + side) and the possession count (`engine::POSSESSION_COUNTER` + side). The engine is
+/// re-read on every access, as in the original.
 /// Original: `take_ball` (0x6f0630, the player takes the ball, thiscall).
 pub(crate) unsafe extern "thiscall" fn take_ball(this: usize) {
     let this = MatchPlayer(this);
@@ -2798,22 +2800,26 @@ pub(crate) unsafe fn shoot_injected(j: MatchPlayer, strength_in: i16, x_in: i8, 
     }
 }
 
-/// the chance by distance to goal (table 0xa15e44 on side 0, `exe::match_player_distance_to_cell` on side 1), stamina, the direction angle (+0x19a
-/// against `engine::BALL_DIRECTION`) weighted by the play `engine::BALL_HEIGHT`, power minus 20 × (`engine::BALL_ROLL` − 1)³ (and more by the engine's byte 1);
-/// with an angle up to 90 the player turns to the goal or to the target (`exe::match_player_set_facing_direction`). The play and the attribute: header
-/// 0x25 (+0x164); with `engine::BALL_HEIGHT` 4+ the long-range 0xc (power and clear path `exe::cm3_match_engine_is_clear_ahead_of_cell`, `engine::BALL_HEIGHT` becomes 2), 0x2e (+0x176)
-/// or 0x15 (+0x144); with 2/3 the 0x3b (+0x190) near goal, else 0xc (+0x132); the others 0xd (+0x134). Score =
-/// draw(attribute) − draw(stamina) − draw(angle) + draw(power). Three possible fouls: the shooter's before (`exe::cm3_match_engine_referee_check_foul`;
-/// recorded by draw(chance × 5 + 2), else punished as in `exe::match_player_try_intercept_ball`), the challenger's (`exe::cm3_match_engine_get_opposition_challenge`, injury 0x6cfe10;
-/// punished as in the tackle, plus the +0x17 adjustment on a penalty) and the shooter's on him (narration by the play
-/// table, penalty given to the challenger). A challenger with the higher score takes the ball (foul narrated in the
-/// box, keeper save 0x70d430 or the play's narration; the ball spills below the limit; counts, stamina, +0x17; 1 in 7
-/// 0x1f41). Otherwise the shot goes on: `engine::MOMENTUM_A`/`engine::MOMENTUM_B` lose score × 2/11; headed 0x2164/0x21cb/0x214f/0x1f5d and
-/// `decide_player`; else 0x216e or the long-range narrations (0x21cc, 0x21db, 0x21dc, 0x1f47), +0x19c gains the difference
-/// (±200) and by draw `decide_player` (with +0x1a7 and +100 possession); outside the attacking box the player may grow
-/// (0x211d). The tackle's punished foul became a shared function (`punish_challenger_foul_injected`); the shooter's
-/// (`punish_contester_foul_injected`) repeats `exe::match_player_try_intercept_ball`'s, which keeps its inline copy (see COMO_CONTINUAR). Compared
-/// through the tape
+/// the chance by distance to goal (table 0xa15e44 on side 0, `exe::match_player_distance_to_cell` on side 1), stamina,
+/// the direction angle (`.facing()` against `engine::BALL_DIRECTION`) weighted by the play `engine::BALL_HEIGHT`, power
+/// minus 20 × (`engine::BALL_ROLL` − 1)³ (and more by the engine's byte 1); with an angle up to 90 the player turns to
+/// the goal or to the target (`exe::match_player_set_facing_direction`). The play and the attribute: header 0x25
+/// (+0x164); with `engine::BALL_HEIGHT` 4+ the long-range 0xc (power and clear path
+/// `exe::cm3_match_engine_is_clear_ahead_of_cell`, `engine::BALL_HEIGHT` becomes 2), 0x2e (+0x176) or 0x15 (+0x144);
+/// with 2/3 the 0x3b (+0x190) near goal, else 0xc (+0x132); the others 0xd (+0x134). Score = draw(attribute) −
+/// draw(stamina) − draw(angle) + draw(power). Three possible fouls: the shooter's before
+/// (`exe::cm3_match_engine_referee_check_foul`; recorded by draw(chance × 5 + 2), else punished as in
+/// `exe::match_player_try_intercept_ball`), the challenger's (`exe::cm3_match_engine_get_opposition_challenge`, injury
+/// 0x6cfe10; punished as in the tackle, plus the +0x17 adjustment on a penalty) and the shooter's on him (narration by
+/// the play table, penalty given to the challenger). A challenger with the higher score takes the ball (foul narrated
+/// in the box, keeper save 0x70d430 or the play's narration; the ball spills below the limit; counts, stamina, +0x17; 1
+/// in 7 0x1f41). Otherwise the shot goes on: `engine::MOMENTUM_A`/`engine::MOMENTUM_B` lose score × 2/11; headed
+/// 0x2164/0x21cb/0x214f/0x1f5d and `decide_player`; else 0x216e or the long-range narrations (0x21cc, 0x21db, 0x21dc,
+/// 0x1f47), `match_player::BALL_CONTROL` gains the difference (±200) and by draw `decide_player` (with
+/// `engine::SHOT_PENDING` and +100 possession); outside the attacking box the player may grow (0x211d). The tackle's
+/// punished foul became a shared function (`punish_challenger_foul_injected`); the shooter's
+/// (`punish_contester_foul_injected`) repeats `exe::match_player_try_intercept_ball`'s, which keeps its inline copy
+/// (see COMO_CONTINUAR). Compared through the tape
 /// Original: `shot` (0x6f6c00, match_pl.cpp (12.7 KB, called only by 0x6b98c0 with power +0x8ed6 and target +0x1c8/+0x1c9), thiscall, ret 0xc).
 pub(crate) unsafe extern "thiscall" fn shot(j: usize, strength: u32, x: u32, y: u32) {
     shoot_injected(MatchPlayer(j), strength as i16, x as i8, y as i8, &mut |rotina, this, a| dispatch_tackle_calls(rotina, this, a))
@@ -6390,9 +6396,11 @@ pub(crate) unsafe fn dispatch_pass_calls(routine: usize, this: usize, a: [u32; 5
 
 /// `p`'s pass (type 6..=0x5e) from (x, y) to (tx, ty), with receiver and the output (1 when it does not reach him).
 /// Score by type and distance; challenger with foul or dispossession; without him, stamina, inaccurate pass by
-/// `engine::WEATHER`'s factor, cost in +0x35, approach and pass-type commentary, the next set piece (`engine::BALL_HEIGHT`/`engine::BALL_ROLL`) and the
-/// trace (0x6ccb60): shot (`shot_outcome`/`shot_on_goal`) or ball in transit (`engine::BALL_TRANSIT_TICKS`..`engine::TRANSIT_ORIGIN_Y`, `engine::BALL_RECEIVER`). Compared through the tape,
-/// with comparison inside the unit
+/// `engine::WEATHER`'s factor, cost in `match_player::MATCH_RATING`, approach and pass-type commentary, the next set
+/// piece (`engine::BALL_HEIGHT`/`engine::BALL_ROLL`) and the trace
+/// (`FN_CM3_MATCH_ENGINE_CHECK_PASS_INTERCEPTED_ON_PATH`): shot (`shot_outcome`/`shot_on_goal`) or ball in transit
+/// (`engine::BALL_TRANSIT_TICKS`..`engine::TRANSIT_ORIGIN_Y`, `engine::BALL_RECEIVER`). Compared through the tape, with
+/// comparison inside the unit
 /// Original: `execute_pass` (0x6fad40, match_pl.cpp (22 KB), thiscall, ret 0x1c).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn execute_pass(p: usize, x: u32, y: u32, kind: u32, out: *mut u8, receiver: usize, tx: u32, ty: u32) -> u8 {
@@ -7187,12 +7195,14 @@ pub(crate) unsafe fn player_decide_injected(j: MatchPlayer, call: &mut dyn FnMut
     }
 }
 
-/// off the ball, "switches off" (0x67) when draw(10) + +0x4d·c does not beat draw(65); with the ball out of the side's
-/// reach, draw(20) zero and no +0x10d switches off tiring (+0x35 − 15, +0x2b = 1, +0x4d + 5..9); with the side in
-/// situation 5 (+0x1ab) and far from goal, switches off without the −15; with +0x2b, idle. Before each outcome the
-/// marked players (+0x1ae) move (`move_off_ball`) by draw(900) against +0x107·+0x104. The ball holder dribbles (`dribble`, new
-/// tape port) and may decide again (draw(+0x7d) against draw(5)); the others go to `exe::match_player_choose_attacking_off_ball_move` (ball with the side, in the
-/// band, in play) or `move_off_ball`
+/// off the ball, "switches off" (0x67) when draw(10) + `match_player::STAMINA`·c does not beat draw(65); with the ball
+/// out of the side's reach, draw(20) zero and no `match_player::MOMENT_WORK_RATE` switches off tiring
+/// (`match_player::MATCH_RATING` − 15, `match_player::BUSY` = 1, `match_player::STAMINA` + 5..9); with the side in
+/// situation 5 (`engine::SIDE_STANCE`) and far from goal, switches off without the −15; with `match_player::BUSY`,
+/// idle. Before each outcome the marked players (`match_player::MARKERS`) move (`move_off_ball`) by draw(900) against
+/// `match_player::MOMENT_MOVEMENT`·`match_player::MOMENT_PACE`. The ball holder dribbles (`dribble`, new tape port) and
+/// may decide again (draw(`.anticipation()`) against draw(5)); the others go to
+/// `FN_MATCH_PLAYER_CHOOSE_ATTACKING_OFF_BALL_MOVE` (ball with the side, in the band, in play) or `move_off_ball`
 /// Original: `decide_player` (0x7103e0, match_pl.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn decide_player(j: usize) {
     player_decide_injected(MatchPlayer(j), &mut |rotina, this, _a| match rotina {
@@ -7534,11 +7544,13 @@ pub(crate) unsafe fn off_ball_move_injected(j: MatchPlayer, call: &mut dyn FnMut
     rep(call, px, py, 0x100);
 }
 
-/// set piece (spot, 0x100), formation (0x68), run beyond the offside line (0x7a, by record +0x105/+0x106/+0x10a/+0x10b
-/// and the kept goalkeeper), support and pressing (0x100), man-marking (+0x1aa, 0x105, or drop), pressing threshold
-/// (1.5 or ~2, reduced without +0x106/+0x10a and by the draw against +0x1a2). Goalkeeper: picks up and comments
-/// (0x1f46, 0x103), comes out (0x103) or returns (0x71). The others: deep (0x78), advance (0x6b), go to the ball
-/// (0x100; on it picks up and comments 0x1f46/0x2113, or 0x104), stay in the opponent's area (0x104), cell (0x68/0x76)
+/// set piece (spot, 0x100), formation (0x68), run beyond the offside line (0x7a, by record
+/// `match_player::MOMENT_ANTICIPATION`/`match_player::MOMENT_DECISIONS`/`match_player::MOMENT_POSITIONING`/`match_player::MOMENT_VISION`
+/// and the kept goalkeeper), support and pressing (0x100), man-marking (`.marking_target()`, 0x105, or drop), pressing
+/// threshold (1.5 or ~2, reduced without `match_player::MOMENT_DECISIONS`/`match_player::MOMENT_POSITIONING` and by the
+/// draw against `.confidence()`). Goalkeeper: picks up and comments (0x1f46, 0x103), comes out (0x103) or returns
+/// (0x71). The others: deep (0x78), advance (0x6b), go to the ball (0x100; on it picks up and comments 0x1f46/0x2113,
+/// or 0x104), stay in the opponent's area (0x104), cell (0x68/0x76)
 /// Original: `move_off_ball` (0x714d40, match_pl.cpp, ~4.7 KB (outside the attacking band; inside it, with the ball in play, it is 0x713fc0), thiscall).
 pub(crate) unsafe extern "thiscall" fn move_off_ball(j: usize) {
     off_ball_move_injected(MatchPlayer(j), &mut |rotina, this, a| match rotina {
@@ -7849,8 +7861,9 @@ pub(crate) unsafe extern "thiscall" fn advance_row(this: usize, direct: u8) -> u
     })
 }
 
-/// `draw_moment`; 1 in 11: +0xff drops 1 above (+0x100/2 + record +0x25 + 10)/4, +0x4d adds +0x59 (which clears if 1 or
-/// halves), above 50 in +1 subtracts (+1 − 50)^1.25/4 (up to 25); +0x4d within 1..10000 (prologue with a relative
+/// `draw_moment`; 1 in 11: `match_player::ANGER` drops 1 above (`.frustration()`/2 + record `.dirtiness()` + 10)/4,
+/// `match_player::STAMINA` adds `match_player::STAMINA_BOOST` (which clears if 1 or halves), above 50 in `.passes()`
+/// subtracts (`.passes()` − 50)^1.25/4 (up to 25); `match_player::STAMINA` within 1..10000 (prologue with a relative
 /// `call`)
 /// Original: `evolve_moment` (0x6f55c0, match_pl.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn evolve_moment(this: usize) {
@@ -8217,10 +8230,13 @@ pub(crate) unsafe extern "thiscall" fn match_performance(this: usize, marcar: u8
     exe::match_player_roll_current_ratings(this);
 }
 
-/// recomputes word +0x3b and the 34 f32 fields from +0x71 to +0xf5 of the player: the designated player's rating
-/// (`player_rating`, slot `exe::tactics_find_captain_slot`), age, days alive, exe::contract_manager_get_contract_for_club(`exe::contract_manager_get_contract_for_club`, +0x45 bits, +0x10/+0x14 history), morale, tactical
-/// tables A/B (`table_a`/`table_b`), formation (`side_centre_backs_without_conflict`/`side_slots_without_conflict`), managers and preferences
-/// (`exe::staff_is_favoured_by`/`exe::staff_is_disliked_by`/`exe::staff_dislikes_club`/`exe::staff_favours_club`), powers (0x945ff0) and random draws. Only the player record changes
+/// recomputes word `match_player::EFFECTIVE_ABILITY` and the 34 f32 fields from `match_player::ACCELERATION` to
+/// `match_player::WORK_RATE` of the player: the designated player's rating (`player_rating`, slot
+/// `exe::tactics_find_captain_slot`), age, days alive, the contract (`exe::contract_manager_get_contract_for_club`,
+/// `contract::GRIEVANCES` bits, +0x10/+0x14 history), morale, tactical tables A/B (`table_a`/`table_b`), formation
+/// (`side_centre_backs_without_conflict`/`side_slots_without_conflict`), managers and preferences
+/// (`exe::staff_is_favoured_by`/`exe::staff_is_disliked_by`/`exe::staff_dislikes_club`/`exe::staff_favours_club`),
+/// powers (0x945ff0) and random draws. Only the player record changes
 /// Original: `update_attributes` (0x6ec010, match_pl.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
     let this = MatchPlayer(this);
@@ -8920,10 +8936,12 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
     }
 }
 
-/// n = contract level (`exe::database_get_contract_rating_modifier`); form = (word +0xd of the record − club word +0x80) × 0.002 + 1.5, clamped to −4..4; c
-/// = contract byte +0x44 (`exe::contract_manager_get_contract_for_club`) / 75 + 0.5, adjusted by type (+0x4f >> 4: −10, +2.5, +2, −3, −15, −20, −50); x =
-/// byte +0x22 × 75 for a national side, otherwise days alive (`exe::date_days_since`); y = 1 + (x − 1000) × 0.000125 above 1000.
-/// Rating = byte +0x2f × y − (n² + 5) × 0.1 + form + c + 0.5, truncated
+/// n = contract level (`exe::database_get_contract_rating_modifier`); form = (word `.world_reputation()` of the record
+/// − club word `club::REPUTATION`) × 0.002 + 1.5, clamped to −4..4; c = contract byte `.morale()`
+/// (`exe::contract_manager_get_contract_for_club`) / 75 + 0.5, adjusted by type (`.squad_status()` >> 4: −10, +2.5, +2,
+/// −3, −15, −20, −50); x = byte `.int_apps()` × 75 for a national side, otherwise days alive (`exe::date_days_since`);
+/// y = 1 + (x − 1000) × 0.000125 above 1000. Rating = byte `.leadership()` × y − (n² + 5) × 0.1 + form + c + 0.5,
+/// truncated
 /// Original: `player_rating` (0x6ebd70, match_pl.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn player_rating(this: usize) -> i32 {
     let this = MatchPlayer(this);
@@ -9389,9 +9407,9 @@ pub(crate) unsafe fn call_player_byte_routine(endereco: usize, j: MatchPlayer) -
 
 /// the opponent the player man-marks, or 0. Needs mark 4 on the position's square; looks among the active opponents for
 /// the record designated for the position. With mark 0x10: if the opposing formation has a centre forward (bit
-/// 0x10000000 of +0x187b) or the other side's byte +0xaf is above 1, a player with 0x106 does not mark; and, if the
-/// marked player has tables A and B different (arrow to another square) and B without the attack mark 0x40, a player
-/// with 0x106 does not mark either
+/// 0x10000000 of +0x187b) or the other side's byte `engine::SIDE_OUT_OF_POSITION` is above 1, a player with
+/// `.moment_decisions()` does not mark; and, if the marked player has tables A and B different (arrow to another
+/// square) and B without the attack mark 0x40, a player with `.moment_decisions()` does not mark either
 /// Original: `designated_marked` (0x7160f0, match_pl.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn designated_marked(this: usize) -> usize {
     let this = MatchPlayer(this);
@@ -9425,7 +9443,7 @@ pub(crate) unsafe extern "thiscall" fn designated_marked(this: usize) -> usize {
     }
 }
 
-/// the player's side (+0x27)
+/// the player's side (`.side()`)
 /// Original: `player_side` (0x714d30, match_pl.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn player_side(j: usize) -> u8 {
     let j = MatchPlayer(j);
@@ -9442,7 +9460,7 @@ pub(crate) unsafe extern "thiscall" fn shoot(p: usize, a1: u32, a2: u32, a3: u32
     shoot_with(p, a1, a2, a3, a4, a5, a6 as usize, &mut |r, t, a| dispatch_shot_call(r, t, a))
 }
 
-/// the match player destructor (zeroes +0x19e)
+/// the match player destructor (zeroes `.engine()`, `.set_engine()`)
 /// Original: `destroy_match_player` (0x6ebd60, match_pl.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn destroy_match_player(j: usize) {
     let j = MatchPlayer(j);
@@ -9479,8 +9497,8 @@ pub(crate) unsafe extern "thiscall" fn construct_match_player(j: usize) -> usize
     j
 }
 
-/// Returns 1 if the player is in his own half (side 1 with row +0x103 >= 6, side 0 with row < 6), else 0 [inference:
-/// meaning taken from the attack directions].
+/// Returns 1 if the player is in his own half (side 1 with row `.cell_y()` >= 6, side 0 with row < 6), else 0
+/// [inference: meaning taken from the attack directions].
 /// Original: `player_condition` (0x70dfa0, match_pl.cpp).
 pub(crate) unsafe extern "thiscall" fn player_condition(this: usize) -> u8 {
     let this = MatchPlayer(this);
@@ -9488,7 +9506,8 @@ pub(crate) unsafe extern "thiscall" fn player_condition(this: usize) -> u8 {
     (if lado == 1 && v >= 6 { true } else { lado == 0 && v < 6 }) as u8
 }
 
-/// `table_a` of the player's engine (0x19e), called through the game's address
+/// `table_a` (`exe::cm3_match_engine_get_player_position`) of the player's engine (`.engine()`), called through the
+/// game's address
 /// Original: `player_table` (0x717410, thiscall).
 pub(crate) unsafe extern "thiscall" fn player_table(player: usize) -> u16 {
     let player = MatchPlayer(player);
@@ -9517,7 +9536,7 @@ pub(crate) unsafe extern "thiscall" fn player_band(this: usize, side: u8) -> u32
     ((2..=6).contains(&b) && target.contains(&c)) as u32
 }
 
-/// 0x91e2 + 6371 × side
+/// `engine::TACTICS` + `formation_fields::SIZE` × side
 /// Original: `field_by_position` (0x6f4600, the side's block in the engine, thiscall, `al`).
 pub(crate) unsafe extern "thiscall" fn field_by_position(this: usize) -> u8 {
     let this = MatchPlayer(this);
@@ -9526,9 +9545,10 @@ pub(crate) unsafe extern "thiscall" fn field_by_position(this: usize) -> u8 {
     if exe::formation_get_marking_type(block, this.position()) & 2 != 0 { this.moment_positioning() as u8 } else { this.moment_marking() as u8 }
 }
 
-/// Sets the match player's facing direction in degrees (+0x19a, 0..=359) from cell (a, b) towards (c, d) (same cell:
-/// random, except two fixed goal cases 0 and 180), plus a random deviation of up to +-30 when +0x10c x +0x105 <
-/// random(120), plus twice the difference of two player-data attributes (+0x3b - +0x30).
+/// Sets the match player's facing direction in degrees (`match_player::FACING`, 0..=359) from cell (a, b) towards (c,
+/// d) (same cell: random, except two fixed goal cases 0 and 180), plus a random deviation of up to +-30 when
+/// `.moment_agility()` x `.moment_anticipation()` < random(120), plus twice the difference of two player-data
+/// attributes (`.right_foot()` - `.left_foot()`).
 /// Original: `aim (set facing direction)` (0x6f4920, match_pl.cpp).
 pub(crate) unsafe extern "thiscall" fn aim_set_facing_direction(this: usize, a: i8, b: i8, c: i8, d: i8) {
     let this = MatchPlayer(this);

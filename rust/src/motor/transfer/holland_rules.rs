@@ -8,7 +8,8 @@ pub(crate) const HOLLAND_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
 ];
 
 /// the Holland rule (12): one window, from 8 June (moved to the Saturday [inference]) to 4 April (moved to the Friday
-/// [inference]); +0x13 = 50 (base default 50) [inference: the foreign limit]; +0x14 = 50 (default 30)
+/// [inference]); `transfer_rules::FOREIGN_PLAYER_LIMIT` = 50 (base default 50) [inference: the foreign limit];
+/// `transfer_rules::NON_EU_PLAYER_LIMIT` = 50 (default 30)
 /// Original: `HOLLAND_RULES::HOLLAND_RULES` (0x5f9690, holland_rules.cpp, thiscall, ret 0x14).
 pub(crate) unsafe extern "thiscall" fn construct_holland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     covered!("cqm_1 netherlands");

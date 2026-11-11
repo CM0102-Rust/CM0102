@@ -7,10 +7,11 @@ pub(crate) unsafe fn month_ratings_staff_by_id(id: i32) -> usize {
 
 /// Records every player's rating from a match into the month ratings.
 ///
-/// `MONTH_RATINGS::record_match_ratings(game, match)`, called by 0x7683a0 for every match of the leagues that have a
-/// monthly award. Both sides of the match (+0x190 and +0x190 + 0x625), 20 slots of 0x49 bytes each: except the slot
-/// marked 0xfb at +0x1d and, from the 12th slot on, the substitute who did not come on (+0x32 = 0xff), the person (id
-/// at +0) below the person count [0xae2364] goes to the month ratings (`add_player_rating`).
+/// `MONTH_RATINGS::record_match_ratings(game, fixture)`, called by 0x7683a0 for every match of the leagues that have a
+/// monthly award. Both sides of the match (+0x190 and +0x190 + 0x625), 20 slots of `match_record_row::SIZE` bytes each:
+/// except the slot whose `.position()` is `row_slot::EMPTY` and, from the 12th slot on, the substitute who did not come
+/// on (`.minute_on()` = 0xff), the person (id at +0) below the person count `G_STAFF_COUNT` goes to the month ratings
+/// (`exe::month_ratings_add_player_rating`).
 /// Original: `MONTH_RATINGS::record_match_ratings` (0x767ee0, month_ratings.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn record_match_ratings(this: usize, game: usize, fixture: usize) {
     let _ = game;
@@ -47,10 +48,11 @@ pub(crate) unsafe fn add_match_rating(r: usize, e: usize) {
 
 /// Finds or appends the person's record in the month ratings table, adds the rating and counts one match.
 ///
-/// `MONTH_RATINGS::add_player_rating(slot)`. The table at [this] (count at +4, capacity at +8) has 12-byte records: +0
-/// person, +4 club's league (or −1), +8 sum of the ratings, +0xa matches, +0xb age. It finds the slot's person (+0) or
-/// appends it (growing by 300 with malloc `exe::crt_malloc` or realloc `exe::crt_realloc` when full; the league from the person's club
-/// +0x39 and that club's +0x57; the age from the person's +0x18) and adds the rating.
+/// `MONTH_RATINGS::add_player_rating(e)`. The table at [this] (count at +4, capacity at +8) has 12-byte records: +0
+/// person, +4 club's league (or −1), +8 sum of the ratings, `month_rating_entry::MATCHES` matches,
+/// `month_rating_entry::AGE` age. It finds the slot's person (+0) or appends it (growing by 300 with malloc
+/// `exe::crt_malloc` or realloc `exe::crt_realloc` when full; the league from the person's `.club_job()` and that
+/// club's `.division()`; the age from the person's `.age()`) and adds the rating (`add_match_rating`).
 /// Original: `MONTH_RATINGS::add_player_rating` (0x767fa0, month_ratings.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn add_player_rating(this: usize, e: usize) {
     let id = read_i32(e);
@@ -101,11 +103,12 @@ pub(crate) unsafe extern "thiscall" fn add_player_rating(this: usize, e: usize) 
 
 /// Sorts the month ratings by average and returns the best player of a league, with an optional age filter.
 ///
-/// `MONTH_RATINGS::find_best_player(league, age)`, used by the monthly award (`award_best_rated_player`). It sorts the table by average
-/// (qsort `exe::crt_qsort` with 0x768200: those with fewer than 3 matches go to the end) and returns the first record of the
-/// league (−1: any) with at least 3 matches (then 2, 1 and 0); with an age (not 0xff), those above it are only counted
-/// and the youngest only qualifies after 3 have been counted; with a league, the current league of the person's club
-/// (+0x39, +0x57) must also be the requested one. None: 0.
+/// `MONTH_RATINGS::find_best_player(league, age)`, used by the monthly award (`award_best_rated_player`). It sorts the
+/// table by average (qsort `exe::crt_qsort` with 0x768200: those with fewer than 3 matches go to the end) and returns
+/// the first record of the league (−1: any) with at least 3 `month_rating_entry::MATCHES` (then 2, 1 and 0); with an
+/// age (not 0xff), those whose `month_rating_entry::AGE` is above it are only counted and the youngest only qualifies
+/// after 3 have been counted; with a league, the current league of the person's club (`staff::CLUB_JOB`, `.division()`)
+/// must also be the requested one. None: 0.
 /// Original: `MONTH_RATINGS::find_best_player` (0x768130, month_ratings.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn find_best_player(this: usize, league: i32, age: u32) -> usize {
     covered!("cpw_5 sorted the ratings");

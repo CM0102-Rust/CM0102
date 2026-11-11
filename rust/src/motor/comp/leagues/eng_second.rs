@@ -293,19 +293,16 @@ pub(crate) unsafe fn eng_second_staff_records() -> usize {
 }
 
 /// Updates the staff records by the club's status in the English Second Division (virtual `+0x44` of the First, Second
-/// and Third). Returns 0.
-///
-/// `EngSecond::update_staff_records_for_status(clube, situação, fase, &saiu, _, _)` (club, status, stage, &removed, _,
-/// _), announced by `0x686670`.
-///
-/// In the league (stage `0xff`), by status: 5, the title (Staff_Records::add_league_champions_record `0x868c50`,
-/// thiscall(records, club, comp `+4`), ret 8); 0, promotion (`0x869480`, thiscall(records, club, comp, `0x64`), ret
-/// `0xc`); 1, the play-off place (`0x86bdd0`, thiscall(records, club, comp, `0xa0`, `0x82`, `0x1e`), ret `0x14`); 3,
-/// relegation (`0x86a1c0`, thiscall(records, club, comp), ret 8).
-///
-/// In the play-offs (any other stage), on the club's row of the table (`+0xb1`, `0x3b` bytes, `+0x3e` rows): 1 (won the
-/// final), promotion with weight `0x32`, `+0x37` = 0 and removed = 1; 0 (went through the round), the qualification
-/// (`0xa0`, `0x96`, `0xf`) and it keeps searching; `0xff` or 2 (knocked out), `+0x37` = `0xfe`.
+/// and Third). Returns 0. `EngSecond::update_staff_records_for_status(club, status, stage, &left, _a, _b)`, announced
+/// by `0x686670`. In the league (stage `0xff`), by status: 5, the title (Staff_Records::add_league_champions_record
+/// `exe::staff_records_add_league_champions_record`, thiscall(records, club, comp `.competition()`), ret 8); 0,
+/// promotion (`FN_STAFF_RECORDS_ADD_PROMOTION_RECORD`, thiscall(records, club, comp, `0x64`), ret `0xc`); 1, the
+/// play-off place (`FN_STAFF_RECORDS_ADD_QUALIFIED_FOR_ROUND_RECORD`, thiscall(records, club, comp, `0xa0`, `0x82`,
+/// `0x1e`), ret `0x14`); 3, relegation (`exe::staff_records_add_relegation_record`, thiscall(records, club, comp), ret
+/// 8). In the play-offs (any other stage), on the club's row of the table (`.table()`, `league_table_row::SIZE` bytes,
+/// `.club_count()` rows): 1 (won the final), promotion with weight `0x32`, `league_table_row::STATUS` = 0 and left = 1;
+/// 0 (went through the round), the qualification (`0xa0`, `0x96`, `0xf`) and it keeps searching; `0xff` or 2 (knocked
+/// out), `league_table_row::STATUS` = `0xfe`.
 /// Original: `EngSecond::update_staff_records_for_status` (0x576c50, eng_second.cpp, thiscall, ret 0x18).
 pub(crate) unsafe extern "thiscall" fn eng_second_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, left: usize, _a: u32, _b: u32) -> u32 {
     let this = League(this);
@@ -416,7 +413,8 @@ pub(crate) unsafe extern "thiscall" fn eng_second_advance_stage(this: usize) {
     advance_league_stage(League(this), 0x9c43e8, 0x294, 0x576a70, "cpz_3 mata-mata da second")
 }
 
-/// like the First one (6th, 3rd, 5th and 4th), with +0x3a = the extra from virtual +0x3c (lines 0x2b6 and 0x2cc)
+/// like the First one (6th, 3rd, 5th and 4th), with +0x3a = the extra from virtual `comp_vtable::CREATE_SCHEDULE`
+/// (lines 0x2b6 and 0x2cc)
 /// Original: `EngSecond::create_play_off_stage` (0x576a70, eng_second.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn eng_second_create_play_off_stage(this: usize) {
     create_playoff_stage(League(this), [5, 2, 4, 3], 0x9c43e8, 0x2b6, 0x2cc, None, "cpz_1 mata-mata da second"); // cpz1: 6º × 3º e 5º × 4º da Second
