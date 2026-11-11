@@ -29,6 +29,22 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Readability batches 57 and 58: headers in names, contradictions judged
+
+**57 (decision b).** Eight readers rewrote the 1,231 headers that narrated offsets and addresses in hex with the names
+the body uses (fields, `exe::` functions, globals, keys, `.rdata` constants, the Rust signature's parameters); what the
+body does not name stays in hex (`cabecalhos_completos.py --extrair-hex`/`--aplicar`; brief, inputs and outputs in
+`cabecalhos_nomes/`). Proof: aa7e9c95 ×2, detector equal, comparison 0.
+
+**58.** The readers reported 90 header/body contradictions (`cabecalhos_nomes/contradicoes.txt`); three judges decided
+each one from the original's disassembly (`juizo_*.json`): 85 headers corrected, stale DESLIGADAS notes updated, three
+fields renamed (`intl_date_entry` WEEK/WEEKDAY → WEEKDAY/DAY, `commentary_queue::VOLUME` → COMMENTARY_SPEED,
+`illness_outbreak::CLUB_ID` → FIXTURE_ID) and the records read through the wrong type now go through the right one
+(League, Finance, Stadium, NonPlayer, TransferManagerFields, Contract, `Staff::age` instead of `year_of_birth`). Same
+offsets and widths. Two real defects came out of this reading and were fixed on their own: the match stats screen
+(b1f42bf3, round 24) and the scout report news (d2890167, batch 43: the scout's index read 0x37 bytes past the record).
+Proof: aa7e9c95 ×2, detector equal, comparison 0; the changed mutations compile.
+
 ## Readability batch 56: the [pt] paragraphs leave the code
 
 Lucas's decision (c) (11/11/2026): the public code is in English. `sem_pt.py` removes the 5,041 `[pt]` paragraphs from

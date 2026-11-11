@@ -28,6 +28,23 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Levas 57 e 58 da legibilidade: os cabeçalhos em nomes e as contradições julgadas
+
+**57 (decisão b).** Oito leitores reescreveram os 1.231 cabeçalhos que narravam deslocamentos e endereços em
+hexadecimal com os nomes que o corpo usa (campos, funções `exe::`, globais, chaves, constantes da `.rdata`, os
+parâmetros da assinatura Rust); o que o corpo não nomeia ficou em hexadecimal (`cabecalhos_completos.py
+--extrair-hex`/`--aplicar`; pedido, entradas e saídas em `cabecalhos_nomes/`). Prova: aa7e9c95 ×2, detector igual,
+comparação 0.
+
+**58.** Os leitores relataram 90 contradições entre cabeçalho e corpo (`cabecalhos_nomes/contradicoes.txt`); três juízes
+decidiram cada uma pela desmontagem do original (`juizo_*.json`): 85 cabeçalhos corrigidos, as notas velhas de
+DESLIGADAS atualizadas, três campos renomeados (`intl_date_entry` WEEK/WEEKDAY → WEEKDAY/DAY, `commentary_queue::VOLUME`
+→ COMMENTARY_SPEED, `illness_outbreak::CLUB_ID` → FIXTURE_ID) e os registros lidos pelo tipo errado passam pelo tipo
+certo (League, Finance, Stadium, NonPlayer, TransferManagerFields, Contract, `Staff::age` no lugar de
+`year_of_birth`). Mesmos deslocamentos e larguras. Dois defeitos reais saíram dessa leitura e foram corrigidos à parte:
+a tela de estatísticas (b1f42bf3, rodada 24) e a notícia do olheiro (d2890167, leva 43: o índice do olheiro lido 0x37
+bytes depois do registro). Prova: aa7e9c95 ×2, detector igual, comparação 0; as mutações mudadas compilam.
+
 ## Leva 56 da legibilidade: os parágrafos [pt] saem do código
 
 Decisão (c) do Lucas (11/11/2026): o código público fica em inglês. O `sem_pt.py` tira os 5.041 parágrafos `[pt]` dos
