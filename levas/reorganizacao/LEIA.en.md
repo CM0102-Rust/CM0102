@@ -29,6 +29,14 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Readability batch 41: field readers on player stats, regens, stadiums and the World Cup
+
+Reader verdicts on `player_stats.rs`, `player_regen.rs`, `comp/stadium.rs` and `comp/worldcup/world_cup.rs`. New
+records: `stadium_venue`, `world_cup_fields`; the match statistics of `player_category_stats` and `lineup_row`,
+`stadium::SIZE`, the retirement and regen bits of the staff state. A tool had written
+`career_entry::STATS * HISTORY_ENTRY_SIZE` where the original means six entries: back to `6 * HISTORY_ENTRY_SIZE` (same
+value). Proof: aa7e9c95 ×2, detector equal (it also covers batch 40), comparison 0; the 3 changed mutations compile.
+
 ## Readability batch 40: field readers on UEFA seeding, European cups, match day and training
 
 Reader verdicts on `comp/uefa_seeding.rs`, `comp/eurocomp/european_cup.rs`, `match_day.rs` and `training_manager.rs`.

@@ -28,6 +28,14 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Leva 41 da legibilidade: leitores de campo em estatísticas, regens, estádios e Copa do Mundo
+
+Vereditos dos leitores no `player_stats.rs`, `player_regen.rs`, `comp/stadium.rs` e `comp/worldcup/world_cup.rs`.
+Registros novos: `stadium_venue`, `world_cup_fields`; as estatísticas de partida do `player_category_stats` e da
+`lineup_row`, `stadium::SIZE`, os bits de aposentadoria e de regen do estado da pessoa. Uma ferramenta tinha escrito
+`career_entry::STATS * HISTORY_ENTRY_SIZE` onde o original quer seis entradas: voltou a `6 * HISTORY_ENTRY_SIZE` (mesmo
+valor). Prova: aa7e9c95 ×2, detector igual (cobre também a leva 40), comparação 0; as 3 mutações mudadas compilam.
+
 ## Leva 40 da legibilidade: leitores de campo na classificação da UEFA, copas europeias, dia de jogo e treino
 
 Vereditos dos leitores no `comp/uefa_seeding.rs`, `comp/eurocomp/european_cup.rs`, `match_day.rs` e
