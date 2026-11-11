@@ -136,6 +136,15 @@ pub(crate) mod league_selected {
     pub(crate) const PLAYABLE: u8 = 0x2;
 }
 
+/// Bits of `awol_fields::PERSON_FLAGS`.
+#[allow(dead_code)]
+pub(crate) mod person_flags {
+    /// per-person byte of the PERSON_FLAGS table: AWOL::end_absence flips ^ 1. Name: verified.
+    pub(crate) const ABSENT_WITHOUT_LEAVE: usize = 0x1;
+    /// per-person byte of the PERSON_FLAGS table: closing a missed-training case flips ^ 2. Name: verified.
+    pub(crate) const MISSED_TRAINING: usize = 0x2;
+}
+
 /// Bits of `formation_fields::PLAYER_INSTRUCTIONS`.
 #[allow(dead_code)]
 pub(crate) mod player_instructions {

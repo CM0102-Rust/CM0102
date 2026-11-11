@@ -19,9 +19,9 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | Nível | Campos |
 |---|---|
 | comunidade | 247 |
-| conferido | 109 |
-| lido | 1495 |
-| inferido | 157 |
+| conferido | 112 |
+| lido | 1501 |
+| inferido | 164 |
 
 ## Por registro
 
@@ -32,6 +32,8 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `appearance_clause` | 0 | 0 | 3 | 0 |
 | `area_fields` | 0 | 6 | 14 | 0 |
 | `awol_fields` | 0 | 0 | 0 | 1 |
+| `awol_fitness_incident` | 0 | 0 | 0 | 1 |
+| `awol_missed_training` | 0 | 0 | 1 | 0 |
 | `ban_appeal` | 0 | 0 | 8 | 0 |
 | `ban_record` | 0 | 0 | 7 | 0 |
 | `ban_slot` | 0 | 0 | 1 | 1 |
@@ -108,7 +110,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `intertoto_cup` | 0 | 0 | 1 | 0 |
 | `intl_date_entry` | 0 | 0 | 6 | 1 |
 | `job_vacancy` | 0 | 0 | 1 | 0 |
-| `key_nation_record` | 0 | 7 | 1 | 1 |
+| `key_nation_record` | 0 | 7 | 2 | 1 |
 | `language_entry` | 0 | 0 | 2 | 0 |
 | `league` | 0 | 5 | 44 | 6 |
 | `league_projection` | 0 | 0 | 5 | 0 |
@@ -121,7 +123,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `loan_negotiation` | 0 | 0 | 1 | 0 |
 | `man_of_match_record` | 0 | 0 | 2 | 0 |
 | `manager_manager_fields` | 0 | 0 | 5 | 0 |
-| `manager_record` | 0 | 0 | 47 | 0 |
+| `manager_record` | 0 | 1 | 47 | 0 |
 | `match_day_fields` | 0 | 0 | 17 | 0 |
 | `match_events_fields` | 0 | 0 | 3 | 0 |
 | `match_incident` | 0 | 0 | 6 | 0 |
@@ -177,8 +179,8 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `run_record` | 0 | 0 | 2 | 0 |
 | `scheduled_friendly_slot` | 0 | 0 | 4 | 0 |
 | `scout_manager_fields` | 0 | 0 | 4 | 0 |
-| `scout_report` | 0 | 2 | 3 | 0 |
-| `scout_request` | 0 | 0 | 4 | 0 |
+| `scout_report` | 0 | 3 | 6 | 4 |
+| `scout_request` | 0 | 0 | 5 | 0 |
 | `scouted_match_entry` | 0 | 1 | 2 | 0 |
 | `scouted_player_slot` | 0 | 0 | 2 | 0 |
 | `screen_manager` | 0 | 1 | 3 | 1 |
@@ -200,7 +202,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `tactics_fields` | 0 | 0 | 10 | 2 |
 | `tactics_row` | 0 | 2 | 4 | 0 |
 | `tally_record` | 0 | 0 | 1 | 0 |
-| `tournament_slot` | 0 | 0 | 8 | 1 |
+| `tournament_slot` | 0 | 1 | 8 | 3 |
 | `training_manager_fields` | 0 | 0 | 6 | 0 |
 | `training_schedule` | 0 | 0 | 1 | 0 |
 | `transfer_fee_record` | 0 | 0 | 4 | 1 |
@@ -359,10 +361,16 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `player_category_stats::DRIBBLES` | +0x16 | 2 byte(s): times he beat an opponent summed over the matches [inference] |
 | `rating_record::YEAR` | +0x1d | 2 byte(s): Season year of the record [inference] |
 | `ruling_body_entry::PERSON_ID` | +0x0 | 4 byte(s): Person id of the entry (-1 = free) [inference] |
+| `scout_report::ELIGIBILITY_NOTE` | +0x58 | 1 byte(s): eligibility note: 1 needs a work permit (outcome in WORK_PERMIT_GRANTED), 2 eligible through a second nationality of membership group 2, 0 none [inference] |
+| `scout_report::CURRENT_RATING` | +0x5c | 1 byte(s): scout's 0-5 grade of the player's current score; the news packs it times 8 [inference] |
+| `scout_report::POTENTIAL_RATING` | +0x5d | 1 byte(s): scout's 0-5 grade of the player's projected score; the news packs it in the low 3 bits [inference] |
+| `scout_report::LEAGUE_MATCH` | +0x62 | 4 byte(s): 1 when the watched fixture's HOME_SIDE_MARK byte (+0x40) is 0 (league match by that field's reading) [inference] |
 | `shortlist_slot::VALUATION` | +0x3 | 4 byte(s): Club's valuation of the target, compared with PRICE in compensation deals [inference] |
 | `staff_state::INJURY_COUNTER` | +0xa | 1 byte(s): byte of the 79-byte general.dat record raised by injuries up to 100 [inference] |
 | `tactics_fields::FORMATION` | +0x187b | 4 byte(s): formation (shape) object of the tactic, compared with the manager's favourite formation [inference] |
 | `tactics_fields::POSITION_MARKS` | +0x188b | 88 byte(s): per tactical position mark bits, one u64 per position (11), read by position_marks [inference: same block layout as the engine tactics] |
+| `tournament_slot::COMP_FLAGS_A` | +0xf | 2 byte(s): first rule-flags word for the tournament competition; value 0x80 also adds flag 2 [inference] |
+| `tournament_slot::COMP_FLAGS_B` | +0x11 | 2 byte(s): second rule-flags word, OR-ed with COMP_FLAGS_A into the last flags argument of the MiniCup/MiniLeague constructor [inference] |
 | `tournament_slot::IN_USE` | +0x29 | 4 byte(s): nonzero once the tournament is under way; find_human_club_tournament only returns slots with it set [inference] |
 | `transfer_fee_record::FLAG` | +0x28 | 1 byte(s): Transfer flag: 1 when the transfer's +4 was set (loan or part exchange) [inference] |
 | `transfer_rules::SCOPE` | +0x12 | 1 byte(s): Scope of the squad restriction rules (2 continental; otherwise compared with the fixture rules type) [inference] |
@@ -376,3 +384,4 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `tactic_stats::ALL_OUT_ATTACK_SCORE` | +0x10 | 8 byte(s): f64 score of the tactic used when the stance is 1 (all-out attack) [inference] |
 | `tactic_stats::ATTACK_SCORE` | +0x18 | 8 byte(s): f64 score of the tactic used for stance 2 (attack) and any other value [inference] |
 | `tactic_stats::DEFENSIVE_SCORE` | +0x20 | 8 byte(s): f64 score of the tactic used for stances 3..5 (balanced, defend, park the bus) [inference] |
+| `awol_fitness_incident::REPEAT_CASE` | +0x10 | 1 byte(s): nonzero takes the repeat path (professionalism/temperament draws); never set by report_poor_fitness (stack leftover) [inference] |

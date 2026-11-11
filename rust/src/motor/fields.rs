@@ -1585,6 +1585,7 @@ pub(crate) mod key_nation_record {
     pub(crate) const SEASON_END_DAY: usize = 0x15; // 2 byte(s): Day of year the nation's season ends (72-byte records at 0xb63d60)
     pub(crate) const SPLIT_SEASON_FLAG: usize = 0x17; // 4 byte(s): 1 when the nation season spans two calendar years [verified: community data map g_league_table+0x17 split_season_flag (u32, read by 0x59b4c0); here nonzero selects the year 2002 instead of start year + 1]
     pub(crate) const SEASON_SPANS_YEAR: usize = 0x1d; // 1 byte(s): Nonzero when the season ends in the following year [inference]
+    pub(crate) const LEAGUE_COMP: usize = 0x26; // 4 byte(s): pointer to the league competition record of the entry (its first dword is the comp id)
     pub(crate) const START_DATE: usize = 0x2a; // 8 byte(s): season start date of the key nation [verified: community data map g_league_table+0x2a start_date (Date); passed as a date to date_days_since; fields.rs START_DATE_YEAR already describes START_DATE at +0x2a]
     pub(crate) const START_DATE_YEAR: usize = 0x2c; // 2 byte(s): year half of the key nation's season start date (START_DATE at +0x2a) [verified: community map: g_league_table+0x2a start_date; t = record+0x2a, t+2 = +0x2c = START_DATE + cm_date::YEAR; same pattern as END_DATE_YEAR]
     pub(crate) const START_MONTH: usize = 0x34; // 1 byte(s): month the nation season starts [verified: community data map g_league_table+0x34 start_month (u8, 0x59b4c0); compared with date_get_month of today]
@@ -1778,6 +1779,7 @@ pub(crate) mod manager_record {
     pub(crate) const LOSSES: usize = 0x94; // 2 byte(s): matches lost
     pub(crate) const GOALS_FOR: usize = 0x96; // 4 byte(s): goals scored
     pub(crate) const GOALS_AGAINST: usize = 0x9a; // 4 byte(s): goals conceded
+    pub(crate) const MONTH_AWARDS: usize = 0x9e; // 2 byte(s): number of monthly awards won by the manager [verified: r = get_manager_record (0x86f5b0, 210-byte record); Staff_Records::add_month_award_record (0x86c8c0, community: counts it for a manager) increments this word; g]
     pub(crate) const PLAYERS_BOUGHT: usize = 0xa0; // 2 byte(s): number of players bought
     pub(crate) const PLAYERS_SOLD: usize = 0xa2; // 2 byte(s): number of players sold
     pub(crate) const PURCHASES_TOTAL: usize = 0xa4; // 8 byte(s): total spent on players (i64)
@@ -2393,12 +2395,21 @@ pub(crate) mod scout_report {
     pub(crate) const PLAYER_ID: usize = 0x2b; // 4 byte(s): Id of the scouted player
     pub(crate) const SCOUT_NAME_REF: usize = 0x37; // 24 byte(s): the scout's name reference: name ids, staff index at +0xc, date at +0x10 [verified: 0x7b62a0 at 0x7b6f57: fill_staff_name_ref(ebx, report+0x37), ebx = the search's checked scout (0x7b637d); his club id goes to CLUB_ID +0x50]
     pub(crate) const CLUB_ID: usize = 0x50; // 4 byte(s): Id of the club the report is for
+    pub(crate) const WORK_PERMIT_GRANTED: usize = 0x54; // 4 byte(s): 1 when the needed work permit would be granted; 0 when refused or when no permit is needed
+    pub(crate) const ELIGIBILITY_NOTE: usize = 0x58; // 1 byte(s): eligibility note: 1 needs a work permit (outcome in WORK_PERMIT_GRANTED), 2 eligible through a second nationality of membership group 2, 0 none [inference]
+    pub(crate) const PLAYER_AGE: usize = 0x59; // 1 byte(s): age of the scouted player when the report was made [verified: 0x7b6f27/0x7b6f2b: mov dl,[ebp+0x18] (staff::AGE of the player ebp, the same ebp passed to fill_staff_name_ref for +0x1f); mov [esi+0x59],dl]
+    pub(crate) const POSITION_MASK: usize = 0x5a; // 2 byte(s): position mask of the scouted player
+    pub(crate) const CURRENT_RATING: usize = 0x5c; // 1 byte(s): scout's 0-5 grade of the player's current score; the news packs it times 8 [inference]
+    pub(crate) const POTENTIAL_RATING: usize = 0x5d; // 1 byte(s): scout's 0-5 grade of the player's projected score; the news packs it in the low 3 bits [inference]
+    pub(crate) const HAS_MATCH: usize = 0x5e; // 4 byte(s): 1 when the report comes from a watched match (match data at +0 filled), 0 otherwise
+    pub(crate) const LEAGUE_MATCH: usize = 0x62; // 4 byte(s): 1 when the watched fixture's HOME_SIDE_MARK byte (+0x40) is 0 (league match by that field's reading) [inference]
     pub(crate) const REPORT_MODE: usize = 0x66; // 1 byte(s): report mode (0 assigned target, 1 requested, 2 general); 0xff = no report produced
 }
 
 /// Fields of the `scout_request` object, named from how the routines use them. [pt] Campos do objeto `scout_request`.
 #[allow(dead_code)]
 pub(crate) mod scout_request {
+    pub(crate) const CLUB_ID: usize = 0x0; // 4 byte(s): id of the club that asked for the scouting (r + 0x11 = the next request's +0)
     pub(crate) const PLAYER_ID: usize = 0x4; // 4 byte(s): Id of the player to scout
     pub(crate) const DATE: usize = 0x8; // 8 byte(s): Date of the request (TCMDate)
     pub(crate) const DATE_YEAR: usize = 0xa; // 2 byte(s): Year half of DATE
@@ -2509,6 +2520,9 @@ pub(crate) mod tournament_slot {
     pub(crate) const HOST: usize = 0x0; // 4 byte(s): host club pointer; 0 = free slot (one of the Friendly object's 127 tournament slots of 0x69 bytes)
     pub(crate) const START_DATE: usize = 0x4; // 8 byte(s): tournament start date (TCMDate)
     pub(crate) const KIND: usize = 0xc; // 1 byte(s): tournament type, passed to is_club_free_on_date
+    pub(crate) const COMP_FLAGS_A: usize = 0xf; // 2 byte(s): first rule-flags word for the tournament competition; value 0x80 also adds flag 2 [inference]
+    pub(crate) const COMP_FLAGS_B: usize = 0x11; // 2 byte(s): second rule-flags word, OR-ed with COMP_FLAGS_A into the last flags argument of the MiniCup/MiniLeague constructor [inference]
+    pub(crate) const TEAM_COUNT: usize = 0x13; // 2 byte(s): number of participating clubs (host plus invited) [verified: 0x5c5820 passes [t+0x13] as team_count of MiniLeague::MiniLeague (community map); 0x5c5310 loops the invited clubs 1..[t+0x13]; 0x5c3be0 passes its club count p]
     pub(crate) const INVITED_CLUBS: usize = 0x15; // 16 byte(s): the 4 invited club pointers (0 = empty)
     pub(crate) const INVITE_PENDING: usize = 0x25; // 4 byte(s): per invited club, 1 while the invitation has not been accepted (no cancellation news to it)
     pub(crate) const IN_USE: usize = 0x29; // 4 byte(s): nonzero once the tournament is under way; find_human_club_tournament only returns slots with it set [inference]
@@ -2967,5 +2981,19 @@ pub(crate) mod world_cup_fields {
 pub(crate) mod human_manager_fields {
     pub(crate) const RECORD_COUNT: usize = 0x4; // 4 byte(s): number of human manager records at [+0] (index valid 0..count-1) [verified: every human manager routine bounds the index (id - staff count + 16) by [this+4] - 1; community thiscall HUMAN_MANAGER* this]
     pub(crate) const HOLIDAY_COUNT: usize = 0xc; // 4 byte(s): number of human managers on holiday [verified: community HUMAN_MANAGER::set_on_holiday (0x5fd2f0, high): keeps the count of humans on holiday; +1 when ON_HOLIDAY turns on, -1 when off]
+
+}
+
+/// AWOL fitness incident record (0x11 bytes, in the list at AWOL+8): +0 staff id, +4 club id, +8 TCMDate, +0x10 repeat byte
+#[allow(dead_code)]
+pub(crate) mod awol_fitness_incident {
+    pub(crate) const REPEAT_CASE: usize = 0x10; // 1 byte(s): nonzero takes the repeat path (professionalism/temperament draws); never set by report_poor_fitness (stack leftover) [inference]
+
+}
+
+/// AWOL missed-training record (13 bytes, in the list at AWOL+4): +0 staff id, +4 TCMDate of the miss, +0xc repeat byte
+#[allow(dead_code)]
+pub(crate) mod awol_missed_training {
+    pub(crate) const REPEAT_CASE: usize = 0xc; // 1 byte(s): nonzero = repeat case: professionalism/temperament draws and a new miss; miss_training leaves it as stack residue (0x90)
 
 }

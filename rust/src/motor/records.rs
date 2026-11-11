@@ -2443,8 +2443,12 @@ impl Friendly {
     }
     /// `friendly::TOURNAMENT_SLOTS` (+0xb1). Name: read.
     #[inline(always)]
-    pub(crate) fn tournament_slots_addr(self) -> usize {
-        self.0 + friendly::TOURNAMENT_SLOTS
+    pub(crate) unsafe fn tournament_slots(self) -> usize {
+        read_usize(self.0 + friendly::TOURNAMENT_SLOTS)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_tournament_slots(self, v: usize) {
+        write_usize(self.0 + friendly::TOURNAMENT_SLOTS, v)
     }
     /// `friendly::FRIENDLY_MATCH_LIST` (+0x34c8). Name: read.
     #[inline(always)]
@@ -12958,6 +12962,15 @@ impl KeyNationRecord {
     pub(crate) unsafe fn set_season_spans_year(self, v: u8) {
         write_u8(self.0 + key_nation_record::SEASON_SPANS_YEAR, v)
     }
+    /// `key_nation_record::LEAGUE_COMP` (+0x26). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn league_comp(self) -> usize {
+        read_usize(self.0 + key_nation_record::LEAGUE_COMP)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_league_comp(self, v: usize) {
+        write_usize(self.0 + key_nation_record::LEAGUE_COMP, v)
+    }
     /// `key_nation_record::START_DATE` (+0x2a). Name: verified.
     #[inline(always)]
     pub(crate) fn start_date_addr(self) -> usize {
@@ -14498,6 +14511,15 @@ impl ManagerRecord {
     #[inline(always)]
     pub(crate) unsafe fn set_goals_against(self, v: i32) {
         write_i32(self.0 + manager_record::GOALS_AGAINST, v)
+    }
+    /// `manager_record::MONTH_AWARDS` (+0x9e). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn month_awards(self) -> u16 {
+        read_u16(self.0 + manager_record::MONTH_AWARDS)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_month_awards(self, v: u16) {
+        write_u16(self.0 + manager_record::MONTH_AWARDS, v)
     }
     /// `manager_record::PLAYERS_BOUGHT` (+0xa0). Name: read.
     #[inline(always)]
@@ -19191,8 +19213,12 @@ impl ScoutManagerFields {
     }
     /// `scout_manager_fields::EDIT_SESSIONS` (+0xc). Name: read.
     #[inline(always)]
-    pub(crate) fn edit_sessions_addr(self) -> usize {
-        self.0 + scout_manager_fields::EDIT_SESSIONS
+    pub(crate) unsafe fn edit_sessions(self) -> usize {
+        read_usize(self.0 + scout_manager_fields::EDIT_SESSIONS)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_edit_sessions(self, v: usize) {
+        write_usize(self.0 + scout_manager_fields::EDIT_SESSIONS, v)
     }
     /// `scout_manager_fields::SELECTED_LISTS` (+0x4c). Name: read.
     #[inline(always)]
@@ -19276,6 +19302,78 @@ impl ScoutReport {
     pub(crate) unsafe fn set_club_id(self, v: usize) {
         write_usize(self.0 + scout_report::CLUB_ID, v)
     }
+    /// `scout_report::WORK_PERMIT_GRANTED` (+0x54). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn work_permit_granted(self) -> usize {
+        read_usize(self.0 + scout_report::WORK_PERMIT_GRANTED)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_work_permit_granted(self, v: usize) {
+        write_usize(self.0 + scout_report::WORK_PERMIT_GRANTED, v)
+    }
+    /// `scout_report::ELIGIBILITY_NOTE` (+0x58). Name: inferred.
+    #[inline(always)]
+    pub(crate) unsafe fn eligibility_note(self) -> u8 {
+        read_u8(self.0 + scout_report::ELIGIBILITY_NOTE)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_eligibility_note(self, v: u8) {
+        write_u8(self.0 + scout_report::ELIGIBILITY_NOTE, v)
+    }
+    /// `scout_report::PLAYER_AGE` (+0x59). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn player_age(self) -> u8 {
+        read_u8(self.0 + scout_report::PLAYER_AGE)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_player_age(self, v: u8) {
+        write_u8(self.0 + scout_report::PLAYER_AGE, v)
+    }
+    /// `scout_report::POSITION_MASK` (+0x5a). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn position_mask(self) -> i16 {
+        read_i16(self.0 + scout_report::POSITION_MASK)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_position_mask(self, v: i16) {
+        write_i16(self.0 + scout_report::POSITION_MASK, v)
+    }
+    /// `scout_report::CURRENT_RATING` (+0x5c). Name: inferred.
+    #[inline(always)]
+    pub(crate) unsafe fn current_rating(self) -> u8 {
+        read_u8(self.0 + scout_report::CURRENT_RATING)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_current_rating(self, v: u8) {
+        write_u8(self.0 + scout_report::CURRENT_RATING, v)
+    }
+    /// `scout_report::POTENTIAL_RATING` (+0x5d). Name: inferred.
+    #[inline(always)]
+    pub(crate) unsafe fn potential_rating(self) -> u8 {
+        read_u8(self.0 + scout_report::POTENTIAL_RATING)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_potential_rating(self, v: u8) {
+        write_u8(self.0 + scout_report::POTENTIAL_RATING, v)
+    }
+    /// `scout_report::HAS_MATCH` (+0x5e). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn has_match(self) -> usize {
+        read_usize(self.0 + scout_report::HAS_MATCH)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_has_match(self, v: usize) {
+        write_usize(self.0 + scout_report::HAS_MATCH, v)
+    }
+    /// `scout_report::LEAGUE_MATCH` (+0x62). Name: inferred.
+    #[inline(always)]
+    pub(crate) unsafe fn league_match(self) -> usize {
+        read_usize(self.0 + scout_report::LEAGUE_MATCH)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_league_match(self, v: usize) {
+        write_usize(self.0 + scout_report::LEAGUE_MATCH, v)
+    }
     /// `scout_report::REPORT_MODE` (+0x66). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn report_mode(self) -> u8 {
@@ -19315,6 +19413,15 @@ impl ScoutRequest {
     #[inline(always)]
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
+    }
+    /// `scout_request::CLUB_ID` (+0x0). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn club_id(self) -> i32 {
+        read_i32(self.0 + scout_request::CLUB_ID)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_club_id(self, v: i32) {
+        write_i32(self.0 + scout_request::CLUB_ID, v)
     }
     /// `scout_request::PLAYER_ID` (+0x4). Name: read.
     #[inline(always)]
@@ -20129,6 +20236,33 @@ impl TournamentSlot {
     #[inline(always)]
     pub(crate) unsafe fn set_kind(self, v: u8) {
         write_u8(self.0 + tournament_slot::KIND, v)
+    }
+    /// `tournament_slot::COMP_FLAGS_A` (+0xf). Name: inferred.
+    #[inline(always)]
+    pub(crate) unsafe fn comp_flags_a(self) -> u16 {
+        read_u16(self.0 + tournament_slot::COMP_FLAGS_A)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_comp_flags_a(self, v: u16) {
+        write_u16(self.0 + tournament_slot::COMP_FLAGS_A, v)
+    }
+    /// `tournament_slot::COMP_FLAGS_B` (+0x11). Name: inferred.
+    #[inline(always)]
+    pub(crate) unsafe fn comp_flags_b(self) -> u16 {
+        read_u16(self.0 + tournament_slot::COMP_FLAGS_B)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_comp_flags_b(self, v: u16) {
+        write_u16(self.0 + tournament_slot::COMP_FLAGS_B, v)
+    }
+    /// `tournament_slot::TEAM_COUNT` (+0x13). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn team_count(self) -> u16 {
+        read_u16(self.0 + tournament_slot::TEAM_COUNT)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_team_count(self, v: u16) {
+        write_u16(self.0 + tournament_slot::TEAM_COUNT, v)
     }
     /// `tournament_slot::INVITED_CLUBS` (+0x15). Name: read.
     #[inline(always)]
@@ -23255,6 +23389,86 @@ impl Addr for HumanManagerFields {
 }
 
 impl core::fmt::LowerHex for HumanManagerFields {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
+/// A `awol_fitness_incident` record in the game's memory (fields in `fields::awol_fitness_incident`). [pt] Um registro `awol_fitness_incident` na memória do jogo.
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
+pub(crate) struct AwolFitnessIncident(pub(crate) usize);
+
+#[allow(dead_code)]
+impl AwolFitnessIncident {
+    #[inline(always)]
+    pub(crate) fn addr(self) -> usize {
+        self.0
+    }
+    #[inline(always)]
+    pub(crate) fn is_null(self) -> bool {
+        self.0 == 0
+    }
+    /// `awol_fitness_incident::REPEAT_CASE` (+0x10). Name: inferred.
+    #[inline(always)]
+    pub(crate) unsafe fn repeat_case(self) -> u8 {
+        read_u8(self.0 + awol_fitness_incident::REPEAT_CASE)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_repeat_case(self, v: u8) {
+        write_u8(self.0 + awol_fitness_incident::REPEAT_CASE, v)
+    }
+}
+
+impl Addr for AwolFitnessIncident {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
+impl core::fmt::LowerHex for AwolFitnessIncident {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
+/// A `awol_missed_training` record in the game's memory (fields in `fields::awol_missed_training`). [pt] Um registro `awol_missed_training` na memória do jogo.
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
+pub(crate) struct AwolMissedTraining(pub(crate) usize);
+
+#[allow(dead_code)]
+impl AwolMissedTraining {
+    #[inline(always)]
+    pub(crate) fn addr(self) -> usize {
+        self.0
+    }
+    #[inline(always)]
+    pub(crate) fn is_null(self) -> bool {
+        self.0 == 0
+    }
+    /// `awol_missed_training::REPEAT_CASE` (+0xc). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn repeat_case(self) -> u8 {
+        read_u8(self.0 + awol_missed_training::REPEAT_CASE)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_repeat_case(self, v: u8) {
+        write_u8(self.0 + awol_missed_training::REPEAT_CASE, v)
+    }
+}
+
+impl Addr for AwolMissedTraining {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
+impl core::fmt::LowerHex for AwolMissedTraining {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         core::fmt::LowerHex::fmt(&self.0, f)
     }

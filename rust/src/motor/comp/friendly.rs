@@ -984,7 +984,7 @@ pub(crate) unsafe extern "thiscall" fn find_human_club_tournament(this: usize) -
         return 0;
     }
     for i in 0..0x7fusize {
-        let t = this + 0x69 * i + 0xb1;
+        let t = this + 0x69 * i + friendly::TOURNAMENT_SLOTS;
         let host = read_usize(t);
         if host != 0 && host == club.addr() && read_usize(t + tournament_slot::IN_USE) != 0 {
             return t;
@@ -1065,11 +1065,11 @@ pub(crate) unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entries
         if nation.is_null() || nation.league_selected() == 0 {
             continue;
         }
-        if is_before_today(league + 0x2a) {
+        if is_before_today(league + key_nation_record::START_DATE) {
             continue;
         }
         let mut d = [0u8; 8];
-        let r = exe::date_sub_weeks(league + 0x39, &mut d, 0x34);
+        let r = exe::date_sub_weeks(league + key_nation_record::END_DATE, &mut d, 0x34);
         if is_after_today(r) {
             continue;
         }
@@ -1143,7 +1143,7 @@ pub(crate) unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entries
 ///
 /// [pt] O torneio livre: o primeiro dos 127 (0x69 bytes a partir de +0xb1) sem anfitrião (+0), ou 0.
 pub(crate) unsafe fn free_tournament_slot(this: usize) -> usize {
-    (0..0x7fusize).map(|i| this + 0x69 * i + 0xb1).find(|&t| read_usize(t) == 0).unwrap_or(0)
+    (0..0x7fusize).map(|i| this + 0x69 * i + friendly::TOURNAMENT_SLOTS).find(|&t| read_usize(t) == 0).unwrap_or(0)
 }
 
 /// `host.add_tournament(type, start, a, b, c, d, e, invited, name)`, called by the AI tournament (0x5c3be0)
@@ -1171,12 +1171,12 @@ pub(crate) unsafe extern "thiscall" fn add_tournament(this: usize, host: usize, 
     write_u8(t + 0xe, b as u8);
     let mut tmp = [0u8; 8];
     exe::date_operator_3d(t + tournament_slot::START_DATE, (&mut tmp) as *mut [u8; 8] as usize, start);
-    write_u16(t + 0x11, d as u16);
-    write_u16(t + 0x13, e as u16);
+    write_u16(t + tournament_slot::COMP_FLAGS_B, d as u16);
+    write_u16(t + tournament_slot::TEAM_COUNT, e as u16);
     write_u32(t + tournament_slot::COMPETITION, 0);
     write_u32(t + tournament_slot::IN_USE, 0);
     write_u32(t + 0x2d, 0);
-    write_u16(t + 0xf, c as u16);
+    write_u16(t + tournament_slot::COMP_FLAGS_A, c as u16);
     let mut k = 0usize;
     loop {
         let x = read_u8(name + k);
@@ -1619,7 +1619,7 @@ pub(crate) unsafe fn add_month_award_record_body(this: usize, p: Staff, club: us
         let r = staff_records_manager_record(this, p);
         if r != 0 {
             crate::comparison::branch("cpv_13 manager award");
-            let a = (r + 0x9e) as *mut u16;
+            let a = (r + manager_record::MONTH_AWARDS) as *mut u16;
             core::ptr::write_unaligned(a, core::ptr::read_unaligned(a).wrapping_add(1)); // cpv13: counts the prize
         }
         return;
@@ -1642,8 +1642,8 @@ pub(crate) unsafe fn add_month_award_record_body(this: usize, p: Staff, club: us
     let gt = read_usize(G_TRANSFER_MANAGER);
     if gt != 0 {
         if exe::date_days_since(G_CURRENT_DATE, (k.date_started()) as u32, read_usize(k.addr() + contract::DATE_STARTED + 4) as u32) > 0x12c {
-            let x = exe::shortlist_manager_find_club_shortlist_entry(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), contract_club_except_type5(p), p, 0, 0);
-            if x != 0 && read_usize(x + 0xf) == read_usize(p.addr()) {
+            let x = exe::shortlist_manager_find_club_shortlist_entry(read_usize(read_usize(G_TRANSFER_MANAGER) + transfer_manager_fields::SHORTLIST_MANAGER), contract_club_except_type5(p), p, 0, 0);
+            if x != 0 && read_usize(x + shortlist_slot::TARGET_STAFF_ID) == read_usize(p.addr()) {
                 crate::comparison::branch("cpv_13 renewal");
                 offer_renewal(p.addr());
             }
@@ -1895,7 +1895,7 @@ pub(crate) unsafe extern "thiscall" fn plan_ai_preseason_friendlies(this: usize)
     exe::friendly_plan_preseason_tournaments_and_tours(this, v, p, ns);
     exe::friendly_plan_club_friendlies(this, v, p, ns);
     for k in 0..ns.max(0) as usize {
-        for l in [read_usize(v + k * 0x16 + 0xa), read_usize(v + k * 0x16 + 0x12)] {
+        for l in [read_usize(v + k * 0x16 + preseason_candidate::OPPONENTS), read_usize(v + k * 0x16 + preseason_candidate::PLANNED_DATES)] {
             if l != 0 {
                 exe::drop_llist(l);
                 exe::crt_operator_delete(l);
@@ -1935,7 +1935,7 @@ pub(crate) unsafe fn set_friendly_windows(ptrs: usize, n: i32, write: bool) -> V
             continue;
         }
         let (mut prim, mut ult) = (u32::MAX as usize, u32::MAX as usize);
-        let lg = read_usize(ent + 0x26);
+        let lg = read_usize(ent + key_nation_record::LEAGUE_COMP);
         let comp = Cup(if lg != 0 { read_usize(read_usize(G_COMP_OBJECT_TABLE) + read_usize(lg) * 4) } else { 0 });
         if !comp.is_null() && comp.comp_type() == 1 {
             if write {
@@ -1958,7 +1958,7 @@ pub(crate) unsafe fn set_friendly_windows(ptrs: usize, n: i32, write: bool) -> V
             ult = if b != 0 { read_usize(b) } else { u32::MAX as usize };
         }
         let mut l = [0u8; 8];
-        exe::date_sub_weeks(ent + 0x2a, &mut l, 1);
+        exe::date_sub_weeks(ent + key_nation_record::START_DATE, &mut l, 1);
         let dano = u16::from_le_bytes([l[2], l[3]]).wrapping_sub(read_u16(G_CURRENT_DATE_YEAR));
         let end = (dano as u32).wrapping_mul(365).wrapping_sub(read_usize(G_CURRENT_DATE) as u32)
             .wrapping_add(u32::from_le_bytes([l[0], l[1], l[2], l[3]])) as u16 as i16;
@@ -1985,7 +1985,7 @@ pub(crate) unsafe fn set_friendly_windows(ptrs: usize, n: i32, write: bool) -> V
         while q < ate {
             let c = read_usize(q);
             let id = read_usize(c);
-            if read_usize(read_usize(G_CLUB_TABLE) + id * club::SIZE + 0x53) != nation.addr() {
+            if read_usize(read_usize(G_CLUB_TABLE) + id * club::SIZE + club::NATION) != nation.addr() {
                 break;
             }
             let nova = id == prim || id == ult;
@@ -2129,12 +2129,12 @@ pub(crate) unsafe extern "thiscall" fn schedule_tour_matches(this: usize, cand: 
                     let l = alloc_list();
                     write_u32(cand + preseason_candidate::PLANNED_DATES, l as u32);
                 }
-                if read_usize(read_usize(p) + 0x12) == 0 {
+                if read_usize(read_usize(p) + preseason_candidate::PLANNED_DATES) == 0 {
                     let l = alloc_list();
-                    write_u32(read_usize(p) + 0x12, l as u32);
+                    write_u32(read_usize(p) + preseason_candidate::PLANNED_DATES, l as u32);
                 }
                 exe::llist_add_tail(read_usize(cand + preseason_candidate::PLANNED_DATES), (&mut d1) as *mut [u8; 8] as usize, 8);
-                exe::llist_add_tail(read_usize(read_usize(p) + 0x12), (&mut d1) as *mut [u8; 8] as usize, 8);
+                exe::llist_add_tail(read_usize(read_usize(p) + preseason_candidate::PLANNED_DATES), (&mut d1) as *mut [u8; 8] as usize, 8);
             }
         }
         p += 4;
@@ -2554,8 +2554,8 @@ pub(crate) unsafe extern "thiscall" fn is_banned_nation_pair(this: usize, a: i32
 /// [pt] { 0x5cc5f0 } (cdecl, friendly.cpp): `compare_nations_by_reputation_desc(a, b)`: o qsort das listas de nações
 /// (ponteiros) pela reputação (+0x8e, palavra com sinal), a maior primeiro. Quente (qsort): sem contador.
 pub(crate) unsafe extern "C" fn compare_nations_by_reputation_desc(a: usize, b: usize) -> i32 {
-    let ra = read_i16(read_usize(a) + 0x8e) as i32;
-    let rb = read_i16(read_usize(b) + 0x8e) as i32;
+    let ra = read_i16(read_usize(a) + nation::REPUTATION) as i32;
+    let rb = read_i16(read_usize(b) + nation::REPUTATION) as i32;
     rb - ra // the highest reputation first
 }
 
@@ -2673,18 +2673,18 @@ pub(crate) unsafe extern "thiscall" fn is_comp_current_on_date(this: usize, comp
     }
     let k = read_u8(comp).wrapping_sub(read_u8(this + friendly::FIRST_TOURNAMENT_COMP_ID)) as i8 as isize;
     let e = this.wrapping_add((k * 0x69) as usize);
-    if read_usize(e + 0xb1) == 0 {
+    if read_usize(e + friendly::TOURNAMENT_SLOTS) == 0 {
         return 0;
     }
     let (dia, ano) = friendly_date_day_year(data);
     let mut a = [0u8; 8];
-    let (adia, aano) = friendly_date_day_year(exe::date_sub_days(e + 0xb5, (&mut a) as *mut [u8; 8] as usize, 7));
+    let (adia, aano) = friendly_date_day_year(exe::date_sub_days(e + friendly::TOURNAMENT_SLOTS + 4, (&mut a) as *mut [u8; 8] as usize, 7));
     if ano < aano || (ano == aano && dia <= adia) {
         return 0;
     }
     let (dia, ano) = friendly_date_day_year(data);
     let mut b = [0u8; 8];
-    let (bdia, bano) = friendly_date_day_year(exe::date_add_days(e + 0xb5, (&mut b) as *mut [u8; 8] as usize, 7));
+    let (bdia, bano) = friendly_date_day_year(exe::date_add_days(e + friendly::TOURNAMENT_SLOTS + 4, (&mut b) as *mut [u8; 8] as usize, 7));
     (ano < bano || (ano == bano && dia < bdia)) as u32
 }
 
@@ -3120,7 +3120,7 @@ pub(crate) unsafe extern "thiscall" fn register_comp_objects(friendly: usize) {
     let table = || *(G_COMP_OBJECT_TABLE as *const usize) as isize;
     *((table() + *(KEY_CLUB_COMP_FRIENDLY as *const i32) as isize * 4) as *mut usize) = *(G_FRIENDLY as *const usize);
     for i in 0..0x7fusize {
-        let p = friendly.addr() + 0x116 + i * 0x69;
+        let p = friendly.addr() + friendly::TOURNAMENT_SLOTS + 0x65 + i * 0x69;
         let object = core::ptr::read_unaligned(p as *const usize);
         if core::ptr::read_unaligned((p - 0x65) as *const usize) != 0 && object != 0 {
             let key = friendly.first_tournament_comp_id() as isize + i as isize;
@@ -3211,7 +3211,7 @@ pub(crate) unsafe extern "thiscall" fn remove_club_from_ai_plans(amistosos: usiz
     if *list == 0 {
         return;
     }
-    write_u32(*list + 0xa, read_u32(*list + 2));
+    write_u32(*list + llist::CURSOR, read_u32(*list + 2));
     loop {
         let e = exe::llist_get_next(*list);
         if e == 0 {
