@@ -36,7 +36,7 @@ the code readable for publication (named fields and records, English names and h
 career as before): [`levas/reorganizacao/LEIA.en.md`](levas/reorganizacao/LEIA.en.md), scoreboard in
 [`docs/LEGIBILIDADE.en.md`](docs/LEGIBILIDADE.en.md).
 
-The game files do not go into git: the game is free to download, but the code and the brand still belong to SI and Eidos.
+The game files do not go into git: the game is free to download, but the code and the brand still belong to SI and Eidos. This project's own code and documentation are under the [MIT license](LICENSE).
 
 ## Building from scratch
 

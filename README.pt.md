@@ -31,7 +31,7 @@ o código legível para a publicação (campos e registros com nome, nomes e cab
 mesma carreira de antes): [`levas/reorganizacao/LEIA.md`](levas/reorganizacao/LEIA.md), placar em
 [`docs/LEGIBILIDADE.md`](docs/LEGIBILIDADE.md).
 
-Os arquivos do jogo não entram no git: o jogo é gratuito para baixar, mas o código e a marca continuam da SI e da Eidos.
+Os arquivos do jogo não entram no git: o jogo é gratuito para baixar, mas o código e a marca continuam da SI e da Eidos. O código e a documentação deste projeto estão sob a [licença MIT](LICENSE).
 
 ## Montar do zero
 
