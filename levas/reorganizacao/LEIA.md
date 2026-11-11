@@ -28,6 +28,15 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Leva 54 da legibilidade: as marcas de cobertura dos testes como `covered!()`
+
+O obstáculo 5 do leitor de fora (andaime de teste no meio da lógica). As 1.758 chamadas `crate::comparison::branch(..)` do
+motor viram `covered!(..)`, macro do `motor/macros.rs` documentada como marca de teste (as mutações pulam a mutação cujo
+caminho não rodou na base), ligada pela feature `coverage` (padrão); `cargo build --release --no-default-features` faz a
+DLL sem as marcas (170 KB menor, nenhum nome de marca no binário). Prova: aa7e9c95 ×2, detector igual, comparação 0; as
+mutações mudadas compilam. A DLL sem as marcas chega à data com outra impressão (7cc445c2, a mesma de antes da leva 32):
+o resíduo de pilha que o original lê depende do código gerado, então uma DLL pública sem marcas precisa da própria prova.
+
 ## Leva 53 da legibilidade: os slots dos métodos virtuais com nome
 
 Um agente leitor leu as vtables das classes de competição (Comp, League, Cup e subclasses), das regras nacionais de

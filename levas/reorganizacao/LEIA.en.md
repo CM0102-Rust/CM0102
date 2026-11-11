@@ -29,6 +29,16 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Readability batch 54: test coverage markers as `covered!()`
+
+The outside reader's obstacle 5 (test scaffolding in the body). The engine's 1,758 `crate::comparison::branch(..)` calls
+become `covered!(..)`, a `motor/macros.rs` macro documented as a test marker (the mutation tests skip a mutation whose
+path never ran in the base run), switched by the `coverage` feature (on by default); `cargo build --release
+--no-default-features` builds the DLL without them (170 KB smaller, no marker name in the binary). Proof: aa7e9c95 ×2,
+detector equal, comparison 0; the changed mutations compile. The DLL without markers reaches the date with another
+fingerprint (7cc445c2, the one from before batch 32): the stack residue the original reads depends on the generated code,
+so a public DLL without markers needs its own proof.
+
 ## Readability batch 53: virtual method slots by name
 
 A reader agent read the vtables of the competition classes (Comp, League, Cup and subclasses), the national transfer
