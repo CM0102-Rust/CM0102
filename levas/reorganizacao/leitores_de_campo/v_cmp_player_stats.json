@@ -1,0 +1,54 @@
+[
+ {
+  "line": 207,
+  "offset": "0xe",
+  "base": "CATEGORY_RECORDS + i*0x20 (player category record)",
+  "module": "player_category_stats",
+  "verdict": "existing",
+  "name": "RATING_TOTAL",
+  "width": 2,
+  "rust_type": "u16",
+  "description": "rating total; 0xffff marks a free record",
+  "confidence": "verified",
+  "evidence": "player_category_stats::RATING_TOTAL; same 0xffff free marker as v_player_stats line 1064"
+ },
+ {
+  "line": 287,
+  "offset": "0xe",
+  "base": "CATEGORY_RECORDS + i*0x20",
+  "module": "player_category_stats",
+  "verdict": "existing",
+  "name": "RATING_TOTAL",
+  "width": 2,
+  "rust_type": "u16",
+  "description": "rating total / free marker of record i",
+  "confidence": "verified",
+  "evidence": "player_category_stats::RATING_TOTAL"
+ },
+ {
+  "line": 344,
+  "offset": "0x20",
+  "base": "PLAYER_ENTRIES + player id*0x27",
+  "module": "player_stats_entry",
+  "verdict": "existing",
+  "name": "CLUB_LEAGUE_GAMES",
+  "width": 7,
+  "rust_type": "u16",
+  "description": "club league games, goals and recent ratings (7-byte window 0x20..0x26)",
+  "confidence": "verified",
+  "evidence": "player_stats_entry::CLUB_LEAGUE_GAMES; 7 bytes cover CLUB_LEAGUE_GAMES..LAST_RATING"
+ },
+ {
+  "line": 347,
+  "offset": "0x3b",
+  "base": "ct (contract)",
+  "module": "contract",
+  "verdict": "existing",
+  "name": "CLUB_APPEARANCES",
+  "width": 2,
+  "rust_type": "u16",
+  "description": "appearances for the club",
+  "confidence": "verified",
+  "evidence": "contract::CLUB_APPEARANCES; +1 per league match, as v_player_stats line 1257"
+ }
+]

@@ -259,7 +259,7 @@ pub(crate) unsafe extern "thiscall" fn compare_sync_scout_lists(this: usize, man
         return o(this, manager);
     }
     let slot = read_u8(m).wrapping_sub(read_u8(G_STAFF_COUNT)).wrapping_add(0x10) as i8;
-    if !(0..=15).contains(&slot) || read_usize(this + slot as usize * 4 + 0xc) != 0 {
+    if !(0..=15).contains(&slot) || read_usize(this + slot as usize * 4 + scout_manager_fields::EDIT_SESSIONS) != 0 {
         return o(this, manager);
     }
     let mut regions = Vec::new();

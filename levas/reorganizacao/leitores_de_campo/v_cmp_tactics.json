@@ -1,0 +1,54 @@
+[
+ {
+  "line": 17,
+  "offset": "0x5e",
+  "base": "tactics row (ROWS + k*0x91)",
+  "module": "tactics_row",
+  "verdict": "existing",
+  "name": "SET_PIECE_TAKERS",
+  "width": 4,
+  "rust_type": "i32",
+  "description": "set piece taker of role t, choice l",
+  "confidence": "verified",
+  "evidence": "+0x5e + (l + t*2)*4; tactics_row::SET_PIECE_TAKERS (community Tactics::get_set_piece_taker)"
+ },
+ {
+  "line": 109,
+  "offset": "0x52",
+  "base": "tactics row (ROWS + k*0x91)",
+  "module": "tactics_row",
+  "verdict": "existing",
+  "name": "CAPTAIN",
+  "width": 4,
+  "rust_type": "i32",
+  "description": "staff id of the captain",
+  "confidence": "verified",
+  "evidence": "set_captain; tactics_row::CAPTAIN"
+ },
+ {
+  "line": 218,
+  "offset": "0x9a69",
+  "base": "human_manager_record_at(manager,k)",
+  "module": "human_manager_record",
+  "verdict": "existing",
+  "name": "ACTIVE_TACTIC_SLOT",
+  "width": 1,
+  "rust_type": "i8",
+  "description": "active tactic slot",
+  "confidence": "verified",
+  "evidence": "human_manager_record::ACTIVE_TACTIC_SLOT"
+ },
+ {
+  "line": 282,
+  "offset": "0x52",
+  "base": "tactics row (table + l*0x91)",
+  "module": "tactics_row",
+  "verdict": "existing",
+  "name": "CAPTAIN",
+  "width": 4,
+  "rust_type": "i32",
+  "description": "staff id of the captain",
+  "confidence": "verified",
+  "evidence": "comment: compares 0x52..0x56 of the row; tactics_row::CAPTAIN"
+ }
+]

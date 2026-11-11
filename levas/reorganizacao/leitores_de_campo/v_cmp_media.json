@@ -1,0 +1,15 @@
+[
+ {
+  "line": 401,
+  "offset": "0x1c",
+  "base": "manager.staff_preferences() (preferences)",
+  "module": "preferences",
+  "verdict": "existing",
+  "name": "STAFF_FAVOURITE_STAFF1",
+  "width": 24,
+  "rust_type": "[u8]",
+  "description": "window over the favourite/disliked staff slots (+0x1c..+0x34)",
+  "confidence": "read",
+  "evidence": "comment: preferences block +0x1c..+0x34 changed by the rejection; preferences::STAFF_FAVOURITE_STAFF1"
+ }
+]

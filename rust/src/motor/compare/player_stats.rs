@@ -204,7 +204,7 @@ pub(crate) unsafe extern "thiscall" fn compare_create_stats(this: usize, player:
     let current = read_usize(slot) as i32;
     let (n, soltos) = (read_usize(this + player_stats_fields::CATEGORY_COUNT), read_usize(this + player_stats_fields::FREE_CATEGORY_COUNT));
     let solto = if current == -1 && soltos != 0 {
-        (0..n as i32).find(|&i| read_u16(read_usize(this + player_stats_fields::CATEGORY_RECORDS) + ((i as usize) << 5) + 0xe) == 0xffff)
+        (0..n as i32).find(|&i| read_u16(read_usize(this + player_stats_fields::CATEGORY_RECORDS) + ((i as usize) << 5) + player_category_stats::RATING_TOTAL) == 0xffff)
     } else {
         None
     };
@@ -284,7 +284,7 @@ pub(crate) unsafe extern "thiscall" fn compare_player_stats_reset_player(this: u
     for k in 0..6usize {
         let i = read_usize(r + 4 * k);
         if i as u32 != 0xffff_ffff {
-            reg.push((read_usize(this + player_stats_fields::CATEGORY_RECORDS).wrapping_add(i << 5) + 0xe, 2));
+            reg.push((read_usize(this + player_stats_fields::CATEGORY_RECORDS).wrapping_add(i << 5) + player_category_stats::RATING_TOTAL, 2));
         }
     }
     let (a, b, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, person.addr()), || player_stats_reset_player(this, person.addr()));
@@ -341,10 +341,10 @@ pub(crate) unsafe extern "thiscall" fn compare_player_stats_record_match(this: u
                 }
                 regions.push((r, 0x20));
             }
-            regions.push((read_usize(this + player_stats_fields::PLAYER_ENTRIES).wrapping_add(read_usize(e + lineup_row::PLAYER_ID).wrapping_mul(0x27)) + 0x20, 7));
+            regions.push((read_usize(this + player_stats_fields::PLAYER_ENTRIES).wrapping_add(read_usize(e + lineup_row::PLAYER_ID).wrapping_mul(0x27)) + player_stats_entry::CLUB_LEAGUE_GAMES, 7));
             let ct = contract_of_staff(pessoa);
             if !ct.is_null() {
-                regions.push((ct.addr() + 0x3b, 2));
+                regions.push((ct.addr() + contract::CLUB_APPEARANCES, 2));
             }
         }
     }

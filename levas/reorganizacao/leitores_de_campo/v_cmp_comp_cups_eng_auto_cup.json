@@ -1,0 +1,15 @@
+[
+ {
+  "line": 66,
+  "offset": "0x30",
+  "base": "-",
+  "module": null,
+  "verdict": "not_field",
+  "name": null,
+  "width": null,
+  "rust_type": null,
+  "description": null,
+  "confidence": "read",
+  "evidence": "offset inside a log format string literal"
+ }
+]

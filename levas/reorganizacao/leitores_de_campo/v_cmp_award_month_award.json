@@ -1,0 +1,15 @@
+[
+ {
+  "line": 14,
+  "offset": "0x1d",
+  "base": "this",
+  "module": "month_award_fields",
+  "verdict": "existing",
+  "name": "SLOT_WINNER_ID",
+  "width": 4,
+  "rust_type": "i32",
+  "description": "start of the 12 slots of 11 bytes",
+  "confidence": "verified",
+  "evidence": "same as routine verdict; region 12 x 11"
+ }
+]

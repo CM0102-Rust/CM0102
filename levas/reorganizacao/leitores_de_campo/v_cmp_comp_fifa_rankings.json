@@ -1,0 +1,28 @@
+[
+ {
+  "line": 49,
+  "offset": "0xa",
+  "base": "e (ranking entry)",
+  "module": "fifa_ranking_entry",
+  "verdict": "existing",
+  "name": "HISTORY_COUNT",
+  "width": 2,
+  "rust_type": "i16",
+  "description": "number of results in HISTORY",
+  "confidence": "read",
+  "evidence": "append_result expects count + 1; fifa_ranking_entry::HISTORY_COUNT"
+ },
+ {
+  "line": 54,
+  "offset": "0xa",
+  "base": "e (ranking entry)",
+  "module": "fifa_ranking_entry",
+  "verdict": "existing",
+  "name": "HISTORY_COUNT",
+  "width": 2,
+  "rust_type": "i16",
+  "description": "number of results in HISTORY",
+  "confidence": "read",
+  "evidence": "append_result expects count + 1; fifa_ranking_entry::HISTORY_COUNT"
+ }
+]

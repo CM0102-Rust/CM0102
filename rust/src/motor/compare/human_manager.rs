@@ -28,7 +28,7 @@ pub(crate) unsafe extern "thiscall" fn compare_select_tactic_slot(this: usize, r
     let Some(k) = (if t != 0 { human_manager_human_manager_index(this, t) } else { None }) else {
         return o(this, reserve, club, manager);
     };
-    let reg = [(human_manager_record_at(this, k) + 0x9a69, 1)];
+    let reg = [(human_manager_record_at(this, k) + human_manager_record::ACTIVE_TACTIC_SLOT, 1)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, reserve, club, manager), || select_tactic_slot(this, reserve, club, manager));
     SCOREBOARD.record(igual, || format!("select_tactic_slot(reserve {}, club {:#x}, manager {:#x}) {:x?} x {:x?}", reserve, club, manager, mo, mr));
 }
@@ -138,9 +138,9 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_nickname_from_all(this: us
     let mut reg = Vec::new();
     for c in 0..n.min(128) {
         let g = (read_u32(this) as usize).wrapping_add(c as usize * 0xa6ef);
-        if g != 0 && read_u32(g + 0xa6e3) != 0 {
-            reg.push((g + 0xa6e3, 0xc));
-            reg.push((read_u32(g + 0xa6e3) as usize, (read_u32(g + 0xa6eb) as i32).max(0) as usize * 30));
+        if g != 0 && read_u32(g + human_manager_record::NICKNAMES) != 0 {
+            reg.push((g + human_manager_record::NICKNAMES, 0xc));
+            reg.push((read_u32(g + human_manager_record::NICKNAMES) as usize, (read_u32(g + human_manager_record::NICKNAME_COUNT) as i32).max(0) as usize * 30));
         }
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, id), || remove_nickname_from_all(this, id));
@@ -167,7 +167,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_human_field(t: usize, value: 
         vec![]
     } else {
         let i = (*p).wrapping_sub(read_i32(G_STAFF_COUNT)).wrapping_add(0x10);
-        if i < 0 || i > read_i32(t + 4).wrapping_sub(1) { vec![] } else { vec![(read_usize(t) + i as usize * 0xa6ef + 0x9a65, 4)] }
+        if i < 0 || i > read_i32(t + 4).wrapping_sub(1) { vec![] } else { vec![(read_usize(t) + i as usize * 0xa6ef + human_manager_record::HOLIDAY_STAMP, 4)] }
     };
     let (r, v, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(t, value, manager), || set_human_field(t, value, manager));
     SCOREBOARD.record(igual && r == v, || format!("set_human_field({:#x}, {:#x}, {:p}) original={} {:x?} rust={} {:x?}", t, value, manager, r, mo, v, mr));
@@ -183,10 +183,10 @@ pub(crate) unsafe extern "thiscall" fn compare_set_on_holiday(this: usize, holid
         return o(this, holiday, manager); // the message box: original only
     }
     let mark = read_usize(this).wrapping_add((i as usize).wrapping_mul(0xa6ef)).wrapping_add(0x9a01);
-    let (antes, conta) = (read_usize(mark), read_usize(this + 0xc) as i32);
+    let (antes, conta) = (read_usize(mark), read_usize(this + human_manager_fields::HOLIDAY_COUNT) as i32);
     let expected = conta + if holiday != 0 && antes == 0 { 1 } else if holiday == 0 && antes != 0 { -1 } else { 0 };
     o(this, holiday, manager);
-    let (depois, conta2) = (read_usize(mark) as u32, read_usize(this + 0xc) as i32);
+    let (depois, conta2) = (read_usize(mark) as u32, read_usize(this + human_manager_fields::HOLIDAY_COUNT) as i32);
     SCOREBOARD.record(depois == holiday && conta2 == expected, || format!("set_on_holiday({}, manager {:x}): mark {:x} -> {:x}, count {} -> {} (esperava {})", holiday, t, antes, depois, conta, conta2, expected));
 }
 

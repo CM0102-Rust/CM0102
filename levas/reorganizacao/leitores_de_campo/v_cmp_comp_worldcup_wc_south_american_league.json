@@ -1,0 +1,67 @@
+[
+ {
+  "line": 11,
+  "offset": "0xef",
+  "base": "this",
+  "module": "wc_south_american_league_fields",
+  "verdict": "existing",
+  "name": "OCEANIA_EXEMPT_COUNT",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "exempt nations belonging to Oceania",
+  "confidence": "verified",
+  "evidence": "predicted from the Oceania section's +0xee, read back after set_up_rules"
+ },
+ {
+  "line": 15,
+  "offset": "0xee",
+  "base": "c (Oceania qualifying section)",
+  "module": "wc_oceania_league_fields",
+  "verdict": "existing",
+  "name": "EXEMPT_COUNT",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "Oceania nations exempt from qualifying",
+  "confidence": "verified",
+  "evidence": "c = comp object of KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION"
+ },
+ {
+  "line": 18,
+  "offset": "0xee",
+  "base": "this",
+  "module": "wc_south_american_league_fields",
+  "verdict": "existing",
+  "name": "EXEMPT_COUNT",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "South American nations exempt",
+  "confidence": "verified",
+  "evidence": "slots = 4 - oceania exempt - this exempt"
+ },
+ {
+  "line": 20,
+  "offset": "0xef",
+  "base": "this",
+  "module": "wc_south_american_league_fields",
+  "verdict": "existing",
+  "name": "OCEANIA_EXEMPT_COUNT",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "exempt nations belonging to Oceania",
+  "confidence": "verified",
+  "evidence": "read back after the original set_up_rules"
+ },
+ {
+  "line": 21,
+  "offset": "0xef",
+  "base": "string",
+  "module": null,
+  "verdict": "not_field",
+  "name": null,
+  "width": null,
+  "rust_type": null,
+  "description": null,
+  "confidence": "read",
+  "evidence": "offset inside a log string literal"
+ }
+]

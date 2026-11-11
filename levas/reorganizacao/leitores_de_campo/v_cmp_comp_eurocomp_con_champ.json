@@ -1,0 +1,15 @@
+[
+ {
+  "line": 68,
+  "offset": "0x23",
+  "base": "round record",
+  "module": "cup_round",
+  "verdict": "existing",
+  "name": "SLOT_VENUE",
+  "width": 4,
+  "rust_type": "u32",
+  "description": "venue value of match-day slot 0",
+  "confidence": "read",
+  "evidence": "a + r x 0x68 + 0x23 read as dword, then 3 bytes 0xff (slot weekday, slice, code)"
+ }
+]

@@ -12,8 +12,8 @@ pub(crate) unsafe extern "thiscall" fn compare_build_entrants(this: usize) -> i3
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_BUILD_ENTRANTS);
     let (a0, t0) = (this.team_table(), this.entrant_book());
     let base = read_usize(G_CLUB_TABLE);
-    let mut reg: Vec<(usize, usize)> = vec![(this.addr() + cup::ENTRANT_COUNT, 4), (this.addr() + cup::TEAM_COUNT, 2), (this.addr() + 0xb2, 1), (G_MOUSE_LEFT_BUTTON_DOWN, 4)];
-    reg.extend((0..read_usize(G_CLUB_COUNT)).map(|i| (base + i * club::SIZE + 0x1db, 4)));
+    let mut reg: Vec<(usize, usize)> = vec![(this.addr() + cup::ENTRANT_COUNT, 4), (this.addr() + cup::TEAM_COUNT, 2), (this.addr() + uefa_cup::PRELIMINARY_CLUB_COUNT, 1), (G_MOUSE_LEFT_BUTTON_DOWN, 4)];
+    reg.extend((0..read_usize(G_CLUB_COUNT)).map(|i| (base + i * club::SIZE + club::CONTINENTAL_COMP_ID, 4)));
     let lo = core::cell::Cell::new((0usize, 0usize));
     let lr = core::cell::Cell::new((0usize, 0usize));
     let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {

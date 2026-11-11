@@ -16,7 +16,7 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_groups(this: usize) -> usize
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_DRAW_GROUPS);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend_from_slice(&[(this.addr() + 0xee, 0xa0), (this.addr() + league::ENTRANT_COUNT, 2), (G_MOUSE_LEFT_BUTTON_DOWN, 4)]);
+    reg.extend_from_slice(&[(this.addr() + world_cup_fields::DRAW_SLOT_CLUB, 0xa0), (this.addr() + league::ENTRANT_COUNT, 2), (G_MOUSE_LEFT_BUTTON_DOWN, 4)]);
     if this.year() == 0x7d2 && this.entrant_book() != 0 {
         reg.push((this.entrant_book(), 0xc0));
     }
@@ -200,7 +200,7 @@ pub(crate) unsafe extern "thiscall" fn compare_seed_teams(this: usize) {
     if this.year() != 0x7d2 {
         return o(this.addr());
     }
-    let reg = [(this.addr() + league::ENTRANT_COUNT, 0x16usize), (this.addr() + 0xee, 0xa0usize)];
+    let reg = [(this.addr() + league::ENTRANT_COUNT, 0x16usize), (this.addr() + world_cup_fields::DRAW_SLOT_CLUB, 0xa0usize)];
     let (_, _, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this.addr()), || seed_teams(this.addr()));
     SCOREBOARD.record(igual, || "seed_teams: a Copa de 2002 mudou".to_string());
 }

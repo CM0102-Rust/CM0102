@@ -8224,6 +8224,11 @@ impl Fixture {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
+    /// `fixture::SIZE` (+0x4f). Name: read.
+    #[inline(always)]
+    pub(crate) fn size_addr(self) -> usize {
+        self.0 + fixture::SIZE
+    }
     /// `fixture::COMP_ID` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn comp_id(self) -> i32 {
@@ -11112,6 +11117,11 @@ impl CupRound {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
+    /// `cup_round::SIZE` (+0x68). Name: read.
+    #[inline(always)]
+    pub(crate) fn size_addr(self) -> usize {
+        self.0 + cup_round::SIZE
+    }
     /// `cup_round::DAY` (+0x3). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn day(self) -> i16 {
@@ -13244,6 +13254,11 @@ impl LeagueRoundDate {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
+    /// `league_round_date::SIZE` (+0x41). Name: read.
+    #[inline(always)]
+    pub(crate) fn size_addr(self) -> usize {
+        self.0 + league_round_date::SIZE
+    }
     /// `league_round_date::DAY` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn day(self) -> i16 {
@@ -13346,6 +13361,11 @@ impl LeagueTableRow {
     #[inline(always)]
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
+    }
+    /// `league_table_row::SIZE` (+0x3b). Name: read.
+    #[inline(always)]
+    pub(crate) fn size_addr(self) -> usize {
+        self.0 + league_table_row::SIZE
     }
     /// `league_table_row::CLUB` (+0x0). Name: read.
     #[inline(always)]
@@ -15740,6 +15760,11 @@ impl MatchRecordRow {
     #[inline(always)]
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
+    }
+    /// `match_record_row::SIZE` (+0x49). Name: read.
+    #[inline(always)]
+    pub(crate) fn size_addr(self) -> usize {
+        self.0 + match_record_row::SIZE
     }
     /// `match_record_row::STAFF_ID` (+0x0). Name: read.
     #[inline(always)]
@@ -19969,6 +19994,11 @@ impl StaffState {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
+    /// `staff_state::SIZE` (+0x4f). Name: read.
+    #[inline(always)]
+    pub(crate) fn size_addr(self) -> usize {
+        self.0 + staff_state::SIZE
+    }
     /// `staff_state::INJURY_COUNTER` (+0xa). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn injury_counter(self) -> u8 {
@@ -21401,6 +21431,11 @@ impl FormationFields {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
+    /// `formation_fields::SIZE` (+0x18e3). Name: read.
+    #[inline(always)]
+    pub(crate) fn size_addr(self) -> usize {
+        self.0 + formation_fields::SIZE
+    }
     /// `formation_fields::PASSWORD` (+0x33). Name: verified.
     #[inline(always)]
     pub(crate) unsafe fn password(self) -> u8 {
@@ -22048,6 +22083,11 @@ impl SideStats {
     #[inline(always)]
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
+    }
+    /// `side_stats::SIZE` (+0x36). Name: read.
+    #[inline(always)]
+    pub(crate) fn size_addr(self) -> usize {
+        self.0 + side_stats::SIZE
     }
     /// `side_stats::CAPTAIN` (+0x11). Name: read.
     #[inline(always)]
@@ -24472,6 +24512,15 @@ impl SaveSummary {
     #[inline(always)]
     pub(crate) fn game_date_addr(self) -> usize {
         self.0 + save_summary::GAME_DATE
+    }
+    /// `save_summary::PLAY_TIME_TOTAL` (+0xf6c). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn play_time_total(self) -> i32 {
+        read_i32(self.0 + save_summary::PLAY_TIME_TOTAL)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_play_time_total(self, v: i32) {
+        write_i32(self.0 + save_summary::PLAY_TIME_TOTAL, v)
     }
 }
 

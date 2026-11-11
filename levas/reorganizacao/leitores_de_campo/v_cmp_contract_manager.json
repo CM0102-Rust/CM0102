@@ -1,0 +1,68 @@
+[
+ {
+  "line": 76,
+  "offset": "0x190",
+  "base": "summary + side*0x625 (match record)",
+  "module": "match_record",
+  "verdict": "existing",
+  "name": "ROW_STAFF_ID",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "start of player row k (staff id at +0), 0x49-byte rows",
+  "confidence": "verified",
+  "evidence": "match_record::ROW_STAFF_ID 0x190 = HOME_TEAM 0x11f + match_record_team::ROWS 0x71; staff_of_summary_slot reads it"
+ },
+ {
+  "line": 80,
+  "offset": "0x154",
+  "base": "summary + side*0x625 (match record)",
+  "module": "match_record_team",
+  "verdict": "existing",
+  "name": "FORMATION_X",
+  "width": 2,
+  "rust_type": "i16",
+  "description": "formation slot position word of slot k",
+  "confidence": "read",
+  "evidence": "0x154 = HOME_TEAM 0x11f + FORMATION_X 0x35; same as v_contract_manager line 781",
+  "field_offset": "0x35"
+ },
+ {
+  "line": 540,
+  "offset": "0xd",
+  "base": "e(j) (14-byte decision date entry)",
+  "module": "decision_date",
+  "verdict": "existing",
+  "name": "KIND",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "decision kind (2 = reminder)",
+  "confidence": "verified",
+  "evidence": "decision_date::KIND; entries of DECISION_DATES, 14-byte stride"
+ },
+ {
+  "line": 542,
+  "offset": "0xc",
+  "base": "e(k) (decision date entry)",
+  "module": "decision_date",
+  "verdict": "existing",
+  "name": "SLICE",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "day slice of the decision",
+  "confidence": "verified",
+  "evidence": "decision_date::SLICE; compared with the slice argument"
+ },
+ {
+  "line": 542,
+  "offset": "0xd",
+  "base": "e(k) (decision date entry)",
+  "module": "decision_date",
+  "verdict": "existing",
+  "name": "KIND",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "decision kind",
+  "confidence": "verified",
+  "evidence": "decision_date::KIND; compared with the kind argument"
+ }
+]

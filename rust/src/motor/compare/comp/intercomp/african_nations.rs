@@ -15,8 +15,8 @@ pub(crate) unsafe extern "thiscall" fn compare_african_nations_update_for_date(t
     if draws {
         let stages = this.stages();
         let ok = this.active() == 1
-            && read_usize(this.addr() + 0xee) == 0
-            && read_i16(this.addr() + 0xf2) == 0
+            && read_usize(this.addr() + african_nations::DRAWN_CLUBS) == 0
+            && read_i16(this.addr() + african_nations::DRAWN_CLUB_COUNT) == 0
             && this.table() != 0
             && stages != 0
             && (0..3).all(|g| read_usize(stages + g * 4) != 0)
@@ -68,7 +68,7 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_finalists(this: usize) -> u3
 pub(crate) unsafe extern "thiscall" fn compare_african_nations_create_group_stage(this: usize, g: i32) -> u32 {
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> u32>(IDX_AFRICAN_NATIONS_CREATE_GROUP_STAGE);
-    let list = read_usize(this.addr() + 0xee);
+    let list = read_usize(this.addr() + african_nations::DRAWN_CLUBS);
     if list == 0 || !(0..3).contains(&g) {
         return o(this.addr(), g);
     }
@@ -103,7 +103,7 @@ pub(crate) unsafe extern "thiscall" fn compare_african_nations_advance_stage(thi
 pub(crate) unsafe extern "thiscall" fn compare_init_group_a_table(this: usize) -> u32 {
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_INIT_GROUP_A_TABLE);
-    let list = read_usize(this.addr() + 0xee);
+    let list = read_usize(this.addr() + african_nations::DRAWN_CLUBS);
     if list == 0 {
         return o(this.addr());
     }

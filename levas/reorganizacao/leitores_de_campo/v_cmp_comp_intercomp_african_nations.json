@@ -1,0 +1,80 @@
+[
+ {
+  "line": 18,
+  "offset": "0xee",
+  "base": "this (AfricanNations league)",
+  "module": "african_nations",
+  "verdict": "existing",
+  "name": "DRAWN_CLUBS",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "pointer to the drawn nations list",
+  "confidence": "read",
+  "evidence": "african_nations::DRAWN_CLUBS (v_african_nations)"
+ },
+ {
+  "line": 19,
+  "offset": "0xf2",
+  "base": "this (AfricanNations league)",
+  "module": "african_nations",
+  "verdict": "existing",
+  "name": "DRAWN_CLUB_COUNT",
+  "width": 2,
+  "rust_type": "i16",
+  "description": "number of drawn entries",
+  "confidence": "read",
+  "evidence": "african_nations::DRAWN_CLUB_COUNT"
+ },
+ {
+  "line": 24,
+  "offset": "0x45",
+  "base": "string",
+  "module": "",
+  "verdict": "not_field",
+  "name": "",
+  "width": 0,
+  "rust_type": "",
+  "description": "",
+  "confidence": "verified",
+  "evidence": "offset inside a string literal (log text)"
+ },
+ {
+  "line": 24,
+  "offset": "0x30",
+  "base": "string",
+  "module": "",
+  "verdict": "not_field",
+  "name": "",
+  "width": 0,
+  "rust_type": "",
+  "description": "",
+  "confidence": "verified",
+  "evidence": "offset inside a string literal (log text)"
+ },
+ {
+  "line": 71,
+  "offset": "0xee",
+  "base": "this (AfricanNations league)",
+  "module": "african_nations",
+  "verdict": "existing",
+  "name": "DRAWN_CLUBS",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "pointer to the drawn nations list",
+  "confidence": "read",
+  "evidence": "african_nations::DRAWN_CLUBS (v_african_nations)"
+ },
+ {
+  "line": 106,
+  "offset": "0xee",
+  "base": "this (AfricanNations league)",
+  "module": "african_nations",
+  "verdict": "existing",
+  "name": "DRAWN_CLUBS",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "pointer to the drawn nations list",
+  "confidence": "read",
+  "evidence": "african_nations::DRAWN_CLUBS (v_african_nations)"
+ }
+]

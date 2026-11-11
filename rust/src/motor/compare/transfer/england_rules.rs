@@ -42,7 +42,7 @@ pub(crate) unsafe extern "thiscall" fn compare_england_rules_daily_update(this: 
         return;
     }
     let n = (read_usize(G_CLUB_COUNT) as i32).max(0) as usize;
-    let regions = [(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x91c), n * 16)];
+    let regions = [(read_usize(read_usize(G_TRANSFER_MANAGER) + transfer_manager_fields::SEASON_LOAN_COUNTS), n * 16)];
     let (_, _, igual, _, _) = crate::comparison::side_by_side(&regions, || o(this, data), || england_rules_daily_update(this, data));
     SCOREBOARD.record(igual, || format!("england_rules_daily_update(rules {:#x}) table diverge", this));
 }

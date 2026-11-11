@@ -1,0 +1,80 @@
+[
+ {
+  "line": 18,
+  "offset": "0xee",
+  "base": "this (fra_first league)",
+  "module": "fra_first",
+  "verdict": "existing",
+  "name": "CFA_MARKER",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "pointer to the CFA marker competition",
+  "confidence": "verified",
+  "evidence": "fra_first::CFA_MARKER; checked against KEY_CLUB_COMP_FRENCH_CFA"
+ },
+ {
+  "line": 18,
+  "offset": "0xf2",
+  "base": "this (fra_first league)",
+  "module": "fra_first",
+  "verdict": "existing",
+  "name": "LOWER_MARKER",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "pointer to the French lower division marker competition",
+  "confidence": "verified",
+  "evidence": "fra_first::LOWER_MARKER; checked against KEY_CLUB_COMP_FRENCH_LOWER_DIVISION"
+ },
+ {
+  "line": 22,
+  "offset": "0xee",
+  "base": "-",
+  "module": null,
+  "verdict": "not_field",
+  "name": null,
+  "width": null,
+  "rust_type": null,
+  "description": null,
+  "confidence": "read",
+  "evidence": "offset inside a log format string literal"
+ },
+ {
+  "line": 22,
+  "offset": "0xf2",
+  "base": "-",
+  "module": null,
+  "verdict": "not_field",
+  "name": null,
+  "width": null,
+  "rust_type": null,
+  "description": null,
+  "confidence": "read",
+  "evidence": "offset inside a log format string literal"
+ },
+ {
+  "line": 22,
+  "offset": "0xee",
+  "base": "this (fra_first league)",
+  "module": "fra_first",
+  "verdict": "existing",
+  "name": "CFA_MARKER",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "pointer to the CFA marker competition (logged)",
+  "confidence": "verified",
+  "evidence": "fra_first::CFA_MARKER; read_usize(this + 0xee) in the log arguments"
+ },
+ {
+  "line": 22,
+  "offset": "0xf2",
+  "base": "this (fra_first league)",
+  "module": "fra_first",
+  "verdict": "existing",
+  "name": "LOWER_MARKER",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "pointer to the lower division marker competition (logged)",
+  "confidence": "verified",
+  "evidence": "fra_first::LOWER_MARKER; read_usize(this + 0xf2) in the log arguments"
+ }
+]

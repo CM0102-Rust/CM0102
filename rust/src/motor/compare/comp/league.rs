@@ -45,8 +45,8 @@ pub(crate) unsafe extern "thiscall" fn compare_move_fixtures_for_tv(this: usize,
     };
     let mut block = 0usize;
     let mut validas = 0usize;
-    while block < 8 && read_u8(e + block * 7 + 0xb) != 0xff {
-        if (0..=2).contains(&(read_u8(e + block * 7 + 0xa) as i8)) {
+    while block < 8 && read_u8(e + block * 7 + league_round_date::TV_SLOT_KIND) != 0xff {
+        if (0..=2).contains(&(read_u8(e + block * 7 + league_round_date::TV_SLOT_TIME_SLICE) as i8)) {
             validas += 1;
         }
         block += 1;
@@ -59,7 +59,7 @@ pub(crate) unsafe extern "thiscall" fn compare_move_fixtures_for_tv(this: usize,
     exe::drop_llist(l);
     o(this.addr(), data);
     let expected = if n == 0 { 0 } else { validas.min(n) };
-    let movidas = (0..block).filter(|k| read_u8(e + k * 7 + 0xb) == 0xff).count();
+    let movidas = (0..block).filter(|k| read_u8(e + k * 7 + league_round_date::TV_SLOT_KIND) == 0xff).count();
     SCOREBOARD.record(movidas == expected, || format!("move_fixtures_for_tv(date {:x}) slots {} valid {} games {}: movidas {} (expected {})",
         data, block, validas, n, movidas, expected));
 }
@@ -462,7 +462,7 @@ pub(crate) unsafe extern "thiscall" fn compare_record_final_positions(this: usiz
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_RECORD_FINAL_POSITIONS);
     let reg: Vec<(usize, usize)> = (0..this.club_count().max(0) as usize)
-        .map(|i| (read_usize(this.table() + i * TABLE_ROW_SIZE) + 0x5b, 5))
+        .map(|i| (read_usize(this.table() + i * TABLE_ROW_SIZE) + club::LAST_DIVISION, 5))
         .collect();
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this.addr()), || record_final_positions(this.addr()));
     SCOREBOARD.record(igual, || format!("record_final_positions {:x?} x {:x?}", mo, mr));
@@ -703,7 +703,7 @@ pub(crate) unsafe extern "thiscall" fn compare_limit_club_division_tier(this: us
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32)>(IDX_LIMIT_CLUB_DIVISION_TIER);
     let n = this.club_count();
     let table = this.table();
-    let reg: Vec<(usize, usize)> = (0..n.max(0) as usize).map(|i| (read_usize(table + i * 0x3b) + 0x64, 1)).collect();
+    let reg: Vec<(usize, usize)> = (0..n.max(0) as usize).map(|i| (read_usize(table + i * 0x3b) + club::PROFESSIONAL_STATUS, 1)).collect();
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this.addr(), value, away, inside, baixar),
         || limit_club_division_tier(this.addr(), value, away, inside, baixar));
     SCOREBOARD.record(igual, || format!("limit_club_division_tier(value {}, away {:x}, inside {:x}, baixar {}) {:x?} x {:x?}",

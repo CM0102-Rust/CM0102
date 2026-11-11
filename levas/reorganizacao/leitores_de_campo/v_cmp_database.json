@@ -1,0 +1,93 @@
+[
+ {
+  "line": 1700,
+  "offset": "0x8ea0",
+  "base": "this (engine)",
+  "module": "engine",
+  "verdict": "existing",
+  "name": "SHOOTOUT_KICKS_TAKEN + 1",
+  "width": 32,
+  "rust_type": "[u8]",
+  "description": "start of the compared window of shoot-out/ball bytes (0x8ea0..)",
+  "confidence": "read",
+  "evidence": "compare window start; engine SHOOTOUT_KICKS_TAKEN 0x8e9f + 1 (same verdict as v_match_eng)"
+ },
+ {
+  "line": 1700,
+  "offset": "0x4780",
+  "base": "this (engine)",
+  "module": "engine",
+  "verdict": "existing",
+  "name": "BALL_RECEIVER + 2",
+  "width": 16,
+  "rust_type": "[u8]",
+  "description": "compared window over the ball receiver, momentum and fouled player words",
+  "confidence": "read",
+  "evidence": "compare window start; engine BALL_RECEIVER 0x477e (4 bytes) + 2, window runs over MOMENTUM_A/B and FOULED_PLAYER"
+ },
+ {
+  "line": 1700,
+  "offset": "0xf570",
+  "base": "this (engine)",
+  "module": "engine",
+  "verdict": "existing",
+  "name": "FORMATION_TABLE + 2",
+  "width": 32,
+  "rust_type": "[u8]",
+  "description": "compared window over the formation tables and the player pointers (passer, holder...)",
+  "confidence": "read",
+  "evidence": "compare window start; engine FORMATION_TABLE 0xf56e + 2, window runs over PASSER, SET_PIECE_TAKER, BALL_HOLDER"
+ },
+ {
+  "line": 1700,
+  "offset": "0x1a0",
+  "base": "this (engine)",
+  "module": "engine",
+  "verdict": "existing",
+  "name": "PENDING_INCIDENTS + 0xef",
+  "width": 16,
+  "rust_type": "[u8]",
+  "description": "compared window from the end of the pending incidents (count, shot and shoot-out bytes follow)",
+  "confidence": "read",
+  "evidence": "engine PENDING_INCIDENTS 0xb1 (22 entries of 11 bytes up to PENDING_INCIDENT_COUNT 0x1a3); 0x1a0 = +0xef"
+ },
+ {
+  "line": 1703,
+  "offset": "0x29",
+  "base": "owner = ball_holder() (match player)",
+  "module": "match_player",
+  "verdict": "existing",
+  "name": "SPACE_ON_BALL",
+  "width": 2,
+  "rust_type": "i16",
+  "description": "space on the ball while holding it",
+  "confidence": "read",
+  "evidence": "ball holder; match_player::SPACE_ON_BALL, zeroed when he releases the ball"
+ },
+ {
+  "line": 1703,
+  "offset": "0x19c",
+  "base": "owner (match player)",
+  "module": "match_player",
+  "verdict": "existing",
+  "name": "BALL_CONTROL",
+  "width": 2,
+  "rust_type": "i16",
+  "description": "control margin word",
+  "confidence": "read",
+  "evidence": "ball holder; match_player::BALL_CONTROL"
+ },
+ {
+  "line": 1730,
+  "offset": "0x5bf",
+  "base": "this (formation)",
+  "module": "formation_fields",
+  "verdict": "existing",
+  "name": "DESIGNATED_PEOPLE",
+  "width": 4,
+  "rust_type": "i32",
+  "description": "designated person of the position (+4 x position)",
+  "confidence": "read",
+  "evidence": "mark_position; formation_fields::DESIGNATED_PEOPLE (v_database)"
+ }
+]

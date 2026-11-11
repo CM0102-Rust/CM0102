@@ -78,7 +78,7 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_reg_rio_create_final_stage(th
     let (a, b) = (half_champion(this, 0), half_champion(this, 1));
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_RIO_CREATE_FINAL_STAGE)(this.addr());
     let same = if a == b {
-        let mark = |k: usize| read_u8(read_usize(read_usize(this.stages() + 4 * k) + 0xb1) + 0x37) == 5;
+        let mark = |k: usize| read_u8(read_usize(read_usize(this.stages() + 4 * k) + league::TABLE) + league_table_row::STATUS) == 5;
         let in_league = (0..this.club_count().max(0) as usize).all(|i| {
             let row = LeagueTableRow(this.table() + i * league_table_row::SIZE);
             read_usize(row.addr()) != a || row.status() == table_status::CHAMPIONS

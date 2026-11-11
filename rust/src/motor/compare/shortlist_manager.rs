@@ -140,12 +140,12 @@ pub(crate) unsafe extern "thiscall" fn compare_update_staff_status(this: usize, 
     }
     let mut reg = STAFF_STATUS_DATE_STATICS.to_vec();
     for base in [this, this + shortlist_manager_fields::PAIRS_BY_CLUB] {
-        reg.push((base + 0x10, 4));
+        reg.push((base + shortlist_manager_fields::PAIRS_BY_PERSON_COUNT, 4));
         if read_usize(base) != 0 {
-            reg.push((read_usize(base), read_usize(base + 0x10).wrapping_mul(8)));
+            reg.push((read_usize(base), read_usize(base + shortlist_manager_fields::PAIRS_BY_PERSON_COUNT).wrapping_mul(8)));
         }
     }
-    reg.push((read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person).wrapping_mul(staff_state::SIZE)) + 0xb, 1));
+    reg.push((read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person).wrapping_mul(staff_state::SIZE)) + staff_state::STATUS_FLAGS, 1));
     if club != 0 {
         let entry = shortlist_club_entry(this, club);
         reg.push((read_usize(entry), 40 * 0x25));
@@ -330,7 +330,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_shortlist_entry(this: usize, 
     let key = [read_usize(person) as u32, if club != 0 { read_usize(club) as u32 } else { 0xffff_ffff }];
     let tinha = read_usize(this) != 0 && exe::crt_bsearch((key.as_ptr()) as usize, read_usize(this), read_i32(this + shortlist_manager_fields::PAIRS_BY_PERSON_COUNT) as u32, 8, 0x757ea0) != 0;
     let (n0, n1) = if read_usize(this) != 0 { (read_i32(this + shortlist_manager_fields::PAIRS_BY_PERSON_COUNT), read_i32(this + shortlist_manager_fields::PAIRS_BY_CLUB_COUNT)) } else { (0, 0) };
-    let r = read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person).wrapping_mul(staff_state::SIZE)) + 0xb;
+    let r = read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person).wrapping_mul(staff_state::SIZE)) + staff_state::STATUS_FLAGS;
     let nib = read_u8(r);
     let sum = !tinha && exe::human_manager_is_human_club(club, 0, 1, (0) as u32, 0) == 0;
     o(this, person, club);

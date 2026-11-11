@@ -114,7 +114,7 @@ pub(crate) unsafe extern "thiscall" fn compare_select_squad(this: usize, nation:
     antes.write_back();
     let reg = squad_nation_record(this, nation);
     let r = reg.wrapping_add((t as i32 * 0x14) as usize);
-    let size = read_u8(r + 0x42);
+    let size = read_u8(r + national_squad_record::MAX_SQUAD_SIZE);
     let (elenco, _, _) = squad_team_for_type(nation, t);
     let mode: u32 = if t == 1 { 0x2100914 } else if t != 2 { 0x2000814 } else { 0x814 };
     let mut cand = [0usize; 200];
@@ -202,7 +202,7 @@ pub(crate) unsafe extern "thiscall" fn compare_collect_duty_competitions(this: u
 pub(crate) unsafe extern "thiscall" fn compare_select_squads_for_fixture(this: usize, p: usize) {
     let p = Fixture(p);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SELECT_SQUADS_FOR_FIXTURE);
-    let regions = [(club_nation_record(this, p.home_club()) + 0x32, 0x3a), (club_nation_record(this, p.away_club()) + 0x32, 0x3a)];
+    let regions = [(club_nation_record(this, p.home_club()) + national_squad_record::SQUAD_STAMP_DATE, 0x3a), (club_nation_record(this, p.away_club()) + national_squad_record::SQUAD_STAMP_DATE, 0x3a)];
     let before = crate::comparison::MemorySnapshot::read(&regions);
     o(this, p.addr());
     let mo = crate::comparison::MemorySnapshot::read(&regions);
@@ -511,7 +511,7 @@ pub(crate) unsafe extern "thiscall" fn compare_release_overage_u21_players(this:
     if team.is_null() {
         return o(this, nation);
     }
-    let mut reg = vec![(nation_record_by_id(this, nation) + 0x6b, 1), (team.addr() + club::SQUAD, 200)];
+    let mut reg = vec![(nation_record_by_id(this, nation) + national_squad_record::U21_CALLED_UP_MARK, 1), (team.addr() + club::SQUAD, 200)];
     reg.extend((0..50usize).map(|c| team.squad(c)).filter(|&p| p != 0).map(|p| (p + staff::NATIONAL_JOB, 0x3b)));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, nation), || release_overage_u21_players(this, nation));
     SCOREBOARD.record(igual, || format!("release_overage_u21_players({:x}, {:x}) {:x?} x {:x?}", this, nation, mo, mr));
@@ -556,7 +556,7 @@ pub(crate) unsafe extern "thiscall" fn compare_build_selection_pools(this: usize
         let rec = recs + 0x6e * i;
         for sub in 0..2usize {
             let o = 0x15 * sub;
-            let total: usize = (0..4).map(|k| read_u8(rec + o + 0xe + 4 * k) as usize).sum();
+            let total: usize = (0..4).map(|k| read_u8(rec + o + national_squad_record::RESERVE_LEVEL_CAPACITY + 4 * k) as usize).sum();
             if total > 0 {
                 reg.push((read_usize(this + national_teams_fields::RESERVE_POOLS + 4 * sub).wrapping_add(4 * read_usize(rec + o + 8)), 4 * total));
             }
@@ -597,7 +597,7 @@ pub(crate) unsafe extern "thiscall" fn compare_national_teams_remove_player(this
     let n = exe::national_teams_get_position_group(player, (reg as *const i16) as usize, (0) as u32) as i8 as isize;
     let mut regions = [(player.addr(), 110), (reg, 110), (player.addr(), 0), (player.addr(), 0)];
     if (0..=3).contains(&n) {
-        let start = (0..n as usize).fold(u(reg + 8) as i32, |s, k| s.wrapping_add(read_u8(reg + 0xe + 4 * k) as i32));
+        let start = (0..n as usize).fold(u(reg + 8) as i32, |s, k| s.wrapping_add(read_u8(reg + national_squad_record::RESERVE_LEVEL_CAPACITY + 4 * k) as i32));
         let size = read_u8(reg + national_squad_record::RESERVE_GROUPS + 4 * n as usize) as usize;
         if start >= 0 && size > 0 {
             regions[2] = (read_usize(this + national_teams_fields::RESERVE_POOLS) + 4 * start as usize, 4 * size);
@@ -706,7 +706,7 @@ pub(crate) unsafe extern "thiscall" fn compare_record_club_call_ups(this: usize,
 /// Comparer for `set_person_44`.
 pub(crate) unsafe extern "thiscall" fn compare_set_person_44(this: usize, person: usize, k: i8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8)>(IDX_SET_PERSON_44);
-    let reg = [(person_block(this, person, k) + 0x44, 1)];
+    let reg = [(person_block(this, person, k) + national_squad_record::SQUAD_SELECTED, 1)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, person, k), || set_person_44(this, person, k));
     SCOREBOARD.record(igual, || format!("set_person_44 original={:x?} rust={:x?}", mo, mr));
 }

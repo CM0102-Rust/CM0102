@@ -218,8 +218,8 @@ pub(crate) unsafe extern "thiscall" fn compare_procurar(this: usize, side: i8, g
     // (0x2b, 0x19) and may remove it from the list, so the list, the count and these bytes of each player
     // go into the regions (the tape records them after each call).
     let list = (group as isize + side as isize * 44) as *const usize;
-    let mut regions = vec![(this.addr() + engine::SIDE_PLAYED_BALL, 2), ((group as isize + side as isize) as usize + 0x58, 1), (list as usize, 44)];
-    for i in 0..read_i8((group as isize + side as isize) as usize + 0x58).clamp(0, 11) as usize {
+    let mut regions = vec![(this.addr() + engine::SIDE_PLAYED_BALL, 2), ((group as isize + side as isize) as usize + grid_cell::OCCUPANT_COUNT, 1), (list as usize, 44)];
+    for i in 0..read_i8((group as isize + side as isize) as usize + grid_cell::OCCUPANT_COUNT).clamp(0, 11) as usize {
         let p = *list.add(i);
         regions.extend([(p + match_player::POSITION, 1), (p + match_player::BUSY, 1)]);
     }
@@ -389,7 +389,7 @@ pub(crate) unsafe extern "thiscall" fn compare_hold_position_one(this: usize, l:
     let f = original_fn::<unsafe extern "thiscall" fn(usize, i8) -> usize>(IDX_HOLD_POSITION_ONE);
     let mut regions = vec![(this.addr() + engine::GOALKEEPER, 8)];
     for k in 0..40 {
-        regions.push((this.player(k / 20 , ((k % 20)) as usize).addr() + 0x19, 2));
+        regions.push((this.player(k / 20 , ((k % 20)) as usize).addr() + match_player::POSITION, 2));
     }
     let (r, n, igual, _, _) = crate::comparison::side_by_side(&regions, || f(this.addr(), l), || hold_position_one(this.addr(), l));
     SCOREBOARD.record(igual && r == n, || format!("hold_position_one({}) original={:#x} rust={:#x} memory equal={}", l, r, n, igual));
@@ -450,7 +450,7 @@ pub(crate) unsafe extern "thiscall" fn compare_read_8f7a(this: usize) -> u32 {
 pub(crate) unsafe extern "thiscall" fn compare_posse(this: usize, v: i8) {
     let this = Engine(this);
     let f = original_fn::<unsafe extern "thiscall" fn(usize, i8)>(IDX_RECORD_POSSESSION);
-    let regions = [(this.addr() + engine::LAST_POSSESSION_SIDE, 1), ((this.addr() as isize + 0x8d46 + v as isize) as usize, 1), (this.addr() + engine::POSSESSION_COUNTER, 2)];
+    let regions = [(this.addr() + engine::LAST_POSSESSION_SIDE, 1), ((this.addr() as isize + (engine::POSSESSION_COUNTER as isize) + v as isize) as usize, 1), (this.addr() + engine::POSSESSION_COUNTER, 2)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || f(this.addr(), v), || record_possession(this.addr(), v));
     SCOREBOARD.record(igual, || format!("record_possession({}) original={:x?} rust={:x?}", v, mo, mr));
 }

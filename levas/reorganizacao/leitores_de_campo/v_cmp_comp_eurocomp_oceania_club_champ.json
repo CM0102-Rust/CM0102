@@ -1,0 +1,80 @@
+[
+ {
+  "line": 18,
+  "offset": "0xee",
+  "base": "this",
+  "module": "oceania_club_champ",
+  "verdict": "existing",
+  "name": "DRAWN_CLUBS",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "pointer to the drawn team list",
+  "confidence": "read",
+  "evidence": "zeroed after the draw builds the groups / read as the list of teams"
+ },
+ {
+  "line": 19,
+  "offset": "0xf2",
+  "base": "this",
+  "module": "oceania_club_champ",
+  "verdict": "existing",
+  "name": "DRAWN_CLUB_COUNT",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "number of teams in DRAWN_CLUBS",
+  "confidence": "read",
+  "evidence": "zeroed with the list after the draw"
+ },
+ {
+  "line": 24,
+  "offset": "0x45",
+  "base": "string",
+  "module": null,
+  "verdict": "not_field",
+  "name": null,
+  "width": null,
+  "rust_type": null,
+  "description": null,
+  "confidence": "read",
+  "evidence": "offset inside a log string literal"
+ },
+ {
+  "line": 24,
+  "offset": "0x30",
+  "base": "string",
+  "module": null,
+  "verdict": "not_field",
+  "name": null,
+  "width": null,
+  "rust_type": null,
+  "description": null,
+  "confidence": "read",
+  "evidence": "offset inside a log string literal"
+ },
+ {
+  "line": 33,
+  "offset": "0xee",
+  "base": "this",
+  "module": "oceania_club_champ",
+  "verdict": "existing",
+  "name": "DRAWN_CLUBS",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "pointer to the drawn team list",
+  "confidence": "read",
+  "evidence": "zeroed after the draw builds the groups / read as the list of teams"
+ },
+ {
+  "line": 55,
+  "offset": "0xee",
+  "base": "this",
+  "module": "oceania_club_champ",
+  "verdict": "existing",
+  "name": "DRAWN_CLUBS",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "pointer to the drawn team list",
+  "confidence": "read",
+  "evidence": "zeroed after the draw builds the groups / read as the list of teams"
+ }
+]

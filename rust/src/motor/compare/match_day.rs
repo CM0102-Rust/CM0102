@@ -134,17 +134,17 @@ pub(crate) unsafe extern "C" fn compare_post_match_players(fixture: usize, t: us
             let p = Staff((g(G_STAFF_TABLE) as isize + id as isize * (staff::SIZE as isize)) as usize);
             let f = p.player();
             if !f.is_null() {
-                reg.extend([(f.addr() + 0x45, 1), (f.addr() + 9, 6)]);
+                reg.extend([(f.addr() + player_sheet::PLAYER_MORALE, 1), (f.addr() + 9, 6)]);
                 reg.extend(contract_flags_region(p.addr(), club.addr()));
             }
         }
-        let id = read(ts + 0x184);
+        let id = read(ts + match_record::HOME_MANAGER_ID);
         if id > -1 {
             let manager = Staff((g(G_STAFF_TABLE) as isize + id as isize * (staff::SIZE as isize)) as usize);
             let mut sheets = vec![manager.non_player()];
-            for a in [club.assistant_manager(), read_usize(club.addr() + club::COACHES), g(club.addr() + 0x1a3), g(club.addr() + 0x1a7), g(club.addr() + 0x1ab), g(club.addr() + 0x1af)] {
+            for a in [club.assistant_manager(), read_usize(club.addr() + club::COACHES), g(club.addr() + club::COACHES + 0x4), g(club.addr() + club::COACHES + 0x8), g(club.addr() + club::COACHES + 0xc), g(club.addr() + club::COACHES + 0x10)] {
                 if a != 0 {
-                    sheets.push(NonPlayer(g(a + 0x69)));
+                    sheets.push(NonPlayer(g(a + staff::NON_PLAYER)));
                 }
             }
             for f in sheets.into_iter().filter(|&f| !f.is_null()) {

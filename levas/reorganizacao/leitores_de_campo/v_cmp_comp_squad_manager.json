@@ -1,0 +1,54 @@
+[
+ {
+  "line": 78,
+  "offset": "0x3a",
+  "base": "k (contract)",
+  "module": "contract",
+  "verdict": "existing",
+  "name": "SQUAD_NUMBER",
+  "width": 1,
+  "rust_type": "i8",
+  "description": "squad number",
+  "confidence": "verified",
+  "evidence": "contract (or loan contract) from contract_manager_get_contract; contract::SQUAD_NUMBER"
+ },
+ {
+  "line": 157,
+  "offset": "0x58",
+  "base": "vtable of the league",
+  "module": "",
+  "verdict": "not_field",
+  "name": "",
+  "width": 0,
+  "rust_type": "",
+  "description": "",
+  "confidence": "verified",
+  "evidence": "vtable slot +0x58 (club list method)"
+ },
+ {
+  "line": 180,
+  "offset": "0x3a",
+  "base": "ct (contract)",
+  "module": "contract",
+  "verdict": "existing",
+  "name": "SQUAD_NUMBER",
+  "width": 1,
+  "rust_type": "i8",
+  "description": "squad number",
+  "confidence": "verified",
+  "evidence": "contract (or loan contract) from contract_manager_get_contract; contract::SQUAD_NUMBER"
+ },
+ {
+  "line": 181,
+  "offset": "0x3a",
+  "base": "ct (contract)",
+  "module": "contract",
+  "verdict": "existing",
+  "name": "SQUAD_NUMBER",
+  "width": 1,
+  "rust_type": "i8",
+  "description": "squad number",
+  "confidence": "verified",
+  "evidence": "contract (or loan contract) from contract_manager_get_contract; contract::SQUAD_NUMBER"
+ }
+]

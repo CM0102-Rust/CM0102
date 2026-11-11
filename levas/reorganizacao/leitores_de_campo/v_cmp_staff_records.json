@@ -1,0 +1,56 @@
+[
+ {
+  "line": 300,
+  "offset": "0xba",
+  "base": "manager record",
+  "module": "manager_record",
+  "verdict": "existing",
+  "name": "SEASON_POINTS",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "base of the season points block",
+  "confidence": "read",
+  "evidence": "manager_record_at + 0xba, as v_staff_records 1948"
+ },
+ {
+  "line": 301,
+  "offset": "0xc",
+  "base": "s = record + 0xba",
+  "module": "manager_record",
+  "verdict": "existing",
+  "name": "NATIONAL_NATION",
+  "width": 4,
+  "rust_type": "i32",
+  "description": "nation id of NATIONAL_SEASON_POINTS",
+  "confidence": "read",
+  "evidence": "0xba + 0xc = 0xc6, as v_staff_records 1949",
+  "field_offset": "0xc6"
+ },
+ {
+  "line": 317,
+  "offset": "0xba",
+  "base": "manager record",
+  "module": "manager_record",
+  "verdict": "existing",
+  "name": "SEASON_POINTS",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "base of the season points block",
+  "confidence": "read",
+  "evidence": "manager_record_at + 0xba"
+ },
+ {
+  "line": 318,
+  "offset": "0xc",
+  "base": "s = record + 0xba",
+  "module": "manager_record",
+  "verdict": "existing",
+  "name": "NATIONAL_NATION",
+  "width": 4,
+  "rust_type": "i32",
+  "description": "nation id of NATIONAL_SEASON_POINTS",
+  "confidence": "read",
+  "evidence": "0xba + 0xc = 0xc6",
+  "field_offset": "0xc6"
+ }
+]

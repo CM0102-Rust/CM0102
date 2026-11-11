@@ -1,0 +1,54 @@
+[
+ {
+  "line": 22,
+  "offset": "0xa8",
+  "base": "na = G_NATION_TABLE + k x 0x122 (nation)",
+  "module": "nation",
+  "verdict": "existing",
+  "name": "FIFA_COEFFICIENT",
+  "width": 8,
+  "rust_type": "f64",
+  "description": "FIFA coefficient (double) copied into the history",
+  "confidence": "verified",
+  "evidence": "nation::FIFA_COEFFICIENT, docs/FORMATOS TNation +0xa8"
+ },
+ {
+  "line": 27,
+  "offset": "0x121",
+  "base": "na = G_NATION_TABLE + k x 0x122 (nation)",
+  "module": "nation",
+  "verdict": "existing",
+  "name": "GAMES_PLAYED",
+  "width": 1,
+  "rust_type": "i8",
+  "description": "games played counter (mark < 12 in the December roll)",
+  "confidence": "verified",
+  "evidence": "nation::GAMES_PLAYED, docs/FORMATOS NationGamesPlayed; the routine game.rs uses the same constant"
+ },
+ {
+  "line": 38,
+  "offset": "0x121",
+  "base": "na = G_NATION_TABLE + k x 0x122 (nation)",
+  "module": "nation",
+  "verdict": "existing",
+  "name": "GAMES_PLAYED",
+  "width": 1,
+  "rust_type": "i8",
+  "description": "games played counter compared with the plan",
+  "confidence": "verified",
+  "evidence": "same as line 27"
+ },
+ {
+  "line": 39,
+  "offset": "0x121",
+  "base": "na = G_NATION_TABLE + k x 0x122 (nation)",
+  "module": "nation",
+  "verdict": "existing",
+  "name": "GAMES_PLAYED",
+  "width": 1,
+  "rust_type": "i8",
+  "description": "games played counter, logged",
+  "confidence": "verified",
+  "evidence": "same as line 27 (code, not the string)"
+ }
+]

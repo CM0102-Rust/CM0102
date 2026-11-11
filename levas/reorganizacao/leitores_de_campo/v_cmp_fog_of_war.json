@@ -1,0 +1,15 @@
+[
+ {
+  "line": 43,
+  "offset": "0x190",
+  "base": "data (match record)",
+  "module": "match_record",
+  "verdict": "existing",
+  "name": "ROW_STAFF_ID",
+  "width": 4,
+  "rust_type": "i32",
+  "description": "staff id of a player row",
+  "confidence": "read",
+  "evidence": "data + 0x625 x side + 0x190 + 0x49 x slot, as v_fog_of_war 75"
+ }
+]

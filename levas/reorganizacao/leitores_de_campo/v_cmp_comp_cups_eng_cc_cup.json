@@ -1,0 +1,41 @@
+[
+ {
+  "line": 17,
+  "offset": "0xb2",
+  "base": "this (eng_cc_cup)",
+  "module": "eng_cc_cup",
+  "verdict": "existing",
+  "name": "EUROPEAN_ENTRANT_COUNT",
+  "width": 1,
+  "rust_type": "i8",
+  "description": "count of entrants in European cups",
+  "confidence": "verified",
+  "evidence": "eng_cc_cup::EUROPEAN_ENTRANT_COUNT; zeroed and counted by collect_entrants"
+ },
+ {
+  "line": 26,
+  "offset": "0x439",
+  "base": "read_usize(G_UEFA_SEEDING)",
+  "module": "uefa_seeding",
+  "verdict": "existing",
+  "name": "SEASON_YEAR",
+  "width": 2,
+  "rust_type": "u16",
+  "description": "season year of the UEFA seeding",
+  "confidence": "verified",
+  "evidence": "uefa_seeding::SEASON_YEAR; compared with the cup YEAR, as v_eng_cc_cup line 591"
+ },
+ {
+  "line": 29,
+  "offset": "0x45",
+  "base": "-",
+  "module": null,
+  "verdict": "not_field",
+  "name": null,
+  "width": null,
+  "rust_type": null,
+  "description": null,
+  "confidence": "read",
+  "evidence": "offset inside a log format string literal"
+ }
+]

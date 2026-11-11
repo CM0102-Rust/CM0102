@@ -1,0 +1,28 @@
+[
+ {
+  "line": 228,
+  "offset": "0x34dc",
+  "base": "string",
+  "module": null,
+  "verdict": "not_field",
+  "name": null,
+  "width": null,
+  "rust_type": null,
+  "description": null,
+  "confidence": "read",
+  "evidence": "offset inside a log string literal (PLANNED_NEXT_INDEX label)"
+ },
+ {
+  "line": 608,
+  "offset": "0x16",
+  "base": "list",
+  "module": null,
+  "verdict": "not_field",
+  "name": null,
+  "width": null,
+  "rust_type": null,
+  "description": null,
+  "confidence": "read",
+  "evidence": "0x16 * i: stride of the candidate list"
+ }
+]

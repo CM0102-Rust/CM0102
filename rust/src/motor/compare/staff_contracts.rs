@@ -84,7 +84,7 @@ pub(crate) unsafe extern "thiscall" fn compare_clear_all_grievances(this: usize,
     if check != 0 {
         return o(this, check);
     }
-    let mut reg = vec![(this + 0x45, 4)];
+    let mut reg = vec![(this + contract::GRIEVANCES, 4)];
     if let Some(c) = database_staff_state_record(staff_of_contract(Contract(this))) {
         reg.push((c, 79));
     }
@@ -117,7 +117,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_flags(c: usize, marks: u32) {
     if marks as i32 > 0x1000 {
         return o(c, marks);
     }
-    let mut regions = vec![(c + 0x40, 4)];
+    let mut regions = vec![(c + contract::FLAGS, 4)];
     regions.extend(crate::rng::STATE_REGIONS);
     let before = crate::comparison::MemorySnapshot::read(&regions);
     MISS_TRAINING_DRY_RUN.store(true, Relaxed);

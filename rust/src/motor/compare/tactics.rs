@@ -14,7 +14,7 @@ pub(crate) unsafe extern "thiscall" fn compare_stored_taker(this: usize, club: u
     let k = row(club, human);
     let mut reg = vec![(G_MOUSE_LEFT_BUTTON_DOWN, 4)];
     if k != -1 {
-        reg.push((read_usize(this + tactics_fields::ROWS).wrapping_add(k as usize * 0x91 + 0x5e + (l as i32 + t as i32 * 2) as usize * 4), 4));
+        reg.push((read_usize(this + tactics_fields::ROWS).wrapping_add(k as usize * 0x91 + tactics_row::SET_PIECE_TAKERS + (l as i32 + t as i32 * 2) as usize * 4), 4));
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club, kind, side, human), || stored_taker(this, club, kind, side, human));
     SCOREBOARD.record(igual && r == n, || format!("stored_taker(kind {} side {}) original={:#x} rust={:#x} {:x?} x {:x?}", t, l, r, n, mo, mr));
@@ -106,7 +106,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_captain(this: usize, club: us
     if k == -1 {
         return o(this, club, person, team);
     }
-    let p = read_usize(this + tactics_fields::ROWS).wrapping_add((k as isize * 0x91) as usize) + 0x52;
+    let p = read_usize(this + tactics_fields::ROWS).wrapping_add((k as isize * 0x91) as usize) + tactics_row::CAPTAIN;
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(p, 4)], || o(this, club, person, team), || set_captain(this, club, person, team));
     SCOREBOARD.record(igual && r == n, || format!("set_captain(club {:x}, team {}) original={} rust={} {:x?} x {:x?}", club, team, r, n, mo, mr));
     r
@@ -215,7 +215,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_club_tactic(this: usize, club
     let mut reg = Vec::new();
     if manager != 0 && t != 0 {
         if let Some(k) = human_manager_human_manager_index(manager, t) {
-            reg.push((human_manager_record_at(manager, k) + 0x9a69, 1));
+            reg.push((human_manager_record_at(manager, k) + human_manager_record::ACTIVE_TACTIC_SLOT, 1));
         }
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club.addr(), team), || get_club_tactic(this, club.addr(), team));
@@ -279,7 +279,7 @@ pub(crate) unsafe extern "thiscall" fn compare_mark_slot(this: usize, club: usiz
     // the row can be any in the table: compares 0x52..0x56 of every possible row
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let l = row(club, human);
-    let reg: Vec<(usize, usize)> = if l == -1 || club == 0 { vec![] } else { vec![(table.wrapping_add((l as usize).wrapping_mul(0x91)) + 0x52, 4)] };
+    let reg: Vec<(usize, usize)> = if l == -1 || club == 0 { vec![] } else { vec![(table.wrapping_add((l as usize).wrapping_mul(0x91)) + tactics_row::CAPTAIN, 4)] };
     let (r, v, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club, slot, human), || mark_slot(this, club, slot, human));
     SCOREBOARD.record(igual && r == v, || format!("mark_slot original={} {:x?} rust={} {:x?}", r, mo, v, mr));
     r

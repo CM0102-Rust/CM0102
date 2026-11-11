@@ -1,0 +1,54 @@
+[
+ {
+  "line": 81,
+  "offset": "0xb1",
+  "base": "stage k (League)",
+  "module": "league",
+  "verdict": "existing",
+  "name": "TABLE",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "pointer to the stage league table",
+  "confidence": "verified",
+  "evidence": "league::TABLE; same as v_bra_reg_rio line 690"
+ },
+ {
+  "line": 81,
+  "offset": "0x37",
+  "base": "first row of the stage table",
+  "module": "league_table_row",
+  "verdict": "existing",
+  "name": "STATUS",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "row status (5 = champion of the stage)",
+  "confidence": "verified",
+  "evidence": "league_table_row::STATUS; same as v_bra_reg_rio line 690"
+ },
+ {
+  "line": 97,
+  "offset": "0x30",
+  "base": "-",
+  "module": null,
+  "verdict": "not_field",
+  "name": null,
+  "width": null,
+  "rust_type": null,
+  "description": null,
+  "confidence": "read",
+  "evidence": "offset inside a log format string literal"
+ },
+ {
+  "line": 97,
+  "offset": "0x2c",
+  "base": "-",
+  "module": null,
+  "verdict": "not_field",
+  "name": null,
+  "width": null,
+  "rust_type": null,
+  "description": null,
+  "confidence": "read",
+  "evidence": "offset inside a log format string literal"
+ }
+]

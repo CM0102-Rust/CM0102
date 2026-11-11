@@ -9,16 +9,16 @@ use super::*;
 /// (0xad9c58, que a 0x403600 grava) têm de sair iguais.
 pub(crate) unsafe extern "thiscall" fn compare_area_layout(area: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_AREA_LAYOUT);
-    let marks = read_u32(area + 0x18);
-    let columns = read_u8(area + 0xbab);
-    let rows = read_u8(area + 0xbac);
-    if marks & 0x80000 == 0 && columns != 0 && (columns > 30 || (rows != 0 && rows > 30)) {
+    let marks = read_u32(area + area_fields::FLAGS);
+    let columns = read_u8(area + area_fields::COLUMN_COUNT);
+    let rows = read_u8(area + area_fields::ROW_COUNT);
+    if marks & area_fields_flags::GRID_ONLY == 0 && columns != 0 && (columns > 30 || (rows != 0 && rows > 30)) {
         return o(area);
     }
     let mut reg = vec![(area, 0xbf1), (G_ACTIVE_AREA_SCROLLBAR, 4)];
-    let owner = read_i16(area + 0x20e);
+    let owner = read_i16(area + area_fields::OWNER_ITEM);
     if owner != -1 {
-        reg.push((area_item_at(read_usize(area + 0x208), owner) + 0x7c, 2));
+        reg.push((area_item_at(read_usize(area + area_fields::ITEMS), owner) + guio::POPUP_AREA_INDEX, 2));
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(area), || area_layout(area));
     SCOREBOARD.record(igual, || format!("area_layout {:#x}: differences em {:?}", area, first_differences(&mo, &mr)));

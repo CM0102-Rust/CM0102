@@ -1,0 +1,28 @@
+[
+ {
+  "line": 73,
+  "offset": "0xf6",
+  "base": "this",
+  "module": "euro_champ_qual",
+  "verdict": "existing",
+  "name": "GROUP_FORMAT",
+  "width": 1,
+  "rust_type": "i8",
+  "description": "group format (1 or 2)",
+  "confidence": "read",
+  "evidence": "same as routine verdict"
+ },
+ {
+  "line": 74,
+  "offset": "0xf7",
+  "base": "this",
+  "module": "euro_champ_qual",
+  "verdict": "existing",
+  "name": "DRAWN_TEAMS",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "array of drawn national teams",
+  "confidence": "read",
+  "evidence": "same as routine verdict (now in fields.rs)"
+ }
+]

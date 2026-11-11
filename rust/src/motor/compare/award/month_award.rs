@@ -11,7 +11,7 @@ pub(crate) unsafe extern "thiscall" fn compare_award_best_rated_player(this: usi
 /// Comparer for `set_winner`.
 pub(crate) unsafe extern "thiscall" fn compare_set_winner(this: usize, id: i32, club_id: i32, month: u32, year: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i32, u32, u32)>(IDX_SET_WINNER);
-    let mut regions = vec![(this + 0x1d, 12 * 11)];
+    let mut regions = vec![(this + month_award_fields::SLOT_WINNER_ID, 12 * 11)];
     if id > -1 {
         winner_reputation_regions(&mut regions, month_ratings_staff_by_id(id), if club_id > -1 { (month_award_club_by_id(club_id)).addr() } else { 0 });
     }

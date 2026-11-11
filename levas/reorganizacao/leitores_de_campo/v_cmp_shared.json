@@ -1,0 +1,54 @@
+[
+ {
+  "line": 221,
+  "offset": "0x58",
+  "base": "group + side (grid cell)",
+  "module": "grid_cell",
+  "verdict": "existing",
+  "name": "OCCUPANT_COUNT",
+  "width": 1,
+  "rust_type": "i8",
+  "description": "occupant count of the side",
+  "confidence": "verified",
+  "evidence": "list at group + side*44, count at +0x58 + side; grid_cell::OCCUPANT_COUNT"
+ },
+ {
+  "line": 222,
+  "offset": "0x58",
+  "base": "group + side (grid cell)",
+  "module": "grid_cell",
+  "verdict": "existing",
+  "name": "OCCUPANT_COUNT",
+  "width": 1,
+  "rust_type": "i8",
+  "description": "occupant count of the side",
+  "confidence": "verified",
+  "evidence": "loop bound clamp(0,11); grid_cell::OCCUPANT_COUNT"
+ },
+ {
+  "line": 392,
+  "offset": "0x19",
+  "base": "this.player(..) (match player)",
+  "module": "match_player",
+  "verdict": "existing",
+  "name": "POSITION",
+  "width": 2,
+  "rust_type": "i8",
+  "description": "position and previous position bytes",
+  "confidence": "verified",
+  "evidence": "match_player::POSITION (+0x1a PREVIOUS_POSITION in the 2-byte window)"
+ },
+ {
+  "line": 453,
+  "offset": "0x8d46",
+  "base": "this (engine)",
+  "module": "engine",
+  "verdict": "existing",
+  "name": "POSSESSION_COUNTER",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "possession counter byte of side v",
+  "confidence": "verified",
+  "evidence": "record_possession; engine::POSSESSION_COUNTER"
+ }
+]

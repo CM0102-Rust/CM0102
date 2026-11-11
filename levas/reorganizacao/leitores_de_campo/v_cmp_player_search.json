@@ -1,0 +1,28 @@
+[
+ {
+  "line": 24,
+  "offset": "0x32",
+  "base": "constant",
+  "module": "",
+  "verdict": "not_field",
+  "name": "",
+  "width": 0,
+  "rust_type": "",
+  "description": "",
+  "confidence": "verified",
+  "evidence": "0x32 = 50 scouted player slots (count in a size product)"
+ },
+ {
+  "line": 46,
+  "offset": "0x1a9",
+  "base": "this (player search)",
+  "module": "player_search_fields",
+  "verdict": "existing",
+  "name": "SCOUTING_START_DATE + 4",
+  "width": 4,
+  "rust_type": "u32",
+  "description": "second dword of the scouting start date",
+  "confidence": "read",
+  "evidence": "read next to SCOUTING_START_DATE (8 bytes at 0x1a5) as the rest of the date"
+ }
+]

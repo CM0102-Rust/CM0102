@@ -40,7 +40,7 @@ pub(crate) unsafe extern "stdcall" fn compare_fog_after_match(fixture: usize, da
             continue;
         }
         for vaga in 0..20usize {
-            let i = read_i32(data + lado * 0x625 + 0x190 + vaga * 0x49);
+            let i = read_i32(data + lado * 0x625 + match_record::ROW_STAFF_ID + vaga * 0x49);
             let p = read_usize(G_STAFF_TABLE).wrapping_add((i as usize).wrapping_mul(staff::SIZE));
             if i != -1 && p != 0 && *(p as *const i32) < n {
                 reg.push((read_usize(obj).wrapping_add((read_i32(p) as usize).wrapping_mul(9)), 9));

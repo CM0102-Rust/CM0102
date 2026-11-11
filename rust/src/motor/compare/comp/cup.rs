@@ -22,10 +22,10 @@ pub(crate) unsafe extern "thiscall" fn compare_create_tie_fixtures(this: usize, 
     let id = read_usize(read_usize(this.addr() + 4)) as u32;
     let (mut k, mut ad) = (tie as i16 as i32, adiar);
     if k == -1 {
-        let n = read_i16(round_entry(this, ri) + 0x1a) as i32;
+        let n = read_i16(round_entry(this, ri) + cup_round::TIES) as i32;
         k = -1;
         for i in 0..n.max(0) {
-            let m = read_u8(tie_of_round(this, ri, i) + 0x34);
+            let m = read_u8(tie_of_round(this, ri, i) + cup_tie::FIXTURE_STATE);
             if m == 1 || m == 2 {
                 k = i;
                 ad = (m == 1) as u32;
@@ -53,7 +53,7 @@ pub(crate) unsafe extern "thiscall" fn compare_create_tie_fixtures(this: usize, 
     let last = if duas { add_days_to_day_year(first_leg, e.leg_gap_days() as i32) } else { first_leg };
     let tomorrow = add_days_to_day_year((read_i16(G_CURRENT_DATE_YEAR) as u16 as i32, read_i16(G_CURRENT_DATE) as i32), 1);
     let next = if ri < this.round_count() as i32 - 1 {
-        (read_u8(e.addr() + 0x6d) as i8 as i32 + this.year() as i32, read_i16(e.addr() + 0x6b) as i32)
+        (read_u8(e.addr() + cup_round::YEAR_OFFSET + 0x68) as i8 as i32 + this.year() as i32, read_i16(e.addr() + cup_round::DAY + 0x68) as i32)
     } else {
         last
     };
@@ -210,7 +210,7 @@ pub(crate) unsafe extern "thiscall" fn compare_record_team_progress(cup: usize, 
 pub(crate) unsafe extern "thiscall" fn compare_draw_round(cup: usize, round: u32) -> u32 {
     let cup = Cup(cup);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_DRAW_ROUND);
-    if cup.season_set_up() == 0 || read_u8(round_ties_array(cup, round) + 0x34) != 0 {
+    if cup.season_set_up() == 0 || read_u8(round_ties_array(cup, round) + cup_tie::FIXTURE_STATE) != 0 {
         return o(cup.addr(), round); // simplification: nothing to draw, the original does nothing
     }
     let n = cup.round_count();
@@ -248,7 +248,7 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_round(cup: usize, round: u32
     let mut ok = r == 1;
     let reg = CupRound(round_record_by_dword(cup, round));
     for k in 0..reg.ties().max(0) as usize {
-        ok &= read_u8(round_ties_array(cup, round) + k * 0x35 + 0x34) == 1;
+        ok &= read_u8(round_ties_array(cup, round) + k * 0x35 + cup_tie::FIXTURE_STATE) == 1;
     }
     let sum = if !skips_draw_news(cup, round) && reg.round_code() != 0x8c { 1 } else { 0 };
     ok &= cup.next_draw_round() == before_ac.wrapping_add(sum);
@@ -472,7 +472,7 @@ pub(crate) unsafe extern "thiscall" fn compare_decide_tie_winner(this: usize, ti
     let r = r.unwrap_or(0);
     if let Some(n) = n {
         SCOREBOARD.record(igual && r == n, || format!("decide_tie_winner(rule {:x}, game {}) original={} rust={} {:x?} x {:x?}",
-            (game.tie_rules() as i16) as u16, read_i8(tie + 0x33), r, n, mo, mr));
+            (game.tie_rules() as i16) as u16, read_i8(tie + cup_tie::NEXT_MATCH), r, n, mo, mr));
     }
     r
 }
@@ -579,7 +579,7 @@ pub(crate) unsafe extern "thiscall" fn compare_move_round_fixtures_to_set_dates(
     exe::new_llist(l);
     let mut expected = [0u8; 8];
     for k in 0..8 {
-        expected[k] = read_u8(e + k * 7 + 0x29);
+        expected[k] = read_u8(e + k * 7 + cup_round::SLOT_CODE);
     }
     if collect_round_fixtures(this, data, round, l) != 0 {
         l.set_cursor(l.head());
@@ -601,7 +601,7 @@ pub(crate) unsafe extern "thiscall" fn compare_move_round_fixtures_to_set_dates(
         return; // simplification: the cup has left the game; nothing to check
     }
     let e = cup_round_entry(this, round);
-    let after: [u8; 8] = core::array::from_fn(|k| read_u8(e + k * 7 + 0x29));
+    let after: [u8; 8] = core::array::from_fn(|k| read_u8(e + k * 7 + cup_round::SLOT_CODE));
     SCOREBOARD.record(after == expected, || format!("move_round_fixtures_to_set_dates(round {}) slots {:02x?} (expected {:02x?})",
         round, after, expected));
 }
@@ -629,7 +629,7 @@ pub(crate) unsafe extern "thiscall" fn compare_map_fixture_tree(this: usize) -> 
     let m = (if read_i16(comp_cup_round(this, nr as i32).wrapping_sub(0x61)) == 0x8c { nr.wrapping_sub(1) } else { nr }) as i32;
     let mut error: Option<(i32, i32)> = None;
     'fora: for rd in 0..(m - 1).max(0) {
-        for p in 0..read_i16(comp_cup_round(this, rd) + 0x1a) as i32 {
+        for p in 0..read_i16(comp_cup_round(this, rd) + cup_round::TIES) as i32 {
             let c = CupTie(cup_tie(this, rd, p));
             let target = (c.feeder_round() as i16) as i32;
             let a = (c.feeder_side() as i16) == 1;

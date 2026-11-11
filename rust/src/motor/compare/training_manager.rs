@@ -24,7 +24,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_coach_assignments(this: us
         if manager == 0 || !(0..0x10).contains(&read_i32(G_STAFF_COUNT).wrapping_sub(read_i32(manager)).wrapping_sub(1)) {
             return o(this, club.addr(), tecnico);
         }
-        reg.push((this + 0x652d + 54 * read_i32(G_STAFF_COUNT).wrapping_sub(read_i32(manager)).wrapping_sub(1) as usize, 54));
+        reg.push((this + training_manager_fields::COACH_ASSIGNMENTS + 54 * read_i32(G_STAFF_COUNT).wrapping_sub(read_i32(manager)).wrapping_sub(1) as usize, 54));
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club.addr(), tecnico), || update_coach_assignments(this, club.addr(), tecnico));
     SCOREBOARD.record(igual, || format!("update_coach_assignments(club {:x}, manager {:x}) {:x?} x {:x?}", club.addr(), tecnico, mo.0, mr.0));
@@ -66,11 +66,11 @@ pub(crate) unsafe extern "thiscall" fn compare_reassign_squad_schedules(this: us
                 continue;
             }
             reg.push((training_entry_of_player_data(this, f), 6));
-            reg.push((les.wrapping_add((read_i32(p) as isize * 31 + 0x1e) as usize), 1));
+            reg.push((les.wrapping_add((read_i32(p) as isize * 31 + (physical_record::PRONENESS as isize)) as usize), 1));
         }
     }
     if novo != 0 {
-        reg.push((this + 0x652d + 54 * k as usize, 54));
+        reg.push((this + training_manager_fields::COACH_ASSIGNMENTS + 54 * k as usize, 54));
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, manager, old, novo), || reassign_squad_schedules(this, manager, old, novo));
     SCOREBOARD.record(igual, || format!("reassign_squad_schedules(manager {:x}, {:x} -> {:x}) {:x?} x {:x?}", manager, old, novo, mo.0, mr.0));
@@ -109,7 +109,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_player_training(this: usiz
     reg.extend_from_slice(&[(G_CONTRACT_LOOKUP_RESULT, 4), (training_entry_of_staff(this, p), 6), (f.addr() + player_sheet::GOALKEEPER, 0x33)]);
     let les = read_usize(G_INJURY);
     if les != 0 {
-        reg.push((read_usize(les).wrapping_add((read_i32(p.addr()) as isize * 31 + 0x1e) as usize), 1));
+        reg.push((read_usize(les).wrapping_add((read_i32(p.addr()) as isize * 31 + (physical_record::PRONENESS as isize)) as usize), 1));
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, p.addr(), skip),
         || crate::rng::without_counting(|| update_player_training(this, p.addr(), skip)));
@@ -267,7 +267,7 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_training_progress(this: usi
         return o(this, person.addr(), d);
     }
     let f = person.player();
-    let e = read_usize(this + 0x651d) + 6 * read_i32(f.addr()) as usize;
+    let e = read_usize(this + training_manager_fields::PLAYER_ENTRIES) + 6 * read_i32(f.addr()) as usize;
     let regions = [(f.addr() + player_sheet::GOALKEEPER, 0x33), (e, 6)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&regions, || o(this, person.addr(), d), || apply_training_progress(this, person.addr(), d));
     SCOREBOARD.record(igual, || format!("apply_training_progress(person {:x}, d {:x?}) {:x?} x {:x?}", person.addr(), core::slice::from_raw_parts(d as *const i8, 5), mo.0, mr.0));
@@ -308,7 +308,7 @@ pub(crate) unsafe extern "thiscall" fn compare_has_fast_position_training(this: 
 /// [pt] Comparador: lado a lado na semana do treino, com a devolução.
 pub(crate) unsafe extern "thiscall" fn compare_advance_week_counter(this: usize, day: *const i16) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i16) -> i32>(IDX_ADVANCE_WEEK_COUNTER);
-    let regions = [(this + 0x688d, 2)];
+    let regions = [(this + training_manager_fields::WEEK_COUNTER, 2)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&regions, || o(this, day), || advance_week_counter(this, day));
     SCOREBOARD.record(igual && r == n, || format!("advance_week_counter(day {}) original={} rust={} {:x?} x {:x?}", *day, r, n, mo.0, mr.0));
     r
@@ -320,7 +320,7 @@ pub(crate) unsafe extern "thiscall" fn compare_advance_week_counter(this: usize,
 /// ou 1 pela nota de goleiro e o bit 0x20 do +5 apagado).
 pub(crate) unsafe extern "thiscall" fn compare_init_player_entries(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_INIT_PLAYER_ENTRIES)(this);
-    let base = read_usize(this + 0x651d);
+    let base = read_usize(this + training_manager_fields::PLAYER_ENTRIES);
     if base == 0 {
         return;
     }

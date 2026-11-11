@@ -51,8 +51,8 @@ pub(crate) unsafe extern "C" fn compare_match_stats_compare_events(a: *const u8,
 pub(crate) unsafe fn compare_match_screen_build(name: &str, extra: &[(usize, usize)], original: impl FnOnce(), rust: impl FnOnce()) {
     let mut reg = screen_build_regions();
     reg.push((G_MATCH_SCREEN_PANEL_REFRESHED_FLAG, 12));
-    let slot = *((SCREEN_MANAGER + 0x382a) as *const i16) as isize;
-    let block = core::ptr::read_unaligned((SCREEN_MANAGER as isize + 0x7e2 + slot * 0x300) as *const usize);
+    let slot = *((SCREEN_MANAGER + screen_manager::CURRENT_SLOT) as *const i16) as isize;
+    let block = core::ptr::read_unaligned((SCREEN_MANAGER as isize + (screen_manager::PARAM_BLOCK as isize) + slot * 0x300) as *const usize);
     if block != 0 {
         reg.push((block, 0xb4));
         reg.push((block + 0xb8, 0x200 - 0xb8));
@@ -91,21 +91,21 @@ pub(crate) unsafe extern "C" fn compare_build_match_screen() {
     let f = exe::get_human_manager_record(0);
     let mut extra = Vec::new();
     if current_human_display() != 0 {
-        extra.push((current_human_display() + 0x12f4fe, 3));
+        extra.push((current_human_display() + display::FOCUS_FLAGS, 3));
     }
     if f != 0 {
         extra.push((f, 1));
-        extra.push((f + 0xea, 4));
+        extra.push((f + human_manager_sheet::IN_MATCH_SCREEN, 4));
     }
     let p = LiveMatch(get_screen_param(0));
     if !p.is_null() && get_screen_param(1) as u8 != 1 {
         let _rd = |a: usize| read_usize(a);
         let espectadores = p.spectators();
-        extra.push(((espectadores as isize + 0xc5 + read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize * 4) as usize, 4));
+        extra.push(((espectadores as isize + (match_spectators::HUMAN_MARKS as isize) + read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize * 4) as usize, 4));
         extra.push((espectadores + match_spectators::COUNT, 1));
         let pm = Engine(p.engine() as usize);
         if !pm.is_null() && pm.commentator() != 0 {
-            extra.push((pm.commentator() + 0x2db0, 1));
+            extra.push((pm.commentator() + match_events_fields::COMMENTARY_SPEED, 1));
         }
     }
     compare_match_screen_build("build_match_screen", &extra, || o(), || build_match_screen());
@@ -177,7 +177,7 @@ pub(crate) unsafe extern "C" fn compare_draw_match_overview_panel(top: *mut i32,
     let p0 = LiveMatch(get_screen_param(0));
     let photo = get_screen_param(0x1d);
     let commentator = !p0.is_null()
-        && read_u32(p0.record() + 0x53) == 0
+        && read_u32(p0.record() + match_record::SHOOTOUT) == 0
         && get_screen_param(7) != 0;
     let reg = screen_update_regions(false);
     if overview_would_error() || commentator || (!p0.is_null() && photo == 0) || reg.is_none() {
@@ -288,8 +288,8 @@ pub(crate) unsafe extern "C" fn compare_refresh_latest_scores_rows() {
         None => return o(),
     };
     reg.push((G_MATCH_SCREEN_PANEL_REFRESHED_FLAG, 12));
-    let slot = *((SCREEN_MANAGER + 0x382a) as *const i16) as isize;
-    let block = core::ptr::read_unaligned((SCREEN_MANAGER as isize + 0x7e2 + slot * 0x300) as *const usize);
+    let slot = *((SCREEN_MANAGER + screen_manager::CURRENT_SLOT) as *const i16) as isize;
+    let block = core::ptr::read_unaligned((SCREEN_MANAGER as isize + (screen_manager::PARAM_BLOCK as isize) + slot * 0x300) as *const usize);
     if block != 0 {
         reg.push((block, 0xb4));
         reg.push((block + 0xb8, 0x200 - 0xb8));
@@ -352,7 +352,7 @@ pub(crate) unsafe extern "C" fn compare_draw_action_zones_panel(top: *mut i32, b
 /// aqui (alocação e construção) só a original roda.
 pub(crate) unsafe extern "C" fn compare_draw_match_report_panel(top: *mut i32, base: *mut i32) {
     let o = original_fn::<unsafe extern "C" fn(*mut i32, *mut i32)>(IDX_DRAW_MATCH_REPORT_PANEL);
-    if get_screen_param(0) == 0 && *((get_screen_param(0x20) + 0x4c) as *const u8) == 0 && get_screen_param(0x2d) == 0 {
+    if get_screen_param(0) == 0 && *((get_screen_param(0x20) + match_record::NO_STATISTICS) as *const u8) == 0 && get_screen_param(0x2d) == 0 {
         // simplification: the report allocation does not run twice; this path is proven in Rust mode
         return o(top, base);
     }
@@ -364,7 +364,7 @@ pub(crate) unsafe extern "C" fn compare_draw_match_report_panel(top: *mut i32, b
 /// [pt] A montagem é comparada de verdade, com a marca de vista do humano no grupo (+0x14 + 4h).
 pub(crate) unsafe extern "C" fn compare_build_day_fixtures_screen() {
     let o = original_fn::<unsafe extern "C" fn()>(IDX_BUILD_DAY_FIXTURES_SCREEN);
-    let mark = (get_screen_param(1) as isize + 0x14 + read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize * 4) as usize;
+    let mark = (get_screen_param(1) as isize + (day_competition::PANEL as isize) + read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize * 4) as usize;
     compare_by_display_list_with("build_day_fixtures_screen", &[(mark, 4)], || o(), || build_day_fixtures_screen());
 }
 
@@ -681,8 +681,8 @@ pub(crate) unsafe extern "C" fn compare_open_waiting_screen(slot: u32) {
 pub(crate) unsafe extern "C" fn compare_draw_latest_scores_panel(top: *mut i32, base: *mut i32) {
     let o = original_fn::<unsafe extern "C" fn(*mut i32, *mut i32)>(IDX_DRAW_LATEST_SCORES_PANEL);
     let mut reg = screen_build_regions();
-    let slot = *((SCREEN_MANAGER + 0x382a) as *const i16) as isize;
-    let block = core::ptr::read_unaligned((SCREEN_MANAGER as isize + 0x7e2 + slot * 0x300) as *const usize);
+    let slot = *((SCREEN_MANAGER + screen_manager::CURRENT_SLOT) as *const i16) as isize;
+    let block = core::ptr::read_unaligned((SCREEN_MANAGER as isize + (screen_manager::PARAM_BLOCK as isize) + slot * 0x300) as *const usize);
     if block != 0 {
         reg.push((block, 0xb4));
         reg.push((block + 0xb8, 0x200 - 0xb8));

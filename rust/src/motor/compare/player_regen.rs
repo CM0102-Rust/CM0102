@@ -79,7 +79,7 @@ pub(crate) unsafe extern "stdcall" fn compare_player_regen_sign_for_club(person:
         return r;
     }
     let c = exe::contract_manager_get_contract(read_i32(G_CONTRACT_MANAGER) as usize, person);
-    let ok = r == 1 && (club.squad(k) as i32) == person.addr() as i32 && (person.club_job().addr() as i32) == club.addr() as i32 && (c == 0 || read_u8(c + 0x3a) == 0);
+    let ok = r == 1 && (club.squad(k) as i32) == person.addr() as i32 && (person.club_job().addr() as i32) == club.addr() as i32 && (c == 0 || read_u8(c + contract::SQUAD_NUMBER) == 0);
     SCOREBOARD.record(ok, || format!("player_regen_sign_for_club({:x}, {:x}) slot {} original={}", person.addr(), club.addr(), k, r));
     r
 }
@@ -115,7 +115,7 @@ pub(crate) unsafe extern "stdcall" fn compare_player_regen_post_retirement_annou
 /// Comparador: o id da ficha antes; a original acrescenta (pode realocar); confere a conta e o item novo.
 pub(crate) unsafe extern "thiscall" fn compare_add_player_data_to_pool(this: usize, person: i32, nation: u32, second: u32) {
     let n = read_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT);
-    let id = read_usize(read_usize(read_usize(G_STAFF_TABLE).wrapping_add((person as u32).wrapping_mul((staff::SIZE as u32)) as usize) + 0x61)) as u32;
+    let id = read_usize(read_usize(read_usize(G_STAFF_TABLE).wrapping_add((person as u32).wrapping_mul((staff::SIZE as u32)) as usize) + staff::PLAYER)) as u32;
     original_fn::<unsafe extern "thiscall" fn(usize, i32, u32, u32)>(IDX_ADD_PLAYER_DATA_TO_POOL)(this, person, nation, second);
     let item = read_usize(this + player_regen_fields::PLAYER_DATA_POOL).wrapping_add(n << 4);
     let g = [read_usize(item) as u32, read_usize(item + regen_pool_item::NATION_ID) as u32, read_usize(item + regen_pool_item::SECOND_NATION_ID) as u32];

@@ -53,7 +53,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_marking_type(this: usize, hom
     if !matches!(mark as u8, 1 | 2 | 4 | 8 | 0x10) {
         return o(this, home, mark); // simplification: the box, original only
     }
-    let reg = [(this as isize + home as u8 as i8 as isize + 0x5b4) as usize, 1usize];
+    let reg = [(this as isize + home as u8 as i8 as isize + (formation_fields::MARKING_TYPES as isize)) as usize, 1usize];
     let reg = [(reg[0], reg[1]), (this + formation_fields::CHANGED_FLAG, 4)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, home, mark), || set_marking_type(this, home, mark));
     SCOREBOARD.record(igual && r == n, || format!("set_marking_type({:x}, {}, {}) {}/{} {:x?} x {:x?}", this, home as u8 as i8, mark as u8, r, n, mo, mr));

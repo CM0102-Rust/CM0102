@@ -1,0 +1,102 @@
+[
+ {
+  "line": 12,
+  "offset": "0x18",
+  "base": "area",
+  "module": "area_fields",
+  "verdict": "existing",
+  "name": "FLAGS",
+  "width": 4,
+  "rust_type": "u32",
+  "description": "area style flags",
+  "confidence": "verified",
+  "evidence": "area_fields::FLAGS; tested with 0x80000 on line 15"
+ },
+ {
+  "kind": "bit",
+  "line": 15,
+  "value": "0x80000",
+  "field": "area_fields::FLAGS",
+  "name": "GRID_ONLY",
+  "confidence": "verified",
+  "evidence": "same bit as v_area (layout skips the grid checks when grid-only)"
+ },
+ {
+  "line": 13,
+  "offset": "0xbab",
+  "base": "area",
+  "module": "area_fields",
+  "verdict": "existing",
+  "name": "COLUMN_COUNT",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "number of grid columns (at most 30)",
+  "confidence": "read",
+  "evidence": "checked > 30 before layout"
+ },
+ {
+  "line": 14,
+  "offset": "0xbac",
+  "base": "area",
+  "module": "area_fields",
+  "verdict": "existing",
+  "name": "ROW_COUNT",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "number of visible grid rows (at most 30)",
+  "confidence": "read",
+  "evidence": "checked > 30 before layout"
+ },
+ {
+  "line": 19,
+  "offset": "0x20e",
+  "base": "area",
+  "module": "area_fields",
+  "verdict": "existing",
+  "name": "OWNER_ITEM",
+  "width": 2,
+  "rust_type": "i16",
+  "description": "item index the popup opens on (-1 none)",
+  "confidence": "read",
+  "evidence": "-1 test, then the item +0x7c is compared"
+ },
+ {
+  "line": 21,
+  "offset": "0x208",
+  "base": "area",
+  "module": "area_fields",
+  "verdict": "existing",
+  "name": "ITEMS",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "pointer to the Display's item table",
+  "confidence": "read",
+  "evidence": "area_item_at(base, k) = base + k x 0x18c"
+ },
+ {
+  "line": 21,
+  "offset": "0x7c",
+  "base": "item",
+  "module": "guio",
+  "verdict": "existing",
+  "name": "POPUP_AREA_INDEX",
+  "width": 2,
+  "rust_type": "u16",
+  "description": "index of the popup area opening on this item",
+  "confidence": "read",
+  "evidence": "owner item +0x7c, 2 bytes, as v_area 68"
+ },
+ {
+  "line": 33,
+  "offset": "0xff",
+  "base": "area",
+  "module": null,
+  "verdict": "not_field",
+  "name": null,
+  "width": null,
+  "rust_type": null,
+  "description": null,
+  "confidence": "read",
+  "evidence": "region length 0xbcb + 0xff (whole area written by init), arithmetic"
+ }
+]

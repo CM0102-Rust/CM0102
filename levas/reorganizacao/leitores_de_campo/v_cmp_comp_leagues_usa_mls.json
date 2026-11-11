@@ -1,0 +1,28 @@
+[
+ {
+  "line": 89,
+  "offset": "0xc",
+  "base": "this.stages() (stage array)",
+  "module": "",
+  "verdict": "not_field",
+  "name": "",
+  "width": 0,
+  "rust_type": "",
+  "description": "",
+  "confidence": "verified",
+  "evidence": "index 3 of the 4-byte stage array"
+ },
+ {
+  "line": 151,
+  "offset": "0x3e",
+  "base": "string",
+  "module": "",
+  "verdict": "not_field",
+  "name": "",
+  "width": 0,
+  "rust_type": "",
+  "description": "",
+  "confidence": "verified",
+  "evidence": "offset inside a string literal (log text)"
+ }
+]

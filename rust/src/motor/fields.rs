@@ -3155,6 +3155,7 @@ pub(crate) mod config {
 pub(crate) mod save_summary {
     pub(crate) const GAME_DATE: usize = 0xf64; // 8 byte(s): game date when saved [verified: build_save_game_summary (0x591f80, file_screens.rs) writes G_CURRENT_DATE at +0xf64; +0x7d0 version text, +0xf6c play time, +0xf70 time()]
 
+    pub(crate) const PLAY_TIME_TOTAL: usize = 0xf6c; // 4 byte(s): total play time of the career when saved (G_GAME_PLAY_TIME_TOTAL after adding the current session) [verified: build_save_game_summary writes the updated G_GAME_PLAY_TIME_TOTAL at +0xf6c (time() at +0xf70); save_summary::GAME_DATE comment names +0xf6c play time]
 }
 
 /// one 0x22-byte entry of the HostCountry table (HostCountry.tmp): competition, edition year, three bids of host/co-host nations, chosen bid, decision day, interval

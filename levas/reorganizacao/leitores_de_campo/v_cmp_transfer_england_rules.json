@@ -1,0 +1,15 @@
+[
+ {
+  "line": 45,
+  "offset": "0x91c",
+  "base": "[G_TRANSFER_MANAGER] (transfer manager)",
+  "module": "transfer_manager_fields",
+  "verdict": "existing",
+  "name": "SEASON_LOAN_COUNTS",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "pointer to the per-club 16-byte season loan table",
+  "confidence": "read",
+  "evidence": "read_usize(TM + 0x91c), window club count x 16; transfer_manager_fields::SEASON_LOAN_COUNTS"
+ }
+]

@@ -1,0 +1,54 @@
+[
+ {
+  "line": 44,
+  "offset": "0xb1",
+  "base": "read_usize(this.stages() + 4 x k) (half stage league)",
+  "module": "league",
+  "verdict": "existing",
+  "name": "TABLE",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "league table of the half",
+  "confidence": "verified",
+  "evidence": "same as routine verdict"
+ },
+ {
+  "line": 44,
+  "offset": "0x37",
+  "base": "row 0 of the stage table",
+  "module": "league_table_row",
+  "verdict": "existing",
+  "name": "STATUS",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "decided status (5 = champions)",
+  "confidence": "verified",
+  "evidence": "same as routine verdict"
+ },
+ {
+  "line": 60,
+  "offset": "0x30",
+  "base": "string",
+  "module": "",
+  "verdict": "not_field",
+  "name": "",
+  "width": 0,
+  "rust_type": "",
+  "description": "offset inside a string literal (log text)",
+  "confidence": "read",
+  "evidence": "inside format!"
+ },
+ {
+  "line": 60,
+  "offset": "0x2c",
+  "base": "string",
+  "module": "",
+  "verdict": "not_field",
+  "name": "",
+  "width": 0,
+  "rust_type": "",
+  "description": "offset inside a string literal (log text)",
+  "confidence": "read",
+  "evidence": "inside format!"
+ }
+]

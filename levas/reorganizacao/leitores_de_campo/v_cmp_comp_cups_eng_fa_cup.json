@@ -1,0 +1,28 @@
+[
+ {
+  "line": 19,
+  "offset": "0xb2",
+  "base": "this",
+  "module": "eng_fa_cup",
+  "verdict": "existing",
+  "name": "FIFTH_ROUND_QUESTION_ASKED",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "set once the 5th round question was asked",
+  "confidence": "read",
+  "evidence": "byte tested == 0 on 1 September 1999, the question date"
+ },
+ {
+  "line": 22,
+  "offset": "0x45",
+  "base": "string",
+  "module": null,
+  "verdict": "not_field",
+  "name": null,
+  "width": null,
+  "rust_type": null,
+  "description": null,
+  "confidence": "read",
+  "evidence": "offset inside a log string literal"
+ }
+]

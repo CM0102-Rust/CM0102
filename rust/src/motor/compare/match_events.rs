@@ -17,7 +17,7 @@ pub(crate) unsafe extern "thiscall" fn compare_read_events(e: usize, desc: *cons
         return o(e, desc);
     }
     let n = (*desc.add(1) as usize).min(0x10000);
-    let reg = [(e + 6, 2), (e + 0x720, 0xe * n)];
+    let reg = [(e + 6, 2), (e + match_events_fields::ENTRIES, 0xe * n)];
     let (r, rr, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(e, desc), || read_events(e, desc));
     SCOREBOARD.record(igual && r == rr, || format!("read_events(pos {} n {} number {} human {}) original={} rust={} {:x?} x {:x?}", *desc, *desc.add(1), *desc.add(2), *(desc.add(3) as *const u8), r, rr, mo, mr));
     r
@@ -78,7 +78,7 @@ pub(crate) unsafe extern "thiscall" fn compare_combine_with_previous(t: usize, e
         return o(t, e, m);
     }
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(e, 14), (t + 0x30, 12 * 14)]);
+    reg.extend([(e, 14), (t + commentary_queue::SLOTS, 12 * 14)]);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(t, e, m), || crate::rng::without_counting(|| combine_with_previous(t, e, m)));
     SCOREBOARD.record(igual && r == n, || format!("combine_with_previous({:#x}) original={:#x} rust={:#x} {:x?} x {:x?}", read_u16(e), r, n, mo, mr));
     r

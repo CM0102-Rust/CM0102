@@ -1,0 +1,28 @@
+[
+ {
+  "line": 82,
+  "offset": "0x3a",
+  "base": "c (contract)",
+  "module": "contract",
+  "verdict": "existing",
+  "name": "SQUAD_NUMBER",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "squad number (0 none)",
+  "confidence": "verified",
+  "evidence": "contract::SQUAD_NUMBER; as v_player_regen line 1384"
+ },
+ {
+  "line": 118,
+  "offset": "0x61",
+  "base": "staff table + person*staff::SIZE",
+  "module": "staff",
+  "verdict": "existing",
+  "name": "PLAYER",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "pointer to the person's player data (its id at +0)",
+  "confidence": "verified",
+  "evidence": "staff::PLAYER (TStaff +0x61 Player, community format)"
+ }
+]

@@ -1,0 +1,15 @@
+[
+ {
+  "line": 42,
+  "offset": "0x110",
+  "base": "read_usize(this) + k*0x167 (club finance)",
+  "module": "finance",
+  "verdict": "existing",
+  "name": "SEASON_PLAYERS_BOUGHT",
+  "width": 80,
+  "rust_type": "u8",
+  "description": "start of the 0x50-byte season totals block",
+  "confidence": "verified",
+  "evidence": "finance::SEASON_PLAYERS_BOUGHT; block cleared at season end, as v_fin_prm line 110"
+ }
+]

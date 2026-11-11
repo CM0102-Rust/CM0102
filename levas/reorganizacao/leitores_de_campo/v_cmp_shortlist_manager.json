@@ -1,0 +1,63 @@
+[
+ {
+  "line": 143,
+  "offset": "0x10",
+  "base": "base = this or this + PAIRS_BY_CLUB",
+  "module": "shortlist_manager_fields",
+  "verdict": "existing",
+  "name": "PAIRS_BY_PERSON_COUNT",
+  "width": 4,
+  "rust_type": "u32",
+  "description": "pair count (by person; by club through the +4 base)",
+  "confidence": "read",
+  "evidence": "same as routine verdict"
+ },
+ {
+  "line": 145,
+  "offset": "0x10",
+  "base": "base = this or this + PAIRS_BY_CLUB",
+  "module": "shortlist_manager_fields",
+  "verdict": "existing",
+  "name": "PAIRS_BY_PERSON_COUNT",
+  "width": 4,
+  "rust_type": "u32",
+  "description": "pair count, sizes the pair array region",
+  "confidence": "read",
+  "evidence": "same as line 143"
+ },
+ {
+  "line": 148,
+  "offset": "0xb",
+  "base": "G_STAFF_STATE_TABLE + id x 0x4f",
+  "module": "staff_state",
+  "verdict": "existing",
+  "name": "STATUS_FLAGS",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "status byte: low nibble counts AI shortlists",
+  "confidence": "verified",
+  "evidence": "same as routine verdict"
+ },
+ {
+  "line": 333,
+  "offset": "0xb",
+  "base": "G_STAFF_STATE_TABLE + id x 0x4f",
+  "module": "staff_state",
+  "verdict": "existing",
+  "name": "STATUS_FLAGS",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "status byte: low nibble counts AI shortlists",
+  "confidence": "verified",
+  "evidence": "same as routine verdict"
+ },
+ {
+  "kind": "bit",
+  "line": 336,
+  "value": "0xf",
+  "field": "staff_state::STATUS_FLAGS",
+  "name": "AI_SHORTLIST_COUNT",
+  "confidence": "read",
+  "evidence": "low nibble raised by 1 when a non-human club adds the person; same name as the routine verdicts"
+ }
+]

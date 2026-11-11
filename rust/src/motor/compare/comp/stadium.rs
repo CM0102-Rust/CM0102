@@ -51,7 +51,7 @@ pub(crate) unsafe extern "thiscall" fn compare_calculate_match_attendance(this: 
         reg.push((out as usize, 12));
     }
     if game.stadium() != 0 {
-        reg.push((game.stadium() + 0x3c, 4));
+        reg.push((game.stadium() + stadium::CAPACITY, 4));
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, game.addr(), out), || crate::rng::without_counting(|| calculate_match_attendance(this, game.addr(), out)));
     SCOREBOARD.record(igual && r == n, || format!("calculate_match_attendance(comp {:x}, kind {}): original {} rust {} {:x?} x {:x?}", read_usize(game.addr()), game.category(), r, n, mo, mr));
@@ -108,7 +108,7 @@ pub(crate) unsafe extern "thiscall" fn compare_stadium_daily_update(this: usize,
         m += 1;
     }
     if read_usize(G_STADIUM_STASHED_VENUE_ID) as i32 != -1 {
-        regions[m] = (stadium_by_id(read_usize(G_STADIUM_STASHED_VENUE_ID)) + 0x3c, 8);
+        regions[m] = (stadium_by_id(read_usize(G_STADIUM_STASHED_VENUE_ID)) + stadium::CAPACITY, 8);
         m += 1;
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions[..m], || o(this, today), || stadium_daily_update(this, today));

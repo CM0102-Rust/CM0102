@@ -43,7 +43,7 @@ pub(crate) unsafe extern "thiscall" fn compare_player_search_scout_match(this: u
         return o(this, game, result, out);
     }
     let state = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
-    let before = (read_usize(this + player_search_fields::SCOUTING_START_DATE), read_usize(this + 0x1a9));
+    let before = (read_usize(this + player_search_fields::SCOUTING_START_DATE), read_usize(this + player_search_fields::SCOUTING_START_DATE + 4));
     SCOUT_MATCH_DRY_RUN.store(true, Relaxed);
     SCOUT_MATCH_WOULD_REPORT.store(false, Relaxed);
     let n = crate::rng::without_counting(|| player_search_scout_match(this, game, result, out));

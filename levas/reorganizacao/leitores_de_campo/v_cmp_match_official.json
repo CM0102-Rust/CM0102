@@ -1,0 +1,15 @@
+[
+ {
+  "line": 56,
+  "offset": "0x15",
+  "base": "other (fouled match player)",
+  "module": "match_player",
+  "verdict": "existing",
+  "name": "FOULS_SUFFERED",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "fouls suffered by the player",
+  "confidence": "read",
+  "evidence": "match_player::FOULS_SUFFERED; punish_move bumps it on the fouled player, as v_match_official line 233"
+ }
+]

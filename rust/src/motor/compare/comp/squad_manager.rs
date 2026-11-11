@@ -75,7 +75,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_squad_number(this: usize, p: 
     let mut reg = Vec::new();
     for k in [exe::contract_manager_get_contract(read_u32(G_CONTRACT_MANAGER) as usize, p), exe::contract_manager_get_loan_contract(read_u32(G_CONTRACT_MANAGER) as usize, p)] {
         if k != 0 {
-            reg.push((k + 0x3a, 1));
+            reg.push((k + contract::SQUAD_NUMBER, 1));
         }
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, p, c, n), || set_squad_number(this, p, c, n));
@@ -177,8 +177,8 @@ pub(crate) unsafe extern "thiscall" fn compare_assign_league_squad_numbers(this:
                     continue;
                 }
                 for ct in [exe::contract_manager_get_contract(read_u32(G_CONTRACT_MANAGER) as usize, p), exe::contract_manager_get_loan_contract(read_u32(G_CONTRACT_MANAGER) as usize, p)] {
-                    if ct != 0 && !reg.contains(&(ct + 0x3a, 1)) {
-                        reg.push((ct + 0x3a, 1));
+                    if ct != 0 && !reg.contains(&(ct + contract::SQUAD_NUMBER, 1)) {
+                        reg.push((ct + contract::SQUAD_NUMBER, 1));
                     }
                 }
             }

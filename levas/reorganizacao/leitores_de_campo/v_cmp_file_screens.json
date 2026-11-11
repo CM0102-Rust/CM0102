@@ -1,0 +1,15 @@
+[
+ {
+  "line": 8,
+  "offset": "0xf6c",
+  "base": "summary (save game summary)",
+  "module": "save_summary",
+  "verdict": "new",
+  "name": "PLAY_TIME_TOTAL",
+  "width": 4,
+  "rust_type": "i32",
+  "description": "total play time of the career when saved (G_GAME_PLAY_TIME_TOTAL after adding the current session)",
+  "confidence": "verified",
+  "evidence": "build_save_game_summary writes the updated G_GAME_PLAY_TIME_TOTAL at +0xf6c (time() at +0xf70); save_summary::GAME_DATE comment names +0xf6c play time"
+ }
+]

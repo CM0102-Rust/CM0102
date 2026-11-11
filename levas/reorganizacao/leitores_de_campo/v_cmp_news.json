@@ -1,0 +1,80 @@
+[
+ {
+  "line": 85,
+  "offset": "0x63",
+  "base": "inicio (ring index)",
+  "module": "",
+  "verdict": "not_field",
+  "name": "",
+  "width": 0,
+  "rust_type": "",
+  "description": "ring arithmetic: last of the 100 slots of the human ring",
+  "confidence": "read",
+  "evidence": "index start + 99"
+ },
+ {
+  "line": 91,
+  "offset": "0xd6",
+  "base": "v(previous) (news item)",
+  "module": "news_item",
+  "verdict": "existing",
+  "name": "ID",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "news id of the previous slot",
+  "confidence": "verified",
+  "evidence": "news_item::ID; compared with the id being delivered (repeat check)"
+ },
+ {
+  "line": 91,
+  "offset": "0xda",
+  "base": "v(atual) (news item)",
+  "module": "news_item",
+  "verdict": "existing",
+  "name": "READ",
+  "width": 4,
+  "rust_type": "u32",
+  "description": "1 read or free, 0 unread",
+  "confidence": "verified",
+  "evidence": "news_item::READ; a free current slot raises the count"
+ },
+ {
+  "line": 96,
+  "offset": "0x64",
+  "base": "inicio (ring index)",
+  "module": "",
+  "verdict": "not_field",
+  "name": "",
+  "width": 0,
+  "rust_type": "",
+  "description": "ring arithmetic: 100 slots per human ring",
+  "confidence": "read",
+  "evidence": "wraps the position at start + 100"
+ },
+ {
+  "line": 327,
+  "offset": "0x63",
+  "base": "ring index",
+  "module": "",
+  "verdict": "not_field",
+  "name": "",
+  "width": 0,
+  "rust_type": "",
+  "description": "ring arithmetic: last of the 100 slots",
+  "confidence": "read",
+  "evidence": "k = start + 99"
+ },
+ {
+  "line": 346,
+  "offset": "0xd6",
+  "base": "r + i x MEDIA_NEWS_ITEM_SIZE (news item)",
+  "module": "news_item",
+  "verdict": "existing",
+  "name": "ID",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "news id of returned item i",
+  "confidence": "verified",
+  "evidence": "news_item::ID"
+ }
+]

@@ -1,0 +1,15 @@
+[
+ {
+  "line": 262,
+  "offset": "0xc",
+  "base": "this + slot*4",
+  "module": "scout_manager_fields",
+  "verdict": "existing",
+  "name": "EDIT_SESSIONS",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "edit session pointer of slot (16 pointers)",
+  "confidence": "verified",
+  "evidence": "scout_manager_fields::EDIT_SESSIONS; slot 0..15 checked empty"
+ }
+]

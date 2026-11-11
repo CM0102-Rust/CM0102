@@ -73,7 +73,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_after_match(this: usize, g
         let base = summary + lado * 0x625;
         let mut total = 0i32;
         for k in 0..20usize {
-            let slot = base + 0x190 + k * 0x49;
+            let slot = base + match_record::ROW_STAFF_ID + k * 0x49;
             let Some(pessoa) = staff_of_summary_slot(slot) else { continue };
             let c = exe::contract_manager_get_contract_for_club(this, pessoa, club);
             if c != 0 {
@@ -537,9 +537,9 @@ pub(crate) unsafe extern "thiscall" fn compare_add_decision_date(this: usize, pe
     let data_of = |j: usize| core::ptr::read_unaligned((e(j) + 4) as *const [u8; 8]);
     let mut certo = read_usize(this + contract_manager_fields::DECISION_COUNT) == n.wrapping_add(k + 1);
     for (j, l) in lembretes[..k].iter().enumerate() {
-        certo &= read_usize(e(j)) == id && data_of(j) == *l && *((e(j) + 0xd) as *const u8) == 2;
+        certo &= read_usize(e(j)) == id && data_of(j) == *l && *((e(j) + decision_date::KIND) as *const u8) == 2;
     }
-    certo &= read_usize(e(k)) == id && data_of(k) == d && *((e(k) + 0xc) as *const u8) == slice as u8 && *((e(k) + 0xd) as *const u8) == kind as u8;
+    certo &= read_usize(e(k)) == id && data_of(k) == d && *((e(k) + decision_date::SLICE) as *const u8) == slice as u8 && *((e(k) + decision_date::KIND) as *const u8) == kind as u8;
     SCOREBOARD.record(certo, || {
         format!("add_decision_date(person {}, slice {}, kind {}) count {} -> {} (esperava {}), lembretes {:?}, entries {:?}",
             id, slice as u8, kind as u8, n, read_usize(this + contract_manager_fields::DECISION_COUNT), n + k + 1, &lembretes[..k],

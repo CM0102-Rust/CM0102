@@ -19,12 +19,12 @@ pub(crate) unsafe extern "C" fn compare_game_update_nation_coefficients() {
         let na = base + k * 0x122;
         let mut h = nation_coefficient_history(Nation(na));
         if iniciar {
-            let v = read_f64(na + 0xa8);
+            let v = read_f64(na + nation::FIFA_COEFFICIENT);
             for x in h.iter_mut().take(5) {
                 *x = v;
             }
         }
-        let mut mark = read_u8(na + 0x121);
+        let mut mark = read_u8(na + nation::GAMES_PLAYED);
         if dez {
             roll_coefficient_year(Nation(na), &mut h, &mut mark);
         }
@@ -35,8 +35,8 @@ pub(crate) unsafe extern "C" fn compare_game_update_nation_coefficients() {
     for (k, (h, mark)) in plan.iter().enumerate() {
         let na = base + k * 0x122;
         let g = nation_coefficient_history(Nation(na));
-        if (0..6).any(|j| g[j].to_bits() != h[j].to_bits()) || read_u8(na + 0x121) != *mark {
-            error = Some(format!("nation {} ({:x}): {:?}/{} x plan {:?}/{}", k, na, g, read_u8(na + 0x121), h, mark));
+        if (0..6).any(|j| g[j].to_bits() != h[j].to_bits()) || read_u8(na + nation::GAMES_PLAYED) != *mark {
+            error = Some(format!("nation {} ({:x}): {:?}/{} x plan {:?}/{}", k, na, g, read_u8(na + nation::GAMES_PLAYED), h, mark));
             break;
         }
     }

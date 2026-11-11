@@ -1,0 +1,28 @@
+[
+ {
+  "line": 54,
+  "offset": "0x3c",
+  "base": "game.stadium()",
+  "module": "stadium",
+  "verdict": "existing",
+  "name": "CAPACITY",
+  "width": 4,
+  "rust_type": "i32",
+  "description": "stadium capacity",
+  "confidence": "read",
+  "evidence": "fixture STADIUM pointer; calculate_match_attendance may change the capacity"
+ },
+ {
+  "line": 111,
+  "offset": "0x3c",
+  "base": "stadium_by_id",
+  "module": "stadium",
+  "verdict": "existing",
+  "name": "CAPACITY",
+  "width": 4,
+  "rust_type": "i32",
+  "description": "capacity (the 8-byte region also covers SEATING_CAPACITY)",
+  "confidence": "read",
+  "evidence": "stashed venue reopened at 90000/90000, as v_stadium 1130-1131"
+ }
+]

@@ -53,7 +53,7 @@ pub(crate) unsafe extern "thiscall" fn compare_punish_foul(this: usize, j: usize
 pub(crate) unsafe extern "thiscall" fn compare_punish_move(this: usize, j: usize, other: usize, kind: *mut u8, x: i8, sev: i8, flag: u8, weight: *mut f32, send_off: u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, *mut u8, i8, i8, u8, *mut f32, u8)>(IDX_PUNISH_MOVE);
     let mut reg = card_regions(read_usize(this), j, kind, weight);
-    reg.push((other + 0x15, 1));
+    reg.push((other + match_player::FOULS_SUFFERED, 1));
     let t0 = *kind;
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, j, other, kind, x, sev, flag, weight, send_off), || crate::rng::without_counting(|| punish_move(this, j, other, kind, x, sev, flag, weight, send_off)));
     SCOREBOARD.record(igual, || format!("punish_move(kind {}, sev {}, flag {}) original={:x?} rust={:x?}", t0, sev, flag, mo, mr));

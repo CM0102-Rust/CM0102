@@ -1,0 +1,28 @@
+[
+ {
+  "line": 20,
+  "offset": "0x720",
+  "base": "e (match events)",
+  "module": "match_events_fields",
+  "verdict": "existing",
+  "name": "ENTRIES",
+  "width": 14,
+  "rust_type": "[u8; 14]",
+  "description": "event entries of 14 bytes",
+  "confidence": "verified",
+  "evidence": "same as routine verdict"
+ },
+ {
+  "line": 81,
+  "offset": "0x30",
+  "base": "t (commentary queue)",
+  "module": "commentary_queue",
+  "verdict": "existing",
+  "name": "SLOTS",
+  "width": 168,
+  "rust_type": "[u8; 168]",
+  "description": "12 slots of 14 bytes",
+  "confidence": "verified",
+  "evidence": "same as routine verdict; region 12 x 14"
+ }
+]

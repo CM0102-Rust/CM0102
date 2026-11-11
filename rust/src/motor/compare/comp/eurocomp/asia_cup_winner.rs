@@ -11,7 +11,7 @@ pub(crate) unsafe extern "thiscall" fn compare_asia_cup_winner_create_knockout_s
     if stages == 0 || (0..3).any(|g| read_usize(stages + g * 4) == 0) || this.table() == 0 {
         return o(this.addr());
     }
-    let table = |g: i32| if g < 0 { this.table() } else { read_usize(read_usize(stages + g as usize * 4) + 0xb1) };
+    let table = |g: i32| if g < 0 { this.table() } else { read_usize(read_usize(stages + g as usize * 4) + league::TABLE) };
     let mut plan: Vec<usize> = AFRICAN_NATIONS_QUARTER_FINAL_SLOTS.iter().map(|&(g, p)| read_usize(table(g) + p as usize * 0x3b)).collect();
     o(this.addr());
     let stage = Cup(read_usize(this.stages() + 0xc));

@@ -398,7 +398,7 @@ pub(crate) unsafe extern "thiscall" fn compare_pick_ai_manager_response(this: us
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(IDX_PICK_AI_MANAGER_RESPONSE);
     let mut regions = crate::rng::STATE_REGIONS.to_vec();
     if !manager.is_null() && manager.staff_preferences() != 0 {
-        regions.push((manager.staff_preferences() + 0x1c, 0x18));
+        regions.push((manager.staff_preferences() + preferences::STAFF_FAVOURITE_STAFF1, 0x18));
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(
         &regions,

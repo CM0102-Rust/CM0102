@@ -1,0 +1,41 @@
+[
+ {
+  "line": 15,
+  "offset": "0xb2",
+  "base": "this (UEFA cup)",
+  "module": "uefa_cup",
+  "verdict": "existing",
+  "name": "PRELIMINARY_CLUB_COUNT",
+  "width": 1,
+  "rust_type": "i8",
+  "description": "clubs in the preliminary round",
+  "confidence": "read",
+  "evidence": "build_entrants; uefa_cup::PRELIMINARY_CLUB_COUNT"
+ },
+ {
+  "line": 16,
+  "offset": "0x1db",
+  "base": "club table row (base + i*club::SIZE)",
+  "module": "club",
+  "verdict": "existing",
+  "name": "CONTINENTAL_COMP_ID",
+  "width": 4,
+  "rust_type": "i32",
+  "description": "continental competition the club is entered in",
+  "confidence": "read",
+  "evidence": "club::CONTINENTAL_COMP_ID"
+ },
+ {
+  "line": 64,
+  "offset": "0x1db",
+  "base": "string",
+  "module": "",
+  "verdict": "not_field",
+  "name": "",
+  "width": 0,
+  "rust_type": "",
+  "description": "",
+  "confidence": "verified",
+  "evidence": "offset inside a string literal (log text)"
+ }
+]

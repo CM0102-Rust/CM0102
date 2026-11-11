@@ -39,7 +39,7 @@ pub(crate) unsafe extern "thiscall" fn compare_fin_prm_end_season_for_nation(thi
     }
     o(this, entry);
     if let Some(k) = last {
-        let f = read_usize(this) + k * 0x167 + 0x110;
+        let f = read_usize(this) + k * 0x167 + finance::SEASON_PLAYERS_BOUGHT;
         let cleared = core::slice::from_raw_parts(f as *const u8, 0x50).iter().all(|&x| x == 0);
         SCOREBOARD.record(cleared, || format!("fin_prm_end_season_for_nation(entry {:#x}) club {} without clear the totais of the year", entry, k));
     }

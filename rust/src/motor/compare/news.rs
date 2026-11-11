@@ -88,7 +88,7 @@ pub(crate) unsafe extern "thiscall" fn compare_deliver_to_manager(this: usize, n
         (id == 0, true)
     } else {
         let v = |k: i32| read_usize(this).wrapping_add((k as usize).wrapping_mul(NEWS_NEWS_RECORD_SIZE));
-        (read_usize(v(previous) + 0xd6) == id, read_usize(v(atual) + 0xda) != 0)
+        (read_usize(v(previous) + news_item::ID) == id, read_usize(v(atual) + news_item::READ) != 0)
     };
     let (prox, conta_depois) = if repetida {
         (atual, conta)
@@ -343,7 +343,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_inbox_items(this: usize, mana
     let ok = if ids.is_empty() {
         r == 0
     } else {
-        r == 0 || (*count as usize == ids.len() && ids.iter().enumerate().all(|(i, &id)| read_usize(r + i * MEDIA_NEWS_ITEM_SIZE + 0xd6) == id))
+        r == 0 || (*count as usize == ids.len() && ids.iter().enumerate().all(|(i, &id)| read_usize(r + i * MEDIA_NEWS_ITEM_SIZE + news_item::ID) == id))
     };
     SCOREBOARD.record(ok, || format!("get_inbox_items(category {}) {} news, esperava {:?}", category as u8, if r == 0 { 0 } else { *count }, ids));
     r

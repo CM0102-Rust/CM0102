@@ -297,7 +297,7 @@ pub(crate) unsafe extern "thiscall" fn compare_staff_records_end_season_for_nati
     let n = manager_record_count().max(0);
     let mut plan = Vec::with_capacity(n as usize);
     for k in 0..n {
-        let s = manager_record_at(this, k) + 0xba;
+        let s = manager_record_at(this, k) + manager_record::SEASON_POINTS;
         let (mut liga, mut copa, mut cl, mut cc) = (read_usize(s), read_usize(s + 4), read_i32(s + 8), read_i32(s + 0xc));
         if cl == id {
             if cc == id {
@@ -314,7 +314,7 @@ pub(crate) unsafe extern "thiscall" fn compare_staff_records_end_season_for_nati
     }
     o(this, entry);
     let wrong = (0..n).find(|&k| {
-        let s = manager_record_at(this, k) + 0xba;
+        let s = manager_record_at(this, k) + manager_record::SEASON_POINTS;
         plan[k as usize] != (read_usize(s), read_usize(s + 4), read_i32(s + 8), read_i32(s + 0xc))
     });
     SCOREBOARD.record(wrong.is_none(), || format!("staff_records_end_season_for_nation(competition {}) record {:?} difere of the plan", id, wrong));

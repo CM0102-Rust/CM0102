@@ -234,7 +234,7 @@ pub(crate) unsafe extern "thiscall" fn compare_transfer_manager_daily_update(thi
         let p10 = exe::new_date(d10.as_mut_ptr() as usize, 100, year.wrapping_sub(10) as u32);
         let mut s = read_usize(G_STAFF_TABLE);
         for _ in 0..(read_usize(G_STAFF_COUNT) as i32).max(0) {
-            if meets_residency_naturalisation(Staff(s), p2, p5, p10, community) && read_usize(s + staff::SECOND_NATION) != read_usize(read_usize(s + staff::CLUB_JOB) + 0x53) {
+            if meets_residency_naturalisation(Staff(s), p2, p5, p10, community) && read_usize(s + staff::SECOND_NATION) != read_usize(read_usize(s + staff::CLUB_JOB) + club::NATION) {
                 erradas += 1;
             }
             s += 0x6e;
@@ -378,7 +378,7 @@ pub(crate) unsafe extern "thiscall" fn compare_check_squad_limits(this: usize, c
     if club == 0 {
         return f(this, club, o.addr(), count_queue, reason);
     }
-    let mut regions = vec![(G_CONTRACT_LOOKUP_RESULT, 4usize), (read_usize(G_TRANSFER_MANAGER) + 0x936, 4)];
+    let mut regions = vec![(G_CONTRACT_LOOKUP_RESULT, 4usize), (read_usize(G_TRANSFER_MANAGER) + transfer_manager_fields::FREE_TRANSFER_QUEUE_CURSOR, 4)];
     if !reason.is_null() {
         regions.push((reason as usize, 2));
     }
@@ -1454,7 +1454,7 @@ pub(crate) unsafe extern "stdcall" fn compare_transfer_manager_close_offer_contr
     if !l.is_null() {
         ids.extend(llist_data_values(l).iter().map(|&e| read_u32(e)));
     }
-    let propostas = Llist(read_usize(read_usize(G_CONTRACT_MANAGER) + 0x34));
+    let propostas = Llist(read_usize(read_usize(G_CONTRACT_MANAGER) + contract_manager_fields::CONTRACT_OFFERS));
     let mut regions = vec![(G_CONTRACT_LOOKUP_RESULT, 4usize)];
     if !l.is_null() {
         regions.push((l.addr() + llist::CURSOR, 4));

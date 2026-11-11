@@ -35,7 +35,7 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_start_new_season(th
     let before = this.year();
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_THIRD_START_NEW_SEASON)(this.addr());
     let after = this.year();
-    let same = after == before.wrapping_add(1) && read_usize(this.addr() + 0xee) == 0 && (0..7).all(|g| read_usize(this.stages() + 4 * g) != 0);
+    let same = after == before.wrapping_add(1) && read_usize(this.addr() + bra_nat_third::CLUB_LIST) == 0 && (0..7).all(|g| read_usize(this.stages() + 4 * g) != 0);
     SCOREBOARD.record(same, || format!("bra_nat_third_start_new_season({:#x}) year before={} after={} +0xee={:#x}", this.addr(), before, after, read_usize(this.addr() + 0xee)));
     r
 }
@@ -84,7 +84,7 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_create_group_stage(
     let k = g as u8 as i8 as i32;
     let mut plan = [0usize; 7];
     for (j, c) in plan.iter_mut().enumerate() {
-        *c = read_usize(read_usize(this.addr() + 0xee) + 4 * (7 * (k + 1) as usize + j));
+        *c = read_usize(read_usize(this.addr() + bra_nat_third::CLUB_LIST) + 4 * (7 * (k + 1) as usize + j));
     }
     original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_BRA_NAT_THIRD_CREATE_GROUP_STAGE)(this.addr(), g);
     let stage = League(read_usize(this.stages() + 4 * k as usize));
@@ -116,7 +116,7 @@ pub(crate) unsafe extern "thiscall" fn compare_create_second_round_stage(this: u
     let this = League(this);
     let mut r = [(0usize, 0i16); 16];
     for (k, g) in (-1i32..7).enumerate() {
-        let t = LeagueTableRow(read_usize(if g == -1 { this.addr() } else { read_usize(this.stages() + 4 * g as usize) } + 0xb1));
+        let t = LeagueTableRow(read_usize(if g == -1 { this.addr() } else { read_usize(this.stages() + 4 * g as usize) } + league::TABLE));
         r[2 * k] = (read_usize(t.addr()), t.points());
         r[2 * k + 1] = (read_usize(t.addr() + 0x3b), read_i16(t.addr() + 0x54));
     }
@@ -204,7 +204,7 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_create_table(this: 
         i += 1;
     }
     let r = o(this.addr());
-    let (lista, t) = (read_usize(this.addr() + 0xee), this.table());
+    let (lista, t) = (read_usize(this.addr() + bra_nat_third::CLUB_LIST), this.table());
     let mut same = r == 1 && this.club_count() == 7 && lista != 0 && t != 0 && plan.len() >= 7;
     let mut drawn: Vec<usize> = Vec::new();
     if same {

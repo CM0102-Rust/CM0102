@@ -1,0 +1,54 @@
+[
+ {
+  "line": 44,
+  "offset": "0xb1",
+  "base": "stage k",
+  "module": "league",
+  "verdict": "existing",
+  "name": "TABLE",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "pointer to the stage's league table",
+  "confidence": "read",
+  "evidence": "stage is a League; row 0 then read"
+ },
+ {
+  "line": 44,
+  "offset": "0x37",
+  "base": "row 0",
+  "module": "league_table_row",
+  "verdict": "existing",
+  "name": "STATUS",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "decided table status",
+  "confidence": "read",
+  "evidence": "== 5 test on row 0 STATUS, as v_bra_reg_parana 75"
+ },
+ {
+  "line": 60,
+  "offset": "0x30",
+  "base": "string",
+  "module": null,
+  "verdict": "not_field",
+  "name": null,
+  "width": null,
+  "rust_type": null,
+  "description": null,
+  "confidence": "read",
+  "evidence": "offset inside a log string literal"
+ },
+ {
+  "line": 60,
+  "offset": "0x2c",
+  "base": "string",
+  "module": null,
+  "verdict": "not_field",
+  "name": null,
+  "width": null,
+  "rust_type": null,
+  "description": null,
+  "confidence": "read",
+  "evidence": "offset inside a log string literal"
+ }
+]

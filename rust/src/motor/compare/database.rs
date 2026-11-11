@@ -1697,10 +1697,10 @@ pub(crate) unsafe extern "thiscall" fn compare_ball_out(this: usize, l: u8) -> u
     if is_recording() {
         return call_recording(FN_CM3_MATCH_ENGINE_BALL_OUT_OF_PLAY, this.addr(), [l as u32, 0, 0, 0, 0], || o(this.addr(), l) as u32) as u8;
     }
-    let mut extra = vec![(this.addr() + 0x8ea0, 0x20), (this.addr() + 0x4780, 0x10), (this.addr() + 0xf570, 0x20), (this.addr() + 0x1a0, 0x10)];
+    let mut extra = vec![(this.addr() + engine::SHOOTOUT_KICKS_TAKEN + 1, 0x20), (this.addr() + engine::BALL_RECEIVER + 2, 0x10), (this.addr() + engine::FORMATION_TABLE + 2, 0x20), (this.addr() + engine::PENDING_INCIDENTS + 0xef, 0x10)];
     let owner = this.ball_holder();
     if !owner.is_null() {
-        extra.extend([(owner.addr() + 0x29, 2), (owner.addr() + 0x19c, 2)]);
+        extra.extend([(owner.addr() + match_player::SPACE_ON_BALL, 2), (owner.addr() + match_player::BALL_CONTROL, 2)]);
     }
     let (r, n) = (core::cell::Cell::new(0u8), core::cell::Cell::new(0u8));
     let (igual, k) = compare_with_commentary_at(&extra, || r.set(o(this.addr(), l)), |c| n.set(ball_out_with(this, l, c)));
@@ -1727,7 +1727,7 @@ pub(crate) unsafe extern "C" fn compare_dislikes(target: usize, person: usize) -
 /// Comparer for `mark_position`.
 pub(crate) unsafe extern "thiscall" fn compare_mark_position(this: usize, position: i8, sheet: *const u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, *const u32) -> u32>(IDX_MARK_POSITION);
-    let reg = [((this as isize + 0x5bf + 4 * position as isize) as usize, 4), (this + formation_fields::CHANGED_FLAG, 4)];
+    let reg = [((this as isize + (formation_fields::DESIGNATED_PEOPLE as isize) + 4 * position as isize) as usize, 4), (this + formation_fields::CHANGED_FLAG, 4)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, position, sheet), || mark_position(this, position, sheet));
     SCOREBOARD.record(igual && r == n, || format!("mark_position({}) original={:x?} rust={:x?}", position, mo, mr));
     r

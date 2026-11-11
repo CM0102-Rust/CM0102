@@ -237,7 +237,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_club_manager(this: usize, 
             let ct = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p);
             if ct != 0 {
                 // 0x10000000 is read at +0x40 (0x8676f0) and cleared at +0x45 (0x8674e0): cannot be checked
-                sobra |= (exe::staff_contract_get_flags(ct) & 0x180) | (read_usize(ct + 0x45) as u32 & 0x889_2608);
+                sobra |= (exe::staff_contract_get_flags(ct) & 0x180) | (read_usize(ct + contract::GRIEVANCES) as u32 & 0x889_2608);
             }
         }
     }
@@ -298,10 +298,10 @@ pub(crate) unsafe extern "thiscall" fn compare_assess_transfer_deal(this: usize,
     reg.extend([(f1, 2), (f2, 2)]);
     let person = Staff(read_usize(G_STAFF_TABLE).wrapping_add(transf.target_staff_id().wrapping_mul(staff::SIZE)));
     let buyer = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(transf.addr() + 8).wrapping_mul(club::SIZE));
-    reg.push((board_row_at(this, read_usize(buyer)) + 0x38, 8));
+    reg.push((board_row_at(this, read_usize(buyer)) + board_record::SQUAD_INVESTMENT, 8));
     let seller = person.club_job();
     if !seller.is_null() {
-        reg.push((board_row_at(this, read_usize(seller.addr())) + 0x38, 8));
+        reg.push((board_row_at(this, read_usize(seller.addr())) + board_record::SQUAD_INVESTMENT, 8));
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, transf.addr(), f1, f2),
         || crate::rng::without_counting(|| assess_transfer_deal(this, transf.addr(), f1, f2)));
@@ -453,7 +453,7 @@ pub(crate) unsafe extern "thiscall" fn compare_fix_missing_jobs(this: usize) {
 pub(crate) unsafe extern "thiscall" fn compare_best_manager_candidate_score(this: usize, club: usize, current: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(IDX_BEST_MANAGER_CANDIDATE_SCORE);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.push((read_usize(this + manager_manager_fields::VACANCY_LIST) + 0xa, 4));
+    reg.push((read_usize(this + manager_manager_fields::VACANCY_LIST) + llist::CURSOR, 4));
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club, current), || crate::rng::without_counting(|| best_manager_candidate_score(this, club, current)));
     SCOREBOARD.record(igual && r == n, || format!("best_manager_candidate_score(club {}, current {:x}) original={} rust={} {:x?} x {:x?}", read_usize(club), current, r, n, mo, mr));
     r

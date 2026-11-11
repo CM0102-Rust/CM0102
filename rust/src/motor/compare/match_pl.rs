@@ -264,7 +264,7 @@ pub(crate) unsafe extern "thiscall" fn compare_move_to(this: usize, x: i8, y: i8
     if v >= 0 && n > 0 {
         let moved = *((old as isize + 4 * (11 * l as isize + n as isize - 1)) as *const usize);
         if moved != 0 {
-            reg.push((moved + 0x28, 1));
+            reg.push((moved + match_player::CELL_SLOT, 1));
         }
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this.addr(), x, y), || move_to(this.addr(), x, y));
@@ -317,7 +317,7 @@ pub(crate) unsafe extern "thiscall" fn compare_match_performance(this: usize, ma
     reg.push((this.addr(), 0x1be));
     let engine = this.engine();
     if !engine.is_null() {
-        reg.push(((engine.addr() as isize + 0xaf + this.side() as isize) as usize, 1));
+        reg.push(((engine.addr() as isize + (engine::SIDE_OUT_OF_POSITION as isize) + this.side() as isize) as usize, 1));
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this.addr(), mark), || crate::rng::without_counting(|| match_performance(this.addr(), mark)));
     SCOREBOARD.record(igual, || format!("match_performance({}) original={:x?} rust={:x?}", mark, mo, mr));

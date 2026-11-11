@@ -15,7 +15,7 @@ pub(crate) unsafe extern "thiscall" fn compare_conmebol_liber_update_for_date(th
     if draws {
         let stages = this.stages();
         let ok = this.active() == 1
-            && read_usize(this.addr() + 0xee) == 0
+            && read_usize(this.addr() + conmebol_liber::DRAWN_CLUBS) == 0
             && this.table() != 0
             && stages != 0
             && (0..7).all(|g| read_usize(stages + g * 4) != 0)
@@ -29,7 +29,7 @@ pub(crate) unsafe extern "thiscall" fn compare_conmebol_liber_update_for_date(th
 pub(crate) unsafe extern "thiscall" fn compare_build_first_group_table(this: usize) -> u32 {
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BUILD_FIRST_GROUP_TABLE);
-    let list = read_usize(this.addr() + 0xee);
+    let list = read_usize(this.addr() + conmebol_liber::DRAWN_CLUBS);
     if list == 0 {
         return o(this.addr());
     }
@@ -51,7 +51,7 @@ pub(crate) unsafe extern "thiscall" fn compare_build_first_group_table(this: usi
 pub(crate) unsafe extern "thiscall" fn compare_conmebol_liber_create_group_stage(this: usize, g: i32) -> u32 {
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> u32>(IDX_CONMEBOL_LIBER_CREATE_GROUP_STAGE);
-    let list = read_usize(this.addr() + 0xee);
+    let list = read_usize(this.addr() + conmebol_liber::DRAWN_CLUBS);
     if list == 0 || !(0..7).contains(&g) {
         return o(this.addr(), g);
     }
@@ -121,7 +121,7 @@ pub(crate) unsafe extern "thiscall" fn compare_conmebol_liber_update_staff_recor
     if title {
         let mundial = Cup(read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(KEY_CLUB_COMP_WORLD_CLUB_CUP).wrapping_mul(4))));
         let t = mundial.team_table();
-        let nation = Nation(read_usize(read_usize(t) + 0x53));
+        let nation = Nation(read_usize(read_usize(t) + club::NATION));
         slot = if !nation.is_null() && read_usize(nation.continent()) == read_usize(KEY_CONTINENT_SOUTH_AMERICA) { t } else { t + 6 };
     }
     let r = o(this, club, outcome, stage, a4, game, a6);

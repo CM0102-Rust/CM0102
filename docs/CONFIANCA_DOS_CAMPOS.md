@@ -19,8 +19,8 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | Nível | Campos |
 |---|---|
 | comunidade | 246 |
-| conferido | 165 |
-| lido | 1545 |
+| conferido | 166 |
+| lido | 1553 |
 | inferido | 163 |
 
 ## Por registro
@@ -72,7 +72,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `count_record` | 0 | 0 | 2 | 0 |
 | `crt_file` | 0 | 1 | 0 | 0 |
 | `cup` | 0 | 0 | 25 | 2 |
-| `cup_round` | 0 | 0 | 23 | 1 |
+| `cup_round` | 0 | 0 | 24 | 1 |
 | `cup_team_entry` | 0 | 0 | 3 | 0 |
 | `cup_tie` | 0 | 2 | 10 | 0 |
 | `day_competition` | 0 | 0 | 5 | 1 |
@@ -100,10 +100,10 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `file_find_state` | 0 | 0 | 1 | 0 |
 | `finance` | 0 | 0 | 40 | 2 |
 | `fixed_fixture` | 0 | 0 | 1 | 0 |
-| `fixture` | 0 | 0 | 35 | 6 |
+| `fixture` | 0 | 0 | 36 | 6 |
 | `fixture_leg_check` | 0 | 0 | 4 | 0 |
 | `fixture_manager` | 0 | 0 | 7 | 0 |
-| `formation_fields` | 0 | 5 | 9 | 0 |
+| `formation_fields` | 0 | 5 | 10 | 0 |
 | `fra_first` | 0 | 0 | 2 | 0 |
 | `free_transfer_entry` | 0 | 0 | 2 | 0 |
 | `friendly` | 0 | 0 | 19 | 2 |
@@ -132,8 +132,8 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `language_entry` | 0 | 0 | 2 | 0 |
 | `league` | 0 | 5 | 44 | 6 |
 | `league_projection` | 0 | 0 | 5 | 0 |
-| `league_round_date` | 0 | 0 | 7 | 1 |
-| `league_table_row` | 0 | 0 | 29 | 0 |
+| `league_round_date` | 0 | 0 | 8 | 1 |
+| `league_table_row` | 0 | 0 | 30 | 0 |
 | `lineup_row` | 0 | 4 | 11 | 3 |
 | `live_match` | 0 | 0 | 15 | 2 |
 | `llist` | 0 | 0 | 4 | 0 |
@@ -148,7 +148,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `match_manager` | 0 | 0 | 15 | 7 |
 | `match_player` | 0 | 3 | 111 | 22 |
 | `match_record` | 0 | 6 | 69 | 11 |
-| `match_record_row` | 0 | 7 | 25 | 6 |
+| `match_record_row` | 0 | 7 | 26 | 6 |
 | `match_record_team` | 0 | 0 | 28 | 4 |
 | `match_spectators` | 0 | 0 | 9 | 1 |
 | `match_stats` | 0 | 0 | 5 | 0 |
@@ -200,7 +200,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `ruling_body` | 0 | 3 | 5 | 0 |
 | `ruling_body_entry` | 0 | 3 | 2 | 1 |
 | `run_record` | 0 | 0 | 2 | 0 |
-| `save_summary` | 0 | 1 | 0 | 0 |
+| `save_summary` | 0 | 2 | 0 | 0 |
 | `scheduled_friendly_slot` | 0 | 0 | 4 | 0 |
 | `scout_manager_fields` | 0 | 0 | 4 | 0 |
 | `scout_report` | 0 | 3 | 6 | 4 |
@@ -214,7 +214,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `shortlist_manager_fields` | 0 | 0 | 10 | 0 |
 | `shortlist_pair` | 0 | 0 | 1 | 0 |
 | `shortlist_slot` | 0 | 0 | 8 | 1 |
-| `side_stats` | 0 | 0 | 5 | 0 |
+| `side_stats` | 0 | 0 | 6 | 0 |
 | `spa_first_fields` | 0 | 0 | 1 | 0 |
 | `stadium` | 10 | 0 | 1 | 0 |
 | `stadium_obj` | 0 | 0 | 7 | 0 |
@@ -222,7 +222,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `staff` | 32 | 4 | 2 | 0 |
 | `staff_history` | 0 | 3 | 0 | 0 |
 | `staff_records_fields` | 0 | 0 | 7 | 0 |
-| `staff_state` | 0 | 0 | 7 | 1 |
+| `staff_state` | 0 | 0 | 8 | 1 |
 | `story_log_entry` | 0 | 0 | 6 | 0 |
 | `tactic_stats` | 0 | 0 | 7 | 3 |
 | `tactics_fields` | 0 | 0 | 10 | 2 |

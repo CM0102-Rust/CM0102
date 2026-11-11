@@ -15,8 +15,8 @@ pub(crate) unsafe extern "thiscall" fn compare_oceania_club_champ_update_for_dat
     if draws {
         let stages = this.stages();
         let ok = this.active() == 1
-            && read_usize(this.addr() + 0xee) == 0
-            && read_usize(this.addr() + 0xf2) == 0
+            && read_usize(this.addr() + oceania_club_champ::DRAWN_CLUBS) == 0
+            && read_usize(this.addr() + oceania_club_champ::DRAWN_CLUB_COUNT) == 0
             && this.table() != 0
             && stages != 0
             && read_usize(stages) != 0
@@ -30,7 +30,7 @@ pub(crate) unsafe extern "thiscall" fn compare_oceania_club_champ_update_for_dat
 pub(crate) unsafe extern "thiscall" fn compare_create_group_a_table(this: usize) -> u32 {
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CREATE_GROUP_A_TABLE);
-    let list = read_usize(this.addr() + 0xee);
+    let list = read_usize(this.addr() + oceania_club_champ::DRAWN_CLUBS);
     if list == 0 {
         return o(this.addr());
     }
@@ -52,7 +52,7 @@ pub(crate) unsafe extern "thiscall" fn compare_create_group_a_table(this: usize)
 pub(crate) unsafe extern "thiscall" fn compare_create_group_b_stage(this: usize) -> u32 {
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CREATE_GROUP_B_STAGE);
-    let list = read_usize(this.addr() + 0xee);
+    let list = read_usize(this.addr() + oceania_club_champ::DRAWN_CLUBS);
     if list == 0 {
         return o(this.addr());
     }

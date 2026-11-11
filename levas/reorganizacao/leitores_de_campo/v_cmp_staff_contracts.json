@@ -1,0 +1,28 @@
+[
+ {
+  "line": 87,
+  "offset": "0x45",
+  "base": "this (contract)",
+  "module": "contract",
+  "verdict": "existing",
+  "name": "GRIEVANCES",
+  "width": 4,
+  "rust_type": "u32",
+  "description": "grievance bits",
+  "confidence": "read",
+  "evidence": "clear_all_grievances compared on these 4 bytes"
+ },
+ {
+  "line": 120,
+  "offset": "0x40",
+  "base": "c (contract)",
+  "module": "contract",
+  "verdict": "existing",
+  "name": "FLAGS",
+  "width": 4,
+  "rust_type": "u32",
+  "description": "contract flags",
+  "confidence": "read",
+  "evidence": "set_flags compared on these 4 bytes"
+ }
+]

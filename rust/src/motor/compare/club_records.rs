@@ -117,8 +117,8 @@ pub(crate) unsafe extern "thiscall" fn compare_update_transfer_fee_records(this:
     let value = t.fee() as i32;
     let rg = records();
     // (value, club) of each record: paid in the season and all-time by the buyer, received by the seller
-    let mut plan = [(read_i32(rg[0] + 0x313), read_usize(rg[0] + 0x32f)), (read_i32(rg[1] + 0x313), read_usize(rg[1] + 0x32f)),
-                     (read_i32(rg[2] + 0x33c), read_usize(rg[2] + 0x358)), (read_i32(rg[3] + 0x33c), read_usize(rg[3] + 0x358))];
+    let mut plan = [(read_i32(rg[0] + club_record::FEE_PAID), read_usize(rg[0] + club_record::FEE_PAID_OTHER_CLUB_ID)), (read_i32(rg[1] + club_record::FEE_PAID), read_usize(rg[1] + club_record::FEE_PAID_OTHER_CLUB_ID)),
+                     (read_i32(rg[2] + club_record::FEE_RECEIVED), read_usize(rg[2] + club_record::FEE_RECEIVED_OTHER_CLUB_ID)), (read_i32(rg[3] + club_record::FEE_RECEIVED), read_usize(rg[3] + club_record::FEE_RECEIVED_OTHER_CLUB_ID))];
     let mut queue = read_i32(this + club_records_fields::NEWS_QUEUE_COUNT);
     if value != 0 {
         if value > plan[0].0 {
@@ -142,8 +142,8 @@ pub(crate) unsafe extern "thiscall" fn compare_update_transfer_fee_records(this:
     }
     let r = o(this, t.addr());
     let rg = records();
-    let now = [(read_i32(rg[0] + 0x313), read_usize(rg[0] + 0x32f)), (read_i32(rg[1] + 0x313), read_usize(rg[1] + 0x32f)),
-                 (read_i32(rg[2] + 0x33c), read_usize(rg[2] + 0x358)), (read_i32(rg[3] + 0x33c), read_usize(rg[3] + 0x358))];
+    let now = [(read_i32(rg[0] + club_record::FEE_PAID), read_usize(rg[0] + club_record::FEE_PAID_OTHER_CLUB_ID)), (read_i32(rg[1] + club_record::FEE_PAID), read_usize(rg[1] + club_record::FEE_PAID_OTHER_CLUB_ID)),
+                 (read_i32(rg[2] + club_record::FEE_RECEIVED), read_usize(rg[2] + club_record::FEE_RECEIVED_OTHER_CLUB_ID)), (read_i32(rg[3] + club_record::FEE_RECEIVED), read_usize(rg[3] + club_record::FEE_RECEIVED_OTHER_CLUB_ID))];
     let queue_now = read_i32(this + club_records_fields::NEWS_QUEUE_COUNT);
     SCOREBOARD.record(r == 1 && now == plan && queue_now == queue && read_usize(G_CONTRACT_LOOKUP_RESULT) == contract.addr(), || {
         format!("update_transfer_fee_records(value {}) plan {:x?} queue {} x {:x?} queue {}", value, plan, queue, now, queue_now)
@@ -171,7 +171,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_transfer_totals(this: usize, 
     // creating the buyer’s record may reallocate the vector and move the seller’s: fetch all four again (now it only finds)
     let regs = [exe::club_records_get_season_record(this, seller, 1), exe::club_records_get_all_time_record(this, seller, 1), exe::club_records_get_season_record(this, buyer, 1), exe::club_records_get_all_time_record(this, buyer, 1)];
     let queue = read_usize(this + club_records_fields::NEWS_QUEUE).wrapping_add(read_usize(this + club_records_fields::NEWS_QUEUE_COUNT).wrapping_mul(6));
-    let reg = [(regs[0] + 0x365, 12), (regs[1] + 0x365, 12), (regs[2] + 0x365, 12), (regs[3] + 0x365, 12), (this + club_records_fields::NEWS_QUEUE_COUNT, 4), (queue, 12)];
+    let reg = [(regs[0] + club_record::TRANSFER_SPENDING, 12), (regs[1] + club_record::TRANSFER_SPENDING, 12), (regs[2] + club_record::TRANSFER_SPENDING, 12), (regs[3] + club_record::TRANSFER_SPENDING, 12), (this + club_records_fields::NEWS_QUEUE_COUNT, 4), (queue, 12)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, value, buyer, seller), || add_transfer_totals(this, value, buyer, seller));
     SCOREBOARD.record(igual && r == n, || format!("add_transfer_totals({}, {}, {}) {:x?} x {:x?}", value, read_usize(buyer), read_usize(seller), mo, mr));
     r

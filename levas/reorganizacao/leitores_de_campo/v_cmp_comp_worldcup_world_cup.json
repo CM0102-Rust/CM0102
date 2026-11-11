@@ -1,0 +1,67 @@
+[
+ {
+  "line": 19,
+  "offset": "0xee",
+  "base": "this (WorldCup league)",
+  "module": "world_cup_fields",
+  "verdict": "existing",
+  "name": "DRAW_SLOT_CLUB",
+  "width": 160,
+  "rust_type": "[u8]",
+  "description": "the 32 draw slots of 5 bytes",
+  "confidence": "read",
+  "evidence": "window 0xa0 = 32 x 5; world_cup_fields::DRAW_SLOT_CLUB (v_world_cup)"
+ },
+ {
+  "line": 46,
+  "offset": "0x30",
+  "base": "string",
+  "module": "",
+  "verdict": "not_field",
+  "name": "",
+  "width": 0,
+  "rust_type": "",
+  "description": "",
+  "confidence": "verified",
+  "evidence": "offset inside a string literal (log text)"
+ },
+ {
+  "line": 62,
+  "offset": "0xb1",
+  "base": "string",
+  "module": "",
+  "verdict": "not_field",
+  "name": "",
+  "width": 0,
+  "rust_type": "",
+  "description": "",
+  "confidence": "verified",
+  "evidence": "offset inside a string literal (log text)"
+ },
+ {
+  "line": 62,
+  "offset": "0x45",
+  "base": "string",
+  "module": "",
+  "verdict": "not_field",
+  "name": "",
+  "width": 0,
+  "rust_type": "",
+  "description": "",
+  "confidence": "verified",
+  "evidence": "offset inside a string literal (log text)"
+ },
+ {
+  "line": 203,
+  "offset": "0xee",
+  "base": "this (WorldCup league)",
+  "module": "world_cup_fields",
+  "verdict": "existing",
+  "name": "DRAW_SLOT_CLUB",
+  "width": 160,
+  "rust_type": "[u8]",
+  "description": "the 32 draw slots of 5 bytes",
+  "confidence": "read",
+  "evidence": "seed_teams window 0xa0 = 32 x 5; world_cup_fields::DRAW_SLOT_CLUB"
+ }
+]

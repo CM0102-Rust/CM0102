@@ -14,7 +14,7 @@ pub(crate) unsafe extern "thiscall" fn compare_eng_cc_cup_create_round_table(thi
 pub(crate) unsafe extern "thiscall" fn compare_eng_cc_cup_collect_entrants(this: usize) -> i32 {
     let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_ENG_CC_CUP_COLLECT_ENTRANTS);
-    eng_cc_cup_compare_entrant_list("eng_cc_cup_collect_entrants", this, &[(this.addr() + cup::TEAM_COUNT, 2), (this.addr() + 0xb2, 1), (G_MOUSE_LEFT_BUTTON_DOWN, 4)], || o(this.addr()),
+    eng_cc_cup_compare_entrant_list("eng_cc_cup_collect_entrants", this, &[(this.addr() + cup::TEAM_COUNT, 2), (this.addr() + eng_cc_cup::EUROPEAN_ENTRANT_COUNT, 1), (G_MOUSE_LEFT_BUTTON_DOWN, 4)], || o(this.addr()),
         || collect_league_cup_entrants(this), |_, n| n.max(0) as usize * 6)
 }
 
@@ -23,7 +23,7 @@ pub(crate) unsafe extern "thiscall" fn compare_eng_cc_cup_update_for_date(this: 
     let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_ENG_CC_CUP_UPDATE_FOR_DATE);
     let before = this.season_set_up();
-    let vira = before == 0 && read_i16(read_usize(G_UEFA_SEEDING) + 0x439) as u16 as i32 == this.year() as i32 && stage != 0;
+    let vira = before == 0 && read_i16(read_usize(G_UEFA_SEEDING) + uefa_seeding::SEASON_YEAR) as u16 as i32 == this.year() as i32 && stage != 0;
     let r = o(this.addr(), today, stage);
     let after = this.season_set_up();
     SCOREBOARD.record(after == if vira { 1 } else { before }, || format!("eng_cc_cup_update_for_date({:#x}) vira {} +0x45 {} -> {}", this.addr(), vira, before, after));

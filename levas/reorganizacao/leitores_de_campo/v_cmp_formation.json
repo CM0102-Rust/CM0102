@@ -1,0 +1,15 @@
+[
+ {
+  "line": 56,
+  "offset": "0x5b4",
+  "base": "this",
+  "module": "formation_fields",
+  "verdict": "existing",
+  "name": "MARKING_TYPES",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "marking type byte of slot home",
+  "confidence": "verified",
+  "evidence": "same as routine verdict (set_marking_type)"
+ }
+]

@@ -1,0 +1,54 @@
+[
+ {
+  "line": 240,
+  "offset": "0x45",
+  "base": "ct (contract)",
+  "module": "contract",
+  "verdict": "existing",
+  "name": "GRIEVANCES",
+  "width": 4,
+  "rust_type": "u32",
+  "description": "grievance bits",
+  "confidence": "read",
+  "evidence": "ct from contract_manager_get_contract; the comment says the bits are cleared at +0x45"
+ },
+ {
+  "line": 301,
+  "offset": "0x38",
+  "base": "board row (buyer)",
+  "module": "board_record",
+  "verdict": "existing",
+  "name": "SQUAD_INVESTMENT",
+  "width": 8,
+  "rust_type": "f64",
+  "description": "net value of players bought minus sold",
+  "confidence": "read",
+  "evidence": "8-byte double compared around assess_transfer_deal"
+ },
+ {
+  "line": 304,
+  "offset": "0x38",
+  "base": "board row (seller)",
+  "module": "board_record",
+  "verdict": "existing",
+  "name": "SQUAD_INVESTMENT",
+  "width": 8,
+  "rust_type": "f64",
+  "description": "net value of players bought minus sold",
+  "confidence": "read",
+  "evidence": "8-byte double compared around assess_transfer_deal"
+ },
+ {
+  "line": 456,
+  "offset": "0xa",
+  "base": "VACANCY_LIST (LLIST)",
+  "module": "llist",
+  "verdict": "existing",
+  "name": "CURSOR",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "iteration cursor of the vacancy list",
+  "confidence": "read",
+  "evidence": "header: the cursor of the vacancy list (0x69fc60 returns it)"
+ }
+]

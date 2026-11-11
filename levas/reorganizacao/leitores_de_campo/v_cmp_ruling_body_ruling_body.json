@@ -1,0 +1,15 @@
+[
+ {
+  "line": 30,
+  "offset": "0xe",
+  "base": "base (ruling body entries)",
+  "module": "",
+  "verdict": "not_field",
+  "name": "",
+  "width": 0,
+  "rust_type": "",
+  "description": "entry stride (14-byte ruling_body_entry)",
+  "confidence": "read",
+  "evidence": "base + 0xe x k; 0xe bytes copied per entry"
+ }
+]

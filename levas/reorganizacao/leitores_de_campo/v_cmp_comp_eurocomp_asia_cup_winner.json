@@ -1,0 +1,28 @@
+[
+ {
+  "line": 14,
+  "offset": "0xb1",
+  "base": "stage g (League)",
+  "module": "league",
+  "verdict": "existing",
+  "name": "TABLE",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "pointer to the group stage league table",
+  "confidence": "verified",
+  "evidence": "league::TABLE; the g < 0 branch uses this.table() for the same field"
+ },
+ {
+  "line": 17,
+  "offset": "0xc",
+  "base": "this.stages()",
+  "module": null,
+  "verdict": "not_field",
+  "name": null,
+  "width": null,
+  "rust_type": null,
+  "description": null,
+  "confidence": "read",
+  "evidence": "index 3 of the stage pointer array (4 bytes per stage), as v_asia_cup_winner line 71"
+ }
+]

@@ -1,0 +1,67 @@
+[
+ {
+  "line": 75,
+  "offset": "0xee",
+  "base": "this (con_merc_cup league)",
+  "module": "con_merc_cup",
+  "verdict": "existing",
+  "name": "DRAWN_CLUBS",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "pointer to the drawn invited clubs list (zeroed after the groups are built)",
+  "confidence": "read",
+  "evidence": "con_merc_cup::DRAWN_CLUBS; same as v_con_merc_cup"
+ },
+ {
+  "line": 80,
+  "offset": "0x45",
+  "base": "-",
+  "module": null,
+  "verdict": "not_field",
+  "name": null,
+  "width": null,
+  "rust_type": null,
+  "description": null,
+  "confidence": "read",
+  "evidence": "offset inside a log format string literal"
+ },
+ {
+  "line": 80,
+  "offset": "0x30",
+  "base": "-",
+  "module": null,
+  "verdict": "not_field",
+  "name": null,
+  "width": null,
+  "rust_type": null,
+  "description": null,
+  "confidence": "read",
+  "evidence": "offset inside a log format string literal"
+ },
+ {
+  "line": 89,
+  "offset": "0xee",
+  "base": "this (con_merc_cup league)",
+  "module": "con_merc_cup",
+  "verdict": "existing",
+  "name": "DRAWN_CLUBS",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "pointer to the drawn invited clubs list",
+  "confidence": "read",
+  "evidence": "con_merc_cup::DRAWN_CLUBS; first four entries fill the first group table"
+ },
+ {
+  "line": 111,
+  "offset": "0xee",
+  "base": "this (con_merc_cup league)",
+  "module": "con_merc_cup",
+  "verdict": "existing",
+  "name": "DRAWN_CLUBS",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "pointer to the drawn invited clubs list",
+  "confidence": "read",
+  "evidence": "con_merc_cup::DRAWN_CLUBS; group g takes entries 4g+4.."
+ }
+]

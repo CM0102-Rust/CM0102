@@ -1,0 +1,28 @@
+[
+ {
+  "line": 11,
+  "offset": "0x439",
+  "base": "read_usize(G_UEFA_SEEDING) (uefa_seeding)",
+  "module": "uefa_seeding",
+  "verdict": "existing",
+  "name": "SEASON_YEAR",
+  "width": 2,
+  "rust_type": "i16",
+  "description": "game year of the last seeding rollover",
+  "confidence": "read",
+  "evidence": "same as uefa_seeding routine verdict; compared with the cup year"
+ },
+ {
+  "line": 14,
+  "offset": "0x45",
+  "base": "string",
+  "module": "",
+  "verdict": "not_field",
+  "name": "",
+  "width": 0,
+  "rust_type": "",
+  "description": "offset inside a string literal (log text)",
+  "confidence": "read",
+  "evidence": "inside format!"
+ }
+]
