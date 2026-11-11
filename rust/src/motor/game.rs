@@ -442,7 +442,7 @@ pub(crate) unsafe extern "C" fn game_spread_squad_morale_by_leadership() {
                     continue;
                 }
                 let c = game_contract_for_club(p, Club(club));
-                let m = if c.is_null() { 0 } else { (c.morale() as i32) };
+                let m = if c.is_null() { 0 } else { c.morale() as i32  };
                 let l = read_i8_as_i32(read_usize(p + staff::PLAYER) + player_sheet::LEADERSHIP);
                 crate::comparison::branch("cps_5 drawn morale");
                 let r1 = friendly_random(soma.wrapping_mul(2) / (l + lideranca));
@@ -516,7 +516,7 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
     for _ in 0..q {
         let p = Staff(current);
         current = current.wrapping_add(0x6e);
-        if p.player().is_null() || p.job_for_club() != 0xb {
+        if p.player().is_null() || p.job_for_club() != job_kind::PLAYER {
             continue;
         }
         let c = game_get_contract_and_store(p.addr());

@@ -712,7 +712,7 @@ pub(crate) unsafe fn is_squad_candidate(this: usize, nation: Nation, t: i8, data
         return false;
     }
     let tj = j.national_job();
-    if !tj.is_null() && (j.job_for_nation() != 0xb || tj.nation() != nation) {
+    if !tj.is_null() && (j.job_for_nation() != job_kind::PLAYER || tj.nation() != nation) {
         return false;
     }
     if !p.is_null() {
@@ -1929,7 +1929,7 @@ pub(crate) unsafe extern "thiscall" fn withdraw_injured_player(this: usize, p: u
     if club.is_null() {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_WITHDRAW_INJURED_PLAYER)(this, p.addr(), days_arg);
     }
-    if p.job_for_nation() != 0xb {
+    if p.job_for_nation() != job_kind::PLAYER {
         return;
     }
     let nation = club.nation().addr();
@@ -2000,7 +2000,7 @@ pub(crate) unsafe extern "thiscall" fn withdraw_injured_player(this: usize, p: u
 /// [pt] O caminho que a 0x775cd0 vai tomar, só lendo (a lista [this] percorrida pelos nós, sem mexer no cursor): 0 nada, 1
 /// doença (só sai), 2 sai com notícia. O clube (+0x24) já conferido.
 pub(crate) unsafe fn release_plan(this: usize, p: Staff, days: u32) -> u8 {
-    if (days as u16 as i16) < 0xe || p.job_for_nation() != 0xb {
+    if (days as u16 as i16) < 0xe || p.job_for_nation() != job_kind::PLAYER {
         return 0;
     }
     let club = p.national_job();
@@ -2746,7 +2746,7 @@ pub(crate) unsafe fn remove_from_tactics(team: Club, p: usize) {
 /// [pt] A pessoa sai da seleção: sem time (+0x24), sem a marca +0x28 e só com os bits de clube (& 3) em +0x5e.
 pub(crate) unsafe fn clear_national_call_up(p: Staff) {
     p.set_national_job(Club(0));
-    p.set_job_for_nation(0); // the call-up mark
+    p.set_job_for_nation(job_kind::UNEMPLOYED); // the call-up mark
     p.set_playing_squad(p.playing_squad() & 3);
 }
 
@@ -2771,7 +2771,7 @@ pub(crate) unsafe extern "thiscall" fn add_player_to_squad(_this: usize, nation:
     p.set_national_job(team);
     let mut data = [0u8; 8];
     exe::date_operator_3d(p.addr() + staff::DATE_JOINED_NATION, (data.as_mut_ptr()) as usize, G_CURRENT_DATE);
-    p.set_job_for_nation(0xb);
+    p.set_job_for_nation(job_kind::PLAYER);
     exe::staff_set_squad_flags(p, squad);
 }
 
@@ -3006,7 +3006,7 @@ pub(crate) unsafe extern "thiscall" fn call_up_replacement(this: usize, nation: 
         }
         let team = q.national_job();
         if !team.is_null() {
-            if q.job_for_nation() != 0xb {
+            if q.job_for_nation() != job_kind::PLAYER {
                 continue;
             }
             let other: i8 = if exe::club_is_national_team(team) != 0 { 2 } else { ((q.playing_squad() >> 3) & 1) as i8 };

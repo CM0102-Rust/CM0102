@@ -180,7 +180,7 @@ pub(crate) unsafe extern "thiscall" fn make_club_bids(this: usize, club: usize) 
         if exe::transfer_manager_get_future_transfer(gm, p, 0 as u32) != 0 || exe::transfer_manager_get_agreed_contract_club(gm, p, 0) != 0 {
             continue;
         }
-        if !p.national_job().is_null() && p.job_for_nation() == 5 {
+        if !p.national_job().is_null() && p.job_for_nation() == job_kind::MANAGER {
             continue;
         }
         if read_u8(slot(0x24)) & 1 == 0 {
@@ -321,7 +321,7 @@ pub(crate) unsafe extern "thiscall" fn make_club_bids(this: usize, club: usize) 
         } else {
             // the loan slot
             let n = club.nation().addr();
-            if n != 0 && read_usize(n) == read_usize(KEY_NATION_FRANCE) && club.professional_status() == 3 {
+            if n != 0 && read_usize(n) == read_usize(KEY_NATION_FRANCE) && club.professional_status() == professional_status::AMATEUR {
                 continue;
             }
             if exe::transfer_manager_can_loan_player(gm, club, p, 0) == 0 {
@@ -2709,7 +2709,7 @@ pub(crate) unsafe extern "thiscall" fn allocate_transfer_budget(this: usize, clu
                 if read_i32(v + shortlist_slot::REPLACEMENT_STAFF_ID) != -1 {
                     continue;
                 }
-                let rico = club.professional_status() == 1;
+                let rico = club.professional_status() == professional_status::PROFESSIONAL;
                 match (t as i8 as i32).wrapping_sub(6) {
                     0 | 2 => Some(if rico { a * 10 } else { 0 }),
                     1 => Some(if rico { a * 1000 } else { 0 }),
@@ -2743,14 +2743,14 @@ pub(crate) unsafe extern "thiscall" fn allocate_transfer_budget(this: usize, clu
                 } else if t == 0xb {
                     let l = Offer(read_usize(exe::transfer_manager_get_offer_slot(read_usize(G_TRANSFER_MANAGER), lance)));
                     if !l.is_null() {
-                        rest = rest.wrapping_sub((l.fee() as i32));
+                        rest = rest.wrapping_sub(l.fee() as i32);
                     }
                 } else {
                     rest = rest.wrapping_sub(read_i32(shortlist_manager_staff_by_index(target) + staff::VALUE));
                 }
                 continue;
             }
-            if club.professional_status() != 1 && t != 0xb {
+            if club.professional_status() != professional_status::PROFESSIONAL && t != 0xb {
                 write_i32(v + 7, 0);
             } else {
                 let base = if split >= 1000 { split } else { 1000 };
@@ -3069,10 +3069,10 @@ pub(crate) unsafe extern "thiscall" fn add_player_to_club_shortlists(this: usize
     if read_u8(record(player.addr()) + staff_state::STATUS_FLAGS) & 0x30 == staff_state_status_flags::RETIREMENT_ANNOUNCED {
         return;
     }
-    if player.job_for_club() != 0xb {
+    if player.job_for_club() != job_kind::PLAYER {
         return;
     }
-    if !player.national_job().is_null() && player.job_for_nation() == 5 {
+    if !player.national_job().is_null() && player.job_for_nation() == job_kind::MANAGER {
         return;
     }
     let nation = player.nation();
@@ -3897,7 +3897,7 @@ pub(crate) unsafe extern "stdcall" fn passes_work_permit_check(player: usize, _c
         return 0;
     }
     let target = buyer.nation();
-    if target.actual_region() != 0xe || nation == target || player.second_nation() == target {
+    if target.actual_region() != world_region::UK_AND_IRELAND || nation == target || player.second_nation() == target {
         return 1;
     }
     if exe::database_is_staff_eu_national(player, target) != 0 {

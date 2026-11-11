@@ -58,7 +58,7 @@ pub(crate) unsafe fn bra_reg_rio_construct_state_league(this: League, year: u32,
     }
     crate::comparison::branch(ramo);
     this.set_importance(0xf);
-    this.set_stage_index(0xff);
+    this.set_stage_index(stage_index::MAIN);
     write_i32(this.addr() + league::CURRENT_STAGE, -1);
     write_u32(this.addr() + league::STAGE_COUNT, e.stages);
     let v = exe::crt_malloc(e.stages * 4);
@@ -101,8 +101,8 @@ pub(crate) unsafe fn bra_reg_rio_construct_state_league(this: League, year: u32,
 pub(crate) unsafe fn bra_reg_rio_compare_state_league_ctor(name: &str, this: League, year: u32, record: usize, e: &BraRegRioStateChampionship, original: impl FnOnce() -> usize) -> usize {
     let r = original();
     let mut ok = r == this.addr() && read_usize(this.addr()) == e.vtabela && (this.year() as u16) == year as u16
-        && this.competition().addr() == record && this.discipline_rule() == 7;
-    if this.stage_index() == 0xff && this.comp_stats() != 0 {
+        && this.competition().addr() == record && this.discipline_rule() == discipline_rule::BRAZIL_REGIONAL;
+    if this.stage_index() == stage_index::MAIN && this.comp_stats() != 0 {
         ok = ok && this.stage_count() == e.stages as usize && this.stages() != 0 && this.importance() == 0xf;
     }
     SCOREBOARD.record(ok, || format!("{}({:#x}): returned {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this.addr(), r, read_usize(this.addr()), this.stage_count(), this.stages(), this.comp_stats()));
@@ -693,7 +693,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_final_stage(this: usiz
         while i < this.club_count() {
             let row = LeagueTableRow(this.table() + i as usize * 0x3b);
             if read_usize(row.addr()) == read_usize(list) {
-                row.set_status(5);
+                row.set_status(table_status::CHAMPIONS);
             }
             i += 1;
         }

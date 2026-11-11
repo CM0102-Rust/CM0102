@@ -54,7 +54,7 @@ pub(crate) unsafe extern "thiscall" fn compare_clear_human_manager_record(this: 
 pub(crate) unsafe extern "thiscall" fn compare_record_match_result(this: usize, p: usize, m: usize) {
     let p = Fixture(p);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_RECORD_MATCH_RESULT);
-    if p.category() == 1 {
+    if p.category() == match_category::FRIENDLY {
         return o(this, p.addr(), m);
     }
     let a = club_manager_record(this, p.home_club());
@@ -326,7 +326,7 @@ pub(crate) unsafe extern "thiscall" fn compare_staff_records_end_season_for_nati
 pub(crate) unsafe extern "thiscall" fn compare_find_manager_of_the_month(this: usize, index: i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> usize>(IDX_FIND_MANAGER_OF_THE_MONTH);
     let league = League(read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((index as usize).wrapping_mul(4))));
-    if league.comp_type() != 2 {
+    if league.comp_type() != comp_type::LEAGUE {
         return o(this, index);
     }
     let r = o(this, index);

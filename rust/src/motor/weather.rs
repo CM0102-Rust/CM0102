@@ -106,7 +106,7 @@ pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, game: usi
             if cap > 0x4e20 {
                 return 0;
             }
-            let home_side = home.professional_status() == 1;
+            let home_side = home.professional_status() == professional_status::PROFESSIONAL;
             let n = if cap > 0x30d4 {
                 0xfa
             } else if cap > 0x1388 {
@@ -131,7 +131,7 @@ pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, game: usi
             if cap > 0x3a98 {
                 return 0;
             }
-            let home_side = home.professional_status() == 1;
+            let home_side = home.professional_status() == professional_status::PROFESSIONAL;
             if cap > 0x1d4c && home_side {
                 if friendly_random(4) != 0 {
                     return 5;

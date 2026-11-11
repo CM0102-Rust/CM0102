@@ -146,8 +146,8 @@ pub(crate) unsafe extern "thiscall" fn create_tie_fixtures(this: usize, round: u
     }
     p.set_match_stats_slot(usize::MAX);
     p.set_stage_index(this.stage_index());
-    p.set_home_result_mark((0) as i8);
-    p.set_away_result_mark((0) as i8);
+    p.set_home_result_mark((result_mark::NONE) as i8);
+    p.set_away_result_mark((result_mark::NONE) as i8);
     p.set_stage(0xff);
     p.set_home_side_mark(1);
     p.set_away_side_mark((1) as i8);
@@ -825,7 +825,7 @@ pub(crate) unsafe extern "thiscall" fn pay_round_prize_money(cup: usize, winner:
         None => return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, usize)>(IDX_PAY_ROUND_PRIZE_MONEY)(cup.addr(), winner, loser, round, fixture.addr()), // simplification: the original crashes on the division; let it crash there
     };
     let mut outcome = read_u8(winner + 5);
-    if fixture.round_name() == 0x136 && outcome == 1 {
+    if fixture.round_name() == round_name::THIRD_PLACE_PLAYOFF_ALT && outcome == 1 {
         outcome = 3;
     }
     let e = CupRound(round_record(cup, r));
@@ -1349,7 +1349,7 @@ pub(crate) unsafe fn cup_record_final_result(f: usize, club: usize, game: Fixtur
 pub(crate) unsafe extern "thiscall" fn cup_update_staff_records_for_status(cup: usize, club: usize, outcome: u32, a3: u32, a4: u32, game: usize, final_: u32) -> u32 {
     let cup = Cup(cup);
     let game = Fixture(game);
-    if game.category() == 1 || cup.stage_count() != 0 || cup.stage_index() != 0xff {
+    if game.category() == match_category::FRIENDLY || cup.stage_count() != 0 || cup.stage_index() != stage_index::MAIN {
         return 0;
     }
     let comp = read_usize(cup.addr() + 4);
@@ -1766,7 +1766,7 @@ pub(crate) unsafe fn cup_stage(this: Cup, i: usize) -> usize {
 /// também monta na data pendente da rodada (+0x34 da fase da rodada). Devolve 0.
 pub(crate) unsafe extern "thiscall" fn cup_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
     let this = Cup(this);
-    if this.stage_index() == 0xff {
+    if this.stage_index() == stage_index::MAIN {
         let mut completas = this.run_by_stages() != 0;
         if completas {
             let mut i = 0usize;
@@ -1796,7 +1796,7 @@ pub(crate) unsafe extern "thiscall" fn cup_update_for_date(this: usize, today: u
             exe::comp_stats_send_record_news(read_usize(this.addr() + 8));
         }
     }
-    if this.stage_index() == 0xff {
+    if this.stage_index() == stage_index::MAIN {
         let mut i = 0usize;
         while (i as i32) <= this.current_stage() as i32 {
             let p = cup_stage(this, i);
@@ -2391,13 +2391,13 @@ pub(crate) unsafe fn cap_professional_status(club: Club, value: i8, baixar: u32)
 pub(crate) unsafe fn fixture_winner_side(this: Cup, f: Fixture) -> Option<u32> {
     let fl = (f.tie_rules() as i16) as u16;
     if fl & 0x10 != 0 {
-        f.set_home_result_mark(1);
-        f.set_away_result_mark(1);
+        f.set_home_result_mark(result_mark::LEVEL);
+        f.set_away_result_mark(result_mark::LEVEL);
     }
     let (g1, g2) = (f.home_goals(), f.away_goals());
     if g1 > g2 {
-        if f.home_result_mark() == 1 {
-            f.set_home_result_mark(2);
+        if f.home_result_mark() == result_mark::LEVEL {
+            f.set_home_result_mark(result_mark::WON);
         }
         if fl & 0x2000 != 0 {
             f.set_home_result_mark(f.home_result_mark().wrapping_sub(3));
@@ -2405,8 +2405,8 @@ pub(crate) unsafe fn fixture_winner_side(this: Cup, f: Fixture) -> Option<u32> {
         return Some(1);
     }
     if g1 < g2 {
-        if f.away_result_mark() == 1 {
-            f.set_away_result_mark(2);
+        if f.away_result_mark() == result_mark::LEVEL {
+            f.set_away_result_mark(result_mark::WON);
         }
         if fl & 0x2000 != 0 {
             f.set_away_result_mark(f.away_result_mark().wrapping_sub(3));
@@ -2419,22 +2419,22 @@ pub(crate) unsafe fn fixture_winner_side(this: Cup, f: Fixture) -> Option<u32> {
             crate::comparison::branch("cpm_1 match in extra time");
             let c = f.home_result_mark();
             if c == 1 {
-                f.set_home_result_mark(2);
+                f.set_home_result_mark(result_mark::WON);
             } else if fl & 0x2000 != 0 {
                 f.set_home_result_mark(c.wrapping_sub(3));
             } else {
-                f.set_home_result_mark(3);
+                f.set_home_result_mark(result_mark::WON_EXTRA_TIME);
             }
             return Some(1); // the home team in extra time
         }
         if a1 < a2 {
             let c = f.away_result_mark();
             if c == 1 {
-                f.set_away_result_mark(2);
+                f.set_away_result_mark(result_mark::WON);
             } else if fl & 0x2000 != 0 {
                 f.set_away_result_mark(c.wrapping_sub(3));
             } else {
-                f.set_away_result_mark(3);
+                f.set_away_result_mark(result_mark::WON_EXTRA_TIME);
             }
             return Some(2); // the away team in extra time
         }
@@ -2446,7 +2446,7 @@ pub(crate) unsafe fn fixture_winner_side(this: Cup, f: Fixture) -> Option<u32> {
         if p1 > p2 {
             let c = f.home_result_mark();
             if c == 1 {
-                f.set_home_result_mark(2);
+                f.set_home_result_mark(result_mark::WON);
             } else if fl & 0x2000 != 0 {
                 f.set_home_result_mark(c.wrapping_sub(3));
             } else {
@@ -2457,7 +2457,7 @@ pub(crate) unsafe fn fixture_winner_side(this: Cup, f: Fixture) -> Option<u32> {
         if p1 < p2 {
             let c = f.away_result_mark();
             if c == 1 {
-                f.set_away_result_mark(2);
+                f.set_away_result_mark(result_mark::WON);
             } else if fl & 0x2000 != 0 {
                 f.set_away_result_mark(c.wrapping_sub(3));
             } else {
@@ -2468,11 +2468,11 @@ pub(crate) unsafe fn fixture_winner_side(this: Cup, f: Fixture) -> Option<u32> {
         return None; // draw in the penalties: the original’s box
     }
     if fl & 0x800 != 0 {
-        f.set_home_result_mark(8); // Walkover in favour of the home team
+        f.set_home_result_mark(result_mark::WALKOVER); // Walkover in favour of the home team
         return Some(1);
     }
     if fl & 0x1000 != 0 {
-        f.set_away_result_mark(8);
+        f.set_away_result_mark(result_mark::WALKOVER);
         return Some(2);
     }
     if fl & 0x2000 == 0 {
@@ -2587,15 +2587,15 @@ pub(crate) unsafe fn tie_winner_side(conf: usize, j: Fixture) -> Option<u32> {
             t(0x24) > t(0x25)
         };
         if side_return == side_first_leg {
-            j.set_home_result_mark(1);
-            j.set_away_result_mark(1);
+            j.set_home_result_mark(result_mark::LEVEL);
+            j.set_away_result_mark(result_mark::LEVEL);
             return Some(4);
         }
         if side_return {
-            j.set_away_result_mark(2);
+            j.set_away_result_mark(result_mark::WON);
             return Some(2);
         }
-        j.set_home_result_mark(2);
+        j.set_home_result_mark(result_mark::WON);
         return Some(1);
     }
     if fl & 0x2000 != 0 {
@@ -2623,32 +2623,32 @@ pub(crate) unsafe fn tie_winner_side(conf: usize, j: Fixture) -> Option<u32> {
     }
     crate::comparison::branch("cpm_1 tie level on aggregate");
     if fl & 0x800 != 0 {
-        j.set_home_result_mark(8);
+        j.set_home_result_mark(result_mark::WALKOVER);
         return Some(1);
     }
     if fl & 0x1000 != 0 {
-        j.set_away_result_mark(8);
+        j.set_away_result_mark(result_mark::WALKOVER);
         return Some(2);
     }
     if fl & 2 != 0 && t(0x22) as u8 != 0xff {
         if fl & 0x4000 != 0 && (t(0x22) as i32 + t(0x15) as i32) == (t(0x23) as i32 + t(0x14) as i32) {
             if t(0x23) > t(0x15) {
-                j.set_away_result_mark(6);
+                j.set_away_result_mark(result_mark::WON_ON_AWAY_GOALS);
                 return Some(2);
             }
             if t(0x23) < t(0x15) {
-                j.set_home_result_mark(6);
+                j.set_home_result_mark(result_mark::WON_ON_AWAY_GOALS);
                 return Some(1);
             }
         }
         let x = t(0x23) as i32 - t(0x1f) as i32;
         let y = t(0x22) as i32 - t(0x1e) as i32;
         if y > x {
-            j.set_home_result_mark(3);
+            j.set_home_result_mark(result_mark::WON_EXTRA_TIME);
             return Some(1);
         }
         if y < x {
-            j.set_away_result_mark(3);
+            j.set_away_result_mark(result_mark::WON_EXTRA_TIME);
             return Some(2);
         }
     }
@@ -2656,11 +2656,11 @@ pub(crate) unsafe fn tie_winner_side(conf: usize, j: Fixture) -> Option<u32> {
         // away goals (the second-leg away team, +0x15, against the first-leg one, +0x1f)
         let away = t(0x1f) as i16;
         if volta2 < away {
-            j.set_away_result_mark(6);
+            j.set_away_result_mark(result_mark::WON_ON_AWAY_GOALS);
             return Some(2);
         }
         if volta2 > away {
-            j.set_home_result_mark(6);
+            j.set_home_result_mark(result_mark::WON_ON_AWAY_GOALS);
             return Some(1);
         }
     }
@@ -2959,7 +2959,7 @@ pub(crate) unsafe extern "thiscall" fn cup_check_complete(this: usize, stages: u
     if this.run_by_stages() == 0 {
         return 0;
     }
-    if stages != 1 || this.stage_index() != 0xff {
+    if stages != 1 || this.stage_index() != stage_index::MAIN {
         return 1;
     }
     let mut i = 0i32;

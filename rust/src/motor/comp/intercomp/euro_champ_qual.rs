@@ -27,8 +27,8 @@ pub(crate) unsafe fn set_up_rules(this: League) -> u32 {
     this.set_substitutions_allowed(3);
     this.set_legs(2); // cqs8: dois turnos
     this.set_draw_points(1);
-    this.set_match_category(0xa);
-    this.set_comp_type(2);
+    this.set_match_category(match_category::NATIONAL_TEAMS);
+    this.set_comp_type(comp_type::LEAGUE);
     for (k, v) in [1u8, 2, 4, 5].into_iter().enumerate() {
         write_u8(this.addr() + league::TIEBREAKS + k, v);
     }

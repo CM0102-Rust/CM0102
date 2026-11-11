@@ -226,7 +226,7 @@ pub(crate) unsafe extern "thiscall" fn mark_stars(this: usize, side: i8) {
             v += 2000;
         }
         if v as i16 > 8500 {
-            exe::formation_set_player_instruction((this as isize + (engine::TACTICS as isize) + 0x18e3 * side as isize) as usize, j.position(), (player_instructions::STANDOUT_PLAYER as u64));
+            exe::formation_set_player_instruction((this as isize + (engine::TACTICS as isize) + 0x18e3 * side as isize) as usize, j.position(), player_instructions::STANDOUT_PLAYER as u64);
         }
     }
 }

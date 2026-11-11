@@ -3,7 +3,7 @@ MUTACOES = [
     ('cpd_fim_competicao', 'read_usize(r + 4) == read_usize(comp) /* a competição */', 'read_usize(r + 4) != read_usize(comp) /* mutacao: as outras */'),
     ('cpd_fim_nacao', 'read_usize(r) == read_usize(nation) /* a nação */', 'read_usize(r) != read_usize(nation) /* mutacao: as outras */'),
     ('cpd_poda_vencidas', 'vencidas = vencidas.wrapping_add(1); // one won', 'vencidas = vencidas.wrapping_add(0); // mutacao: nenhuma vencida'),
-    ('cpd_por_marca', '    p.set_job_for_nation(0xb);\n    exe::staff_set_squad_flags(p, squad)', '    p.set_job_for_nation(0xa); // mutacao: outra marca\n    exe::staff_set_squad_flags(p, squad)'),
+    ('cpd_por_marca', '    p.set_job_for_nation(job_kind::PLAYER);\n    exe::staff_set_squad_flags(p, squad)', '    p.set_job_for_nation(0xa); // mutacao: outra marca\n    exe::staff_set_squad_flags(p, squad)'),
     ('cpd_tirar_vaga', 'team.set_squad(c, 0);', 'team.set_squad(c, p); // mutacao: a vaga fica'),
     ('cpd_sub21_idade', '(p.age() as i8) > 0x15 { // over 21 years old', '(p.age() as i8) >= 0x15 { // mutacao: tambem os de 21'),
     ('cpd_atual_aviso', '        notify_manager_manager(nation); // the notice of the next competition', '        // mutacao: sem o aviso da competicao seguinte'),

@@ -9,7 +9,7 @@ MUTACOES = [
     ('cpn_poucas_partidas', 'r = r * s1f as f64 * (1.0f32 / 12.0) as f64; // fewer than 12 matches', 'r = r * s1f as f64 * (1.0f32 / 6.0) as f64; // mutacao: s1/6', 'cpn_3 few matches'),
     ('cpn_nota_negativa', 'r = r * player_club_reputation_ratio(player, Club(club)); // the refusal by reputation', 'r = r / player_club_reputation_ratio(player, Club(club)); // mutacao: dividida', 'cpn_3 negative rating'),
     ('cpn_peso_da_historia', 'weight as f64 * (1.0f32 / 60.0) as f64; // the weight of the story', 'weight as f64 * (1.0f32 / 30.0) as f64; // mutacao: 1/30', 'cpn_3 player rating'),
-    ('cpn_aposentado_vira_treinador', 'p.set_job_for_club((0x10) as u8); // aposentado', 'p.set_job_for_club((5) as u8); // mutacao: vira treinador', 'cpn_4 retired player'),
+    ('cpn_aposentado_vira_treinador', 'p.set_job_for_club((job_kind::RETIRED_PLAYER) as u8); // aposentado', 'p.set_job_for_club((5) as u8); // mutacao: vira treinador', 'cpn_4 retired player'),
     ('cpn_jovem_primeiro_clube', 'if s > melhor_nota {', 'if melhor == 0 { // mutacao: o primeiro clube valido', 'cpn_4 better club for the youngster'),
     ('cpn_nacao_sem_sorteio', 'let rating = exe::utils_random(c as i16 as i32) as i16;', 'let rating = c as i16; // mutacao: sem o sorteio', 'cpn_4 draw of the nation club'),
     ('cpn_vaga_nunca_achada', 'return Some(true);', 'return Some(false); // mutacao: a vaga aberta nao conta', 'cpn_5 club with open vacancy'),

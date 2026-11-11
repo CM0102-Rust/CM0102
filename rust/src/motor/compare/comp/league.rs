@@ -242,7 +242,7 @@ pub(crate) unsafe extern "thiscall" fn compare_league_add_result(league: usize, 
     let p = Fixture(p);
     let league = League(league);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(IDX_LEAGUE_ADD_RESULT);
-    if p.is_null() || (league.stage_index() == 0xff && p.stage_index() != 0xff) {
+    if p.is_null() || (league.stage_index() == stage_index::MAIN && p.stage_index() != stage_index::MAIN) {
         return o(league.addr(), p.addr(), game); // simplification: the box or the stage, original only
     }
     let n = league.club_count() as u16 as u32;
@@ -416,7 +416,7 @@ pub(crate) unsafe extern "thiscall" fn compare_init_table_row(this: usize, i: u3
     o(this.addr(), i, club.addr(), mark, rows);
     let idx = i as u8 as i8 as isize;
     let l = LeagueTableRow(table.wrapping_add((idx * TABLE_ROW_SIZE as isize) as usize));
-    let mut ok = read_usize(l.addr()) == club.addr() && (l.position() as u8) == i as u8 && l.status() == 0xff && l.mark() == mark as u8
+    let mut ok = read_usize(l.addr()) == club.addr() && (l.position() as u8) == i as u8 && l.status() == table_status::UNDECIDED && l.mark() == mark as u8
         && l.best_possible_position() == 1 && l.worst_possible_position() == n as u8 && this.games_per_club() == a7_expected
         && (club.is_null() || club.professional_status() == status_expected)
         && (l.position_history() != 0) == (this.legs() > 0) && (l.h2h_entries() != 0) == confrontos;

@@ -318,7 +318,7 @@ pub(crate) unsafe fn close_awol_case(this: usize, r: usize) {
     if *m == 0 {
         return;
     }
-    *m ^= (person_flags::MISSED_TRAINING as u8);
+    *m ^= person_flags::MISSED_TRAINING as u8;
     crate::comparison::branch("cpw_7 absence removed from the list");
     exe::llist_remove(read_usize(this + 4), r); // cpw7: removes the case from the list
 }
@@ -704,7 +704,7 @@ pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, person: usize)
         MISS_TRAINING_DECISION.store(2, Relaxed);
         return;
     }
-    *m |= (person_flags::MISSED_TRAINING as u8);
+    *m |= person_flags::MISSED_TRAINING as u8;
     let k3 = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
     write_u32(G_CONTRACT_LOOKUP_RESULT, k3 as u32);
     exe::awol_post_missed_training_news(person, awol_club_of_contract(Contract(k3)));
@@ -772,7 +772,7 @@ pub(crate) unsafe extern "thiscall" fn end_absence(this: usize, r: usize) {
         }
     }
     let m = read_usize(this + awol_fields::PERSON_FLAGS).wrapping_add(read_i32(r) as usize) as *mut u8;
-    *m ^= (person_flags::ABSENT_WITHOUT_LEAVE as u8);
+    *m ^= person_flags::ABSENT_WITHOUT_LEAVE as u8;
     if MISS_TRAINING_DRY_RUN.load(Relaxed) {
         return;
     }

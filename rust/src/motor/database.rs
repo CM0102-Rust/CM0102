@@ -3607,7 +3607,7 @@ pub(crate) unsafe extern "C" fn database_compare_clubs_by_reputation(a: usize, b
 pub(crate) unsafe extern "C" fn database_club_nation_is_eec(club: usize) -> u32 {
     let club = Club(club);
     let nation = club.nation();
-    (!nation.is_null() && nation.group_membership() == 2) as u32 // in the EEC (dbt)
+    (!nation.is_null() && nation.group_membership() == nation_group::EEC) as u32 // in the EEC (dbt)
 }
 
 /// `get_regions_sorted_by_name(language)`: fills the global array of the 14 regions (0xae2104) with 1..14, stores
@@ -5766,7 +5766,7 @@ pub(crate) unsafe fn any_coach_missing_from_club() -> bool {
     while i < read_i32(G_STAFF_COUNT) {
         let s = Staff(read_usize(G_STAFF_TABLE) + i as usize * 110);
         let c = s.club_job();
-        if s.job_for_club() == 8 && !c.is_null() && !(0..5).any(|j| c.coaches(j) == s.addr()) {
+        if s.job_for_club() == job_kind::COACH && !c.is_null() && !(0..5).any(|j| c.coaches(j) == s.addr()) {
             return true;
         }
         i += 1;
@@ -7984,7 +7984,7 @@ pub(crate) unsafe extern "C" fn staff_normalise_non_player_attributes(person: us
     let pw = |i: i8, x: i16| core::ptr::write_unaligned(v.add(3 * i as usize) as *mut i16, x);
     let end = end as i8;
     let mut mark = [0u32; 64];
-    let job_10 = person.job_for_club() == 10 || person.job_for_nation() == 10;
+    let job_10 = person.job_for_club() == job_kind::PHYSIO || person.job_for_nation() == job_kind::PHYSIO;
     for step_towards in 0..2 {
         let bp = w(end);
         let (mut quantas, mut soma) = (0i32, 0i32);
@@ -8809,7 +8809,7 @@ pub(crate) unsafe extern "C" fn staff_is_transfer_listed(person: usize, club: us
     if v == 0 || read_u8(v + contract::TRANSFER_STATUS) & 1 == 0 {
         return 0;
     }
-    if exe::human_manager_is_human_club(club, 1, 1, 0, 0) == 0 && person.job_for_club() == 0xf {
+    if exe::human_manager_is_human_club(club, 1, 1, 0, 0) == 0 && person.job_for_club() == job_kind::PLAYER_COACH {
         return 0;
     }
     1
@@ -9142,13 +9142,13 @@ pub(crate) unsafe extern "C" fn database_is_staff_eu_national(person: usize, nat
     let person = Staff(person);
     let g = |a: usize| read_u32(a);
     let n = person.nation();
-    if n.group_membership() == 2 { return 1; } // EU nationality
+    if n.group_membership() == nation_group::EEC { return 1; } // EU nationality
     let id = g(n.addr());
     if id == g(KEY_NATION_SWITZERLAND) {
         return 1;
     }
     let n2 = person.second_nation();
-    if !n2.is_null() && n2.group_membership() == 2 {
+    if !n2.is_null() && n2.group_membership() == nation_group::EEC {
         return 1;
     }
     if nation_of_club == 0 {

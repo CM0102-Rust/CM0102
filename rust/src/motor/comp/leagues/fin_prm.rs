@@ -312,10 +312,10 @@ pub(crate) unsafe extern "thiscall" fn season_end_club_update(this: usize, club_
             post_works_news(this, club, v, 3);
             break 'works;
         }
-        let amateur = club.professional_status() == 1;
+        let professional = club.professional_status() == professional_status::PROFESSIONAL;
         let base = if cash > 0x1312d00 {
-            if amateur { 16000 } else { 21000 }
-        } else if amateur {
+            if professional { 16000 } else { 21000 }
+        } else if professional {
             ftol(cash as f64 * read_f64(rdata::F64_0_1)) / 125
         } else {
             ftol(cash as f64 * read_f64(rdata::F64_0_2)) / 50
@@ -346,7 +346,7 @@ pub(crate) unsafe extern "thiscall" fn season_end_club_update(this: usize, club_
         }
         let n = n as i16 as i32;
         ground.set_capacity(n.wrapping_add(cap));
-        if amateur {
+        if professional {
             let s = club.stadium();
             s.set_seating_capacity(s.seating_capacity().wrapping_add(n));
             charge_expense(fin, finance::MONTH_GROUND_COSTS, finance::SEASON_GROUND_COSTS, (n / 1000 + 1).wrapping_mul(6000).wrapping_add(n).wrapping_mul(125));
@@ -624,7 +624,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
     let mut league: i32 = 100;
     let mut factor: f64 = 0.25; // [esp + 0x3c]: 0x3fd00000_00000000
     let mut contract: usize = 0;
-    if club.professional_status() == 3 {
+    if club.professional_status() == professional_status::AMATEUR {
         return 0;
     }
     let rep = club.reputation();
@@ -1221,7 +1221,7 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, fixtur
     let Some(visitante) = match_club_finance(table, fixture, 0x20) else { return };
     let (mut tv, mut publico, mut renda) = (0i32, 0i32, 0i32);
     if (result.attendance() as i32) != 0 {
-        publico = (result.attendance() as i32);
+        publico = result.attendance() as i32;
         renda = result.gate_receipts();
         let q = div_trunc(1, friendly_random(10).wrapping_add(2));
         crate::comparison::branch("cqb_1 paying attendance");
@@ -1230,7 +1230,7 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, fixtur
     let home = fixture.home_club();
     let away = fixture.away_club();
     let mut cost; // the original’s ebp
-    if home.professional_status() != 1 && away.professional_status() != 1 {
+    if home.professional_status() != professional_status::PROFESSIONAL && away.professional_status() != professional_status::PROFESSIONAL {
         cost = ftol(publico as f64 * read_f64(rdata::F64_0_25));
     } else {
         let est = fixture.stadium();
@@ -1265,7 +1265,7 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, fixtur
     }
     let home = fixture.home_club();
     let mut gastos; // the original’s [esp+0x10] (starts with the attendance)
-    if home.professional_status() == 1 {
+    if home.professional_status() == professional_status::PROFESSIONAL {
         let rep = home.reputation();
         if rep != 0 {
             let r = friendly_random(0xc8);
@@ -1417,7 +1417,7 @@ pub(crate) unsafe extern "thiscall" fn calc_gate_receipts(table: usize, fixture:
         };
         if comp.is_null() || friendly {
             v = ftol(price as f64 * read_f64(rdata::F64_0_5) * attendance as f64);
-        } else if home.professional_status() == 1 || fixture.away_club().professional_status() == 1 {
+        } else if home.professional_status() == professional_status::PROFESSIONAL || fixture.away_club().professional_status() == professional_status::PROFESSIONAL {
             v = price.wrapping_add(4).wrapping_mul(attendance);
         } else {
             v = price.wrapping_add(3).wrapping_mul(attendance);
@@ -1897,7 +1897,7 @@ pub(crate) unsafe extern "thiscall" fn update_wage_bill(this: usize) {
         crate::comparison::branch("cpz_11 staff payroll");
         this.set_stages(((this.stages() as i32).wrapping_add(staff)) as usize); // cpz11: the staff on the payroll
     }
-    let tipo1 = club.professional_status() == 1;
+    let tipo1 = club.professional_status() == professional_status::PROFESSIONAL;
     let rep = club.reputation() as i32;
     if ocupadas < 15 {
         let mut v = if rep > 0x128e {
@@ -2937,7 +2937,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_staff_wage(this: usize, job: i8) 
     let this = Finance(this);
     let id = this.club_id();
     let club = Club(read_usize(G_CLUB_TABLE).wrapping_add(id.wrapping_mul(club::SIZE)));
-    if club.professional_status() == 3 {
+    if club.professional_status() == professional_status::AMATEUR {
         return 0;
     }
     let r50 = club.reputation() as i32 / 50;

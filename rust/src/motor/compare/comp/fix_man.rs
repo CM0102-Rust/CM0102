@@ -132,7 +132,7 @@ pub(crate) unsafe extern "thiscall" fn compare_find_new_fixture_date(this: usize
     let game = Fixture(game);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_FIND_NEW_FIXTURE_DATE);
     // the window box without a date (+0x24, type 2) would appear twice: original only
-    if game.is_null() || matches!(exe::comp_util_get_round_variant((game.round_name() as u16) as i16 as i32), 3 | 4) || (game.category() == 2 && game.next_round_year() == 0) {
+    if game.is_null() || matches!(exe::comp_util_get_round_variant((game.round_name() as u16) as i16 as i32), 3 | 4) || (game.category() == match_category::LEAGUE && game.next_round_year() == 0) {
         return o(this, game.addr());
     }
     let reg = [(game.addr(), 0x4f)];

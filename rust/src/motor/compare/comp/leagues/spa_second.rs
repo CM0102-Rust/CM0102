@@ -46,7 +46,7 @@ pub(crate) unsafe extern "thiscall" fn compare_spa_second_create_table(this: usi
     if ok {
         for (k, &(c, b)) in plan.iter().enumerate() {
             let l = LeagueTableRow(t + k * 0x3b);
-            ok = ok && read_usize(l.addr()) == c && (!b || l.status() == 0xfc);
+            ok = ok && read_usize(l.addr()) == c && (!b || l.status() == table_status::PROMOTION_INELIGIBLE);
         }
     }
     SCOREBOARD.record(ok, || format!("spa_second_create_table({:#x}): returned {}, plan {:x?}", this.addr(), r, plan));

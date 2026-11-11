@@ -69,7 +69,7 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_first(this: usize, year: u3
     write_usize(this.addr(), 0x96aa24);
     this.set_year((year as u16) as i16);
     write_usize(this.addr() + league::COMPETITION, record);
-    this.set_discipline_rule(0xc); // cqq6: the discipline of the French first division
+    this.set_discipline_rule(discipline_rule::FRANCE); // cqq6: the discipline of the French first division
     let m = new_marker_comp(0x96a994, KEY_CLUB_COMP_FRENCH_CFA);
     write_usize(this.addr() + fra_first::CFA_MARKER, m);
     let m = new_marker_comp(0x96a904, KEY_CLUB_COMP_FRENCH_LOWER_DIVISION);
@@ -100,7 +100,7 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_first(this: usize, year: u3
             }
         }
     }
-    this.set_stage_index(0xff);
+    this.set_stage_index(stage_index::MAIN);
     this.set_current_stage(0xffff_ffff);
     this.set_stage_count(0);
     this.set_stages(0);

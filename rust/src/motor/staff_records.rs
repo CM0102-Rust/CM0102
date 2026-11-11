@@ -567,7 +567,7 @@ pub(crate) unsafe fn match_rating_for_manager(p: Fixture, side: u32, out: &mut u
 /// visitante, +0xbe/+0xba recebem o [esp+0x10] da rotina, que é a nota do mandante (ou o bônus dele, sem registro).
 pub(crate) unsafe extern "thiscall" fn record_match_result(this: usize, p: usize, m: usize) {
     let p = Fixture(p);
-    if p.category() == 1 {
+    if p.category() == match_category::FRIENDLY {
         return;
     }
     let (casa, fora) = (p.home_club(), p.away_club());
@@ -1985,7 +1985,7 @@ pub(crate) unsafe extern "thiscall" fn staff_records_end_season_for_nation(this:
 /// acima de 0. Devolve o técnico ou 0.
 pub(crate) unsafe extern "thiscall" fn find_manager_of_the_month(this: usize, index: i32) -> usize {
     let league = League(read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((index as usize).wrapping_mul(4))));
-    if league.comp_type() != 2 {
+    if league.comp_type() != comp_type::LEAGUE {
         show_error_at(0xa83b78, 0x104e);
         return 0;
     }

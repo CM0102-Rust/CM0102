@@ -105,7 +105,7 @@ pub(crate) unsafe extern "thiscall" fn player_search_record_scouted_club_match(t
         let l = r.wrapping_add((k as i8 as isize * 0x29) as usize);
         let por = |o: usize, v: u8| write_u8(l + o, v);
         por(0x17, e.assists());
-        por(0x18, (e.goals_conceded() as u8));
+        por(0x18, e.goals_conceded() as u8);
         write_u16(l + 6, (game.day() as i16) as u16);
         write_u16(l + 8, (game.year() as i16) as u16);
         por(0x16, e.goals());
@@ -138,13 +138,13 @@ pub(crate) unsafe extern "thiscall" fn player_search_record_scouted_club_match(t
                 por(0x15, a);
             } else if ((e.minute_off() as u8) as i8) > -1 {
                 por(0x2e, 5);
-                por(0x15, (e.minute_off() as u8));
+                por(0x15, e.minute_off() as u8);
             } else {
-                por(0x15, (result.minute() as u8));
+                por(0x15, result.minute() as u8);
             }
         } else {
             por(0x2e, 2);
-            let c = (e.minute_on() as u8);
+            let c = e.minute_on() as u8;
             if c == 0xff {
                 por(0x15, 0);
             } else {
@@ -389,7 +389,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: Fixture, result: usize,
             // entry (+2); result without ratings (+0x4c): a starter counts 90
             let rating_of = |x: usize| -> u8 {
                 let a = read_u8(x + 4);
-                if (a as i8) > -1 { a } else if (read_u8(x) as i8) > -1 { read_u8(x) } else { (result.minute() as u8) }
+                if (a as i8) > -1 { a } else if (read_u8(x) as i8) > -1 { read_u8(x) } else { result.minute() as u8  }
             };
             let rating: u8 = if j < 0xb {
                 if result.no_statistics() != 0 { 0x5a } else { rating_of(current) }
@@ -593,7 +593,7 @@ pub(crate) unsafe extern "C" fn player_search_get_club_target_rating(club: usize
         };
         esi = sum / 16; // cpu13: a base
     }
-    if club.professional_status() != 1 {
+    if club.professional_status() != professional_status::PROFESSIONAL {
         esi /= 2;
     }
     let mut edi: i32 = if esi > 9000 {
@@ -887,7 +887,7 @@ pub(crate) unsafe extern "thiscall" fn scout_covers_nation(this: usize, nation: 
         return 0;
     }
     let nc = club.nation();
-    if nc.group_membership() == 2 && nation.group_membership() == 2 {
+    if nc.group_membership() == nation_group::EEC && nation.group_membership() == nation_group::EEC {
         return 1;
     }
     if nc.actual_region() == nation.actual_region() {

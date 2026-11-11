@@ -1302,10 +1302,10 @@ pub(crate) unsafe fn substitution_order_ends(a: MatchPlayer, b: MatchPlayer) -> 
     if b.is_null() || b.player().is_null() {
         return Some(-1);
     }
-    if a.position() == -2 {
+    if a.position() == match_slot::INJURED_OFF {
         return Some(-1);
     }
-    if b.position() == -2 {
+    if b.position() == match_slot::INJURED_OFF {
         return Some(1);
     }
     if exe::match_player_get_position(a) == 1 && a.player().goalkeeper() < 20 {
@@ -1589,11 +1589,11 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
                 }
                 let (a, b2) = (l18 as f64, l14 as f64);
                 if a > b2 + b2 && strong > 0x28 && l14 < 0x1b58 {
-                    t.set_selection_mode((0) as i8);
+                    t.set_selection_mode((rotation_mode::ROTATE_HEAVY) as i8);
                 } else if a > b2 * read_f64(rdata::F64_1_4) && strong > 0x23 && l14 < 0x2134 {
-                    t.set_selection_mode((1) as i8);
+                    t.set_selection_mode((rotation_mode::ROTATE_MEDIUM) as i8);
                 } else if a > b2 * read_f64(rdata::F64_1_1) && l14 < 0x2710 {
-                    t.set_selection_mode((2) as i8);
+                    t.set_selection_mode((rotation_mode::ROTATE_LIGHT) as i8);
                 }
             }
         }
@@ -1615,7 +1615,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
         }
         owner(p) == partner(club, 0, 1)
     };
-    if t.selection_mode() != 3 && exe::human_manager_is_human_club(club, 0, 1, 0, 0) == 0 && exe::database_is_national_team(club) == 0 {
+    if t.selection_mode() != rotation_mode::NO_ROTATION && exe::human_manager_is_human_club(club, 0, 1, 0, 0) == 0 && exe::database_is_national_team(club) == 0 {
         match t.selection_mode() {
             0 => {
                 for (o, v) in [(0x50, 1), (0x52, 0x804), (0x54, 0x84), (0x56, 0x204), (0x58, 0x204), (0x5a, 0x204), (0x5c, 0x810), (0x5e, 0x90), (0x60, 0x210), (0x62, 0x210), (0x64, 0x210), (0x66, 0x40), (0x68, 0x40), (0x6a, 0x40), (0x6c, 0x40)] {
@@ -1717,7 +1717,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
             }
         }
         let m5e = |p: usize| *((p + staff::PLAYING_SQUAD) as *const u8);
-        let follows = if t.selection_mode() == 3 {
+        let follows = if t.selection_mode() == rotation_mode::NO_ROTATION {
             !(exe::database_is_national_team(club) != 0 && m5e(p) & playing_squad::NATIONAL_B_SQUAD != 0)
         } else if exe::human_manager_is_human_club(club, 0, 1, 0, 0) != 0 {
             if exe::database_is_national_team(club) != 0 {
@@ -1805,7 +1805,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
                 }
             } else {
                 let j0 = *(game.addr() as *const i32);
-                if t.selection_mode() != 3 || (j0 > -1 && competition(j0) != 0 && exe::comp_is_club_still_in_contention(competition(j0), club) == 0) {
+                if t.selection_mode() != rotation_mode::NO_ROTATION || (j0 > -1 && competition(j0) != 0 && exe::comp_is_club_still_in_contention(competition(j0), club) == 0) {
                     mask = (mask | 0x100) ^ 0x80000;
                 } else if exe::database_is_national_team(club) == 0 {
                     mask |= 0x10000;
@@ -2238,7 +2238,7 @@ pub(crate) unsafe fn substitute_with(c: MatchManager, goalkeeper: u8, call: &mut
             let check_national_team = if strength(match_manager::CLUB) - strength(match_manager::OPPONENT) > r {
                 mode |= 0x100;
                 true
-            } else if c.selection_mode() != 3 {
+            } else if c.selection_mode() != rotation_mode::NO_ROTATION {
                 false
             } else {
                 let id = read_i32(comp.addr());
@@ -3239,7 +3239,7 @@ pub(crate) unsafe fn age_and_foreigner_adjust(p: Staff, f: PlayerSheet, club: Cl
     if (0..=9).contains(&c) {
         const IGUAL: [usize; 10] = [0x96a6a8, 0x96d588, 0x96d590, 0x96d598, 0x96d5a0, 0x96d5a8, 0x96d5b0, 0x96d5b8, 0x96d5c0, 0x96d5c8];
         const OUTRO: [usize; 10] = [0x96d588, 0x96d590, 0x96d598, 0x96d5a0, 0x96d5a8, 0x96d5b0, 0x96d5b8, 0x96d5c0, 0x96d5c8, 0x968e50];
-        let t = if pais.actual_region() == 0xe { &IGUAL } else { &OUTRO };
+        let t = if pais.actual_region() == world_region::UK_AND_IRELAND { &IGUAL } else { &OUTRO };
         l4c = ftol(l4c as f64 * read_f64(t[c as usize]));
     }
     l4c
@@ -4052,7 +4052,7 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
     if without_value == 0 {
         let mut v: i32;
         if !reg.is_null() {
-            if reg.position() == -2 {
+            if reg.position() == match_slot::INJURED_OFF {
                 return -1000000;
             }
             let x = reg.stamina_boost() as f64;

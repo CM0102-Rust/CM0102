@@ -23,7 +23,7 @@ MUTACOES = [
     ('l_conta', '    *((manager.addr() + how_many) as *mut i32) -= 1;', '    *((manager.addr() + how_many) as *mut i32) -= (j > i + 1) as i32;'),
     ('r_marca', '    for o in [0, 4, 8] {\n        write_i32(last + o, -1);', '    for o in [0, 4] {\n        write_i32(last + o, -1);'),
     ('e_data', '    (clubs && w(8) == data_a && w(match_stats_entry::YEAR) == data_b) as i32', '    (clubs && w(8) == data_a) as i32'),
-    ('b_tipo', '        return (game.category() == 1) as u8 + 2;', '        return (game.category() == 1) as u8 + 1;'),
+    ('b_tipo', '        return (game.category() == match_category::FRIENDLY) as u8 + 2;', '        return (game.category() == 1) as u8 + 1;'),
     ('l_tamanho', '    if exe::crt_fread(out, MATCH_STATS_RECORD_SIZE, 1, f) != 1 {', '    if exe::crt_fread(out, MATCH_STATS_RECORD_SIZE - 4, 1, f) != 1 {'),
     ('r_excluido', '|| r.no_statistics() == 0 {', '|| r.no_statistics() != 0 {'),
     ('s_faixa', '                *size = (*size).wrapping_sub(1);', '                *size = (*size).wrapping_sub(0);'),

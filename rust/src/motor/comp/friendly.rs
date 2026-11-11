@@ -225,7 +225,7 @@ pub(crate) unsafe extern "thiscall" fn cancel_tournament(this: usize, tournament
             if read_i16(G_CURRENT_DATE_YEAR) == read_i16(pd + 2) && read_i16(G_CURRENT_DATE) == read_i16(pd) {
                 let r = Fixture(exe::fixture_manager_find_stored_fixture(read_usize(G_FIXTURE_MANAGER), j));
                 if !r.is_null() {
-                    r.set_stage_index(0xff);
+                    r.set_stage_index(stage_index::MAIN);
                     r.set_competition(Competition(read_usize(this.addr() + 4)));
                     write_usize(r.addr(), read_usize(KEY_CLUB_COMP_FRIENDLY));
                 }
@@ -1937,7 +1937,7 @@ pub(crate) unsafe fn set_friendly_windows(ptrs: usize, n: i32, write: bool) -> V
         let (mut prim, mut ult) = (u32::MAX as usize, u32::MAX as usize);
         let lg = read_usize(ent + key_nation_record::LEAGUE_COMP);
         let comp = Cup(if lg != 0 { read_usize(read_usize(G_COMP_OBJECT_TABLE) + read_usize(lg) * 4) } else { 0 });
-        if !comp.is_null() && comp.comp_type() == 1 {
+        if !comp.is_null() && comp.comp_type() == comp_type::CUP {
             if write {
                 // the league start dates that the original builds and does not use (locals only)
                 let (mut t1, mut t2, mut t3, mut t4, mut t5, mut t6) = ([0u8; 8], [0u8; 8], [0u8; 8], [0u8; 8], [0u8; 8], [0u8; 8]);

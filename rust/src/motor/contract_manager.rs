@@ -2286,7 +2286,7 @@ pub(crate) unsafe extern "thiscall" fn end_loan(this: usize, person: usize) {
         }
     }
     if read_byte_volatile(person.addr() + staff::SQUAD_SELECTED_FOR) == 0x10 {
-        person.set_squad_selected_for(4);
+        person.set_squad_selected_for(euro_registration::PENDING_REREGISTRATION);
     }
 }
 
@@ -2769,8 +2769,8 @@ pub(crate) unsafe extern "thiscall" fn resubmit_held_offers(this: usize, id: usi
                 if p != 0 {
                     let q = Offer(read_usize(p));
                     if !q.is_null() && q.serial() == read_usize(item + contract_offer::TRANSFER_OFFER_SERIAL) {
-                        if q.status() == 0xf {
-                            q.set_status(8);
+                        if q.status() == offer_status::COLLAPSED {
+                            q.set_status(offer_status::AWAITING_PLAYER_DECISION);
                         }
                         crate::comparison::branch("cpo_2 resend offer");
                         exe::contract_manager_add_contract_offer(this, (item) as usize as *mut u8, t, read_usize(item + contract_offer::TRANSFER_OFFER_SERIAL), (q.addr() as u32 & 0xffff_ff00) | byte, 1, 1, 0); // with the transfer

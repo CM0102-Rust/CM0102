@@ -492,7 +492,7 @@ pub(crate) unsafe extern "thiscall" fn collect_day_clashes(this: usize, game: us
                                         crate::comparison::branch("cqc_3 same club in another pot");
                                     }
                                     default_clash_severity(grav, true); // cqc3: the same club in another pot
-                                } else if game.category() != 1 {
+                                } else if game.category() != match_category::FRIENDLY {
                                     default_clash_severity(grav, false);
                                 }
                             }
@@ -510,7 +510,7 @@ pub(crate) unsafe extern "thiscall" fn collect_day_clashes(this: usize, game: us
                                     }
                                 } else if t != 1 {
                                     default_clash_severity(grav, true);
-                                } else if game.category() != 1 {
+                                } else if game.category() != match_category::FRIENDLY {
                                     default_clash_severity(grav, false);
                                 }
                             }

@@ -48,7 +48,7 @@ pub(crate) unsafe fn match_weight(club: Club, fixture: Fixture, factor: &mut f64
     }
     let x = (comp.reputation() as i32).wrapping_mul(500).wrapping_sub(club.reputation() as i32);
     let mut p = read_f64(rdata::F64_1) - (x as f64).abs() * read_f64(rdata::F64_6_666666667ENEG_05);
-    if fixture.category() == 8 {
+    if fixture.category() == match_category::CONTINENTAL_LATE_ROUND {
         p *= read_f64(rdata::F64_1_25);
     }
     match fixture.round_name() as u16 {
@@ -310,7 +310,7 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
         }
     } else {
         fl = 0x400;
-        if fixture.category() == 8 {
+        if fixture.category() == match_category::CONTINENTAL_LATE_ROUND {
             let f = fixture.round_prefix() as i32;
             if (0x41f..=0x426).contains(&f) && vis {
                 aj = aj.wrapping_add(0xf);
@@ -399,7 +399,7 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
         let s = manager_manager_is_national_team(club);
         if s != 0 { weight + weight } else { weight }
     };
-    if fixture.category() == 8 {
+    if fixture.category() == match_category::CONTINENTAL_LATE_ROUND {
         if read_u8(board_row(this, club) + board_record::EXPECTATION_FLAGS + 1) & expectation_flags_byte1::EUROPEAN_SUCCESS != 0 { // a palavra +0xe & 0x400
             mult = mult + mult;
             if (aj as i16) < 0 {
@@ -494,7 +494,7 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
     }
     // story 0x5c: the club in danger in the league
     let id = read_i32(fixture.addr());
-    if id > -1 && id == (club.continental_comp_id() as i32) && id != read_i32(KEY_CLUB_COMP_INTER_TOTO_CUP) && fixture.category() == 8
+    if id > -1 && id == (club.continental_comp_id() as i32) && id != read_i32(KEY_CLUB_COMP_INTER_TOTO_CUP) && fixture.category() == match_category::CONTINENTAL_LATE_ROUND
         && (fixture.round_name() as i32 / 10) * 10 != 0x96
     {
         let co = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((id as usize).wrapping_mul(4)));
@@ -552,20 +552,20 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
                     } else if stage == 0x96 {
                         floor(board_record::CONFIDENCE, 0x2134);
                         floor(board_record::SUPPORTERS_CONFIDENCE, 0x2134);
-                    } else if comp != club.division() && (rep < 0xea6 || fixture.category() == 8) {
+                    } else if comp != club.division() && (rep < 0xea6 || fixture.category() == match_category::CONTINENTAL_LATE_ROUND) {
                         floor(board_record::CONFIDENCE, 0x10b3);
                         floor(board_record::SUPPORTERS_CONFIDENCE, 0x1964);
                     }
                 } else if stage == 0x82 || stage == 0x96 {
                     floor(board_record::CONFIDENCE, 0x1964);
                     floor(board_record::SUPPORTERS_CONFIDENCE, 0x1964);
-                } else if comp != club.division() && (stage == 0x78 || fixture.category() == 8) {
+                } else if comp != club.division() && (stage == 0x78 || fixture.category() == match_category::CONTINENTAL_LATE_ROUND) {
                     floor(board_record::CONFIDENCE, 0x10b3);
                     floor(board_record::SUPPORTERS_CONFIDENCE, 0x10b3);
                 }
             }
         }
-    } else if (aj as i16) < 0 && !comp.is_null() && fixture.round_name() == 0x96 && fixture.category() == 5 {
+    } else if (aj as i16) < 0 && !comp.is_null() && fixture.round_name() == round_name::FINAL && fixture.category() == match_category::LEAGUE_PLAYOFF {
         let l = board_row(this, club);
         if read_u8(l + board_record::EXPECTATION_FLAGS) & (expectation_flags::PROMOTION as u8) != 0 {
             if read_i16(l + board_record::CONFIDENCE) > 0x10b3 {
@@ -585,7 +585,7 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
         exe::manager_manager_post_supporter_protest_news(this, club);
     }
     if fixture.competition() == club.division() || (aj as i16) < 0 {
-        if fixture.round_name() != 0xa0 {
+        if fixture.round_name() != round_name::PLAYOFF {
             exe::manager_manager_consider_sacking_manager(this, club, (a < b) as u32);
         }
         return;
@@ -939,23 +939,23 @@ pub(crate) unsafe extern "thiscall" fn set_season_expectations(this: usize, club
     let ou = |m: u8| write_u8(ln() + board_record::EXPECTATION_FLAGS, read_u8(ln() + board_record::EXPECTATION_FLAGS) | m);
     'marcas: {
         if call_comp_virtual(co, 0x98) == 0 && meta() <= slots {
-            ou((expectation_flags::TITLE_CHALLENGE as u8));
+            ou(expectation_flags::TITLE_CHALLENGE as u8);
             break 'marcas;
         }
         let na = club.nation().addr();
         if na != 0 && read_i32(na) != read_i32(KEY_NATION_AUSTRALIA) && call_comp_virtual(club_division_comp(club), 0x98) == 0 && meta() <= slots + outras {
-            ou((expectation_flags::EUROPEAN_QUALIFICATION as u8));
+            ou(expectation_flags::EUROPEAN_QUALIFICATION as u8);
             break 'marcas;
         }
         let co = club_division_comp(club);
         if call_comp_virtual(co, 0x98) != 0 && meta() <= read_i8(club_division_comp(club) + league::PROMOTED_COUNT) as i32 {
-            ou((expectation_flags::PROMOTION as u8));
+            ou(expectation_flags::PROMOTION as u8);
             break 'marcas;
         }
         let co = club_division_comp(club);
         let bf = read_i8(co + league::PROMOTION_PLAYOFF_COUNT);
         if bf != 0 && meta() <= bf as i32 {
-            ou((expectation_flags::PLAYOFFS as u8));
+            ou(expectation_flags::PLAYOFFS as u8);
             break 'marcas;
         }
         if meta() <= read_i16(co + league::CLUB_COUNT) as i32 / 2 {
@@ -965,7 +965,7 @@ pub(crate) unsafe extern "thiscall" fn set_season_expectations(this: usize, club
         if call_comp_virtual(co, 0x9c) != 0 {
             let co = club_division_comp(club);
             if meta() >= read_i16(co + league::CLUB_COUNT) as i32 - read_i8(co + league::RELEGATED_COUNT) as i32 {
-                ou((expectation_flags::RELEGATION_BATTLE as u8));
+                ou(expectation_flags::RELEGATION_BATTLE as u8);
                 break 'marcas;
             }
         }
@@ -2615,10 +2615,10 @@ pub(crate) unsafe fn offer_contract_club(c: Contract, filter: bool) -> usize {
 /// vaga +0x20 (0x4ccb30) e o estado dele (+4) zera.
 pub(crate) unsafe fn put_offer_on_hold(o: Offer) {
     let mark = (o.completion_timing() & 0xf1) | 1;
-    o.set_status(1);
+    o.set_status(offer_status::ON_HOLD);
     o.set_completion_timing(mark);
     exe::contract_manager_remove_contract_offer(read_usize(G_CONTRACT_MANAGER), staff_records_staff_by_id(o.target_staff_id()), friendly_club_by_id(o.buyer_club_id()));
-    o.set_terms_state(0);
+    o.set_terms_state(terms_state::NONE);
     let l = o.exchange_players();
     if !l.is_null() {
         l.set_cursor(l.head());
@@ -2797,20 +2797,20 @@ pub(crate) unsafe extern "thiscall" fn init_club_board_records(this: usize) {
         let mut tira = true;
         if f == 0xf || f == 0xd {
             if !p.player().is_null() {
-                p.set_job_for_nation(0xb);
+                p.set_job_for_nation(job_kind::PLAYER);
                 tira = false;
             } else {
-                p.set_job_for_nation(8);
+                p.set_job_for_nation(job_kind::COACH);
             }
         }
         if tira {
             p.set_national_job(Club((0) as usize));
         }
-        if p.club_job().is_null() && p.job_for_club() == 0 {
+        if p.club_job().is_null() && p.job_for_club() == job_kind::UNEMPLOYED {
             p.set_job_for_club(p.job_for_nation());
         }
-        if p.job_for_nation() != 0xb {
-            p.set_job_for_nation(0);
+        if p.job_for_nation() != job_kind::PLAYER {
+            p.set_job_for_nation(job_kind::UNEMPLOYED);
         }
     }
     // (2) the clubs
@@ -3117,8 +3117,8 @@ pub(crate) unsafe extern "thiscall" fn consider_sacking_manager(this: usize, clu
     }
     let manager = club.manager().addr();
     if manager != 0 && read_usize(manager + staff::NON_PLAYER) != 0 {
-        let conf = read_i16(read_usize(manager + staff::NON_PLAYER) + non_player::CURRENT_REPUTATION);
-        if conf > 0x1388 && club.reputation().wrapping_sub(0x2ee) < conf
+        let manager_reputation = read_i16(read_usize(manager + staff::NON_PLAYER) + non_player::CURRENT_REPUTATION);
+        if manager_reputation > 0x1388 && club.reputation().wrapping_sub(0x2ee) < manager_reputation
             && days_until_today(read_usize(manager + staff::DATE_JOINED_CLUB), read_usize(manager + staff::DATE_JOINED_CLUB_LEAP_YEAR)) < 0x190 {
             let presence = chairman_record(club);
             let n = if presence != 0 { read_u8(presence + non_player::PATIENCE) as i8 as i32 } else { 10 };
@@ -3168,7 +3168,7 @@ pub(crate) unsafe extern "thiscall" fn consider_sacking_manager(this: usize, clu
             if jogos as i16 > 0 && ((pontos as i16 as i32) / (jogos as i16 as i32)) as f64 > read_f64(rdata::F64_2) {
                 return; // average above 2
             }
-            let s19 = (ln.winning_run() as i32);
+            let s19 = ln.winning_run() as i32;
             if s19 > 1 {
                 if limit as i16 == 10 || s19 > 2 {
                     return;
@@ -3770,11 +3770,11 @@ pub(crate) unsafe extern "thiscall" fn reset_board_for_new_manager(this: usize, 
     write_u32(e.addr() + board_record::SQUAD_INVESTMENT, 0);
     write_u32(e.addr() + board_record::SQUAD_INVESTMENT + 4, 0);
     e.set_requests_made(0);
-    m(board_record::REQUEST_STATE, (!request_state::LAST_REQUEST as u8));
+    m(board_record::REQUEST_STATE, !request_state::LAST_REQUEST as u8);
     m(board_record::FLAGS, 0xdf);
     e.set_extra_funds_granted(0);
     e.set_wage_rise_granted(0);
-    m(board_record::REQUEST_STATE, (!request_state::EXTRA_TIME_GRANTED as u8));
+    m(board_record::REQUEST_STATE, !request_state::EXTRA_TIME_GRANTED as u8);
     m(board_record::DISCIPLINE_COUNTERS, !discipline_counters::APPEALS_MADE);
     exe::staff_records_record_manager_job_change(read_u32(G_STAFF_RECORDS) as usize, (club.manager().addr() as u32) as usize, club, 1);
     if read_u32((club.manager().addr() as u32) as usize) as i32 >= (read_u32(G_STAFF_COUNT) as i32).wrapping_sub(0x10) {
@@ -4457,17 +4457,17 @@ pub(crate) unsafe fn detach_staff_from_club(person: usize, s: Staff, club: usize
                 s.set_club_job(Club(0));
             }
             11 => {
-                s.set_job_for_club(0xb);
+                s.set_job_for_club(job_kind::PLAYER);
                 if c.manager().addr() == person {
                     write_usize(c.addr() + club::MANAGER, 0);
                 }
             }
             12 => {
-                s.set_job_for_club(0xb);
+                s.set_job_for_club(job_kind::PLAYER);
                 c.set_assistant_manager(0);
             }
             14 => {
-                s.set_job_for_club(0xb);
+                s.set_job_for_club(job_kind::PLAYER);
                 clear_slots_holding(c, 0x19f, 5, person);
             }
             _ => {
@@ -4487,16 +4487,16 @@ pub(crate) unsafe fn detach_staff_from_club(person: usize, s: Staff, club: usize
             9 => clear_slots_holding(c, 0x1cf, 3, person),
             11 => {
                 write_usize(c.addr() + club::MANAGER, 0);
-                s.set_job_for_nation(0xb);
+                s.set_job_for_nation(job_kind::PLAYER);
                 return;
             }
             12 => {
-                s.set_job_for_nation(0xb);
+                s.set_job_for_nation(job_kind::PLAYER);
                 c.set_assistant_manager(0);
                 return;
             }
             14 => {
-                s.set_job_for_nation(0xb);
+                s.set_job_for_nation(job_kind::PLAYER);
                 clear_slots_holding(c, 0x19f, 5, person);
                 return;
             }
@@ -4800,7 +4800,7 @@ pub(crate) unsafe fn club_shortlist_entries(this: usize, id: u32) -> Vec<usize> 
 ///
 /// [pt] A oferta `o` serve: do `clube` (+8) ou marcada (+0x2d = 1), e no estado 2 (+0x2c)?
 pub(crate) unsafe fn is_offer_eligible(o: Offer, club: u32) -> bool {
-    (o.buyer_club_id() as u32 == club || o.player_aware() == 1) && o.status() == 2
+    (o.buyer_club_id() as u32 == club || o.player_aware() == 1) && o.status() == offer_status::REJECTED
 }
 
 /// Is the person in the list (iterator `next_list_item`, restored at the end)?

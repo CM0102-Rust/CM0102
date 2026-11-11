@@ -1630,7 +1630,7 @@ pub(crate) unsafe fn punish_challenger_foul_injected(m: Engine, e: MatchPlayer, 
                 let t = m.r#match();
                 let club = Club(read_usize(t + if j.side() != 0 { 0x20 } else { 0x1c }));
                 let k = club.nation();
-                if !k.is_null() && k.first_language() == 8 {
+                if !k.is_null() && k.first_language() == language::ENGLISH {
                     narrate(call, event::SILENT_OFF_OFF_OFF, 0, 0, u32::MAX);
                 }
             }
@@ -2128,7 +2128,7 @@ pub(crate) unsafe fn punish_contester_foul_injected(j: MatchPlayer, mut t: u8, c
                 let fixture = m.r#match();
                 let club = Club(read_usize(fixture + if j.side() == 0 { 0x20 } else { 0x1c }));
                 let k = club.nation();
-                if !k.is_null() && k.first_language() == 8 {
+                if !k.is_null() && k.first_language() == language::ENGLISH {
                     narrate(call, event::SILENT_OFF_OFF_OFF, 0, 0, u32::MAX);
                 }
             }
@@ -2386,7 +2386,7 @@ pub(crate) unsafe fn contest_ball_injected(j: MatchPlayer, strength: i16, kind_i
                         let fixture = m.r#match();
                         let club = Club(read_usize(fixture + if j.side() == 0 { 0x20 } else { 0x1c }));
                         let k = club.nation();
-                        if !k.is_null() && k.first_language() == 8 {
+                        if !k.is_null() && k.first_language() == language::ENGLISH {
                             narrate(call, event::SILENT_OFF_OFF_OFF, 0, 0, u32::MAX);
                         }
                     }

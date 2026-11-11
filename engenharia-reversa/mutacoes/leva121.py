@@ -1,6 +1,6 @@
 # Mutacoes da leva121 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva121.py --jogo 2001-08-20
 MUTACOES = [
-    ('c_pontas', "    if a.position() == -2 {\n        return Some(-1);", "    if a.position() == -3 {\n        return Some(-1);"),
+    ('c_pontas', "    if a.position() == match_slot::INJURED_OFF {\n        return Some(-1);", "    if a.position() == -3 {\n        return Some(-1);"),
     ('c_goleiro', "    if exe::match_player_get_position(a) == 1 && a.player().goalkeeper() < 20 {", "    if exe::match_player_get_position(a) == 1 && a.player().goalkeeper() < 19 {"),
     ('c_peso', "            4 | 2 => ftol(v as f64 * 1.35),", "            4 | 2 => ftol(v as f64 * 1.3),"),
     ('c_oito', "    let vb = pesar(match_condition(MatchPlayer(b)), 1.25);", "    let vb = pesar(match_condition(MatchPlayer(b)), 1.2);"),

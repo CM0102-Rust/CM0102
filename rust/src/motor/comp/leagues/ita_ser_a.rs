@@ -516,7 +516,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_staff_records_for_status
                     let l3 = LeagueTableRow(this.table() + i as usize * 0x3b);
                     write_u8(l3.addr() + 4, i as u8);
                     write_u8(l3.addr() - 0x3b + 4, (i as u8).wrapping_sub(1));
-                    l3.set_status(0xff);
+                    l3.set_status(table_status::UNDECIDED);
                     write_u8(l3.addr() - 0x3b + league_table_row::STATUS, 0xff);
                     break;
                 }
@@ -606,7 +606,7 @@ pub(crate) unsafe fn construct_italian_division(this: League, year: u32, registr
     write_usize(this.addr() + league::COMPETITION, registro);
     write_usize(this.addr(), p.vtabela);
     this.set_year((year as u16) as i16);
-    this.set_discipline_rule(0x11); // cqm4: the discipline rule of the Italian leagues
+    this.set_discipline_rule(discipline_rule::ITALY_LEAGUE); // cqm4: the discipline rule of the Italian leagues
     if exe::league_load_from_temp_file(this, 1) != 0 {
         return this.addr();
     }
@@ -615,7 +615,7 @@ pub(crate) unsafe fn construct_italian_division(this: League, year: u32, registr
         write_u8(this.addr() + italian_league::TIEBREAK_TIE_COUNT, 0);
         this.set_season_closed(1); // cqm4: the history mark of A and B
     }
-    this.set_stage_index(0xff);
+    this.set_stage_index(stage_index::MAIN);
     this.set_current_stage(0xffff_ffff);
     this.set_stage_count(p.stages as usize);
     if p.stages != 0 {
@@ -713,8 +713,8 @@ pub(crate) unsafe extern "thiscall" fn construct_ita_ser_a(this: usize, year: u3
 pub(crate) unsafe fn compare_italian_constructor(name: &str, this: League, year: u32, record: usize, p: &ItalianDivision, original: impl FnOnce() -> usize) -> usize {
     let r = original();
     let mut ok = r == this.addr() && read_usize(this.addr()) == p.vtabela && (this.year() as u16) == year as u16
-        && this.competition().addr() == record && this.discipline_rule() == 0x11;
-    if this.stage_index() == 0xff && this.comp_stats() != 0 {
+        && this.competition().addr() == record && this.discipline_rule() == discipline_rule::ITALY_LEAGUE;
+    if this.stage_index() == stage_index::MAIN && this.comp_stats() != 0 {
         ok = ok && this.stage_count() == p.stages as usize && (this.stages() != 0) == (p.stages != 0);
         if p.series {
             ok = ok && *((this.addr() + italian_league::TIEBREAK_TIE_COUNT) as *const u8) == 0;

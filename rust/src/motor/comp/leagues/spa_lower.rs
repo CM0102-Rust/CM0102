@@ -325,13 +325,13 @@ pub(crate) unsafe extern "thiscall" fn construct_spa_lower(this: usize, year: u3
     exe::new_league(this);
     write_usize(this.addr(), 0x96fb1c);
     this.set_year((year as u16) as i16);
-    this.set_discipline_rule(0xff);
+    this.set_discipline_rule(discipline_rule::NONE);
     write_usize(this.addr() + league::COMPETITION, comp_record_of_key(KEY_CLUB_COMP_SPANISH_LOWER_DIVISION));
     if exe::league_load_from_temp_file(this, 1) != 0 {
         return this.addr();
     }
     crate::comparison::branch("cqm_6 new lower division");
-    this.set_stage_index(0xff);
+    this.set_stage_index(stage_index::MAIN);
     this.set_current_stage(0xffff_ffff);
     this.set_stage_count(0);
     if exe::spalower_set_up_rules(this) == 0 {

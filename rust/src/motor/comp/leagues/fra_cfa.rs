@@ -305,7 +305,7 @@ pub(crate) unsafe fn create_c1_schedule(this: League, stage: u32, rounds: *mut i
 pub(crate) unsafe extern "thiscall" fn fra_cfa_set_up_rules(this: usize) -> u32 {
     let this = League(this);
     this.set_legs((2) as i16);
-    this.set_match_category(2);
+    this.set_match_category(match_category::LEAGUE);
     write_u8(this.addr() + league::TIEBREAKS + 2, 2);
     this.set_win_points(3); // cqn4: the points per win in the French lower leagues
     this.set_draw_points(1);
@@ -391,9 +391,9 @@ pub(crate) unsafe fn construct_group_league(this: League, year: u32, p: &Backgro
     write_usize(this.addr(), p.vtabela);
     this.set_year((year as u16) as i16);
     this.set_stage_count(0);
-    this.set_discipline_rule(0xff);
+    this.set_discipline_rule(discipline_rule::NONE);
     write_usize(this.addr() + league::COMPETITION, comp_record_of_key(p.competition));
-    this.set_stage_index(0xff);
+    this.set_stage_index(stage_index::MAIN);
     this.set_current_stage(0xffff_ffff);
     if exe::fracfa_set_up_rules(this) == 0 {
         show_error_at(p.file, p.rows[0]);
@@ -501,7 +501,7 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_cfa(this: usize, year: u32)
 pub(crate) unsafe fn compare_construct_group_league(name: &str, this: League, year: u32, p: &BackgroundLeague, original: impl FnOnce() -> usize) -> usize {
     let r = original();
     let ok = r == this.addr() && read_usize(this.addr()) == p.vtabela && (this.year() as u16) == year as u16
-        && this.discipline_rule() == 0xff && this.competition().addr() == comp_record_of_key(p.competition)
+        && this.discipline_rule() == discipline_rule::NONE && this.competition().addr() == comp_record_of_key(p.competition)
         && this.table() == 0;
     SCOREBOARD.record(ok, || format!("{}({:#x}): returned {:#x}, vtable {:#x}, +4 = {:#x}, +0xb1 = {:#x}", name, this.addr(), r, read_usize(this.addr()), this.competition().addr(), this.table()));
     r

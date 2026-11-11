@@ -325,7 +325,7 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marks: u32
         let home = fx.home_club();
         let n = home.nation().addr();
         let fin = read_usize(KEY_NATION_FINLAND);
-        if n != 0 && read_usize(n) == fin && fx.stage_index() != 0xff && read_usize(fx.addr()) == read_usize(KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE) && home.stadium().addr() != 0 {
+        if n != 0 && read_usize(n) == fin && fx.stage_index() != stage_index::MAIN && read_usize(fx.addr()) == read_usize(KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE) && home.stadium().addr() != 0 {
             let st = read_usize(nation_by_id(fin) + nation::NATIONAL_STADIUM);
             let mut free = true;
             if read_usize(this) != 0 {
@@ -686,7 +686,7 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, g
             let lg = Competition(read_usize(read_usize(game.addr() + if side == 0 { 0x1c } else { 0x20 }) + club::DIVISION));
             if !lg.is_null() && lg.reputation() != 0 {
                 f[k] /= lg.reputation() as i32 as f64;
-            } else if game.category() == 0xa {
+            } else if game.category() == match_category::NATIONAL_TEAMS {
                 f[k] *= read_f64(rdata::F64_0_2);
             } else {
                 f[k] *= read_f64(rdata::F64_0_05); // cqo2: the factor without the club league;
@@ -719,7 +719,7 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, g
                 let p = CompStatsClub(exe::comp_stats_find_club_entry(read_usize(league + 8), home));
                 if !p.is_null() {
                     let n = comp.reputation() as i32;
-                    let v = (p.winning_run() as i32);
+                    let v = p.winning_run() as i32;
                     if v > 1 {
                         crate::comparison::branch("cqo_2 top position");
                         pc = pc.wrapping_add(if v < 4 || n < 0xc {

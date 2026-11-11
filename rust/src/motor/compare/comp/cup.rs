@@ -285,7 +285,7 @@ pub(crate) unsafe extern "thiscall" fn compare_cup_update_staff_records_for_stat
     }
     let state = club_state_record(club);
     let before = read_i32(state);
-    let predicted = if game.category() != 1 && cup.stage_count() == 0 && cup.stage_index() == 0xff && outcome as u8 == 1
+    let predicted = if game.category() != match_category::FRIENDLY && cup.stage_count() == 0 && cup.stage_index() == stage_index::MAIN && outcome as u8 == 1
         && wins_uefa_cup_place(Competition(read_usize(cup.addr() + 4)), club) { read_i32(KEY_CLUB_COMP_UEFA_CUP) } else { before };
     let r = o(cup.addr(), club, outcome, a3, a4, game.addr(), final_);
     let after = read_i32(state);

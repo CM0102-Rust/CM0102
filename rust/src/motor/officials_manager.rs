@@ -574,7 +574,7 @@ pub(crate) unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize)
         }
         let year = read_u8(G_CURRENT_DATE_YEAR);
         let dif = (referee.birth_day() as i32).wrapping_sub(read_i16(G_CURRENT_DATE) as i32);
-        let age = if dif > 0 { year.wrapping_sub((referee.birth_year() as u8)).wrapping_sub(1) } else { year.wrapping_sub((referee.birth_year() as u8)) } as i8;
+        let age = if dif > 0 { year.wrapping_sub(referee.birth_year() as u8).wrapping_sub(1) } else { year.wrapping_sub(referee.birth_year() as u8) } as i8;
         if age <= 0x28 || (age <= 0x2d && random(3) != 0) {
             continue;
         }
@@ -585,12 +585,12 @@ pub(crate) unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize)
         // the original picks the second name with the first-name routine as well (DEFEITOS_DO_ORIGINAL: 0x79cee0)
         let n2 = exe::database_pick_first_name_for_nation(referee.nation());
         referee.set_second_name(n2);
-        referee.set_discipline((if random(10) != 0 {
+        referee.set_discipline(if random(10) != 0 {
             (random(0x10) as u8).wrapping_add(5)
         } else {
             let a = random(0xb) as u8;
             a.wrapping_add(random(0xb) as u8)
-        }));
+        });
         let r5 = random(5);
         let base = (read_i16(G_CURRENT_DATE_YEAR) as u16).wrapping_sub(0x1b);
         referee.set_birth_year(((r5 as u16).wrapping_add(base)) as i16);

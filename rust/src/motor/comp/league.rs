@@ -14,7 +14,7 @@ use super::*;
 pub(crate) unsafe extern "thiscall" fn group_decided(this: usize, club: usize, fixture: usize) -> u32 {
     let fixture = Fixture(fixture);
     let this = League(this);
-    if fixture.stage_index() != 0xff {
+    if fixture.stage_index() != stage_index::MAIN {
         return 0;
     }
     if exe::comp_util_is_league_division(read_i32(this.competition().addr())) == 0 {
@@ -117,15 +117,15 @@ pub(crate) unsafe fn comment_standing_with(this: Engine, side: u32, call: AddEve
             }
             // with no starter the average would be whatever was in the argument (does not happen)
             let average = if n != 0 { (sum / n as f64) as f32 as f64 } else { 0.0 };
-            let strength = |o: usize| read_i16(read_usize(t() + o) + club::REPUTATION) as f64;
+            let reputation = |o: usize| read_i16(read_usize(t() + o) + club::REPUTATION) as f64;
             let x = average * read_f64(rdata::F64_0_5) - read_f64(rdata::F64_2);
             if bl == 0 {
-                if average < read_f64(rdata::F64_7) && x * strength(0x20) < strength(0x1c) {
+                if average < read_f64(rdata::F64_7) && x * reputation(0x20) < reputation(0x1c) {
                     say(call, event::BOO_OFF_PITCH, 0);
                 }
                 return;
             }
-            if average < read_f64(rdata::F64_6_67) && x * strength(0x1c) < strength(0x20) * read_f64(rdata::F64_0_8) {
+            if average < read_f64(rdata::F64_6_67) && x * reputation(0x1c) < reputation(0x20) * read_f64(rdata::F64_0_8) {
                 say(call, event::BOO_OFF_PITCH, side);
             }
         }
@@ -559,8 +559,8 @@ pub(crate) unsafe extern "thiscall" fn send_fixture_list_news(this: usize, list:
     let mut l0 = [0u8; 0x10];
     let p0 = l0.as_mut_ptr() as usize;
     exe::new_llist(p0);
-    let list = if this.stage_index() == 0xff || list == 0 { p0 } else { list };
-    if exe::comp_util_is_league_division((read_usize(this.competition().addr()) as u32) as i32) == 0 || this.stage_index() != 0xff {
+    let list = if this.stage_index() == stage_index::MAIN || list == 0 { p0 } else { list };
+    if exe::comp_util_is_league_division((read_usize(this.competition().addr()) as u32) as i32) == 0 || this.stage_index() != stage_index::MAIN {
         exe::drop_llist(p0);
         return;
     }
@@ -638,7 +638,7 @@ pub(crate) unsafe extern "thiscall" fn send_fixture_list_news(this: usize, list:
             }
         }
     }
-    if this.stage_index() == 0xff && (this.current_stage() as i32) >= 0 {
+    if this.stage_index() == stage_index::MAIN && (this.current_stage() as i32) >= 0 {
         let mut j: u8 = 0;
         loop {
             let stage = read_usize(this.stages() + (j as i8 as isize * 4) as usize);
@@ -741,7 +741,7 @@ pub(crate) unsafe extern "thiscall" fn league_update_for_date(this: usize, data:
         }
     }
     let table = LeagueTableRow(this.table());
-    if !table.is_null() && (table.played() as u8) == 0 && this.stage_index() == 0xff && full != 0 && !same_date(this.addr() + league::LAST_UPDATE_DATE, data) {
+    if !table.is_null() && (table.played() as u8) == 0 && this.stage_index() == stage_index::MAIN && full != 0 && !same_date(this.addr() + league::LAST_UPDATE_DATE, data) {
         let c = this.competition().addr();
         if read_usize(c + competition::NATION) != 0 {
             let k = exe::key_nation_index_of_comp(c) as i8 as isize;
@@ -754,7 +754,7 @@ pub(crate) unsafe extern "thiscall" fn league_update_for_date(this: usize, data:
             }
         }
     }
-    if this.stage_index() == 0xff {
+    if this.stage_index() == stage_index::MAIN {
         let mut i = 0i32;
         while i <= this.current_stage() as i32 {
             let stage = read_usize(this.stages() + i as usize * 4);
@@ -769,7 +769,7 @@ pub(crate) unsafe extern "thiscall" fn league_update_for_date(this: usize, data:
         f(this.addr());
     }
     let mut follow_tv = true;
-    if this.stage_index() == 0xff {
+    if this.stage_index() == stage_index::MAIN {
         if this.table() == 0 {
             follow_tv = false;
         } else if !same_date(this.addr() + league::LAST_UPDATE_DATE, data) {
@@ -829,7 +829,7 @@ pub(crate) unsafe extern "thiscall" fn league_update_for_date(this: usize, data:
     if full == 0 {
         return 1;
     }
-    if this.squad_flags() & squad_flags::FIXED_SQUAD_NUMBERS != 0 && this.stage_index() == 0xff && !same_date(this.addr() + league::LAST_UPDATE_DATE, data)
+    if this.squad_flags() & squad_flags::FIXED_SQUAD_NUMBERS != 0 && this.stage_index() == stage_index::MAIN && !same_date(this.addr() + league::LAST_UPDATE_DATE, data)
         && this.complete() == 0 && read_u8(this.table() + league_table_row::PLAYED) == 0 {
         let e = this.round_dates();
         // simplification: the original pushes the day and the year in registers with leftovers in the high bytes; 0x549ef0 only reads the words
@@ -977,14 +977,14 @@ pub(crate) unsafe extern "thiscall" fn create_fixtures(this: usize) -> u32 {
     r.set_squad_rules((r.squad_rules() as i16) as u16 & 0xfbff);
     r.set_category(this.match_category());
     r.set_round_draw_rules(this.round_draw_rules() as u16);
-    r.set_round_name((0) as i16);
+    r.set_round_name((round_name::NONE) as i16);
     for k in 0x43..=0x4cusize {
         write_u8(r.addr() + k, 0xff);
     }
     r.set_match_stats_slot(u32::MAX as usize);
     r.set_stage_index(this.stage_index());
-    r.set_home_result_mark((0) as i8);
-    r.set_away_result_mark((0) as i8);
+    r.set_home_result_mark((result_mark::NONE) as i8);
+    r.set_away_result_mark((result_mark::NONE) as i8);
     r.set_stage(0xff);
     let prepare: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(vtable_method(this, 0x7c));
     prepare(this.addr(), r.addr());
@@ -1064,8 +1064,8 @@ pub(crate) unsafe extern "thiscall" fn create_fixtures(this: usize) -> u32 {
                             let (ea, eb) = (tb + a as usize * 0x3b, tb + b as usize * 0x3b);
                             let sel = this.fixed_stadium_id() as u32;
                             let (m, f) = if sel != u32::MAX {
-                                let nation = read_usize(read_usize(eb) + club::STADIUM);
-                                if nation != 0 && read_usize(nation) as u32 == sel { (eb, ea) } else { (ea, eb) }
+                                let stadium = read_usize(read_usize(eb) + club::STADIUM);
+                                if stadium != 0 && read_usize(stadium) as u32 == sel { (eb, ea) } else { (ea, eb) }
                             } else {
                                 (ea, eb)
                             };
@@ -1551,7 +1551,7 @@ pub(crate) unsafe extern "thiscall" fn update_positions_and_status(this: usize) 
         // the European place of those whose position is already decided
         let li = league_table_row(this, ii);
         let best = read_i8(li + league_table_row::BEST_POSSIBLE_POSITION);
-        if best == read_i8(li + league_table_row::WORST_POSSIBLE_POSITION) && best < 9 && this.stage_index() == 0xff {
+        if best == read_i8(li + league_table_row::WORST_POSSIBLE_POSITION) && best < 9 && this.stage_index() == stage_index::MAIN {
             if exe::comp_util_is_league_division(read_i32(this.competition().addr())) != 0 && this.upper_division_id() == -1 {
                 let slot = read_usize(G_CLUB_STATE_TABLE) + (read_i32(read_usize(li)) as usize).wrapping_mul(6);
                 let reg = this.competition();
@@ -1804,7 +1804,7 @@ pub(crate) unsafe extern "thiscall" fn announce_team_status(league: usize, club:
     if r == -1 {
         return 0;
     }
-    if league.stage_index() == 0xff && stage as u8 != 0xff {
+    if league.stage_index() == stage_index::MAIN && stage as u8 != 0xff {
         let f = read_usize(league.stages().wrapping_add((stage as u8 as i8 as isize as usize).wrapping_mul(4)));
         round = read_i16(f + league::STAGE_ID);
     }
@@ -1918,7 +1918,7 @@ pub(crate) unsafe extern "thiscall" fn league_add_result(league: usize, p: usize
     // simplification: the original pushes +0x3e with the high part of ecx (leftover from the previous call); 0x685f60 reads only the short
     crate::comparison::branch("cpw_11 result applied");
     exe::league_apply_result_to_table(league, p, league.table(), league.club_count() as u16 as u32, 1, (&mut pts_casa) as *mut i16 as usize, (&mut pts_fora) as *mut i16 as usize); // cpw11: a tabela
-    if league.stage_index() == 0xfe || read_usize(G_COMP_OBJECT_TABLE) == 0 {
+    if league.stage_index() == stage_index::SPECIAL_STAGE || read_usize(G_COMP_OBJECT_TABLE) == 0 {
         return 1;
     }
     let comp = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(league.competition().addr()).wrapping_mul(4)));
@@ -2225,8 +2225,8 @@ pub(crate) unsafe fn uses_head_to_head_rule(this: League) -> bool {
 pub(crate) unsafe extern "thiscall" fn init_table_row(this: usize, i: u32, club: usize, mark: u32, rows: usize) {
     let this = League(this);
     let club = Club(club);
-    if !club.is_null() && club.professional_status() == 3 {
-        club.set_professional_status(2);
+    if !club.is_null() && club.professional_status() == professional_status::AMATEUR {
+        club.set_professional_status(professional_status::SEMI_PROFESSIONAL);
     }
     if this.games_per_club() == -1 && this.club_count() > 0 {
         if this.club_count() > 0x32 {
@@ -2247,7 +2247,7 @@ pub(crate) unsafe extern "thiscall" fn init_table_row(this: usize, i: u32, club:
         core::ptr::write_bytes((e + 4) as *mut u8, 0, 6);
     }
     l.set_mark(mark as u8);
-    l.set_status(0xff);
+    l.set_status(table_status::UNDECIDED);
     l.set_best_possible_position(1);
     l.set_worst_possible_position(this.club_count() as u8);
     l.set_h2h_entries(0);
@@ -2456,12 +2456,12 @@ pub(crate) unsafe extern "thiscall" fn apply_result_to_table(league: usize, p: u
     } else if flags & fixture_tie_rules::EXTRA_TIME != 0 && p.home_goals_extra_time() > p.away_goals_extra_time() {
         wins_home(0x20);
         if mark != 0 {
-            p.set_home_result_mark((3) as i8);
+            p.set_home_result_mark((result_mark::WON_EXTRA_TIME) as i8);
         }
     } else if flags & 2 != 0 && p.home_goals_extra_time() < p.away_goals_extra_time() {
         wins_away(0x2e);
         if mark != 0 {
-            p.set_away_result_mark((3) as i8);
+            p.set_away_result_mark((result_mark::WON_EXTRA_TIME) as i8);
         }
     } else if flags & 0x21 != 0 && p.home_penalties() > p.away_penalties() {
         wins_home(0x21);
@@ -2809,7 +2809,7 @@ pub(crate) unsafe extern "thiscall" fn sort_table(league: usize, rows: usize) ->
             exe::crt_qsort(rows, (n() as i32) as u32, LEAGUE_TABLE_ROW_SIZE as u32, 0x683210);
         }
     }
-    if league.stage_index() != 0xfe && league.table_column() == 0 && n() > 0 {
+    if league.stage_index() != stage_index::SPECIAL_STAGE && league.table_column() == 0 && n() > 0 {
         let mut c: i8 = 0;
         loop {
             let r = LeagueTableRow(rows + LEAGUE_TABLE_ROW_SIZE * c as i32 as usize);
@@ -3062,7 +3062,7 @@ pub(crate) unsafe extern "thiscall" fn league_check_complete(league: usize, stag
     if table == 0 || league.stopped() != 0 || league.active() == 0 {
         return 0;
     }
-    let unica = league.stage_index() == 0xff;
+    let unica = league.stage_index() == stage_index::MAIN;
     if league.complete() == 0 {
         if league.games_per_club() == -1 && league.club_count() > 0 {
             league.set_games_per_club((league.club_count() - 1).wrapping_mul(league.legs()));
@@ -3089,7 +3089,7 @@ pub(crate) unsafe extern "thiscall" fn league_check_complete(league: usize, stag
     } else if !unica {
         return 1;
     }
-    if stages == 1 && league.stage_index() == 0xff {
+    if stages == 1 && league.stage_index() == stage_index::MAIN {
         crate::comparison::branch("league complete: stages");
         let mut k = 0usize;
         if league.current_stage() as i32 >= 0 {
@@ -3130,7 +3130,7 @@ pub(crate) unsafe fn is_complete_check_read_only(league: League, stages: u32) ->
         return true;
     }
     if league.complete() != 0 {
-        return league.stage_index() != 0xff || stages != 1;
+        return league.stage_index() != stage_index::MAIN || stages != 1;
     }
     let n = league.club_count();
     let mut total = league.games_per_club();
@@ -3338,7 +3338,7 @@ pub(crate) unsafe extern "thiscall" fn get_match_importance(league: usize, fixtu
         return imp.wrapping_add(1);
     }
     let r = LeagueTableRow(row(i));
-    if r.status() != 0xff {
+    if r.status() != table_status::UNDECIDED {
         return imp;
     }
     let mut local = imp.wrapping_add(1);
@@ -3529,7 +3529,7 @@ pub(crate) unsafe extern "thiscall" fn final_day_margin_needed(league: usize, ro
     let clubs = league.club_count();
     let table = LeagueTableRow(league.table());
     let criterio = league.tiebreaks() as u8;
-    if (row.played() as i32) < league.round_count() as i32 - 1 || row.status() != 0xff {
+    if (row.played() as i32) < league.round_count() as i32 - 1 || row.status() != table_status::UNDECIDED {
         return 0xff; // outside the last day
     }
     // the `alvo` row ahead, unmarked: points + extra above it, 0xff; equal (extra 0), the margin
@@ -3563,7 +3563,7 @@ pub(crate) unsafe extern "thiscall" fn final_day_margin_needed(league: usize, ro
         }
         None
     };
-    if (league.league_flags() as u8) & (league_flags::CHAMPION_STATUS as u8) != 0 && table.status() != 5 {
+    if (league.league_flags() as u8) & (league_flags::CHAMPION_STATUS as u8) != 0 && table.status() != table_status::CHAMPIONS {
         if pos > 0 {
             let v = p(row.addr()) + extra;
             if v > p(table.addr()) {
@@ -3884,7 +3884,7 @@ pub(crate) unsafe extern "thiscall" fn move_club_to_division(_this: usize, club:
     let id = read_usize(division);
     if comps != 0 {
         let comp = League(read_usize(comps + 4 * id));
-        if !comp.is_null() && club.stadium().addr() != 0 && comp.comp_type() == 2 {
+        if !comp.is_null() && club.stadium().addr() != 0 && comp.comp_type() == comp_type::LEAGUE {
             let required_capacity = comp.required_capacity() as i16;
             if required_capacity != -1 {
                 crate::comparison::branch("cpm_3 division stadium");
@@ -3895,8 +3895,8 @@ pub(crate) unsafe extern "thiscall" fn move_club_to_division(_this: usize, club:
         }
     }
     // the original rereads [0xadadfc] after the construction work (without it, the same value; if null, it also reads from address 0)
-    if read_usize(read_usize(G_COMP_OBJECT_TABLE) + 4 * id) != 0 && club.professional_status() == 3 {
-        club.set_professional_status(2);
+    if read_usize(read_usize(G_COMP_OBJECT_TABLE) + 4 * id) != 0 && club.professional_status() == professional_status::AMATEUR {
+        club.set_professional_status(professional_status::SEMI_PROFESSIONAL);
     }
 }
 

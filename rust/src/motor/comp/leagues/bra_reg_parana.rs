@@ -78,7 +78,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_final_stage(this: u
         while i < this.club_count() {
             let row = LeagueTableRow(this.table() + i as usize * 0x3b);
             if read_usize(row.addr()) == read_usize(list) {
-                row.set_status(5);
+                row.set_status(table_status::CHAMPIONS);
             }
             i += 1;
         }

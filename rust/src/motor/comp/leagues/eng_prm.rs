@@ -60,7 +60,7 @@ pub(crate) unsafe fn construct_english_division(this: League, year: u32, registr
     write_usize(this.addr() + league::COMPETITION, registro);
     write_usize(this.addr(), p.vtable);
     this.set_year((year as u16) as i16);
-    this.set_discipline_rule(9); // cql6: the discipline rule of the English leagues
+    this.set_discipline_rule(discipline_rule::ENGLAND); // cql6: the discipline rule of the English leagues
     if let Some((capacidade, sentados)) = p.stadium {
         this.set_required_capacity(capacidade);
         this.set_required_seats(sentados);
@@ -69,7 +69,7 @@ pub(crate) unsafe fn construct_english_division(this: League, year: u32, registr
         return this.addr();
     }
     crate::comparison::branch("cql_6 new english division");
-    this.set_stage_index(0xff);
+    this.set_stage_index(stage_index::MAIN);
     this.set_current_stage(0xffff_ffff);
     this.set_stage_count(p.extra_stages as usize);
     if p.extra_stages != 0 {
@@ -162,11 +162,11 @@ pub(crate) unsafe extern "thiscall" fn construct_eng_prm(this: usize, year: u32,
 pub(crate) unsafe fn compare_english_constructor(name: &str, this: League, year: u32, record: usize, p: &EnglishDivision, original: impl FnOnce() -> usize) -> usize {
     let r = original();
     let mut ok = r == this.addr() && read_usize(this.addr()) == p.vtable && (this.year() as u16) == year as u16
-        && this.competition().addr() == record && this.discipline_rule() == 9;
+        && this.competition().addr() == record && this.discipline_rule() == discipline_rule::ENGLAND;
     if let Some((c, s)) = p.stadium {
         ok = ok && this.required_capacity() == c && this.required_seats() == s;
     }
-    if this.stage_index() == 0xff && this.comp_stats() != 0 {
+    if this.stage_index() == stage_index::MAIN && this.comp_stats() != 0 {
         ok = ok && this.stage_count() == p.extra_stages as usize && (this.stages() != 0) == (p.extra_stages != 0);
     }
     SCOREBOARD.record(ok, || format!("{}({:#x}): returned {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this.addr(), r, read_usize(this.addr()), this.stage_count(), this.stages(), this.comp_stats()));

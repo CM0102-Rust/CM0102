@@ -2,5 +2,5 @@
 MUTACOES = [
     ('j_campo', "    let offset = if field == 1 { 0x20 } else { 0x22 };", "    let offset = if field == 1 { 0x22 } else { 0x20 };"),
     ('e_data', "    (clubs && w(8) == data_a && w(match_stats_entry::YEAR) == data_b) as i32", "    (clubs && w(8) == data_a) as i32"),
-    ('b_tipo', "        return (game.category() == 1) as u8 + 2;", "        return (game.category() == 1) as u8 + 1;"),
+    ('b_tipo', "        return (game.category() == match_category::FRIENDLY) as u8 + 2;", "        return (game.category() == 1) as u8 + 1;"),
 ]

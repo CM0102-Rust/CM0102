@@ -127,10 +127,10 @@ pub(crate) unsafe extern "thiscall" fn send_prize_money_news(this: usize, club: 
     let won = if !fixture.is_null() {
         if fixture.home_club() == club {
             exe::newsitem_set_slot(p, (5) as u32 as i8, read_usize(fixture.away_club().addr()) as u32);
-            fixture.home_result_mark() != 0 || fixture.home_aggregate() > fixture.away_aggregate() || fixture.home_goals() > fixture.away_goals()
+            fixture.home_result_mark() != result_mark::NONE || fixture.home_aggregate() > fixture.away_aggregate() || fixture.home_goals() > fixture.away_goals()
         } else {
             exe::newsitem_set_slot(p, (5) as u32 as i8, read_usize(fixture.home_club().addr()) as u32);
-            fixture.away_result_mark() != 0 || fixture.home_aggregate() < fixture.away_aggregate() || fixture.home_goals() < fixture.away_goals()
+            fixture.away_result_mark() != result_mark::NONE || fixture.home_aggregate() < fixture.away_aggregate() || fixture.home_goals() < fixture.away_goals()
         }
     } else {
         exe::newsitem_set_slot(p, (5) as u32 as i8, u32::MAX);
@@ -722,7 +722,7 @@ pub(crate) unsafe extern "thiscall" fn are_round_fixtures_known(this: usize, sta
         return original_fn::<unsafe extern "thiscall" fn(usize, i32, i32) -> u32>(IDX_ARE_ROUND_FIXTURES_KNOWN)(this.addr(), stage, round);
     }
     let c = Cup(if stage == -1 { this.addr() } else { read_usize(this.stages().wrapping_add(4 * stage as usize)) });
-    if c.comp_type() == 2 {
+    if c.comp_type() == comp_type::LEAGUE {
         return 1;
     }
     let current = (c.current_round() as i8) as i32;

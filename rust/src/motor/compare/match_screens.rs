@@ -103,7 +103,7 @@ pub(crate) unsafe extern "C" fn compare_build_match_screen() {
         let espectadores = p.spectators();
         extra.push(((espectadores as isize + 0xc5 + read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize * 4) as usize, 4));
         extra.push((espectadores + match_spectators::COUNT, 1));
-        let pm = Engine((p.engine() as usize));
+        let pm = Engine(p.engine() as usize);
         if !pm.is_null() && pm.commentator() != 0 {
             extra.push((pm.commentator() + 0x2db0, 1));
         }

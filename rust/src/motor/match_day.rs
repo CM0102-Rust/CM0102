@@ -381,7 +381,7 @@ pub(crate) unsafe extern "thiscall" fn close_day_match(_day: usize, p: usize) ->
             }
             let r = CompStatsClub(exe::comp_stats_find_club_entry(u(competition(id), 8), c));
             if !r.is_null() && (r.losing_run() as i32) > 1 {
-                round[k] = (r.losing_run() as u8);
+                round[k] = r.losing_run() as u8;
                 crate::comparison::branch("close human round");
             }
         }

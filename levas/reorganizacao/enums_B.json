@@ -1,0 +1,1175 @@
+{
+ "Staff.job_for_club": {
+  "record": "Staff",
+  "getter": "job_for_club",
+  "enum_name": "job_kind",
+  "values": {
+   "0": {
+    "name": "UNEMPLOYED",
+    "meaning": "staff job: Unemployed",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x0 prints 'Unemployed' (exe string)"
+   },
+   "1": {
+    "name": "CHAIRMAN",
+    "meaning": "staff job: Chairman",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x1 prints 'Chairman' (exe string)"
+   },
+   "2": {
+    "name": "MANAGING_DIRECTOR",
+    "meaning": "staff job: Managing Director",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x2 prints 'Managing Director' (exe string)"
+   },
+   "3": {
+    "name": "GENERAL_MANAGER",
+    "meaning": "staff job: General Manager",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x3 prints 'General Manager' (exe string)"
+   },
+   "4": {
+    "name": "DIRECTOR_OF_FOOTBALL",
+    "meaning": "staff job: Director Of Football",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x4 prints 'Director Of Football' (exe string)"
+   },
+   "5": {
+    "name": "MANAGER",
+    "meaning": "staff job: Manager",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x5 prints 'Manager' (exe string)"
+   },
+   "6": {
+    "name": "ASSISTANT_MANAGER",
+    "meaning": "staff job: Assistant Manager",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x6 prints 'Assistant Manager' (exe string)"
+   },
+   "7": {
+    "name": "RESERVE_TEAM_MANAGER",
+    "meaning": "staff job: Reserve Team Manager",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x7 prints 'Reserve Team Manager' (exe string)"
+   },
+   "8": {
+    "name": "COACH",
+    "meaning": "staff job: Coach",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x8 prints 'Coach' (exe string)"
+   },
+   "9": {
+    "name": "SCOUT",
+    "meaning": "staff job: Scout",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x9 prints 'Scout' (exe string)"
+   },
+   "10": {
+    "name": "PHYSIO",
+    "meaning": "staff job: Physio",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0xa prints 'Physio' (exe string)"
+   },
+   "11": {
+    "name": "PLAYER",
+    "meaning": "staff job: Player",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0xb prints 'Player' (exe string); database_is_player_job 0x53b620 accepts 11,12,13,15"
+   },
+   "12": {
+    "name": "PLAYER_MANAGER",
+    "meaning": "staff job: Player Manager",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0xc prints 'Player Manager' (exe string); database_is_player_job 0x53b620 accepts 11,12,13,15"
+   },
+   "13": {
+    "name": "PLAYER_ASSISTANT_MANAGER",
+    "meaning": "staff job: Player Assistant Manager",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0xd prints 'Player Assistant Manager' (exe string); database_is_player_job 0x53b620 accepts 11,12,13,15"
+   },
+   "15": {
+    "name": "PLAYER_COACH",
+    "meaning": "staff job: Player Coach",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0xf prints 'Player Coach' (exe string); database_is_player_job 0x53b620 accepts 11,12,13,15"
+   },
+   "16": {
+    "name": "RETIRED_PLAYER",
+    "meaning": "staff job: Retired Player",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x10 prints 'Retired Player' (exe string)"
+   },
+   "17": {
+    "name": "MEDIA_PUNDIT",
+    "meaning": "staff job: Media Pundit",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x11 prints 'Media Pundit' (exe string)"
+   }
+  }
+ },
+ "Staff.job_for_nation": {
+  "record": "Staff",
+  "getter": "job_for_nation",
+  "enum_name": "job_kind",
+  "values": {
+   "0": {
+    "name": "UNEMPLOYED",
+    "meaning": "staff job: Unemployed",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x0 prints 'Unemployed' (exe string)"
+   },
+   "1": {
+    "name": "CHAIRMAN",
+    "meaning": "staff job: Chairman",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x1 prints 'Chairman' (exe string)"
+   },
+   "2": {
+    "name": "MANAGING_DIRECTOR",
+    "meaning": "staff job: Managing Director",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x2 prints 'Managing Director' (exe string)"
+   },
+   "3": {
+    "name": "GENERAL_MANAGER",
+    "meaning": "staff job: General Manager",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x3 prints 'General Manager' (exe string)"
+   },
+   "4": {
+    "name": "DIRECTOR_OF_FOOTBALL",
+    "meaning": "staff job: Director Of Football",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x4 prints 'Director Of Football' (exe string)"
+   },
+   "5": {
+    "name": "MANAGER",
+    "meaning": "staff job: Manager",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x5 prints 'Manager' (exe string)"
+   },
+   "6": {
+    "name": "ASSISTANT_MANAGER",
+    "meaning": "staff job: Assistant Manager",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x6 prints 'Assistant Manager' (exe string)"
+   },
+   "7": {
+    "name": "RESERVE_TEAM_MANAGER",
+    "meaning": "staff job: Reserve Team Manager",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x7 prints 'Reserve Team Manager' (exe string)"
+   },
+   "8": {
+    "name": "COACH",
+    "meaning": "staff job: Coach",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x8 prints 'Coach' (exe string)"
+   },
+   "9": {
+    "name": "SCOUT",
+    "meaning": "staff job: Scout",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x9 prints 'Scout' (exe string)"
+   },
+   "10": {
+    "name": "PHYSIO",
+    "meaning": "staff job: Physio",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0xa prints 'Physio' (exe string)"
+   },
+   "11": {
+    "name": "PLAYER",
+    "meaning": "staff job: Player",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0xb prints 'Player' (exe string); database_is_player_job 0x53b620 accepts 11,12,13,15"
+   },
+   "12": {
+    "name": "PLAYER_MANAGER",
+    "meaning": "staff job: Player Manager",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0xc prints 'Player Manager' (exe string); database_is_player_job 0x53b620 accepts 11,12,13,15"
+   },
+   "13": {
+    "name": "PLAYER_ASSISTANT_MANAGER",
+    "meaning": "staff job: Player Assistant Manager",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0xd prints 'Player Assistant Manager' (exe string); database_is_player_job 0x53b620 accepts 11,12,13,15"
+   },
+   "15": {
+    "name": "PLAYER_COACH",
+    "meaning": "staff job: Player Coach",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0xf prints 'Player Coach' (exe string); database_is_player_job 0x53b620 accepts 11,12,13,15"
+   },
+   "16": {
+    "name": "RETIRED_PLAYER",
+    "meaning": "staff job: Retired Player",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x10 prints 'Retired Player' (exe string)"
+   },
+   "17": {
+    "name": "MEDIA_PUNDIT",
+    "meaning": "staff job: Media Pundit",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x11 prints 'Media Pundit' (exe string)"
+   }
+  }
+ },
+ "Offer.job_type": {
+  "record": "Offer",
+  "getter": "job_type",
+  "enum_name": "job_kind",
+  "values": {
+   "0": {
+    "name": "UNEMPLOYED",
+    "meaning": "staff job: Unemployed",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x0 prints 'Unemployed' (exe string)"
+   },
+   "1": {
+    "name": "CHAIRMAN",
+    "meaning": "staff job: Chairman",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x1 prints 'Chairman' (exe string)"
+   },
+   "2": {
+    "name": "MANAGING_DIRECTOR",
+    "meaning": "staff job: Managing Director",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x2 prints 'Managing Director' (exe string)"
+   },
+   "3": {
+    "name": "GENERAL_MANAGER",
+    "meaning": "staff job: General Manager",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x3 prints 'General Manager' (exe string)"
+   },
+   "4": {
+    "name": "DIRECTOR_OF_FOOTBALL",
+    "meaning": "staff job: Director Of Football",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x4 prints 'Director Of Football' (exe string)"
+   },
+   "5": {
+    "name": "MANAGER",
+    "meaning": "staff job: Manager",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x5 prints 'Manager' (exe string)"
+   },
+   "6": {
+    "name": "ASSISTANT_MANAGER",
+    "meaning": "staff job: Assistant Manager",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x6 prints 'Assistant Manager' (exe string)"
+   },
+   "7": {
+    "name": "RESERVE_TEAM_MANAGER",
+    "meaning": "staff job: Reserve Team Manager",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x7 prints 'Reserve Team Manager' (exe string)"
+   },
+   "8": {
+    "name": "COACH",
+    "meaning": "staff job: Coach",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x8 prints 'Coach' (exe string)"
+   },
+   "9": {
+    "name": "SCOUT",
+    "meaning": "staff job: Scout",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x9 prints 'Scout' (exe string)"
+   },
+   "10": {
+    "name": "PHYSIO",
+    "meaning": "staff job: Physio",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0xa prints 'Physio' (exe string)"
+   },
+   "11": {
+    "name": "PLAYER",
+    "meaning": "staff job: Player",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0xb prints 'Player' (exe string); database_is_player_job 0x53b620 accepts 11,12,13,15"
+   },
+   "12": {
+    "name": "PLAYER_MANAGER",
+    "meaning": "staff job: Player Manager",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0xc prints 'Player Manager' (exe string); database_is_player_job 0x53b620 accepts 11,12,13,15"
+   },
+   "13": {
+    "name": "PLAYER_ASSISTANT_MANAGER",
+    "meaning": "staff job: Player Assistant Manager",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0xd prints 'Player Assistant Manager' (exe string); database_is_player_job 0x53b620 accepts 11,12,13,15"
+   },
+   "15": {
+    "name": "PLAYER_COACH",
+    "meaning": "staff job: Player Coach",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0xf prints 'Player Coach' (exe string); database_is_player_job 0x53b620 accepts 11,12,13,15"
+   },
+   "16": {
+    "name": "RETIRED_PLAYER",
+    "meaning": "staff job: Retired Player",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x10 prints 'Retired Player' (exe string)"
+   },
+   "17": {
+    "name": "MEDIA_PUNDIT",
+    "meaning": "staff job: Media Pundit",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x11 prints 'Media Pundit' (exe string)"
+   }
+  }
+ },
+ "ExchangePlayer.job_type": {
+  "record": "ExchangePlayer",
+  "getter": "job_type",
+  "enum_name": "job_kind",
+  "values": {
+   "0": {
+    "name": "UNEMPLOYED",
+    "meaning": "staff job: Unemployed",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x0 prints 'Unemployed' (exe string)"
+   },
+   "1": {
+    "name": "CHAIRMAN",
+    "meaning": "staff job: Chairman",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x1 prints 'Chairman' (exe string)"
+   },
+   "2": {
+    "name": "MANAGING_DIRECTOR",
+    "meaning": "staff job: Managing Director",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x2 prints 'Managing Director' (exe string)"
+   },
+   "3": {
+    "name": "GENERAL_MANAGER",
+    "meaning": "staff job: General Manager",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x3 prints 'General Manager' (exe string)"
+   },
+   "4": {
+    "name": "DIRECTOR_OF_FOOTBALL",
+    "meaning": "staff job: Director Of Football",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x4 prints 'Director Of Football' (exe string)"
+   },
+   "5": {
+    "name": "MANAGER",
+    "meaning": "staff job: Manager",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x5 prints 'Manager' (exe string)"
+   },
+   "6": {
+    "name": "ASSISTANT_MANAGER",
+    "meaning": "staff job: Assistant Manager",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x6 prints 'Assistant Manager' (exe string)"
+   },
+   "7": {
+    "name": "RESERVE_TEAM_MANAGER",
+    "meaning": "staff job: Reserve Team Manager",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x7 prints 'Reserve Team Manager' (exe string)"
+   },
+   "8": {
+    "name": "COACH",
+    "meaning": "staff job: Coach",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x8 prints 'Coach' (exe string)"
+   },
+   "9": {
+    "name": "SCOUT",
+    "meaning": "staff job: Scout",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x9 prints 'Scout' (exe string)"
+   },
+   "10": {
+    "name": "PHYSIO",
+    "meaning": "staff job: Physio",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0xa prints 'Physio' (exe string)"
+   },
+   "11": {
+    "name": "PLAYER",
+    "meaning": "staff job: Player",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0xb prints 'Player' (exe string); database_is_player_job 0x53b620 accepts 11,12,13,15"
+   },
+   "12": {
+    "name": "PLAYER_MANAGER",
+    "meaning": "staff job: Player Manager",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0xc prints 'Player Manager' (exe string); database_is_player_job 0x53b620 accepts 11,12,13,15"
+   },
+   "13": {
+    "name": "PLAYER_ASSISTANT_MANAGER",
+    "meaning": "staff job: Player Assistant Manager",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0xd prints 'Player Assistant Manager' (exe string); database_is_player_job 0x53b620 accepts 11,12,13,15"
+   },
+   "15": {
+    "name": "PLAYER_COACH",
+    "meaning": "staff job: Player Coach",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0xf prints 'Player Coach' (exe string); database_is_player_job 0x53b620 accepts 11,12,13,15"
+   },
+   "16": {
+    "name": "RETIRED_PLAYER",
+    "meaning": "staff job: Retired Player",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x10 prints 'Retired Player' (exe string)"
+   },
+   "17": {
+    "name": "MEDIA_PUNDIT",
+    "meaning": "staff job: Media Pundit",
+    "confidence": "verified",
+    "evidence": "database_get_job_name 0x53ad00 (community name) switch case 0x11 prints 'Media Pundit' (exe string)"
+   }
+  }
+ },
+ "Club.professional_status": {
+  "record": "Club",
+  "getter": "professional_status",
+  "enum_name": "professional_status",
+  "values": {
+   "1": {
+    "name": "PROFESSIONAL",
+    "meaning": "professional club",
+    "confidence": "verified",
+    "evidence": "club screen 0x460ec6: [club+0x64]==1 prints 'Professional' (0x9904b0)"
+   },
+   "2": {
+    "name": "SEMI_PROFESSIONAL",
+    "meaning": "semi-professional club",
+    "confidence": "verified",
+    "evidence": "0x460ee1: ==2 prints 'Semi-Professional' (0x99049c); League::init_table_row turns 3 into 2"
+   },
+   "3": {
+    "name": "AMATEUR",
+    "meaning": "amateur club",
+    "confidence": "verified",
+    "evidence": "0x460ef9: ==3 prints 'Amateur' (0x990494); get_max_staff_wage returns 0 for 3"
+   }
+  }
+ },
+ "Nation.actual_region": {
+  "record": "Nation",
+  "getter": "actual_region",
+  "enum_name": "world_region",
+  "values": {
+   "1": {
+    "name": "AFRICA",
+    "meaning": "world region africa",
+    "confidence": "read",
+    "evidence": "get_region_name 0x616f20 (community name, regions 1..14) case 1 prints 'African/Africa'"
+   },
+   "2": {
+    "name": "ASIA",
+    "meaning": "world region asia",
+    "confidence": "read",
+    "evidence": "get_region_name 0x616f20 (community name, regions 1..14) case 2 prints 'Asian'"
+   },
+   "3": {
+    "name": "CARIBBEAN",
+    "meaning": "world region caribbean",
+    "confidence": "read",
+    "evidence": "get_region_name 0x616f20 (community name, regions 1..14) case 3 prints 'Caribbean'"
+   },
+   "4": {
+    "name": "CENTRAL_AMERICA",
+    "meaning": "world region central america",
+    "confidence": "read",
+    "evidence": "get_region_name 0x616f20 (community name, regions 1..14) case 4 prints 'Central American/Central America'"
+   },
+   "5": {
+    "name": "CENTRAL_EUROPE",
+    "meaning": "world region central europe",
+    "confidence": "read",
+    "evidence": "get_region_name 0x616f20 (community name, regions 1..14) case 5 prints 'Central European/Central Europe'"
+   },
+   "6": {
+    "name": "EASTERN_EUROPE",
+    "meaning": "world region eastern europe",
+    "confidence": "read",
+    "evidence": "get_region_name 0x616f20 (community name, regions 1..14) case 6 prints 'Eastern European/Eastern Europe'"
+   },
+   "7": {
+    "name": "MIDDLE_EAST",
+    "meaning": "world region middle east",
+    "confidence": "read",
+    "evidence": "get_region_name 0x616f20 (community name, regions 1..14) case 7 prints 'Middle Eastern/Middle East'"
+   },
+   "8": {
+    "name": "NORTH_AFRICA",
+    "meaning": "world region north africa",
+    "confidence": "read",
+    "evidence": "get_region_name 0x616f20 (community name, regions 1..14) case 8 prints 'North African/North Africa'"
+   },
+   "9": {
+    "name": "NORTH_AMERICA",
+    "meaning": "world region north america",
+    "confidence": "read",
+    "evidence": "get_region_name 0x616f20 (community name, regions 1..14) case 9 prints 'North American/North America'"
+   },
+   "10": {
+    "name": "OCEANIA",
+    "meaning": "world region oceania",
+    "confidence": "read",
+    "evidence": "get_region_name 0x616f20 (community name, regions 1..14) case 10 prints 'Oceanic/Oceania'"
+   },
+   "11": {
+    "name": "SCANDINAVIA",
+    "meaning": "world region scandinavia",
+    "confidence": "read",
+    "evidence": "get_region_name 0x616f20 (community name, regions 1..14) case 11 prints 'Scandinavian'"
+   },
+   "12": {
+    "name": "SOUTH_AMERICA",
+    "meaning": "world region south america",
+    "confidence": "read",
+    "evidence": "get_region_name 0x616f20 (community name, regions 1..14) case 12 prints 'South American'"
+   },
+   "13": {
+    "name": "SOUTHERN_EUROPE",
+    "meaning": "world region southern europe",
+    "confidence": "read",
+    "evidence": "get_region_name 0x616f20 (community name, regions 1..14) case 13 prints 'Southern European'"
+   },
+   "14": {
+    "name": "UK_AND_IRELAND",
+    "meaning": "world region uk and ireland",
+    "confidence": "verified",
+    "evidence": "get_region_name 0x616f20 (community name, regions 1..14) case 14 prints 'UK & Irish'; transfer/work-permit code tests actual_region()==0xe for both nations (shared British-Irish rule)"
+   }
+  }
+ },
+ "Nation.first_language": {
+  "record": "Nation",
+  "getter": "first_language",
+  "enum_name": "language",
+  "values": {
+   "0": {
+    "name": "NONE",
+    "meaning": "no language set",
+    "confidence": "read",
+    "evidence": "database.rs:8306/8342 (name pick): language 0 draws from the whole name table instead of a donor nation; 0x53cee0 prints 'Unknown' for it"
+   },
+   "1": {
+    "name": "ALBANIAN",
+    "meaning": "language Albanian",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x1 prints 'Albanian' (exe string)"
+   },
+   "2": {
+    "name": "ARABIC",
+    "meaning": "language Arabic",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x2 prints 'Arabic' (exe string)"
+   },
+   "3": {
+    "name": "BULGARIAN",
+    "meaning": "language Bulgarian",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x3 prints 'Bulgarian' (exe string)"
+   },
+   "4": {
+    "name": "CHINESE",
+    "meaning": "language Chinese",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x4 prints 'Chinese' (exe string)"
+   },
+   "5": {
+    "name": "CROATIAN",
+    "meaning": "language Croatian",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x5 prints 'Croatian' (exe string)"
+   },
+   "6": {
+    "name": "CZECH",
+    "meaning": "language Czech",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x6 prints 'Czech' (exe string)"
+   },
+   "7": {
+    "name": "DUTCH",
+    "meaning": "language Dutch",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x7 prints 'Dutch' (exe string)"
+   },
+   "8": {
+    "name": "ENGLISH",
+    "meaning": "language English",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x8 prints 'English' (exe string); match commentary (match_eng/match_pl) tests first_language()==8 for English-speaking nations"
+   },
+   "9": {
+    "name": "FINNISH",
+    "meaning": "language Finnish",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x9 prints 'Finnish' (exe string)"
+   },
+   "10": {
+    "name": "FRENCH",
+    "meaning": "language French",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0xa prints 'French' (exe string)"
+   },
+   "11": {
+    "name": "GERMAN",
+    "meaning": "language German",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0xb prints 'German' (exe string)"
+   },
+   "12": {
+    "name": "GREEK",
+    "meaning": "language Greek",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0xc prints 'Greek' (exe string)"
+   },
+   "13": {
+    "name": "HEBREW",
+    "meaning": "language Hebrew",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0xd prints 'Hebrew' (exe string)"
+   },
+   "14": {
+    "name": "HUNGARIAN",
+    "meaning": "language Hungarian",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0xe prints 'Hungarian' (exe string)"
+   },
+   "15": {
+    "name": "ITALIAN",
+    "meaning": "language Italian",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0xf prints 'Italian' (exe string)"
+   },
+   "16": {
+    "name": "JAPANESE",
+    "meaning": "language Japanese",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x10 prints 'Japanese' (exe string)"
+   },
+   "17": {
+    "name": "KOREAN",
+    "meaning": "language Korean",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x11 prints 'Korean' (exe string)"
+   },
+   "18": {
+    "name": "POLISH",
+    "meaning": "language Polish",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x12 prints 'Polish' (exe string)"
+   },
+   "19": {
+    "name": "PORTUGUESE",
+    "meaning": "language Portuguese",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x13 prints 'Portuguese' (exe string)"
+   },
+   "20": {
+    "name": "ROMANIAN",
+    "meaning": "language Romanian",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x14 prints 'Romanian' (exe string)"
+   },
+   "21": {
+    "name": "RUSSIAN",
+    "meaning": "language Russian",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x15 prints 'Russian' (exe string)"
+   },
+   "22": {
+    "name": "NORWEGIAN",
+    "meaning": "language Norwegian",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x16 prints 'Norwegian' (exe string)"
+   },
+   "23": {
+    "name": "SERBIAN",
+    "meaning": "language Serbian",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x17 prints 'Serbian' (exe string)"
+   },
+   "24": {
+    "name": "SPANISH",
+    "meaning": "language Spanish",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x18 prints 'Spanish' (exe string)"
+   },
+   "25": {
+    "name": "TURKISH",
+    "meaning": "language Turkish",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x19 prints 'Turkish' (exe string)"
+   },
+   "26": {
+    "name": "BURMESE",
+    "meaning": "language Burmese",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x1a prints 'Burmese' (exe string)"
+   },
+   "27": {
+    "name": "MALAY",
+    "meaning": "language Malay",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x1b prints 'Malay' (exe string)"
+   },
+   "28": {
+    "name": "PERSIAN",
+    "meaning": "language Persian",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x1c prints 'Persian' (exe string)"
+   },
+   "29": {
+    "name": "SLOVAK",
+    "meaning": "language Slovak",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x1d prints 'Slovak' (exe string)"
+   },
+   "30": {
+    "name": "SWEDISH",
+    "meaning": "language Swedish",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x1e prints 'Swedish' (exe string)"
+   },
+   "31": {
+    "name": "ICELANDIC",
+    "meaning": "language Icelandic",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x1f prints 'Icelandic' (exe string)"
+   },
+   "32": {
+    "name": "DANISH",
+    "meaning": "language Danish",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x20 prints 'Danish' (exe string)"
+   },
+   "33": {
+    "name": "AFRIKAANS",
+    "meaning": "language Afrikaans",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x21 prints 'Afrikaans' (exe string)"
+   },
+   "35": {
+    "name": "AMHARIC",
+    "meaning": "language Amharic",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x23 prints 'Amharic' (exe string)"
+   },
+   "36": {
+    "name": "ARMENIAN",
+    "meaning": "language Armenian",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x24 prints 'Armenian' (exe string)"
+   },
+   "37": {
+    "name": "AZERI",
+    "meaning": "language Azeri",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x25 prints 'Azeri' (exe string)"
+   },
+   "38": {
+    "name": "BANGLA",
+    "meaning": "language Bangla",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x26 prints 'Bangla' (exe string)"
+   },
+   "39": {
+    "name": "ESTONIAN",
+    "meaning": "language Estonian",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x27 prints 'Estonian' (exe string)"
+   },
+   "40": {
+    "name": "GEORGIAN",
+    "meaning": "language Georgian",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x28 prints 'Georgian' (exe string)"
+   },
+   "41": {
+    "name": "HINDI",
+    "meaning": "language Hindi",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x29 prints 'Hindi' (exe string)"
+   },
+   "42": {
+    "name": "JAVANESE",
+    "meaning": "language Javanese",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x2a prints 'Javanese' (exe string)"
+   },
+   "43": {
+    "name": "KHMER",
+    "meaning": "language Khmer",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x2b prints 'Khmer' (exe string)"
+   },
+   "44": {
+    "name": "KYRGYZ",
+    "meaning": "language Kyrgyz",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x2c prints 'Kyrgyz' (exe string)"
+   },
+   "45": {
+    "name": "LAO",
+    "meaning": "language Lao",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x2d prints 'Lao' (exe string)"
+   },
+   "46": {
+    "name": "LATVIAN",
+    "meaning": "language Latvian",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x2e prints 'Latvian' (exe string)"
+   },
+   "47": {
+    "name": "LETZBURGESCH",
+    "meaning": "language Letzburgesch",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x2f prints 'Letzburgesch' (exe string)"
+   },
+   "48": {
+    "name": "LITHUANIAN",
+    "meaning": "language Lithuanian",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x30 prints 'Lithuanian' (exe string)"
+   },
+   "49": {
+    "name": "MACEDONIAN",
+    "meaning": "language Macedonian",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x31 prints 'Macedonian' (exe string)"
+   },
+   "50": {
+    "name": "MALAGASY",
+    "meaning": "language Malagasy",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x32 prints 'Malagasy' (exe string)"
+   },
+   "51": {
+    "name": "MALTESE",
+    "meaning": "language Maltese",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x33 prints 'Maltese' (exe string)"
+   },
+   "52": {
+    "name": "SINHALESE",
+    "meaning": "language Sinhalese",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x34 prints 'Sinhalese' (exe string)"
+   },
+   "53": {
+    "name": "SLOVENIAN",
+    "meaning": "language Slovenian",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x35 prints 'Slovenian' (exe string)"
+   },
+   "54": {
+    "name": "SOMALI",
+    "meaning": "language Somali",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x36 prints 'Somali' (exe string)"
+   },
+   "55": {
+    "name": "SWAHILI",
+    "meaning": "language Swahili",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x37 prints 'Swahili' (exe string)"
+   },
+   "56": {
+    "name": "TAJIK",
+    "meaning": "language Tajik",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x38 prints 'Tajik' (exe string)"
+   },
+   "57": {
+    "name": "TAMIL",
+    "meaning": "language Tamil",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x39 prints 'Tamil' (exe string)"
+   },
+   "58": {
+    "name": "THAI",
+    "meaning": "language Thai",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x3a prints 'Thai' (exe string)"
+   },
+   "59": {
+    "name": "UZBEK",
+    "meaning": "language Uzbek",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x3b prints 'Uzbek' (exe string)"
+   },
+   "60": {
+    "name": "VIETNAMESE",
+    "meaning": "language Vietnamese",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x3c prints 'Vietnamese' (exe string)"
+   },
+   "61": {
+    "name": "MONGOL",
+    "meaning": "language Mongol",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x3d prints 'Mongol' (exe string)"
+   },
+   "62": {
+    "name": "BOSNIAN",
+    "meaning": "language Bosnian",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x3e prints 'Bosnian' (exe string)"
+   },
+   "63": {
+    "name": "UKRAINIAN",
+    "meaning": "language Ukrainian",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x3f prints 'Ukrainian' (exe string)"
+   },
+   "64": {
+    "name": "ZULU",
+    "meaning": "language Zulu",
+    "confidence": "verified",
+    "evidence": "database_get_language_name 0x53cee0 (community name) case 0x40 prints 'Zulu' (exe string)"
+   }
+  }
+ },
+ "Nation.group_membership": {
+  "record": "Nation",
+  "getter": "group_membership",
+  "enum_name": "nation_group",
+  "values": {
+   "2": {
+    "name": "EEC",
+    "meaning": "member of the EEC/EU (free movement for nationality rules)",
+    "confidence": "verified",
+    "evidence": "database_club_nation_is_eec 0x53d7d0 (community name) is cmp byte [nation+0x7f],2; database.rs:9145 'EU nationality'"
+   }
+  }
+ },
+ "Staff.squad_selected_for": {
+  "record": "Staff",
+  "getter": "squad_selected_for",
+  "enum_name": "euro_registration",
+  "values": {
+   "0": {
+    "name": "NOT_REGISTERED",
+    "meaning": "not registered for the European cups",
+    "confidence": "read",
+    "evidence": "process_euro_registration 0x85a9b0 zeroes it for everyone at stage 1; select_euro_registered_players drops registered players to 0"
+   },
+   "1": {
+    "name": "PENDING_REGISTRATION",
+    "meaning": "registered with the mark at stage 1; reverts to 0 at the next stage",
+    "confidence": "inferred",
+    "evidence": "select_euro_registered_players 0x85aae0: stage 1 with mark writes 1; at later stages 1 -> 0"
+   },
+   "2": {
+    "name": "REGISTERED",
+    "meaning": "registered for the European cups",
+    "confidence": "read",
+    "evidence": "select_euro_registered_players counts the players with 2 as registered; 4 -> 2 at the next stage"
+   },
+   "4": {
+    "name": "PENDING_REREGISTRATION",
+    "meaning": "dropped with the mark, or back from loan; becomes 2 again at the next stage",
+    "confidence": "inferred",
+    "evidence": "select_euro_registered_players: 2 -> 4 with mark, later 4 -> 2; end_loan (contract_manager.rs:2289) turns 0x10 into 4"
+   },
+   "16": {
+    "name": "REGISTERED_ON_LOAN",
+    "meaning": "registered player sent out on loan (not eligible while away)",
+    "confidence": "read",
+    "evidence": "transfer_manager.rs:521/5111 loan: 2 -> 0x10; end_loan 0x10 -> 4; select_euro_registered_players skips & 0x18"
+   }
+  }
+ },
+ "MatchManager.selection_mode": {
+  "record": "MatchManager",
+  "getter": "selection_mode",
+  "enum_name": "rotation_mode",
+  "values": {
+   "0": {
+    "name": "ROTATE_HEAVY",
+    "meaning": "next match far more important: widest rotation (15 slots rewritten, 14 at +0x30)",
+    "confidence": "inferred",
+    "evidence": "match_man.rs:1592 when weight(next) > 2x weight(today); 1619 mode 0 table"
+   },
+   "1": {
+    "name": "ROTATE_MEDIUM",
+    "meaning": "medium rotation (8 slots, 7 at +0x30)",
+    "confidence": "inferred",
+    "evidence": "match_man.rs:1594 when > 1.4x; mode 1 table"
+   },
+   "2": {
+    "name": "ROTATE_LIGHT",
+    "meaning": "light rotation (3 slots, 2 at +0x30)",
+    "confidence": "inferred",
+    "evidence": "match_man.rs:1596 when > 1.1x; mode 2 table"
+   },
+   "3": {
+    "name": "NO_ROTATION",
+    "meaning": "no squad rotation for this match (default for the away side)",
+    "confidence": "read",
+    "evidence": "match_man.rs:4365 away side gets 3; 1618/1720/1808 skip rotation when ==3"
+   }
+  }
+ },
+ "Offer.terms_state": {
+  "record": "Offer",
+  "getter": "terms_state",
+  "enum_name": "terms_state",
+  "values": {
+   "0": {
+    "name": "NONE",
+    "meaning": "no personal terms agreed yet",
+    "confidence": "read",
+    "evidence": "transfer_manager.rs:2493 terms_state()!=0 goes straight to club approval; reset to 0"
+   },
+   "2": {
+    "name": "ACCEPTED",
+    "meaning": "target accepted the personal terms (job_type set alongside)",
+    "confidence": "read",
+    "evidence": "transfer_manager.rs:449 sets 2 with set_job_type(kind); 5501 completion requires 2"
+   },
+   "4": {
+    "name": "REFUSED",
+    "meaning": "terms refused or the deal collapsed",
+    "confidence": "read",
+    "evidence": "transfer_manager.rs:9891 sets 4 on the target's refusal (status 0xf); 4355 sets 4 with status 3"
+   }
+  }
+ },
+ "LiveMatch.state": {
+  "record": "LiveMatch",
+  "getter": "state",
+  "enum_name": "live_match_state",
+  "values": {
+   "1": {
+    "name": "IN_PLAY",
+    "meaning": "match running (period in play)",
+    "confidence": "verified",
+    "evidence": "match_screens period label: state 1 with period end 0x1ef/0x3de/0x483/0x528 prints '1ST','2ND','ET 1ST','ET 2ND' (exe strings 0xa16d10..)"
+   },
+   "2": {
+    "name": "FULL_TIME",
+    "meaning": "match finished",
+    "confidence": "verified",
+    "evidence": "state 2 prints 'F/T' (0xa16d04) or 'ET F/T'; step_day_match counts 2 as finished"
+   },
+   "4": {
+    "name": "HALF_TIME",
+    "meaning": "break between periods",
+    "confidence": "verified",
+    "evidence": "state 4 prints 'H/T' (0xa16d0c) or 'ET H/T'; match_day raises the HALF_TIME update flag"
+   },
+   "8": {
+    "name": "MATCH_ENDED",
+    "meaning": "second finishing code of run_match_steps",
+    "confidence": "read",
+    "evidence": "step_day_match/match_day treat 2 or 8 as finished; 8 raises update_flags::MATCH_ENDED"
+   },
+   "255": {
+    "name": "NOT_LIVE",
+    "meaning": "not started / not a live match",
+    "confidence": "read",
+    "evidence": "match_screens.rs:3163/4949 skip the match when state==0xff; match_day writes 0xff"
+   }
+  }
+ },
+ "DayMatch.state": {
+  "record": "DayMatch",
+  "getter": "state",
+  "enum_name": "live_match_state",
+  "values": {
+   "1": {
+    "name": "IN_PLAY",
+    "meaning": "match running (period in play)",
+    "confidence": "verified",
+    "evidence": "match_screens period label: state 1 with period end 0x1ef/0x3de/0x483/0x528 prints '1ST','2ND','ET 1ST','ET 2ND' (exe strings 0xa16d10..)"
+   },
+   "2": {
+    "name": "FULL_TIME",
+    "meaning": "match finished",
+    "confidence": "verified",
+    "evidence": "state 2 prints 'F/T' (0xa16d04) or 'ET F/T'; step_day_match counts 2 as finished"
+   },
+   "4": {
+    "name": "HALF_TIME",
+    "meaning": "break between periods",
+    "confidence": "verified",
+    "evidence": "state 4 prints 'H/T' (0xa16d0c) or 'ET H/T'; match_day raises the HALF_TIME update flag"
+   },
+   "8": {
+    "name": "MATCH_ENDED",
+    "meaning": "second finishing code of run_match_steps",
+    "confidence": "read",
+    "evidence": "step_day_match/match_day treat 2 or 8 as finished; 8 raises update_flags::MATCH_ENDED"
+   },
+   "255": {
+    "name": "NOT_LIVE",
+    "meaning": "not started / not a live match",
+    "confidence": "read",
+    "evidence": "match_screens.rs:3163/4949 skip the match when state==0xff; match_day writes 0xff"
+   }
+  }
+ },
+ "MatchPlayer.position": {
+  "record": "MatchPlayer",
+  "getter": "position",
+  "enum_name": "match_slot",
+  "values": {
+   "-1": {
+    "name": "BENCH",
+    "meaning": "off the pitch, available (bench / not placed)",
+    "confidence": "read",
+    "evidence": "match_eng.rs:10014 sets -1 when slot >10 or no player; match_man.rs:2297 a -1 player coming on is a substitution"
+   },
+   "-2": {
+    "name": "INJURED_OFF",
+    "meaning": "taken off injured",
+    "confidence": "read",
+    "evidence": "match_eng.rs:1954 sets -2 when the injury forces him off; substitution order (match_man.rs:1305) puts -2 first"
+   },
+   "-3": {
+    "name": "REMOVED",
+    "meaning": "left the pitch without a substitute (injury or sending-off, 0x6cda20)",
+    "confidence": "read",
+    "evidence": "match_eng.rs:6704 writes -3 after remove_player_from_pitch(-3)"
+   },
+   "-4": {
+    "name": "SUBSTITUTED",
+    "meaning": "substituted off",
+    "confidence": "read",
+    "evidence": "match_man.rs:2314 writes -4 with SUBSTITUTED_OFF=1 and MINUTE_OFF"
+   },
+   "-5": {
+    "name": "EMPTY",
+    "meaning": "empty slot (0xfb)",
+    "confidence": "read",
+    "evidence": "match_eng.rs:3685 writes 0xfb for players without an engine; screens/ratings skip 0xfb"
+   }
+  }
+ },
+ "MatchRecordRow.position": {
+  "record": "MatchRecordRow",
+  "getter": "position",
+  "enum_name": "row_slot",
+  "values": {
+   "251": {
+    "name": "EMPTY",
+    "meaning": "empty player row (0xfb, the MatchPlayer -5 as u8)",
+    "confidence": "read",
+    "evidence": "month_ratings.rs:28 and match_screens.rs:4551 skip rows with position 0xfb"
+   }
+  }
+ }
+}

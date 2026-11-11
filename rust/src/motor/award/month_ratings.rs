@@ -25,7 +25,7 @@ pub(crate) unsafe extern "thiscall" fn record_match_ratings(this: usize, game: u
     for l in 0..2 { // cpw5: os dois lados
         for k in 0..0x14usize {
             let e = MatchRecordRow(side + k * 0x49);
-            if e.position() == 0xfb {
+            if e.position() == row_slot::EMPTY {
                 continue;
             }
             if k >= 0xb && (e.minute_on() as u8) == 0xff {

@@ -1,0 +1,1438 @@
+{
+ "offer_status": {
+  "record": "Offer",
+  "getter": "status",
+  "enum_name": "offer_status",
+  "values": {
+   "0": {
+    "name": "SUBMITTED",
+    "meaning": "bid made, waiting for the selling club's response",
+    "confidence": "read",
+    "evidence": "add_transfer_offer writes 0; process_due_offer case 0 = seller response (accept_transfer_bid / ai_respond_to_bid); 0x11/0x12 go back to 0 for a new round"
+   },
+   "1": {
+    "name": "ON_HOLD",
+    "meaning": "offer held while its terms are negotiated (negotiation slot open)",
+    "confidence": "read",
+    "evidence": "put_offer_on_hold sets 1 (manager_manager.rs 2618); transfer_manager.rs 5735 'the offer under negotiation'"
+   },
+   "2": {
+    "name": "REJECTED",
+    "meaning": "offer rejected",
+    "confidence": "read",
+    "evidence": "fields.rs offer::STATUS '2 rejected'; transfer_manager doc 'estado 2 (recusada)'; closed set {2,3,4,0x10,0x14}"
+   },
+   "3": {
+    "name": "WITHDRAWN",
+    "meaning": "offer withdrawn by the bidder",
+    "confidence": "read",
+    "evidence": "fields.rs '3 withdrawn'; withdraw_transfer_offer doc 'Estado 3 (retirada)'"
+   },
+   "4": {
+    "name": "LAPSED",
+    "meaning": "a human party did not answer by the deadline; the offer is closed and removed when due again",
+    "confidence": "inferred",
+    "evidence": "process_due_offer: case 0 with a human seller and case 1 with a human buyer set 4 and reschedule; when due, 4 is removed like 2/3/0xf/0x10/0x14"
+   },
+   "5": {
+    "name": "ACCEPTED",
+    "meaning": "the selling club accepted the bid",
+    "confidence": "read",
+    "evidence": "fields.rs '5 accepted'; accept_transfer_bid '+0x2e = 0, status 5'; due 5/6 -> contract offered to the target"
+   },
+   "6": {
+    "name": "ACCEPTED_EXCHANGE_TERMS_SET",
+    "meaning": "accepted, terms already offered to every exchange player; next is the target's contract",
+    "confidence": "inferred",
+    "evidence": "note_terms_offered_to_exchange_player: no exchange item left unmarked -> 8 if it was 7, else 6; due 5/6 -> offer_contract_to_offer_player"
+   },
+   "7": {
+    "name": "PRE_CONTRACT",
+    "meaning": "pre-contract offer (no fee to a seller); terms still to be offered to the exchange players",
+    "confidence": "read",
+    "evidence": "add_transfer_offer: with pre_contract (+0x2f) status 7 (28 days if the buyer is human); due 7 with an exchange -> contracts to the exchange players"
+   },
+   "8": {
+    "name": "AWAITING_PLAYER_DECISION",
+    "meaning": "agreed with the clubs; the player's decision on the contract is pending",
+    "confidence": "read",
+    "evidence": "after acceptance: schedule_decision_for_transfer then status 8 and the accepted news; 7 -> 8 once the exchange terms are set"
+   },
+   "9": {
+    "name": "AWAITING_HUMAN_CONTRACT_OFFER",
+    "meaning": "accepted; the human buyer has to offer the player a contract",
+    "confidence": "read",
+    "evidence": "process_due_offer: 5/6 with a human buyer -> 9 and 10 days"
+   },
+   "10": {
+    "name": "AWAITING_WORK_PERMIT",
+    "meaning": "waiting for the work permit decision",
+    "confidence": "read",
+    "evidence": "advance_offer_to_club_approval: permit to request -> work-permit delay news, status 0xa, 18+random(7) days; due 0xa -> check_offer_work_permits"
+   },
+   "11": {
+    "name": "AWAITING_CLUB_CONFIRMATIONS",
+    "meaning": "deal agreed; both clubs still have to confirm",
+    "confidence": "read",
+    "evidence": "advance_offer_to_club_approval sets 0xb; state_after_approval moves 0xb to 0xd (buyer) or 0xc (other side)"
+   },
+   "12": {
+    "name": "SELLER_CONFIRMED",
+    "meaning": "the selling side confirmed; the buyer has not",
+    "confidence": "read",
+    "evidence": "state_after_approval: other side 0xb -> 0xc; buyer 0xc -> 0xe"
+   },
+   "13": {
+    "name": "BUYER_CONFIRMED",
+    "meaning": "the buyer confirmed; the selling side has not",
+    "confidence": "read",
+    "evidence": "state_after_approval: buyer 0xb -> 0xd; other side 0xd -> 0xe"
+   },
+   "14": {
+    "name": "BOTH_CONFIRMED",
+    "meaning": "both clubs confirmed; the transfer is completed when due",
+    "confidence": "read",
+    "evidence": "state_after_approval reaches 0xe; process_due_offer 0xe -> try_complete_offer"
+   },
+   "15": {
+    "name": "COLLAPSED",
+    "meaning": "the deal fell through (player refused to move, or a rival offer went ahead); another round may follow while +0x2e < 3",
+    "confidence": "read",
+    "evidence": "post_player_rejects_move_news then status 0xf with +0x2e = 3; rival offers fall to 0xf; due 0xf with +0x2e < 3 gets one more round"
+   },
+   "16": {
+    "name": "CANCELLED",
+    "meaning": "offer cancelled (loan refused, work permit refused, no player sheet); removed when due",
+    "confidence": "read",
+    "evidence": "post_loan_cancelled_news / post_offer_collapsed_news then 0x10; target without a player sheet -> 0x10 in 1 day"
+   },
+   "17": {
+    "name": "REFUSED_BY_SELLING_SIDE",
+    "meaning": "the selling side refused at the approval stage; the offer goes back to the clubs",
+    "confidence": "read",
+    "evidence": "club_rejects_offer: refusing club is not the buyer (+8) -> 0x11 and unsettle_player_after_bid; due 0x11/0x12 -> status 0 again"
+   },
+   "18": {
+    "name": "REFUSED_BY_BUYER",
+    "meaning": "the buying club refused at the approval stage; the offer goes back to the clubs",
+    "confidence": "read",
+    "evidence": "club_rejects_offer: refusing club id = buyer (+8) -> 0x12; due 0x11/0x12 -> status 0 again"
+   },
+   "19": {
+    "name": "FUTURE_TRANSFER",
+    "meaning": "agreed transfer that completes at a later date",
+    "confidence": "verified",
+    "evidence": "fields.rs '0x13 future transfer'; set with +0x2d = 1 when the future transfer is registered (transfer_manager.rs 6920); list lookups for status 0x13"
+   },
+   "20": {
+    "name": "COMPLETED",
+    "meaning": "transfer or loan completed; removed when due",
+    "confidence": "read",
+    "evidence": "after finalise_transfer / move_player_to_club / the loan records: status 0x14 rescheduled (5 or 10 days), then removed"
+   }
+  }
+ },
+ "league_table_row_status": {
+  "record": "LeagueTableRow",
+  "getter": "status",
+  "enum_name": "table_status",
+  "values": {
+   "0": {
+    "name": "PROMOTED",
+    "meaning": "promotion place clinched (or advances to the next stage)",
+    "confidence": "verified",
+    "evidence": "table key 0x492040/0x7d8666: 0 -> 'P<%s - COMMENT - promoted>'; update_positions_and_status band 0 with flag 2; promote_and_relegate moves 0/5 up"
+   },
+   "1": {
+    "name": "PROMOTION_PLAYOFF",
+    "meaning": "promotion play-off place",
+    "confidence": "verified",
+    "evidence": "table key: 1 and 2 -> 'Pl<%s - COMMENT - playoffs>'; update_positions_and_status band 1 (+0xbf) -> 1"
+   },
+   "2": {
+    "name": "RELEGATION_PLAYOFF",
+    "meaning": "relegation play-off place",
+    "confidence": "verified",
+    "evidence": "table key: 2 -> 'Pl' playoffs; update_positions_and_status band 2 (+0xc0) -> 2"
+   },
+   "3": {
+    "name": "RELEGATED",
+    "meaning": "relegated",
+    "confidence": "verified",
+    "evidence": "table key: 3 -> 'R<%s - COMMENT - relegated>'; band 3 (+0xc1) with the relegation clauses; promote_and_relegate moves 3 down"
+   },
+   "5": {
+    "name": "CHAMPIONS",
+    "meaning": "title clinched",
+    "confidence": "verified",
+    "evidence": "table key: 5 -> 'C<%s - COMMENT - league champions>'; update_positions_and_status 'the title' (cpz3); news to the nation"
+   },
+   "6": {
+    "name": "QUALIFIED",
+    "meaning": "qualified for the next stage (band 0 with rule flag 8)",
+    "confidence": "verified",
+    "evidence": "table key: 6/7/8 -> 'Q<%s - COMMENT - qualified>'; promotion band with league_flags bit 8; ita_cup writes 6 for group qualifiers"
+   },
+   "7": {
+    "name": "QUALIFIED_7",
+    "meaning": "qualified (band 0 with rule flag 4); how it differs from 6 is not known",
+    "confidence": "verified",
+    "evidence": "table key: 7 -> 'Q' qualified; update_positions_and_status writes 7 with league_flags bit 4"
+   },
+   "8": {
+    "name": "QUALIFIED_8",
+    "meaning": "qualified; writer not found",
+    "confidence": "verified",
+    "evidence": "table key 0x492040/0x7d8666: 8 -> 'Q' qualified"
+   },
+   "252": {
+    "name": "PROMOTION_INELIGIBLE",
+    "meaning": "cannot go up (B team of a top-division club); can still be relegated",
+    "confidence": "read",
+    "evidence": "spa_second set_up: B team of a Primera club gets 0xfc 'cannot go up'; excluded from the top bands, 0xfc -> 3 allowed"
+   },
+   "254": {
+    "name": "OUT_OF_CONTENTION",
+    "meaning": "no band (title, promotion, play-off, relegation) still reachable; in group stages, eliminated",
+    "confidence": "read",
+    "evidence": "update_positions_and_status with flag 0x20: between the bands -> 0xfe, news to the club's manager; bra_nat_first writes 0xfe 'eliminado'"
+   },
+   "255": {
+    "name": "UNDECIDED",
+    "meaning": "situation not decided yet",
+    "confidence": "read",
+    "evidence": "fields.rs league_table_row::STATUS '0xff = not decided yet'; reset to 0xff after promotion/relegation and at the new season"
+   }
+  }
+ },
+ "fixture_category": {
+  "record": "Fixture",
+  "getter": "category",
+  "enum_name": "match_category",
+  "values": {
+   "1": {
+    "name": "FRIENDLY",
+    "meaning": "friendly",
+    "confidence": "read",
+    "evidence": "fix_man pairs category 1 with friendlies (reserve fixtures, skip_side_by_reputation); manager records skip category 1"
+   },
+   "2": {
+    "name": "LEAGUE",
+    "meaning": "league match",
+    "confidence": "verified",
+    "evidence": "every League set_up_rules writes +0xc4 = 2 ('match category: league', bra_nat_first 457); the fixture copies League::match_category"
+   },
+   "4": {
+    "name": "CUP_EARLY_ROUND",
+    "meaning": "domestic cup, early rounds and cup group stages",
+    "confidence": "read",
+    "evidence": "Coppa Italia and Serie C cup groups 4; English League Cup 'category 4 up to the 4th'; French Cup '4 up to the last 16 and 6 after'"
+   },
+   "5": {
+    "name": "LEAGUE_PLAYOFF",
+    "meaning": "league play-off / second-phase stage",
+    "confidence": "read",
+    "evidence": "bra_nat_third second phase 'category 5'; fra_cfa cup stages of C1 'category 5'; manager_manager: final (0x96) with category 5"
+   },
+   "6": {
+    "name": "CUP_LATE_ROUND",
+    "meaning": "domestic cup late rounds, super cups, charity shield, world club cup",
+    "confidence": "read",
+    "evidence": "French Cup '6 after' the last 16; Coppa Italia '6 after' the 2nd round; super cups, eng_charity, world_club_cup: category 6"
+   },
+   "7": {
+    "name": "CONTINENTAL_EARLY_ROUND",
+    "meaning": "continental club competition, early rounds (qualifying, groups, round of 16)",
+    "confidence": "read",
+    "evidence": "UEFA Cup 'category 7 in qualifying and 8 after'; Intertoto '7 in the first three'; Libertadores/Merconorte groups 7"
+   },
+   "8": {
+    "name": "CONTINENTAL_LATE_ROUND",
+    "meaning": "continental club competition, main/late rounds",
+    "confidence": "read",
+    "evidence": "UEFA Cup and Intertoto '8 after'; Libertadores '7 in the round of 16 and 8 after'; manager_manager tests 8 with the club's continental_comp_id"
+   },
+   "9": {
+    "name": "NATIONAL_FRIENDLY",
+    "meaning": "friendly-like match outside club friendlies (fields.rs: national-team friendly)",
+    "confidence": "inferred",
+    "evidence": "match_man treats 1 and 9 alike; fix_man removes category-9 fixtures when moving a match; fields.rs comment; no writer found"
+   },
+   "10": {
+    "name": "NATIONAL_TEAMS",
+    "meaning": "national-team competition match",
+    "confidence": "read",
+    "evidence": "Euro and World Cup qualifiers, African Nations, Gold Cup/Copa America, Confederations Cup: category 0xa; match_eng tests 0xa for national teams"
+   },
+   "23": {
+    "name": "CHAMPIONS_CUP_GROUP",
+    "meaning": "group of a champions cup (Brazilian Copa dos Campeoes rules)",
+    "confidence": "inferred",
+    "evidence": "CHAMPIONS_CUP_RULES category 0x17; fix_man compares category < 0x17"
+   }
+  }
+ },
+ "league_match_category": {
+  "record": "League",
+  "getter": "match_category",
+  "enum_name": "match_category",
+  "values": {
+   "1": {
+    "name": "FRIENDLY",
+    "meaning": "friendly",
+    "confidence": "read",
+    "evidence": "fix_man pairs category 1 with friendlies (reserve fixtures, skip_side_by_reputation); manager records skip category 1"
+   },
+   "2": {
+    "name": "LEAGUE",
+    "meaning": "league match",
+    "confidence": "verified",
+    "evidence": "every League set_up_rules writes +0xc4 = 2 ('match category: league', bra_nat_first 457); the fixture copies League::match_category"
+   },
+   "4": {
+    "name": "CUP_EARLY_ROUND",
+    "meaning": "domestic cup, early rounds and cup group stages",
+    "confidence": "read",
+    "evidence": "Coppa Italia and Serie C cup groups 4; English League Cup 'category 4 up to the 4th'; French Cup '4 up to the last 16 and 6 after'"
+   },
+   "5": {
+    "name": "LEAGUE_PLAYOFF",
+    "meaning": "league play-off / second-phase stage",
+    "confidence": "read",
+    "evidence": "bra_nat_third second phase 'category 5'; fra_cfa cup stages of C1 'category 5'; manager_manager: final (0x96) with category 5"
+   },
+   "6": {
+    "name": "CUP_LATE_ROUND",
+    "meaning": "domestic cup late rounds, super cups, charity shield, world club cup",
+    "confidence": "read",
+    "evidence": "French Cup '6 after' the last 16; Coppa Italia '6 after' the 2nd round; super cups, eng_charity, world_club_cup: category 6"
+   },
+   "7": {
+    "name": "CONTINENTAL_EARLY_ROUND",
+    "meaning": "continental club competition, early rounds (qualifying, groups, round of 16)",
+    "confidence": "read",
+    "evidence": "UEFA Cup 'category 7 in qualifying and 8 after'; Intertoto '7 in the first three'; Libertadores/Merconorte groups 7"
+   },
+   "8": {
+    "name": "CONTINENTAL_LATE_ROUND",
+    "meaning": "continental club competition, main/late rounds",
+    "confidence": "read",
+    "evidence": "UEFA Cup and Intertoto '8 after'; Libertadores '7 in the round of 16 and 8 after'; manager_manager tests 8 with the club's continental_comp_id"
+   },
+   "9": {
+    "name": "NATIONAL_FRIENDLY",
+    "meaning": "friendly-like match outside club friendlies (fields.rs: national-team friendly)",
+    "confidence": "inferred",
+    "evidence": "match_man treats 1 and 9 alike; fix_man removes category-9 fixtures when moving a match; fields.rs comment; no writer found"
+   },
+   "10": {
+    "name": "NATIONAL_TEAMS",
+    "meaning": "national-team competition match",
+    "confidence": "read",
+    "evidence": "Euro and World Cup qualifiers, African Nations, Gold Cup/Copa America, Confederations Cup: category 0xa; match_eng tests 0xa for national teams"
+   },
+   "23": {
+    "name": "CHAMPIONS_CUP_GROUP",
+    "meaning": "group of a champions cup (Brazilian Copa dos Campeoes rules)",
+    "confidence": "inferred",
+    "evidence": "CHAMPIONS_CUP_RULES category 0x17; fix_man compares category < 0x17"
+   }
+  }
+ },
+ "cup_round_match_category": {
+  "record": "CupRound",
+  "getter": "match_category",
+  "enum_name": "match_category",
+  "values": {
+   "1": {
+    "name": "FRIENDLY",
+    "meaning": "friendly",
+    "confidence": "read",
+    "evidence": "fix_man pairs category 1 with friendlies (reserve fixtures, skip_side_by_reputation); manager records skip category 1"
+   },
+   "2": {
+    "name": "LEAGUE",
+    "meaning": "league match",
+    "confidence": "verified",
+    "evidence": "every League set_up_rules writes +0xc4 = 2 ('match category: league', bra_nat_first 457); the fixture copies League::match_category"
+   },
+   "4": {
+    "name": "CUP_EARLY_ROUND",
+    "meaning": "domestic cup, early rounds and cup group stages",
+    "confidence": "read",
+    "evidence": "Coppa Italia and Serie C cup groups 4; English League Cup 'category 4 up to the 4th'; French Cup '4 up to the last 16 and 6 after'"
+   },
+   "5": {
+    "name": "LEAGUE_PLAYOFF",
+    "meaning": "league play-off / second-phase stage",
+    "confidence": "read",
+    "evidence": "bra_nat_third second phase 'category 5'; fra_cfa cup stages of C1 'category 5'; manager_manager: final (0x96) with category 5"
+   },
+   "6": {
+    "name": "CUP_LATE_ROUND",
+    "meaning": "domestic cup late rounds, super cups, charity shield, world club cup",
+    "confidence": "read",
+    "evidence": "French Cup '6 after' the last 16; Coppa Italia '6 after' the 2nd round; super cups, eng_charity, world_club_cup: category 6"
+   },
+   "7": {
+    "name": "CONTINENTAL_EARLY_ROUND",
+    "meaning": "continental club competition, early rounds (qualifying, groups, round of 16)",
+    "confidence": "read",
+    "evidence": "UEFA Cup 'category 7 in qualifying and 8 after'; Intertoto '7 in the first three'; Libertadores/Merconorte groups 7"
+   },
+   "8": {
+    "name": "CONTINENTAL_LATE_ROUND",
+    "meaning": "continental club competition, main/late rounds",
+    "confidence": "read",
+    "evidence": "UEFA Cup and Intertoto '8 after'; Libertadores '7 in the round of 16 and 8 after'; manager_manager tests 8 with the club's continental_comp_id"
+   },
+   "9": {
+    "name": "NATIONAL_FRIENDLY",
+    "meaning": "friendly-like match outside club friendlies (fields.rs: national-team friendly)",
+    "confidence": "inferred",
+    "evidence": "match_man treats 1 and 9 alike; fix_man removes category-9 fixtures when moving a match; fields.rs comment; no writer found"
+   },
+   "10": {
+    "name": "NATIONAL_TEAMS",
+    "meaning": "national-team competition match",
+    "confidence": "read",
+    "evidence": "Euro and World Cup qualifiers, African Nations, Gold Cup/Copa America, Confederations Cup: category 0xa; match_eng tests 0xa for national teams"
+   },
+   "23": {
+    "name": "CHAMPIONS_CUP_GROUP",
+    "meaning": "group of a champions cup (Brazilian Copa dos Campeoes rules)",
+    "confidence": "inferred",
+    "evidence": "CHAMPIONS_CUP_RULES category 0x17; fix_man compares category < 0x17"
+   }
+  }
+ },
+ "cup_comp_type": {
+  "record": "Cup",
+  "getter": "comp_type",
+  "enum_name": "comp_type",
+  "values": {
+   "1": {
+    "name": "CUP",
+    "meaning": "cup (knockout) competition object",
+    "confidence": "verified",
+    "evidence": "Cup_Stage constructor sets +0x43 = 1 (cup_stage.rs 43); fields.rs '1 = cup'"
+   },
+   "2": {
+    "name": "LEAGUE",
+    "meaning": "league (table) competition object",
+    "confidence": "verified",
+    "evidence": "EuroChampQual (a League) sets +0x43 = 2; the league rule tables write (0x43, 1, 2); fields.rs '2 = league'"
+   }
+  }
+ },
+ "league_comp_type": {
+  "record": "League",
+  "getter": "comp_type",
+  "enum_name": "comp_type",
+  "values": {
+   "1": {
+    "name": "CUP",
+    "meaning": "cup (knockout) competition object",
+    "confidence": "verified",
+    "evidence": "Cup_Stage constructor sets +0x43 = 1 (cup_stage.rs 43); fields.rs '1 = cup'"
+   },
+   "2": {
+    "name": "LEAGUE",
+    "meaning": "league (table) competition object",
+    "confidence": "verified",
+    "evidence": "EuroChampQual (a League) sets +0x43 = 2; the league rule tables write (0x43, 1, 2); fields.rs '2 = league'"
+   }
+  }
+ },
+ "cup_stage_index": {
+  "record": "Cup",
+  "getter": "stage_index",
+  "enum_name": "stage_index",
+  "values": {
+   "254": {
+    "name": "SPECIAL_STAGE",
+    "meaning": "special stage: accepts fixtures of any stage and keeps no competition statistics",
+    "confidence": "read",
+    "evidence": "League::add_result refuses a fixture of another stage (+0x42 != +0x44) unless +0x44 = 0xfe; comp stats only 'outside stages 0xfe'"
+   },
+   "255": {
+    "name": "MAIN",
+    "meaning": "the main (top-level) competition itself, not a stage of a parent",
+    "confidence": "verified",
+    "evidence": "fields.rs cup/league STAGE_INDEX '0xff for a top-level competition'; every set_up writes 0xff; tests 'stage_index() == 0xff' for the main league"
+   }
+  }
+ },
+ "league_stage_index": {
+  "record": "League",
+  "getter": "stage_index",
+  "enum_name": "stage_index",
+  "values": {
+   "254": {
+    "name": "SPECIAL_STAGE",
+    "meaning": "special stage: accepts fixtures of any stage and keeps no competition statistics",
+    "confidence": "read",
+    "evidence": "League::add_result refuses a fixture of another stage (+0x42 != +0x44) unless +0x44 = 0xfe; comp stats only 'outside stages 0xfe'"
+   },
+   "255": {
+    "name": "MAIN",
+    "meaning": "the main (top-level) competition itself, not a stage of a parent",
+    "confidence": "verified",
+    "evidence": "fields.rs cup/league STAGE_INDEX '0xff for a top-level competition'; every set_up writes 0xff; tests 'stage_index() == 0xff' for the main league"
+   }
+  }
+ },
+ "fixture_stage_index": {
+  "record": "Fixture",
+  "getter": "stage_index",
+  "enum_name": "stage_index",
+  "values": {
+   "254": {
+    "name": "SPECIAL_STAGE",
+    "meaning": "special stage: accepts fixtures of any stage and keeps no competition statistics",
+    "confidence": "read",
+    "evidence": "League::add_result refuses a fixture of another stage (+0x42 != +0x44) unless +0x44 = 0xfe; comp stats only 'outside stages 0xfe'"
+   },
+   "255": {
+    "name": "MAIN",
+    "meaning": "the main (top-level) competition itself, not a stage of a parent",
+    "confidence": "verified",
+    "evidence": "fields.rs cup/league STAGE_INDEX '0xff for a top-level competition'; every set_up writes 0xff; tests 'stage_index() == 0xff' for the main league"
+   }
+  }
+ },
+ "fixtureLegCheck_stage_index": {
+  "record": "FixtureLegCheck",
+  "getter": "stage_index",
+  "enum_name": "stage_index",
+  "values": {
+   "254": {
+    "name": "SPECIAL_STAGE",
+    "meaning": "special stage: accepts fixtures of any stage and keeps no competition statistics",
+    "confidence": "read",
+    "evidence": "League::add_result refuses a fixture of another stage (+0x42 != +0x44) unless +0x44 = 0xfe; comp stats only 'outside stages 0xfe'"
+   },
+   "255": {
+    "name": "MAIN",
+    "meaning": "the main (top-level) competition itself, not a stage of a parent",
+    "confidence": "verified",
+    "evidence": "fields.rs cup/league STAGE_INDEX '0xff for a top-level competition'; every set_up writes 0xff; tests 'stage_index() == 0xff' for the main league"
+   }
+  }
+ },
+ "dayMatch_stage_index": {
+  "record": "DayMatch",
+  "getter": "stage_index",
+  "enum_name": "stage_index",
+  "values": {
+   "-1": {
+    "name": "MAIN",
+    "meaning": "the main (top-level) competition itself, not a stage of a parent",
+    "confidence": "verified",
+    "evidence": "fields.rs cup/league STAGE_INDEX '0xff for a top-level competition'; every set_up writes 0xff; tests 'stage_index() == 0xff' for the main league"
+   }
+  }
+ },
+ "liveMatch_stage_index": {
+  "record": "LiveMatch",
+  "getter": "stage_index",
+  "enum_name": "stage_index",
+  "values": {
+   "-1": {
+    "name": "MAIN",
+    "meaning": "the main (top-level) competition itself, not a stage of a parent",
+    "confidence": "verified",
+    "evidence": "fields.rs cup/league STAGE_INDEX '0xff for a top-level competition'; every set_up writes 0xff; tests 'stage_index() == 0xff' for the main league"
+   }
+  }
+ },
+ "cup_current_stage": {
+  "record": "Cup",
+  "getter": "current_stage",
+  "enum_name": "current_stage",
+  "values": {
+   "0xffffffff": {
+    "name": "NONE",
+    "meaning": "before the first extra stage (still in the main league/cup stage)",
+    "confidence": "read",
+    "evidence": "fields.rs CURRENT_STAGE '-1 before the first' / '-1 = still in the league stage'; set_up_rules write 0xffff_ffff"
+   }
+  }
+ },
+ "league_current_stage": {
+  "record": "League",
+  "getter": "current_stage",
+  "enum_name": "current_stage",
+  "values": {
+   "0xffffffff": {
+    "name": "NONE",
+    "meaning": "before the first extra stage (still in the main league/cup stage)",
+    "confidence": "read",
+    "evidence": "fields.rs CURRENT_STAGE '-1 before the first' / '-1 = still in the league stage'; set_up_rules write 0xffff_ffff"
+   }
+  }
+ },
+ "league_discipline_rule": {
+  "record": "League",
+  "getter": "discipline_rule",
+  "enum_name": "discipline_rule",
+  "values": {
+   "0": {
+    "name": "INTERNATIONAL",
+    "meaning": "discipline rule set (ruling body) RbInternational (FIFA), index 0 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbInternational (FIFA) constructor; it writes rule set id 0x0 to body+5 in cm0102.exe"
+   },
+   "1": {
+    "name": "EUROPE",
+    "meaning": "discipline rule set (ruling body) RbEurope, index 1 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbEurope constructor; it writes rule set id 0x1 to body+5 in cm0102.exe"
+   },
+   "2": {
+    "name": "SOUTH_AMERICA",
+    "meaning": "discipline rule set (ruling body) RbSouthAmerica, index 2 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbSouthAmerica constructor; it writes rule set id 0x2 to body+5 in cm0102.exe"
+   },
+   "3": {
+    "name": "ARGENTINA",
+    "meaning": "discipline rule set (ruling body) RbArgentina, index 3 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbArgentina constructor; it writes rule set id 0x3 to body+5 in cm0102.exe"
+   },
+   "4": {
+    "name": "BELGIUM_LEAGUE",
+    "meaning": "discipline rule set (ruling body) RbBelgiumLeague, index 4 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbBelgiumLeague constructor; it writes rule set id 0x4 to body+5 in cm0102.exe"
+   },
+   "5": {
+    "name": "BELGIUM_CUP",
+    "meaning": "discipline rule set (ruling body) RbBelgiumCup, index 5 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbBelgiumCup constructor; it writes rule set id 0x5 to body+5 in cm0102.exe"
+   },
+   "6": {
+    "name": "BRAZIL_NATIONAL",
+    "meaning": "discipline rule set (ruling body) RbBrazilNational, index 6 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbBrazilNational constructor; it writes rule set id 0x6 to body+5 in cm0102.exe"
+   },
+   "7": {
+    "name": "BRAZIL_REGIONAL",
+    "meaning": "discipline rule set (ruling body) RbBrazilRegional, index 7 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbBrazilRegional constructor; it writes rule set id 0x7 to body+5 in cm0102.exe"
+   },
+   "8": {
+    "name": "DENMARK",
+    "meaning": "discipline rule set (ruling body) RbDenmark, index 8 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbDenmark constructor; it writes rule set id 0x8 to body+5 in cm0102.exe"
+   },
+   "9": {
+    "name": "ENGLAND",
+    "meaning": "discipline rule set (ruling body) RbEngland, index 9 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbEngland constructor; it writes rule set id 0x9 to body+5 in cm0102.exe"
+   },
+   "10": {
+    "name": "FINLAND_LEAGUE",
+    "meaning": "discipline rule set (ruling body) RbFinlandLeague, index 10 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbFinlandLeague constructor; it writes rule set id 0xa to body+5 in cm0102.exe"
+   },
+   "11": {
+    "name": "FINLAND_CUP",
+    "meaning": "discipline rule set (ruling body) RbFinlandCup, index 11 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbFinlandCup constructor; it writes rule set id 0xb to body+5 in cm0102.exe"
+   },
+   "12": {
+    "name": "FRANCE",
+    "meaning": "discipline rule set (ruling body) RbFrance, index 12 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbFrance constructor; it writes rule set id 0xc to body+5 in cm0102.exe"
+   },
+   "13": {
+    "name": "GERMANY_LEAGUE",
+    "meaning": "discipline rule set (ruling body) RbGermanyLeague, index 13 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbGermanyLeague constructor; it writes rule set id 0xd to body+5 in cm0102.exe"
+   },
+   "14": {
+    "name": "GERMANY_CUP",
+    "meaning": "discipline rule set (ruling body) RbGermanyCup, index 14 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbGermanyCup constructor; it writes rule set id 0xe to body+5 in cm0102.exe"
+   },
+   "15": {
+    "name": "HOLLAND",
+    "meaning": "discipline rule set (ruling body) RbHolland, index 15 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbHolland constructor; it writes rule set id 0xf to body+5 in cm0102.exe"
+   },
+   "16": {
+    "name": "IRELAND",
+    "meaning": "discipline rule set (ruling body) RbIreland, index 16 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbIreland constructor; it writes rule set id 0x10 to body+5 in cm0102.exe"
+   },
+   "17": {
+    "name": "ITALY_LEAGUE",
+    "meaning": "discipline rule set (ruling body) RbItalyLeague, index 17 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbItalyLeague constructor; it writes rule set id 0x11 to body+5 in cm0102.exe"
+   },
+   "18": {
+    "name": "ITALY_CUP",
+    "meaning": "discipline rule set (ruling body) RbItalyCup, index 18 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbItalyCup constructor; it writes rule set id 0x12 to body+5 in cm0102.exe"
+   },
+   "19": {
+    "name": "JAPAN_LEAGUE",
+    "meaning": "discipline rule set (ruling body) RbJapanLeague, index 19 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbJapanLeague constructor; it writes rule set id 0x13 to body+5 in cm0102.exe"
+   },
+   "20": {
+    "name": "JAPAN_CUP",
+    "meaning": "discipline rule set (ruling body) RbJapanCup, index 20 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbJapanCup constructor; it writes rule set id 0x14 to body+5 in cm0102.exe"
+   },
+   "21": {
+    "name": "NORWAY_LEAGUE",
+    "meaning": "discipline rule set (ruling body) RbNorwayLeague, index 21 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbNorwayLeague constructor; it writes rule set id 0x15 to body+5 in cm0102.exe"
+   },
+   "22": {
+    "name": "NORWAY_CUP",
+    "meaning": "discipline rule set (ruling body) RbNorwayCup, index 22 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbNorwayCup constructor; it writes rule set id 0x16 to body+5 in cm0102.exe"
+   },
+   "23": {
+    "name": "PORTUGAL",
+    "meaning": "discipline rule set (ruling body) RbPortugal, index 23 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbPortugal constructor; it writes rule set id 0x17 to body+5 in cm0102.exe"
+   },
+   "24": {
+    "name": "SCOTLAND_LEAGUE",
+    "meaning": "discipline rule set (ruling body) RbScotlandLeague, index 24 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbScotlandLeague constructor; it writes rule set id 0x18 to body+5 in cm0102.exe"
+   },
+   "25": {
+    "name": "SCOTLAND_CUP",
+    "meaning": "discipline rule set (ruling body) RbScotlandCup, index 25 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbScotlandCup constructor; it writes rule set id 0x19 to body+5 in cm0102.exe"
+   },
+   "26": {
+    "name": "SPAIN_LEAGUE",
+    "meaning": "discipline rule set (ruling body) RbSpainLeague, index 26 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbSpainLeague constructor; it writes rule set id 0x1a to body+5 in cm0102.exe"
+   },
+   "27": {
+    "name": "SPAIN_CUP",
+    "meaning": "discipline rule set (ruling body) RbSpainCup, index 27 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbSpainCup constructor; it writes rule set id 0x1b to body+5 in cm0102.exe"
+   },
+   "28": {
+    "name": "SWEDEN_LEAGUE",
+    "meaning": "discipline rule set (ruling body) RbSwedenLeague, index 28 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbSwedenLeague constructor; it writes rule set id 0x1c to body+5 in cm0102.exe"
+   },
+   "29": {
+    "name": "SWEDEN_CUP",
+    "meaning": "discipline rule set (ruling body) RbSwedenCup, index 29 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbSwedenCup constructor; it writes rule set id 0x1d to body+5 in cm0102.exe"
+   },
+   "30": {
+    "name": "USA",
+    "meaning": "discipline rule set (ruling body) RbUsa, index 30 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbUsa constructor; it writes rule set id 0x1e to body+5 in cm0102.exe"
+   },
+   "31": {
+    "name": "POLAND",
+    "meaning": "discipline rule set (ruling body) RbPoland, index 31 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbPoland constructor; it writes rule set id 0x1f to body+5 in cm0102.exe"
+   },
+   "32": {
+    "name": "GREECE",
+    "meaning": "discipline rule set (ruling body) RbGreece, index 32 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbGreece constructor; it writes rule set id 0x20 to body+5 in cm0102.exe"
+   },
+   "33": {
+    "name": "CROATIA",
+    "meaning": "discipline rule set (ruling body) RbCroatia, index 33 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbCroatia constructor; it writes rule set id 0x21 to body+5 in cm0102.exe"
+   },
+   "34": {
+    "name": "AUSTRALIA",
+    "meaning": "discipline rule set (ruling body) RbAustralia, index 34 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbAustralia constructor; it writes rule set id 0x22 to body+5 in cm0102.exe"
+   },
+   "35": {
+    "name": "OCEANIA",
+    "meaning": "discipline rule set (ruling body) RbOceania, index 35 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbOceania constructor; it writes rule set id 0x23 to body+5 in cm0102.exe"
+   },
+   "36": {
+    "name": "NORTHERN_IRELAND",
+    "meaning": "discipline rule set (ruling body) RbNorthernIreland, index 36 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbNorthernIreland constructor; it writes rule set id 0x24 to body+5 in cm0102.exe"
+   },
+   "37": {
+    "name": "TURKEY_LEAGUE",
+    "meaning": "discipline rule set (ruling body) RbTurkeyLeague, index 37 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbTurkeyLeague constructor; it writes rule set id 0x25 to body+5 in cm0102.exe"
+   },
+   "38": {
+    "name": "TURKEY_CUP",
+    "meaning": "discipline rule set (ruling body) RbTurkeyCup, index 38 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbTurkeyCup constructor; it writes rule set id 0x26 to body+5 in cm0102.exe"
+   },
+   "39": {
+    "name": "RUSSIA",
+    "meaning": "discipline rule set (ruling body) RbRussia, index 39 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbRussia constructor; it writes rule set id 0x27 to body+5 in cm0102.exe"
+   },
+   "40": {
+    "name": "WALES",
+    "meaning": "discipline rule set (ruling body) RbWales, index 40 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbWales constructor; it writes rule set id 0x28 to body+5 in cm0102.exe"
+   },
+   "41": {
+    "name": "ASIA",
+    "meaning": "discipline rule set (ruling body) RbAsia, index 41 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbAsia constructor; it writes rule set id 0x29 to body+5 in cm0102.exe"
+   },
+   "42": {
+    "name": "KOREA",
+    "meaning": "discipline rule set (ruling body) RbKorea, index 42 of the Discipline table",
+    "confidence": "verified",
+    "evidence": "cm0102-function-map RbKorea constructor; it writes rule set id 0x2a to body+5 in cm0102.exe"
+   },
+   "255": {
+    "name": "NONE",
+    "meaning": "the competition has no discipline rule set",
+    "confidence": "verified",
+    "evidence": "docs/MAPA_DISCIPLINA: comp +0x50 '0xff = none' (0x556210, 0x55ca00); fra_cfa/spa_lower write 0xff"
+   }
+  }
+ },
+ "fixture_home_result_mark": {
+  "record": "Fixture",
+  "getter": "home_result_mark",
+  "enum_name": "result_mark",
+  "values": {
+   "0": {
+    "name": "NONE",
+    "meaning": "no mark",
+    "confidence": "read",
+    "evidence": "fixtures created with 0 (cup.rs 149, league.rs 986)"
+   },
+   "1": {
+    "name": "LEVEL",
+    "meaning": "under the points rule (tie rule 0x10): side marked level / one match won each",
+    "confidence": "read",
+    "evidence": "decide_fixture_winner with 0x10 sets both to 1; decide_tie_winner sets both to 1 when each side won a leg"
+   },
+   "2": {
+    "name": "WON",
+    "meaning": "won the match/tie in normal time (or on points)",
+    "confidence": "read",
+    "evidence": "decide_fixture_winner: winner's mark 1 -> 2; doc '2 won'"
+   },
+   "3": {
+    "name": "WON_EXTRA_TIME",
+    "meaning": "won in extra time",
+    "confidence": "read",
+    "evidence": "decide_fixture_winner: extra-time goals (rule bit 2) -> 3; decide_tie_winner: extra-time aggregate -> 3; doc '3 in extra time'"
+   },
+   "4": {
+    "name": "WON_ON_PENALTIES",
+    "meaning": "won the penalty shoot-out",
+    "confidence": "read",
+    "evidence": "penalty code = (!rule & 1) | 4: 4 with rule bit 1 (exe text 'Penalty shoot-out if scores are level...')"
+   },
+   "5": {
+    "name": "WON_ON_SHOOTOUT",
+    "meaning": "won the US-style (35-yard) shoot-out",
+    "confidence": "read",
+    "evidence": "penalty code 5 when only rule bit 0x20 is set (fields.rs TIE_RULES 0x20 35-yard shoot-out; exe text 'US-style shoot-out...')"
+   },
+   "6": {
+    "name": "WON_ON_AWAY_GOALS",
+    "meaning": "won on away goals",
+    "confidence": "read",
+    "evidence": "decide_tie_winner: level aggregate, away goals of the second-leg visitor vs the first-leg one -> 6 (also with rule 0x4000 after extra time)"
+   },
+   "8": {
+    "name": "WALKOVER",
+    "meaning": "walkover in favour of this side",
+    "confidence": "read",
+    "evidence": "tie rule 0x800 sets home 8, 0x1000 sets away 8 ('Walkover in favour of the home team'); doc '8 walkover'"
+   }
+  }
+ },
+ "fixture_away_result_mark": {
+  "record": "Fixture",
+  "getter": "away_result_mark",
+  "enum_name": "result_mark",
+  "values": {
+   "0": {
+    "name": "NONE",
+    "meaning": "no mark",
+    "confidence": "read",
+    "evidence": "fixtures created with 0 (cup.rs 149, league.rs 986)"
+   },
+   "1": {
+    "name": "LEVEL",
+    "meaning": "under the points rule (tie rule 0x10): side marked level / one match won each",
+    "confidence": "read",
+    "evidence": "decide_fixture_winner with 0x10 sets both to 1; decide_tie_winner sets both to 1 when each side won a leg"
+   },
+   "2": {
+    "name": "WON",
+    "meaning": "won the match/tie in normal time (or on points)",
+    "confidence": "read",
+    "evidence": "decide_fixture_winner: winner's mark 1 -> 2; doc '2 won'"
+   },
+   "3": {
+    "name": "WON_EXTRA_TIME",
+    "meaning": "won in extra time",
+    "confidence": "read",
+    "evidence": "decide_fixture_winner: extra-time goals (rule bit 2) -> 3; decide_tie_winner: extra-time aggregate -> 3; doc '3 in extra time'"
+   },
+   "4": {
+    "name": "WON_ON_PENALTIES",
+    "meaning": "won the penalty shoot-out",
+    "confidence": "read",
+    "evidence": "penalty code = (!rule & 1) | 4: 4 with rule bit 1 (exe text 'Penalty shoot-out if scores are level...')"
+   },
+   "5": {
+    "name": "WON_ON_SHOOTOUT",
+    "meaning": "won the US-style (35-yard) shoot-out",
+    "confidence": "read",
+    "evidence": "penalty code 5 when only rule bit 0x20 is set (fields.rs TIE_RULES 0x20 35-yard shoot-out; exe text 'US-style shoot-out...')"
+   },
+   "6": {
+    "name": "WON_ON_AWAY_GOALS",
+    "meaning": "won on away goals",
+    "confidence": "read",
+    "evidence": "decide_tie_winner: level aggregate, away goals of the second-leg visitor vs the first-leg one -> 6 (also with rule 0x4000 after extra time)"
+   },
+   "8": {
+    "name": "WALKOVER",
+    "meaning": "walkover in favour of this side",
+    "confidence": "read",
+    "evidence": "tie rule 0x800 sets home 8, 0x1000 sets away 8 ('Walkover in favour of the home team'); doc '8 walkover'"
+   }
+  }
+ },
+ "fixture_round_name": {
+  "record": "Fixture",
+  "getter": "round_name",
+  "enum_name": "round_name",
+  "values": {
+   "0": {
+    "name": "NONE",
+    "meaning": "no round name (league rounds)",
+    "confidence": "verified",
+    "evidence": "name table 0x4b4850: code 0 -> empty text; league fixtures set 0 (league.rs 980)"
+   },
+   "10": {
+    "name": "FIRST_ROUND",
+    "meaning": "First Round (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0xa -> \"First Round\""
+   },
+   "20": {
+    "name": "SECOND_ROUND",
+    "meaning": "Second Round (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x14 -> \"Second Round\""
+   },
+   "30": {
+    "name": "THIRD_ROUND",
+    "meaning": "Third Round (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x1e -> \"Third Round\""
+   },
+   "40": {
+    "name": "FOURTH_ROUND",
+    "meaning": "Fourth Round (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x28 -> \"Fourth Round\""
+   },
+   "50": {
+    "name": "FIFTH_ROUND",
+    "meaning": "Fifth Round (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x32 -> \"Fifth Round\""
+   },
+   "60": {
+    "name": "SIXTH_ROUND",
+    "meaning": "Sixth Round (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x3c -> \"Sixth Round\""
+   },
+   "70": {
+    "name": "SEVENTH_ROUND",
+    "meaning": "Seventh Round (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x46 -> \"Seventh Round\""
+   },
+   "80": {
+    "name": "EIGHTH_ROUND",
+    "meaning": "Eighth Round (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x50 -> \"Eighth Round\""
+   },
+   "90": {
+    "name": "NINTH_ROUND",
+    "meaning": "Ninth Round (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x5a -> \"Ninth Round\""
+   },
+   "100": {
+    "name": "TENTH_ROUND",
+    "meaning": "Tenth Round (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x64 -> \"Tenth Round\""
+   },
+   "110": {
+    "name": "ELEVENTH_ROUND",
+    "meaning": "Eleventh Round (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x6e -> \"Eleventh Round\""
+   },
+   "120": {
+    "name": "QUARTER_FINAL",
+    "meaning": "Quarter Final (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x78 -> \"Quarter Final\""
+   },
+   "123": {
+    "name": "QUARTER_FINAL_FIRST_LEG",
+    "meaning": "Quarter Final First Leg (0x78 + variant 3)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x7b -> \"Quarter Final First Leg\""
+   },
+   "130": {
+    "name": "SEMI_FINAL",
+    "meaning": "Semi Final (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x82 -> \"Semi Final\""
+   },
+   "140": {
+    "name": "THIRD_PLACE_PLAYOFF",
+    "meaning": "Third Place Playoff (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x8c -> \"Third Place Playoff\""
+   },
+   "150": {
+    "name": "FINAL",
+    "meaning": "Final (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x96 -> \"Final\""
+   },
+   "160": {
+    "name": "PLAYOFF",
+    "meaning": "Playoff (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0xa0 -> \"Playoff\""
+   },
+   "170": {
+    "name": "PLAYOFF_FINAL",
+    "meaning": "Playoff Final (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0xaa -> \"Playoff Final\""
+   },
+   "180": {
+    "name": "PLAYOFF_SEMI_FINAL",
+    "meaning": "Playoff Semi Final (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0xb4 -> \"Playoff Semi Final\""
+   },
+   "190": {
+    "name": "PLAYOUT",
+    "meaning": "Playout (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0xbe -> \"Playout\""
+   },
+   "200": {
+    "name": "FIRST_PRELIMINARY_ROUND",
+    "meaning": "First Preliminary Round (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0xc8 -> \"First Preliminary Round\""
+   },
+   "210": {
+    "name": "SECOND_PRELIMINARY_ROUND",
+    "meaning": "Second Preliminary Round (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0xd2 -> \"Second Preliminary Round\""
+   },
+   "220": {
+    "name": "QUALIFYING_ROUND",
+    "meaning": "Qualifying Round (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0xdc -> \"Qualifying Round\""
+   },
+   "230": {
+    "name": "PRELIMINARY_ROUND",
+    "meaning": "Preliminary Round (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0xe6 -> \"Preliminary Round\""
+   },
+   "240": {
+    "name": "PROMOTION_FINAL",
+    "meaning": "Promotion Final (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0xf0 -> \"Promotion Final\""
+   },
+   "250": {
+    "name": "FIRST_QUALIFYING_PHASE",
+    "meaning": "First Qualifying Phase (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0xfa -> \"First Qualifying Phase\""
+   },
+   "260": {
+    "name": "SECOND_QUALIFYING_PHASE",
+    "meaning": "Second Qualifying Phase (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x104 -> \"Second Qualifying Phase\""
+   },
+   "270": {
+    "name": "THIRD_QUALIFYING_PHASE",
+    "meaning": "Third Qualifying Phase (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x10e -> \"Third Qualifying Phase\""
+   },
+   "280": {
+    "name": "PLAYOFF_1",
+    "meaning": "Playoff 1 (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x118 -> \"Playoff 1\""
+   },
+   "290": {
+    "name": "PLAYOFF_2",
+    "meaning": "Playoff 2 (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x122 -> \"Playoff 2\""
+   },
+   "300": {
+    "name": "NORTH_PLAYOFF",
+    "meaning": "North Playoff (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x12c -> \"North Playoff\""
+   },
+   "310": {
+    "name": "THIRD_PLACE_PLAYOFF_ALT",
+    "meaning": "second code for the Third Place Playoff ('3rd Place Playoff' in the short style); its winner gets outcome 3 in the prize news",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x136 -> \"Third Place Playoff\""
+   },
+   "320": {
+    "name": "ELIMINATION_FINAL",
+    "meaning": "Elimination Final (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x140 -> \"Elimination Final\""
+   },
+   "330": {
+    "name": "MINOR_SEMI_FINAL",
+    "meaning": "Minor Semi Final (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x14a -> \"Minor Semi Final\""
+   },
+   "340": {
+    "name": "MAJOR_SEMI_FINAL",
+    "meaning": "Major Semi Final (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x154 -> \"Major Semi Final\""
+   },
+   "350": {
+    "name": "PRELIMINARY_FINAL",
+    "meaning": "Preliminary Final (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x15e -> \"Preliminary Final\""
+   },
+   "360": {
+    "name": "GRAND_FINAL",
+    "meaning": "Grand Final (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x168 -> \"Grand Final\""
+   },
+   "370": {
+    "name": "INTERZONE_PLAYOFF",
+    "meaning": "Interzone Playoff (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x172 -> \"Interzone Playoff\""
+   }
+  }
+ },
+ "club_match_record_round_name": {
+  "record": "ClubMatchRecord",
+  "getter": "round_name",
+  "enum_name": "round_name",
+  "values": {
+   "0": {
+    "name": "NONE",
+    "meaning": "no round name (league rounds)",
+    "confidence": "verified",
+    "evidence": "name table 0x4b4850: code 0 -> empty text; league fixtures set 0 (league.rs 980)"
+   },
+   "10": {
+    "name": "FIRST_ROUND",
+    "meaning": "First Round (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0xa -> \"First Round\""
+   },
+   "20": {
+    "name": "SECOND_ROUND",
+    "meaning": "Second Round (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x14 -> \"Second Round\""
+   },
+   "30": {
+    "name": "THIRD_ROUND",
+    "meaning": "Third Round (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x1e -> \"Third Round\""
+   },
+   "40": {
+    "name": "FOURTH_ROUND",
+    "meaning": "Fourth Round (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x28 -> \"Fourth Round\""
+   },
+   "50": {
+    "name": "FIFTH_ROUND",
+    "meaning": "Fifth Round (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x32 -> \"Fifth Round\""
+   },
+   "60": {
+    "name": "SIXTH_ROUND",
+    "meaning": "Sixth Round (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x3c -> \"Sixth Round\""
+   },
+   "70": {
+    "name": "SEVENTH_ROUND",
+    "meaning": "Seventh Round (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x46 -> \"Seventh Round\""
+   },
+   "80": {
+    "name": "EIGHTH_ROUND",
+    "meaning": "Eighth Round (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x50 -> \"Eighth Round\""
+   },
+   "90": {
+    "name": "NINTH_ROUND",
+    "meaning": "Ninth Round (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x5a -> \"Ninth Round\""
+   },
+   "100": {
+    "name": "TENTH_ROUND",
+    "meaning": "Tenth Round (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x64 -> \"Tenth Round\""
+   },
+   "110": {
+    "name": "ELEVENTH_ROUND",
+    "meaning": "Eleventh Round (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x6e -> \"Eleventh Round\""
+   },
+   "120": {
+    "name": "QUARTER_FINAL",
+    "meaning": "Quarter Final (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x78 -> \"Quarter Final\""
+   },
+   "123": {
+    "name": "QUARTER_FINAL_FIRST_LEG",
+    "meaning": "Quarter Final First Leg (0x78 + variant 3)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x7b -> \"Quarter Final First Leg\""
+   },
+   "130": {
+    "name": "SEMI_FINAL",
+    "meaning": "Semi Final (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x82 -> \"Semi Final\""
+   },
+   "140": {
+    "name": "THIRD_PLACE_PLAYOFF",
+    "meaning": "Third Place Playoff (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x8c -> \"Third Place Playoff\""
+   },
+   "150": {
+    "name": "FINAL",
+    "meaning": "Final (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x96 -> \"Final\""
+   },
+   "160": {
+    "name": "PLAYOFF",
+    "meaning": "Playoff (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0xa0 -> \"Playoff\""
+   },
+   "170": {
+    "name": "PLAYOFF_FINAL",
+    "meaning": "Playoff Final (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0xaa -> \"Playoff Final\""
+   },
+   "180": {
+    "name": "PLAYOFF_SEMI_FINAL",
+    "meaning": "Playoff Semi Final (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0xb4 -> \"Playoff Semi Final\""
+   },
+   "190": {
+    "name": "PLAYOUT",
+    "meaning": "Playout (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0xbe -> \"Playout\""
+   },
+   "200": {
+    "name": "FIRST_PRELIMINARY_ROUND",
+    "meaning": "First Preliminary Round (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0xc8 -> \"First Preliminary Round\""
+   },
+   "210": {
+    "name": "SECOND_PRELIMINARY_ROUND",
+    "meaning": "Second Preliminary Round (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0xd2 -> \"Second Preliminary Round\""
+   },
+   "220": {
+    "name": "QUALIFYING_ROUND",
+    "meaning": "Qualifying Round (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0xdc -> \"Qualifying Round\""
+   },
+   "230": {
+    "name": "PRELIMINARY_ROUND",
+    "meaning": "Preliminary Round (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0xe6 -> \"Preliminary Round\""
+   },
+   "240": {
+    "name": "PROMOTION_FINAL",
+    "meaning": "Promotion Final (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0xf0 -> \"Promotion Final\""
+   },
+   "250": {
+    "name": "FIRST_QUALIFYING_PHASE",
+    "meaning": "First Qualifying Phase (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0xfa -> \"First Qualifying Phase\""
+   },
+   "260": {
+    "name": "SECOND_QUALIFYING_PHASE",
+    "meaning": "Second Qualifying Phase (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x104 -> \"Second Qualifying Phase\""
+   },
+   "270": {
+    "name": "THIRD_QUALIFYING_PHASE",
+    "meaning": "Third Qualifying Phase (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x10e -> \"Third Qualifying Phase\""
+   },
+   "280": {
+    "name": "PLAYOFF_1",
+    "meaning": "Playoff 1 (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x118 -> \"Playoff 1\""
+   },
+   "290": {
+    "name": "PLAYOFF_2",
+    "meaning": "Playoff 2 (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x122 -> \"Playoff 2\""
+   },
+   "300": {
+    "name": "NORTH_PLAYOFF",
+    "meaning": "North Playoff (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x12c -> \"North Playoff\""
+   },
+   "310": {
+    "name": "THIRD_PLACE_PLAYOFF_ALT",
+    "meaning": "second code for the Third Place Playoff ('3rd Place Playoff' in the short style); its winner gets outcome 3 in the prize news",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x136 -> \"Third Place Playoff\""
+   },
+   "320": {
+    "name": "ELIMINATION_FINAL",
+    "meaning": "Elimination Final (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x140 -> \"Elimination Final\""
+   },
+   "330": {
+    "name": "MINOR_SEMI_FINAL",
+    "meaning": "Minor Semi Final (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x14a -> \"Minor Semi Final\""
+   },
+   "340": {
+    "name": "MAJOR_SEMI_FINAL",
+    "meaning": "Major Semi Final (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x154 -> \"Major Semi Final\""
+   },
+   "350": {
+    "name": "PRELIMINARY_FINAL",
+    "meaning": "Preliminary Final (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x15e -> \"Preliminary Final\""
+   },
+   "360": {
+    "name": "GRAND_FINAL",
+    "meaning": "Grand Final (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x168 -> \"Grand Final\""
+   },
+   "370": {
+    "name": "INTERZONE_PLAYOFF",
+    "meaning": "Interzone Playoff (base code; +1 replay, +2 second replay, +3 first leg, +4 second leg, +5 decider)",
+    "confidence": "verified",
+    "evidence": "comp_util name table 0x4b4850: case 0x172 -> \"Interzone Playoff\""
+   }
+  }
+ }
+}

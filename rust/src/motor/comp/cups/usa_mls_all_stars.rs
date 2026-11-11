@@ -245,7 +245,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_create_round_table(this
     w(9, 0);
     w(0xb, 0);
     w(0xd, 0x20);
-    t.set_match_category(8);
+    t.set_match_category(match_category::CONTINENTAL_LATE_ROUND);
     w(0x1a, 1);
     w(0xf, 0);
     w(0x1e, 0);

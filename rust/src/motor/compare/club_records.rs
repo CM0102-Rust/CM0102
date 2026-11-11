@@ -19,7 +19,7 @@ use super::*;
 pub(crate) unsafe extern "thiscall" fn compare_update_league_position_records(this: usize, liga0: usize, always: u32) -> u32 {
     let liga0 = League(liga0);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_UPDATE_LEAGUE_POSITION_RECORDS);
-    if liga0.is_null() || liga0.stage_index() != 0xff {
+    if liga0.is_null() || liga0.stage_index() != stage_index::MAIN {
         return o(this, liga0.addr(), always); // simplification: the boxes, original only
     }
     let mut regions = vec![(this + club_records_fields::NEWS_QUEUE, 0xc)];

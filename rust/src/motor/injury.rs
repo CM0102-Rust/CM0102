@@ -340,7 +340,7 @@ pub(crate) unsafe extern "thiscall" fn injury_grade(injuries: usize, person: usi
     if (r.recurring_type() as i8) <= -1 {
         return 0;
     }
-    let g = (r.recurrence_grade() as i8);
+    let g = r.recurrence_grade() as i8;
     if g > 1 { g as u8 } else { 1 }
 }
 
@@ -1474,7 +1474,7 @@ pub(crate) unsafe extern "thiscall" fn post_due_recovery_news(this: usize) {
                 let mark = physical_record_by_index(this, read_i32(p)) + physical_record::TRAINING_NEWS_SENT;
                 if read_u8(mark) == 0 {
                     write_u8(mark, 1);
-                    let days = (inj.days_out() as u16).wrapping_sub((inj.training_return_days() as u16));
+                    let days = (inj.days_out() as u16).wrapping_sub(inj.training_return_days() as u16);
                     // simplification: the upper bytes of the 8- and 16-bit arguments are uninitialized in the original; 0x630ee0 reads char/short
                     exe::injury_post_recovery_news(this, p, 0, read_u8(inj.addr()) as u32, 0, days as u32);
                 }
@@ -2256,7 +2256,7 @@ pub(crate) unsafe extern "thiscall" fn init_squad_fitness(this: usize) {
                     match p.job_for_club() {
                         0xb => {
                             p.set_club_job(Club(0));
-                            p.set_job_for_club(8);
+                            p.set_job_for_club(job_kind::COACH);
                         }
                         0xf => *((p.addr() + staff::JOB_FOR_CLUB) as *mut u8) = 8,
                         0xd => *((p.addr() + staff::JOB_FOR_CLUB) as *mut u8) = 6,

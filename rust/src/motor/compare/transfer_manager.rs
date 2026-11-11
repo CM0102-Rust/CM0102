@@ -175,7 +175,7 @@ pub(crate) unsafe extern "thiscall" fn compare_check_offer_work_permits(this: us
     let (precisa, proposta, concedida) = check_work_permit(TransferManagerFields(this), (transfer_manager_staff_by_id(offer.target_staff_id())).addr(), transfer_manager_club_by_id(offer.buyer_club_id()));
     let refused = precisa && proposta != 0 && !concedida;
     let r = o(this, offer.addr(), quiet);
-    let ok = if refused { r == 0 && offer.status() == 0x10 } else { r == 1 };
+    let ok = if refused { r == 0 && offer.status() == offer_status::CANCELLED } else { r == 1 };
     SCOREBOARD.record(ok, || format!("check_offer_work_permits(offer {:x}) refused prevista {} returned {}", offer.addr(), refused, r));
     r
 }
@@ -497,7 +497,7 @@ pub(crate) unsafe extern "thiscall" fn compare_free_transfer_staff(this: usize, 
         && read_usize(r + past_transfer::FROM_CLUB_ID) as u32 == if club != 0 { read_usize(club) as u32 } else { u32::MAX }
         && read_u8(r + past_transfer::MOVE_TYPE) == if so_record != 0 { 5 } else { 3 };
     if so_record == 0 {
-        ok = ok && get_contract_unstored(p) == 0 && p.value() == 0 && p.squad_selected_for() == 0;
+        ok = ok && get_contract_unstored(p) == 0 && p.value() == 0 && p.squad_selected_for() == euro_registration::NOT_REGISTERED;
     }
     SCOREBOARD.record(ok, || format!("free_transfer_staff(person {}, club {:x}, only record {}): count {} -> {}, record {:x?}", read_usize(p.addr()), club, so_record,
         n, this.past_transfer_count(), core::slice::from_raw_parts(r as *const u8, 0x1d)));
@@ -917,7 +917,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_future_transfer(this: usize, 
     }
     let count = this.future_transfer_count();
     let mark = *staff_flags_byte(this, offer.target_staff_id());
-    let ok = count == n.wrapping_add(1) && vector_contains_record(this.future_transfers(), count, 0xc, &target) && offer.status() == 0x13 && offer.player_aware() == 1 && mark & 0x10 != 0;
+    let ok = count == n.wrapping_add(1) && vector_contains_record(this.future_transfers(), count, 0xc, &target) && offer.status() == offer_status::FUTURE_TRANSFER && offer.player_aware() == 1 && mark & 0x10 != 0;
     SCOREBOARD.record(ok, || format!("add_future_transfer(offer {:x}): count {} -> {}, state {:#x}, mark {:#x}", offer.slot_index(), n, count, offer.status(), mark));
 }
 

@@ -463,7 +463,7 @@ pub(crate) unsafe extern "C" fn comp_util_get_league_clash_type(a: usize, b: usi
     }
     let ea = CompStatsClub(exe::comp_stats_find_club_entry(league.comp_stats(), a));
     let eb = CompStatsClub(exe::comp_stats_find_club_entry(league.comp_stats(), b));
-    if ea.is_null() || eb.is_null() || league.current_stage() as i32 != -1 || league.comp_type() != 2 {
+    if ea.is_null() || eb.is_null() || league.current_stage() as i32 != -1 || league.comp_type() != comp_type::LEAGUE {
         return 0;
     }
     let (a73, b73) = (ea.current_position() as i32, eb.current_position() as i32);

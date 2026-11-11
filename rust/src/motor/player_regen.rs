@@ -203,8 +203,8 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
             exe::playerstats_add_language(read_usize(G_PLAYER_STATS), p, k as u8 as u32, level as u32, 1);
         }
     }
-    p.set_job_for_club(0xb);
-    p.set_job_for_nation(0xb);
+    p.set_job_for_club(job_kind::PLAYER);
+    p.set_job_for_nation(job_kind::PLAYER);
     *staff_state_byte(p, staff_state::STATUS_FLAGS) &= 0xcf;
     let f = p.player();
     let nation = p.nation();
@@ -1351,7 +1351,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_sign_for_club(person: usize, 
         crate::comparison::branch("cpv_9 one in four");
         exe::staff_add_favoured_club(person, club, 0);
     }
-    if club.professional_status() == 3 && (person.value() as i32) > 0x1388 {
+    if club.professional_status() == professional_status::AMATEUR && (person.value() as i32) > 0x1388 {
         person.set_value((0x1388) as usize);
     }
     // simplification: the original writes the year in the low word of the `clube` argument and pushes the dword; 0x549f70 reads 16 bits
@@ -2154,8 +2154,8 @@ pub(crate) unsafe extern "stdcall" fn player_regen_retire_from_non_playing_staff
         leave_job_slot(person, s, person.job_for_nation() as i8 , 0x24);
         zero_dword(person.addr() + staff::NATIONAL_JOB);
     }
-    person.set_job_for_club(0);
-    person.set_job_for_nation(0);
+    person.set_job_for_club(job_kind::UNEMPLOYED);
+    person.set_job_for_nation(job_kind::UNEMPLOYED);
 }
 
 // simplification: the search appends (realloc) and rolls on each test: it does not run twice. Original only; Rust mode and the
@@ -2394,15 +2394,15 @@ pub(crate) unsafe extern "stdcall" fn retire_from_playing_staff(p: usize) {
         0 => false,
         1..=10 => return, // staff: the original exits through the end of the routine
         12 => {
-            p.set_job_for_club((5) as u8);
+            p.set_job_for_club((job_kind::MANAGER) as u8);
             true
         }
         13 => {
-            p.set_job_for_club((6) as u8);
+            p.set_job_for_club((job_kind::ASSISTANT_MANAGER) as u8);
             true
         }
         15 => {
-            p.set_job_for_club((8) as u8);
+            p.set_job_for_club((job_kind::COACH) as u8);
             true
         }
         16 => {
@@ -2411,7 +2411,7 @@ pub(crate) unsafe extern "stdcall" fn retire_from_playing_staff(p: usize) {
         }
         _ => {
             crate::comparison::branch("cpn_4 retired player");
-            p.set_job_for_club((0x10) as u8); // aposentado
+            p.set_job_for_club((job_kind::RETIRED_PLAYER) as u8); // aposentado
             false
         }
     };
@@ -2419,15 +2419,15 @@ pub(crate) unsafe extern "stdcall" fn retire_from_playing_staff(p: usize) {
         0 => false,
         1..=10 => return,
         12 => {
-            p.set_job_for_club((5) as u8); // in +0x3d, like the original
+            p.set_job_for_club((job_kind::MANAGER) as u8); // in +0x3d, like the original
             true
         }
         13 => {
-            p.set_job_for_club((6) as u8);
+            p.set_job_for_club((job_kind::ASSISTANT_MANAGER) as u8);
             true
         }
         15 => {
-            p.set_job_for_club((8) as u8);
+            p.set_job_for_club((job_kind::COACH) as u8);
             true
         }
         16 => {
@@ -2435,7 +2435,7 @@ pub(crate) unsafe extern "stdcall" fn retire_from_playing_staff(p: usize) {
             false
         }
         _ => {
-            p.set_job_for_nation((0x10) as u8);
+            p.set_job_for_nation((job_kind::RETIRED_PLAYER) as u8);
             false
         }
     };
@@ -2668,7 +2668,7 @@ pub(crate) unsafe extern "thiscall" fn add_retirement(this: usize, r: usize) {
     }
     let item = || read_usize(this + player_regen_fields::RETIREMENTS).wrapping_add(read_usize(this + player_regen_fields::RETIREMENT_COUNT).wrapping_mul(26));
     write_usize(item(), read_usize(r.addr()));
-    write_usize(item() + 4, (r.club_id() as usize));
+    write_usize(item() + 4, r.club_id() as usize);
     write_u8(item() + retirement_entry::REASON, r.reason());
     for o in [8usize, 0xa, 0x10, 0x12] {
         write_u16(item() + o, read_u16(r.addr() + o));

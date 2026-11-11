@@ -171,7 +171,7 @@ pub(crate) unsafe fn league_stage_chain(liga0: League) -> Vec<usize> {
             return v;
         }
         let f = League(exe::comp_get_stage(liga0, k + 1));
-        if f.comp_type() != 2 || f.club_count() != read_i16(league + league::CLUB_COUNT) {
+        if f.comp_type() != comp_type::LEAGUE || f.club_count() != read_i16(league + league::CLUB_COUNT) {
             return v;
         }
         v.push(f.addr());
@@ -202,7 +202,7 @@ pub(crate) unsafe fn league_stage_chain(liga0: League) -> Vec<usize> {
 /// [0xae2378] também é "sem"), a fila da notícia (club_records_queue_record_news). Devolve 1.
 pub(crate) unsafe extern "thiscall" fn update_league_position_records(this: usize, liga0: usize, always: u32) -> u32 {
     let liga0 = League(liga0);
-    if liga0.is_null() || liga0.stage_index() != 0xff {
+    if liga0.is_null() || liga0.stage_index() != stage_index::MAIN {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_UPDATE_LEAGUE_POSITION_RECORDS)(this, liga0.addr(), always); // the boxes
     }
     let comp = read_usize(liga0.competition().addr()) as i32;

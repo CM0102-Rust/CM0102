@@ -4585,7 +4585,7 @@ pub(crate) unsafe fn shot_foul_with(m: Engine, e: MatchPlayer, p: MatchPlayer, k
                 let t = m.r#match();
                 let club = Club(read_usize(t + (if e.side() == 0 { 0x20 } else { 0x1c })));
                 let k = club.nation();
-                if !k.is_null() && k.first_language() == 8 {
+                if !k.is_null() && k.first_language() == language::ENGLISH {
                     n7(call, event::SILENT_OFF_OFF_OFF, 0, 0);
                 }
             }
@@ -10038,7 +10038,7 @@ pub(crate) unsafe extern "thiscall" fn choose_taker(this: usize, side: i8, kind:
             if s <= 0 {
                 return s;
             }
-            let age = (j.staff().age() as i8);
+            let age = j.staff().age() as i8;
             if age < 20 {
                 s = ftol(s as f64 * read_f64(rdata::F64_0_85)) as i16;
             } else if age < 24 {

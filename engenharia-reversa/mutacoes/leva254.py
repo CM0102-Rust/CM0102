@@ -7,7 +7,7 @@ MUTACOES = [
     ('cpr2_acerto_livre', 'return (0x21, 0); // contrato acertado', 'let _ = 0x21; // mutacao: o acerto nao segura', 'cpr_2 contract agreed'),
     ('cpr2_futura_livre', 'return (0x20, 0); // future transfer agreed', 'return (0, 1); // mutacao: pode mesmo com a futura', 'cpr_2 future transfer'),
     ('cpr3_futura_ignorada', '1 // the future transfer exists', '0 // mutacao: nao acha a futura', 'cpr_3 future found'),
-    ('cpr3_estado_futura', 'offer.set_status(0x13); // future transfer', 'offer.set_status(0x12); // mutacao: estado errado', 'cpr_3 add future'),
+    ('cpr3_estado_futura', 'offer.set_status(offer_status::FUTURE_TRANSFER); // future transfer', 'offer.set_status(0x12); // mutacao: estado errado', 'cpr_3 add future'),
     ('cpr3_sem_marca', '*staff_flags_byte(this, offer.target_staff_id()) |= 0x10; // the future transfer mark', 'let _ = 0x10; // mutacao: sem a marca', 'cpr_3 add future'),
     ('cpr4_desfeita_conta', 'o.response_round() < 3 // undone (+0x2e = 3) does not count', 'true // mutacao: a desfeita conta', 'cpr_4 offer undone'),
     ('cpr4_emprestimo_conta', 'let owner = if !c.is_null() && c.contract_type() & 0x3f != 5 { friendly_club_by_id(c.club()) } else { Club(0) }; // the loan does not count', 'let owner = if !c.is_null() { friendly_club_by_id(c.club()) } else { Club(0) }; // mutacao: o emprestimo conta', 'cpr_4 loaned player'),

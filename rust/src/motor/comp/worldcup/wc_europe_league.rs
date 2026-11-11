@@ -78,7 +78,7 @@ pub(crate) unsafe extern "thiscall" fn wc_europe_league_set_up_rules(this: usize
     crate::comparison::branch("cqj_12 europe rules");
     wc_europe_league_write_rule_fields(this, &EUROPE_RULE_FIELDS);
     this.set_win_points(3); // cqj12: the win in the European qualifiers
-    this.set_match_category(0xa); // cqj12: the match category of the European qualifiers
+    this.set_match_category(match_category::NATIONAL_TEAMS); // cqj12: the match category of the European qualifiers
     let day = 0x19; // cqj12: the start day of the European qualifiers
     let word = comp_date_word(this, day, 2, 5);
     finish_rules_setup(this, word, 0)

@@ -57,7 +57,7 @@ pub(crate) unsafe fn construct_division_league(this: League, ano: u32, registro:
         return this.addr();
     }
     crate::comparison::branch("cqm_5 new division");
-    this.set_stage_index(0xff);
+    this.set_stage_index(stage_index::MAIN);
     this.set_current_stage(0xffff_ffff);
     this.set_stage_count(0);
     this.set_stages(0);
@@ -158,7 +158,7 @@ pub(crate) unsafe fn compare_division_league_ctor(name: &str, this: League, year
     let r = original();
     let mut ok = r == this.addr() && read_usize(this.addr()) == p.vtabela && (this.year() as u16) == year as u16
         && this.competition().addr() == record && this.discipline_rule() == p.discipline;
-    if this.stage_index() == 0xff && this.comp_stats() != 0 {
+    if this.stage_index() == stage_index::MAIN && this.comp_stats() != 0 {
         ok = ok && this.stage_count() == 0 && this.stages() == 0;
         if p.low {
             let nation = this.competition().nation();

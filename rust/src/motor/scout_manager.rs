@@ -1049,7 +1049,7 @@ pub(crate) unsafe extern "thiscall" fn sync_scout_lists(this: usize, manager: us
         }
         let o = Staff(search_scout(l));
         if !club.is_null() {
-            if o.is_null() || (o.club_job() == club && o.job_for_club() == 9) {
+            if o.is_null() || (o.club_job() == club && o.job_for_club() == job_kind::SCOUT) {
                 continue;
             }
         }
