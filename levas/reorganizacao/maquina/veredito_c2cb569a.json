@@ -1,0 +1,668 @@
+[
+ {
+  "batch": "c2cb569a",
+  "function": "__RINvNt5ddraw3rng11pause_tracehNCINvNtNtB4_5motor17compare_match_eng16compare_com_fitahNCNvBK_21compare_look_for_play0NCB1B_s_0Es1_0EB4_",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RINvNt5ddraw3rng11pause_tracehNCINvNtNtB4_5motor17compare_match_eng16compare_com_fitahNCNvNtBM_14compare_shared16compare_procurar0NCB1B_s_0Es1_0EB4_",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RINvNt5ddraw3rng11pause_tracemNCINvNtNtB4_5motor17compare_match_eng16compare_com_fitamNCNvNtBM_8match_pl21compare_dribble_inner0NCB1B_s_0Es1_0EB4_",
+  "verdict": "noise",
+  "reason": "The batch only renames offsets in this file (injury/manager_manager/match_pl/match_screens/transfer_manager): every new constant and accessor resolves to the old offset and width (checked against fields.rs/records.rs/bits.rs at c2cb569a, e.g. board_record CONFIDENCE 6/SUPPORTERS 8/STAFF 0xa, request_state !0x1e=0xe1, discipline !0xf8=7, engine setters write_i8/i32/u16 on the same constants); diff is register allocation, inlining and tail-merging."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RINvNt5ddraw3rng11pause_traceuNCINvNtNtB4_5motor17compare_match_eng16compare_com_fitauNCNvBK_17compare_penalties0NCB1B_s_0Es1_0EB4_",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RINvNt5ddraw3rng11pause_traceuNCINvNtNtB4_5motor17compare_match_eng16compare_com_fitauNCNvBK_19compare_punishments0NCB1B_s_0Es1_0EB4_",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RINvNt5ddraw3rng11pause_traceuNCINvNtNtB4_5motor17compare_match_eng16compare_com_fitauNCNvNtBM_13compare_media36compare_warn_squad_of_position_rival0NCINvNtBM_17compare_match_day11compare_posB1z_NCB1B_s_0E0Es1_0EB4_",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RINvNt5ddraw3rng11pause_traceuNCINvNtNtB4_5motor17compare_match_eng16compare_com_fitauNCNvNtBM_16compare_match_pl14compare_tackle0NCB1B_s_0Es1_0EB4_",
+  "verdict": "noise",
+  "reason": "The batch only renames offsets in this file (injury/manager_manager/match_pl/match_screens/transfer_manager): every new constant and accessor resolves to the old offset and width (checked against fields.rs/records.rs/bits.rs at c2cb569a, e.g. board_record CONFIDENCE 6/SUPPORTERS 8/STAFF 0xa, request_state !0x1e=0xe1, discipline !0xf8=7, engine setters write_i8/i32/u16 on the same constants); diff is register allocation, inlining and tail-merging."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RINvNt5ddraw3rng11pause_traceuNCINvNtNtB4_5motor17compare_match_eng16compare_com_fitauNCNvNtBM_17compare_match_day26compare_post_match_playerss1_0NCINvB1D_11compare_posB1z_NCB1B_s2_0E0Es1_0EB4_",
+  "verdict": "noise",
+  "reason": "The batch only renames offsets in this file (injury/manager_manager/match_pl/match_screens/transfer_manager): every new constant and accessor resolves to the old offset and width (checked against fields.rs/records.rs/bits.rs at c2cb569a, e.g. board_record CONFIDENCE 6/SUPPORTERS 8/STAFF 0xa, request_state !0x1e=0xe1, discipline !0xf8=7, engine setters write_i8/i32/u16 on the same constants); diff is register allocation, inlining and tail-merging."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RINvNt5ddraw3rng11pause_traceuNCINvNtNtB4_5motor17compare_match_eng16compare_com_fitauNCNvNtBM_17compare_match_man18compare_substitutes_0NCB1B_s0_0Es1_0EB4_",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RINvNt5ddraw3rng11pause_traceuNCINvNtNtB4_5motor17compare_match_eng16compare_com_fitauNCNvNtBM_8match_pl26compare_shot_on_goal_inner0NCB1B_s_0Es1_0EB4_",
+  "verdict": "noise",
+  "reason": "The batch only renames offsets in this file (injury/manager_manager/match_pl/match_screens/transfer_manager): every new constant and accessor resolves to the old offset and width (checked against fields.rs/records.rs/bits.rs at c2cb569a, e.g. board_record CONFIDENCE 6/SUPPORTERS 8/STAFF 0xa, request_state !0x1e=0xe1, discipline !0xf8=7, engine setters write_i8/i32/u16 on the same constants); diff is register allocation, inlining and tail-merging."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RINvNt5ddraw3rng11pause_traceuNCINvNtNtB4_5motor17compare_match_eng16compare_com_fitauNCNvNtBM_8match_pl26compare_shot_outcome_inner0NCB1B_s_0Es1_0EB4_",
+  "verdict": "noise",
+  "reason": "The batch only renames offsets in this file (injury/manager_manager/match_pl/match_screens/transfer_manager): every new constant and accessor resolves to the old offset and width (checked against fields.rs/records.rs/bits.rs at c2cb569a, e.g. board_record CONFIDENCE 6/SUPPORTERS 8/STAFF 0xa, request_state !0x1e=0xe1, discipline !0xf8=7, engine setters write_i8/i32/u16 on the same constants); diff is register allocation, inlining and tail-merging."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RINvNt5ddraw3rng11pause_traceuNCNvNtNtB4_5motor12match_events24probe_context_commentarys0_0EB4_",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RINvNtNt5ddraw5motor17comp_cups_ita_cup19compare_group_stageNCNvNtB4_25compare_comp_cups_ita_cup41compare_ita_cup_create_group_stage_63d9e00EB6_",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RINvNtNt5ddraw5motor19comp_leagues_jap_j122compare_japanese_tableNCNvNtB4_28compare_comp_leagues_aus_nsl28compare_aus_nsl_create_table0EB6_",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNCNCNCNCINvNtNt5ddraw5motor17compare_match_eng16compare_com_fitamNCNvNtBc_16compare_match_pl19compare_advance_rows_0NCB1h_s0_0Es1_0000Be_",
+  "verdict": "noise",
+  "reason": "The batch only renames offsets in this file (injury/manager_manager/match_pl/match_screens/transfer_manager): every new constant and accessor resolves to the old offset and width (checked against fields.rs/records.rs/bits.rs at c2cb569a, e.g. board_record CONFIDENCE 6/SUPPORTERS 8/STAFF 0xa, request_state !0x1e=0xe1, discipline !0xf8=7, engine setters write_i8/i32/u16 on the same constants); diff is register allocation, inlining and tail-merging."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNCNCNCNCINvNtNt5ddraw5motor17compare_match_eng16compare_com_fitauNCNvNtBc_8match_pl26compare_shot_outcome_inner0NCB1h_s_0Es1_0000Be_",
+  "verdict": "noise",
+  "reason": "The batch only renames offsets in this file (injury/manager_manager/match_pl/match_screens/transfer_manager): every new constant and accessor resolves to the old offset and width (checked against fields.rs/records.rs/bits.rs at c2cb569a, e.g. board_record CONFIDENCE 6/SUPPORTERS 8/STAFF 0xa, request_state !0x1e=0xe1, discipline !0xf8=7, engine setters write_i8/i32/u16 on the same constants); diff is register allocation, inlining and tail-merging."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvMs_NtNtNt3std2io8buffered9bufwriterINtB4_9BufWriterNtNtBa_2fs4FileE14write_all_cold5ddraw",
+  "verdict": "noise",
+  "reason": "Library/runtime code untouched by the batch; only layout and register allocation differ."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNt5ddraw10simulation11game_blocks",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNt5ddraw10simulation11record_draw",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNt5ddraw10simulation11write_trace",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor11comp_league12sort_regions",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor13staff_records17promotion_regions",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor14compare_injury27compare_injury_reset_player",
+  "verdict": "noise",
+  "reason": "The batch only renames offsets in this file (injury/manager_manager/match_pl/match_screens/transfer_manager): every new constant and accessor resolves to the old offset and width (checked against fields.rs/records.rs/bits.rs at c2cb569a, e.g. board_record CONFIDENCE 6/SUPPORTERS 8/STAFF 0xa, request_state !0x1e=0xe1, discipline !0xf8=7, engine setters write_i8/i32/u16 on the same constants); diff is register allocation, inlining and tail-merging."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor16contract_manager17offer_to_schedule",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor16contract_manager22post_contract_end_news",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor16transfer_manager18check_squad_limits",
+  "verdict": "noise",
+  "reason": "The batch only renames offsets in this file (injury/manager_manager/match_pl/match_screens/transfer_manager): every new constant and accessor resolves to the old offset and width (checked against fields.rs/records.rs/bits.rs at c2cb569a, e.g. board_record CONFIDENCE 6/SUPPORTERS 8/STAFF 0xa, request_state !0x1e=0xe1, discipline !0xf8=7, engine setters write_i8/i32/u16 on the same constants); diff is register allocation, inlining and tail-merging."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor17compare_match_day27compare_match_without_human",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor17compare_match_man20compare_instructions",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor18compare_discipline19compare_release_ban",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor18compare_discipline25compare_restore_held_bans",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor18compare_discipline32compare_serve_international_bans",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor20comp_leagues_fra_cfa19create_french_table",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor20comp_leagues_fra_cfa22construct_group_league",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor20compare_comp_fix_man27compare_collect_day_clashes",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor20compare_comp_fix_man28compare_find_fixture_clashes",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor20compare_comp_fix_man32compare_queue_fixture_moved_news",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor20compare_player_regen31compare_build_nation_club_lists",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor21compare_comp_friendly29compare_remove_friendly_match",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor21compare_scout_manager24compare_sync_scout_lists",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor21compare_scout_manager34compare_collect_club_scout_targets",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor21compare_staff_records28compare_add_transfer_records",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor21compare_staff_records30compare_add_cup_winners_record",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor21compare_staff_records33compare_record_manager_job_change",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor21compare_staff_records35compare_add_league_champions_record",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor21compare_staff_records43compare_staff_records_end_season_for_nation",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor21compare_staff_records44compare_add_supporters_player_of_year_record",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor22comp_leagues_fra_first26set_up_fixed_fixtures_body",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor22compare_national_teams33compare_collect_duty_competitions",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor23comp_leagues_fra_second23fra_second_create_table",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor23comp_leagues_fra_second23fra_second_set_up_rules",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor23comp_leagues_fra_second25construct_division_league",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor23compare_manager_manager28compare_assess_transfer_deal",
+  "verdict": "noise",
+  "reason": "The batch only renames offsets in this file (injury/manager_manager/match_pl/match_screens/transfer_manager): every new constant and accessor resolves to the old offset and width (checked against fields.rs/records.rs/bits.rs at c2cb569a, e.g. board_record CONFIDENCE 6/SUPPORTERS 8/STAFF 0xa, request_state !0x1e=0xe1, discipline !0xf8=7, engine setters write_i8/i32/u16 on the same constants); diff is register allocation, inlining and tail-merging."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor23compare_manager_manager35compare_post_manager_departure_news",
+  "verdict": "noise",
+  "reason": "The batch only renames offsets in this file (injury/manager_manager/match_pl/match_screens/transfer_manager): every new constant and accessor resolves to the old offset and width (checked against fields.rs/records.rs/bits.rs at c2cb569a, e.g. board_record CONFIDENCE 6/SUPPORTERS 8/STAFF 0xa, request_state !0x1e=0xe1, discipline !0xf8=7, engine setters write_i8/i32/u16 on the same constants); diff is register allocation, inlining and tail-merging."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor23compare_manager_manager37compare_post_manager_appointment_news",
+  "verdict": "noise",
+  "reason": "The batch only renames offsets in this file (injury/manager_manager/match_pl/match_screens/transfer_manager): every new constant and accessor resolves to the old offset and width (checked against fields.rs/records.rs/bits.rs at c2cb569a, e.g. board_record CONFIDENCE 6/SUPPORTERS 8/STAFF 0xa, request_state !0x1e=0xe1, discipline !0xf8=7, engine setters write_i8/i32/u16 on the same constants); diff is register allocation, inlining and tail-merging."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor23compare_manager_manager40compare_post_manager_under_pressure_news",
+  "verdict": "noise",
+  "reason": "The batch only renames offsets in this file (injury/manager_manager/match_pl/match_screens/transfer_manager): every new constant and accessor resolves to the old offset and width (checked against fields.rs/records.rs/bits.rs at c2cb569a, e.g. board_record CONFIDENCE 6/SUPPORTERS 8/STAFF 0xa, request_state !0x1e=0xe1, discipline !0xf8=7, engine setters write_i8/i32/u16 on the same constants); diff is register allocation, inlining and tail-merging."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor24comp_leagues_bra_reg_rio27start_new_season_two_halves",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor24comp_leagues_ita_ser_c1a27create_end_of_league_stages",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor24comp_leagues_ita_ser_c1b24ita_ser_c1b_create_table",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor24compare_contract_manager26compare_add_contract_offer",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor24compare_contract_manager29compare_remove_contract_offer",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor24compare_contract_manager31compare_schedule_offer_decision",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor24compare_transfer_manager45compare_note_terms_offered_to_exchange_player",
+  "verdict": "noise",
+  "reason": "The batch only renames offsets in this file (injury/manager_manager/match_pl/match_screens/transfer_manager): every new constant and accessor resolves to the old offset and width (checked against fields.rs/records.rs/bits.rs at c2cb569a, e.g. board_record CONFIDENCE 6/SUPPORTERS 8/STAFF 0xa, request_state !0x1e=0xe1, discipline !0xf8=7, engine setters write_i8/i32/u16 on the same constants); diff is register allocation, inlining and tail-merging."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor25compare_award_month_award18compare_set_winner",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor25compare_officials_manager46compare_officials_manager_add_random_officials",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor26comp_eurocomp_european_cup23planned_final_positions",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor26compare_comp_squad_manager35compare_assign_league_squad_numbers",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor27compare_comp_leagues_jap_j227compare_jap_j2_create_table",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_fra_first30compare_fra_first_create_table",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_fra_first30compare_fra_first_set_up_rules",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_fra_first33compare_fra_first_create_schedule",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_spa_first27compare_construct_spa_first",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor31compare_comp_leagues_eng_second28compare_construct_eng_second",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor31compare_comp_leagues_eng_second31compare_eng_second_create_table",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor31compare_comp_leagues_eng_second31compare_eng_second_set_up_rules",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor31compare_comp_leagues_eng_second34compare_eng_second_create_schedule",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor31compare_comp_leagues_eng_second40compare_eng_second_create_play_off_stage",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor31compare_comp_leagues_fra_second28compare_construct_fra_second",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor31compare_comp_leagues_fra_second31compare_fra_second_create_table",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor31compare_comp_leagues_fra_second31compare_fra_second_set_up_rules",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor31compare_comp_leagues_fra_second34compare_fra_second_create_schedule",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor31compare_comp_leagues_spa_second28compare_construct_spa_second",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1a29compare_construct_ita_ser_c1a",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1a29compare_create_playoff_stages",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1a32compare_ita_ser_c1a_create_table",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1a32compare_ita_ser_c1a_set_up_rules",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1a33compare_ita_ser_c1a_advance_stage",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1a35compare_ita_ser_c1a_create_schedule",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1a37compare_ita_ser_c1a_set_club_progress",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1b29compare_construct_ita_ser_c1b",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1b30compare_create_play_off_stages",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1b32compare_ita_ser_c1b_create_table",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1b32compare_ita_ser_c1b_set_up_rules",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1b33compare_ita_ser_c1b_advance_stage",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1b35compare_ita_ser_c1b_create_schedule",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1b37compare_ita_ser_c1b_set_club_progress",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor33compare_comp_leagues_bra_reg_pern44compare_bra_reg_pern_create_semi_final_stage",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor34compare_comp_eurocomp_european_cup27compare_draw_quarter_finals",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor34compare_comp_leagues_bra_nat_first43compare_bra_nat_first_create_play_off_stage",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor35compare_comp_leagues_bra_nat_second35compare_bra_nat_second_create_table",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor35compare_comp_leagues_bra_nat_second44compare_bra_nat_second_create_play_off_stage",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor37compare_comp_eurocomp_asia_club_champ40compare_asia_club_champ_build_team_table",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor37compare_comp_eurocomp_asia_club_champ42compare_asia_club_champ_create_round_table",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor38compare_comp_leagues_bra_reg_northeast35compare_construct_bra_reg_northeast",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor46compare_comp_worldcup_wc_south_american_league45compare_wc_south_american_league_set_up_rules",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor4awol30compare_toggle_mark_and_unlist",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor5media25warn_position_rivals_with",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor5media28squad_reaction_to_story_with",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor6injury24compare_injure_with_tape",
+  "verdict": "noise",
+  "reason": "The batch only renames offsets in this file (injury/manager_manager/match_pl/match_screens/transfer_manager): every new constant and accessor resolves to the old offset and width (checked against fields.rs/records.rs/bits.rs at c2cb569a, e.g. board_record CONFIDENCE 6/SUPPORTERS 8/STAFF 0xa, request_state !0x1e=0xe1, discipline !0xf8=7, engine setters write_i8/i32/u16 on the same constants); diff is register allocation, inlining and tail-merging."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor8database15ab_team_regions",
+  "verdict": "noise",
+  "reason": "Source of this function did not change in the batch; the diff comes from codegen of inlined helpers (accessors in records.rs, rename-only) and code folding between identical sibling functions (accesses vanishing from one construct/create_table twin and appearing in another), plus register reshuffles."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__RNvNtNt5ddraw5motor8match_pl21execute_pass_injected",
+  "verdict": "noise",
+  "reason": "The batch only renames offsets in this file (injury/manager_manager/match_pl/match_screens/transfer_manager): every new constant and accessor resolves to the old offset and width (checked against fields.rs/records.rs/bits.rs at c2cb569a, e.g. board_record CONFIDENCE 6/SUPPORTERS 8/STAFF 0xa, request_state !0x1e=0xe1, discipline !0xf8=7, engine setters write_i8/i32/u16 on the same constants); diff is register allocation, inlining and tail-merging."
+ },
+ {
+  "batch": "c2cb569a",
+  "function": "__ehhandler$?write_double_translated_ansi_nolock@@YA?AUwrite_result@?A0x17268360@@HQBDIAAV__crt_cached_ptd_host@@@Z",
+  "verdict": "noise",
+  "reason": "Library/runtime code untouched by the batch; only layout and register allocation differ."
+ }
+]

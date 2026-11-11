@@ -1,0 +1,614 @@
+[
+ {
+  "batch": 34,
+  "function": "__RINvMNt5ddraw10comparisonNtB3_10Scoreboard6recordNCNvNtNtB5_5motor22compare_comp_comp_util31compare_set_club_final_position0EB5_",
+  "verdict": "noise",
+  "reason": "format closure: r is now a CompStatsClub captured by reference (one extra load of the captured value); danger_position() reads u8 at comp_stats_club::DANGER_POSITION, same as before"
+ },
+ {
+  "batch": 34,
+  "function": "__RNvNtNt5ddraw5motor20comp_leagues_fra_cfa19create_french_table",
+  "verdict": "noise",
+  "reason": "instruction scheduling only (store to +0x3e moved before imul, movzx added); same field and width; fra_cfa.rs not touched"
+ },
+ {
+  "batch": 34,
+  "function": "__RNvNtNt5ddraw5motor20comp_leagues_fra_cfa22construct_group_league",
+  "verdict": "noise",
+  "reason": "calling convention changed (this/arg in ecx/edx), registers renamed (record base ebx->ebp); same offsets and widths on every record; fra_cfa.rs not touched"
+ },
+ {
+  "batch": 34,
+  "function": "__RNvNtNt5ddraw5motor27compare_comp_cups_ita_super32compare_ita_super_init_team_list",
+  "verdict": "noise",
+  "reason": "comparer (file not touched in this batch): side_by_side/MemorySnapshot helper inlined or outlined; only stack and snapshot-vector accesses move, no record offset changes"
+ },
+ {
+  "batch": 34,
+  "function": "__RNvNtNt5ddraw5motor27compare_comp_cups_ita_super36compare_ita_super_create_round_table",
+  "verdict": "noise",
+  "reason": "comparer (file not touched in this batch): side_by_side/MemorySnapshot helper inlined or outlined; only stack and snapshot-vector accesses move, no record offset changes"
+ },
+ {
+  "batch": 34,
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_fra_lower30compare_fra_lower_create_table",
+  "verdict": "noise",
+  "reason": "comparer (file not touched in this batch): side_by_side/MemorySnapshot helper inlined or outlined; only stack and snapshot-vector accesses move, no record offset changes"
+ },
+ {
+  "batch": 34,
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_fra_lower33compare_fra_lower_create_schedule",
+  "verdict": "noise",
+  "reason": "comparer (file not touched in this batch): side_by_side/MemorySnapshot helper inlined or outlined; only stack and snapshot-vector accesses move, no record offset changes"
+ },
+ {
+  "batch": 34,
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1a29compare_construct_ita_ser_c1a",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 34,
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1a29compare_create_playoff_stages",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 34,
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1a32compare_ita_ser_c1a_create_table",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 34,
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1a32compare_ita_ser_c1a_set_up_rules",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 34,
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1a33compare_ita_ser_c1a_advance_stage",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 34,
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1a35compare_ita_ser_c1a_create_schedule",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 34,
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1a37compare_ita_ser_c1a_set_club_progress",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 34,
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1b29compare_construct_ita_ser_c1b",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 34,
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1b30compare_create_play_off_stages",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 34,
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1b32compare_ita_ser_c1b_create_table",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 34,
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1b32compare_ita_ser_c1b_set_up_rules",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 34,
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1b33compare_ita_ser_c1b_advance_stage",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 34,
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1b35compare_ita_ser_c1b_create_schedule",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 34,
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1b37compare_ita_ser_c1b_set_club_progress",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 34,
+  "function": "__RNvNtNt5ddraw5motor34compare_comp_intercomp_fifa_confed35compare_fifa_confed_create_schedule",
+  "verdict": "noise",
+  "reason": "comparer (file not touched in this batch): side_by_side/MemorySnapshot helper inlined or outlined; only stack and snapshot-vector accesses move, no record offset changes"
+ },
+ {
+  "batch": 34,
+  "function": "__ehhandler$?write_double_translated_ansi_nolock@@YA?AUwrite_result@?A0x17268360@@HQBDIAAV__crt_cached_ptd_host@@@Z",
+  "verdict": "noise",
+  "reason": "CRT exception handler table, not code from this project"
+ },
+ {
+  "batch": 52,
+  "function": "__RINvMs6_Nt9hashbrown3rawINtB6_8RawTableTReyEE14reserve_rehashNCINvNtB8_3map11make_hasherBQ_yNtNtNt3std4hash6random11RandomStateE0E5ddraw",
+  "verdict": "noise",
+  "reason": "hashbrown generic, re-instantiated/reordered; no project field access"
+ },
+ {
+  "batch": 52,
+  "function": "__RINvMs6_Nt9hashbrown3rawINtB6_8RawTableTjjEE14reserve_rehashNCINvNtB8_3map11make_hasherjjNtNtNt3std4hash6random11RandomStateE0E5ddraw",
+  "verdict": "noise",
+  "reason": "hashbrown generic, re-instantiated/reordered; no project field access"
+ },
+ {
+  "batch": 52,
+  "function": "__RINvNt4core3ptr9drop_glueNtNtNt5ddraw5motor13comp_friendly21FriendlyComparerTrialEBH_",
+  "verdict": "noise",
+  "reason": "drop glue of a Vec-holding struct inlined differently; no game record access"
+ },
+ {
+  "batch": 52,
+  "function": "__RINvNtNt5ddraw5motor19comp_cups_spa_super17compare_team_listNCNvNtB4_27compare_comp_cups_jap_super30compare_jap_super_select_teams0NCB1b_s_0EB6_",
+  "verdict": "noise",
+  "reason": "comparer (file not touched in this batch): side_by_side/MemorySnapshot helper inlined or outlined; only stack and snapshot-vector accesses move, no record offset changes"
+ },
+ {
+  "batch": 52,
+  "function": "__RINvNtNt5ddraw5motor19comp_cups_spa_super17compare_team_listNCNvNtB4_27compare_comp_cups_spa_super30compare_spa_super_select_teams0NCB1b_s_0EB6_",
+  "verdict": "noise",
+  "reason": "comparer (file not touched in this batch): side_by_side/MemorySnapshot helper inlined or outlined; only stack and snapshot-vector accesses move, no record offset changes"
+ },
+ {
+  "batch": 52,
+  "function": "__RINvNtNt5ddraw5motor19comp_cups_spa_super17compare_team_listNCNvNtB4_30compare_comp_cups_ita_c1_super35compare_ita_c1_super_init_team_list0NCB1b_s_0EB6_",
+  "verdict": "noise",
+  "reason": "comparer (file not touched in this batch): side_by_side/MemorySnapshot helper inlined or outlined; only stack and snapshot-vector accesses move, no record offset changes"
+ },
+ {
+  "batch": 52,
+  "function": "__RINvNtNt5ddraw5motor19comp_cups_spa_super17compare_team_listNCNvNtB4_35compare_comp_eurocomp_eur_super_cup34compare_eur_super_cup_select_teams0NCB1b_s_0EB6_",
+  "verdict": "noise",
+  "reason": "comparer (file not touched in this batch): side_by_side/MemorySnapshot helper inlined or outlined; only stack and snapshot-vector accesses move, no record offset changes"
+ },
+ {
+  "batch": 52,
+  "function": "__RINvNtNt5ddraw5motor19comp_cups_spa_super17compare_team_listNCNvNtB4_36compare_comp_eurocomp_asia_super_cup35compare_asia_super_cup_select_teams0NCB1b_s_0EB6_",
+  "verdict": "noise",
+  "reason": "comparer (file not touched in this batch): side_by_side/MemorySnapshot helper inlined or outlined; only stack and snapshot-vector accesses move, no record offset changes"
+ },
+ {
+  "batch": 52,
+  "function": "__RINvNtNt5ddraw5motor22transfer_england_rules27compare_transfer_rules_ctorNCNvNtB4_26compare_transfer_usa_rules27compare_construct_usa_rules0NCB1o_s_0EB6_",
+  "verdict": "noise",
+  "reason": "comparer of transfer rules (file not touched in this batch): the shared ctor/window comparer generic is inlined into some siblings and called in others; the accesses that vanish here reappear identically in a sibling"
+ },
+ {
+  "batch": 52,
+  "function": "__RINvNtNt5ddraw5motor22transfer_england_rules27compare_transfer_rules_ctorNCNvNtB4_28compare_transfer_korea_rules29compare_construct_korea_rules0NCB1o_s_0EB6_",
+  "verdict": "noise",
+  "reason": "comparer of transfer rules (file not touched in this batch): the shared ctor/window comparer generic is inlined into some siblings and called in others; the accesses that vanish here reappear identically in a sibling"
+ },
+ {
+  "batch": 52,
+  "function": "__RINvNtNt5ddraw5motor22transfer_england_rules27compare_transfer_rules_ctorNCNvNtB4_29compare_transfer_greece_rules42compare_greece_rules_init_transfer_windows0NCB1o_s_0EB6_",
+  "verdict": "noise",
+  "reason": "comparer of transfer rules (file not touched in this batch): the shared ctor/window comparer generic is inlined into some siblings and called in others; the accesses that vanish here reappear identically in a sibling"
+ },
+ {
+  "batch": 52,
+  "function": "__RINvNtNt5ddraw5motor22transfer_england_rules27compare_transfer_rules_ctorNCNvNtB4_39compare_transfer_northern_ireland_rules40compare_construct_northern_ireland_rules0NCB1o_s_0EB6_",
+  "verdict": "noise",
+  "reason": "comparer of transfer rules (file not touched in this batch): the shared ctor/window comparer generic is inlined into some siblings and called in others; the accesses that vanish here reappear identically in a sibling"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNt5ddraw3spy4wrap",
+  "verdict": "noise",
+  "reason": "register allocation (movzx ebx,[ebp+0xc] -> mov ch,[ebp+0xc], same byte) and hashbrown inlining; spy.rs not touched"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNt5ddraw3spy7release@4",
+  "verdict": "noise",
+  "reason": "register renaming and an inlined hashbrown/memcpy loop; spy.rs not touched"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor12compare_cash27compare_swap_bytes_16_array",
+  "verdict": "noise",
+  "reason": "comparer (file not touched in this batch): side_by_side/MemorySnapshot helper inlined or outlined; only stack and snapshot-vector accesses move, no record offset changes"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor12compare_cash27compare_swap_bytes_32_array",
+  "verdict": "noise",
+  "reason": "comparer (file not touched in this batch): side_by_side/MemorySnapshot helper inlined or outlined; only stack and snapshot-vector accesses move, no record offset changes"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor13comp_friendly27pair_nations_for_friendlies",
+  "verdict": "noise",
+  "reason": "register renaming only (inc [ebp] -> inc [ebx]); file not touched"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor17comp_cups_ita_cup15create_schedule",
+  "verdict": "noise",
+  "reason": "no longer constant-specialised (the round count 5 and size 0x208 now come from an argument, rounds written in a loop instead of unrolled); same accesses; ita_cup.rs not touched in this batch"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor17comp_cups_ita_cup20set_cup_league_rules",
+  "verdict": "noise",
+  "reason": "same stores reordered/moved (multiset of record accesses unchanged); file not touched"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor22comp_leagues_ita_ser_a13serie_a_rules",
+  "verdict": "noise",
+  "reason": "register renaming and helper inlining change; multiset of record accesses unchanged; file not touched"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor24compare_training_manager37compare_training_manager_cpp_0x8b2230",
+  "verdict": "noise",
+  "reason": "only change in source: 0x1e -> physical_record::PRONENESS (=0x1e); a helper is now called out of line instead of inlined"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor27compare_comp_cups_ita_super32compare_ita_super_init_team_list",
+  "verdict": "noise",
+  "reason": "comparer (file not touched in this batch): side_by_side/MemorySnapshot helper inlined or outlined; only stack and snapshot-vector accesses move, no record offset changes"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor27compare_comp_cups_ita_super36compare_ita_super_create_round_table",
+  "verdict": "noise",
+  "reason": "comparer (file not touched in this batch): side_by_side/MemorySnapshot helper inlined or outlined; only stack and snapshot-vector accesses move, no record offset changes"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor28compare_comp_cups_eng_cc_cup35compare_eng_cc_cup_collect_entrants",
+  "verdict": "noise",
+  "reason": "comparer (file not touched in this batch): side_by_side/MemorySnapshot helper inlined or outlined; only stack and snapshot-vector accesses move, no record offset changes"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor28compare_transfer_italy_rules41compare_italy_rules_init_transfer_windows",
+  "verdict": "noise",
+  "reason": "comparer of transfer rules (file not touched in this batch): the shared ctor/window comparer generic is inlined into some siblings and called in others; the accesses that vanish here reappear identically in a sibling"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor29compare_comp_cups_fra_lge_cup36compare_fra_lge_cup_collect_entrants",
+  "verdict": "noise",
+  "reason": "comparer (file not touched in this batch): side_by_side/MemorySnapshot helper inlined or outlined; only stack and snapshot-vector accesses move, no record offset changes"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor29compare_transfer_france_rules42compare_france_rules_init_transfer_windows",
+  "verdict": "noise",
+  "reason": "comparer of transfer rules (file not touched in this batch): the shared ctor/window comparer generic is inlined into some siblings and called in others; the accesses that vanish here reappear identically in a sibling"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor29compare_transfer_norway_rules30compare_construct_norway_rules",
+  "verdict": "noise",
+  "reason": "comparer of transfer rules (file not touched in this batch): the shared ctor/window comparer generic is inlined into some siblings and called in others; the accesses that vanish here reappear identically in a sibling"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_eng_third27compare_construct_eng_third",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_eng_third30compare_eng_third_create_table",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_eng_third30compare_eng_third_set_up_rules",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_eng_third31compare_eng_third_advance_stage",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_eng_third33compare_eng_third_create_schedule",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_eng_third35compare_eng_third_set_club_progress",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_eng_third39compare_eng_third_create_play_off_stage",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_ita_ser_a27compare_construct_ita_ser_a",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_ita_ser_a30compare_ita_ser_a_create_table",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_ita_ser_a30compare_ita_ser_a_set_up_rules",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_ita_ser_a33compare_ita_ser_a_create_schedule",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_ita_ser_a33compare_ita_ser_a_update_for_date",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor30compare_transfer_croatia_rules31compare_construct_croatia_rules",
+  "verdict": "noise",
+  "reason": "comparer of transfer rules (file not touched in this batch): the shared ctor/window comparer generic is inlined into some siblings and called in others; the accesses that vanish here reappear identically in a sibling"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1a29compare_construct_ita_ser_c1a",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1a32compare_ita_ser_c1a_create_table",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1a32compare_ita_ser_c1a_set_up_rules",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1a35compare_ita_ser_c1a_create_schedule",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1a37compare_ita_ser_c1a_set_club_progress",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor34compare_comp_leagues_bra_reg_goias43compare_bra_reg_goias_create_knockout_stage",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor35compare_comp_cups_usa_mls_all_stars20compare_set_up_teams",
+  "verdict": "noise",
+  "reason": "comparer (file not touched in this batch): side_by_side/MemorySnapshot helper inlined or outlined; only stack and snapshot-vector accesses move, no record offset changes"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor35compare_comp_eurocomp_eur_super_cup40compare_eur_super_cup_create_round_table",
+  "verdict": "noise",
+  "reason": "comparer (file not touched in this batch): side_by_side/MemorySnapshot helper inlined or outlined; only stack and snapshot-vector accesses move, no record offset changes"
+ },
+ {
+  "batch": 52,
+  "function": "__RNvNtNt5ddraw5motor38compare_comp_leagues_bra_reg_northeast35compare_construct_bra_reg_northeast",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 52,
+  "function": "__ehhandler$?write_double_translated_ansi_nolock@@YA?AUwrite_result@?A0x17268360@@HQBDIAAV__crt_cached_ptd_host@@@Z",
+  "verdict": "noise",
+  "reason": "CRT exception handler table, not code from this project"
+ },
+ {
+  "batch": 55,
+  "function": "__RINvNtNt5ddraw5motor22transfer_england_rules27compare_transfer_rules_ctorNCNvNtB4_29compare_transfer_france_rules42compare_france_rules_init_transfer_windows0NCB1p_s_0EB6_",
+  "verdict": "noise",
+  "reason": "comparer of transfer rules (file not touched in this batch): the shared ctor/window comparer generic is inlined into some siblings and called in others; the accesses that vanish here reappear identically in a sibling"
+ },
+ {
+  "batch": 55,
+  "function": "__RINvNtNt5ddraw5motor22transfer_england_rules27compare_transfer_rules_ctorNCNvNtB4_30compare_transfer_holland_rules31compare_construct_holland_rules0NCB1p_s_0EB6_",
+  "verdict": "noise",
+  "reason": "comparer of transfer rules (file not touched in this batch): the shared ctor/window comparer generic is inlined into some siblings and called in others; the accesses that vanish here reappear identically in a sibling"
+ },
+ {
+  "batch": 55,
+  "function": "__RINvNtNt5ddraw5motor22transfer_england_rules27compare_transfer_rules_ctorNCNvNtB4_32compare_transfer_australia_rules23compare_australia_rules0NCB1p_s_0EB6_",
+  "verdict": "noise",
+  "reason": "comparer of transfer rules (file not touched in this batch): the shared ctor/window comparer generic is inlined into some siblings and called in others; the accesses that vanish here reappear identically in a sibling"
+ },
+ {
+  "batch": 55,
+  "function": "__RINvNtNt5ddraw5motor22transfer_england_rules27compare_transfer_rules_ctorNCNvNtB4_39compare_transfer_northern_ireland_rules40compare_construct_northern_ireland_rules0NCB1p_s_0EB6_",
+  "verdict": "noise",
+  "reason": "comparer of transfer rules (file not touched in this batch): the shared ctor/window comparer generic is inlined into some siblings and called in others; the accesses that vanish here reappear identically in a sibling"
+ },
+ {
+  "batch": 55,
+  "function": "__RNvNtNt5ddraw5motor26compare_transfer_usa_rules27compare_construct_usa_rules",
+  "verdict": "noise",
+  "reason": "comparer of transfer rules (file not touched in this batch): the shared ctor/window comparer generic is inlined into some siblings and called in others; the accesses that vanish here reappear identically in a sibling"
+ },
+ {
+  "batch": 55,
+  "function": "__RNvNtNt5ddraw5motor28compare_transfer_korea_rules29compare_construct_korea_rules",
+  "verdict": "noise",
+  "reason": "comparer of transfer rules (file not touched in this batch): the shared ctor/window comparer generic is inlined into some siblings and called in others; the accesses that vanish here reappear identically in a sibling"
+ },
+ {
+  "batch": 55,
+  "function": "__RNvNtNt5ddraw5motor29compare_transfer_poland_rules30compare_construct_poland_rules",
+  "verdict": "noise",
+  "reason": "comparer of transfer rules (file not touched in this batch): the shared ctor/window comparer generic is inlined into some siblings and called in others; the accesses that vanish here reappear identically in a sibling"
+ },
+ {
+  "batch": 55,
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_eng_first27compare_construct_eng_first",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 55,
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_eng_first30compare_eng_first_create_table",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 55,
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_eng_first30compare_eng_first_set_up_rules",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 55,
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_eng_first33compare_eng_first_create_schedule",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 55,
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_eng_first35compare_eng_first_set_club_progress",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 55,
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_eng_first38compare_eng_first_create_playoff_stage",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 55,
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_eng_third27compare_construct_eng_third",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 55,
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_eng_third30compare_eng_third_create_table",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 55,
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_eng_third30compare_eng_third_set_up_rules",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 55,
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_eng_third33compare_eng_third_create_schedule",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 55,
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_eng_third35compare_eng_third_set_club_progress",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 55,
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_eng_third39compare_eng_third_create_play_off_stage",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 55,
+  "function": "__RNvNtNt5ddraw5motor30compare_transfer_croatia_rules31compare_construct_croatia_rules",
+  "verdict": "noise",
+  "reason": "comparer of transfer rules (file not touched in this batch): the shared ctor/window comparer generic is inlined into some siblings and called in others; the accesses that vanish here reappear identically in a sibling"
+ },
+ {
+  "batch": 55,
+  "function": "__RNvNtNt5ddraw5motor31compare_transfer_portugal_rules44compare_portugal_rules_init_transfer_windows",
+  "verdict": "noise",
+  "reason": "comparer of transfer rules (file not touched in this batch): the shared ctor/window comparer generic is inlined into some siblings and called in others; the accesses that vanish here reappear identically in a sibling"
+ },
+ {
+  "batch": 55,
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1b29compare_construct_ita_ser_c1b",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 55,
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1b32compare_ita_ser_c1b_create_table",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 55,
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1b32compare_ita_ser_c1b_set_up_rules",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 55,
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1b35compare_ita_ser_c1b_create_schedule",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 55,
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1b37compare_ita_ser_c1b_set_club_progress",
+  "verdict": "noise",
+  "reason": "league comparer (file not touched in this batch): the shared ita_ser_a/league comparer helper is inlined here and outlined in a sibling (or vice versa); the record accesses appear/vanish as identical sets across the sibling pair"
+ },
+ {
+  "batch": 55,
+  "function": "__RNvNtNt5ddraw5motor35compare_comp_eurocomp_eur_super_cup34compare_eur_super_cup_select_teams",
+  "verdict": "noise",
+  "reason": "comparer (file not touched in this batch): side_by_side/MemorySnapshot helper inlined or outlined; only stack and snapshot-vector accesses move, no record offset changes"
+ },
+ {
+  "batch": 55,
+  "function": "__ehhandler$?write_double_translated_ansi_nolock@@YA?AUwrite_result@?A0x17268360@@HQBDIAAV__crt_cached_ptd_host@@@Z",
+  "verdict": "noise",
+  "reason": "CRT exception handler table, not code from this project"
+ }
+]

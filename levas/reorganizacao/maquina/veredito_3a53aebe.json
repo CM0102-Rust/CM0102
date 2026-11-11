@@ -1,0 +1,656 @@
+[
+ {
+  "batch": "3a53aebe",
+  "function": "__RINvNt5ddraw3rng11pause_tracehNCINvNtNtB4_5motor17compare_match_eng16compare_com_fitahNCNvBK_21compare_look_for_play0NCB1B_s_0Es1_0EB4_",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RINvNt5ddraw3rng11pause_tracehNCINvNtNtB4_5motor17compare_match_eng16compare_com_fitahNCNvNtBM_14compare_shared16compare_procurar0NCB1B_s_0Es1_0EB4_",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RINvNt5ddraw3rng11pause_tracemNCINvNtNtB4_5motor17compare_match_eng16compare_com_fitamNCNvNtBM_8match_pl21compare_dribble_inner0NCB1B_s_0Es1_0EB4_",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RINvNt5ddraw3rng11pause_traceuNCINvNtNtB4_5motor17compare_match_eng16compare_com_fitauNCNvBK_17compare_penalties0NCB1B_s_0Es1_0EB4_",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RINvNt5ddraw3rng11pause_traceuNCINvNtNtB4_5motor17compare_match_eng16compare_com_fitauNCNvBK_19compare_punishments0NCB1B_s_0Es1_0EB4_",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RINvNt5ddraw3rng11pause_traceuNCINvNtNtB4_5motor17compare_match_eng16compare_com_fitauNCNvNtBM_13compare_media36compare_warn_squad_of_position_rival0NCINvNtBM_17compare_match_day11compare_posB1z_NCB1B_s_0E0Es1_0EB4_",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RINvNt5ddraw3rng11pause_traceuNCINvNtNtB4_5motor17compare_match_eng16compare_com_fitauNCNvNtBM_16compare_match_pl14compare_tackle0NCB1B_s_0Es1_0EB4_",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RINvNt5ddraw3rng11pause_traceuNCINvNtNtB4_5motor17compare_match_eng16compare_com_fitauNCNvNtBM_17compare_match_day26compare_post_match_playerss1_0NCINvB1D_11compare_posB1z_NCB1B_s2_0E0Es1_0EB4_",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RINvNt5ddraw3rng11pause_traceuNCINvNtNtB4_5motor17compare_match_eng16compare_com_fitauNCNvNtBM_17compare_match_man18compare_substitutes_0NCB1B_s0_0Es1_0EB4_",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RINvNt5ddraw3rng11pause_traceuNCINvNtNtB4_5motor17compare_match_eng16compare_com_fitauNCNvNtBM_8match_pl26compare_shot_on_goal_inner0NCB1B_s_0Es1_0EB4_",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RINvNt5ddraw3rng11pause_traceuNCINvNtNtB4_5motor17compare_match_eng16compare_com_fitauNCNvNtBM_8match_pl26compare_shot_outcome_inner0NCB1B_s_0Es1_0EB4_",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RINvNt5ddraw3rng11pause_traceuNCNvNtNtB4_5motor12match_events24probe_context_commentarys0_0EB4_",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RINvNtNt5ddraw5motor16transfer_manager23compare_reject_withdrawNCNvNtB4_24compare_transfer_manager25compare_reject_loan_offer0NCB1e_s_0EB6_",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RINvNtNt5ddraw5motor16transfer_manager23compare_reject_withdrawNCNvNtB4_24compare_transfer_manager29compare_reject_transfer_offer0NCB1e_s_0EB6_",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RINvNtNt5ddraw5motor16transfer_manager23compare_reject_withdrawNCNvNtB4_24compare_transfer_manager31compare_withdraw_transfer_offer0NCB1e_s_0EB6_",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RINvNtNt5ddraw5motor22comp_leagues_ita_ser_a30ita_ser_a_compare_league_rulesNCNvNtB4_32compare_comp_leagues_ita_ser_c1a32compare_ita_ser_c1a_set_up_rules0NCB1r_s_0EB6_",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNCNCNCNCINvNtNt5ddraw5motor17compare_match_eng16compare_com_fitamNCNvNtBc_16compare_match_pl19compare_advance_rows_0NCB1h_s0_0Es1_0000Be_",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNCNCNCNCINvNtNt5ddraw5motor17compare_match_eng16compare_com_fitauNCNvNtBc_8match_pl26compare_shot_outcome_inner0NCB1h_s_0Es1_0000Be_",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNt5ddraw10simulation11record_draw",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNt5ddraw10simulation11write_trace",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor11comp_league21apply_result_to_table",
+  "verdict": "noise",
+  "reason": "source in comp/league.rs changed only by renames; every changed line checked: constants/accessors resolve to the same offset, width and sign (e.g. league_table_row::STATUS=0x37, fixture_tie_rules bits 0x20/0x2, patience()/discipline() as i8, pressing() i8, grievances() u32 at 0x45, POSITION_LISTS_BY_PERSON+0x3c=0x54); diff is register allocation / block layout / inlining"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor13compare_media36compare_warn_squad_of_position_rival",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor13compare_media44compare_apply_squad_reaction_to_player_story",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor14comp_comp_util28set_final_positions_by_round",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor14compare_injury27compare_injury_daily_update",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor14compare_shared25compare_hold_position_one",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor14compare_zipdir23compare_zget_archive_id",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor15compare_tactics23compare_get_club_tactic",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor15compare_tactics28compare_clear_selection_slot",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor16compare_match_pl19compare_advance_row",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor16transfer_manager20payment_list_regions",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor17compare_match_day23compare_post_match_club",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor17compare_match_day25compare_post_match_events",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor17compare_match_day26compare_post_match_players",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor17compare_match_day27compare_match_without_human",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor17compare_match_man20compare_instructions",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor18comp_squad_manager20squad_number_regions",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor18compare_discipline19compare_release_ban",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor18compare_discipline25compare_restore_held_bans",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor18compare_discipline32compare_serve_international_bans",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor20comp_leagues_fra_cfa19create_french_table",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor20comp_leagues_fra_cfa22construct_group_league",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor20compare_comp_fix_man27compare_collect_day_clashes",
+  "verdict": "noise",
+  "reason": "source in comp/fix_man.rs changed only by renames; every changed line checked: constants/accessors resolve to the same offset, width and sign (e.g. league_table_row::STATUS=0x37, fixture_tie_rules bits 0x20/0x2, patience()/discipline() as i8, pressing() i8, grievances() u32 at 0x45, POSITION_LISTS_BY_PERSON+0x3c=0x54); diff is register allocation / block layout / inlining"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor20compare_comp_fix_man28compare_find_fixture_clashes",
+  "verdict": "noise",
+  "reason": "source in comp/fix_man.rs changed only by renames; every changed line checked: constants/accessors resolve to the same offset, width and sign (e.g. league_table_row::STATUS=0x37, fixture_tie_rules bits 0x20/0x2, patience()/discipline() as i8, pressing() i8, grievances() u32 at 0x45, POSITION_LISTS_BY_PERSON+0x3c=0x54); diff is register allocation / block layout / inlining"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor20compare_comp_fix_man32compare_queue_fixture_moved_news",
+  "verdict": "noise",
+  "reason": "source in comp/fix_man.rs changed only by renames; every changed line checked: constants/accessors resolve to the same offset, width and sign (e.g. league_table_row::STATUS=0x37, fixture_tie_rules bits 0x20/0x2, patience()/discipline() as i8, pressing() i8, grievances() u32 at 0x45, POSITION_LISTS_BY_PERSON+0x3c=0x54); diff is register allocation / block layout / inlining"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor20compare_player_stats28compare_archive_player_stats",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor20compare_player_stats33compare_player_stats_record_match",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor21compare_human_manager32compare_remove_nickname_from_all",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor21compare_match_screens33compare_draw_match_overview_panel",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor21compare_match_screens44compare_match_screens_draw_live_league_table",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor22comp_cups_ita_c1_super27ita_c1_super_init_team_list",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor22comp_leagues_ita_ser_a13serie_a_rules",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor22comp_leagues_spa_first13primera_rules",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor22compare_match_official19compare_decide_foul",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor22transfer_england_rules30england_rules_compare_can_loan",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor24comp_leagues_ita_ser_c1a24ita_ser_c1a_create_table",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor24comp_leagues_ita_ser_c1a24ita_ser_c1a_set_up_rules",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor24comp_leagues_ita_ser_c1a27create_end_of_league_stages",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor24compare_contract_manager26compare_add_contract_offer",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor24compare_contract_manager29compare_remove_contract_offer",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor24compare_contract_manager31compare_schedule_offer_decision",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor24compare_training_manager32compare_reassign_squad_schedules",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor24compare_transfer_manager26compare_check_squad_limits",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor24compare_transfer_manager32compare_pay_next_sale_percentage",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor24compare_transfer_manager38compare_get_exchange_offers_for_player",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor24compare_transfer_manager40compare_settle_previous_transfer_clauses",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor24compare_transfer_manager52compare_transfer_manager_close_offer_contract_offers@4",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor25compare_award_month_award18compare_set_winner",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor25compare_officials_manager46compare_officials_manager_add_random_officials",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor25compare_shortlist_manager27compare_update_staff_status",
+  "verdict": "noise",
+  "reason": "source in shortlist_manager.rs changed only by renames; every changed line checked: constants/accessors resolve to the same offset, width and sign (e.g. league_table_row::STATUS=0x37, fixture_tie_rules bits 0x20/0x2, patience()/discipline() as i8, pressing() i8, grievances() u32 at 0x45, POSITION_LISTS_BY_PERSON+0x3c=0x54); diff is register allocation / block layout / inlining"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor25compare_shortlist_manager31compare_mark_player_under_offer",
+  "verdict": "noise",
+  "reason": "source in shortlist_manager.rs changed only by renames; every changed line checked: constants/accessors resolve to the same offset, width and sign (e.g. league_table_row::STATUS=0x37, fixture_tie_rules bits 0x20/0x2, patience()/discipline() as i8, pressing() i8, grievances() u32 at 0x45, POSITION_LISTS_BY_PERSON+0x3c=0x54); diff is register allocation / block layout / inlining"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor25compare_shortlist_manager41compare_suspend_clubs_shortlisting_player",
+  "verdict": "noise",
+  "reason": "source in shortlist_manager.rs changed only by renames; every changed line checked: constants/accessors resolve to the same offset, width and sign (e.g. league_table_row::STATUS=0x37, fixture_tie_rules bits 0x20/0x2, patience()/discipline() as i8, pressing() i8, grievances() u32 at 0x45, POSITION_LISTS_BY_PERSON+0x3c=0x54); diff is register allocation / block layout / inlining"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor26compare_comp_squad_manager29compare_allocate_squad_number",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor26compare_comp_squad_manager31compare_club_uses_squad_numbers",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor26compare_comp_squad_manager33compare_process_euro_registration",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor27compare_award_award_manager37compare_award_raise_winner_reputation",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor27compare_comp_leagues_jap_j127compare_jap_j1_create_table",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor29comp_eurocomp_asia_club_champ32asia_club_champ_build_team_table",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor29compare_comp_cups_eng_charity38compare_eng_charity_create_round_table",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor29compare_comp_cups_jap_emp_cup36compare_jap_emp_cup_collect_entrants",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor29compare_comp_cups_jap_emp_cup38compare_jap_emp_cup_create_round_table",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_intercomp_goldcup28compare_goldcup_set_up_rules",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_intercomp_goldcup31compare_goldcup_create_schedule",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_ita_ser_a27compare_construct_ita_ser_a",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_ita_ser_a30compare_ita_ser_a_create_table",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_ita_ser_a30compare_ita_ser_a_set_up_rules",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_ita_ser_a33compare_ita_ser_a_create_schedule",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_ita_ser_a33compare_ita_ser_a_update_for_date",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_spa_first27compare_construct_spa_first",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_spa_first30compare_spa_first_set_up_rules",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_spa_first33compare_spa_first_create_schedule",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor31compare_comp_leagues_eng_second32compare_eng_second_advance_stage",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1b29compare_construct_ita_ser_c1b",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1b30compare_create_play_off_stages",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1b32compare_ita_ser_c1b_create_table",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1b32compare_ita_ser_c1b_set_up_rules",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1b33compare_ita_ser_c1b_advance_stage",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1b35compare_ita_ser_c1b_create_schedule",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_ita_ser_c1b37compare_ita_ser_c1b_set_club_progress",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor33compare_comp_leagues_bra_reg_pern44compare_bra_reg_pern_create_semi_final_stage",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor34compare_comp_leagues_bra_reg_bahia31compare_construct_bra_reg_bahia",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor34compare_comp_leagues_bra_reg_bahia34compare_bra_reg_bahia_create_table",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor35compare_comp_eurocomp_conmebol_merc37compare_conmebol_merc_create_schedule",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor37compare_comp_eurocomp_asia_club_champ42compare_asia_club_champ_create_round_table",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor5media17club_staff_vector",
+  "verdict": "noise",
+  "reason": "source in media.rs changed only by renames; every changed line checked: constants/accessors resolve to the same offset, width and sign (e.g. league_table_row::STATUS=0x37, fixture_tie_rules bits 0x20/0x2, patience()/discipline() as i8, pressing() i8, grievances() u32 at 0x45, POSITION_LISTS_BY_PERSON+0x3c=0x54); diff is register allocation / block layout / inlining"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor5media25warn_position_rivals_with",
+  "verdict": "noise",
+  "reason": "source in media.rs changed only by renames; every changed line checked: constants/accessors resolve to the same offset, width and sign (e.g. league_table_row::STATUS=0x37, fixture_tie_rules bits 0x20/0x2, patience()/discipline() as i8, pressing() i8, grievances() u32 at 0x45, POSITION_LISTS_BY_PERSON+0x3c=0x54); diff is register allocation / block layout / inlining"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor5media28squad_reaction_to_story_with",
+  "verdict": "noise",
+  "reason": "source in media.rs changed only by renames; every changed line checked: constants/accessors resolve to the same offset, width and sign (e.g. league_table_row::STATUS=0x37, fixture_tie_rules bits 0x20/0x2, patience()/discipline() as i8, pressing() i8, grievances() u32 at 0x45, POSITION_LISTS_BY_PERSON+0x3c=0x54); diff is register allocation / block layout / inlining"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__RNvNtNt5ddraw5motor8database15ab_team_regions",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ },
+ {
+  "batch": "3a53aebe",
+  "function": "__ehhandler$?write_double_translated_ansi_nolock@@YA?AUwrite_result@?A0x17268360@@HQBDIAAV__crt_cached_ptd_host@@@Z",
+  "verdict": "noise",
+  "reason": "source of this function unchanged in 3a53aebe (only fix_man.rs, league.rs, media.rs, shortlist_manager.rs changed, all verified rename-equivalent; fields/bits/records only gained additions); diff is codegen noise: inlining/outlining of shared helpers, register and stack layout"
+ }
+]

@@ -1,0 +1,524 @@
+[
+ {
+  "batch": "e01e59ef",
+  "function": "_DirectDrawCreate@12",
+  "verdict": "noise",
+  "reason": "no source change outside motor/ in this batch; registro::linha now called instead of inlined, register allocation shifts"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "_DllMain@12",
+  "verdict": "noise",
+  "reason": "no source change; body outlined into a callee (335 -> 4 lines)"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RINvMs6_Nt9hashbrown3rawINtB6_8RawTableTReyEE14reserve_rehashNCINvNtB8_3map11make_hasherBQ_yNtNtNt3std4hash6random11RandomStateE0E5ddraw",
+  "verdict": "noise",
+  "reason": "std hash table instantiation, untouched by the batch; inlining noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RINvMs6_Nt9hashbrown3rawINtB6_8RawTableTjjEE14reserve_rehashNCINvNtB8_3map11make_hasherjjNtNtNt3std4hash6random11RandomStateE0E5ddraw",
+  "verdict": "noise",
+  "reason": "std hash table instantiation, untouched by the batch; inlining noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RINvNt5ddraw10comparison18side_by_side_lightjNCNvNtNtB4_5motor18compare_discipline27compare_discipline_operator0NCBW_s_0EB4_",
+  "verdict": "noise",
+  "reason": "comparison helper now inlines its closures (snapshot Vec of (addr,len)); no record access changed"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RINvNtNt5ddraw5motor16transfer_manager23compare_reject_withdrawNCNvNtB4_24compare_transfer_manager25compare_reject_loan_offer0NCB1e_s_0EB6_",
+  "verdict": "noise",
+  "reason": "same memory-access multiset once registers are renamed; register allocation/scheduling noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RINvNtNt5ddraw5motor16transfer_manager23compare_reject_withdrawNCNvNtB4_24compare_transfer_manager29compare_reject_transfer_offer0NCB1e_s_0EB6_",
+  "verdict": "noise",
+  "reason": "same memory-access multiset once registers are renamed; register allocation/scheduling noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RINvNtNt5ddraw5motor16transfer_manager23compare_reject_withdrawNCNvNtB4_24compare_transfer_manager31compare_withdraw_transfer_offer0NCB1e_s_0EB6_",
+  "verdict": "noise",
+  "reason": "same memory-access multiset once registers are renamed; register allocation/scheduling noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RINvNtNt5ddraw5motor22comp_leagues_ita_ser_a30ita_ser_a_compare_league_rulesNCNvNtB4_32compare_comp_leagues_ita_ser_c1a32compare_ita_ser_c1a_set_up_rules0NCB1r_s_0EB6_",
+  "verdict": "noise",
+  "reason": "helper partly outlined; vanished accesses are snapshot Vec slots, no record displacement"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RINvNtNt5ddraw5motor22transfer_england_rules27compare_transfer_rules_ctorNCNvNtB4_26compare_transfer_usa_rules27compare_construct_usa_rules0NCB1o_s_0EB6_",
+  "verdict": "noise",
+  "reason": "global reads moved into a shared/inlined helper; no record displacement"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RINvNtNt5ddraw5motor22transfer_england_rules27compare_transfer_rules_ctorNCNvNtB4_29compare_transfer_russia_rules42compare_russia_rules_init_transfer_windows0NCB1o_s_0EB6_",
+  "verdict": "noise",
+  "reason": "global reads moved into a shared/inlined helper; no record displacement"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor13compare_media36compare_warn_squad_of_position_rival",
+  "verdict": "noise",
+  "reason": "two global byte accesses (lock/flag) moved into a callee; noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor13compare_media44compare_apply_squad_reaction_to_player_story",
+  "verdict": "noise",
+  "reason": "two global byte accesses (lock/flag) moved into a callee; noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor13player_search39player_search_record_scouted_club_match",
+  "verdict": "noise",
+  "reason": "the store to slot +0x15 was tail-merged before and is now duplicated into each branch (same values, same offset); source change is only result -> result.addr()"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor14compare_injury27compare_injury_daily_update",
+  "verdict": "noise",
+  "reason": "register allocation and hoisting of global loads; same accesses"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor14compare_injury29compare_roll_recurring_injury",
+  "verdict": "noise",
+  "reason": "record base moved from ebp to ebx (+0x12/+0x13 unchanged: recurring_type/recurrence_grade use the same constants); remaining lines are a jump table decoded as code"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor14compare_shared25compare_hold_position_one",
+  "verdict": "noise",
+  "reason": "same memory-access multiset once registers are renamed; register allocation/scheduling noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor15compare_tactics23compare_get_club_tactic",
+  "verdict": "noise",
+  "reason": "same memory-access multiset once registers are renamed; register allocation/scheduling noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor15compare_tactics28compare_clear_selection_slot",
+  "verdict": "noise",
+  "reason": "same memory-access multiset once registers are renamed; register allocation/scheduling noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor16compare_match_pl19compare_advance_row",
+  "verdict": "noise",
+  "reason": "same memory-access multiset once registers are renamed; register allocation/scheduling noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor16transfer_manager20payment_list_regions",
+  "verdict": "noise",
+  "reason": "same memory-access multiset once registers are renamed; register allocation/scheduling noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor17compare_match_day23compare_post_match_club",
+  "verdict": "noise",
+  "reason": "side_by_side/compare_com_fit helper now inlined (57 -> 1184 lines); comparator code, no record displacement changed"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor17compare_match_day25compare_post_match_events",
+  "verdict": "noise",
+  "reason": "same helper inlined as in compare_post_match_club; noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor17compare_match_day26compare_post_match_players",
+  "verdict": "noise",
+  "reason": "same helper inlined; the +0xd3/+0x19f..+0x1af accesses keep their displacements"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor18compare_discipline19compare_release_ban",
+  "verdict": "noise",
+  "reason": "same memory-access multiset once registers are renamed; register allocation/scheduling noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor18compare_discipline25compare_restore_held_bans",
+  "verdict": "noise",
+  "reason": "same memory-access multiset once registers are renamed; register allocation/scheduling noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor18compare_discipline32compare_serve_international_bans",
+  "verdict": "noise",
+  "reason": "loop strength reduction: stride-0x14 element written via base+i*0x14 before and via a running pointer at -0x10 after; same fields (+0,+8,+0xc,+0x10)"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor20compare_player_stats28compare_archive_player_stats",
+  "verdict": "noise",
+  "reason": "same memory-access multiset once registers are renamed; register allocation/scheduling noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor20compare_player_stats33compare_player_stats_record_match",
+  "verdict": "noise",
+  "reason": "Vec<(addr,len)> region pushes reordered/re-indexed (push index bookkeeping); same regions (0x3b/2, 0x20, +0x27*i/7)"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor21compare_human_manager32compare_remove_nickname_from_all",
+  "verdict": "noise",
+  "reason": "same memory-access multiset once registers are renamed; register allocation/scheduling noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor21compare_match_screens33compare_draw_match_overview_panel",
+  "verdict": "noise",
+  "reason": "p0.record() = read_usize(p0 + live_match::RECORD 0x5f), as before; extra lines are a region Vec push moved"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor21compare_match_screens44compare_match_screens_draw_live_league_table",
+  "verdict": "noise",
+  "reason": "same memory-access multiset once registers are renamed; register allocation/scheduling noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor22comp_cups_ita_c1_super27ita_c1_super_init_team_list",
+  "verdict": "noise",
+  "reason": "was a tail jump to init_c1_super_cup_list, now inlines it (source unchanged)"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor22comp_eurocomp_uefa_cup27uefa_cup_create_round_table",
+  "verdict": "noise",
+  "reason": "helper now inlined (source unchanged); noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor22comp_leagues_spa_first13primera_rules",
+  "verdict": "noise",
+  "reason": "same memory-access multiset once registers are renamed; register allocation/scheduling noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor22compare_match_official19compare_decide_foul",
+  "verdict": "noise",
+  "reason": "same memory-access multiset once registers are renamed; register allocation/scheduling noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor22transfer_england_rules30england_rules_compare_can_loan",
+  "verdict": "noise",
+  "reason": "same memory-access multiset once registers are renamed; register allocation/scheduling noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor24comp_leagues_ita_ser_c1a27create_end_of_league_stages",
+  "verdict": "noise",
+  "reason": "same memory-access multiset once registers are renamed; register allocation/scheduling noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor24compare_training_manager32compare_reassign_squad_schedules",
+  "verdict": "noise",
+  "reason": "register allocation/scheduling only; same record accesses"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor24compare_transfer_manager26compare_check_squad_limits",
+  "verdict": "noise",
+  "reason": "same memory-access multiset once registers are renamed; register allocation/scheduling noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor24compare_transfer_manager32compare_pay_next_sale_percentage",
+  "verdict": "noise",
+  "reason": "Vec<(addr,len)> region pushes re-indexed (ebx*8+0x10.. -> ebp*8+0..); same values (len 0x167)"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor24compare_transfer_manager38compare_get_exchange_offers_for_player",
+  "verdict": "noise",
+  "reason": "same memory-access multiset once registers are renamed; register allocation/scheduling noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor24compare_transfer_manager40compare_settle_previous_transfer_clauses",
+  "verdict": "noise",
+  "reason": "same memory-access multiset once registers are renamed; register allocation/scheduling noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor24compare_transfer_manager52compare_transfer_manager_close_offer_contract_offers@4",
+  "verdict": "noise",
+  "reason": "same memory-access multiset once registers are renamed; register allocation/scheduling noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor25compare_comp_cups_fra_cup34compare_fra_cup_create_round_table",
+  "verdict": "noise",
+  "reason": "identical-code folding: a shared comparator body is now attributed to a different symbol (the twin function shows the opposite change); same displacements"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor25compare_shortlist_manager21compare_position_code@4",
+  "verdict": "noise",
+  "reason": "shortlist_manager::position_code now inlined (was a call); its source only gained typed accessors with the same constants"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor25compare_shortlist_manager27compare_update_staff_status",
+  "verdict": "noise",
+  "reason": "Vec<(addr,len)> region pushes re-indexed; same regions"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor25compare_shortlist_manager31compare_mark_player_under_offer",
+  "verdict": "noise",
+  "reason": "same memory-access multiset once registers are renamed; register allocation/scheduling noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor25compare_shortlist_manager33compare_try_loan_offer_for_player",
+  "verdict": "noise",
+  "reason": "callee inlined into the comparator (snapshot pushes and slot reads with the shortlist_slot offsets); no displacement changed"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor25compare_shortlist_manager41compare_suspend_clubs_shortlisting_player",
+  "verdict": "noise",
+  "reason": "same memory-access multiset once registers are renamed; register allocation/scheduling noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor26compare_comp_fifa_rankings28compare_collect_ranked_order",
+  "verdict": "noise",
+  "reason": "comp_fifa_rankings::collect_ranked_order now inlined (source unchanged)"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor27comp_eurocomp_intertoto_cup17collect_club_list",
+  "verdict": "noise",
+  "reason": "accesses of a formerly inlined callee now behind a call; noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor27compare_award_award_manager37compare_award_raise_winner_reputation",
+  "verdict": "noise",
+  "reason": "body outlined to a helper (399 -> 53); noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor27compare_comp_cups_spa_super30compare_spa_super_select_teams",
+  "verdict": "noise",
+  "reason": "compare_team_list helper inlined; noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor28compare_comp_cups_eng_cc_cup35compare_eng_cc_cup_collect_entrants",
+  "verdict": "noise",
+  "reason": "helper inlined; noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor29compare_comp_cups_eng_charity38compare_eng_charity_create_round_table",
+  "verdict": "noise",
+  "reason": "identical-code folding: a shared comparator body is now attributed to a different symbol (the twin function shows the opposite change); same displacements"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_eurocomp_uefa_cup22compare_build_entrants",
+  "verdict": "noise",
+  "reason": "helper outlined; noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_eurocomp_uefa_cup35compare_uefa_cup_create_round_table",
+  "verdict": "noise",
+  "reason": "identical-code folding: a shared comparator body is now attributed to a different symbol (the twin function shows the opposite change); same displacements"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_intercomp_goldcup28compare_goldcup_set_up_rules",
+  "verdict": "noise",
+  "reason": "check_set_up_rules helper inlined; noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_intercomp_goldcup31compare_goldcup_create_schedule",
+  "verdict": "noise",
+  "reason": "identical-code folding: a shared comparator body is now attributed to a different symbol (the twin function shows the opposite change); same displacements"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_eng_first31compare_eng_first_advance_stage",
+  "verdict": "noise",
+  "reason": "identical-code folding: a shared comparator body is now attributed to a different symbol (the twin function shows the opposite change); same displacements (177 <-> 8 swap with eng_third)"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_eng_third31compare_eng_third_advance_stage",
+  "verdict": "noise",
+  "reason": "identical-code folding: a shared comparator body is now attributed to a different symbol (the twin function shows the opposite change); same displacements (swap with eng_first)"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_fra_first30compare_fra_first_create_table",
+  "verdict": "noise",
+  "reason": "identical-code folding: a shared comparator body is now attributed to a different symbol (the twin function shows the opposite change); same displacements (eng_second_create_table gained the twin body with its own global 0x9cf5c4)"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_fra_first30compare_fra_first_set_up_rules",
+  "verdict": "noise",
+  "reason": "identical-code folding: a shared comparator body is now attributed to a different symbol (the twin function shows the opposite change); same displacements"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_fra_first33compare_fra_first_create_schedule",
+  "verdict": "noise",
+  "reason": "identical-code folding: a shared comparator body is now attributed to a different symbol (the twin function shows the opposite change); same displacements"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_spa_first27compare_construct_spa_first",
+  "verdict": "noise",
+  "reason": "identical-code folding: a shared comparator body is now attributed to a different symbol (the twin function shows the opposite change); same displacements (construct comparators: swap with bra_reg_rio)"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_spa_first30compare_spa_first_set_up_rules",
+  "verdict": "noise",
+  "reason": "identical-code folding: a shared comparator body is now attributed to a different symbol (the twin function shows the opposite change); same displacements"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_spa_first33compare_spa_first_create_schedule",
+  "verdict": "noise",
+  "reason": "identical-code folding: a shared comparator body is now attributed to a different symbol (the twin function shows the opposite change); same displacements"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_spa_lower30compare_spa_lower_create_table",
+  "verdict": "noise",
+  "reason": "identical-code folding: a shared comparator body is now attributed to a different symbol (the twin function shows the opposite change); same displacements"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_spa_lower30compare_spa_lower_set_up_rules",
+  "verdict": "noise",
+  "reason": "identical-code folding: a shared comparator body is now attributed to a different symbol (the twin function shows the opposite change); same displacements"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor30compare_comp_leagues_spa_lower33compare_spa_lower_create_schedule",
+  "verdict": "noise",
+  "reason": "identical-code folding: a shared comparator body is now attributed to a different symbol (the twin function shows the opposite change); same displacements"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor30compare_transfer_belgium_rules43compare_belgium_rules_init_transfer_windows",
+  "verdict": "noise",
+  "reason": "transfer rules comparator helper now inlined here; noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor30compare_transfer_holland_rules31compare_construct_holland_rules",
+  "verdict": "noise",
+  "reason": "identical-code folding: a shared comparator body is now attributed to a different symbol (the twin function shows the opposite change); same displacements (folded ctor now named after northern_ireland)"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor31compare_comp_leagues_eng_second28compare_construct_eng_second",
+  "verdict": "noise",
+  "reason": "identical-code folding: a shared comparator body is now attributed to a different symbol (the twin function shows the opposite change); same displacements"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor31compare_comp_leagues_eng_second31compare_eng_second_create_table",
+  "verdict": "noise",
+  "reason": "identical-code folding: a shared comparator body is now attributed to a different symbol (the twin function shows the opposite change); same displacements (twin of fra_first_create_table, own global 0x9cf5c4)"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor31compare_comp_leagues_eng_second31compare_eng_second_set_up_rules",
+  "verdict": "noise",
+  "reason": "identical-code folding: a shared comparator body is now attributed to a different symbol (the twin function shows the opposite change); same displacements"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor31compare_comp_leagues_eng_second34compare_eng_second_create_schedule",
+  "verdict": "noise",
+  "reason": "identical-code folding: a shared comparator body is now attributed to a different symbol (the twin function shows the opposite change); same displacements"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor31compare_comp_leagues_eng_second40compare_eng_second_create_play_off_stage",
+  "verdict": "noise",
+  "reason": "compare_playoff_stage helper inlined; noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_bra_reg_rio29compare_construct_bra_reg_rio",
+  "verdict": "noise",
+  "reason": "identical-code folding: a shared comparator body is now attributed to a different symbol (the twin function shows the opposite change); same displacements"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor32compare_comp_leagues_bra_reg_rio32compare_bra_reg_rio_create_table",
+  "verdict": "noise",
+  "reason": "identical-code folding: a shared comparator body is now attributed to a different symbol (the twin function shows the opposite change); same displacements"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor34compare_comp_leagues_bra_nat_third34compare_bra_nat_third_create_table",
+  "verdict": "noise",
+  "reason": "register allocation (ebp<->ebx) and region Vec pushes re-indexed; same displacements"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor35compare_comp_cups_usa_mls_all_stars20compare_set_up_teams",
+  "verdict": "noise",
+  "reason": "helper inlining changed; region Vec pushes re-indexed; noise"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor35compare_comp_leagues_bra_reg_parana35compare_bra_reg_parana_create_table",
+  "verdict": "noise",
+  "reason": "identical-code folding: a shared comparator body is now attributed to a different symbol (the twin function shows the opposite change); same displacements"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor5media25warn_position_rivals_with",
+  "verdict": "noise",
+  "reason": "global loads hoisted into registers (CSE); same accesses"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor5media28squad_reaction_to_story_with",
+  "verdict": "noise",
+  "reason": "global loads hoisted and blocks reordered; same accesses"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__RNvNtNt5ddraw5motor9match_eng19gate_llist_add_tail",
+  "verdict": "noise",
+  "reason": "source unchanged (match_eng.rs only renamed closures elsewhere); rescheduling of an inlined lock sequence"
+ },
+ {
+  "batch": "e01e59ef",
+  "function": "__ehhandler$?write_double_translated_ansi_nolock@@YA?AUwrite_result@?A0x17268360@@HQBDIAAV__crt_cached_ptd_host@@@Z",
+  "verdict": "noise",
+  "reason": "CRT exception handler; codegen noise"
+ }
+]
