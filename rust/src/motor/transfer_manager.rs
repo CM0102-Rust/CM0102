@@ -1238,7 +1238,7 @@ pub(crate) unsafe extern "thiscall" fn accept_transfer_bid(this: usize, slot: us
             }
             let job = read_u8(p + 5);
             // simplification: the original pushes edx with byte +5 and the high bytes of what 0x600a50 left in it; 0x85fc50
-            // reads only the read_i8(mov cl + ([esp+0x284]))
+            // reads only the byte (mov cl, [esp+0x284])
             let salary = exe::staff_contract_set_to_desired_contract(pc, person, seller, (u32::MAX) as u32 as i32, job as u32, 0xb, 0, 0);
             let t = exe::finance_get_max_wage(exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), seller), person, job as u32);
             covered!("cqd_2 expensive swap");

@@ -280,7 +280,7 @@ pub(crate) unsafe extern "thiscall" fn send_scout_report_news(this: usize, r: us
     pr(&mut idx, read_usize(r + scout_report::WORK_PERMIT_GRANTED) as u32);
     for k in 0..n.max(0) as usize {
         let p = r + scout_report::SCOUT_NAME_REF + k * 0x67;
-        pr(&mut idx, read_usize(p + scout_report::SCOUT_NAME_REF + 0xc) as u32);
+        pr(&mut idx, read_usize(p + 0xc) as u32);
         pr(&mut idx, read_usize(p) as u32);
         pr(&mut idx, read_usize(p + 4) as u32);
         pr(&mut idx, read_usize(p + 8) as u32);

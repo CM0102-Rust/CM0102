@@ -1017,7 +1017,7 @@ pub(crate) unsafe extern "C" fn db_files_read_staff_comp_history(stream: usize, 
 ///
 /// `db_files_read_comps_v1(stream, use_zip, records, n)`: for each of the `n` 107-byte records, the fields of
 /// `COMPETITION_V1_LAYOUT`, each read on its own (size, 1) through `zread` `zipdir_zread` (use_zip ≠ 0) or `fread` `exe::crt_fread`;
-/// the reputation, read into one read_i8(the original reads it into an argument slot on its own stack + (already used)),
+/// the reputation, read into one byte (the original reads it into an argument slot on its own stack, already used),
 /// becomes a u16 with no arithmetic. The first read that fails gives 0 (what was already read stays); everything, 1.
 /// Called by `db_files_read_comps` `db_files_read_comps` with the entry version equal to 1; the stock database and the save are
 /// version 2. No SEH and no local variable read without a value.

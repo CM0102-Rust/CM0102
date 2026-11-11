@@ -2189,7 +2189,7 @@ pub(crate) unsafe extern "thiscall" fn count_slots_with_bids(this: usize, club: 
 ///
 /// `shortlist_manager_remove_from_transfer_list(person)`, called by the transfer screens (`0x8f6770`, `0x8f8120`). No
 /// contract (`contract_of_staff`): 0. With one, bit 0 of `.transfer_status()` (on the transfer list) is cleared and it
-/// returns 1 in the low read_i8(the upper ones are those of the contract pointer + (as in the original)).
+/// returns 1 in the low byte (the upper ones are those of the contract pointer, as in the original).
 /// Original: `shortlist_manager_remove_from_transfer_list` (0x844280, shortlist_manager.cpp, stdcall).
 pub(crate) unsafe extern "stdcall" fn shortlist_manager_remove_from_transfer_list(person: usize) -> u32 {
     let c = Contract((contract_of_staff(person)).addr());

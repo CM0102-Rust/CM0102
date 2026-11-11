@@ -657,7 +657,7 @@ pub(crate) unsafe fn send_prize_news(cup: Cup, club: usize, value: i32, next: u3
         return;
     }
     // simplification: the original pushes the dword of a local of which it writes only the low byte (the high bits are stack leftover);
-    // the news item only reads the read_i8(movsx ecx + (byte [esp+0x114])): here, the clean byte.
+    // the news item only reads the byte (movsx ecx, byte [esp+0x114]): here, the clean byte.
     exe::comp_send_prize_money_news(cup, club, value, value >> 31, -1, next, fixture, (outcome as u32) as i32);
 }
 

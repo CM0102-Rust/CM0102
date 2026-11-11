@@ -612,7 +612,7 @@ pub(crate) const CONFED_CUP_KNOCKOUT: [GoldcupScheduleOp; 57] = [
     Cqp12X(0x130, 0), Cqp12X(0x134, 0),
 ];
 
-/// Copa America phase description by signed phase read_i8(groups below 2 + (knockout at 2)).
+/// Copa America phase description by signed phase byte (groups below 2, knockout at 2).
 pub(crate) fn copa_america_phase(stage: u32) -> Option<GoldcupStagePlan> {
     let f = stage as u8 as i8;
     if f < 2 {
