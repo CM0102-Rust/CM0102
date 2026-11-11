@@ -1,0 +1,4 @@
+compila (11/11/2026, leitor B do mercado): o item aplicado como o fila.py aplica (linha no routines! + codigo.rs na âncora) numa cópia de rust/ e cm0102-base/ fora do projeto, cargo build --release sem erro e sem aviso novo; 0x8c0810 igual no cm0102.exe e no cm0102-1080.exe (bytes 0x8c0810..0x8c0f40); prólogo conferido na desmontagem
+NÃO provado: comparação, carreiras Rust x2 com o detector e as 3 mutações não rodaram (as 5 vagas do laboratório ocupadas pelos outros leitores e o pool não paginado em 2,84 GB, perto do limite de 3 GB do vigia); a rotina tem 13 chamadas até 2002-06-01 (cobertura de 17/10): a cadeia da leva tem de mostrar se as mutações são pegas
+
+prova 11/11/2026 (bancada 3, os 5 itens juntos): comparacao ate 2002-01-01 0 div; Rust x2 iguais (694677f1), detector igual; mutacoes acusadas (mkc1_emprestimo_um_mes_a_mais pelo comparador; mkb1_verba_dobrada tirada: o ramo "over budget" nao roda ate 2002-06-01)

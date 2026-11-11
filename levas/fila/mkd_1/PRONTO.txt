@@ -1,0 +1,3 @@
+NAO PROVADO NO JOGO: compila com o motor atual (copia propria com a rotina na tabela, 0 avisos do item, 11/11/2026); ancoras das 3 mutacoes conferidas (1 ocorrencia cada); prologo e 0x6b0 bytes iguais no cm0102-1080.exe; logica transcrita da desmontagem (pacotes/0x866830). Falta: comparacao ate 2002-06-01, Rust x2 com detector e as 3 mutacoes (a trava do laboratorio estava ocupada e a vigia recusou: 2,3 GB livres, minimo 4).
+
+prova 11/11/2026 (bancada 3, os 5 itens juntos): comparacao ate 2002-01-01 0 div; Rust x2 iguais (694677f1), detector igual; mutacoes acusadas (mkc1_emprestimo_um_mes_a_mais pelo comparador; mkb1_verba_dobrada tirada: o ramo "over budget" nao roda ate 2002-06-01)
