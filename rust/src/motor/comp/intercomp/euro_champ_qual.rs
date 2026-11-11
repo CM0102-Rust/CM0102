@@ -44,7 +44,7 @@ pub(crate) unsafe fn set_up_rules(this: League) -> u32 {
     this.set_next_draw_day((data[0] as u16) as i16);
     this.set_next_draw_year_offset((0) as i16);
     crate::comparison::branch("cqs_8 euro rules");
-    let rounds: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let rounds: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let t = rounds(this.addr(), 0xffff_ffff, this.addr() + league::ROUND_COUNT, this.addr() + league::STAGE_ID, 0);
     this.set_round_dates((t as u32) as usize);
     1

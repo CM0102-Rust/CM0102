@@ -37,7 +37,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_final_stage(this: us
     let mut list = [0usize; 2];
     list[0] = stage_leader(this, 8); // cqs4: the group A winner
     list[1] = stage_leader(this, 9);
-    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = table(this.addr(), 10, &mut rodadas, &mut extra, 0);
     let p = exe::crt_operator_new(0xb2);
@@ -125,7 +125,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_start_new_season(this: usiz
     crate::comparison::branch("cqs_4 serie c rollover");
     let v = if n > 0 { exe::crt_malloc((n * 4) as u32) } else { 0 };
     write_usize(this.addr() + league::STAGES, v);
-    let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x8c));
+    let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::SET_UP_RULES));
     if rules(this.addr()) == 0 {
         show_error_at(0x98aba4, 0x202);
         return 0;
@@ -147,7 +147,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_start_new_season(this: usiz
     for g in 0..7 {
         exe::branatthird_create_group_stage(this, g);
     }
-    let predicted: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x5c));
+    let predicted: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::SET_PREDICTED_POSITIONS));
     predicted(this.addr());
     let l = read_usize(this.addr() + bra_nat_third::CLUB_LIST);
     if l != 0 {
@@ -238,7 +238,7 @@ pub(crate) type LeagueStageCtorFn = unsafe extern "thiscall" fn(usize, usize, u3
 ///    e a tabela liberados (free 0x9452ca) e +0x30 = g (o byte com sinal).
 pub(crate) unsafe fn bra_nat_third_create_group_stage_cqs3_group(this: League, g: u32, pv: usize) {
     let construct: LeagueStageCtorFn = core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
-    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = table(this.addr(), g, &mut rodadas, &mut extra, 0);
     let v = exe::crt_malloc(((this.club_count() as i32) << 2) as u32);
@@ -349,7 +349,7 @@ pub(crate) unsafe extern "thiscall" fn create_second_round_stage(this: usize) {
         };
         write_usize(list + 4 * SECOND_ROUND_SEEDS[k] as usize, c);
     }
-    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = table(this.addr(), 7, &mut rodadas, &mut extra, 0);
     let p = exe::crt_operator_new(0xb2);
@@ -417,7 +417,7 @@ pub(crate) unsafe extern "thiscall" fn create_third_round_groups(this: usize) {
     }
     exe::comp_util_shuffle_pointer_array((v.as_mut_ptr()) as usize, 8); // cqs3: os oito vencedores embaralhados
     for (k, f) in [(8u32, 0x353u32), (9, 0x363)] {
-        let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+        let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
         let (mut rodadas, mut extra) = (0i16, 0i16);
         let t = table(this.addr(), k, &mut rodadas, &mut extra, 0);
         let p = exe::crt_operator_new(0xee);

@@ -170,7 +170,7 @@ pub(crate) unsafe extern "thiscall" fn run_group_draw(this: usize) {
         exe::worldcup_create_group_stage(this, g, list);
     }
     exe::crt_free(list);
-    let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x5c));
+    let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::SET_PREDICTED_POSITIONS));
     predicted(this.addr());
     let body = read_usize(read_usize(read_usize(G_DISCIPLINE)).wrapping_add((this.discipline_rule() as i8 as i32 * 4) as usize));
     exe::rulingbody_reset_bookings_for_club(body, 0);
@@ -318,7 +318,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_create_group_stage(this: usize,
             break;
         }
     }
-    let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let (mut rodadas, mut id) = (0i16, 0i16);
     let table = rounds_of_cup(this.addr(), g, &mut rodadas, &mut id, 0);
     let p = exe::crt_operator_new(0xee);

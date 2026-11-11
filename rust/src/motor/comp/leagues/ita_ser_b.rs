@@ -50,13 +50,13 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_b_update_for_date(this: usize, to
         this.set_stage_count(1);
         let v = exe::crt_malloc(4);
         this.set_stages(v);
-        let proxima: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x28));
+        let proxima: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::ADVANCE_STAGE));
         proxima(this.addr());
         return r;
     }
     this.set_complete(0);
     this.set_tiebreak_matches(0);
-    let status: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x94));
+    let status: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + league_vtable::UPDATE_POSITIONS_AND_STATUS));
     status(this.addr());
     r
 }

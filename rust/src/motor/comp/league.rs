@@ -758,14 +758,14 @@ pub(crate) unsafe extern "thiscall" fn league_update_for_date(this: usize, data:
         let mut i = 0i32;
         while i <= this.current_stage() as i32 {
             let stage = read_usize(this.stages() + i as usize * 4);
-            let f: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(vtable_method(League(stage), 0x14));
+            let f: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(vtable_method(League(stage), comp_vtable::UPDATE_FOR_DATE));
             f(stage, data, full);
             i += 1;
         }
     }
     if read_i16(this.addr() + league::LAST_RESULT_DATE + 2) == read_i16(G_CURRENT_DATE_YEAR) && this.last_result_date() == read_i16(G_CURRENT_DATE) && this.complete() == 0 {
         this.set_table_column(0);
-        let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(vtable_method(this, 0x94));
+        let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(vtable_method(this, league_vtable::UPDATE_POSITIONS_AND_STATUS));
         f(this.addr());
     }
     let mut follow_tv = true;
@@ -773,14 +773,14 @@ pub(crate) unsafe extern "thiscall" fn league_update_for_date(this: usize, data:
         if this.table() == 0 {
             follow_tv = false;
         } else if !same_date(this.addr() + league::LAST_UPDATE_DATE, data) {
-            let f: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(vtable_method(this, 0x10));
+            let f: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(vtable_method(this, comp_vtable::CHECK_COMPLETE));
             f(this.addr(), 0, 0);
             if this.complete() == 1 {
                 let mut acabadas = true;
                 let mut i = 0i32;
                 while i <= this.current_stage() as i32 {
                     let stage = read_usize(this.stages() + i as usize * 4);
-                    let g: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(vtable_method(League(stage), 0x10));
+                    let g: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(vtable_method(League(stage), comp_vtable::CHECK_COMPLETE));
                     if g(stage, 0, 1) as u8 == 0 {
                         acabadas = false;
                         break;
@@ -789,7 +789,7 @@ pub(crate) unsafe extern "thiscall" fn league_update_for_date(this: usize, data:
                 }
                 if acabadas {
                     if (this.current_stage() as i32) < (this.stage_count() as i32).wrapping_sub(1) {
-                        let h: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(vtable_method(this, 0x28));
+                        let h: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(vtable_method(this, comp_vtable::ADVANCE_STAGE));
                         h(this.addr());
                     } else if this.season_closed() == 0 {
                         exe::club_history_record_comp_season(read_usize(G_CLUB_HISTORY), this);
@@ -799,7 +799,7 @@ pub(crate) unsafe extern "thiscall" fn league_update_for_date(this: usize, data:
                         if this.tiebreak_matches() != 0 {
                             show_error_at(0x9f15f4, 0x74c);
                         }
-                        let h: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(vtable_method(this, 0x30));
+                        let h: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(vtable_method(this, comp_vtable::RECORD_SEASON_HONOURS));
                         h(this.addr());
                         if this.comp_stats() != 0 {
                             exe::comp_stats_update_season_end_records(this.comp_stats());
@@ -986,7 +986,7 @@ pub(crate) unsafe extern "thiscall" fn create_fixtures(this: usize) -> u32 {
     r.set_home_result_mark((result_mark::NONE) as i8);
     r.set_away_result_mark((result_mark::NONE) as i8);
     r.set_stage(0xff);
-    let prepare: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(vtable_method(this, 0x7c));
+    let prepare: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(vtable_method(this, comp_vtable::SET_FIXTURE_SUBSTITUTES));
     prepare(this.addr(), r.addr());
     let ult = this.round_dates().wrapping_add((this.round_count() as i32 * 0x41) as usize);
     // simplification: the original pushes the day and the year with leftover in the high bytes; 0x549ef0 only reads the words
@@ -1267,7 +1267,7 @@ pub(crate) unsafe fn league_announce_team_status(league: League, i: i32, status:
         }
         return;
     }
-    let f: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(read_usize(read_usize(league.addr()) + 0x40));
+    let f: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(read_usize(read_usize(league.addr()) + comp_vtable::ANNOUNCE_TEAM_STATUS));
     f(league.addr(), read_usize(league_table_row(league, i)), status, high | league.stage_index() as u32, 0, 0);
 }
 
@@ -1578,7 +1578,7 @@ pub(crate) unsafe extern "thiscall" fn update_positions_and_status(this: usize) 
             let li = league_table_row(this, ii);
             // simplification: the original pushes the worst, the best, the position and the stage in registers with garbage in the bits of
             // top; the +0x68 ones (0x573260, 0x578660, Comp::set_club_progress 0x48e380) only read the byte.
-            let f: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x68));
+            let f: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::SET_CLUB_PROGRESS));
             f(this.addr(), read_usize(li), this.stage_index() as u32, (i as u8).wrapping_add(1) as u32, read_u8(li + league_table_row::BEST_POSSIBLE_POSITION) as u32, read_u8(li + league_table_row::WORST_POSSIBLE_POSITION) as u32);
         }
         i += 1;
@@ -1698,7 +1698,7 @@ pub(crate) unsafe extern "thiscall" fn pay_prize_money(league: usize) {
             return show_error_at(0x9f15f4, 0x1df);
         }
         let comp = read_usize(t.wrapping_add(read_usize(league.competition().addr()).wrapping_mul(4)));
-        let pay: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(read_usize(read_usize(comp) + 0x6c));
+        let pay: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(read_usize(read_usize(comp) + comp_vtable::PAY_STAGE_PRIZE_MONEY));
         return pay(comp, league.addr());
     }
     let s = sum_of_positions(league.club_count());
@@ -1799,7 +1799,7 @@ pub(crate) unsafe extern "thiscall" fn announce_team_status(league: usize, club:
         return 0;
     }
     let comp = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(league.competition().addr()).wrapping_mul(4)));
-    let virtual44: unsafe extern "thiscall" fn(usize, usize, u32, u32, *mut u32, u32, u32) -> i32 = core::mem::transmute(read_usize(read_usize(comp) + 0x44));
+    let virtual44: unsafe extern "thiscall" fn(usize, usize, u32, u32, *mut u32, u32, u32) -> i32 = core::mem::transmute(read_usize(read_usize(comp) + comp_vtable::UPDATE_STAFF_RECORDS_FOR_STATUS));
     let r = virtual44(comp, club.addr(), status, stage, &mut out, 0, 0);
     if r == -1 {
         return 0;
@@ -1908,7 +1908,7 @@ pub(crate) unsafe extern "thiscall" fn league_add_result(league: usize, p: usize
             return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(IDX_LEAGUE_ADD_RESULT)(league.addr(), p.addr(), game);
         }
         let filha = read_usize(league.stages().wrapping_add(4 * k as usize));
-        let add: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(read_usize(read_usize(filha) + 4));
+        let add: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(read_usize(read_usize(filha) + comp_vtable::ADD_RESULT));
         return add(filha, p.addr(), game);
     }
     if stage_of_league != stage && stage_of_league != 0xfe {
@@ -2175,7 +2175,7 @@ pub(crate) unsafe extern "thiscall" fn update_projected_positions(this: usize, c
     // (here, zero); the 69 versions of virtual +0x68 only read the low byte of each argument (or pass the dwords on to
     // another one that reads)
     let progresso: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) =
-        core::mem::transmute(read_usize(read_usize(this.addr()) + 0x68));
+        core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::SET_CLUB_PROGRESS));
     let competition = (melhor & !0xff) | this.stage_index() as u32; // dl over the edx of the second local
     progresso(this.addr(), club, competition, normal, melhor, pior);
     1
@@ -2422,7 +2422,7 @@ pub(crate) unsafe extern "thiscall" fn apply_result_to_table(league: usize, p: u
         league_add_i16(r + league_table_row::AWAY_GOALS_AGAINST, contra as i16);
     }
     let points = |club: usize| -> i16 {
-        let f: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(read_usize(read_usize(pontuador) + 0x90));
+        let f: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(read_usize(read_usize(pontuador) + league_vtable::POINTS_FOR_RESULT));
         f(pontuador, club, p.addr()) as u8 as i8 as i16
     };
     // home team wins: its +0x20 and points (+0x27), defeat (+0x30) for the away team; loses: +0x22 and +0x2e with the points (+0x35)
@@ -3095,7 +3095,7 @@ pub(crate) unsafe extern "thiscall" fn league_check_complete(league: usize, stag
         if league.current_stage() as i32 >= 0 {
             loop {
                 let stage = read_usize(league.stages() + 4 * k);
-                let completa: unsafe extern "thiscall" fn(usize, u32, u32) -> u8 = core::mem::transmute(read_usize(read_usize(stage) + 0x10));
+                let completa: unsafe extern "thiscall" fn(usize, u32, u32) -> u8 = core::mem::transmute(read_usize(read_usize(stage) + comp_vtable::CHECK_COMPLETE));
                 if completa(stage, 0, 1) == 0 {
                     return 0;
                 }
@@ -3111,7 +3111,7 @@ pub(crate) unsafe extern "thiscall" fn league_check_complete(league: usize, stag
     }
     if league.complete() == 0 {
         if warn != 0 {
-            let end: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(league.addr()) + 0x94));
+            let end: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(league.addr()) + league_vtable::UPDATE_POSITIONS_AND_STATUS));
             end(league.addr());
         }
         league.set_complete((1) as usize);
@@ -3222,7 +3222,7 @@ pub(crate) unsafe extern "thiscall" fn league_record_season_honours(league: usiz
     }
     let comp = league.competition().addr();
     let target = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(4 * read_u32(comp) as usize));
-    let pede: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(target) + 0x88));
+    let pede: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(target) + comp_vtable::HAS_HOST_COUNTRY));
     let mut highlight = 0usize;
     if pede(target) != 0 {
         let (mut a, mut b) = (0i32, 0i32);

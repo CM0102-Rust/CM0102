@@ -49,7 +49,7 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_update_for_date(this: 
     if year_of_today == year && day_of_today == day && this.active() == 0 && full == 0 {
         crate::comparison::branch("cqt_10 oceania draw");
         exe::oceaniaclubchamp_select_qualified_clubs(this);
-        let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x5c));
+        let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::SET_PREDICTED_POSITIONS));
         predicted(this.addr());
         if exe::oceaniaclubchamp_create_group_a_table(this) == 0 {
             show_error_at(0xa6a068, 0x21d);
@@ -151,7 +151,7 @@ pub(crate) unsafe extern "thiscall" fn create_group_b_stage(this: usize) -> u32 
         crate::comparison::branch("cqt_10 group b team");
         write_usize(teams + n * 4, selected_club(this, 4 + n)); // cqt10: the team in the group B slot
     }
-    let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let (mut rodadas, mut id) = (0i16, 0i16);
     let table = rounds_of_cup(this.addr(), 0, &mut rodadas, &mut id, 0);
     let p = exe::crt_operator_new(0xee);
@@ -445,7 +445,7 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_create_knockout_stage(
     for (k, &c) in semifinalists(this).iter().enumerate() {
         write_usize(list + k * 4, c);
     }
-    let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let (mut rodadas, mut id) = (0i16, 0i16);
     let table = rounds_of_cup(this.addr(), 1, &mut rodadas, &mut id, 0);
     let p = exe::crt_operator_new(0xb2);

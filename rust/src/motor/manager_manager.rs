@@ -807,7 +807,7 @@ pub(crate) unsafe extern "thiscall" fn set_season_expectations(this: usize, club
             let ent = exe::nationalteams_get_current_competition(read_usize(G_NATIONAL_TEAMS), club.nation().addr());
             let co = if ent != 0 { read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((read_i32(ent) as usize).wrapping_mul(4))) } else { 0 };
             if co != 0 {
-                let exp: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(read_usize(read_usize(co) + 0x70));
+                let exp: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(read_usize(read_usize(co) + comp_vtable::GET_QUALIFICATION_STATUS));
                 let w = exp(co, club.addr()) as u16;
                 write_i16(ln() + board_record::EXPECTATION_FLAGS, w as i16);
                 write_u32(ln() + board_record::TARGET_POSITION, read_usize(ent) as u32);
@@ -938,17 +938,17 @@ pub(crate) unsafe extern "thiscall" fn set_season_expectations(this: usize, club
     let co = club_division_comp(club);
     let ou = |m: u8| write_u8(ln() + board_record::EXPECTATION_FLAGS, read_u8(ln() + board_record::EXPECTATION_FLAGS) | m);
     'marcas: {
-        if call_comp_virtual(co, 0x98) == 0 && meta() <= slots {
+        if call_comp_virtual(co, league_vtable::HAS_AUTOMATIC_PROMOTION) == 0 && meta() <= slots {
             ou(expectation_flags::TITLE_CHALLENGE as u8);
             break 'marcas;
         }
         let na = club.nation().addr();
-        if na != 0 && read_i32(na) != read_i32(KEY_NATION_AUSTRALIA) && call_comp_virtual(club_division_comp(club), 0x98) == 0 && meta() <= slots + outras {
+        if na != 0 && read_i32(na) != read_i32(KEY_NATION_AUSTRALIA) && call_comp_virtual(club_division_comp(club), league_vtable::HAS_AUTOMATIC_PROMOTION) == 0 && meta() <= slots + outras {
             ou(expectation_flags::EUROPEAN_QUALIFICATION as u8);
             break 'marcas;
         }
         let co = club_division_comp(club);
-        if call_comp_virtual(co, 0x98) != 0 && meta() <= read_i8(club_division_comp(club) + league::PROMOTED_COUNT) as i32 {
+        if call_comp_virtual(co, league_vtable::HAS_AUTOMATIC_PROMOTION) != 0 && meta() <= read_i8(club_division_comp(club) + league::PROMOTED_COUNT) as i32 {
             ou(expectation_flags::PROMOTION as u8);
             break 'marcas;
         }
@@ -962,19 +962,19 @@ pub(crate) unsafe extern "thiscall" fn set_season_expectations(this: usize, club
             write_i16(ln() + board_record::EXPECTATION_FLAGS, expectation_flags::RESPECTABLE_POSITION);
             break 'marcas;
         }
-        if call_comp_virtual(co, 0x9c) != 0 {
+        if call_comp_virtual(co, league_vtable::HAS_RELEGATION) != 0 {
             let co = club_division_comp(club);
             if meta() >= read_i16(co + league::CLUB_COUNT) as i32 - read_i8(co + league::RELEGATED_COUNT) as i32 {
                 ou(expectation_flags::RELEGATION_BATTLE as u8);
                 break 'marcas;
             }
         }
-        let r = call_comp_virtual(club_division_comp(club), 0x9c);
+        let r = call_comp_virtual(club_division_comp(club), league_vtable::HAS_RELEGATION);
         write_i16(ln() + board_record::EXPECTATION_FLAGS, if r != 0 { expectation_flags::AVOID_RELEGATION } else { 0 });
     }
     // the chairman’s random rolls and the cup’s league
     let bf = club.chairman().addr();
-    if read_u8(ln() + board_record::FLAGS) & board_record_flags::NEW_MANAGER == 0 && call_comp_virtual(club_division_comp(club), 0x98) == 0 && bf != 0 && read_usize(bf + staff::NON_PLAYER) != 0 {
+    if read_u8(ln() + board_record::FLAGS) & board_record_flags::NEW_MANAGER == 0 && call_comp_virtual(club_division_comp(club), league_vtable::HAS_AUTOMATIC_PROMOTION) == 0 && bf != 0 && read_usize(bf + staff::NON_PLAYER) != 0 {
         let p1d = || (club.chairman().non_player().patience() as i8) as i32;
         crate::comparison::branch("cqc_9 chairman draw");
         let r = friendly_random(0x32); // cqc9: the chairman random draw
@@ -3143,7 +3143,7 @@ pub(crate) unsafe extern "thiscall" fn consider_sacking_manager(this: usize, clu
             if slots != 0 && ln.best_position() as i32 <= slots as i32 && ln.matches_played() as i32 > ceiling {
                 return;
             }
-            let virtual_98: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(comp) + 0x98));
+            let virtual_98: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(comp) + league_vtable::HAS_AUTOMATIC_PROMOTION));
             if virtual_98(comp) != 0 {
                 let comp = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(club.division().addr()).wrapping_mul(4)));
                 if ln.best_position() as i32 <= read_u8(comp + league::PROMOTED_COUNT) as i8 as i32 && ln.matches_played() as i32 > ceiling {
@@ -3509,7 +3509,7 @@ pub(crate) unsafe extern "thiscall" fn review_national_team_performance(this: us
         write_i16(club_board_row(this, national_team) + board_record::CONFIDENCE, 0x1964); // new manager
     }
     let o = object();
-    let rating_of: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(read_usize(read_usize(o) + 0x74));
+    let rating_of: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(read_usize(read_usize(o) + comp_vtable::GET_QUALIFICATION_STATUS_CHANGE));
     let rating = rating_of(o, national_team.addr()) as u8 as i8;
     crate::comparison::branch("cpq_2 national team evaluated");
     let c = club_board_row(this, national_team) + board_record::CONFIDENCE;

@@ -50,7 +50,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_update_for_date(this: usize
         && core::ptr::read_unaligned(junho.as_ptr() as *const u16) == core::ptr::read_unaligned(today as *const u16)
         && this.year() as i32 != year_of_today as i32
     {
-        let turned: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + 8));
+        let turned: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::START_NEW_SEASON));
         turned(this.addr());
     }
     if this.active() == 0 && full != 0 {
@@ -71,7 +71,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_update_for_date(this: usize
             for g in 0..4i32 {
                 exe::conmebolmerc_create_group_stage(this, g);
             }
-            let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x5c));
+            let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::SET_PREDICTED_POSITIONS));
             predicted(this.addr());
             exe::crt_free(read_usize(this.addr() + conmebol_merc::DRAWN_CLUBS));
             write_usize(this.addr() + conmebol_merc::DRAWN_CLUBS, 0);
@@ -174,7 +174,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_group_stage(this: us
         write_usize(teams + n * 4, conmebol_merc_drawn_club(this, k as usize)); // cqr11: the team in the group slot
         k += 1;
     }
-    let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let (mut rodadas, mut id) = (0i16, 0i16);
     let table = rounds_of_cup(this.addr(), g, &mut rodadas, &mut id, 0);
     let p = exe::crt_operator_new(0xee);

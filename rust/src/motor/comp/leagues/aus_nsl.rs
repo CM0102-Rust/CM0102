@@ -73,7 +73,7 @@ pub(crate) unsafe extern "thiscall" fn create_finals_series_stage(this: usize) -
     for (i, c) in clubs.iter_mut().enumerate() {
         *c = aus_nsl_table_row_club(this, i); // cqr3: the top six of the table
     }
-    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = table(this.addr(), 0, &mut rodadas, &mut extra, 0);
     let p = exe::crt_operator_new(0xee);
@@ -133,7 +133,7 @@ pub(crate) unsafe extern "thiscall" fn create_grand_final_stage(this: usize) {
     let series = read_usize(this.stages());
     write_usize(list, aus_nsl_table_row_club(League(series), 0)); // cqr3: the first of the final series
     write_usize(list + 4, aus_nsl_table_row_club(League(series), 1)); // cqr3: the second of the final series
-    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = table(this.addr(), 1, &mut rodadas, &mut extra, 0);
     let p = exe::crt_operator_new(0xb2);

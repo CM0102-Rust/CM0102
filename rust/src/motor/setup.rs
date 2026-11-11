@@ -1215,7 +1215,7 @@ pub(crate) unsafe extern "C" fn save_game_data(path: *const u8, a4: u32) -> u32 
             SaveStep::Virtual(g) => {
                 let o = u(g) as usize;
                 if o != 0 {
-                    let f: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(read_usize(read_usize(o) + 0x1c));
+                    let f: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(read_usize(read_usize(o) + comp_vtable::SAVE_TO_TEMP_FILE));
                     f(o, 1);
                 }
             }

@@ -245,7 +245,7 @@ pub(crate) unsafe extern "thiscall" fn create_section_stage(this: usize) {
         write_usize(teams + i as usize * 4, read_usize(read_usize(this.addr() + eng_auto_cup::SELECTED_CLUBS) + i as usize * 4)); // cqs5: the order of the brackets
         i += 1;
     }
-    let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let table = rounds_of_cup(this.addr(), 0, &mut rodadas, &mut extra, 0);
     let p = exe::crt_operator_new(0xb2);
@@ -336,7 +336,7 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_create_final_stage(this: usi
     if let Some(c) = first_entrant_with_status(read_usize(read_usize(this.stages()) + cup::TEAM_TABLE), this.team_count() as i32, 1) { // cqs6: the brackets finalist
         write_usize(l + 4, c);
     }
-    let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let table = rounds_of_cup(this.addr(), 1, &mut rodadas, &mut extra, 0);
     let p = exe::crt_operator_new(0xb2);

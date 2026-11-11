@@ -597,15 +597,15 @@ pub(crate) unsafe extern "thiscall" fn eng_cc_cup_update_for_date(this: usize, t
             show_error_at(0x9c4224, 0x161);
             return 0;
         }
-        if call_cup_virtual(this, 0x8c) < 0 {
+        if call_cup_virtual(this, comp_vtable::SET_UP_RULES) < 0 {
             show_error_at(0x9c4224, 0x168);
             return 0;
         }
-        if call_cup_virtual(this, 0x94) < 0 {
+        if call_cup_virtual(this, cup_vtable::MAP_FIXTURE_TREE) < 0 {
             show_error_at(0x9c4224, 0x16f);
             return 0;
         }
-        call_cup_virtual(this, 0x5c);
+        call_cup_virtual(this, comp_vtable::SET_PREDICTED_POSITIONS);
     }
     eng_cc_cup_cup_update_for_date(this, today, stage)
 }

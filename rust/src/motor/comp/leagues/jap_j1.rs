@@ -51,7 +51,7 @@ pub(crate) unsafe extern "thiscall" fn create_championship_final_stage(this: usi
     }
     write_usize(list, half_champion(this, 0)); // cqq9: the first-stage champion
     write_usize(list + 4, half_champion(this, 1)); // cqq9: the second-stage champion
-    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = table(this.addr(), 2, &mut rodadas, &mut extra, 0);
     let p = exe::crt_operator_new(0xb2);
@@ -113,7 +113,7 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u
         f(c)
     };
     write_u32(this.addr() + league::SEASON_CLOSED, 0);
-    let cadeia: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + 0xb0));
+    let cadeia: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + league_vtable::PROCESS_PROMOTION_RELEGATION_CHAIN));
     cadeia(this.addr(), 1);
     exe::league_free_table(this, 0);
     let l = this.round_dates();
@@ -155,7 +155,7 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u
     this.set_year(a.wrapping_add(1)); // cqq9: the next year of the J1
     write_i32(this.addr() + league::CURRENT_STAGE, -1);
     crate::comparison::branch("cqq_9 j1 rollover");
-    let error = if virtual_(this.addr(), 0x8c) == 0 {
+    let error = if virtual_(this.addr(), comp_vtable::SET_UP_RULES) == 0 {
         0x1be
     } else if core::mem::transmute::<usize, unsafe extern "thiscall" fn(usize) -> u32>(0x6634e0usize)(this.addr()) == 0 {
         0x1c5
@@ -171,7 +171,7 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u
         return 0;
     }
     virtual_(read_usize(read_usize(G_COMP_OBJECT_TABLE) + 4 * read_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2)), 8);
-    virtual_(this.addr(), 0x5c);
+    virtual_(this.addr(), comp_vtable::SET_PREDICTED_POSITIONS);
     exe::league_set_club_season_expectations(this);
     exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), this.competition().addr()) as u32 
 }

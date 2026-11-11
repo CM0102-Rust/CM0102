@@ -417,7 +417,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_for_date(this: usize, to
                 this.set_stage_count(1);
                 let v = exe::crt_malloc(4);
                 this.set_stages(v);
-                let proxima: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x28));
+                let proxima: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::ADVANCE_STAGE));
                 proxima(this.addr());
                 return r;
             }
@@ -429,7 +429,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_for_date(this: usize, to
     }
     this.set_complete(0);
     this.set_tiebreak_matches(0);
-    let status: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x94));
+    let status: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + league_vtable::UPDATE_POSITIONS_AND_STATUS));
     status(this.addr());
     r
 }
@@ -546,9 +546,9 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_staff_records_for_status
     }
     this.set_tiebreak_matches(0);
     this.set_complete(0);
-    let status_f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x94));
+    let status_f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + league_vtable::UPDATE_POSITIONS_AND_STATUS));
     status_f(this.addr());
-    let end: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x10));
+    let end: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CHECK_COMPLETE));
     end(this.addr(), 0, 0);
     this.set_complete(1);
     0xffff_ffff
@@ -1531,7 +1531,7 @@ pub(crate) unsafe fn ita_ser_a_apply_league_rules(this: League, written: &[(usiz
         }
     }
     if !ITA_SER_A_RULES_DRY_RUN.load(Relaxed) {
-        let rounds: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+        let rounds: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
         let t = rounds(this.addr(), 0xffff_ffff, this.addr() + league::ROUND_COUNT, this.addr() + league::STAGE_ID, 0);
         this.set_round_dates(t);
     }

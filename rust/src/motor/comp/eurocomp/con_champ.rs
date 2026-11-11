@@ -145,7 +145,7 @@ pub(crate) unsafe extern "thiscall" fn con_champ_update_for_date(this: usize, to
             return 0;
         }
         crate::comparison::branch("cqi_11 national team day");
-        let prever: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x5c));
+        let prever: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::SET_PREDICTED_POSITIONS));
         prever(this.addr());
     }
     exe::cup_update_for_date(this, today, stage)
@@ -168,7 +168,7 @@ pub(crate) unsafe extern "thiscall" fn con_champ_update_for_date(this: usize, to
 pub(crate) unsafe extern "thiscall" fn con_champ_set_up_rounds(this: usize) -> u32 {
     let this = Cup(this);
     this.set_prize_fund((0x1e8480) as i32);
-    let table: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let table: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let t = table(this.addr(), 0xffff_ffff, this.addr() + cup::ROUND_COUNT, this.addr() + cup::STAGE_LABEL, 0);
     this.set_round_table((t as u32) as usize);
     1

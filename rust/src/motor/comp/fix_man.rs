@@ -347,7 +347,7 @@ pub(crate) unsafe fn comp_clash_rule(id_of: usize, a: usize, b: usize) -> u32 {
     if c == 0 {
         return 0;
     }
-    let f: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(read_usize(read_usize(c) + 0x60));
+    let f: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(read_usize(read_usize(c) + comp_vtable::COUNTS_FOR_FIXTURE_CLASH));
     f(c, a, b)
 }
 
@@ -1021,7 +1021,7 @@ pub(crate) unsafe extern "thiscall" fn add_fixture(this: usize, game: usize, cle
             if (kind == 1 || kind == 9) && game.competition().addr() != 0 && read_usize(G_COMP_OBJECT_TABLE) != 0 {
                 let c = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((read_usize(game.competition().addr()) as usize).wrapping_mul(4)));
                 if c != 0 {
-                    let accepted: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(read_usize(read_usize(c) + 0x64));
+                    let accepted: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(read_usize(read_usize(c) + comp_vtable::ACCEPTS_FIXTURE));
                     if accepted(c, game.addr()) == 0 {
                         if l != 0 {
                             free_list(l);

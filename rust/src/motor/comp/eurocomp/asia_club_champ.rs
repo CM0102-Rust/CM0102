@@ -83,7 +83,7 @@ pub(crate) unsafe fn create_asia_group(this: Cup, g: u32, teams: *const usize, a
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
     let rules: [u8; 4] = [1, 2, 0, 0];
     let rules_b: [u8; 4] = [2, 0, 0, 0];
-    let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let (mut rodadas, mut id) = (0i16, 0i16);
     let table = rounds_of_cup(this.addr(), g, &mut rodadas, &mut id, 0);
     let p = exe::crt_operator_new(0xee);
@@ -196,7 +196,7 @@ pub(crate) unsafe extern "thiscall" fn asia_club_champ_create_semi_final_stage(t
     for (k, &c) in asia_semi_finalists(this).iter().enumerate() {
         write_usize(list + k * 4, c);
     }
-    let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let (mut rodadas, mut id) = (0i16, 0i16);
     let table = rounds_of_cup(this.addr(), 3, &mut rodadas, &mut id, 0);
     let p = exe::crt_operator_new(0xb2);

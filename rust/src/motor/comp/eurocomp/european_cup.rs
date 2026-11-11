@@ -238,7 +238,7 @@ pub(crate) unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
             exe::finance_add_prize_money(exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), c), value);
             exe::comp_send_prize_money_news(this, c, value, 0, -1, 0x449, 0, -2);
         }
-        let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+        let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
         let (mut rodadas, mut id) = (0i16, 0i16);
         let table = rounds_of_cup(this.addr(), g as u32, &mut rodadas, &mut id, 0);
         let p = exe::crt_operator_new(0xee);
@@ -305,7 +305,7 @@ pub(crate) unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
         }
         k += 1;
     }
-    let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(uefa.addr()) + 0x5c));
+    let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(uefa.addr()) + comp_vtable::SET_PREDICTED_POSITIONS));
     predicted(uefa.addr());
 }
 
@@ -453,7 +453,7 @@ pub(crate) unsafe extern "thiscall" fn european_cup_rank_teams(this: usize) {
         i += 1;
     }
     exe::comp_util_sort_clubs_by_strength(v, this.entrant_count() as i32);
-    let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let (mut nm, mut id) = (0i16, 0i16);
     let knockout = rounds_of_cup(this.addr(), 0xc, &mut nm, &mut id, 0);
     // the knockout positions before freeing its table, the others after (like the original)
@@ -678,7 +678,7 @@ pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, attempt: 
             exe::finance_add_prize_money(exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), c), value);
             exe::comp_send_prize_money_news(this, c, value, 0, -1, 0x44a, 0, -2);
         }
-        let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+        let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
         let (mut rodadas, mut id) = (0i16, 0i16);
         let table = rounds_of_cup(this.addr(), (h + 8) as u32, &mut rodadas, &mut id, 0);
         let p = exe::crt_operator_new(0xee);
@@ -747,7 +747,7 @@ pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, attempt: 
         let quarto = read_usize(exe::league_get_table_row(read_usize(this.stages() + b * 4), (3) as i32));
         write_usize(quarto + club::CONTINENTAL_COMP_ID, usize::MAX);
     }
-    let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(uefa.addr()) + 0x5c));
+    let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(uefa.addr()) + comp_vtable::SET_PREDICTED_POSITIONS));
     predicted(uefa.addr());
 }
 
@@ -1008,7 +1008,7 @@ pub(crate) unsafe extern "thiscall" fn draw_quarter_finals(this: usize) {
         let obj = read_usize(read_usize(read_usize(G_DISCIPLINE)) + 4 * (this.discipline_index() as i8 as i32 as usize));
         exe::rulingbody_reset_bookings_for_club(obj, read_usize(list + 4 * k));
     }
-    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = table(this.addr(), 0xc, &mut rodadas, &mut extra, 0);
     let p = exe::crt_operator_new(0xb2);

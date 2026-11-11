@@ -474,7 +474,7 @@ pub(crate) unsafe extern "C" fn comp_util_get_league_clash_type(a: usize, b: usi
     let (na, nb) = (league_stats_rating(ea.addr(), a73 as f64), league_stats_rating(eb.addr(), b73 as f64));
     let (a74, b74) = (ea.best_position() as f64, eb.best_position() as f64);
     let virtual98 = || {
-        let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(league.addr()) + 0x98));
+        let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(league.addr()) + league_vtable::HAS_AUTOMATIC_PROMOTION));
         f(league.addr())
     };
     // x87 comparisons: NaN counts as ”less” (C0) and ”less or equal” (C0|C3)

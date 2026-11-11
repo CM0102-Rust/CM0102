@@ -72,7 +72,7 @@ pub(crate) unsafe fn build_knockout_stage(this: League, teams: u32, stages: usiz
             j += 1;
         }
     }
-    let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let (mut rodadas, mut id) = (0i16, 0i16);
     let table = rounds_of_cup(this.addr(), knockout, &mut rodadas, &mut id, 0);
     let p = exe::crt_operator_new(0xb2);
@@ -400,7 +400,7 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_update_for_date(this: usize,
             for g in 0..3i32 {
                 exe::conmerccup_create_group_stage(this, g);
             }
-            let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x5c));
+            let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::SET_PREDICTED_POSITIONS));
             predicted(this.addr());
             exe::crt_free(read_usize(this.addr() + con_merc_cup::DRAWN_CLUBS));
             write_usize(this.addr() + con_merc_cup::DRAWN_CLUBS, 0);
@@ -493,7 +493,7 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_group_stage(this: usi
         write_usize(teams + n * 4, con_merc_cup_drawn_club(this, k as usize)); // cqr12: the team in the group slot
         k += 1;
     }
-    let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let (mut rodadas, mut id) = (0i16, 0i16);
     let table = rounds_of_cup(this.addr(), g, &mut rodadas, &mut id, 0);
     let p = exe::crt_operator_new(0xee);

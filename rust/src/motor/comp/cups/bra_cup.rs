@@ -68,15 +68,15 @@ pub(crate) unsafe fn start_new_cup_season(this: Cup, entrants: usize, file: usiz
         show_error_at(file, rows[0]);
         return 0;
     }
-    if call_cup_virtual(this, 0x8c) < 0 {
+    if call_cup_virtual(this, comp_vtable::SET_UP_RULES) < 0 {
         show_error_at(file, rows[1]);
         return 0;
     }
-    if call_cup_virtual(this, 0x94) < 0 {
+    if call_cup_virtual(this, cup_vtable::MAP_FIXTURE_TREE) < 0 {
         show_error_at(file, rows[2]);
         return 0;
     }
-    call_cup_virtual(this, 0x5c) as u32
+    call_cup_virtual(this, comp_vtable::SET_PREDICTED_POSITIONS) as u32
 }
 
 /// Comparer for the cup season change: only the original runs; checks the year (+0x40) went up by one.
@@ -195,7 +195,7 @@ pub(crate) unsafe fn set_up_brazil_cup_rounds(this: Cup) -> i32 {
     this.set_substitutes_named(7);
     this.set_substitutions_allowed(3); // cqo12: the Copa do Brasil substitutions
     this.set_prize_fund((0x7a120) as i32);
-    let table: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let table: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let t = table(this.addr(), 0xffff_ffff, this.addr() + cup::ROUND_COUNT, this.addr() + cup::STAGE_LABEL, 0);
     this.set_round_table((t as u32) as usize);
     1

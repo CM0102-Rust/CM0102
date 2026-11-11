@@ -38,15 +38,15 @@ pub(crate) unsafe extern "thiscall" fn spa_cup_update_for_date(this: usize, toda
             show_error_at(0xa82810, 0x161);
             return 0;
         }
-        if call_cup_virtual(this, 0x8c) < 0 {
+        if call_cup_virtual(this, comp_vtable::SET_UP_RULES) < 0 {
             show_error_at(0xa82810, 0x168);
             return 0;
         }
-        if call_cup_virtual(this, 0x94) < 0 {
+        if call_cup_virtual(this, cup_vtable::MAP_FIXTURE_TREE) < 0 {
             show_error_at(0xa82810, 0x16f);
             return 0;
         }
-        call_cup_virtual(this, 0x5c);
+        call_cup_virtual(this, comp_vtable::SET_PREDICTED_POSITIONS);
     }
     exe::cup_update_for_date(this, today, stage)
 }
@@ -61,7 +61,7 @@ pub(crate) unsafe extern "thiscall" fn spa_cup_update_for_date(this: usize, toda
 pub(crate) unsafe fn record_season_honours(this: Cup, o: usize, ramo: &'static str) -> i32 {
     crate::comparison::branch(ramo);
     let stage = read_usize(this.stages() + o);
-    call_cup_virtual(Cup(stage), 0x30)
+    call_cup_virtual(Cup(stage), comp_vtable::RECORD_SEASON_HONOURS)
 }
 
 /// EuropeanCup::record_season_honours(): records the season's honours by calling the honours routine of the cup's final

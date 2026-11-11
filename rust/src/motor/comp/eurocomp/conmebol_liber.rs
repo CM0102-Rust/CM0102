@@ -44,7 +44,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_for_date(this: usiz
             for g in 0..7i32 {
                 exe::conmebolliber_create_group_stage(this, g);
             }
-            let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x5c));
+            let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::SET_PREDICTED_POSITIONS));
             predicted(this.addr());
             exe::crt_free(read_usize(this.addr() + conmebol_liber::DRAWN_CLUBS));
             write_usize(this.addr() + conmebol_liber::DRAWN_CLUBS, 0);
@@ -138,7 +138,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_create_group_stage(this: u
         write_usize(teams + n * 4, conmebol_liber_drawn_club(this, k as usize)); // cqr10: the team in the group slot
         k += 1;
     }
-    let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let (mut rodadas, mut id) = (0i16, 0i16);
     let table = rounds_of_cup(this.addr(), g, &mut rodadas, &mut id, 0);
     let p = exe::crt_operator_new(0xee);
@@ -434,7 +434,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_staff_records_for_s
                     write_u32(t + 6, club as u32);
                 }
                 exe::comp_stats_archive_season_and_reset(read_usize(mundial.addr() + 8), 1);
-                let prever: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(mundial.addr()) + 0x5c));
+                let prever: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(mundial.addr()) + comp_vtable::SET_PREDICTED_POSITIONS));
                 prever(mundial.addr());
             }
             2 => final_(0x86b0b0),

@@ -336,7 +336,7 @@ pub(crate) unsafe fn spa_first_apply_league_rules(this: League, written: &[(usiz
         }
     }
     if !SPA_FIRST_RULES_DRY_RUN.load(Relaxed) {
-        let rounds: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+        let rounds: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
         let t = rounds(this.addr(), 0xffff_ffff, this.addr() + league::ROUND_COUNT, this.addr() + league::STAGE_ID, 0);
         this.set_round_dates(t);
     }

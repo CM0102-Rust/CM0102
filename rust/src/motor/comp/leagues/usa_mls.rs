@@ -128,7 +128,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_playoff_stage(this: usize)
     poe(4, club_of_record(&r, 2));
     poe(2, club_of_record(&r, 3));
     poe(0, club_of_record(&r, 4)); // cqr4: the fifth best of the others
-    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = table(this.addr(), 2, &mut rodadas, &mut extra, 0);
     let p = exe::crt_operator_new(0xb2);
@@ -187,7 +187,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_final_stage(this: usize) {
         }
         i += 1;
     }
-    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = table(this.addr(), 3, &mut rodadas, &mut extra, 0);
     let p = exe::crt_operator_new(0xb2);
@@ -309,7 +309,7 @@ pub(crate) unsafe fn create_division_stage(this: League, code: i16, k: u32, curr
         }
         i += 1;
     }
-    let table: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let table: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = table(this.addr(), -3, &mut rodadas, &mut extra, 0);
     let p = exe::crt_operator_new(0xee);
@@ -450,7 +450,7 @@ pub(crate) unsafe fn mls_start_new_season(this: League, year: i16) -> u32 {
     let a = this.year();
     this.set_year(a.wrapping_add(year));
     crate::comparison::branch("cqs_2 mls rollover");
-    let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x8c));
+    let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::SET_UP_RULES));
     if rules(this.addr()) == 0 {
         show_error_at(0xaa1fb4, 0x4af);
         return 0;
@@ -467,7 +467,7 @@ pub(crate) unsafe fn mls_start_new_season(this: League, year: i16) -> u32 {
         show_error_at(0xaa1fb4, 0x4c3);
         return 0;
     }
-    let predicted: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x5c));
+    let predicted: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::SET_PREDICTED_POSITIONS));
     predicted(this.addr());
     exe::league_set_club_season_expectations(this);
     exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), this.competition().addr()) as u32  // cqs2: the renewal of the MLS referees
@@ -683,7 +683,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_add_result(this: usize, game: usi
     write_u8(game + fixture::STAGE_INDEX, 0);
     let estagio = |k: usize| -> (usize, unsafe extern "thiscall" fn(usize, usize, u32) -> u32) {
         let e = read_usize(this.stages() + 4 * k);
-        (e, core::mem::transmute(read_usize(read_usize(e) + 4)))
+        (e, core::mem::transmute(read_usize(read_usize(e) + comp_vtable::ADD_RESULT)))
     };
     let (e0, f0) = estagio(0);
     f0(e0, game, stats);

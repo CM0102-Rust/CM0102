@@ -482,7 +482,7 @@ pub(crate) unsafe extern "thiscall" fn handle_player_accepted_terms(this: usize,
         reason = 4;
     } else if let Some(r) = nation_transfer_rules_opt(this, read_usize(a + club::NATION)) {
         if r != 0 {
-            let can: unsafe extern "thiscall" fn(usize, usize, usize, u32, *mut u32) = core::mem::transmute(read_usize(read_usize(r) + 0x20));
+            let can: unsafe extern "thiscall" fn(usize, usize, usize, u32, *mut u32) = core::mem::transmute(read_usize(read_usize(r) + transfer_rules_vtable::CAN_LOAN_PLAYER));
             can(r, (transfer_manager_club_by_id(offer.buyer_club_id())).addr(), (transfer_manager_staff_by_id(offer.target_staff_id())).addr(), 0, &mut reason);
         }
     }
@@ -1554,14 +1554,14 @@ pub(crate) unsafe extern "thiscall" fn post_offer_made_news(this: usize, o: usiz
 ///
 /// [pt] O virtual +0x20 da regra de nação `r` (push 0; push mensagem; push jogador; push clube; mov ecx, regra: 4 dwords).
 pub(crate) unsafe fn rules_vfunc_20(r: usize) -> unsafe extern "thiscall" fn(usize, usize, usize, usize, u32) -> u32 {
-    core::mem::transmute(read_usize(read_usize(r) + 0x20))
+    core::mem::transmute(read_usize(read_usize(r) + transfer_rules_vtable::CAN_LOAN_PLAYER))
 }
 
 /// Returns the virtual method at vtable +0x24 of a nation's transfer rules object (5 arguments).
 ///
 /// [pt] O virtual +0x24 da regra de nação `r` (push 1; push &data; push 0; push jogador; push clube; mov ecx, regra: 5 dwords).
 pub(crate) unsafe fn rules_vfunc_24(r: usize) -> unsafe extern "thiscall" fn(usize, usize, usize, u32, usize, u32) -> u32 {
-    core::mem::transmute(read_usize(read_usize(r) + 0x24))
+    core::mem::transmute(read_usize(read_usize(r) + transfer_rules_vtable::CAN_END_LOAN))
 }
 
 /// Tells whether the club can take the player on loan: current club, contract record, playing role, whether the club
@@ -2645,7 +2645,7 @@ pub(crate) unsafe extern "thiscall" fn check_offer_restrictions(this: usize, o: 
                 return 0;
             }
             let rule: unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32 =
-                core::mem::transmute(read_usize(read_usize(r) + 0xc));
+                core::mem::transmute(read_usize(read_usize(r) + transfer_rules_vtable::CAN_MAKE_OFFER));
             if rule(r, o.addr(), decides.addr(), G_CURRENT_DATE, reason) != 0 {
                 return 0;
             }
@@ -6364,7 +6364,7 @@ pub(crate) unsafe extern "thiscall" fn fill_squad_restrictions(this: usize, fixt
                 read_usize(r + transfer_rules::NATION_ID) == nacao && read_u8(r + transfer_rules::SCOPE) == tipo
             };
             if home {
-                let encher: unsafe extern "thiscall" fn(usize, usize, *mut u8) -> u32 = core::mem::transmute(read_usize(read_usize(r) + 0x1c));
+                let encher: unsafe extern "thiscall" fn(usize, usize, *mut u8) -> u32 = core::mem::transmute(read_usize(read_usize(r) + transfer_rules_vtable::FILL_SQUAD_RESTRICTIONS));
                 encher(r, fixture, t);
                 break;
             }
@@ -7102,7 +7102,7 @@ pub(crate) unsafe fn offer_seller_club(offer: Offer) -> usize {
 ///
 /// [pt] O método +0xc das regras (`TRANSFER_RULES::can_make_offer(oferta, clube, data, motivo)`): 1 permite; 0 e o motivo.
 pub(crate) unsafe fn rules_can_make_offer(rule: usize, offer: Offer, club: Club, data: *const [u32; 2], reason: *mut u32) -> u32 {
-    let f: unsafe extern "thiscall" fn(usize, usize, usize, *const [u32; 2], *mut u32) -> u32 = core::mem::transmute(read_usize(read_usize(rule) + 0xc));
+    let f: unsafe extern "thiscall" fn(usize, usize, usize, *const [u32; 2], *mut u32) -> u32 = core::mem::transmute(read_usize(read_usize(rule) + transfer_rules_vtable::CAN_MAKE_OFFER));
     f(rule, offer.addr(), club.addr(), data, reason)
 }
 
@@ -9012,7 +9012,7 @@ pub(crate) unsafe extern "thiscall" fn get_ineligibility_code(this: usize, playe
         };
         if home {
             crate::comparison::branch("cpk_4 match rule");
-            let respond: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(read_usize(read_usize(r) + 0x18));
+            let respond: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(read_usize(read_usize(r) + transfer_rules_vtable::GET_INELIGIBILITY_CODE));
             return respond(r, player, fixture.addr());
         }
     }
@@ -9038,7 +9038,7 @@ pub(crate) unsafe fn transfer_rules_at(this: TransferManagerFields, i: usize) ->
 /// notícia (0x785830): o método +0x30 delas, com os mesmos argumentos. Devolve o que ele devolve.
 pub(crate) unsafe extern "thiscall" fn write_deadline_news_text(this: usize, news: usize, full: u32, text: usize) -> u32 {
     let rules = transfer_rules_at(TransferManagerFields(this), exe::newsitem_get_slot(news, (0) as u32) as usize); // the rules of slot 0
-    let metodo: unsafe extern "thiscall" fn(usize, usize, u32, usize) -> u32 = core::mem::transmute(read_usize(read_usize(rules) + 0x30));
+    let metodo: unsafe extern "thiscall" fn(usize, usize, u32, usize) -> u32 = core::mem::transmute(read_usize(read_usize(rules) + transfer_rules_vtable::WRITE_DEADLINE_NEWS_TEXT));
     metodo(rules, news, full, text)
 }
 
@@ -9069,7 +9069,7 @@ pub(crate) unsafe fn loan_transfer_rules(this: usize, club: Club, player: Staff)
 pub(crate) unsafe extern "thiscall" fn can_end_loan(this: usize, club: usize, player: usize, a: u32, b: u32, c: u32) -> u32 {
     match loan_transfer_rules(this, Club(club), Staff(player)) {
         Some(r) => {
-            let metodo: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) -> u32 = core::mem::transmute(read_usize(read_usize(r) + 0x24));
+            let metodo: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) -> u32 = core::mem::transmute(read_usize(read_usize(r) + transfer_rules_vtable::CAN_END_LOAN));
             metodo(r, club, player, a, b, c)
         }
         None => 1,
@@ -9252,7 +9252,7 @@ pub(crate) unsafe extern "thiscall" fn can_sign_player(manager: usize, club: usi
         return 1;
     }
     let consultar: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, *mut u32) -> u32 =
-        core::mem::transmute(read_usize(read_usize(rules) + 0x10));
+        core::mem::transmute(read_usize(read_usize(rules) + transfer_rules_vtable::CAN_SIGN_PLAYER));
     // the reason is the slot of the `clube` argument on the original’s stack: with no answer from the rules the club stays
     let mut reason = club.addr() as u32;
     let r = consultar(rules, club.addr(), player.addr(), a4, a2, &mut reason);
@@ -10065,7 +10065,7 @@ pub(crate) unsafe extern "thiscall" fn hold_offers_at_window_close(this: usize, 
         if rules == 0 {
             return true;
         }
-        let segurar: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32) -> u32 = core::mem::transmute(read_usize(read_usize(rules) + 0xc));
+        let segurar: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32) -> u32 = core::mem::transmute(read_usize(read_usize(rules) + transfer_rules_vtable::CAN_MAKE_OFFER));
         segurar(rules, o, club, G_CURRENT_DATE, 0) == 0
     };
     let mut i = 0usize;
@@ -10339,7 +10339,7 @@ pub(crate) unsafe extern "thiscall" fn transfer_manager_get_loan_period(this: us
             break;
         }
     }
-    let period: unsafe extern "thiscall" fn(usize, usize, u32, *mut i8, *mut u16, *mut i8, *mut u16, usize) = core::mem::transmute(read_usize(read_usize(rule) + 0x28));
+    let period: unsafe extern "thiscall" fn(usize, usize, u32, *mut i8, *mut u16, *mut i8, *mut u16, usize) = core::mem::transmute(read_usize(read_usize(rule) + transfer_rules_vtable::GET_LOAN_PERIOD));
     period(rule, club.addr(), a2, start_month, start_year, month, year, player);
     let day = exe::date_get_day_of_month(G_CURRENT_DATE) as i32;
     let c = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), player));
@@ -10442,7 +10442,7 @@ pub(crate) unsafe extern "thiscall" fn update_transfer_window_news(this: usize, 
             let rules = |w: usize| read_usize(this.addr() + transfer_manager_fields::TRANSFER_RULES + (read_u8(w) as i8 as isize * 4) as usize);
             let aviso = |w: usize, code: u32| {
                 let rg = rules(w);
-                let f: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(read_usize(read_usize(rg) + 0x2c));
+                let f: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(read_usize(read_usize(rg) + transfer_rules_vtable::POST_DEADLINE_NEWS));
                 f(rg, w, code, dw);
             };
             if ha == da && hd == dd {

@@ -62,11 +62,11 @@ pub(crate) unsafe fn usa_mls_all_stars_cup_start_new_season(this: Cup, entrants:
         show_error_at(file, rows[0]);
         return 0;
     }
-    if call_cup_virtual(this, 0x8c) < 0 {
+    if call_cup_virtual(this, comp_vtable::SET_UP_RULES) < 0 {
         show_error_at(file, rows[1]);
         return 0;
     }
-    let r = call_cup_virtual(this, 0x94);
+    let r = call_cup_virtual(this, cup_vtable::MAP_FIXTURE_TREE);
     if r < 0 {
         show_error_at(file, rows[2]);
         return 0;
@@ -74,7 +74,7 @@ pub(crate) unsafe fn usa_mls_all_stars_cup_start_new_season(this: Cup, entrants:
     if !predicted {
         return r as u32;
     }
-    call_cup_virtual(this, 0x5c) as u32
+    call_cup_virtual(this, comp_vtable::SET_PREDICTED_POSITIONS) as u32
 }
 
 /// Rule: the MLS All-Star Game season turn: tables freed, history archived, year +1, the two all-star teams, the rounds

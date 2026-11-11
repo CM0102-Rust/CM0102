@@ -321,7 +321,7 @@ pub(crate) unsafe extern "thiscall" fn fra_cfa_set_up_rules(this: usize) -> u32 
     this.set_upper_division_id(read_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) as i32);
     this.set_lower_division_id(0xffff_ffff);
     this.set_league_flags((0x43) as i16); // cqn4: the rule bits of the lower leagues
-    let calendario: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let calendario: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let g = calendario(this.addr(), 0xffff_ffff, this.addr() + league::ROUND_COUNT, this.addr() + league::STAGE_ID, 0);
     this.set_round_dates(g);
     1

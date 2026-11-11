@@ -85,7 +85,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_final_stage(this: u
         // simplification: the 8-byte list is not freed, as in the original.
         return;
     }
-    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = table(this.addr(), 2, &mut rodadas, &mut extra, 0);
     let p = exe::crt_operator_new(0xb2);
@@ -142,7 +142,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_record_season_honours(this
     let this = League(this);
     if this.current_stage() == 2 {
         let f = read_usize(this.stages() + 8);
-        let history: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(f) + 0x30));
+        let history: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(f) + comp_vtable::RECORD_SEASON_HONOURS));
         history(f);
         crate::comparison::branch("cqo_8 final history");
         return exe::bra_nat_first_fill_champions_cup_entrants();

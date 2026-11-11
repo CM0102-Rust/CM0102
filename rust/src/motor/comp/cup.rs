@@ -156,7 +156,7 @@ pub(crate) unsafe extern "thiscall" fn create_tie_fixtures(this: usize, round: u
         let nf = read_u8(cup_team_entry(this, read_i16(t + cup_tie::AWAY_TEAM)) + 4) as i8;
         p.set_tie_rules(if nc >= nf { 0x1000 } else { 0x800 });
     }
-    let virtual_7c: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x7c));
+    let virtual_7c: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::SET_FIXTURE_SUBSTITUTES));
     virtual_7c(this.addr(), p.addr());
     let e = round_entry(this, ri);
     if (read_u8(e + cup_round::LEGS) as i8) < 2 && (read_u8(e + cup_round::SINGLE_LEG_FLAG) as i8) > 0 {
@@ -906,7 +906,7 @@ pub(crate) unsafe extern "thiscall" fn set_home_teams_for_round(cup: usize, roun
         let inverter = if rule & 1 != 0 {
             let (ca, cb) = (read_usize(ta), read_usize(tb));
             // the virtual +0x90: push cb; push ca; ecx = the cup; no add esp -> thiscall(copa, ca, cb), ret 8
-            let greater: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(read_usize(read_usize(cup.addr()) + 0x90));
+            let greater: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(read_usize(read_usize(cup.addr()) + cup_vtable::CLUB_IN_HIGHER_DIVISION));
             let m = greater(cup.addr(), ca, cb);
             m != 0 && m == cb
         } else if rule & 8 != 0 {
@@ -1003,7 +1003,7 @@ pub(crate) unsafe extern "thiscall" fn record_team_progress(cup: usize, team: u3
     let (t, r) = (team as i16 as i32, round as i16 as i32);
     if let Some((p1, p2, p3)) = team_progress_args(cup, t, r) {
         // the virtual +0x68: 5 pushes; ecx = the cup; no add esp -> thiscall(copa, clube, comp, p1, p2, p3), ret 0x14
-        let f: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) = core::mem::transmute(read_usize(read_usize(cup.addr()) + 0x68));
+        let f: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) = core::mem::transmute(read_usize(read_usize(cup.addr()) + comp_vtable::SET_CLUB_PROGRESS));
         // simplification: the original pushes bytes over whole registers (the caller’s ebx, the argument’s dword
         // `time` with the low byte replaced, 13 × round): the high bits are leftovers; the 70 versions of +0x68 only read the byte
         // low byte of each (or pass the dwords on to another that reads): here, the clean bytes.
@@ -1458,7 +1458,7 @@ pub(crate) unsafe fn season_honours(cup: Cup) -> (usize, usize, usize, usize) {
         }
     }
     let o = object();
-    let has: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(o) + 0x88));
+    let has: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(o) + comp_vtable::HAS_HOST_COUNTRY));
     let mut anfitria = 0usize;
     if has(o) != 0 {
         let (mut a, mut b) = (0i32, 0i32);
@@ -1772,7 +1772,7 @@ pub(crate) unsafe extern "thiscall" fn cup_update_for_date(this: usize, today: u
             let mut i = 0usize;
             while (i as i32) <= this.current_stage() as i32 {
                 let p = cup_stage(this, i);
-                let completa: unsafe extern "thiscall" fn(usize, u32, u32) -> u8 = core::mem::transmute(read_usize(read_usize(p) + 0x10));
+                let completa: unsafe extern "thiscall" fn(usize, u32, u32) -> u8 = core::mem::transmute(read_usize(read_usize(p) + comp_vtable::CHECK_COMPLETE));
                 if completa(p, 0, 1) == 0 {
                     completas = false;
                     break;
@@ -1782,10 +1782,10 @@ pub(crate) unsafe extern "thiscall" fn cup_update_for_date(this: usize, today: u
         }
         if completas {
             if (this.current_stage() as i32) < (this.stage_count() as i32).wrapping_sub(1) {
-                cup_call_virtual_no_args(this, 0x28); // a fase seguinte
+                cup_call_virtual_no_args(this, comp_vtable::ADVANCE_STAGE); // a fase seguinte
             } else if this.season_closed() == 0 {
                 exe::club_history_record_comp_season(read_usize(G_CLUB_HISTORY), this);
-                cup_call_virtual_no_args(this, 0x30);
+                cup_call_virtual_no_args(this, comp_vtable::RECORD_SEASON_HONOURS);
                 if read_usize(this.addr() + 8) != 0 {
                     exe::comp_stats_update_season_end_records(read_usize(this.addr() + 8));
                 }
@@ -1800,7 +1800,7 @@ pub(crate) unsafe extern "thiscall" fn cup_update_for_date(this: usize, today: u
         let mut i = 0usize;
         while (i as i32) <= this.current_stage() as i32 {
             let p = cup_stage(this, i);
-            let day: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(read_usize(read_usize(p) + 0x14));
+            let day: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(read_usize(read_usize(p) + comp_vtable::UPDATE_FOR_DATE));
             day(p, G_CURRENT_DATE, stage);
             i += 1;
         }
@@ -2902,7 +2902,7 @@ pub(crate) unsafe extern "thiscall" fn add_team_result_news(cup: usize, club: us
         return 0;
     }
     let comp = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(read_usize(cup.addr() + 4)).wrapping_mul(4)));
-    let virtual44: unsafe extern "thiscall" fn(usize, usize, u32, u32, *mut u32, usize, u32) -> i32 = core::mem::transmute(read_usize(read_usize(comp) + 0x44));
+    let virtual44: unsafe extern "thiscall" fn(usize, usize, u32, u32, *mut u32, usize, u32) -> i32 = core::mem::transmute(read_usize(read_usize(comp) + comp_vtable::UPDATE_STAFF_RECORDS_FOR_STATUS));
     let r = virtual44(comp, club.addr(), outcome, a3, &mut out, p.addr(), a5);
     if r == -1 || p.is_null() {
         return 0;
@@ -2965,7 +2965,7 @@ pub(crate) unsafe extern "thiscall" fn cup_check_complete(this: usize, stages: u
     let mut i = 0i32;
     while i <= this.current_stage() as i32 {
         let stage = read_usize(this.stages().wrapping_add(i as usize * 4));
-        let completa: unsafe extern "thiscall" fn(usize, u32, u32) -> u8 = core::mem::transmute(read_usize(read_usize(stage) + 0x10));
+        let completa: unsafe extern "thiscall" fn(usize, u32, u32) -> u8 = core::mem::transmute(read_usize(read_usize(stage) + comp_vtable::CHECK_COMPLETE));
         if completa(stage, 0, 1) == 0 {
             return 0; // an incomplete stage
         }

@@ -39,7 +39,7 @@ pub(crate) unsafe fn create_knockout_from_table(this: League, rows: &[usize], se
         write_usize(list + 4 * k, bra_reg_bahia_table_row_club(this, l));
     }
     crate::comparison::branch(ramo);
-    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = table(this.addr(), 0, &mut rodadas, &mut extra, 0);
     let p = exe::crt_operator_new(0xb2);

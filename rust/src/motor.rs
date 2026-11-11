@@ -3198,6 +3198,9 @@ pub(crate) use self::bits::*;
 #[path = "motor/enums.rs"]
 pub(crate) mod enums;
 pub(crate) use self::enums::*;
+#[path = "motor/vtables.rs"]
+pub(crate) mod vtables;
+pub(crate) use self::vtables::*;
 #[path = "motor/match_day.rs"]
 pub(crate) mod match_day;
 pub(crate) use self::match_day::*;

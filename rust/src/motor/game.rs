@@ -616,7 +616,7 @@ pub(crate) unsafe extern "C" fn game_update_comps_for_date(mark: u32) {
     while i < read_usize(G_COMP_OBJECT_COUNT) as i32 {
         let c = read_usize(read_usize(G_COMP_OBJECT_TABLE) + i as usize * 4);
         if c != 0 {
-            let day: unsafe extern "thiscall" fn(usize, usize, i32) = core::mem::transmute(read_usize(read_usize(c) + 0x14));
+            let day: unsafe extern "thiscall" fn(usize, usize, i32) = core::mem::transmute(read_usize(read_usize(c) + comp_vtable::UPDATE_FOR_DATE));
             day(c, G_CURRENT_DATE, m as i32);
         }
         i += 1;

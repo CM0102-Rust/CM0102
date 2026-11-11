@@ -47,7 +47,7 @@ pub(crate) unsafe extern "thiscall" fn african_nations_update_for_date(this: usi
     if year_of_today == year && day_of_today == day && this.active() == 0 {
         crate::comparison::branch("cqs_13 african cup draw day");
         exe::africannations_draw_finalists(this);
-        let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x5c));
+        let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::SET_PREDICTED_POSITIONS));
         predicted(this.addr());
         if exe::africannations_init_group_a_table(this) == 0 {
             show_error_at(0x9870f8, 0x3c2);
@@ -221,7 +221,7 @@ pub(crate) unsafe extern "thiscall" fn african_nations_create_group_stage(this: 
         crate::comparison::branch("cqs_13 group team");
         write_usize(teams + n * 4, read_usize(read_usize(this.addr() + african_nations::DRAWN_CLUBS) + ((g as usize + 1) * 4 + n) * 4)); // cqs13: the team in the group slot
     }
-    let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let (mut rodadas, mut id) = (0i16, 0i16);
     let table = rounds_of_cup(this.addr(), g, &mut rodadas, &mut id, 0);
     let p = exe::crt_operator_new(0xee);
@@ -344,7 +344,7 @@ pub(crate) unsafe extern "thiscall" fn init_group_a_table(this: usize) -> u32 {
 pub(crate) unsafe extern "thiscall" fn african_nations_record_season_honours(this: usize) {
     let this = League(this);
     let stage = read_usize(this.stages() + 0xc);
-    let h: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(stage) + 0x30));
+    let h: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(stage) + comp_vtable::RECORD_SEASON_HONOURS));
     h(stage);
 }
 

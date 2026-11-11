@@ -114,7 +114,7 @@ pub(crate) const PLAYOUT_ROWS: [usize; 4] = [16, 13, 15, 14]; // cql5: the play-
 pub(crate) unsafe fn create_end_of_league_stages(this: League, file: usize, rows: [u32; 3], lista_primeiro: bool) {
     let stage_of_cup: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
         core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-    let calendario: unsafe extern "thiscall" fn(usize, u32, *mut u32, *mut u32, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let calendario: unsafe extern "thiscall" fn(usize, u32, *mut u32, *mut u32, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     // the Série C1 Super Cup
     let cup = Cup(read_usize(read_usize(G_COMP_OBJECT_TABLE) + read_usize(KEY_CLUB_COMP_ITALIAN_C1_SUPER_CUP) * 4));
     let entrants = cup.team_table();
@@ -150,7 +150,7 @@ pub(crate) unsafe fn create_end_of_league_stages(this: League, file: usize, rows
     exe::cup_set_up_round(read_usize(this.stages()), 0);
     exe::crt_free(gabarito);
     let (mut rodadas, mut extra) = (0u32, 0u32);
-    let calendario: unsafe extern "thiscall" fn(usize, u32, *mut u32, *mut u32, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let calendario: unsafe extern "thiscall" fn(usize, u32, *mut u32, *mut u32, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let gabarito = calendario(this.addr(), 1, &mut rodadas, &mut extra, 0);
     for (k, &i) in PLAYOUT_ROWS.iter().enumerate() {
         write_usize(list + k * 4, ita_ser_c1a_league_row_club(this, i));

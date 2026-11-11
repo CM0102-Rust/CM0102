@@ -210,7 +210,7 @@ pub(crate) unsafe fn state_league_new_season(this: League, table: usize, file: u
     this.set_year(a.wrapping_add(year));
     crate::comparison::branch(ramo);
     write_i32(this.addr() + league::CURRENT_STAGE, -1);
-    let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x8c));
+    let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::SET_UP_RULES));
     if rules(this.addr()) == 0 {
         show_error_at(file, rows[0]);
         return 0;
@@ -228,7 +228,7 @@ pub(crate) unsafe fn state_league_new_season(this: League, table: usize, file: u
         show_error_at(file, rows[3]);
         return 0;
     }
-    let predicted: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x5c));
+    let predicted: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::SET_PREDICTED_POSITIONS));
     predicted(this.addr());
     exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), this.competition().addr()) as u32 
 }

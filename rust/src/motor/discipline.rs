@@ -815,7 +815,7 @@ pub(crate) unsafe extern "thiscall" fn discipline_daily_update(this: usize, toda
     for k in 0..43usize {
         let rules = read_usize(read_usize(this) + 4 * k);
         if rules != 0 {
-            let metodo: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(read_usize(read_usize(rules) + 4));
+            let metodo: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(read_usize(read_usize(rules) + ruling_body_vtable::DAILY_UPDATE));
             metodo(rules, today);
         }
     }

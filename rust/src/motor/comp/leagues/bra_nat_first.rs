@@ -32,7 +32,7 @@ pub(crate) unsafe fn create_play_off_stage(this: League, rows: &[usize; 4], file
     for (k, &l) in rows.iter().enumerate() {
         write_usize(list + 4 * k, bra_reg_bahia_table_row_club(this, l));
     }
-    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = table(this.addr(), 0, &mut rodadas, &mut extra, 0);
     let p = exe::crt_operator_new(0xb2);
@@ -193,7 +193,7 @@ pub(crate) unsafe fn rebuild_season(this: League, table: usize, file: usize, row
     let a = this.year();
     this.set_year(a.wrapping_add(year));
     write_i32(this.addr() + league::CURRENT_STAGE, -1);
-    if bra_nat_first_call_virtual_no_args(this.addr(), 0x8c) == 0 {
+    if bra_nat_first_call_virtual_no_args(this.addr(), comp_vtable::SET_UP_RULES) == 0 {
         show_error_at(file, rows[0]);
         return false;
     }
@@ -210,7 +210,7 @@ pub(crate) unsafe fn rebuild_season(this: League, table: usize, file: usize, row
         show_error_at(file, rows[3]);
         return false;
     }
-    bra_nat_first_call_virtual_no_args(this.addr(), 0x5c);
+    bra_nat_first_call_virtual_no_args(this.addr(), comp_vtable::SET_PREDICTED_POSITIONS);
     true
 }
 
@@ -258,7 +258,7 @@ pub(crate) const BRAZIL_TURNOVER_COMPS: [usize; 14] = [KEY_CLUB_COMP_BRAZILIAN_N
 pub(crate) unsafe extern "thiscall" fn bra_nat_first_start_new_season(this: usize) -> u32 {
     let this = League(this);
     this.set_season_closed((0) as usize);
-    let cadeia: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + 0xb0));
+    let cadeia: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + league_vtable::PROCESS_PROMOTION_RELEGATION_CHAIN));
     cadeia(this.addr(), 1);
     for f in [0x42b760usize, 0x42b520, 0x42b130] {
         let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(f);
@@ -273,7 +273,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_first_start_new_season(this: usiz
         if k == 13 {
             crate::comparison::branch("cqq_8 paulista rollover");
         }
-        bra_nat_first_call_virtual_no_args(comp_by_global(*g), 8); // cqq8: the rollover of each one
+        bra_nat_first_call_virtual_no_args(comp_by_global(*g), comp_vtable::START_NEW_SEASON); // cqq8: the rollover of each one
     }
     set_expectations_and_renew_officials(this)
 }
@@ -291,9 +291,9 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_first_start_new_season(this: usiz
 /// eax da última.
 pub(crate) unsafe extern "thiscall" fn bra_nat_first_process_promotion_relegation_chain(this: usize, _pairs: u32) -> u32 {
     let (a, b, c) = (KEY_CLUB_COMP_BRAZILIAN_NATIONAL_FIRST_DIVISION, KEY_CLUB_COMP_BRAZILIAN_NATIONAL_SECOND_DIVISION, KEY_CLUB_COMP_BRAZILIAN_NATIONAL_THIRD_DIVISION);
-    bra_nat_first_call_virtual_no_args(comp_by_global(a), 0xa4);
-    bra_nat_first_call_virtual_no_args(comp_by_global(b), 0xa4);
-    bra_nat_first_call_virtual_no_args(comp_by_global(c), 0xa4);
+    bra_nat_first_call_virtual_no_args(comp_by_global(a), league_vtable::RECORD_FINAL_POSITIONS);
+    bra_nat_first_call_virtual_no_args(comp_by_global(b), league_vtable::RECORD_FINAL_POSITIONS);
+    bra_nat_first_call_virtual_no_args(comp_by_global(c), league_vtable::RECORD_FINAL_POSITIONS);
     for k in 0..7 {
         bra_nat_first_call_virtual_no_args(read_usize(read_usize(comp_by_global(c) + league::STAGES) + 4 * k), 0xa4);
     }

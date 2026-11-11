@@ -265,7 +265,7 @@ pub(crate) unsafe fn intertoto_winners_for_uefa(this: Cup, uefa: Cup) -> ([usize
 pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
     let this = Cup(this);
     if read_usize(this.addr() + intertoto_cup::WINNERS_SENT_TO_UEFA) == 0 {
-        let acabou: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x10));
+        let acabou: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CHECK_COMPLETE));
         if acabou(this.addr(), 0, 1) as u8 != 0 {
             let uefa = uefa_cup_object();
             if uefa == 0 {
@@ -298,11 +298,11 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_for_date(this: usize
                         }
                     }
                 }
-                let prever: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(uefa) + 0x5c));
+                let prever: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(uefa) + comp_vtable::SET_PREDICTED_POSITIONS));
                 prever(uefa);
                 write_u32(this.addr() + intertoto_cup::WINNERS_SENT_TO_UEFA, 1);
                 let uefa = uefa_cup_object();
-                let prever: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(uefa) + 0x5c));
+                let prever: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(uefa) + comp_vtable::SET_PREDICTED_POSITIONS));
                 prever(uefa);
                 let base: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_CUP_UPDATE_FOR_DATE);
                 return base(this.addr(), today, stage);

@@ -78,7 +78,7 @@ pub(crate) unsafe extern "stdcall" fn special_club(club: usize) -> u32 {
 /// [pt] O slot 0xa4 da vtable da liga (thiscall, sem argumentos) [inferência: fecha a classificação final da temporada e
 /// marca os que sobem e descem (+0x37 dos clubes), que a 0x689c80 lê].
 pub(crate) unsafe fn finalize_league_table(league: League) {
-    let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(league.addr()) + 0xa4));
+    let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(league.addr()) + league_vtable::RECORD_FINAL_POSITIONS));
     f(league.addr())
 }
 
@@ -186,7 +186,7 @@ pub(crate) unsafe extern "thiscall" fn all_stages_complete(this: usize) -> u8 {
         return 0;
     }
     let completa = |c: usize| -> u8 {
-        let f: unsafe extern "thiscall" fn(usize, u32, u32) -> u8 = core::mem::transmute(read_usize(read_usize(c) + 0x10));
+        let f: unsafe extern "thiscall" fn(usize, u32, u32) -> u8 = core::mem::transmute(read_usize(read_usize(c) + comp_vtable::CHECK_COMPLETE));
         f(c, 1, 1)
     };
     if completa(this.addr()) == 0 {
@@ -416,7 +416,7 @@ pub(crate) unsafe extern "thiscall" fn get_current_stage(this: usize) -> usize {
     if this.current_stage() as i32 >= -1 {
         loop {
             let f = comp_stage(this, e);
-            let acabou: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(read_usize(read_usize(f) + 0x10));
+            let acabou: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(read_usize(read_usize(f) + comp_vtable::CHECK_COMPLETE));
             if acabou(f, 0, 1) as u8 == 0 {
                 if f == 0 {
                     break;
@@ -617,7 +617,7 @@ pub(crate) unsafe extern "thiscall" fn get_fixture_match_importance(this: usize,
     let this = League(this);
     let stage = read_u8(p + fixture::STAGE_INDEX);
     let c = if stage == 0xff { this.addr() } else { read_usize(this.stages().wrapping_add(4 * (stage as i8 as i32) as usize)) };
-    let f: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(read_usize(read_usize(c) + 0x54));
+    let f: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(read_usize(read_usize(c) + comp_vtable::GET_MATCH_IMPORTANCE));
     f(c, p, a, b)
 }
 

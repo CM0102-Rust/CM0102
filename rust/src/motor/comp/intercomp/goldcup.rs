@@ -202,7 +202,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_start_new_season(this: usize) {
     this.set_year(this.year().wrapping_add(2)); // cqs12: the Copa América every 2 years
     this.set_active(0);
     this.set_current_stage(usize::MAX);
-    let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x8c));
+    let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::SET_UP_RULES));
     if rules(this.addr()) == 0 {
         show_error_at(0x9cd640, 0x28b);
     }
@@ -265,7 +265,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_update_for_date(this: usize, toda
     if year_of_today == year && day_of_today == day && this.active() == 0 && full == 0 {
         crate::comparison::branch("cqr_13 copa america draw");
         exe::goldcup_set_up_team_list(this);
-        let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x5c));
+        let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::SET_PREDICTED_POSITIONS));
         predicted(this.addr());
         if exe::goldcup_create_group_table(this) == 0 {
             show_error_at(0x9cd640, 0x3e7);
@@ -371,7 +371,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_group_stage(this: usize, g
         crate::comparison::branch("cqr_13 group team");
         write_usize(teams + n * 4, drawn_team(this, (g + 1) as usize + n * 3)); // cqr13: the team in the group slot
     }
-    let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let (mut rodadas, mut id) = (0i16, 0i16);
     let table = rounds_of_cup(this.addr(), g, &mut rodadas, &mut id, 0);
     let p = exe::crt_operator_new(0xee);

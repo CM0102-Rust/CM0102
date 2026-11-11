@@ -1,0 +1,701 @@
+{
+ "comp": {
+  "class": "Comp (League, Cup and subclasses, Friendly): slots 0x00..0x8c shared by every competition",
+  "base_vtable": "g_vtable_comp 0x9689e8 (36 slots)",
+  "slots": {
+   "0x0": {
+    "name": "SCALAR_DELETING_DESTRUCTOR",
+    "index": 0,
+    "targets": [
+     "0x48c600 Comp::scalar_deleting_destructor (1 vtables)",
+     "0x518670 Cup::`scalar deleting destructor' (1 vtables)",
+     "0x5230c0 Cup_Stage::`scalar deleting destructor' (1 vtables)",
+     "0x5c22a0 Friendly::`scalar deleting destructor' (1 vtables)",
+     "0x6822e0 League::`scalar deleting destructor' (1 vtables)",
+     "0x68b4d0 League_Stage::`scalar deleting destructor' (1 vtables)",
+     "0x401200 AfricanNations::`scalar deleting destructor' (1 vtables)",
+     "0x404490 ArgPrm::`scalar deleting destructor' (1 vtables)",
+     "0x40ad50 AsiaClubChamp::`scalar deleting destructor' (1 vtables)",
+     "0x40ce50 AsiaCupWinner::`scalar deleting destructor' (1 vtables)",
+     "... 151 more per-class overrides"
+    ],
+    "confidence": "verified",
+    "evidence": "Comp::scalar_deleting_destructor 0x48c600 and every subclass `scalar deleting destructor`; Rust calls it with (this, 1).",
+    "call_sites": 12
+   },
+   "0x4": {
+    "name": "ADD_RESULT",
+    "index": 1,
+    "targets": [
+     "0x685d30 League::add_result (93 vtables)",
+     "0x51a150 Cup::process_fixture (53 vtables)",
+     "0x48c690 Comp::add_result (1 vtables)",
+     "0x5c6b60 Friendly::add_result (1 vtables)",
+     "0x57ffd0 EuroChampQual::add_result (2 vtables)",
+     "0x5bb540 stub_return_one_ret8 (2 vtables)",
+     "0x633290 IntertotoCup::process_fixture (2 vtables)",
+     "0x405c50 ArgPrm::add_result (1 vtables)",
+     "0x420110 BelSecond::add_result (1 vtables)",
+     "0x422c50 BelThird::add_result (1 vtables)",
+     "... 4 more per-class overrides"
+    ],
+    "confidence": "verified",
+    "evidence": "Comp::add_result 0x48c690, League::add_result 0x685d30, Cup::process_fixture 0x51a150 (same slot, the Cup name differs); Rust: League stages get the fixture through it.",
+    "call_sites": 2
+   },
+   "0x8": {
+    "name": "START_NEW_SEASON",
+    "index": 2,
+    "targets": [
+     "0x682760 League::start_new_season (6 vtables)",
+     "0x5a8f60 shared_noop_ret0_5a8f60 (4 vtables)",
+     "0x518780 Cup::start_new_season (3 vtables)",
+     "0x401d20 AfricanNations::start_new_season (1 vtables)",
+     "0x405720 ArgPrm::start_new_season (1 vtables)",
+     "0x40b700 AsiaClubChamp::start_new_season (1 vtables)",
+     "0x40d5b0 AsiaCupWinner::start_new_season (1 vtables)",
+     "0x40f720 AsiaNations::start_new_season (1 vtables)",
+     "0x410c50 AsiaSuperCup::start_new_season (1 vtables)",
+     "0x411de0 AusNsl::start_new_season (1 vtables)",
+     "... 141 more per-class overrides"
+    ],
+    "confidence": "verified",
+    "evidence": "League::start_new_season 0x682760, Cup::start_new_season 0x518780 and ~150 overrides; Comp base is an empty stub 0x5a8f60.",
+    "call_sites": 3
+   },
+   "0x10": {
+    "name": "CHECK_COMPLETE",
+    "index": 4,
+    "targets": [
+     "0x689ad0 League::check_complete (98 vtables)",
+     "0x521e00 Cup::check_complete (56 vtables)",
+     "0x5b9420 stub_return_zero_ret8 (6 vtables)",
+     "0x48ce60 Comp::check_complete (1 vtables)"
+    ],
+    "confidence": "verified",
+    "evidence": "Comp/League/Cup::check_complete (0x48ce60, 0x689ad0, 0x521e00); thiscall(this, day, year) -> bool in Rust.",
+    "call_sites": 9
+   },
+   "0x14": {
+    "name": "UPDATE_FOR_DATE",
+    "index": 5,
+    "targets": [
+     "0x6847c0 League::update_for_date (76 vtables)",
+     "0x51f890 Cup::update_for_date (45 vtables)",
+     "0x48ce80 Comp::update_for_date (1 vtables)",
+     "0x5c2460 Friendly::update_for_date (1 vtables)",
+     "0x5b9420 stub_return_zero_ret8 (5 vtables)",
+     "0x4025a0 AfricanNations::update_for_date (1 vtables)",
+     "0x410170 AsiaNations::update_for_date (1 vtables)",
+     "0x410e20 AsiaSuperCup::update_for_date (1 vtables)",
+     "0x4c4410 ConmebolLiber::update_for_date (1 vtables)",
+     "0x4c1620 ConChamp::update_for_date (1 vtables)",
+     "... 28 more per-class overrides"
+    ],
+    "confidence": "verified",
+    "evidence": "Comp/League/Cup::update_for_date (0x48ce80, 0x6847c0, 0x51f890); Rust passes (this, date, flag).",
+    "call_sites": 3
+   },
+   "0x1c": {
+    "name": "SAVE_TO_TEMP_FILE",
+    "index": 7,
+    "targets": [
+     "0x6891c0 League::save_to_temp_file (101 vtables)",
+     "0x5210f0 Cup::save_cup_to_disk (56 vtables)",
+     "0x48cea0 shared_noop_ret4_48cea0 (1 vtables)",
+     "0x5c9650 Friendly::save_to_temp_file (1 vtables)",
+     "0x583470 shared_noop_ret4 (2 vtables)"
+    ],
+    "confidence": "verified",
+    "evidence": "League::save_to_temp_file 0x6891c0, Cup::save_cup_to_disk 0x5210f0, Friendly::save_to_temp_file 0x5c9650; Comp base empty; Rust (setup save step) calls it on Friendly with 1.",
+    "call_sites": 1
+   },
+   "0x28": {
+    "name": "ADVANCE_STAGE",
+    "index": 10,
+    "targets": [
+     "0x5a8f60 shared_noop_ret0_5a8f60 (95 vtables)",
+     "0x401e10 AfricanNations::advance_stage (1 vtables)",
+     "0x40c070 AsiaClubChamp::advance_stage (1 vtables)",
+     "0x40dfa0 AsiaCupWinner::advance_stage (1 vtables)",
+     "0x40f810 AsiaNations::advance_stage (1 vtables)",
+     "0x411f70 AusNsl::advance_stage (1 vtables)",
+     "0x4201a0 BelSecond::advance_stage (1 vtables)",
+     "0x423640 BelThird::advance_stage (1 vtables)",
+     "0x42a950 BraNatFirst::advance_stage (1 vtables)",
+     "0x42cdd0 BraNatSecond::advance_stage (1 vtables)",
+     "... 57 more per-class overrides"
+    ],
+    "confidence": "verified",
+    "evidence": "Base (Comp/League/Cup) is the empty stub 0x5a8f60; 66 overrides are all named X::advance_stage by the community; Rust comments it as \"a fase seguinte\".",
+    "call_sites": 4
+   },
+   "0x30": {
+    "name": "RECORD_SEASON_HONOURS",
+    "index": 12,
+    "targets": [
+     "0x684640 League::record_season_honours (57 vtables)",
+     "0x519a90 Cup::record_season_honours (47 vtables)",
+     "0x5a8f60 shared_noop_ret0_5a8f60 (8 vtables)",
+     "0x595160 FinFirst::record_season_honours (8 vtables)",
+     "0x432970 BraRegGaucho::record_season_honours (7 vtables)",
+     "0x90fbe0 WcAfricanCup::record_season_honours (7 vtables)",
+     "0x401b90 AfricanNations::record_season_honours (6 vtables)",
+     "0x637750 IreLgeCup::record_season_honours (4 vtables)",
+     "0x40f590 AsiaNations::record_season_honours (3 vtables)",
+     "0x408eb0 ArgSecond::record_season_honours (2 vtables)",
+     "... 11 more per-class overrides"
+    ],
+    "confidence": "verified",
+    "evidence": "League::record_season_honours 0x684640, Cup::record_season_honours 0x519a90; Comp base empty.",
+    "call_sites": 7
+   },
+   "0x3c": {
+    "name": "CREATE_SCHEDULE",
+    "index": 15,
+    "targets": [
+     "0x48c6a0 Comp::create_schedule (4 vtables)",
+     "0x682650 League::create_schedule (3 vtables)",
+     "0x5186a0 Cup::create_round_table (2 vtables)",
+     "0x4012e0 AfricanNations::create_schedule (1 vtables)",
+     "0x404570 ArgPrm::create_schedule (1 vtables)",
+     "0x40ae90 AsiaClubChamp::create_round_table (1 vtables)",
+     "0x40cf90 AsiaCupWinner::create_round_table (1 vtables)",
+     "0x40eb00 AsiaNations::create_schedule (1 vtables)",
+     "0x410910 AsiaSuperCup::create_round_table (1 vtables)",
+     "0x4111a0 AusNsl::create_schedule (1 vtables)",
+     "... 145 more per-class overrides"
+    ],
+    "confidence": "verified",
+    "evidence": "Comp::create_schedule 0x48c6a0, League::create_schedule 0x682650, Cup::create_round_table 0x5186a0 (alias in cups: CREATE_ROUND_TABLE); ~155 overrides; Rust (this, year, *start, *end, flag) -> table.",
+    "call_sites": 48
+   },
+   "0x40": {
+    "name": "ANNOUNCE_TEAM_STATUS",
+    "index": 16,
+    "targets": [
+     "0x686670 League::announce_team_status (101 vtables)",
+     "0x519690 Cup::add_team_result_news (56 vtables)",
+     "0x48c6b0 Comp::announce_team_status (4 vtables)"
+    ],
+    "confidence": "verified",
+    "evidence": "Comp::announce_team_status 0x48c6b0, League::announce_team_status 0x686670, Cup::add_team_result_news 0x519690.",
+    "call_sites": 1
+   },
+   "0x44": {
+    "name": "UPDATE_STAFF_RECORDS_FOR_STATUS",
+    "index": 17,
+    "targets": [
+     "0x519890 Cup::update_staff_records_for_status (47 vtables)",
+     "0x686940 League::update_staff_records_for_status (39 vtables)",
+     "0x48c6c0 Comp::update_staff_records_for_status (5 vtables)",
+     "0x430210 BraRegBahia::update_staff_records_for_status (6 vtables)",
+     "0x654180 ItaSerC2a::update_staff_records_for_status (5 vtables)",
+     "0x576c50 EngSecond::update_staff_records_for_status (3 vtables)",
+     "0x401ba0 AfricanNations::update_staff_records_for_status (1 vtables)",
+     "0x40c5b0 AsiaClubChamp::update_staff_records_for_status (1 vtables)",
+     "0x40e260 AsiaCupWinner::update_staff_records_for_status (1 vtables)",
+     "0x40f5a0 AsiaNations::update_staff_records_for_status (1 vtables)",
+     "... 52 more per-class overrides"
+    ],
+    "confidence": "verified",
+    "evidence": "Comp/League/Cup::update_staff_records_for_status (0x48c6c0, 0x686940, 0x519890) + 59 overrides.",
+    "call_sites": 2
+   },
+   "0x54": {
+    "name": "GET_MATCH_IMPORTANCE",
+    "index": 21,
+    "targets": [
+     "0x68a3e0 League::get_match_importance (101 vtables)",
+     "0x5221f0 Cup::get_match_importance (56 vtables)",
+     "0x48c5f0 Comp::get_match_importance (4 vtables)"
+    ],
+    "confidence": "verified",
+    "evidence": "Comp/League/Cup::get_match_importance (0x48c5f0, 0x68a3e0, 0x5221f0).",
+    "call_sites": 1
+   },
+   "0x5c": {
+    "name": "SET_PREDICTED_POSITIONS",
+    "index": 23,
+    "targets": [
+     "0x68a850 League::set_predicted_positions (60 vtables)",
+     "0x5223a0 Cup::rank_teams (49 vtables)",
+     "0x5a53c0 shared_noop_ret0_5a53c0 (4 vtables)",
+     "0x4027d0 AfricanNations::set_predicted_positions (1 vtables)",
+     "0x40c720 AsiaClubChamp::rank_teams (1 vtables)",
+     "0x40e3b0 AsiaCupWinner::rank_teams (1 vtables)",
+     "0x4103a0 AsiaNations::set_predicted_positions (1 vtables)",
+     "0x424030 BelThird::set_predicted_positions (1 vtables)",
+     "0x42f0a0 BraNatThird::set_predicted_positions (1 vtables)",
+     "0x430340 BraRegBahia::set_predicted_positions (1 vtables)",
+     "... 41 more per-class overrides"
+    ],
+    "confidence": "verified",
+    "evidence": "League::set_predicted_positions 0x68a850, Cup::rank_teams 0x5223a0 (same slot), Comp base empty 0x5a53c0; Rust names the local \"predicted\".",
+    "call_sites": 24
+   },
+   "0x60": {
+    "name": "COUNTS_FOR_FIXTURE_CLASH",
+    "index": 24,
+    "targets": [
+     "0x48e360 Comp::counts_for_fixture_clash (158 vtables)",
+     "0x5839d0 shared_return_zero_ret8 (3 vtables)"
+    ],
+    "confidence": "verified",
+    "evidence": "Comp::counts_for_fixture_clash 0x48e360 everywhere except 3 European cups (return 0); fix_man calls it (comp, fixture, other).",
+    "call_sites": 1
+   },
+   "0x64": {
+    "name": "ACCEPTS_FIXTURE",
+    "index": 25,
+    "targets": [
+     "0x5bb550 stub_return_one_ret4 (156 vtables)",
+     "0x5b9430 stub_return_zero_ret4 (5 vtables)"
+    ],
+    "confidence": "read",
+    "evidence": "No class method: default stub_return_one_ret4 0x5bb550, stub_return_zero_ret4 0x5b9430 in fra_cfa/fra_lower/spa_lower (community: \"a competition refuses league fixtures\"); fix_man.rs calls it (comp, fixture) and drops the fixture on 0. Name read from the code.",
+    "call_sites": 1
+   },
+   "0x68": {
+    "name": "SET_CLUB_PROGRESS",
+    "index": 26,
+    "targets": [
+     "0x48e380 Comp::set_club_progress (87 vtables)",
+     "0x432af0 BraRegGaucho::set_club_progress (6 vtables)",
+     "0x4241b0 BelThird::set_club_progress (2 vtables)",
+     "0x42d260 BraNatSecond::set_club_progress (2 vtables)",
+     "0x573260 EngFirst::set_club_progress (2 vtables)",
+     "0x4029c0 AfricanNations::set_club_progress (1 vtables)",
+     "0x406b80 ArgPrm::set_club_progress (1 vtables)",
+     "0x40ca20 AsiaClubChamp::set_club_progress (1 vtables)",
+     "0x40e6b0 AsiaCupWinner::set_club_progress (1 vtables)",
+     "0x410560 AsiaNations::set_club_progress (1 vtables)",
+     "... 57 more per-class overrides"
+    ],
+    "confidence": "verified",
+    "evidence": "Comp::set_club_progress 0x48e380 + 66 overrides; Rust (this, club, a, b, c, d).",
+    "call_sites": 3
+   },
+   "0x6c": {
+    "name": "PAY_STAGE_PRIZE_MONEY",
+    "index": 27,
+    "targets": [
+     "0x583470 shared_noop_ret4 (161 vtables)"
+    ],
+    "confidence": "read",
+    "evidence": "Empty in every vtable (shared_noop_ret4 0x583470, one argument). The only caller, League::pay_prize_money 0x682e10 with prize mode 3, hands the stage league to its parent competition through it. Name read from the caller.",
+    "call_sites": 1
+   },
+   "0x70": {
+    "name": "GET_QUALIFICATION_STATUS",
+    "index": 28,
+    "targets": [
+     "0x4011c0 Comp::get_qualification_status (152 vtables)",
+     "0x911b80 WcAfricanCup::get_qualification_status (4 vtables)",
+     "0x57cd30 EuroChamp::get_qualification_status (1 vtables)",
+     "0x580b50 EuroChampQual::get_qualification_status (1 vtables)",
+     "0x91b6e0 WcEuropeLeague::get_qualification_status (1 vtables)",
+     "0x921630 WcSouthAmericanLeague::get_qualification_status (1 vtables)",
+     "0x92fae0 WorldCup::get_qualification_status (1 vtables)"
+    ],
+    "confidence": "verified",
+    "evidence": "Comp::get_qualification_status 0x4011c0 + overrides in EuroChamp, EuroChampQual, WorldCup and WC qualifiers; Rust (comp, club) -> short (board expectation flags of a national team).",
+    "call_sites": 1
+   },
+   "0x74": {
+    "name": "GET_QUALIFICATION_STATUS_CHANGE",
+    "index": 29,
+    "targets": [
+     "0x4011d0 Comp::get_qualification_status_change (152 vtables)",
+     "0x920260 WcOceaniaLeague::get_qualification_status_change (3 vtables)",
+     "0x57cd80 EuroChamp::get_qualification_status_change (1 vtables)",
+     "0x580b80 EuroChampQual::get_qualification_status_change (1 vtables)",
+     "0x911ba0 WcAfricanCup::get_qualification_status_change (1 vtables)",
+     "0x91b710 WcEuropeLeague::get_qualification_status_change (1 vtables)",
+     "0x921670 WcSouthAmericanLeague::get_qualification_status_change (1 vtables)",
+     "0x92fb40 WorldCup::get_qualification_status_change (1 vtables)"
+    ],
+    "confidence": "verified",
+    "evidence": "Comp::get_qualification_status_change 0x4011d0 + overrides in the same international comps; Rust (comp, nation) -> char.",
+    "call_sites": 1
+   },
+   "0x7c": {
+    "name": "SET_FIXTURE_SUBSTITUTES",
+    "index": 31,
+    "targets": [
+     "0x48f2d0 Comp::set_fixture_substitutes (157 vtables)",
+     "0x5bb100 FraCup::set_fixture_substitutes (2 vtables)",
+     "0x4124e0 AusNsl::set_fixture_substitutes (1 vtables)",
+     "0x5ea3d0 GreCup::set_fixture_substitutes (1 vtables)"
+    ],
+    "confidence": "verified",
+    "evidence": "Comp::set_fixture_substitutes 0x48f2d0 + AusNsl, FraCup, GreCup overrides; Rust (this, fixture).",
+    "call_sites": 2
+   },
+   "0x88": {
+    "name": "HAS_HOST_COUNTRY",
+    "index": 34,
+    "targets": [
+     "0x5dce00 shared_return_false (158 vtables)",
+     "0x404480 shared_return_true (3 vtables)"
+    ],
+    "confidence": "read",
+    "evidence": "Comp slot 34: shared_return_false 0x5dce00 by default, shared_return_true 0x404480 only in EuroChamp, Olympics and WorldCup (community: unnamed slot 34). Both Rust callers (cup.rs, league.rs history record) look up the hosts in HostCountry when it returns true. Name read from the callers.",
+    "call_sites": 2
+   },
+   "0x8c": {
+    "name": "SET_UP_RULES",
+    "index": 35,
+    "targets": [
+     "0x48ce90 shared_return_one (4 vtables)",
+     "0x6826f0 League::set_up_rules (3 vtables)",
+     "0x518710 Cup::set_up_rounds (2 vtables)",
+     "0x858e70 SpaSuper::set_up_rounds (21 vtables)",
+     "0x5bb000 FraCup::set_up_rounds (7 vtables)",
+     "0x7ce6f0 PorCup::set_up_rounds (5 vtables)",
+     "0x4322d0 BraRegGaucho::set_up_rules (3 vtables)",
+     "0x40d800 AsiaCupWinner::set_up_rounds (2 vtables)",
+     "0x43bc70 BraRegSanta::set_up_rules (2 vtables)",
+     "0x4c15f0 ConChamp::set_up_rounds (2 vtables)",
+     "... 106 more per-class overrides"
+    ],
+    "confidence": "verified",
+    "evidence": "League::set_up_rules 0x6826f0, Cup::set_up_rounds 0x518710 (same slot), Comp base shared_return_one 0x48ce90; ~116 overrides; the season rollovers call it and show an error box on <0 / 0.",
+    "call_sites": 12
+   }
+  }
+ },
+ "league": {
+  "class": "League and subclasses (League_Stage): slots past Comp, 0x90..0xb0",
+  "base_vtable": "g_vtable_league 0x96d020 (45 slots)",
+  "slots": {
+   "0x90": {
+    "name": "POINTS_FOR_RESULT",
+    "index": 36,
+    "targets": [
+     "0x68aad0 League::points_for_result (89 vtables)",
+     "0x43c4a0 BraRegSp::points_for_result (8 vtables)",
+     "0x66d770 KorLeagueCup::points_for_result (1 vtables)"
+    ],
+    "confidence": "verified",
+    "evidence": "League::points_for_result 0x68aad0 (+2 overrides); Rust (scorer, club, fixture) -> points. Cup has another method at this offset.",
+    "call_sites": 1
+   },
+   "0x94": {
+    "name": "UPDATE_POSITIONS_AND_STATUS",
+    "index": 37,
+    "targets": [
+     "0x684cd0 League::update_positions_and_status (93 vtables)",
+     "0x420680 BelSecond::update_positions_and_status (1 vtables)",
+     "0x422f70 BelThird::update_positions_and_status (1 vtables)",
+     "0x580010 EuroChampQual::update_positions_and_status (1 vtables)",
+     "0x5f6d20 HolFirst::update_positions_and_status (1 vtables)",
+     "0x91a7b0 WcEuropeLeague::update_positions_and_status (1 vtables)"
+    ],
+    "confidence": "verified",
+    "evidence": "League::update_positions_and_status 0x684cd0 (+5 overrides).",
+    "call_sites": 5
+   },
+   "0x98": {
+    "name": "HAS_AUTOMATIC_PROMOTION",
+    "index": 38,
+    "targets": [
+     "0x684790 League::has_automatic_promotion (94 vtables)",
+     "0x404480 shared_return_true (4 vtables)"
+    ],
+    "confidence": "verified",
+    "evidence": "League::has_automatic_promotion 0x684790; shared_return_true in ger_regional, spa_second_b, swe_second, tur_second_b.",
+    "call_sites": 7
+   },
+   "0x9c": {
+    "name": "HAS_RELEGATION",
+    "index": 39,
+    "targets": [
+     "0x6847b0 League::has_relegation (93 vtables)",
+     "0x404480 shared_return_true (4 vtables)",
+     "0x5dce00 shared_return_false (1 vtables)"
+    ],
+    "confidence": "verified",
+    "evidence": "League::has_relegation 0x6847b0; shared_return_true in 4 leagues, shared_return_false in ger_regional.",
+    "call_sites": 3
+   },
+   "0xa4": {
+    "name": "RECORD_FINAL_POSITIONS",
+    "index": 41,
+    "targets": [
+     "0x68aa30 League::record_final_positions (95 vtables)",
+     "0x650050 ItaSerC1b::record_final_positions (2 vtables)",
+     "0x901ba0 TurSecondB::record_final_positions (1 vtables)"
+    ],
+    "confidence": "verified",
+    "evidence": "League::record_final_positions 0x68aa30 (+ItaSerC1b, TurSecondB overrides).",
+    "call_sites": 5
+   },
+   "0xb0": {
+    "name": "PROCESS_PROMOTION_RELEGATION_CHAIN",
+    "index": 44,
+    "targets": [
+     "0x689c20 League::process_promotion_relegation_chain (86 vtables)",
+     "0x4067f0 ArgPrm::process_promotion_relegation_chain (1 vtables)",
+     "0x41ee80 BelFirst::process_promotion_relegation_chain (1 vtables)",
+     "0x42ae90 BraNatFirst::process_promotion_relegation_chain (1 vtables)",
+     "0x5752e0 EngPrm::process_promotion_relegation_chain (1 vtables)",
+     "0x596110 FinPrm::process_promotion_relegation_chain (1 vtables)",
+     "0x5db6c0 GerFirst::process_promotion_relegation_chain (1 vtables)",
+     "0x642410 ItaSerA::process_promotion_relegation_chain (1 vtables)",
+     "0x7ca490 PolFirst::process_promotion_relegation_chain (1 vtables)",
+     "0x7cfbf0 PorPrm::process_promotion_relegation_chain (1 vtables)",
+     "... 3 more per-class overrides"
+    ],
+    "confidence": "verified",
+    "evidence": "League::process_promotion_relegation_chain 0x689c20 + 12 national overrides; Rust (this, 1).",
+    "call_sites": 2
+   }
+  }
+ },
+ "cup": {
+  "class": "Cup and subclasses (Cup_Stage): slots past Comp, 0x90..0x9c (different methods from League at the same offsets)",
+  "base_vtable": "g_vtable_cup 0x9693c8 (40 slots)",
+  "slots": {
+   "0x90": {
+    "name": "CLUB_IN_HIGHER_DIVISION",
+    "index": 36,
+    "targets": [
+     "0x522360 Cup::club_in_higher_division (54 vtables)",
+     "0x5bb030 FraCup::club_in_higher_division (1 vtables)",
+     "0x5d9930 GerCup::club_in_higher_division (1 vtables)"
+    ],
+    "confidence": "verified",
+    "evidence": "Cup::club_in_higher_division 0x522360 (+2 overrides); Rust (cup, club_a, club_b) -> greater.",
+    "call_sites": 1
+   },
+   "0x94": {
+    "name": "MAP_FIXTURE_TREE",
+    "index": 37,
+    "targets": [
+     "0x518790 Cup::map_fixture_tree (55 vtables)",
+     "0x5241e0 Cup_Stage::map_fixture_tree (1 vtables)"
+    ],
+    "confidence": "verified",
+    "evidence": "Cup::map_fixture_tree 0x518790, Cup_Stage::map_fixture_tree 0x5241e0; the cup rollovers show an error box on <0.",
+    "call_sites": 5
+   }
+  }
+ },
+ "transfer_rules": {
+  "class": "TRANSFER_RULES (per-nation transfer rules, TransferManager +TRANSFER_RULES, 29 vtables of 13 slots)",
+  "base_vtable": "base ctor TRANSFER_RULES::TRANSFER_RULES 0x8e84a0; vtables found by TRANSFER_RULES::rule_slot_5 at +0x14",
+  "slots": {
+   "0x0": {
+    "name": "DAILY_UPDATE",
+    "index": 0,
+    "targets": [
+     "0x583470 shared_noop_ret4 (25 vtables)",
+     "0x57a020 ENGLAND_RULES::daily_update (2 vtables)",
+     "0x40a710 ARGENTINA_RULES::daily_update (1 vtables)",
+     "0x5c1710 FRANCE_RULES::daily_update (1 vtables)"
+    ],
+    "confidence": "verified",
+    "evidence": "ARGENTINA/ENGLAND/FRANCE_RULES::daily_update; other nations shared_noop_ret4; TransferManager daily loop over the 28 rules.",
+    "call_sites": 1
+   },
+   "0x4": {
+    "name": "RECORD_TRANSFER",
+    "index": 1,
+    "targets": [
+     "0x583470 shared_noop_ret4 (27 vtables)",
+     "0x40a810 ARGENTINA_RULES::record_transfer (1 vtables)",
+     "0x5c17d0 FRANCE_RULES::record_transfer (1 vtables)"
+    ],
+    "confidence": "verified",
+    "evidence": "ARGENTINA_RULES/FRANCE_RULES::record_transfer, else shared_noop_ret4; Rust picks slot 4 for a transfer.",
+    "call_sites": 2
+   },
+   "0x8": {
+    "name": "RECORD_LOAN",
+    "index": 2,
+    "targets": [
+     "0x583470 shared_noop_ret4 (27 vtables)",
+     "0x579fd0 ENGLAND_RULES::record_loan (1 vtables)",
+     "0x63c4e0 IRELAND_RULES::record_loan (1 vtables)"
+    ],
+    "confidence": "verified",
+    "evidence": "ENGLAND_RULES/IRELAND_RULES::record_loan, else shared_noop_ret4; Rust picks slot 8 for a loan.",
+    "call_sites": 2
+   },
+   "0xc": {
+    "name": "CAN_MAKE_OFFER",
+    "index": 3,
+    "targets": [
+     "0x8e8800 TRANSFER_RULES::can_make_offer (21 vtables)",
+     "0x424eb0 BELGIUM_RULES::can_make_offer (2 vtables)",
+     "0x40a900 ARGENTINA_RULES::can_make_offer (1 vtables)",
+     "0x5c1930 FRANCE_RULES::can_make_offer (1 vtables)",
+     "0x661630 ITALY_RULES::can_make_offer (1 vtables)",
+     "0x666e20 JAPAN_RULES::can_make_offer (1 vtables)",
+     "0x7d4040 PORTUGAL_RULES::can_make_offer (1 vtables)",
+     "0x859850 SPAIN_RULES::can_make_offer (1 vtables)"
+    ],
+    "confidence": "verified",
+    "evidence": "TRANSFER_RULES::can_make_offer 0x8e8800 + national overrides.",
+    "call_sites": 3
+   },
+   "0x10": {
+    "name": "CAN_SIGN_PLAYER",
+    "index": 4,
+    "targets": [
+     "0x8e8560 TRANSFER_RULES::can_sign_player (21 vtables)",
+     "0x40a860 ARGENTINA_RULES::can_sign_player (1 vtables)",
+     "0x424d30 BELGIUM_RULES::can_sign_player (1 vtables)",
+     "0x5c1830 FRANCE_RULES::can_sign_player (1 vtables)",
+     "0x5e00e0 GERMANY_RULES::can_sign_player (1 vtables)",
+     "0x661520 ITALY_RULES::can_sign_player (1 vtables)",
+     "0x666d40 JAPAN_RULES::can_sign_player (1 vtables)",
+     "0x7d3ef0 PORTUGAL_RULES::can_sign_player (1 vtables)",
+     "0x859780 SPAIN_RULES::can_sign_player (1 vtables)"
+    ],
+    "confidence": "verified",
+    "evidence": "TRANSFER_RULES::can_sign_player 0x8e8560 + national overrides.",
+    "call_sites": 1
+   },
+   "0x18": {
+    "name": "GET_INELIGIBILITY_CODE",
+    "index": 6,
+    "targets": [
+     "0x8e8a60 TRANSFER_RULES::get_ineligibility_code (12 vtables)",
+     "0x66e770 KOREA_RULES::get_ineligibility_code (8 vtables)",
+     "0x8595e0 SPAIN_RULES::get_ineligibility_code (2 vtables)",
+     "0x43f210 BRAZIL_RULES::get_ineligibility_code (1 vtables)",
+     "0x57a090 ENGLAND_RULES::get_ineligibility_code (1 vtables)",
+     "0x5832e0 EUROPE_RULES::get_ineligibility_code (1 vtables)",
+     "0x63c350 IRELAND_RULES::get_ineligibility_code (1 vtables)",
+     "0x7937f0 NORTHERN_IRELAND_RULES::get_ineligibility_code (1 vtables)",
+     "0x794610 NORWAY_RULES::get_ineligibility_code (1 vtables)",
+     "0x7f65d0 SCOTLAND_RULES::get_ineligibility_code (1 vtables)"
+    ],
+    "confidence": "verified",
+    "evidence": "TRANSFER_RULES::get_ineligibility_code 0x8e8a60 + national overrides.",
+    "call_sites": 1
+   },
+   "0x1c": {
+    "name": "FILL_SQUAD_RESTRICTIONS",
+    "index": 7,
+    "targets": [
+     "0x5832c0 TRANSFER_RULES::fill_squad_restrictions (2 vtables)",
+     "0x63c330 IRELAND_RULES::fill_squad_restrictions (5 vtables)",
+     "0x579c50 ENGLAND_RULES::fill_squad_restrictions (3 vtables)",
+     "0x40aa10 ARGENTINA_RULES::fill_squad_restrictions (1 vtables)",
+     "0x412db0 AUSTRALIA_RULES::fill_squad_restrictions (1 vtables)",
+     "0x424f80 BELGIUM_RULES::fill_squad_restrictions (1 vtables)",
+     "0x43f2a0 BRAZIL_RULES::fill_squad_restrictions (1 vtables)",
+     "0x518620 CROATIA_RULES::fill_squad_restrictions (1 vtables)",
+     "0x5c1a30 FRANCE_RULES::fill_squad_restrictions (1 vtables)",
+     "0x5e02d0 GERMANY_RULES::fill_squad_restrictions (1 vtables)",
+     "... 12 more per-class overrides"
+    ],
+    "confidence": "verified",
+    "evidence": "TRANSFER_RULES::fill_squad_restrictions 0x5832c0 + national overrides.",
+    "call_sites": 1
+   },
+   "0x20": {
+    "name": "CAN_LOAN_PLAYER",
+    "index": 8,
+    "targets": [
+     "0x40a600 TRANSFER_RULES::can_loan_player (9 vtables)",
+     "0x793900 NORTHERN_IRELAND_RULES::can_loan_player (4 vtables)",
+     "0x412dd0 AUSTRALIA_RULES::can_loan_player (3 vtables)",
+     "0x5ed060 GREECE_RULES::can_loan_player (3 vtables)",
+     "0x794760 NORWAY_RULES::can_loan_player (2 vtables)",
+     "0x902240 TURKEY_RULES::can_loan_player (2 vtables)",
+     "0x579d60 ENGLAND_RULES::can_loan_player (1 vtables)",
+     "0x5a9af0 FINLAND_RULES::can_loan_player (1 vtables)",
+     "0x63c3d0 IRELAND_RULES::can_loan_player (1 vtables)",
+     "0x661770 ITALY_RULES::can_loan_player (1 vtables)",
+     "0x7f6650 SCOTLAND_RULES::can_loan_player (1 vtables)",
+     "0x859630 SPAIN_RULES::can_loan_player (1 vtables)"
+    ],
+    "confidence": "verified",
+    "evidence": "TRANSFER_RULES::can_loan_player 0x40a600 + national overrides.",
+    "call_sites": 2
+   },
+   "0x24": {
+    "name": "CAN_END_LOAN",
+    "index": 9,
+    "targets": [
+     "0x40a610 TRANSFER_RULES::can_end_loan (24 vtables)",
+     "0x5a9ba0 FINLAND_RULES::can_end_loan (1 vtables)",
+     "0x5c1ed0 FRANCE_RULES::can_end_loan (1 vtables)",
+     "0x5e0210 GERMANY_RULES::can_end_loan (1 vtables)",
+     "0x63c530 IRELAND_RULES::can_end_loan (1 vtables)",
+     "0x6618f0 ITALY_RULES::can_end_loan (1 vtables)"
+    ],
+    "confidence": "verified",
+    "evidence": "TRANSFER_RULES::can_end_loan 0x40a610 + France/Germany/Ireland/Italy/Finland overrides.",
+    "call_sites": 2
+   },
+   "0x28": {
+    "name": "GET_LOAN_PERIOD",
+    "index": 10,
+    "targets": [
+     "0x8e8bd0 TRANSFER_RULES::get_loan_period (11 vtables)",
+     "0x90f1a0 WALES_RULES::get_loan_period (11 vtables)",
+     "0x7ec8e0 RUSSIA_RULES::get_loan_period (3 vtables)",
+     "0x579c70 ENGLAND_RULES::get_loan_period (1 vtables)",
+     "0x5a9a80 FINLAND_RULES::get_loan_period (1 vtables)",
+     "0x793870 NORTHERN_IRELAND_RULES::get_loan_period (1 vtables)",
+     "0x7f6530 SCOTLAND_RULES::get_loan_period (1 vtables)"
+    ],
+    "confidence": "verified",
+    "evidence": "TRANSFER_RULES::get_loan_period 0x8e8bd0 + national overrides.",
+    "call_sites": 1
+   },
+   "0x2c": {
+    "name": "POST_DEADLINE_NEWS",
+    "index": 11,
+    "targets": [
+     "0x8e9080 TRANSFER_RULES::post_deadline_news (24 vtables)",
+     "0x424fa0 BELGIUM_RULES::post_deadline_news (1 vtables)",
+     "0x5c1a70 FRANCE_RULES::post_deadline_news (1 vtables)",
+     "0x5e0310 GERMANY_RULES::post_deadline_news (1 vtables)",
+     "0x661a30 ITALY_RULES::post_deadline_news (1 vtables)",
+     "0x7947d0 NORWAY_RULES::post_deadline_news (1 vtables)"
+    ],
+    "confidence": "verified",
+    "evidence": "TRANSFER_RULES::post_deadline_news 0x8e9080 + Belgium/France/Germany/Italy/Norway overrides.",
+    "call_sites": 1
+   },
+   "0x30": {
+    "name": "WRITE_DEADLINE_NEWS_TEXT",
+    "index": 12,
+    "targets": [
+     "0x8e91b0 TRANSFER_RULES::write_deadline_news_text (23 vtables)",
+     "0x40aa30 ARGENTINA_RULES::write_deadline_news_text (1 vtables)",
+     "0x4250b0 BELGIUM_RULES::write_deadline_news_text (1 vtables)",
+     "0x5c1b90 FRANCE_RULES::write_deadline_news_text (1 vtables)",
+     "0x5e0420 GERMANY_RULES::write_deadline_news_text (1 vtables)",
+     "0x661b40 ITALY_RULES::write_deadline_news_text (1 vtables)",
+     "0x7948e0 NORWAY_RULES::write_deadline_news_text (1 vtables)"
+    ],
+    "confidence": "verified",
+    "evidence": "TRANSFER_RULES::write_deadline_news_text 0x8e91b0 + national overrides; Rust TransferManager::write_deadline_news_text delegates to it.",
+    "call_sites": 1
+   }
+  }
+ },
+ "ruling_body": {
+  "class": "RulingBody (Discipline rules, 44 vtables of 8 slots)",
+  "base_vtable": "g_vtable_ruling_body 0x96f104",
+  "slots": {
+   "0x4": {
+    "name": "DAILY_UPDATE",
+    "index": 1,
+    "targets": [
+     "0x7e7d50 RulingBody::daily_update (44 vtables)"
+    ],
+    "confidence": "verified",
+    "evidence": "RulingBody::daily_update 0x7e7d50 in all 44 ruling-body vtables (0x96e9f4..0x96f104); Discipline daily loop over the 43 rules.",
+    "call_sites": 1
+   }
+  }
+ }
+}

@@ -281,11 +281,11 @@ pub(crate) unsafe extern "C" fn cqt4_update_average_attendance(league: usize) {
         }
     }
     let promotion = || {
-        let v: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(league.addr()) + 0x98));
+        let v: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(league.addr()) + league_vtable::HAS_AUTOMATIC_PROMOTION));
         v(league.addr())
     };
     let relegation = || {
-        let v: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(league.addr()) + 0x9c));
+        let v: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(league.addr()) + league_vtable::HAS_RELEGATION));
         v(league.addr())
     };
     let mut n = 0i32;
@@ -569,7 +569,7 @@ pub(crate) unsafe fn start_new_season_two_halves(this: League, table: usize, fil
     crate::comparison::branch(ramo);
     this.set_stages(v);
     write_i32(this.addr() + league::CURRENT_STAGE, -1);
-    let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x8c));
+    let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::SET_UP_RULES));
     if rules(this.addr()) == 0 {
         show_error_at(file, 0x1d4);
         return 0;
@@ -587,7 +587,7 @@ pub(crate) unsafe fn start_new_season_two_halves(this: League, table: usize, fil
         show_error_at(file, 0x1e8);
         return 0;
     }
-    let predicted: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x5c));
+    let predicted: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::SET_PREDICTED_POSITIONS));
     predicted(this.addr());
     exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), this.competition().addr()) as u32 
 }
@@ -700,7 +700,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_final_stage(this: usiz
         // simplification: the 8-byte list is not freed, as in the original.
         return;
     }
-    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
+    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = table(this.addr(), 2, &mut rodadas, &mut extra, 0);
     let p = exe::crt_operator_new(0xb2);
@@ -756,7 +756,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_record_season_honours(this: u
     let this = League(this);
     if this.current_stage() == 2 {
         let f = read_usize(this.stages() + 8);
-        let history: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(f) + 0x30));
+        let history: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(f) + comp_vtable::RECORD_SEASON_HONOURS));
         history(f);
         crate::comparison::branch("cqo_9 final history");
         return exe::bra_nat_first_fill_champions_cup_entrants();
