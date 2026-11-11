@@ -56,8 +56,8 @@ pub(crate) unsafe fn staff_state_byte_0b(person: Staff) -> u8 {
 /// slots for another role, role 8/9/10 with a free place in lists `+0x19f` (5), `+0x1b3` (7), `+0x1cf` (3) and role 6/7
 /// with no `.assistant_manager()`; without bits `0x30` of `+0xb` of the 79-byte record (`staff_state_byte_0b`; player
 /// slot), no future transfer (`exe::transfer_manager_get_future_transfer`), agreed contract
-/// (`exe::transfer_manager_get_agreed_contract_club`) or outgoing loan (`.national_job()` with `.job_for_nation()` =
-/// `job_kind::MANAGER`).
+/// (`exe::transfer_manager_get_agreed_contract_club`) or a national team manager job (`.national_job()` with
+/// `.job_for_nation()` = `job_kind::MANAGER`).
 ///
 /// Purchase slot (`shortlist_slot::FLAGS` bit 0, `shortlist_slot_flags::LOAN_SLOT`, clear): position (`+1`) not
 /// negative in a player slot; the club can reach him (`exe::transfer_manager_can_club_bid_for_player`, or reason 9); no
@@ -87,7 +87,7 @@ pub(crate) unsafe fn staff_state_byte_0b(person: Staff) -> u8 {
 /// index (`.slot_index()`) and the count goes up for a player slot. The local offer is destroyed
 /// (`exe::drop_transfer_offer`).
 ///
-/// Loan slot (bit 0, `shortlist_slot_flags::LOAN_SLOT`): outside England (`[KEY_NATION_FRANCE]`) with
+/// Loan slot (bit 0, `shortlist_slot_flags::LOAN_SLOT`): not a French club (`[KEY_NATION_FRANCE]`) with
 /// `.professional_status()` = `professional_status::AMATEUR`; the loan possible
 /// (`exe::transfer_manager_can_loan_player`); a human seller without bit 2 (`transfer_status::LOAN_LISTED`) of the
 /// contract's `contract::TRANSFER_STATUS` skips; no offer (`exe::transfer_manager_club_has_offer_for_player`) and no
@@ -1771,7 +1771,7 @@ pub(crate) unsafe fn young_player_adjustment(this: usize, club: Club, p: Staff, 
 
 /// Values the player for the club: the player's rating for the slot (through the club's best observer, the scout list
 /// at a human club, the fog of war) and the fee the club would pay (base value, age, young players' perceived ability,
-/// consistency, the caps by position, reputation, record, age, division and the club's nation). Returns the price
+/// injury proneness, the caps by position, reputation, record, age, division and the club's nation). Returns the price
 /// (_ftol).
 ///
 /// Convention: thiscall, ret `0x18`, `shortlist_manager.cpp`, 4.6 KB of x87; the map gives 1332 bytes.
@@ -1798,7 +1798,7 @@ pub(crate) unsafe fn young_player_adjustment(this: usize, club: Club, p: Staff, 
 /// position (`exe::shortlist_position_mask_to_index`) the price cap and the fraction; the base value (high with rating
 /// ≥ 35000, the slot's `.price()` ≥ rating/8 and `.position()` ≥ `0x80`); the adjustment by slot type (1, 2, 3: the
 /// young players, `young_player_adjustment`; 3, 4, 5, 6: fractions); the age above the divisor (28, 32 with no
-/// position, 19 in slot 5) and the foreigner (`exe::database_is_staff_foreign`); the price by consistency
+/// position, 19 in slot 5) and the foreigner (`exe::database_is_staff_foreign`); the price by injury proneness
 /// (`.injury_proneness()` of sheet `.player()`) and the cap by slot type, reputation, record (`+0xd`) and age; above
 /// 1.5 million, a perceived potential ability (`FN_MATCH_MAN_JUDGE_PLAYER_ABILITY` with 2) below 145 pulls it to 1.5
 /// million; the limit of the club's division (`.division()`, `.reputation()` < 16); the club's nation (`.nation()`)
@@ -2777,17 +2777,17 @@ pub(crate) unsafe extern "thiscall" fn update_club_shortlist(this: usize, club: 
     exe::shortlist_manager_allocate_transfer_budget(this, club); // the transfer budget
 }
 
-/// Sets to 100 the entry state of every club that targets the player and, with `clear`, removes the bid marker from the
-/// slots holding him.
+/// Sets to 100 the day counter of the entry of every club that targets the player and, with `clear`, removes the bid
+/// marker from the slots holding him.
 ///
 /// Convention: thiscall, ret 8, `shortlist_manager.cpp`, SEH frame only for the new list.
 /// `Shortlist_Manager::suspend_clubs_shortlisting_player(player, clear)`: in a new LLIST (`exe::crt_operator_new(0xe)`
 /// and `exe::new_llist`) it gathers the clubs targeting the player (`exe::shortlist_manager_collect_interested_clubs`
 /// with ignore 1, mode 3, all); for each item (`exe::llist_get_next`, after resetting the cursor
-/// `.set_cursor(.head())`) it sets the state of the club's entry (`club_shortlist::DAYS`) to 100 and, with `clear`,
-/// removes the bid marker (`.offer_ref()` = −1 when > −1) from the slots that hold the player (`.target_staff_id()` =
-/// id). It destroys and frees the list (`exe::drop_llist`, `exe::crt_operator_delete`). The count (`+0`, signed 16
-/// bits) is re-read on every pass, as in the original.
+/// `.set_cursor(.head())`) it sets the day counter of the club's entry (`club_shortlist::DAYS`) to 100 and, with
+/// `clear`, removes the bid marker (`.offer_ref()` = −1 when > −1) from the slots that hold the player
+/// (`.target_staff_id()` = id). It destroys and frees the list (`exe::drop_llist`, `exe::crt_operator_delete`). The
+/// count (`+0`, signed 16 bits) is re-read on every pass, as in the original.
 /// Original: `Shortlist_Manager::suspend_clubs_shortlisting_player` (0x842b00, shortlist_manager.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn suspend_clubs_shortlisting_player(this: usize, player: usize, clear: u8) {
     let p = exe::crt_operator_new(0xe);
@@ -2842,7 +2842,7 @@ pub(crate) unsafe fn shortlist_manager_get_contract_and_store(person: usize) -> 
 /// ago without being listed), tries to put him on the list of each club in the array (`exe::shortlist_manager_try_add_player_to_club_shortlist`) up to 5 clubs, except
 /// national teams, the contract's club and his own; turned off (DESLIGADAS) from 2026-10-30 to 2026-10-31, when the test criterion changed and the list was emptied: the detour alone (without running
 /// the copy) made the career in original mode leave the reference be54a138 (bisection of the 39 routines of batch 252):
-/// the detour changes the stack residue a later original reads; the copy stays in the code and does not run
+/// the detour changes the stack residue a later original reads; since then the routine is hooked again
 /// Original: `Shortlist_Manager::add_player_to_club_shortlists` (0x842c00, shortlist_manager.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn add_player_to_club_shortlists(this: usize, player: usize, force: u32) {
     let player = Staff(player);

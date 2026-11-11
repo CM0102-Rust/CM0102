@@ -29,9 +29,10 @@ pub(crate) unsafe fn postpone_if_draw_nonzero(n: i32) -> u8 {
 /// (`G_LEAGUE_WORLD_CUP_END_DATE`/+0x3b): 0. In the evening slot (`.time_slice()` = 2), by the home club's finances
 /// (`exe::financetable_get_club_finance`, band `exe::finance_get_wealth_band`): random(1000/2500/5000) zero returns
 /// 0x12. Then the match weather (`exe::weather_get_match_weather`, written into the argument's slot as in the
-/// original): rain 5 at 1 to 13 degrees, an uncovered stadium (+0x4d) of up to 20000 places: a random draw by places
-/// and home club (`.professional_status()`), zero = 9 (postponement); rain 8 (up to 15000 places) and 9 (ice; by wind 4
-/// and by 10000 places): a chain of random draws that returns 0, 5 or 6.
+/// original): rain 5 at 1 to 13 degrees, a stadium without under-soil heating (`stadium::UNDER_SOIL_HEATING`) of up to
+/// 20000 places: a random draw by places and home club (`.professional_status()`), zero = 9 (postponement); rain 8
+/// (without under-soil heating, up to 15000 places) and 9 (ice; by wind 4 and by 10000 places): a chain of random draws
+/// that returns 0, 5 or 6.
 /// Original: `Weather::check_postponement` (0x923630, weather.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, game: usize) -> u8 {
     let game = Fixture(game);

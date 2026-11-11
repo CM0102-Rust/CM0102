@@ -136,9 +136,9 @@ pub(crate) unsafe fn set_contract_type_from_job(c: Contract) {
 /// `contract_manager_fields::CONTRACT_COUNT` count): the index from the 79-byte record; with a contract at the same
 /// club, the old terms of `contract::SQUAD_NUMBER`..`contract::SQUAD_STATUS` stay (`contract::LEAVING_ON_BOSMAN` 0,
 /// `contract::TRANSFER_ARRANGED_FOR` −1) and, in the nation of `KEY_NATION_PORTUGAL` for a non-EU player
-/// (`exe::database_is_staff_eu_national`), 100 days (`exe::date_sub_weeks`) after the person's date
-/// `staff::DATE_JOINED_CLUB`, the second nationality (`staff::SECOND_NATION`) becomes that nation's (with the 1st from
-/// `KEY_NATION_BRAZIL` or on a draw of 3); at another club, the type by the job,
+/// (`exe::database_is_staff_eu_national`), when the person joined the club (`staff::DATE_JOINED_CLUB`) more than 100
+/// weeks ago (today − 100 weeks, `exe::date_sub_weeks`), the second nationality (`staff::SECOND_NATION`) becomes that
+/// nation's (with the 1st from `KEY_NATION_BRAZIL` or on a draw of 3); at another club, the type by the job,
 /// `contract::LEAVING_ON_BOSMAN`/`contract::TRANSFER_ARRANGED_FOR`, `exe::staff_contract_reset_morale_state` and
 /// `contract::CLUB_APPEARANCES` zeroed. Without a record: the first free slot (+0 = −1) gets the contract (type by the
 /// job, `exe::staff_contract_reset_morale_state`), the record, the payroll (`exe::finance_update_wage_bill`) and 1;
@@ -311,14 +311,14 @@ pub(crate) unsafe fn scale_contract_bonuses(c: Contract, f: f64) {
 /// the cap, the end date by age, the total by age and the value capped; returns the terms or makes the offer
 /// (`exe::contract_manager_add_contract_offer`). Without a club, the club of the person's contract (the 79-byte record
 /// in `G_STAFF_STATE_TABLE` → the 0x50-byte contract in `[[G_CONTRACT_MANAGER]]`, kept in `G_CONTRACT_LOOKUP_RESULT`);
-/// none: 0. A national side (`exe::database_is_national_team`), a flagged regen (bits 0x30,
-/// `staff_state_status_flags::RETIREMENT_STATE`, of `staff_state::STATUS_FLAGS` of the record), the club itself outside
-/// types 11..15 (`exe::database_is_player_job` of `.job_for_club()`) with the club's list at 2 or without staff
-/// (`club::MANAGER`) and manageable (`exe::club_can_be_managed`), a human club (`exe::human_manager_is_human_club`) or
-/// a future transfer (`exe::transfer_manager_get_future_transfer`): 0. The desired contract
-/// (`exe::staff_contract_set_to_desired_contract` into the local, with the status
-/// `exe::shortlist_manager_get_squad_status_for_club`; a 3 with ability (`.current_reputation()` of the sheet) above
-/// 5250 becomes 2); a return equal to `rdata::F64_0`: 0. The wage (`contract::UNKNOWN`) and the value
+/// none: 0. A national side (`exe::database_is_national_team`), a person retiring or retired
+/// (`staff_state_status_flags::RETIREMENT_STATE`, bits 0x30 of `staff_state::STATUS_FLAGS` of the record), the club
+/// itself outside types 11..15 (`exe::database_is_player_job` of `.job_for_club()`) with the club's list at 2 or
+/// without staff (`club::MANAGER`) and manageable (`exe::club_can_be_managed`), a human club
+/// (`exe::human_manager_is_human_club`) or a future transfer (`exe::transfer_manager_get_future_transfer`): 0. The
+/// desired contract (`exe::staff_contract_set_to_desired_contract` into the local, with the status
+/// `exe::shortlist_manager_get_squad_status_for_club`; a 3 with a current reputation (`.current_reputation()` of the
+/// sheet) above 5250 becomes 2); a return equal to `rdata::F64_0`: 0. The wage (`contract::UNKNOWN`) and the value
 /// (`contract::WAGE`) × factor. With a signing-on fee (`contract::MINIMUM_FEE_RC`): the minimum release fee
 /// (`contract::RELEASE_FEE`) by the value of the slot's offer (`exe::transfer_offer_get_weighted_value`: in bands of 50
 /// thousand, 1 million and 5 million) or 50 thousand without an offer (100 thousand below the 1st band); without a
@@ -337,8 +337,8 @@ pub(crate) unsafe fn scale_contract_bonuses(c: Contract, f: f64) {
 /// `G_FIFA_TRANSFER_RULES_IN_FORCE` = 1, at most 5 years. A value above the cap × `rdata::F64_1_4`: 0; above the cap:
 /// the wage and the bonuses × value / max(cap, 1) and the value = cap. The grievances cleared
 /// (`exe::staff_contract_clear_all_grievances`). With `out`: copies the contract and 1; otherwise, in mode 2, or with a
-/// current contract in mode 1 that ends before today + 150 days, the offer
-/// (`exe::contract_manager_add_contract_offer`); 1.
+/// current contract in mode 1 that ends after `G_CONTRACT_DATE_PLUS_365_DAYS` + 150 days (`exe::date_add_days`), the
+/// offer (`exe::contract_manager_add_contract_offer`); 1.
 /// Original: `contract_manager_offer_contract` (0x4cda70, contract_manager.cpp, thiscall, ret 0x1c).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn contract_manager_offer_contract(this: usize, person: usize, club_arg: usize, out: usize, slot: i32, factor: f64, mode: u32) -> u32 {
@@ -668,9 +668,10 @@ pub(crate) unsafe fn match_bonuses_for_slot(game: Fixture, contract: Contract, s
 /// +3 (−3) on morale `contract::MORALE`; the person leaves the squad copy. Then, those left in the copy (with a player
 /// sheet, a contract, without suspension `exe::discipline_is_player_banned`, injury
 /// `exe::injury_get_player_injury_status`, national duty `exe::nationalteams_get_international_duty_club` or loan)
-/// develop (`exe::update_player_reputation_after_match` with the average rating `G_PLAYER_STATS` − 1),
-/// `contract::UNHAPPY_FLAG` counts and, from 8 (14 with a partner), outside the human club and the partner, they leave
-/// the first team (`exe::contract_manager_get_squad_placement` 2 or 4 →
+/// develop (`exe::update_player_reputation_after_match` with the average rating of `G_PLAYER_STATS`,
+/// `player_stats_fields::RATING_SUM` / `player_stats_fields::RATED_COUNT` or `rdata::F64_6_8` with no rating, − 0.05
+/// `rdata::F64_0_05`), `contract::UNHAPPY_FLAG` counts and, from 8 (14 with a partner), outside the human club and the
+/// partner, they leave the first team (`exe::contract_manager_get_squad_placement` 2 or 4 →
 /// `exe::contract_manager_toggle_squad_placement`); the happiness drops 8 and the morale drops.
 /// Original: `CONTRACT_MANAGER::update_after_match` (0x4ca6d0, contract_manager.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn update_after_match(this: usize, game: usize, summary: usize) {
@@ -1244,13 +1245,14 @@ pub(crate) unsafe fn set_news_staff_slots(n: usize, p: Staff) {
 
 /// `CONTRACT_MANAGER::post_wants_new_contract_news(contract)` (SEH frame for the local news item), called by the daily
 /// staff pass (0x5ce2d0): posts news item 0xbc2, that the player wants a new contract, to the club manager, unless he
-/// is transfer listed or in an offer. Without a contract: the "Error" box (line 0x2d91). A person on the transfer list
-/// (`exe::transfer_manager_is_queued_for_free_transfer`), with offers (`exe::transfer_manager_get_offers_for_player`)
-/// or offered in exchange (`exe::transfer_manager_get_exchange_offers_for_player`): nothing. Otherwise news item 0xbc2
-/// to the manager of the contract club (`exe::news_send_to_club_manager`): the club, the person, the squad status
-/// (`.squad_status()` >> 4), 0, the contract end (`.contract_expires()` signed day, `.contract_expires_year()` year),
-/// the wage (`.wage()`) and, in slot 11, 1 if the adaptability (`.loyalty()`) is below 10, `.professionalism()` below 5
-/// and the sheet's reputation (`.world_reputation()`) above 4750.
+/// is queued for a free transfer or in an offer. Without a contract: the "Error" box (line 0x2d91). A person queued for
+/// a free transfer (`exe::transfer_manager_is_queued_for_free_transfer`), with offers
+/// (`exe::transfer_manager_get_offers_for_player`) or offered in exchange
+/// (`exe::transfer_manager_get_exchange_offers_for_player`): nothing. Otherwise news item 0xbc2 to the manager of the
+/// contract club (`exe::news_send_to_club_manager`): the club, the person, the squad status (`.squad_status()` >> 4),
+/// 0, the contract end (`.contract_expires()` signed day, `.contract_expires_year()` year), the wage (`.wage()`) and,
+/// in slot 11, 1 if the loyalty (`.loyalty()`) is below 10, `.professionalism()` below 5 and the sheet's reputation
+/// (`.world_reputation()`) above 4750.
 /// Original: `post_wants_new_contract_news` (0x4d9f80, contract_manager.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn post_wants_new_contract_news(this: usize, contract: usize) {
     let contract = Contract(contract);
@@ -1607,10 +1609,10 @@ pub(crate) unsafe extern "stdcall" fn contract_manager_lowest_wage_demand(person
 /// (`exe::contract_manager_calc_player_value`) × 1.5 beats the asking price
 /// (`exe::contract_manager_calc_asking_price`), the club lists him (`contract::TRANSFER_STATUS`: clears bit 2 and sets
 /// 8; morale +12 in `exe::staff_adjust_morale`; the club lists `exe::shortlist_manager_add_player_to_club_shortlists`;
-/// `exe::contract_manager_post_transfer_listed_news`). Otherwise a draw by the request strength (`contract::MORALE`)
-/// and the temperament (`.loyalty()`) against another of 50 gives the 0x10000 grievance
-/// (`exe::staff_contract_apply_event_flags`); the morale drops 12 and the request strength grows by temperament × 5 +
-/// 56, held at ±100.
+/// `exe::contract_manager_post_transfer_listed_news`). Otherwise a draw by the contract's morale (`contract::MORALE`)
+/// and the loyalty (`.loyalty()`) against another of 50 gives the 0x10000 grievance
+/// (`exe::staff_contract_apply_event_flags`); the person's morale drops 12 (`exe::staff_adjust_morale`) and
+/// `contract::MORALE` grows by loyalty × 5 + 56, held at ±100.
 /// Original: `CONTRACT_MANAGER::handle_transfer_request` (0x4d8610, contract_manager.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn handle_transfer_request(this: usize, contract: usize) {
     let contract = Contract(contract);
@@ -1712,7 +1714,7 @@ pub(crate) unsafe extern "C" fn compare_decision_dates(a: usize, b: usize) -> i3
 /// consumes the decision dates due by the given date and slice: each one becomes −1 and, for type 3, the person decides
 /// on the contract offers; turned off (DESLIGADAS) from 2026-10-30 to 2026-10-31, when the test criterion changed and the list was emptied: the detour alone (without running the copy) made the career
 /// in original mode leave the reference be54a138 (bisection of the 39 routines of batch 252): the detour changes the
-/// stack residue a later original reads; the copy stays in the code and does not run
+/// stack residue a later original reads; since then the routine is hooked again
 /// Original: `CONTRACT_MANAGER::process_due_decision_dates` (0x4cd9c0, contract_manager.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn process_due_decision_dates(this: usize, data: usize, slice: u32) {
     let n = |c: usize| read_u32(c) as i32;
@@ -2443,10 +2445,10 @@ pub(crate) unsafe extern "thiscall" fn remove_contract(this: usize, person: usiz
 /// `CONTRACT_MANAGER::resubmit_held_offers(id)`: resubmits the person's held offers as live offers, removes each one
 /// from the list and returns how many. It walks the held offers list (`contract_manager_fields::HELD_OFFERS`) and, for
 /// each one of person `id` (+0): with the transfer (`contract_offer::TRANSFER_OFFER_SLOT`,
-/// `exe::transfer_manager_get_offer_slot` over `G_TRANSFER_MANAGER`) whose club (`.serial()`) is the offer's
-/// (`contract_offer::TRANSFER_OFFER_SERIAL`), it sets state 0xf (`offer_status::COLLAPSED`) to 8
+/// `exe::transfer_manager_get_offer_slot` over `G_TRANSFER_MANAGER`) whose serial (`.serial()`) is the one the offer
+/// kept (`contract_offer::TRANSFER_OFFER_SERIAL`), it sets state 0xf (`offer_status::COLLAPSED`) to 8
 /// (`offer_status::AWAITING_PLAYER_DECISION`) and resubmits the offer (`exe::contract_manager_add_contract_offer` with
-/// the transfer, the club, byte `contract_offer::MARK`, 1, 1, 0); without a transfer
+/// the slot, the serial, byte `contract_offer::MARK`, 1, 1, 0); without a transfer
 /// (`contract_offer::TRANSFER_OFFER_SLOT` = −1) it resubmits with −1, −1. It removes the offer from the list
 /// (`exe::llist_remove`) and counts it. Byte `contract_offer::MARK` is pushed in the whole register (the upper bits of
 /// whatever was in it: the pointer read or −1). Returns how many.

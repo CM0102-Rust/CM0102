@@ -1,0 +1,153 @@
+[
+{"item": "find_friendly_opponent / find_tour_opponent: \"same city (+0x57)\" but body compares .division()", "verdict": "header",
+ "evidence": "club +0x57 is club::DIVISION (community club.dat format, records.rs `division()`); +0x53 is NATION. The body skips a candidate whose club has the same division (cp.division() == op.division()): no friendly against a league rival. Nothing in the club record at +0x57 is a city (the city is on the stadium, stadium::CITY +0x38).",
+ "tsv": ["comp/friendly.rs\tfind_friendly_opponent", "comp/friendly.rs\tfind_tour_opponent"]},
+
+{"item": "is_watching_fixture: +0x3f \"competition\"/+0 \"club\" are .time_slice()/.comp_id(); human_manager_record::WATCHED_FIXTURE comment says HOME_CLUB_ID but compared to comp_id", "verdict": "header",
+ "evidence": "The record holds a copy of the whole fixture starting at 0x9ad4: 0x9ad4+0 comp id (compared with .comp_id()), +0xc = 0x9ae0 home club id, +0x10 = 0x9ae4 away club id, +0x28 = 0x9afc year, +0x2a = 0x9afe day, +0x34 = 0x9b08 round number, +0x3f = 0x9b13 time slice: every offset matches fixture:: exactly. So +0x3f is TIME_SLICE and +0 is COMP_ID; the header swapped them with 'competition'/'club'.",
+ "also_field_comment": {"module": "human_manager_record", "name": "WATCHED_FIXTURE", "keep_name": true, "new_comment": "79 byte(s): copy of the watched fixture (fixture record layout: +0 COMP_ID, +0xc HOME_CLUB_ID at 0x9ae0, +0x10 AWAY_CLUB_ID, +0x28 YEAR, +0x2a DAY, +0x34 ROUND_NUMBER, +0x3f TIME_SLICE at 0x9b13) [verified: is_watching_fixture 0x5fe290 compares each of these with the same field of the given fixture]", "note": "the current comment says it holds fixture::HOME_CLUB_ID (+0xc); it is compared with .comp_id() (+0). The raw 0x9ae0/0x9ae4/0x9afc/0x9afe/0x9b08/0x9b13 in the body could become WATCHED_FIXTURE + fixture::X."},
+ "tsv": ["human_manager.rs\tis_watching_fixture"]},
+
+{"item": "get_contract_satisfaction: \"adaptability (+0x59)\" is .loyalty()", "verdict": "header",
+ "evidence": "staff.dat (docs/FORMATOS, community): +0x56 Adaptability, +0x57 Ambition, +0x58 Determination, +0x59 Loyalty. The body reads person.loyalty(). Same mistake as lote 1 post_wants_new_contract_news.",
+ "tsv": ["staff_contracts.rs\tget_contract_satisfaction"]},
+
+{"item": "staff_criterion: \"functions in [t+0x45]\" is .grievances(); \"club's reputation\"/\"age\" are player's current_reputation and staff::TEMPERAMENT", "verdict": "header",
+ "evidence": "exe_fns.rs names 0x866f60 STAFF_CONTRACT::wants_to_leave. `t` is a contract (+0 person id, +4 club, +0x44 morale, +0x45 contract::GRIEVANCES, the grievance bits that check_transfer_request_withdrawal clears one by one). The body: 0 without grievances; the score subtracts for staff::TEMPERAMENT = 1 (not age) and for the player's sheet .current_reputation() above 0x1676/0x1c52 (not the club's reputation); groups of grievance bits counted (k > 1) give the extra deductions; the yes/no tests mix grievance bits, ratings and transfer_status bit 0. Callers (set_flags, media.rs 768, transfer_manager.rs 3998) read it as 'wants to leave'.",
+ "tsv": ["staff_contracts.rs\tstaff_criterion"]},
+
+{"item": "check_postponement: +0x4d \"uncovered stadium\" named stadium::UNDER_SOIL_HEATING", "verdict": "header",
+ "evidence": "stadium.dat (community): +0x4c Covered, +0x4d UnderSoilHeating. The body already returns 0 earlier for a covered stadium (stadium::COVERED); the weather branches 5 and 8 then require +0x4d = 0, i.e. no under-soil heating.",
+ "tsv": ["weather.rs\tcheck_postponement"]},
+
+{"item": "check_transfer_request_withdrawal: +0x44 \"happiness\" is set_morale(); happiness +0x3d", "verdict": "header",
+ "evidence": "contract::MORALE (+0x44) comment already says 'set to professionalism + loyalty + 5 on request withdrawal'; the body writes it with .set_morale() and then raises contract::HAPPINESS (+0x3d) to 15 separately. The header calls +0x44 'the happiness in the contract'.",
+ "tsv": ["staff_contracts.rs\tcheck_transfer_request_withdrawal"]},
+
+{"item": "0x2db0 has two names: commentary_queue::VOLUME and match_events_fields::COMMENTARY_SPEED", "verdict": "field_name",
+ "module": "commentary_queue", "old": "VOLUME", "new": "COMMENTARY_SPEED", "confidence": "read",
+ "evidence": "Same object: construct_commentary_queue builds the object that engine::COMMENTATOR points to, and match_screens/match_day read +0x2db0 on engine::COMMENTATOR. The value is the match-screen speed setting: handle_match_screen_input writes the menu item value there and passes it to HUMAN_MANAGER::set_commentary_speed (community name); match_day 1586 waits 0 ms when it is 20; the event sound length is weight x value / 100 and the sound plays only at >= 101. 125 at construction is the default speed. Nothing treats it as a loudness. Keep match_events_fields::COMMENTARY_SPEED (it should probably be merged into commentary_queue, the same object).",
+ "uses_to_recheck": ["records.rs 10796-10803: accessor volume()/set_volume() -> commentary_speed()", "match_events.rs 697 header: 'with volume (`commentary_queue::VOLUME` >= 101)' -> 'with a commentary speed (`commentary_queue::COMMENTARY_SPEED`) of 101 or more'", "match_events.rs 1060, 1080 (local named volume: reads fine as speed factor, rename optional)", "match_events.rs 1656 header 'commentary_queue::VOLUME = 125' and 1673", "match_screens.rs 463 and 740 headers call COMMENTARY_SPEED 'the commentator volume': should say 'the commentary speed'"]},
+
+{"item": "intl_date_entry::WEEKDAY (+1) gets the day in build_international_date_table: maybe swapped", "verdict": "field_name",
+ "module": "intl_date_entry", "renames": [{"old": "WEEK", "new": "WEEKDAY", "offset": "0x0"}, {"old": "WEEKDAY", "new": "DAY", "offset": "0x1"}], "confidence": "verified",
+ "evidence": "resolve_international_dates calls Date::set (0x54a130) with arg1 = byte +1, arg2 = MONTH (+2), arg3 = year, arg5 = byte +0. Disassembly of 0x54a130: arg1 is checked 1..31 (day of month), arg2 0..11 (month), and the 5th arg goes to 0x54a2d0, which computes the weekday of the date (mod 7) and moves the date to the nearest target weekday (FN_DATE_GET_WEEKDAY is 0x54a3f0 nearby). The INTERNATIONAL_DATES table has column 0 in 0..6 and column 1 in 1..29. So +0 is the weekday and +1 the day of month. Rename order: WEEKDAY -> DAY first, then WEEK -> WEEKDAY. Uses: friendly.rs 823 (writes `dia` into it: reads right as DAY), records.rs 13051-13066 accessors week()/weekday() -> weekday()/day().",
+ "also": "friendly_international_date_set (0x5cb9b0) names its parameters (day, month, duration) but they are written to +0/+1/+2 = weekday, day, month (build_international_date_table passes semana, dia, mes); its header 'day, month, span, year' is wrong the same way: header row in the TSV; the parameter rename (day->weekday, month->day, duration->month, year->year_offset) is a code change left to the caller.",
+ "tsv": ["comp/friendly.rs\tfriendly_international_date_set"]},
+
+{"item": "match_day::end_day: +0x5b \"summary\"/+0x5f \"object\" are day_match::SCOREBOARD/SUMMARY", "verdict": "header",
+ "evidence": "day_match::SUMMARY (+0x5f) is the 0xd7a-byte match summary created at the end of the match (match_day.rs 231/286, 1389/1462) and passed to match_stats_record_match; its destructor is match_team_pair_destructor (it holds the two team objects). +0x5b is the 0x11d-byte humans' network scoreboard (match_day.rs 414, 503-551, 1525). The field names are right; the header called the scoreboard 'the summary'.",
+ "tsv": ["match_day.rs\tend_day"]},
+
+{"item": "match_day::find_record_fixture: \"+0 competition, +4 club\" but match_stats_entry +0 = HOME_CLUB_ID", "verdict": "header",
+ "evidence": "match_screens.rs 2550-2554 writes the 12-byte entry: +0 home club id, +4 away club id (match_stats_entry::AWAY_CLUB_ID), +8 day, +0xa year. In find_record_fixture +0 goes as the 5th argument of FixtureManager::find_fixtures, which is the club filter (fix_man.rs 1384 and match_man.rs 1426 pass a club id there; the competition goes as the 7th, here -1 = any, as friendly.rs 203 shows). So the search is the home club's fixtures that day in any competition, and +4 (the away club) picks the one.",
+ "tsv": ["match_day.rs\tfind_record_fixture"]},
+
+{"item": "scout_manager::send_scout_report_news: header +0xc of each record, body reads p + SCOUT_NAME_REF + 0xc (+0x43): one is wrong; +0x1f \"the scout\" named scout_report::PLAYER_NAME_REF", "verdict": "code_defect",
+ "evidence": "DEFEITO REAL (introduced by f2281941, readability batch 43). Disassembly of 0x7f9a60 at 0x7f9bc8: `lea edi, [esi + 0x37]` then `mov edx, [edi + 0xc]`: the original reads p + 0xc, with p = r + 0x37 + 0x67 k. Up to bb757341 the Rust read `p + 0xc`; batch 43 turned it into `p + scout_report::SCOUT_NAME_REF + 0xc`, which adds 0x37 twice (r + 0x7a + 0x67 k). The news slot 'scout's staff index' of every record gets a wrong dword (for k = 2 beyond the 3 records). The header ('+0xc' relative to the record's SCOUT_NAME_REF) is right.",
+ "file": "scout_manager.rs", "function": "send_scout_report_news", "line": "inside `for k in 0..n.max(0)`",
+ "code_change": "pr(&mut idx, read_usize(p + scout_report::SCOUT_NAME_REF + 0xc) as u32);  ->  pr(&mut idx, read_usize(p + 0xc) as u32); // p already points at the record's scout_report::SCOUT_NAME_REF",
+ "header_part": "+0x1f: scout_report::PLAYER_NAME_REF is verified (fill_staff_name_ref(player, report + 0x1f) at 0x7b6f48); the header's 'the scout' for it is wrong: it is the scouted player. Header row in the TSV.",
+ "note": "worth a sweep of batch 43 for the same pattern (a pointer already offset by a named field, read again with the same name).",
+ "tsv": ["scout_manager.rs\tsend_scout_report_news"]},
+
+{"item": "media::post_financial_trouble_news: +0x38 of the stadium read as player_sheet::PENALTIES (wrong name)", "verdict": "wrong_type",
+ "evidence": "`let sheet = club.stadium();` is a Stadium (club::STADIUM +0x69); +0x38 of a stadium is stadium::CITY (community). The body reads it as player_sheet::PENALTIES (same offset by chance). The check is 'the stadium has a city'.",
+ "file": "media.rs", "function": "post_financial_trouble_news", "right_type": "Stadium", "right_name": "stadium::CITY / .city()",
+ "code_change": "let sheet = club.stadium(); if sheet.is_null() || read_usize(sheet.addr() + player_sheet::PENALTIES) == 0 ...  ->  let stadium = club.stadium(); if stadium.is_null() || stadium.city() == 0 ...",
+ "tsv": ["media.rs\tpost_financial_trouble_news"]},
+
+{"item": "media::queue_sale_unrest_story: teammate param named comp tested with competition::FOREGROUND_COLOUR (wrong name/type)", "verdict": "wrong_type",
+ "evidence": "The 4th argument is a Staff (`let comp = Staff(comp)`, its id and names go into the news, its .professionalism() is read); the header calls it the team mate. The test reads +0x61 through competition::FOREGROUND_COLOUR; +0x61 of a staff is staff::PLAYER (the player sheet), which is what the header says ('with a player sheet').",
+ "file": "media.rs", "function": "queue_sale_unrest_story", "right_type": "Staff", "right_name": "staff::PLAYER / .player()",
+ "code_change": "rename the parameter `comp` -> `teammate` (signature and body), and `read_usize(comp.addr() + competition::FOREGROUND_COLOUR) == 0` -> `teammate.player().is_null()`",
+ "tsv": ["media.rs\tqueue_sale_unrest_story"]},
+
+{"item": "match_day::close_day_match: \"round number\" (+0x2d) is .losing_run()", "verdict": "header",
+ "evidence": "comp_stats_club::LOSING_RUN (+0x2d) is verified (Comp_Stats::record_match_result 0x49feb9 increments it on a defeat, the win path clears it). The value kept (when above 1) is passed to the player-reaction news of each side: a losing run, not a round number.",
+ "tsv": ["match_day.rs\tclose_day_match"]},
+
+{"item": "media::pick_former_international_pundit / pick_rival_manager_id: +0x61/+0x69 \"contract\" are staff::PLAYER / .non_player()", "verdict": "header",
+ "evidence": "staff.dat: +0x61 Player (player record), +0x69 NonPlayer (non-player record), +0x39 ClubJob. The pundit body requires a non-player record and rejects a person with a player record and a club; the rival body requires the manager's non-player record. Neither reads a contract.",
+ "tsv": ["media.rs\tpick_former_international_pundit", "media.rs\tpick_rival_manager_id"]},
+
+{"item": "fin_prm::season_end_club_update: \"league size (+0x69)\" is .division().reputation()", "verdict": "header",
+ "evidence": "competition::REPUTATION (+0x69, Int16, club_comp.dat, community). The body compares random(20) + 5 with it. The current header already names the method but still calls it 'the league size'.",
+ "tsv": ["comp/leagues/fin_prm.rs\tseason_end_club_update"]},
+
+{"item": "fin_prm::get_max_wage: limit applies to non_player without player", "verdict": "header",
+ "evidence": "Body: `if !person.non_player().is_null() && person.player().is_null()` then the cap by .job_for_club() (5..7: 35000, 8: 20000, 9: 1500, 10: 1000, others 750). The header says 'a player limited by type'. Same header also calls the league reputation 'the size' (as in season_end_club_update): fixed in the same row.",
+ "tsv": ["comp/leagues/fin_prm.rs\tget_max_wage"]},
+
+{"item": "fin_prm add_weekly_merchandising_income/try_board_debt_payment/try_cash_injection: +0xbf \"club\"/+0x69 \"stadium\" are .chairman()/.non_player()", "verdict": "header",
+ "evidence": "club +0xbf is club::CHAIRMAN (a Staff); staff +0x69 is NON_PLAYER, whose +0xf BUSINESS and +0x20 RESOURCES are the chairman attributes the bodies read. No club or stadium is involved.",
+ "tsv": ["comp/leagues/fin_prm.rs\tadd_weekly_merchandising_income", "comp/leagues/fin_prm.rs\ttry_board_debt_payment", "comp/leagues/fin_prm.rs\ttry_cash_injection"]},
+
+{"item": "fin_prm::try_finance_boost_event: +0x20 is player_sheet::BRAVERY in one place and non_player::RESOURCES in another; .goalkeeper() used as chairman's +0xf", "verdict": "wrong_type",
+ "evidence": "`sheet` is the chairman's NonPlayer record (presence.non_player()). Offsets read: +0x20 (twice through player_sheet::BRAVERY, twice through non_player::RESOURCES) and +0xf (through player_sheet::GOALKEEPER). In the non-player record +0x20 is RESOURCES and +0xf is BUSINESS (the same pair the sibling routines add_weekly_merchandising_income and try_cash_injection read by name).",
+ "file": "comp/leagues/fin_prm.rs", "function": "try_finance_boost_event", "right_type": "NonPlayer", "right_name": "non_player::RESOURCES (.resources()), non_player::BUSINESS (.business())",
+ "code_change": "the two `read_i8(sheet.addr() + player_sheet::BRAVERY)` -> `sheet.resources()` (or read_i8(sheet.addr() + non_player::RESOURCES)); `read_i8(sheet.addr() + player_sheet::GOALKEEPER) as i32` -> `sheet.business() as i8 as i32`. Leave the `cqb2:` comments (mutation anchors) as they are.",
+ "tsv": ["comp/leagues/fin_prm.rs\ttry_finance_boost_event"]},
+
+{"item": "fin_prm::process_match_income: header \"/4 unless both +0x64 = 1\", body /4 when neither is PROFESSIONAL", "verdict": "header",
+ "evidence": "Body: `if home.professional_status() != PROFESSIONAL && away.professional_status() != PROFESSIONAL { cost = attendance × 0.25 } else { bands }`. The header inverted the condition.",
+ "tsv": ["comp/leagues/fin_prm.rs\tprocess_match_income"]},
+
+{"item": "fin_prm::sell_season_tickets: header \"into +0x15c\", body adds season, month and balance", "verdict": "header",
+ "evidence": "Body: the ticket income goes (with apply) into month_season_tickets, season_season_tickets and the balance; the shop money goes into season_merchandising (+0x15c), month_merchandising and the balance. The header named only season_merchandising and did not say where the ticket income goes.",
+ "tsv": ["comp/leagues/fin_prm.rs\tsell_season_tickets"]},
+
+{"item": "fin_prm::update_wage_bill: writes +0xc with this.set_stages() because this is typed League (wrong type in code)", "verdict": "wrong_type",
+ "evidence": "`this` is a Finance (Finance::update_wage_bill; the body reads finance::HIGHEST_WAGE, finance::CLUB_ID, finance::WAGE_CEILING on it and passes it to Finance::get_max_wage). +0xc of a Finance is finance::WAGE_BILL; League::stages is the same offset by chance.",
+ "file": "comp/leagues/fin_prm.rs", "function": "update_wage_bill", "right_type": "Finance", "right_name": "finance::WAGE_BILL (.wage_bill(), i32)",
+ "code_change": "`let this = League(this);` -> `let this = Finance(this);`; every `this.set_stages((X) as usize)` -> `this.set_wage_bill(X)` and `this.stages() as i32` -> `this.wage_bill()` (finance::WAGE_BILL is 4 bytes i32: check the setter's argument type); optional: the raw finance::HIGHEST_WAGE/WAGE_CEILING reads to their accessors.",
+ "tsv": ["comp/leagues/fin_prm.rs\tupdate_wage_bill"]},
+
+{"item": "manager_manager::update_board_confidence_after_match: \"ratings\" are .home_shots()/.home_shots_on_target()", "verdict": "header",
+ "evidence": "match_record::HOME_SHOTS (+0x127) and HOME_SHOTS_ON_TARGET (+0x128), read on the side's block (base = game + SIDE_SIZE × side); the formula: (shots − 10)/30 + (on target − 10)/30 + (shots − opponent's shots) × 0.02. The 'average of the ratings by age +0x1c4' is the average of the row ratings weighted by the minutes on the pitch (s2 += rating × minutes, rows at match_record::ROW_MINUTE_LEFT_PITCH): 'by age' was also wrong and is fixed in the same row.",
+ "tsv": ["manager_manager.rs\tupdate_board_confidence_after_match"]},
+
+{"item": "manager_manager::board_named_players_after_match: .chairman() called \"manager\"; [0xae1080] is G_CONTRACT_LOOKUP_RESULT", "verdict": "header",
+ "evidence": "Body: `let t = club.chairman()`, his non-player .interference(), his favoured/disliked staff (staff_get_favoured_staff/disliked_staff on t) and club.chairman().ambition(). The contract found is written into G_CONTRACT_LOOKUP_RESULT (write_usize), not read from it.",
+ "tsv": ["manager_manager.rs\tboard_named_players_after_match"]},
+
+{"item": "manager_manager::add_job_vacancy: \"ranking\" is .number_staff()", "verdict": "header",
+ "evidence": "nation +0x88 is NumberStaff (nation.dat, community; +0x86 NumberClubs). The body returns when the nation's number_staff() is <= 1000 (B team, exe::club_is_national_team) or <= 100 (senior team). It is a head count, not a ranking.",
+ "tsv": ["manager_manager.rs\tadd_job_vacancy"]},
+
+{"item": "manager_manager::consider_sacking_manager: \"position (+4)\" is .matches_played()", "verdict": "header",
+ "evidence": "comp_stats_club::MATCHES_PLAYED (+4) is verified (record_match_result increments it per match). Body: best_position within the promotion places AND matches_played > 30 − patience/2 returns (holds).",
+ "tsv": ["manager_manager.rs\tconsider_sacking_manager"]},
+
+{"item": "manager_manager get_departure_reason/resolve_board_ultimatum: \"matches\" is .winless_run()", "verdict": "header",
+ "evidence": "comp_stats_club::WINLESS_RUN (+0x55): the verified WINNING_RUN comment says record_match_result clears +0x2d and +0x55 on a win, so +0x55 is a run that a win ends. get_departure_reason tests matches_played() > 25 and winless_run() > 1; resolve_board_ultimatum gives reason 7 when the row is missing or winless_run() <= 0. Neither is a match count.",
+ "tsv": ["manager_manager.rs\tget_departure_reason", "manager_manager.rs\tresolve_board_ultimatum"]},
+
+{"item": "manager_manager::init_club_board_records: \"person with a club (+0x24)\" uses .national_job()/.job_for_nation()", "verdict": "header",
+ "evidence": "staff.dat: +0x24 NationalJob (the national team's club record), +0x28 JobForNation, +0x39 ClubJob, +0x3d JobForClub. The body walks .national_job()/.job_for_nation() (5/12 -> the team's club::MANAGER) and only then copies the national function into .job_for_club() for a person without a club job. The header said 'club' for the national team job and 'contract' for .club_job().",
+ "tsv": ["manager_manager.rs\tinit_club_board_records"]},
+
+{"item": "manager_manager::assess_transfer_deal: \"already assessed (+0x1f)\" is .offer_type()", "verdict": "header",
+ "evidence": "offer::OFFER_TYPE (+0x1f): '1 = loan offer'; transfer_manager.rs 2077 submits loan contract offers with OFFER_TYPE = 1, and 465 picks 4 or 8 by it. assess_transfer_deal returns at once for a loan offer. The same wrong phrase is in apply_transfer_confidence_changes (manager_manager.rs 3825): fixed in a second row.",
+ "tsv": ["manager_manager.rs\tassess_transfer_deal", "manager_manager.rs\tapply_transfer_confidence_changes"]},
+
+{"item": "shortlist_manager::make_club_bids: \"England [0x9cf300]\" is KEY_NATION_FRANCE; outgoing loan is .national_job()/job_kind::MANAGER", "verdict": "header",
+ "evidence": "keys.rs: KEY_NATION_FRANCE = 0x9cf300 (England is 0x9cf2e4); the body skips the loan slot for a French club with professional_status AMATEUR. The other test skips a target with a national team job as manager (.national_job() non-null, .job_for_nation() = MANAGER), not a loan.",
+ "tsv": ["shortlist_manager.rs\tmake_club_bids"]},
+
+{"item": "shortlist_manager::value_player_for_club: \"consistency (+0x2d)\" is .injury_proneness()", "verdict": "header",
+ "evidence": "player.dat: +0x21 Consistency, +0x2d InjuryProneness (community). The body reads sheet.injury_proneness() (shortlist_manager.rs 2001).",
+ "tsv": ["shortlist_manager.rs\tvalue_player_for_club"]},
+
+{"item": "shortlist_manager::suspend_clubs_shortlisting_player: \"state (+8)\" is club_shortlist::DAYS", "verdict": "header",
+ "evidence": "club_shortlist::DAYS (+8): day counter; make_club_bids only bids with DAYS below 100, so writing 100 suspends the club's bids. ACTIVE (+4) is the state. The name is right [inference]; the header word 'state' was wrong.",
+ "tsv": ["shortlist_manager.rs\tsuspend_clubs_shortlisting_player"]},
+
+{"item": "shortlist_manager::is_staff_suitable_for_job: \"one of their three\" are preferences::STAFF_DISLIKED_CLUBS1..3", "verdict": "header",
+ "evidence": "The routine is MANAGER_MANAGER::is_staff_suitable_for_job in manager_manager.rs (not shortlist_manager). staff_preferences +0x10/+0x14/+0x18 are StaffDislikedClubs1..3 (docs/FORMATOS); the body returns 0 (veto) when the national team is one of them.",
+ "tsv": ["manager_manager.rs\tis_staff_suitable_for_job"]},
+
+{"item": "shortlist_manager_remove_from_transfer_list: header text mangled by an earlier mechanical change", "verdict": "stale",
+ "evidence": "Body returns `(c.addr() & !0xff) | 1`: 1 in the low byte, the upper bytes those of the contract pointer. The header 'in the low read_i8(the upper ones ... + (as in the original))' is a 'byte' -> read_i8 mechanical replacement (round 7, 780e24c1). The same damage is in compare/comp/worldcup/world_cup.rs 9 ('byte by read_i8(the copy's is freed + (`0x9452ca`))') and db_files.rs 1020 ('into one read_i8(the original reads it ...'): outside my items, worth fixing in the same pass.",
+ "tsv": ["shortlist_manager.rs\tshortlist_manager_remove_from_transfer_list"]}
+]

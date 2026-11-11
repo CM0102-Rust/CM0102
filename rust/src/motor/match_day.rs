@@ -57,14 +57,14 @@ pub(crate) unsafe fn match_man_fatal_error(row: u32) -> ! {
     exit(-1)
 }
 
-/// The end of the match day: frees the global list, the day's arrays and, for each match, the engine, the summary and
-/// the `day_match::SUMMARY` object.
+/// The end of the match day: frees the global list, the day's arrays and, for each match, the engine, the humans'
+/// scoreboard and the match summary.
 ///
 /// Frees the global list `G_MATCH_DAY_PLAYER_INCIDENT_LIST`, the two day arrays (`+1`, `+0xd`) and, for each match
 /// (`match_day_fields::MATCHES`, `0x69` bytes each, `match_day_fields::MATCH_COUNT` of them), the engine
 /// (`day_match::ENGINE`: `exe::drop_cm3_match_engine` and freed; the match leaves `G_VIRTUAL_STAFF` via
-/// `exe::virtual_staff_release_fixture`), the summary (`day_match::SCOREBOARD`) and the object at `day_match::SUMMARY`
-/// (`exe::match_team_pair_destructor`); finally the match array.
+/// `exe::virtual_staff_release_fixture`), the humans' network scoreboard (`day_match::SCOREBOARD`) and the match
+/// summary (`day_match::SUMMARY`, `exe::match_team_pair_destructor`); finally the match array.
 /// Original: `end_day` (0x6b4190, match_day.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn end_day(day: usize) {
     let list = read_usize(G_MATCH_DAY_PLAYER_INCIDENT_LIST);
@@ -304,19 +304,18 @@ pub(crate) unsafe extern "thiscall" fn step_day_match(day: usize, until_end: u32
 /// history and each side's club.
 ///
 /// The closing of day match `p` (`0x69` bytes): copies the `0x4f` bytes from p+`day_match::FIXTURE_COPY` to the fixture
-/// (`+0`) and, with a competition (`fixture::COMPETITION`), reads the round number of a human club
-/// (`G_COMP_OBJECT_TABLE` of the competition `+8`, `exe::comp_stats_find_club_entry`, `.losing_run()` above 1; as in
-/// the original, it looks only at the away club `fixture::AWAY_CLUB` on both passes) and records the result:
-/// p+`day_match::HOME_GOALS` = -3 (away game, `exe::weather_post_abandoned_news` with bits 12-13 of `.squad_rules()`
-/// and the copy with scores -1 in `exe::fixture_manager_find_new_fixture_date`/`exe::fixture_manager_add_fixture`) or
-/// method 1 of the competition.
+/// (`+0`) and, with a competition (`fixture::COMPETITION`), reads the losing run of a human club (`G_COMP_OBJECT_TABLE`
+/// of the competition `+8`, `exe::comp_stats_find_club_entry`, `.losing_run()` above 1; as in the original, it looks
+/// only at the away club `fixture::AWAY_CLUB` on both passes) and records the result: p+`day_match::HOME_GOALS` = -3
+/// (away game, `exe::weather_post_abandoned_news` with bits 12-13 of `.squad_rules()` and the copy with scores -1 in
+/// `exe::fixture_manager_find_new_fixture_date`/`exe::fixture_manager_add_fixture`) or method 1 of the competition.
 ///
 /// Then the post-match with the summary (p+`day_match::SUMMARY`): players
 /// (`exe::match_day_apply_post_match_player_changes`), events (`exe::match_day_process_player_incidents`), contracts
 /// (`0x4ca6d0`), suspensions (`0x55ca00`), `0x76b600` (except for -3), states (`0x62c080`) and, except for -3, the
 /// history (`G_RESERVE_COMP` method 1, outside `KEY_CLUB_COMP_RESERVE`), `0x7c0d70`, `0x8c39f0`, `0x444930`,
 /// `0x868830`, `0x4134c0`, `0x6951e0`, `0x59a5d0`, `0x7f8c00` and the club of each side
-/// (`FN_MATCH_DAY_POST_PLAYER_REACTION_NEWS` with the round). Without `p`, error `0x73f` and 0.
+/// (`FN_MATCH_DAY_POST_PLAYER_REACTION_NEWS` with that losing run). Without `p`, error `0x73f` and 0.
 /// Original: `close_day_match` (0x6b5f00, match_day.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn close_day_match(_day: usize, p: usize) -> u32 {
     let u = |q: usize, o: usize| *((q + o) as *const usize);
@@ -1475,14 +1474,15 @@ pub(crate) unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
     exe::virtual_staff_release_fixture(read_usize(G_VIRTUAL_STAFF + 0), game + day_match::FIXTURE_COPY);
 }
 
-/// Finds in the fixture list the match of a statistics record (date, competition and club) and copies the fixture.
-/// Returns 1 if found.
+/// Finds in the fixture list the match of a statistics record (date and clubs) and copies the fixture. Returns 1 if
+/// found.
 ///
-/// The fixture (`0x4f` bytes) of record `k` of the statistics index (`[stats]`, 12 bytes: `+0` competition, `+4` one of
-/// the clubs, `+8`/`match_stats_entry::YEAR` the date): it asks the schedule `G_FIXTURE_MANAGER`
-/// (`exe::fixture_manager_find_fixtures`) for the matches of that date and competition in a local list (`0x68d020`) and
-/// copies to `out` the first one with club `+4` at home (`fixture::HOME_CLUB_ID`) or away (`fixture::AWAY_CLUB_ID`).
-/// Index outside 0..`match_stats::CAPACITY` or null output: the original routine runs (error box, 0).
+/// The fixture (`0x4f` bytes) of record `k` of the statistics index (`[stats]`, 12 bytes:
+/// `match_stats_entry::HOME_CLUB_ID`, `match_stats_entry::AWAY_CLUB_ID`, `+8`/`match_stats_entry::YEAR` the date): it
+/// asks the schedule `G_FIXTURE_MANAGER` (`exe::fixture_manager_find_fixtures`) for the matches of the home club on
+/// that date, in any competition, in a local list (`0x68d020`) and copies to `out` the first one with the away club
+/// (`match_stats_entry::AWAY_CLUB_ID`) at home (`fixture::HOME_CLUB_ID`) or away (`fixture::AWAY_CLUB_ID`). Index
+/// outside 0..`match_stats::CAPACITY` or null output: the original routine runs (error box, 0).
 /// Original: `Match_Stats::find_record_fixture` (0x729e30, match_stats.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn find_record_fixture(stats: usize, k: i32, out: usize) -> u32 {
     if k < 0 || k > read_i32(stats + match_stats::CAPACITY).wrapping_sub(1) || out == 0 {

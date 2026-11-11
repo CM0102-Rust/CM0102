@@ -820,7 +820,7 @@ pub(crate) unsafe extern "thiscall" fn build_international_date_table(this: usiz
             continue;
         }
         write_u8(e, semana);
-        write_u8(e + intl_date_entry::WEEKDAY, dia);
+        write_u8(e + intl_date_entry::DAY, dia);
         write_u8(e + intl_date_entry::MONTH, mes);
         write_u8(e + intl_date_entry::YEAR_OFFSET, ano); // cqb3: the year to add to the Cup’s
         write_i32(e + intl_date_entry::CONTINENT_ID, read_i32(continente));
@@ -2543,10 +2543,10 @@ pub(crate) unsafe fn friendly_random(n: i32) -> i32 {
 /// id), those that already have the club in their list (`preseason_candidate::OPPONENTS`, the cursor goes back to the
 /// start; `already_opponent`), those out by date, those of crossed bands
 /// (`preseason_candidate::WINDOW_START`/`preseason_candidate::WINDOW_END`, −1 = any), the rivals, those of rival
-/// nations (half the time: draw(2) = 0), those from the same city (+0x57) and those above the drawn band (+4 > draw(3)
-/// + 3). By the club's reputation (`.reputation()`): below 2000 the same nation (`.nation()`); from 2000 to 3999 the
-/// same nation `nation::REGION`; from 4000 to 7999 the same `nation::CONTINENT`; with the club's +4 above draw(2), the
-/// same nation. It keeps the candidate when draw(5) = 1; none: 0. No SEH, no box.
+/// nations (half the time: draw(2) = 0), those of the same division (`.division()`) and those above the drawn band (+4
+/// > draw(3) + 3). By the club's reputation (`.reputation()`): below 2000 the same nation (`.nation()`); from 2000 to
+/// 3999 the same nation `nation::REGION`; from 4000 to 7999 the same `nation::CONTINENT`; with the club's +4 above
+/// draw(2), the same nation. It keeps the candidate when draw(5) = 1; none: 0. No SEH, no box.
 /// Original: `Friendly::find_friendly_opponent` (0x5c4cb0, friendly.cpp, thiscall, ret 0x14).
 pub(crate) unsafe extern "thiscall" fn find_friendly_opponent(this: usize, club: usize, list: usize, n: u32, band: u32, excluir: usize) -> usize {
     let mut band = band as i8;
@@ -2647,8 +2647,8 @@ pub(crate) unsafe fn candidate_regions(candidates: impl Iterator<Item = usize>) 
 /// From there up to the second-to-last: the first whose club (`.nation()`) is not of the nation ends the search (0); it
 /// skips those above the band (+5 > `band_max`), those out by date, the club itself, those that already have the club
 /// in their list (`preseason_candidate::OPPONENTS`, `already_opponent`), the rivals, those of rival nations (draw(2) =
-/// 0), those from the same city (+0x57) and those above the drawn band (+4 > draw(3) + 3); it keeps the candidate when
-/// draw(2) = 1. None: 0. No SEH, no box.
+/// 0), those of the same division (`.division()`) and those above the drawn band (+4 > draw(3) + 3); it keeps the
+/// candidate when draw(2) = 1. None: 0. No SEH, no box.
 /// Original: `Friendly::find_tour_opponent` (0x5c5040, friendly.cpp, thiscall, ret 0x14).
 pub(crate) unsafe extern "thiscall" fn find_tour_opponent(this: usize, club: usize, ordenados: usize, n: u32, band_max: u32, nation: usize) -> usize {
     let cp = friendly_club_by_id(read_usize(club));
@@ -2748,7 +2748,7 @@ pub(crate) unsafe extern "thiscall" fn is_own_comp_record(friendly: usize, compe
     (competition == read_usize(friendly + 4)) as u32
 }
 
-/// fills an international date: day, month, span, year, continent and competition
+/// fills an international date: weekday, day, month, year offset, continent and competition
 /// Original: `friendly_international_date_set` (0x5cb9b0, friendly.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn friendly_international_date_set(data: usize, day: u8, month: u8, duration: u8, year: u8, continent: u32, competition: u32) {
     let b = data as *mut u8;

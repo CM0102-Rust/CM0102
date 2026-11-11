@@ -488,18 +488,19 @@ pub(crate) unsafe extern "thiscall" fn player_search_find_or_claim_player_slot(t
 }
 
 /// `player_search_get_club_target_rating(club, *base, *forced)` (cdecl): the rating the club looks for in players: a
-/// base from reputation, money, nation and league, by bands, and adjustments for squad size and wealth; at least 500.
-/// The base (without `forced`): the reputation (`reputation()`), the money one (`min_attendance()` × 0.43 − 430, up to
-/// 10000, if greater than the reputation), the nation one (`division()`: `competition::REPUTATION` × 500, if greater
-/// than reputation / 500) and the league one (`continental_comp_id()` in `G_CLUB_COMP_TABLE`, 0x6b bytes:
-/// `reputation()` × 600, likewise), weighted and / 16; half at a non-professional club (`professional_status()` ≠
-/// `professional_status::PROFESSIONAL`). The rating comes from the base by bands (up to 3000, 5000, 7000, 9000 and
-/// above). Without `forced`, by the squad (`database_count_club_squad`) and the wealth band of the finances
-/// (`exe::financetable_get_club_finance` of `G_FINANCE_TABLE`, `exe::finance_get_wealth_band`) for clubs with a nation
-/// in `G_COMP_OBJECT_TABLE`: a short squad (< 16) halves; < 20 halves, or 2/3 for the poor; otherwise it shrinks by the
-/// shortage of players compared with the nation (`competition::REPUTATION` × 1.35 + 20) and wealth pulls it (−2..2: ×
-/// 0.909 or − 1000, × 0.952 or − 500, nothing, × 1.0125 or + 125, × 1.025 or + 250). At least 500. The base goes into
-/// `*base` (if not null). The floating-point arithmetic is in f64 (the game's x87 at 53 bits).
+/// base from reputation, minimum attendance, division and continental competition, by bands, and adjustments for squad
+/// size and wealth; at least 500. The base (without `forced`): the reputation (`reputation()`), the attendance one
+/// (`min_attendance()` × 0.43 − 430, up to 10000, if greater than the reputation), the division one (`division()`:
+/// `competition::REPUTATION` × 500, if greater than reputation / 500) and the continental one (`continental_comp_id()`
+/// in `G_CLUB_COMP_TABLE`, 0x6b bytes: `reputation()` × 600, likewise), weighted and / 16; half at a non-professional
+/// club (`professional_status()` ≠ `professional_status::PROFESSIONAL`). The rating comes from the base by bands (up to
+/// 3000, 5000, 7000, 9000 and above). Without `forced`, by the squad (`database_count_club_squad`) and the wealth band
+/// of the finances (`exe::financetable_get_club_finance` of `G_FINANCE_TABLE`, `exe::finance_get_wealth_band`) for
+/// clubs whose division is in `G_COMP_OBJECT_TABLE`: a short squad (< 16) halves; < 20 halves, or 2/3 for the poor;
+/// otherwise it shrinks by the shortage of players compared with the division (its `competition::REPUTATION` × 1.35 +
+/// 20) and wealth pulls it (−2..2: × 0.909 or − 1000, × 0.952 or − 500, nothing, × 1.0125 or + 125, × 1.025 or + 250).
+/// At least 500. The base goes into `*base` (if not null). The floating-point arithmetic is in f64 (the game's x87 at
+/// 53 bits).
 /// Original: `player_search_get_club_target_rating` (0x7bca90, player_search.cpp, cdecl).
 pub(crate) unsafe extern "C" fn player_search_get_club_target_rating(club: usize, base: *mut i32, forced: *const i16) -> i32 {
     let club = Club(club);

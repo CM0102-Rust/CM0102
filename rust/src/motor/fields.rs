@@ -1297,7 +1297,7 @@ pub(crate) mod commentary_queue {
     pub(crate) const LAST_PERIOD_END: usize = 0x2d68; // 4 byte(s): engine PERIOD_END seen last; a change resets the queue (-1 forces it)
     pub(crate) const SOUND_START_TIMES: usize = 0x2d6c; // 64 byte(s): start time (ms) of each of the 16 event sounds
     pub(crate) const SOUND_DURATION: usize = 0x2dac; // 4 byte(s): length (ms) of an event sound window: weight x volume / 100
-    pub(crate) const VOLUME: usize = 0x2db0; // 1 byte(s): commentary volume (125 at construction)
+    pub(crate) const COMMENTARY_SPEED: usize = 0x2db0; // 1 byte(s): commentary speed (125 at construction) [read: the value passed to set_commentary_speed]
 }
 
 /// Fields of the `comp_stats_club` object, named from how the routines use them. [pt] Campos do objeto `comp_stats_club`.
@@ -1563,7 +1563,7 @@ pub(crate) mod human_manager_sheet {
 /// Fields of the `illness_outbreak` object, named from how the routines use them. [pt] Campos do objeto `illness_outbreak`.
 #[allow(dead_code)]
 pub(crate) mod illness_outbreak {
-    pub(crate) const CLUB_ID: usize = 0xd; // 4 byte(s): index of the club where the outbreak is
+    pub(crate) const FIXTURE_ID: usize = 0xd; // 4 byte(s): id of the fixture where the outbreak started (-1 none); the club index is at +9 [verified: add_illness_outbreak writes the club at +9 and the fixture id here]
 }
 
 /// Fields of the `injury_entry` object, named from how the routines use them. [pt] Campos do objeto `injury_entry`.
@@ -1592,8 +1592,8 @@ pub(crate) mod instalment {
 /// Fields of the `intl_date_entry` object, named from how the routines use them. [pt] Campos do objeto `intl_date_entry`.
 #[allow(dead_code)]
 pub(crate) mod intl_date_entry {
-    pub(crate) const WEEK: usize = 0x0; // 1 byte(s): week of the month of the international friendly date (0x14-byte entries of the Friendly INTL_DATE_TABLE)
-    pub(crate) const WEEKDAY: usize = 0x1; // 1 byte(s): day byte of the international date as written by build_international_date_table [inference]
+    pub(crate) const WEEKDAY: usize = 0x0; // 1 byte(s): weekday of the international friendly date (0x14-byte entries of the Friendly INTL_DATE_TABLE) [verified: Date::set 0x54a130 takes it as its 5th argument, the weekday]
+    pub(crate) const DAY: usize = 0x1; // 1 byte(s): day of the international date, written by build_international_date_table [verified: passed as the day to Date::set 0x54a130]
     pub(crate) const MONTH: usize = 0x2; // 1 byte(s): month of the international date
     pub(crate) const DATE: usize = 0x3; // 8 byte(s): resolved date (TCMDate) of the entry
     pub(crate) const YEAR_OFFSET: usize = 0xb; // 1 byte(s): signed year offset added to the World Cup cycle year

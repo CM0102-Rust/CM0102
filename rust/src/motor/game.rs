@@ -429,19 +429,19 @@ pub(crate) unsafe fn days_since_staff_date(p: Staff) -> i32 {
 }
 
 /// Checks players missing training: n/250 consecutive people from a random one; a present player with training and
-/// without a serious injury misses training (`exe::awol_miss_training`) by a random draw on the sum of attributes,
-/// morale and liking of the manager (more likely when newly arrived) or by the contract flags.
+/// without a serious injury misses training (`exe::awol_miss_training`) by a random draw on the sum of attributes, work
+/// rate and liking of the manager (more likely when newly arrived) or by the contract flags.
 ///
 /// `game_check_players_missing_training()`, every day from the game's day loop. Starting from a random person (random(n
 /// − n/250 − 1)), n/250 consecutive people: a player (`.player()`, `.job_for_club()` = `job_kind::PLAYER`) with a
 /// contract and a club, present (`exe::awol_is_player_awol`), with the training record
 /// (`exe::training_manager_get_player_schedule`, `training_schedule::TYPE`) and without a serious injury
 /// (`exe::injury_get_player_injury_status` ≠ 2). (1) With `.professionalism()` < 8, player `.leadership()` < 8 and the
-/// sum (player `.leadership()`, `.age()`, `.professionalism()`, link +0x44, −5 if `.professionalism()` or the morale
-/// are 1, −5 if he dislikes the manager (`club::MANAGER`), +2 if he likes him) < 43: random(`.professionalism()` + 100,
-/// 50 or 25 depending on the days since `.date_joined_club()`: < 30, < 90, < 180) coming out zero is a miss. (2)
-/// Otherwise, with `.professionalism()` < 10 and a link with the club: the link flags (`contract::GRIEVANCES`:
-/// `grievances::UNHAPPY_WITH_TRAINING`, 0x30000; with `.professionalism()` < 5, 0x7800) give
+/// sum (player `.leadership()`, `.age()`, `.professionalism()`, player `.work_rate()`, −5 if `.professionalism()` is 1,
+/// −5 if `.work_rate()` is 1, −5 if he dislikes the manager (`club::MANAGER`), +2 if he likes him) < 43:
+/// random(`.professionalism()` + 100, 50 or 25 depending on the days since `.date_joined_club()`: < 30, < 90, < 180)
+/// coming out zero is a miss. (2) Otherwise, with `.professionalism()` < 10 and a link with the club: the link flags
+/// (`contract::GRIEVANCES`: `grievances::UNHAPPY_WITH_TRAINING`, 0x30000; with `.professionalism()` < 5, 0x7800) give
 /// random(`.professionalism()`) draws that, when zero, are a miss. The miss: `exe::awol_miss_training`.
 /// Original: `game_check_players_missing_training` (0x5d6aa0, game.cpp, cdecl).
 pub(crate) unsafe extern "C" fn game_check_players_missing_training() {

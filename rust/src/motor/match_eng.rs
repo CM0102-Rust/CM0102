@@ -6083,7 +6083,7 @@ pub(crate) unsafe fn add_prematch_player_events(m: Engine, game: Fixture) {
                         p += if f57 > 0xf && f5b < 6 { 5 } else { 3 };
                     }
                     let f5a = f.pressure();
-                    if f5a > 0xa && (f.year_of_birth() as i8) < 0x18 && f57 > 0xf {
+                    if f5a > 0xa && (f.age() as i8) < 0x18 && f57 > 0xf {
                         p += 5;
                     }
                     if f5a == 1 {
@@ -6125,7 +6125,7 @@ pub(crate) unsafe fn add_prematch_player_events(m: Engine, game: Fixture) {
             }
             // a forma
             let sheet_61 = f.player();
-            let mut form = f.year_of_birth() as i8;
+            let mut form = f.age() as i8;
             if !sheet_61.is_null() {
                 let x0f = sheet_61.goalkeeper();
                 if x0f == 0x14 {
@@ -6148,7 +6148,7 @@ pub(crate) unsafe fn add_prematch_player_events(m: Engine, game: Fixture) {
             if form < 0x17 {
                 let m1 = exe::playerstats_get_stat(sheet_average, sheet_61, 6, 1, 6.5) as f32;
                 let m2 = exe::playerstats_get_stat(sheet_average, f.player().addr(), 6, 0x11, 6.5) as f32;
-                let mut al = f.professionalism().wrapping_add(f.pressure()).wrapping_add(f.year_of_birth() as i8).wrapping_sub(0x1e);
+                let mut al = f.professionalism().wrapping_add(f.pressure()).wrapping_add(f.age() as i8).wrapping_sub(0x1e);
                 if al < 4 {
                     al = 4;
                 } else if form < 0x12 && al > 0x19 {
@@ -6783,7 +6783,7 @@ pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: u
     if exe::database_is_national_team(club) == 0 && level > 10 {
         let e = Contract(exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), person, club));
         if !e.is_null() {
-            let mut id = (person.year_of_birth() as i8) as i32 as f32;
+            let mut id = (person.age() as i8) as i32 as f32;
             if read_f32(rdata::F32_19) < id {
                 id = 19.0;
             }
@@ -9399,7 +9399,7 @@ pub(crate) unsafe extern "thiscall" fn choose_taker(this: usize, side: i8, kind:
                     let mut s = ftol(f(j.addr(), match_player::PENALTIES)) as i16;
                     if s > 0 {
                         let sheet = j.staff();
-                        let age = sheet.year_of_birth() as i8;
+                        let age = sheet.age() as i8;
                         if age < 20 {
                             s = ftol(s as f64 * read_f64(rdata::F64_0_35)) as i16;
                         } else if age < 24 {

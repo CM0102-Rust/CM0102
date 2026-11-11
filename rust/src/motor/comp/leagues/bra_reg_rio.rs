@@ -183,12 +183,13 @@ pub(crate) unsafe fn cap_attendance(c: Club, lim: i32) {
 /// [`KEY_NATION_UNITED_STATES`]; 0.5 in [`KEY_NATION_SCOTLAND`]; 1 in the others. `r` = the competition's reputation
 /// (`competition::REPUTATION` of the record, word; `league_comp_reputation`). The final table comes from the statistics
 /// (Comp_Stats::get_sorted_team_table `exe::comp_stats_get_sorted_team_table`, thiscall(`comp_stats()`, 1, &n, 1000),
-/// ret 0xc: 0x76-byte records, +0 the club id, `final_position()` the predicted position, `current_position()` the
-/// final one, +5 the home games [inference], +6 the summed attendance [inference]).
+/// ret 0xc: 0x76-byte records, +0 the club id, `final_position()` the club's final position of the previous season (the
+/// expectation), `current_position()` the position now (the final one, at the season's end), +5 the home games
+/// [inference], +6 the summed attendance [inference]).
 ///
 /// For each club (the branches in the original's order, with the same calls to virtuals
 /// `league_vtable::HAS_AUTOMATIC_PROMOTION` "has promotion" and `league_vtable::HAS_RELEGATION` "has relegation"; d =
-/// predicted − final + 1, word):
+/// `final_position()` − `current_position()` + 1, word):
 ///
 /// - champion without promotion: + (r + max(d, 0)) × 200 × f (stadium owner, `own_stadium()`) or × 100 × f;
 ///

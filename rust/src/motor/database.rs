@@ -686,12 +686,14 @@ pub(crate) fn in_range(x: i16, a: i16, b: i16) -> bool {
 /// person attributes (+0x56..`staff::TEMPERAMENT`, outside 1..20: drawn at random), the adjustment by the nation's
 /// region (`nation::ACTUAL_REGION`), the missing nation (national team, club or drawn).
 ///
-/// For the player (`staff::PLAYER`): the abilities (`player_sheet::CURRENT_REPUTATION`,
-/// `player_sheet::HOME_REPUTATION`, `player_sheet::WORLD_REPUTATION`, in that order, each from the one that already
-/// exists), the potential (`player_sheet::POTENTIAL_ABILITY`: −2/−1/0 rarely, by draws of 2000/750/100) and the current
-/// one (`player_sheet::CURRENT_ABILITY`), the age (birth drawn when outside 14..50), the positions and sides in the
-/// vector (`exe::database_player_to_attribute_vector`), and the attributes outside 1..20 from a template: the most
-/// similar player among 250 drawn at random (global vectors
+/// For the player (`staff::PLAYER`): the reputations (current `player_sheet::CURRENT_REPUTATION`, home
+/// `player_sheet::HOME_REPUTATION`, world `player_sheet::WORLD_REPUTATION`, in that order, on a 1..200 scale: each
+/// missing one from those that exist, otherwise from the ability or the club and nation reputations; home = current at
+/// a club of his own nation or without a club; stored × 50 at the end), the potential
+/// (`player_sheet::POTENTIAL_ABILITY`: −2/−1/0 rarely, by draws of 2000/750/100) and the current one
+/// (`player_sheet::CURRENT_ABILITY`), the age (birth drawn when outside 14..50), the positions and sides in the vector
+/// (`exe::database_player_to_attribute_vector`), and the attributes outside 1..20 from a template: the most similar
+/// player among 250 drawn at random (global vectors
 /// `G_PLAYER_INIT_ATTRIBUTE_VECTOR_A`/`G_PLAYER_INIT_ATTRIBUTE_VECTOR_B`, flag 0x9b59b8) or, without a template, by
 /// ability.
 ///
@@ -3915,9 +3917,10 @@ pub(crate) unsafe extern "C" fn database_compare_staff_by_full_name(a: usize, b:
 }
 
 /// `database_staff_matches_names(person, first, surname, common, date)`: 1 if the person, who must have a player record
-/// (`player()`) or a non-player record (`non_player()`), matches: each non-null name (+4, +8, +0xc) has the requested
-/// id (`names::ID`) and, with `data`, the birth date (`date_of_birth()` day, `date_of_birth_year()` year) is the same
-/// (`exe::date_operator_3d_3d`); otherwise 0.
+/// (`player()`) or a non-player record (`non_player()`), matches: each non-null name (`staff::FIRST_NAME`,
+/// `staff::SECOND_NAME`, `staff::COMMON_NAME`) has the requested id (`names::ID`) and, with `data`, the birth date
+/// (`date_of_birth()` day, `date_of_birth_year()` year) is the same (the day and year words compared directly; the
+/// original calls `Date::operator==`, `exe::date_operator_3d_3d`); otherwise 0.
 ///
 /// Null person: the original (error box and 0). Used by screens, regeneration and transfers (~137 callers).
 /// Original: `database_staff_matches_names` (0x53e990, Database.cpp, cdecl).
@@ -5273,8 +5276,8 @@ pub(crate) unsafe extern "C" fn database_generate_extra_non_playing_staff() -> u
 /// [`G_CLUB_ENGLISH_NAME_INDEX_TABLE`] (new row → old id, malloc), compacts the table (id = new row), reallocs in place
 /// (another address: box 0x4ca and the end) and writes "Club table has %d entries" to 0xde1f64.
 ///
-/// Without [`G_NATION_TABLE`] (box) or out of memory on new: the original; out of memory on the callocs: box and the
-/// end, as the original.
+/// Without [`G_NATION_TABLE`]: the original (box at line 0x4f6). Out of memory on new: returns at once, as the original
+/// does (no box). Out of memory on the callocs: box and the end, as the original.
 /// Original: `database_trim_club_table` (0x5267c0, Database.cpp, cdecl).
 pub(crate) unsafe extern "C" fn database_trim_club_table(size: u32) {
     if read_usize(G_NATION_TABLE) == 0 {
@@ -7960,10 +7963,11 @@ pub(crate) unsafe extern "C" fn database_get_reputation_scope(person: usize, who
 }
 
 /// The reputation of `person` as seen by `who_ve`, by the scope (`exe::database_get_reputation_scope`): from the player
-/// data (`player()`: current +9, home +0xb, world +0xd) or, with `not_player`, from the non-player data
-/// (`non_player()`: +8, +0xa, +0xc).
+/// data (`player()`: home `player_sheet::HOME_REPUTATION` +9, current `player_sheet::CURRENT_REPUTATION` +0xb, world
+/// `player_sheet::WORLD_REPUTATION` +0xd) or, with `not_player`, from the non-player data (`non_player()`:
+/// `non_player::HOME_REPUTATION` +8, `non_player::CURRENT_REPUTATION` +0xa, `non_player::WORLD_REPUTATION` +0xc).
 ///
-/// 4 → world, 2 → current, 0 → home, 3 → half the world + half the current, other → half the home + half the current
+/// 4 → world, 2 → home, 0 → current, 3 → half the world + half the home, other → half the current + half the home
 /// (truncating divisions). Only ax is returned.
 /// Original: `database_get_staff_reputation_for_viewer` (0x5407e0, Database.cpp, cdecl).
 pub(crate) unsafe extern "C" fn database_get_staff_reputation_for_viewer(person: usize, who_ve: usize, not_player: u32) -> u16 {

@@ -128,16 +128,16 @@ pub(crate) unsafe extern "thiscall" fn club_uses_squad_numbers(_this: usize, c: 
         return 0;
     }
     let table = read_u32(G_COMP_OBJECT_TABLE) as usize;
-    let comp = Competition(read_u32(table + read_u32(div) as usize * 4) as usize);
+    let comp = League(read_u32(table + read_u32(div) as usize * 4) as usize);
     if comp.is_null() {
         return 0;
     }
-    if comp.short_gender_name() & 2 == 0 {
+    if comp.squad_flags() & squad_flags::FIXED_SQUAD_NUMBERS == 0 {
         return 0;
     }
     if other != 0 {
-        let comp2 = Competition(read_u32(table + read_u32(other) as usize * 4) as usize);
-        if comp2.short_gender_name() & 2 == 0 {
+        let comp2 = League(read_u32(table + read_u32(other) as usize * 4) as usize);
+        if comp2.squad_flags() & squad_flags::FIXED_SQUAD_NUMBERS == 0 {
             return 0;
         }
     }

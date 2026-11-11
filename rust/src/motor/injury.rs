@@ -1862,7 +1862,7 @@ pub(crate) unsafe extern "thiscall" fn add_illness_outbreak(this: usize, data: u
     write_u8(e + 8, kind);
     write_i32(e + 9, club_i);
     let id = if fixture != 0 { read_i32(fixture) } else { -1 };
-    write_i32(e + illness_outbreak::CLUB_ID, id);
+    write_i32(e + illness_outbreak::FIXTURE_ID, id);
     let n = read_i32(this + injury_fields::OUTBREAK_COUNT).wrapping_add(1);
     write_i32(this + injury_fields::OUTBREAK_COUNT, n);
     exe::crt_qsort(read_usize(this + injury_fields::OUTBREAKS), n as u32, OUTBREAK_SIZE as u32, 0x778e90);
@@ -1893,7 +1893,7 @@ pub(crate) unsafe fn is_after_outbreak(limit: &[u8; 8], e: usize) -> bool {
 /// to 20 tries: one of the 50 squad slots (random of 50, `club::SQUAD`), a player (id below `G_STAFF_COUNT`) without
 /// that illness (`last_injury_type()` of the 31-byte record at [this]) becomes ill (`exe::injury_add_injury`: the type
 /// in the low byte of the outbreak's offset dword, as in the original; the outbreak's fixture,
-/// `illness_outbreak::CLUB_ID`). At the end, those leaving go from the front of the vector (the others move down) and
+/// `illness_outbreak::FIXTURE_ID`). At the end, those leaving go from the front of the vector (the others move down) and
 /// the count (`injury_fields::OUTBREAK_COUNT`) drops.
 /// Original: `Injury::spread_illness_outbreaks` (0x62e9e0, injury.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn spread_illness_outbreaks(this: usize) {
@@ -1931,7 +1931,7 @@ pub(crate) unsafe extern "thiscall" fn spread_illness_outbreaks(this: usize) {
                             let doenca = read_u8(e + 8);
                             let record = PhysicalRecord(read_usize(this).wrapping_add((read_i32(p) as usize).wrapping_mul(31)));
                             if record.last_injury_type() != doenca {
-                                exe::injury_add_injury(this, (off as u32 & 0xffff_ff00) | doenca as u32, 0, p, 0, 0, read_i32(e + illness_outbreak::CLUB_ID), 0, 0);
+                                exe::injury_add_injury(this, (off as u32 & 0xffff_ff00) | doenca as u32, 0, p, 0, 0, read_i32(e + illness_outbreak::FIXTURE_ID), 0, 0);
                                 how_many = how_many.wrapping_sub(1);
                             }
                         }
@@ -2073,7 +2073,7 @@ pub(crate) unsafe extern "thiscall" fn init_squad_fitness(this: usize) {
 ///
 /// `Injury::init_records()`: [this] = 31 bytes per person of `G_STAFF_COUNT` (`exe::crt_malloc`; out of memory, the
 /// "Error" box for line 0x7d0 and nothing). Each record: today's date (`exe::date_operator_3d`), form and condition
-/// 10000 (+8, `physical_record::CONDITION`), wear 0 (`physical_record::FATIGUE`), no injury
+/// 10000 (`physical_record::FORM`, `physical_record::CONDITION`), wear 0 (`physical_record::FATIGUE`), no injury
 /// (`physical_record::CURRENT_INJURY` −1), no recurring injury (`physical_record::RECURRING_TYPE` 0xff), history −1
 /// (`physical_record::HISTORY_FIRST`, `physical_record::HISTORY_LAST`), `physical_record::LAST_INJURY_TYPE` 0xff,
 /// `physical_record::PRONENESS` 50. A player (`staff::PLAYER`): the type drawn from 82 with weight (+8 of the 13-byte
@@ -2230,9 +2230,9 @@ pub(crate) unsafe fn plan_recurring_injury(this: usize, record: usize, injury: *
 /// with 1 in 20, a recurring-capable injury becomes recurring in the record (`physical_record::RECURRING_TYPE` type,
 /// `physical_record::RECURRENCE_GRADE` = 0); among the recurring records, the best score (roll 0x65 − 5 × level −
 /// proneness, stops at 95): a player at a big club (reputation > 4250) without a human and 1 in 3 gets a new injury
-/// 0x4d/0x4e/0x4f (`exe::injury_add_injury`); otherwise his mark is cleared; turned off (DESLIGADAS) from 2026-10-29 to
-/// 2026-10-31, when the test criterion changed and the list was emptied (the detour, even passing through, changes the
-/// stack residue a later original reads: the career left be54a138); the copy stays in the code and does not run
+/// 0x4d/0x4e/0x4f (`exe::injury_add_injury`); otherwise his mark is cleared; it was turned off (DESLIGADAS) from
+/// 2026-10-29 to 2026-10-31 (the detour, even passing through, changed the stack residue a later original read: the
+/// career left be54a138); since the test criterion changed and the list was emptied, the copy runs again
 /// Original: `Injury::roll_recurring_injury` (0x62e500, injury.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn roll_recurring_injury(this: usize, record: usize, injury: *const u8) {
     match plan_recurring_injury(this, record, injury) {
@@ -2279,11 +2279,11 @@ pub(crate) unsafe extern "thiscall" fn reset_player_history(this: usize, person:
 /// `Injury::reset_player(id)`: removes from list `injury_fields::MATCH_HIT_LIST` (from the start: `set_cursor(head())`)
 /// each item with the id (`exe::llist_remove`); with an injury (`current_injury()` ≠ −1), ends it
 /// (`exe::injury_end_player_injury`, no news); restarts the history (`exe::injury_reset_player_history`); the 31-byte
-/// record restarts: today's date (`exe::date_operator_3d` of `G_CURRENT_DATE`), condition and form 10000 (+8,
-/// `set_condition`), wear 0 (`set_fatigue`), no injury (`set_current_injury(-1)`), no recurring injury
-/// (`set_recurring_type(0xff)`), history −1 (`set_history_first`, `set_history_last`), `set_last_injury_type(0xff)`.
-/// Bit 0 of `staff_state::EXTRA_FLAGS` of the 79-byte record (`G_STAFF_STATE_TABLE`) is cleared. Returns the address of
-/// that byte.
+/// record restarts: today's date (`exe::date_operator_3d` of `G_CURRENT_DATE`), form and condition 10000
+/// (`physical_record::FORM` +8, `set_condition`), wear 0 (`set_fatigue`), no injury (`set_current_injury(-1)`), no
+/// recurring injury (`set_recurring_type(0xff)`), history −1 (`set_history_first`, `set_history_last`),
+/// `set_last_injury_type(0xff)`. Bit 0 of `staff_state::EXTRA_FLAGS` of the 79-byte record (`G_STAFF_STATE_TABLE`) is
+/// cleared. Returns the address of that byte.
 /// Original: `Injury::reset_player` (0x62bfa0, injury.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn injury_reset_player(this: usize, id: u32) -> usize {
     covered!("cpm_5 reset player");
@@ -2354,13 +2354,14 @@ pub(crate) unsafe extern "thiscall" fn recover_injury(t: usize, p: *const i32, m
 
 compare_value!(compare_table_penalty, table_penalty, IDX_TABLE_PENALTY, (linha: i32, coluna: i8, tipo: i8) -> i32);
 
-/// Returns the player's condition: fitness × match condition / 10,000 (minimum 100, maximum 9000 while recovering), or
-/// as a percentage (maximum 100).
+/// Returns the player's condition: form × condition / 10,000 (minimum 100, maximum 9000 while recovering), or as a
+/// percentage (maximum 100).
 ///
-/// `Injury::get_condition(player, in_percent)`: the player's condition: `condition()` (+0xa) × +8 / 10,000 from the
-/// id's 31-byte record [this], at least 100 and at most 9000 while he is recovering
-/// (`exe::injury_get_player_injury_status` = 1); as a percentage (× `rdata::F32_0_009999999776` + `rdata::F64_0_5`,
-/// _ftol), at most 100. A person outside the players (`G_STAFF_COUNT`): 100 or 10,000. Null player: 0.
+/// `Injury::get_condition(player, in_percent)`: the player's condition: `condition()` (`physical_record::CONDITION`) ×
+/// the form (`physical_record::FORM`, +8) / 10,000 from the id's 31-byte record [this], at least 100 and at most 9000
+/// while he is recovering (`exe::injury_get_player_injury_status` = 1); as a percentage (× `rdata::F32_0_009999999776`
+/// + `rdata::F64_0_5`, _ftol), at most 100. A person outside the players (`G_STAFF_COUNT`): 100 or 10,000. Null player:
+/// 0.
 /// Original: `Injury::get_condition` (0x62c590, injury.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn get_condition(this: usize, player: usize, in_percent: u32) -> u16 {
     if player == 0 {

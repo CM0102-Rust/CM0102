@@ -1,7 +1,7 @@
 # Mutacoes do match_wrap_up do motor (7). Uso: python mutacoes.py mutacoes\levaN.py --carreira 2002-06-01
 MUTACOES = [
     ('r_banco', "            cod2[i] = w(curtos, j);", "            cod2[i] = w(codes, j);"),
-    ('r_idade', "            3 => !p.is_null() && read_i8(rule + 1) < (p.year_of_birth() as i8),", "            3 => !p.is_null() && read_i8(rule + 1) <= (p.year_of_birth() as i8),"),
+    ('r_idade', "            3 => !p.is_null() && read_i8(rule + 1) < (p.age() as i8),", "            3 => !p.is_null() && read_i8(rule + 1) <= (p.age() as i8),"),
     ('n_posicao', "        fb(player_sheet::GOALKEEPER) * fb(player_sheet::GOALKEEPER) - 300", "        fb(player_sheet::GOALKEEPER) * fb(player_sheet::GOALKEEPER) - 299"),
     ('n_ponta', "k1a / 400", "k1a / 401"),
     ('n_contrato', "        3 | 4 | 7 => 25,", "        3 | 4 | 7 => 24,"),

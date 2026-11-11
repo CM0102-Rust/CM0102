@@ -482,8 +482,8 @@ pub(crate) unsafe fn match_rating_for_manager(p: Fixture, side: u32, out: &mut u
 /// `Staff_Records::record_match_result(p, m)` (the fixture and the match): records a match in both managers' records.
 /// Called by the closing of the day's match (`close_day_match`), for each game.
 ///
-/// Match not played (`.category()` = `match_category::FRIENDLY`): nothing. The records of the two managers (+0xcf of
-/// the home side `.home_club()` and of the away side `.away_club()`; `get_manager_record` with create, through
+/// A friendly (`.category()` = `match_category::FRIENDLY`): nothing. The records of the two managers (+0xcf of the home
+/// side `.home_club()` and of the away side `.away_club()`; `get_manager_record` with create, through
 /// `club_manager_record`): +1 game (`manager_record::GAMES`); goals for (`.goals_for()`) and against
 /// (`.goals_against()`) from the score (`.home_goals_extra_time()`/`.away_goals_extra_time()`, or
 /// `.home_goals()`/`.away_goals()` with `.home_goals_extra_time()` = −1); win (`manager_record::WINS`, bonus 900), draw
@@ -591,8 +591,8 @@ pub(crate) unsafe extern "thiscall" fn record_match_result(this: usize, p: usize
 /// manager's history. SEH frame only for the local date. Called by the completed league (`league_check_complete`).
 ///
 /// For each row of the table (`exe::league_get_table_row`, up to `.club_count()`), the history of the club's manager
-/// (`.manager()`; type 0xa: the club id, the competition of `.competition()`, the year `.stage_id()` and the position k
-/// + 1), in the archive (0x58e340).
+/// (`.manager()`; type 0xa: the club id, the competition of `.competition()`, the stage `.stage_id()` and the position
+/// k + 1), in the archive (0x58e340).
 /// Original: `Staff_Records::add_league_finish_records` (0x86a070, staff_records.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn add_league_finish_records(this: usize, league: usize) {
     let league = League(league);

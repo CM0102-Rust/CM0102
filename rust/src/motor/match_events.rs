@@ -694,7 +694,7 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
 /// cuts at a word with "...". Draws (`exe::screenmanager_set_widget_colour`, `exe::screenmanager_set_widget_font`,
 /// `exe::screenmanager_set_widget_text_colour`, `exe::screenmanager_set_widget_text`,
 /// `exe::screenmanager_set_widget_style`, `exe::screenmanager_set_widget_flags` with option 3). Finally, without a
-/// segment (`commentary_slot::CURRENT_PART`) and with volume (`commentary_queue::VOLUME` >= 101), plays the event sound
+/// segment (`commentary_slot::CURRENT_PART`) and with volume (`commentary_queue::COMMENTARY_SPEED` >= 101), plays the event sound
 /// (`exe::screenmanager_play_sound` on the channel from option 6, side from option 5), and marks the time and the sound
 /// duration (`commentary_queue::SOUND_START_TIMES`, `commentary_queue::SOUND_DURATION` = weight × volume / 100).
 /// Original: `commentate_on_panel` (0x6d7b00, match_events.cpp (~4.4 KB), thiscall, ret 0x20).
@@ -1057,7 +1057,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
 
     // the event sound
     *(((nar as isize) + eu() + (commentary_queue::SOUND_CHANNELS as isize)) as *mut u8) = 0xff;
-    if b(commentary_slot::CURRENT_PART) as i8 <= 0 && *((nar + commentary_queue::VOLUME) as *const u8) >= 0x65 {
+    if b(commentary_slot::CURRENT_PART) as i8 <= 0 && *((nar + commentary_queue::COMMENTARY_SPEED) as *const u8) >= 0x65 {
         let sound = (sons() as isize + which() * 0x110) as usize;
         if *((sound + 4) as *const u8) != 0 {
             let canal = if *((e + 6) as *const u8) == 0 { 0xb6b722usize } else { ((nar as isize) + eu() + (commentary_queue::SOUND_CHANNELS as isize)) as usize };
@@ -1077,7 +1077,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
     let now = exe::utils_get_time_ms();
     core::ptr::write_unaligned(((nar as isize) + eu() * 4 + (commentary_queue::SOUND_START_TIMES as isize)) as *mut u32, now);
     let weight = *((sons() as isize + which() * 0x110 + 2) as *const i16) as i32;
-    let volume = *((nar + commentary_queue::VOLUME) as *const u8) as i32;
+    let volume = *((nar + commentary_queue::COMMENTARY_SPEED) as *const u8) as i32;
     core::ptr::write_unaligned((nar + commentary_queue::SOUND_DURATION) as *mut i32, (weight.wrapping_mul(volume) / 100) as i16 as i32);
     0
 }
@@ -1653,7 +1653,7 @@ pub(crate) unsafe extern "thiscall" fn event_at_front(t: usize, a: u32, b: u32, 
 
 /// The commentary queue constructor: clears the queue, reads the events and, if asked, plays the crowd loop.
 ///
-/// Ret 4: zeroes the queue and the fields (`commentary_queue::VOLUME` = 125, +1 and `commentary_queue::SAVED_POS` = −1,
+/// Ret 4: zeroes the queue and the fields (`commentary_queue::COMMENTARY_SPEED` = 125, +1 and `commentary_queue::SAVED_POS` = −1,
 /// `commentary_queue::LAST_PERIOD_END` = −1), the event globals (`G_MATCH_EVENT_DEFAULT_VARIANT`..), reads the events
 /// (`exe::match_events_read_config`), marks the 16 slots (+0x10, +0x20) with −1 and zeroes the 16 times
 /// (`commentary_queue::SOUND_START_TIMES`); with `goal_crowd_reaction`, plays the crowd loop of the side whose turn it
@@ -1670,7 +1670,7 @@ pub(crate) unsafe extern "thiscall" fn construct_commentary_queue(t: usize, goal
     b(5, 0);
     b(2, 0);
     b(0, 1);
-    b(commentary_queue::VOLUME, 0x7d);
+    b(commentary_queue::COMMENTARY_SPEED, 0x7d);
     b(1, 0xff);
     b(3, 0);
     write_u32(t + commentary_queue::SOUND_DURATION, 0);

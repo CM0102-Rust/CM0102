@@ -158,10 +158,9 @@ pub(crate) unsafe extern "thiscall" fn send_by_scope(this: usize, news: usize, c
 }
 
 /// marks the scope as club (`news_item::REACH` = 0) and delivers the item (`exe::news_deliver_to_manager`) to the club
-/// manager (`.manager()`) when he is human (among the last 16 people, `G_STAFF_COUNT`); turned off (DESLIGADAS) from
-/// 2026-10-29 to 2026-10-31, when the test criterion changed and the list was emptied (the detour, even passing
-/// through, changes the stack residue a later original reads: the career left be54a138); the copy stays in the code and
-/// does not run
+/// manager (`.manager()`) when he is human (among the last 16 people, `G_STAFF_COUNT`); it was turned off (DESLIGADAS)
+/// from 2026-10-29 to 2026-10-31 (the detour, even passing through, changed the stack residue a later original read:
+/// the career left be54a138); since the test criterion changed and the list was emptied, the copy runs again
 /// Original: `News::send_to_club_manager` (0x7861e0, news.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn send_to_club_manager(this: usize, news: usize, club: usize) -> u32 {
     let club = Club(club);
@@ -188,7 +187,7 @@ pub(crate) unsafe extern "thiscall" fn send_to_club_manager(this: usize, news: u
 /// copies the item into the human's 100-slot ring (created on the first, reallocating the array), gives it an id, skips
 /// a repeat of the last one and, with the manager on holiday, applies the automatic reply for the club and the national
 /// team; turned off (DESLIGADAS) from 2026-10-29 to 2026-10-31, when the test criterion changed and the list was emptied (the detour, even passing through, changes the stack residue a later original
-/// reads: the career left be54a138); the copy stays in the code and does not run
+/// reads: the career left be54a138); since then the routine is hooked again
 /// Original: `News::deliver_to_manager` (0x785d40, news.cpp, thiscall, ret 0xc).
 pub(crate) unsafe extern "thiscall" fn deliver_to_manager(this: usize, news: usize, manager: usize, _free: u32) -> u32 {
     let manager = Staff(manager);
@@ -780,11 +779,11 @@ pub(crate) unsafe extern "thiscall" fn clear_inbox(this: usize, manager: usize) 
 
 /// builds the news item: type (+0), important byte (`news_item::IMPORTANT`), the 50 data slots (`news_item::DATA`)
 /// cleared, today's date (`news_item::DATE`), byte `G_CURRENT_DAY_SLICE` at `news_item::DAY_SLICE`, id
-/// (`news_item::ID`) and `news_item::READ` cleared; turned off (DESLIGADAS) from 2026-10-29 to 2026-10-31, when the
-/// test criterion changed and the list was emptied: with the detour the career in Rust mode left the reference be54a138
-/// (bisection of batch 251's 39 routines; with `construct_news_item`, the news constructor, the game later crashed in
-/// `player_stats_reset_player` on a broken index); the cause (stack residue or a difference in the copy) is not
-/// isolated yet; the copy stays in the code and does not run
+/// (`news_item::ID`) and `news_item::READ` cleared; it was turned off (DESLIGADAS) from 2026-10-29 to 2026-10-31: with
+/// the detour the career in Rust mode left the reference be54a138 (bisection of batch 251's 39 routines; with
+/// `construct_news_item`, the news constructor, the game later crashed in `player_stats_reset_player` on a broken
+/// index), and the cause (stack residue or a difference in the copy) was not isolated; since the test criterion changed
+/// and the list was emptied, the copy runs again
 /// Original: `NewsItem::NewsItem` (0x77bbe0, news.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn construct_news_item(this: usize, kind: u32, importante: u32) -> usize {
     exe::date_date_54a110(this + news_item::DATE);

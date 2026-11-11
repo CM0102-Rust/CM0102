@@ -8384,8 +8384,8 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
             if t14 != 0 && read_i8(t + fixture::CATEGORY) != 6 {
                 let ax = read_i16(t14 + competition::REPUTATION) as i32;
                 let pv = person();
-                if ax != 0 && !(!pv.is_null() && *(pv.addr() as *const i32) >= n_persons()) && ((pv.year_of_birth() as i8) as i32) < 24 {
-                    let age = (pv.year_of_birth() as i8) as i32;
+                if ax != 0 && !(!pv.is_null() && *(pv.addr() as *const i32) >= n_persons()) && ((pv.age() as i8) as i32) < 24 {
+                    let age = (pv.age() as i8) as i32;
                     let dx = ax.wrapping_mul(500) as i16 as i32;
                     let mut e = (pv.pressure() as i32).wrapping_mul(150);
                     if sheet().goalkeeper() != 20 {
@@ -9536,7 +9536,9 @@ pub(crate) unsafe extern "thiscall" fn player_band(this: usize, side: u8) -> u32
     ((2..=6).contains(&b) && target.contains(&c)) as u32
 }
 
-/// `engine::TACTICS` + `formation_fields::SIZE` × side
+/// Returns the match player's moment rating for his marking duty: `.moment_positioning()` when the marking type of his
+/// slot (`exe::formation_get_marking_type` of `.position()`) in his side's tactics block (`engine::TACTICS` +
+/// `formation_fields::SIZE` × side) has bit 2, otherwise `.moment_marking()`. Returns only `al`.
 /// Original: `field_by_position` (0x6f4600, the side's block in the engine, thiscall, `al`).
 pub(crate) unsafe extern "thiscall" fn field_by_position(this: usize) -> u8 {
     let this = MatchPlayer(this);

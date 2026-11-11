@@ -62,13 +62,13 @@ pub(crate) unsafe fn hits_key_nation_error(club: Club) -> bool {
         && !(0..0x23usize).any(|k| read_usize(G_LEAGUE_TABLE + 72 * k) == nation.addr())
 }
 
-/// Returns the club's season year: the previous year when today is before the season start day of its row.
+/// Returns the club's season year: the previous year when today is before the season end day of its row.
 ///
 /// `key_nation_get_club_season_year(club)`: today's year (`G_CURRENT_DATE_YEAR`); for a club that is not a national
 /// team (`exe::database_is_national_team`), by the club's row (`exe::key_nation_index_of_club`): with the row's dword
-/// `key_nation_record::SPLIT_SEASON_FLAG` not zero or the start day (`key_nation_record::SEASON_END_DAY`, unsigned)
-/// below 60, and today's day (`G_CURRENT_DATE`, signed) before the start day, the previous year. The original returns
-/// only the low 16 bits meaningfully (the high ones are left over from the pushed slot). Called by the club records
+/// `key_nation_record::SPLIT_SEASON_FLAG` not zero or the end day (`key_nation_record::SEASON_END_DAY`, unsigned) below
+/// 60, and today's day (`G_CURRENT_DATE`, signed) before the end day, the previous year. The original returns only the
+/// low 16 bits meaningfully (the high ones are left over from the pushed slot). Called by the club records
 /// `0x444930`/`0x447430`/`0x448ad0` and the player history `0x7c3e40`/`0x7c5fe0`.
 /// Original: `key_nation_get_club_season_year` (0x669950, key_nation.cpp, cdecl).
 pub(crate) unsafe extern "C" fn key_nation_get_club_season_year(club: usize) -> u16 {

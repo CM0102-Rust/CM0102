@@ -1,0 +1,185 @@
+[
+  {
+    "item": 75,
+    "text": "game_check_players_missing_training: \"link +0x44\" (morale) but body reads player().work_rate()",
+    "verdict": "header",
+    "file": "game.rs",
+    "fn": "game_check_players_missing_training",
+    "evidence": "0x5d6aa0: mov eax,[esi+0x61] (staff.player); mov dl,[eax+0x44]; mov bl,[eax+0x2f]; add bl,[esi+0x18]; add bl,cl(=[esi+0x5b]); add bl,dl; cmp dl,1 -> -5. +0x44 is read from the player record, not from a contract; docs/FORMATOS.en.md TPlayer 0x44 WorkRate (0x45 PlayerMorale), fields.rs player_sheet::WORK_RATE = 0x44. The old 'link +0x44' (morale) confused it with contract::MORALE (+0x44 of a contract). Header: 'link +0x44' -> player `.work_rate()`, 'or the morale are 1' -> '`.work_rate()` is 1', summary 'morale' -> 'work rate'."
+  },
+  {
+    "item": 76,
+    "text": "competition_weight: header talks of competitions, body uses nation/second_nation, KEY_NATION_SWEDEN/NORWAY/DENMARK/BELGIUM and languages",
+    "verdict": "header",
+    "file": "player_stats.rs",
+    "fn": "competition_weight",
+    "evidence": "0x7c6930 reads staff +0x1a (nation) and +0x1e (second nation), compares the nation id with the key nations at 0x9cf4a8/0x9cf408/0x9cf2c0/0x9cf244 and the argument byte with nation +0x78/+0x79 (FORMATOS TNation 0x77 FirstLanguage, 0x78 SecondLanguage, 0x79 ThirdLanguage). Caller 0x7c0120 loops the argument over language codes (ebx up to 0x89), calls 0x7c6930(staff, language), turns (result - x)/50 capped at 10 into a value and pushes (staff, language, value, 0) to the next call: it is a language fluency weight, nothing about competitions. The body is right; the header and the routine name are wrong.",
+    "code_note": "The Rust name is wrong too: suggest renaming `competition_weight` -> `language_weight_by_nationality` and the parameter `code` -> `language` (also in compare/player_stats.rs and the PROLOGOS line in motor.rs). The community map (docs/mapa_funcoes.csv) has no name for 0x7c6930 (vizinhanca)."
+  },
+  {
+    "item": 77,
+    "text": "key_nation_get_club_season_year: \"start day\" is key_nation_record::SEASON_END_DAY",
+    "verdict": "header",
+    "file": "key_nation.rs",
+    "fn": "key_nation_get_club_season_year",
+    "evidence": "+0x15 of the 72-byte key nation row: community data map g_league_table+0x15 'update_day: day of year word of a fixed date'; player_regen.rs (retirement dates) uses it as the nation's end of season; the logic here (season spans the year, or the day is < 60, and today is before it -> previous year) is exactly 'still in the season that started last year', i.e. an end day. The name SEASON_END_DAY stands; 'start day' in the header is the old misreading."
+  },
+  {
+    "item": 78,
+    "text": "add_league_finish_records: \"year +0x3a\" is .stage_id()",
+    "verdict": "header",
+    "file": "staff_records.rs",
+    "fn": "add_league_finish_records",
+    "evidence": "0x86a070: movsx eax, word [edi+0x3a] -> history entry +0x11. League +0x3a is the stage/round code (0x3fc tests in comp/comp.rs, output of create_schedule, copied to fixture +0x32); the league's year is +0x40 (league::YEAR), not read here. In the other history entries +0x11 is also the stage (stage_history_entry). 'the year' -> 'the stage'."
+  },
+  {
+    "item": 79,
+    "text": "record_match_result: \"not played (+0x3a = 1)\" compares match_category::FRIENDLY",
+    "verdict": "header",
+    "file": "staff_records.rs",
+    "fn": "record_match_result",
+    "evidence": "fixture +0x3a is the match category (fields.rs fixture::CATEGORY: 1 friendly, 2 league, ...; copied from comp MATCH_CATEGORY); match_screens.rs shows category 1 as friendly (3 vs 2); cup.rs and fix_man.rs skip friendlies with the same test. Managers' records skip friendlies, not 'unplayed' matches. 'Match not played' -> 'A friendly'."
+  },
+  {
+    "item": 80,
+    "text": "send_to_club_manager, construct_news_item, roll_recurring_injury: headers still say DESLIGADAS (stale)",
+    "verdict": "stale",
+    "files": ["news.rs send_to_club_manager", "news.rs construct_news_item", "injury.rs roll_recurring_injury"],
+    "evidence": "All three are in the PROLOGOS table of motor.rs (0x7861e0 line 1108, 0x77bbe0 line 1140, 0x62e500 line 1098) with their comparers, so the detours are installed and the copies run; CLAUDE.md: no DESLIGADAS list since 31/10. The headers end with 'the copy stays in the code and does not run', which is no longer true. New text keeps the history and says the copy runs again.",
+    "also_stale": "Same stale clause in news.rs deliver_to_manager (0x785d40, also in PROLOGOS line 1109), not in my items; `grep -rln DESLIGADAS rust/src/motor` also hits contract_manager.rs, database.rs, manager_manager.rs, national_teams.rs, player_stats.rs, shortlist_manager.rs, transfer_manager.rs, compare/news.rs (not checked)."
+  },
+  {
+    "item": 81,
+    "text": "add_cup_winners_record: param names game/fixture swapped vs meaning",
+    "verdict": "field_name",
+    "module": "parameters of staff_records.rs add_cup_winners_record (and add_cup_runners_up_record, compare/staff_records.rs compare_add_cup_winners_record)",
+    "old": "game, fixture",
+    "new": "fixture, match_record",
+    "confidence": "read",
+    "evidence": "The header is right ('the club, the fixture and the match record'); the code names are the problem: `let fixture = MatchRecord(fixture); let game = Fixture(game);` - the parameter called `game` is the Fixture and the one called `fixture` is the MatchRecord (the lineup is read at match_record::ROW_STAFF_ID of it). Minimal change: rename the parameters `game` -> `fixture` and `fixture` -> `match_record` in add_cup_winners_record, add_cup_runners_up_record (same pattern, line 765) and the comparer; then the header line `add_cup_winners_record(club, game, fixture)` becomes `(club, fixture, match_record)`. Uses inside the body: game.competition(), game.home_club(), game.away_club(), fixture.addr() + match_record::*: all read right after the rename.",
+    "code_change": "staff_records.rs:257 `fn add_cup_winners_record(this: usize, club: usize, fixture: usize, match_record: usize)`, `let match_record = MatchRecord(match_record); let fixture = Fixture(fixture);` and the uses; same for add_cup_runners_up_record and compare_add_cup_winners_record."
+  },
+  {
+    "item": 82,
+    "text": "field_by_position: header incomplete (also returns moment_positioning/marking)",
+    "verdict": "header",
+    "file": "match_pl.rs",
+    "fn": "field_by_position",
+    "evidence": "0x6f4600: block = engine (+0x19e) + 0x91e2 + side (+0x27) x 6371; call 0x5b57c0 (formation_get_marking_type) with the slot byte +0x19; test al,2: set -> al = [esi+0x10a] (MOMENT_POSITIONING), else [esi+0x108] (MOMENT_MARKING). The header was only the address formula of the block; the new one says what it returns."
+  },
+  {
+    "item": 84,
+    "text": "check_squad_limits: header \"not of type 0xb/0xf/0xd\", body picks only those types",
+    "verdict": "header",
+    "file": "transfer_manager.rs",
+    "fn": "check_squad_limits",
+    "evidence": "0x8cd976: mov al,[esi+0x3d] (staff JOB_FOR_CLUB); cmp al,0xb / je take; cmp al,0xf / je take; cmp al,0xd / jne skip. Only player jobs (job_kind::PLAYER 11, PLAYER_ASSISTANT_MANAGER 13, PLAYER_COACH 15) can be released. Body right, header negated."
+  },
+  {
+    "item": 85,
+    "text": "club_rejects_offer: \"selling club (id = +8)\" is buyer_club_id(), body writes REFUSED_BY_BUYER",
+    "verdict": "header",
+    "file": "transfer_manager.rs",
+    "fn": "club_rejects_offer",
+    "evidence": "offer +8 = bidding club (fields.rs offer::BUYER_CLUB_ID, used as the buyer throughout transfer_manager.rs). Internal consistency: when the refusing club is the +8 club the status is 0x12 (REFUSED_BY_BUYER) and the counterpart rejects the offer; in the other branch (status 0x11 REFUSED_BY_SELLING_SIDE) the player is unsettled by the bid and the +8 club, if computer, withdraws the offer, which only fits +8 = buyer. Header: 'selling club' -> 'buying club' (twice); the reason-8 sentence of the other branch is rewritten to match the body (with reason 8 no more-than-one-attempt test; with another reason the computer buyer withdraws with more than one attempt)."
+  },
+  {
+    "item": 86,
+    "text": "update_work_permit_on_move: \"neither has flag 0xe\", body tests not both UK_AND_IRELAND",
+    "verdict": "header",
+    "file": "transfer_manager.rs",
+    "fn": "update_work_permit_on_move",
+    "evidence": "0x8c7f3a: cmp edx,ecx / je skip; cmp byte [edx+0x76],0xe / jne write; cmp byte [ecx+0x76],0xe / je skip; write year. The year is skipped only when both nations are region 0xe; nation +0x76 is a region value (enums world_region::UK_AND_IRELAND = 14), not a flag. Body right."
+  },
+  {
+    "item": 87,
+    "text": "is_work_permit_granted: \"offer wage (+0xc)\" read as offer::TARGET_STAFF_ID on a Contract (wrong type name)",
+    "verdict": "wrong_type",
+    "file": "transfer_manager.rs",
+    "fn": "is_work_permit_granted",
+    "line": "`if !offer.is_null() && read_usize(offer.addr() + offer::TARGET_STAFF_ID) as i32 > 0x88b7 {` (about line 2721)",
+    "right_type": "Contract (the parameter is already `let offer = Contract(offer)`): contract::WAGE (+0xc), method `.wage()` (i32)",
+    "evidence": "0x8c7bf8: cmp dword [eax+0xc], 0x88b7 / jg granted, eax = the offer argument; the routine reads it as a contract elsewhere (contract::CONTRACT_EXPIRES, contract::CLUB). Contract +0xc is WAGE (FORMATOS TContract, fields.rs contract::WAGE). offer::TARGET_STAFF_ID is the same offset of another record type.",
+    "code_change": "`if !offer.is_null() && offer.wage() > 0x88b7 {` (signed compare, as jg in the original)."
+  },
+  {
+    "item": 87,
+    "text": "is_work_permit_granted: \"potential (+0xd)\" is world_reputation()",
+    "verdict": "header",
+    "file": "transfer_manager.rs",
+    "fn": "is_work_permit_granted",
+    "evidence": "0x8c7be4: cmp word [esi+0xd], 0x2134 on the player sheet; FORMATOS TPlayer 0x5 CurrentAbility, 0x7 PotentialAbility, 0xd WorldReputation. The body (`sheet.world_reputation()`) is right; 'Potential' in the header and the summary ('potential above 8500') becomes world reputation; the offer wage becomes `.wage()` after the code change above. Also the comment `// cqb7: potential above 8500` in the body says potential (the covered! label 'cqb_7 checks the potential' is a mutation anchor, leave it unless the mutation is moved)."
+  },
+  {
+    "item": 88,
+    "text": "get_exchange_negotiations_for_player: manager typed Staff, common_name()/staff::DATE_OF_BIRTH used for +0xc/+0x10 (wrong names)",
+    "verdict": "wrong_type",
+    "file": "transfer_manager.rs",
+    "fn": "get_exchange_negotiations_for_player",
+    "line": "`let manager = Staff(manager);` (about line 8332), `let negotiations = manager.common_name();`, `while i < read_i32(manager.addr() + staff::DATE_OF_BIRTH) {`",
+    "right_type": "TransferManagerFields: `.negotiations()` (transfer_manager_fields::NEGOTIATIONS, +0xc) and `.negotiation_capacity()` (NEGOTIATION_CAPACITY, +0x10)",
+    "evidence": "Thiscall on the TRANSFER_MANAGER (ebp = ecx). 0x8c6026: mov eax,[ebp+0x10] (loop bound), mov ebx,[ebp+0xc] (array), null entries skipped; [ebp] is the offer array. +0x10 is the negotiation array capacity (fields.rs, grown by 50 in transfer_manager.rs:5052), not NEGOTIATION_COUNT (+0x14): the original loops over the capacity and skips the empty slots, so the bound must stay the capacity.",
+    "code_change": "`let manager = TransferManagerFields(manager);` `let negotiations = manager.negotiations();` `while i < manager.negotiation_capacity() as i32 {`; `read_usize(manager.addr())` (offer array at +0) stays. Header rewritten with these names."
+  },
+  {
+    "item": 89,
+    "text": "map_fixture_tree: \"team of nation +0x24\" compares club stadium with venue_stadium_id()",
+    "verdict": "header",
+    "file": "comp/cup.rs",
+    "fn": "map_fixture_tree",
+    "evidence": "0x51938b: cmp dword [esi+0x24],-1; ... ebx = team table entry club; mov ebx,[ebx+0x69] (club::STADIUM, FORMATOS TClub 0x69 Stadium); cmp [ebx], [esi+0x24]: the away team becomes home when its club's stadium id is the cup's venue stadium (comp +0x24 VENUE_STADIUM_ID, used the same way in cup.rs:787). Nothing about a nation. Header fixed in the summary and in the slot sentence.",
+    "code_note": "In the body (about cup.rs:2939-2946) the comment 'the team of nation +0x24 on the outer side becomes the home team' and the local `let nation = club.stadium().addr();` carry the same mistake: rename the local to `stadium` and the comment to 'the away team playing at the cup's venue stadium becomes the home team'."
+  },
+  {
+    "item": 90,
+    "text": "calculate_match_attendance: \"number of clubs (+0x69)\" is reputation()",
+    "verdict": "header",
+    "file": "comp/stadium.rs",
+    "fn": "calculate_match_attendance",
+    "evidence": "Competition +0x69 is ClubCompReputation (FORMATOS TComp 0x69 Int16; fields.rs competition::REPUTATION). The number of clubs of a competition is not in the TComp record. Every 'number of clubs' in the header (the factor start, the division by the club's league, the position bonuses, the own-stadium minimum) reads `reputation()` in the body; replaced by the competition's / league's reputation."
+  },
+  {
+    "item": 90,
+    "text": "get_club_target_rating: \"money (+0x77)\" is min_attendance(), \"nation (+0x57)\" is division()",
+    "verdict": "header",
+    "file": "player_search.rs",
+    "fn": "player_search_get_club_target_rating",
+    "evidence": "FORMATOS TClub: 0x57 Division, 0x77 MinAttendance, 0x1db ContinentalCompId (the club's continental competition, not its league). The body reads competition::REPUTATION of the division (a TComp), so 'nation' was wrong; +0x77 is the minimum attendance, not money. Header: 'money' -> 'attendance', 'nation' -> 'division', 'league' -> 'continental', 'clubs with a nation in G_COMP_OBJECT_TABLE' -> 'clubs whose division is in'.",
+    "code_note": "Locals in the body carry the old words: `let nation = (club.division().addr() as i32) as usize;` (twice) and `let league = Competition(...continental_comp_id...)`, and the closure `with_nation`: rename to `division`, `continental`, `with_division`."
+  },
+  {
+    "item": 91,
+    "text": "check_matchday_squad_limit: \"age (+0x18)\" is year_of_birth()",
+    "verdict": "wrong_type",
+    "file": "transfer_manager.rs",
+    "fn": "transfer_manager_check_matchday_squad_limit",
+    "line": "`3 => (p.year_of_birth() as u8) as i8 > l[1] as i8,` (about line 5707)",
+    "right_type": "Staff `.age()` (staff::AGE, same +0x18)",
+    "evidence": "fields.rs: staff +0x18 holds the year of birth in the file, but database setup replaces it with the age (staff::AGE, 'read as i8'); here it is compared as a signed byte with the age limit of the selection rule (l[1], 'age'), so it is the age. The header ('over the age') is right; the accessor name is wrong (both names point to the same offset, so the machine code does not change).",
+    "code_change": "`3 => (p.age() as i8) > l[1] as i8,` and in the header '(`year_of_birth()`, type 3)' -> '(`.age()`, type 3)'. Same misuse elsewhere (not in my items): match_eng.rs:6086/6128/6151/6786/9402, match_man.rs:2544/2599, match_pl.rs:8387-8388 all read `year_of_birth() as i8` as an age."
+  },
+  {
+    "item": 92,
+    "text": "accept_transfer_bid: \"Loan (+0x11 = 0xb)\" is job_kind::PLAYER",
+    "verdict": "header",
+    "file": "transfer_manager.rs",
+    "fn": "accept_transfer_bid",
+    "evidence": "offer +0x11 is the job the target would take (fields.rs offer::JOB_TYPE; its other uses go through database_is_player_job and the staff slot groups in check_squad_limits); value 0xb = job_kind::PLAYER. The loan flag of an offer is +0x1f (offer::OFFER_TYPE, 1 = loan). The branch is the interest check for a player job, not a loan. 'Loan' -> 'Player job' (and 'on loans' in the summary)."
+  },
+  {
+    "item": 93,
+    "text": "position_mask: \"+0x14 midfielder\" is ATTACKING_MIDFIELDER",
+    "verdict": "ok",
+    "file": "formation.rs",
+    "fn": "position_mask",
+    "evidence": "0x5b7de2: cmp [ecx+0x14] -> or 0x20; cmp [ecx+0x13] -> or 0x10. FORMATOS TPlayer 0x13 Midfielder, 0x14 AttackingMidfielder. The old header ('+0x14 midfielder 0x20 or +0x13 0x10') was wrong; the rewritten header now in formation.rs already says `player_sheet::ATTACKING_MIDFIELDER` 0x20 and `player_sheet::MIDFIELDER` 0x10. Nothing left to change."
+  },
+  {
+    "item": 94,
+    "text": "get_offer_response_delay / get_travel_distance_factor: rdata mapping by order of use, to check",
+    "verdict": "ok",
+    "files": ["transfer_manager.rs get_offer_response_delay", "comp/stadium.rs get_travel_distance_factor"],
+    "evidence": "Checked against the original and the .rdata values read from cm0102.exe. 0x8cc5b0: fcomp [0x968e58]=3.15 (F64_3_15), fmul [0x968e18]=2.5 (F64_2_5), fld [0x968dd8]=30.0 (F64_30): as in body and header. 0x85d8a0 in order: 0.5, 0.1333.. (F64_0_1333333333), 1.0, 0.0, 0.0, 1.0, 14.0 (F64_14), 20.0 (F64_20), 0.15 (F64_0_15), 1.0, 0.2, 0.2, 0.05, 0.05, 0.03, 0.03: every constant the header names matches the body and the original. No change.",
+    "side_note": "get_travel_distance_factor's header calls R 'the reputation R (`state_of_development()` of nation `nation()` of the away club)': the body reads state_of_development; the word 'reputation' looks like a leftover of the hex era (not verified which side is right, not in my item)."
+  }
+]

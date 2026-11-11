@@ -511,27 +511,27 @@ pub(crate) unsafe fn apply_side_factor_floor(game: Fixture, side: u8, f: &mut [f
 /// Computes the match attendance, writes the total, the home and the away crowd to `out` and returns the total.
 /// Convention: thiscall, ret 8, `stadium.cpp`; this = `G_STADIUM`; called by the match engine `0x6b7f20`.
 /// `calculate_match_attendance(game, out)` (fixture, output). With no fixture, `G_STADIUM_DEFAULT_ATTENDANCE` (15,000).
-/// R = club reputation (`club::REPUTATION`) / 500 (at least 1). For each side, the factor starts at the number of clubs
-/// in the competition (`reputation()`, at least 1; with no competition 1), +2 in competitions of type 6, 8 and 10; in
-/// leagues (table `G_COMP_OBJECT_TABLE`, outside friendlies `exe::friendly_is_friendly_competition` and the nations of
+/// R = club reputation (`club::REPUTATION`) / 500 (at least 1). For each side, the factor starts at the competition's
+/// reputation (`reputation()`, at least 1; with no competition 1), +2 in competitions of type 6, 8 and 10; in leagues
+/// (table `G_COMP_OBJECT_TABLE`, outside friendlies `exe::friendly_is_friendly_competition` and the nations of
 /// `FN_COMP_IS_RESERVE_OR_MINOR_COMP`, without `league::COMP_TYPE` = 2) plus the difference (`round_number()` of the
 /// fixture − `league::LEGS` of the league, between −6 and 5). The home factor times the away R / its own R (if it has R
 /// < 15 or below the other's), ×1.1 with the other above 17, ×1.25 with the other above 12 and it below 14; divided by
-/// the number of clubs in the club's league (`club::DIVISION` → `reputation()`), without one ×0.2 (type 10) or ×0.05.
-/// The away factor, the same with the roles swapped. Floors by competition type (apply_side_factor_floor: cups 8, 6 and
-/// 5 with the limits `+0x30`/`+0x32` and the reputation; 10 1.25; 9 0.8; otherwise 0.1). With a stadium off neutral
+/// the reputation of the club's league (`club::DIVISION` → `reputation()`), without one ×0.2 (type 10) or ×0.05. The
+/// away factor, the same with the roles swapped. Floors by competition type (apply_side_factor_floor: cups 8, 6 and 5
+/// with the limits `+0x30`/`+0x32` and the reputation; 10 1.25; 9 0.8; otherwise 0.1). With a stadium off neutral
 /// ground: the cities of the stadium and of the two clubs (drawn when there is no city), the distance factor
 /// (`exe::stadium_get_travel_distance_factor`, at least 0.15); the home side gets the average (`attendance()`) × factor
 /// × distance, the away side (`attendance()` + `min_attendance()`) × factor × distance × 0.5; in the home club's
-/// league, by position (`exe::comp_stats_find_club_entry` on the league table): +50/100/150 per club at the top, +25/50
-/// in the race, −25/−10 at the bottom, and by form (`+0x72`/`+0x73`/`+0x74`); in the ground of a club's city, its crowd
-/// between the minimum (`min_attendance()`) and the maximum (`max_attendance()`). With no stadium or on neutral ground:
-/// average × factor. Derby (`club::RIVAL1`/`club::RIVAL2`/`club::RIVAL3`): ×1.5 (same city ×1.35); rival away side
-/// ×1.35; off neutral ground with `stage()` != `0xff` ×1.05 and ×0.85. In the league with `own_stadium()`: the minimum
-/// by the number of clubs in the league (and the maximum with up to 4 clubs). A stadium with fewer than 1,500 seats
-/// becomes R × 1,000 (at least 1,500). Limits by capacity (the away side up to max(5%, min(capacity − away average ×
-/// home factor, 15%)) and the home side the rest; neutral half), with no stadium 40,000 and 25,000; with no crowd, 1 to
-/// 50 and 1 to 15. Total = home + away − random(50) (negative: 45 to 194).
+/// league, by position (`exe::comp_stats_find_club_entry` on the league table): +50/100/150 × the league's reputation
+/// at the top, +25/50 × it in the race, −25/−10 × it at the bottom, and by form (`+0x72`/`+0x73`/`+0x74`); in the
+/// ground of a club's city, its crowd between the minimum (`min_attendance()`) and the maximum (`max_attendance()`).
+/// With no stadium or on neutral ground: average × factor. Derby (`club::RIVAL1`/`club::RIVAL2`/`club::RIVAL3`): ×1.5
+/// (same city ×1.35); rival away side ×1.35; off neutral ground with `stage()` != `0xff` ×1.05 and ×0.85. In the league
+/// with `own_stadium()`: the minimum by the league's reputation (and the maximum with a reputation up to 4). A stadium
+/// with fewer than 1,500 seats becomes R × 1,000 (at least 1,500). Limits by capacity (the away side up to max(5%,
+/// min(capacity − away average × home factor, 15%)) and the home side the rest; neutral half), with no stadium 40,000
+/// and 25,000; with no crowd, 1 to 50 and 1 to 15. Total = home + away − random(50) (negative: 45 to 194).
 /// Original: `Stadium::calculate_match_attendance` (0x85cba0, stadium.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, game: usize, out: *mut i32) -> i32 {
     let game = Fixture(game);

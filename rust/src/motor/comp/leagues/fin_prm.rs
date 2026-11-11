@@ -121,9 +121,9 @@ pub(crate) unsafe extern "thiscall" fn fin_prm_end_season_for_nation(this: usize
 /// ceiling `.expansion_capacity()` and a third of it; news 1 and 2) when the average attendance
 /// (`exe::comp_stats_find_club_entry` from the league table: ecx = `[comp + 8]`; push club; no add esp -> thiscall)
 /// exceeds 0.92 of the capacity (`.capacity()`), by reputation or by the notice; otherwise the seating
-/// (`.seating_capacity()`) by random(20) and the league size (`.division().reputation()`), by balance × 0.2 / 75 (news
-/// 3); the ceiling goes up by 1500 below 30 thousand places; the refusal (`post_works_refused_news`) to the human who
-/// asked.
+/// (`.seating_capacity()`) by random(20) and the league's reputation (`.division().reputation()`), by balance × 0.2 /
+/// 75 (news 3); the ceiling goes up by 1500 below 30 thousand places; the refusal (`post_works_refused_news`) to the
+/// human who asked.
 ///
 /// Then, the human's training facilities request (bit 7): above (500 − reputation) × 500, the upgrade
 /// (`exe::financetable_upgrade_training_facilities`: ecx = table; push club -> thiscall, ret 4; news 8), otherwise the
@@ -534,17 +534,18 @@ pub(crate) unsafe fn human_manager_wage_cap(person: Staff, np: PlayerSheet, job:
 /// `.professional_status()` = `professional_status::AMATEUR`: 0. The wage factor by reputation (/ 50, plus the wealth
 /// band `wealth_band` and the nation's wage table: 0x9c8498 small nations, 0x9c8548 medium, 0x9c85f8 France and clubs
 /// with `.plc()`, 0x9c86a8 the others) × 47.6 (ceiling 10000). With a person: the value of the contract at the club
-/// (`contract_wage`, up to 2 × the finances' ceiling `.wage_ceiling()`, at least that; a player limited by type
-/// `.job_for_club()`), the bonus for the one who pays more (`big_spender_bonus`), reputation² × 0.25 × 0.0001 + the
-/// floor `.highest_wage()`, the rules for roles 1 to 3, the human's ceiling (`human_manager_wage_cap`), the nation
-/// (Basque club `exe::database_is_basque_club`, the market from the transfer manager's table `[G_TRANSFER_MANAGER]` →
-/// `shortlist_manager_fields::CLUB_SHORTLISTS`, the contract near its end `exe::date_days_since`), the chairman
-/// (`.chairman()`: the liking `exe::staff_is_favoured_by` and the favourite `exe::club_favours_staff`, the profile
-/// `.business()`, the manager `.manager()`) and roles 1 to 6. Without a person: the nation factor (`.league_standard()`
-/// / 20 × the type `.state_of_development()`, for type 1 nations), the league (`.division()` and `.last_division()`,
-/// the size `.reputation()` cubed), the table by (factor / 10) minus (`.wage_bill()` − (factor³ × nation / divisor +
-/// balance × 1.3) / 52), with the floor 0x9c83e8 or 0x9c8338, the band and the nation. Then the club with
-/// `.professional_status()` 1 and 2, the league minimum + 100 and the lower of the two.
+/// (`contract_wage`, up to 2 × the finances' ceiling `.wage_ceiling()`, at least that; a non-player without a player
+/// record (`.non_player()` without `.player()`) limited by role `.job_for_club()`), the bonus for the one who pays more
+/// (`big_spender_bonus`), reputation² × 0.25 × 0.0001 + the floor `.highest_wage()`, the rules for roles 1 to 3, the
+/// human's ceiling (`human_manager_wage_cap`), the nation (Basque club `exe::database_is_basque_club`, the market from
+/// the transfer manager's table `[G_TRANSFER_MANAGER]` → `shortlist_manager_fields::CLUB_SHORTLISTS`, the contract near
+/// its end `exe::date_days_since`), the chairman (`.chairman()`: the liking `exe::staff_is_favoured_by` and the
+/// favourite `exe::club_favours_staff`, the profile `.business()`, the manager `.manager()`) and roles 1 to 6. Without
+/// a person: the nation factor (`.league_standard()` / 20 × the type `.state_of_development()`, for type 1 nations),
+/// the league (`.division()` and `.last_division()`, its reputation `.reputation()` cubed), the table by (factor / 10)
+/// minus (`.wage_bill()` − (factor³ × nation / divisor + balance × 1.3) / 52), with the floor 0x9c83e8 or 0x9c8338, the
+/// band and the nation. Then the club with `.professional_status()` 1 and 2, the league minimum + 100 and the lower of
+/// the two.
 /// Original: `Finance::get_max_wage` (0x5968d0, fin_prm.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, job_arg: u32) -> i32 {
     let fin = Finance(fin);
@@ -1090,9 +1091,9 @@ pub(crate) fn div_trunc(a: i32, b: i32) -> i32 {
 /// (`close_day_match`). No result or no fixture: the error box (the original). A national team on either side: nothing
 /// (`match_club_finance`). The amounts: with attendance (`.attendance()` of the result), the TV by attendance (1 /
 /// (random(10) + 2) as an integer, which is 0, plus 1.75, × attendance) and the gate receipts (`.gate_receipts()`); the
-/// match costs (unless both clubs have `.professional_status()` = `professional_status::PROFESSIONAL`: attendance / 4;
-/// otherwise by bands of attendance or of the capacity `stadium::CAPACITY` of the fixture's stadium `.stadium()`, with
-/// a floor of 500 by flag `.home_side_mark()`); the home club's expenses (with `.professional_status()` =
+/// match costs (when neither club has `.professional_status()` = `professional_status::PROFESSIONAL`: attendance ×
+/// 0.25; otherwise by bands of attendance or of the capacity `stadium::CAPACITY` of the fixture's stadium `.stadium()`,
+/// with a floor of 500 by flag `.home_side_mark()`); the home club's expenses (with `.professional_status()` =
 /// `professional_status::PROFESSIONAL`: random + attendance × 1.25 + reputation / 2 + 300, × 1.25 above 4750, or
 /// random(400) + attendance × 1.25 + 600 without reputation; otherwise two random draws + attendance); the competition
 /// TV money by stage (`.stage()`) or type (`.category()`: finals by the reputations, 6 and 4 by the competition's
@@ -1380,18 +1381,18 @@ pub(crate) unsafe fn is_scandinavian_club(club: Club) -> bool {
 }
 
 /// Tries a cash boost for the club: outside seven nations and `.professional_status()` 2 and 3, the divisor by wealth
-/// band and reputation; with the chairman record, three random draws (against `player_sheet::GOALKEEPER`, the debt and
-/// 750 × `non_player::RESOURCES`) give (3 × (`non_player::RESOURCES`)² + 750) × reputation + 1 million plus the
-/// balance; without it, two draws give (reputation + 1000) × 1000; a third in three nations; then the money, the news
-/// by type and the end of the crisis.
+/// band and reputation; with the chairman record, three random draws (against `non_player::BUSINESS`, the debt and 750
+/// × `non_player::RESOURCES`) give (3 × (`non_player::RESOURCES`)² + 750) × reputation + 1 million plus the balance;
+/// without it, two draws give (reputation + 1000) × 1000; a third in three nations; then the money, the news by type
+/// and the end of the crisis.
 ///
 /// `FinanceTable::try_finance_boost_event(club, fin)`, called from the week's events pass
 /// (`process_club_finance_events`). Outside Wales, the Irelands and the nations of `KEY_NATION_NORWAY`,
 /// `KEY_NATION_DENMARK`, `KEY_NATION_SWEDEN` and `KEY_NATION_BELGIUM`, and without `.professional_status()` at 2 or 3.
 /// The divisor by the band (`wealth_band`): rich 0.001; 0 by reputation (up to 4250: 0.0125 with the chairman's
-/// (`.chairman()`) `.ambition()` and the record's (`.non_player()`) `player_sheet::BRAVERY` above 15, otherwise 0.0075;
+/// (`.chairman()`) `.ambition()` and the record's (`.non_player()`) `non_player::RESOURCES` above 15, otherwise 0.0075;
 /// up to 6250: 0.05 or 0.025 the same way; above: 0.025); −1: 0.1 above 5250, 0.075 above 3250, 0.025; −2: 0.125 above
-/// 3750, 0.075. With the chairman's record: random(its `player_sheet::GOALKEEPER`) above random(30 / divisor),
+/// 3750, 0.075. With the chairman's record: random(its `non_player::BUSINESS`) above random(30 / divisor),
 /// random(`non_player::RESOURCES` × 1 million) above the debt and reputation below 750 × `non_player::RESOURCES`: (3 ×
 /// (`non_player::RESOURCES`)² + 750) × reputation + 1 million, plus the low balance (less if the balance is negative),
 /// with the ceiling of reputation² + 1.5 million below 2000. Without it: random(15000 / divisor) below the reputation
@@ -1427,7 +1428,7 @@ pub(crate) unsafe extern "thiscall" fn try_finance_boost_event(this: usize, club
         0 => {
             if rep <= 0x109a {
                 let sheet = if !presence.is_null() { presence.non_player() } else { NonPlayer(0) };
-                if strong(presence.addr(), sheet.addr()) && presence.ambition() > 0xf && read_i8(sheet.addr() + player_sheet::BRAVERY) > 0xf {
+                if strong(presence.addr(), sheet.addr()) && presence.ambition() > 0xf && sheet.resources() > 0xf {
                     read_f64(rdata::F64_0_0125)
                 } else {
                     covered!("cqb_2 low band 0 divisor");
@@ -1435,7 +1436,7 @@ pub(crate) unsafe extern "thiscall" fn try_finance_boost_event(this: usize, club
                 }
             } else if rep < 0x186a {
                 let sheet = if !presence.is_null() { presence.non_player() } else { NonPlayer(0) };
-                if strong(presence.addr(), sheet.addr()) && read_i8(sheet.addr() + player_sheet::BRAVERY) > 0xf && presence.ambition() > 0xf {
+                if strong(presence.addr(), sheet.addr()) && sheet.resources() > 0xf && presence.ambition() > 0xf {
                     read_f64(rdata::F64_0_05)
                 } else {
                     read_f64(rdata::F64_0_025)
@@ -1451,7 +1452,7 @@ pub(crate) unsafe extern "thiscall" fn try_finance_boost_event(this: usize, club
     if !presence.is_null() && !sheet.is_null() {
         covered!("cqb_2 with the record");
         let r1 = friendly_random(ftol(read_f64(rdata::F64_30) / div)); // cqb2: the random draw with the player sheet;
-        let r2 = friendly_random(read_i8(sheet.addr() + player_sheet::GOALKEEPER) as i32);
+        let r2 = friendly_random(sheet.business() as i8 as i32);
         if r2 <= r1 {
             return 0;
         }
@@ -1677,15 +1678,15 @@ pub(crate) unsafe extern "thiscall" fn pay_other_costs(this: usize, value: i32) 
 }
 
 /// Recomputes the wage bill: sums the squad wages (less the other club's share for loanees) and the staff wages into
-/// the wage bill (+0xc) and the highest wage (`finance::HIGHEST_WAGE`); with fewer than 15 players, the missing places
-/// at a wage by reputation; plus reputation² × a factor by club type and nation; the wage ceiling
+/// the wage bill (`finance::WAGE_BILL`) and the highest wage (`finance::HIGHEST_WAGE`); with fewer than 15 players, the
+/// missing places at a wage by reputation; plus reputation² × a factor by club type and nation; the wage ceiling
 /// (`finance::WAGE_CEILING`) by `get_max_wage`.
 ///
 /// `Finance::update_wage_bill()`, called from the daily finance pass (0x59b9c0, on Saturdays, clubs with a nation),
 /// contract signing (`sign_contract`), the daily contracts pass (0x4c7ac0), loans (`sign_loan_contract`, `end_loan`)
 /// and the wage bills at creation (`refresh_all_wage_bills`). Clears the highest wage (`finance::HIGHEST_WAGE`) and the
-/// bill (+0xc) and sums the wages (the contract's `contract::WAGE`) of the 50 squad slots (`.squad(k)`; contract with
-/// the club `exe::contract_manager_get_contract_for_club`; wage −1: the default wage
+/// bill (`finance::WAGE_BILL`) and sums the wages (the contract's `contract::WAGE`) of the 50 squad slots (`.squad(k)`;
+/// contract with the club `exe::contract_manager_get_contract_for_club`; wage −1: the default wage
 /// `exe::staff_contract_default_staff_contract` truncated; on loan (`exe::contract_manager_get_loan_contract`) outside
 /// type 6 (`contract::CONTRACT_TYPE`): minus the other contract's wage) and of the staff (+0x19f × 5, +0x1b3 × 7,
 /// +0x1cf × 3, contract `exe::contract_manager_get_contract`). Squad with fewer than 15 slots filled: the missing ones
@@ -1697,10 +1698,10 @@ pub(crate) unsafe extern "thiscall" fn pay_other_costs(this: usize, value: i32) 
 /// 0, −1).
 /// Original: `Finance::update_wage_bill` (0x598370, finance.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn update_wage_bill(this: usize) {
-    let this = League(this);
+    let this = Finance(this);
     let ceiling: unsafe extern "thiscall" fn(usize, u32, i32) -> i32 = core::mem::transmute(FN_FINANCE_GET_MAX_WAGE);
     write_i32(this.addr() + finance::HIGHEST_WAGE, 0);
-    this.set_stages((0) as usize);
+    this.set_wage_bill(0);
     let club = Club(read_usize(G_CLUB_TABLE).wrapping_add(read_usize(this.addr() + finance::CLUB_ID).wrapping_mul(club::SIZE)));
     let mut ocupadas: i8 = 0;
     for k in 0..50usize {
@@ -1723,7 +1724,7 @@ pub(crate) unsafe extern "thiscall" fn update_wage_bill(this: usize) {
         if w > read_i32(this.addr() + finance::HIGHEST_WAGE) {
             write_i32(this.addr() + finance::HIGHEST_WAGE, w);
         }
-        this.set_stages(((this.stages() as i32).wrapping_add(w)) as usize);
+        this.set_wage_bill(this.wage_bill().wrapping_add(w));
     }
     // the staff: the sum goes to the payroll after the three lists (the same sum, in 32 bits)
     let mut staff = 0i32;
@@ -1746,7 +1747,7 @@ pub(crate) unsafe extern "thiscall" fn update_wage_bill(this: usize) {
     }
     if staff != 0 {
         covered!("cpz_11 staff payroll");
-        this.set_stages(((this.stages() as i32).wrapping_add(staff)) as usize); // cpz11: the staff on the payroll
+        this.set_wage_bill(this.wage_bill().wrapping_add(staff)); // cpz11: the staff on the payroll
     }
     let tipo1 = club.professional_status() == professional_status::PROFESSIONAL;
     let rep = club.reputation() as i32;
@@ -1767,7 +1768,7 @@ pub(crate) unsafe extern "thiscall" fn update_wage_bill(this: usize) {
             v = v.wrapping_div(t);
         }
         let foul = 15 - ocupadas as i32;
-        this.set_stages(((this.stages() as i32).wrapping_add(foul.wrapping_mul(v))) as usize);
+        this.set_wage_bill(this.wage_bill().wrapping_add(foul.wrapping_mul(v)));
     }
     let k = if tipo1 {
         let nation = club.nation().addr();
@@ -1787,8 +1788,8 @@ pub(crate) unsafe extern "thiscall" fn update_wage_bill(this: usize) {
         0x96a5c0
     };
     covered!("cpz_11 payroll by injury_word_0c");
-    let folha = ftol(rep.wrapping_mul(rep) as f64 * read_f64(k) + (this.stages() as i32) as f64); // cpz11: the reputation on the payroll
-    this.set_stages((folha) as usize);
+    let folha = ftol(rep.wrapping_mul(rep) as f64 * read_f64(k) + this.wage_bill() as f64); // cpz11: the reputation on the payroll
+    this.set_wage_bill(folha);
     let t = ceiling(this.addr(), 0, -1);
     write_i32(this.addr() + finance::WAGE_CEILING, t);
 }
@@ -1997,16 +1998,17 @@ pub(crate) unsafe fn fin_prm_club_finance(this: usize, club: Club) -> usize {
     read_usize(this).wrapping_add((read_usize(club.addr()) as u32).wrapping_mul(0x167) as usize)
 }
 
-/// Adds the weekly merchandising income: attendance × reputation × factor (by the stadium of the `.chairman()` club or
-/// by reputation; Japan one step up), × (random(11) + 95)%, added to `finance::MONTH_MERCHANDISING`,
+/// Adds the weekly merchandising income: attendance × reputation × factor (by the chairman's business level or by
+/// reputation; Japan one step up), × (random(11) + 95)%, added to `finance::MONTH_MERCHANDISING`,
 /// `finance::SEASON_MERCHANDISING` and the balance.
 ///
 /// `FinanceTable::add_weekly_merchandising_income(club)`, called from the daily finance pass (0x59b9c0, on day 6 of the
-/// week, league clubs). The base: with the `.chairman()` club and its stadium (`.non_player()`), the level
-/// (`.business()`) × 25 + the reputation (`.reputation()`), × 0.65 truncated if byte `.own_stadium()` is zero, picks
-/// the factor by 5500 and 4000; without them, the reputation picks it by 5250 and 3750 (one step higher in the nation
-/// of Japan `KEY_NATION_JAPAN`). Attendance (`.attendance()`) × reputation × factor, truncated; × (random(11) + 95) ×
-/// 0.01, truncated, added to `finance::MONTH_MERCHANDISING`, `finance::SEASON_MERCHANDISING` and the balance.
+/// week, league clubs). The base: with the chairman (`.chairman()`) and his non-player record (`.non_player()`), the
+/// business level (`.business()`) × 25 + the reputation (`.reputation()`), × 0.65 truncated if byte `.own_stadium()` is
+/// zero, picks the factor by 5500 and 4000; without them, the reputation picks it by 5250 and 3750 (one step higher in
+/// the nation of Japan `KEY_NATION_JAPAN`). Attendance (`.attendance()`) × reputation × factor, truncated; ×
+/// (random(11) + 95) × 0.01, truncated, added to `finance::MONTH_MERCHANDISING`, `finance::SEASON_MERCHANDISING` and
+/// the balance.
 /// Original: `FinanceTable::add_weekly_merchandising_income` (0x59b7e0, finance.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn add_weekly_merchandising_income(this: usize, club: usize) {
     let club = Club(club);
@@ -2063,8 +2065,9 @@ pub(crate) unsafe extern "thiscall" fn add_weekly_merchandising_income(this: usi
 /// (`.season_ticket_step()`, up to 8) picks the fraction (0x9c8758) of the difference, × (random(11) + 95) / 100 = the
 /// new ones; the sold/places ratio goes to `.season_ticket_ratio()` (f32, up to 0.875). The income (price by reputation
 /// × new ones; /4 or /10 by the nation type `.state_of_development()`; × 1.25 in Serie A, Chelsea 1.5, Arsenal and
-/// Tottenham 1.3, Everton 0.75, Liverpool 0.9, Germany 1.2) is applied only with `apply`; then (random(rep) +
-/// random(rep) + 1) × 0.001 + 1, × new ones, into `.season_merchandising()`.
+/// Tottenham 1.3, Everton 0.75, Liverpool 0.9, Germany 1.2) is added only with `apply` (`.month_season_tickets()`,
+/// `.season_season_tickets()` and the balance); then (random(rep) + random(rep) + 1) × 0.001 + 1, × new ones, into
+/// `.season_merchandising()`, `.month_merchandising()` and the balance.
 /// Original: `Finance::sell_season_tickets` (0x599a20, finance.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn sell_season_tickets(this: usize, apply: i32) {
     let this = Finance(this);
@@ -2485,9 +2488,9 @@ pub(crate) unsafe extern "thiscall" fn process_club_finance_events(this: usize, 
 /// `FinanceTable::try_board_debt_payment(club, fin)`, called from the events pass (`process_club_finance_events`). Band
 /// (`wealth_band`) −2, −1 (divisor 2, or 0.4 with reputation of 3500), or 0 with reputation up to 3500 and a balance
 /// below 25 × reputation (0.4); the others: 0. random(7000) + 3500 above the reputation; random(6 / divisor) zero;
-/// random(level `.resources()` of the stadium `.non_player()` of the `.chairman()` club, or 10) not zero. The board
-/// pays 450 × reputation (below 1250 with a balance below −450 × reputation), 300 × (balance below −300 × reputation)
-/// or 150 ×: into `.season_other_income()`, `.month_other_income()` and the balance; the news
+/// random(the resources `.resources()` of the non-player record `.non_player()` of the chairman `.chairman()`, or 10)
+/// not zero. The board pays 450 × reputation (below 1250 with a balance below −450 × reputation), 300 × (balance below
+/// −300 × reputation) or 150 ×: into `.season_other_income()`, `.month_other_income()` and the balance; the news
 /// (`post_finance_boost_news`, `exe::finance_post_finance_boost_news`, type 4); returns 1.
 /// Original: `FinanceTable::try_board_debt_payment` (0x59dd40, finance.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn try_board_debt_payment(this: usize, club: usize, fin: usize) -> u32 {
@@ -2577,18 +2580,19 @@ pub(crate) unsafe fn compare_finance_event(name: &str, fin: usize, original: imp
 }
 
 /// Tries a cash injection for a club of reputation 4750 outside Wales and the Irelands: random draws by the band and
-/// the stadium of the `.chairman()` club; the amount by reputation, up to 10% of the debt and 4 million; news and end
-/// of the crisis.
+/// the chairman (`.chairman()`); the amount by reputation, up to 10% of the debt and 4 million; news and end of the
+/// crisis.
 ///
 /// `FinanceTable::try_cash_injection(club, fin)`, called from the events pass (`process_club_finance_events`).
 /// Reputation (`.reputation()`) of 4750, without flag `.plc()`, outside Wales and the Irelands. Divisor by the band
-/// (`wealth_band`; −2: 0.25; −1: 0.1; others: 0.001). With the stadium (`.non_player()`) of the `.chairman()` club:
-/// random(30 / divisor) below the level (`.business()`) and level `.resources()` above random(5) + 10: (20 × level +
-/// 150) × reputation + 750000; without it: random(4 / divisor) zero: (5 × reputation + 15000) × 50. Debt above 10 × the
-/// amount: 10% of the debt. Ceiling: reputation² + 1.5 million below 2000; otherwise 4 million (+1 if the amount
-/// exceeds reputation² / 4). Into `.season_other_income()`, `.month_other_income()` and the balance; the news
-/// (`post_finance_boost_news`, `exe::finance_post_finance_boost_news`, type 3, with the budget `transfer_budget`); ends
-/// the crisis (`.set_crisis_state(0)`); returns 1.
+/// (`wealth_band`; −2: 0.25; −1: 0.1; others: 0.001). With the chairman's (`.chairman()`) non-player record
+/// (`.non_player()`): random(30 / divisor) below the business level (`.business()`) and the resources `.resources()`
+/// above random(5) + 10: (20 × resources + 150) × reputation + 750000; without it: random(4 / divisor) zero: (5 ×
+/// reputation + 15000) × 50. Debt above 10 × the amount: 10% of the debt. Ceiling: reputation² + 1.5 million below
+/// 2000; otherwise 4 million (+1 if the amount exceeds reputation² / 4). Into `.season_other_income()`,
+/// `.month_other_income()` and the balance; the news (`post_finance_boost_news`,
+/// `exe::finance_post_finance_boost_news`, type 3, with the budget `transfer_budget`); ends the crisis
+/// (`.set_crisis_state(0)`); returns 1.
 /// Original: `FinanceTable::try_cash_injection` (0x59e5a0, finance.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn try_cash_injection(this: usize, club: usize, fin: usize) -> u32 {
     let fin = Finance(fin);

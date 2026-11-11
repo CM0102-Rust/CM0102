@@ -1500,8 +1500,8 @@ pub(crate) unsafe fn for_each_lineup_person(this: usize, p: Fixture, m: usize, m
     }
 }
 
-/// Records a result between two national sides: counts each nation's match; by competition, marks the general record,
-/// swaps the nationality or, in real internationals, scores the FIFA ranking and adds caps and goals to everyone who
+/// Records a result between two national sides: by competition, marks the general record, swaps the nationality or, in
+/// real internationals, counts each nation's match, scores the FIFA ranking and adds caps and goals to everyone who
 /// played; clears the type's +0x44 on its date and sends the news to the clubs. Ret 8:
 /// `NationalTeams::record_international_result(p, m)`: only between two national sides
 /// (`exe::database_is_national_team`). By the fixture's competition (`.competition()`): that of
@@ -1513,11 +1513,12 @@ pub(crate) unsafe fn for_each_lineup_person(this: usize, p: Fixture, m: usize, m
 /// first call-up (`exe::staff_records_add_first_cap_record` with the opponent, if `staff::INT_APPS` = 0, after the
 /// nation swap), a cap (`staff::INT_APPS`) and the goals (`staff::INT_GOALS` += `.goals()` of the slot) for the
 /// national side and the match in the record (`exe::transfer_manager_record_international_appearance` with the nation's
-/// number of matches). In all of them, the nation's match count (+2) goes up. Then, per side: the type (1 if
-/// `.home_side_mark()` = 0; otherwise 2 for the second team `exe::club_is_national_team`, otherwise 0); on the type's
-/// date (`national_squad_record::SQUAD_DATE` + 20 × type, `exe::date_operator_3d_3d` with today's) zeroes +0x44 + 20 ×
-/// type; the news to the clubs (`exe::nationalteams_send_club_international_report_news`) with the star player (slot
-/// `match_record::HOME_CAPTAIN`) and the list of those who played. No SEH, no box, no random draw.
+/// number of matches); only in this branch, each side's nation match count (+2 of the nation record) goes up, before
+/// its players. Then, per side: the type (1 if `.home_side_mark()` = 0; otherwise 2 for the second team
+/// `exe::club_is_national_team`, otherwise 0); on the type's date (`national_squad_record::SQUAD_DATE` + 20 × type,
+/// `exe::date_operator_3d_3d` with today's) zeroes +0x44 + 20 × type; the news to the clubs
+/// (`exe::nationalteams_send_club_international_report_news`) with the star player (slot `match_record::HOME_CAPTAIN`)
+/// and the list of those who played. No SEH, no box, no random draw.
 /// Original: `NationalTeams::record_international_result` (0x76b600, national_teams.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn record_international_result(this: usize, p: usize, m: usize) {
     let p = Fixture(p);
@@ -2099,7 +2100,7 @@ pub(crate) unsafe fn has_too_many_called_up(this: usize, club: Club, a: usize, b
 /// friendly fixture: 1; otherwise 0 when the home or away club (a plain club) has more than 2 players on call-up from a
 /// day before to a day after the fixture date, else 1; turned off (DESLIGADAS) from 2026-10-30 to 2026-10-31, when the test criterion changed and the list was emptied: the detour alone (without
 /// running the copy) made the career in original mode leave the reference be54a138 (bisection of the 39 routines of
-/// batch 252): the detour changes the stack residue a later original reads; the copy stays in the code and does not run
+/// batch 252): the detour changes the stack residue a later original reads; since then the routine is hooked again
 /// Original: `NationalTeams::can_schedule_club_fixture` (0x776fc0, national_teams.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn can_schedule_club_fixture(this: usize, game: usize) -> u32 {
     let game = Fixture(game);
@@ -2232,7 +2233,7 @@ pub(crate) unsafe fn has_flagged_nation(c: Club) -> bool {
 /// 2 another, 3 a club of a flagged nation (entry with no nation); turned off (DESLIGADAS) from 2026-10-29 to 2026-10-31, when the test criterion changed and the list was emptied: with the detour the
 /// career in Rust mode left the reference be54a138 (bisection of batch 251's 39 routines; with `construct_news_item`, the news
 /// constructor, the game later crashed in `player_stats_reset_player` on a broken index); the cause (stack residue or a difference in the
-/// copy) is not isolated yet; the copy stays in the code and does not run
+/// copy) is not isolated yet; since then the routine is hooked again
 /// Original: `NationalTeams::mark_clubs_with_fixtures` (0x7775c0, national_teams.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn mark_clubs_with_fixtures(this: usize, data: usize) {
     let n = (read_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
@@ -2544,9 +2545,10 @@ pub(crate) unsafe fn is_comp_finished(v: i32, end_of_stage: bool) -> bool {
     }
 }
 
-/// in the nations of the continent (`.continent()`), the current and next competitions that ended (competition
-/// `competition::CONTINENT` null, or stage `KEY_CONTINENT_EUROPE`) become −1; empty current and a next one: the next
-/// moves up, with the notice (`notify_manager_manager`)
+/// In the nations of the continent (`.continent()`), the current and next competitions taken as finished
+/// (`is_comp_finished`: without `end_of_stage`, `competition::CONTINENT` null; with it, `competition::CONTINENT` equal
+/// to the Europe continent record, `KEY_CONTINENT_EUROPE` in `G_CONTINENT_TABLE`) become −1; with the current one empty
+/// and a next one, the next moves up, with the notice (`notify_manager_manager`).
 /// Original: `release_competitions_of_continent` (0x775070, national_teams.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn release_competitions_of_continent(this: usize, continent: usize, end_of_stage: u32) {
     let end = end_of_stage as u8 != 0;
@@ -3004,11 +3006,14 @@ pub(crate) unsafe extern "thiscall" fn national_teams_daily_update(this: usize, 
     exe::nationalteams_post_qualified_nations_news(this);
 }
 
-/// Returns the age limits (23/23 in youth competitions, 24/22, 26/22). Stdcall, ret 0x10: the age limits (`*minimum`,
-/// `*maxima`) of a national side in competition `comp`: 23/23 in the Olympic and youth competitions (`.competition()`
-/// with an id among the 9 keys
-/// `KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_ASIAN_GAMES`…`KEY_CLUB_COMP_CONFEDERATIONS_CUP`); 24/22 with `kind` 1 or
-/// above 2; otherwise 26/22. Null pointers: the original routine (error box).
+/// Returns the age limits (23/23 in the main international finals, 24/22, 26/22). Stdcall, ret 0x10: the age limits
+/// (`*minimum`, `*maxima`) of a national side in competition `comp`: 23/23 in the main finals (`.competition()` with
+/// the id of one of the 9 keys `KEY_CLUB_COMP_FIFA_WORLD_CUP`,
+/// `KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES`, `KEY_CLUB_COMP_EUROPEAN_FOOTBALL_CHAMPIONSHIP`,
+/// `KEY_CLUB_COMP_COPA_AMERICA`, `KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS`, `KEY_CLUB_COMP_ASIAN_CUP`,
+/// `KEY_CLUB_COMP_OCEANIA_NATIONS_CUP`, `KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_ASIAN_GAMES`,
+/// `KEY_CLUB_COMP_CONFEDERATIONS_CUP`); 24/22 with `kind` 1 or above 2; otherwise 26/22. Null pointers: the original
+/// routine (error box).
 /// Original: `national_team_ages` (0x76d430, national_teams.cpp, stdcall).
 pub(crate) unsafe extern "stdcall" fn national_team_ages(comp: usize, kind: i8, minimum: *mut u8, maxima: *mut u8) {
     let comp = Fixture(comp);

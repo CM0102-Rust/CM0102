@@ -413,8 +413,9 @@ pub(crate) unsafe extern "thiscall" fn eng_second_advance_stage(this: usize) {
     advance_league_stage(League(this), 0x9c43e8, 0x294, 0x576a70, "cpz_3 mata-mata da second")
 }
 
-/// like the First one (6th, 3rd, 5th and 4th), with +0x3a = the extra from virtual `comp_vtable::CREATE_SCHEDULE`
-/// (lines 0x2b6 and 0x2cc)
+/// Like the First one (6th, 3rd, 5th and 4th, through `create_playoff_stage`), but the new stage's +0x3a (the 10th
+/// argument of the Cup_Stage constructor `FN_CUP_STAGE_CUP_STAGE`, not a field of `this`) is the extra returned by
+/// virtual `comp_vtable::CREATE_SCHEDULE` instead of 0xa0 (error box lines 0x2b6 and 0x2cc).
 /// Original: `EngSecond::create_play_off_stage` (0x576a70, eng_second.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn eng_second_create_play_off_stage(this: usize) {
     create_playoff_stage(League(this), [5, 2, 4, 3], 0x9c43e8, 0x2b6, 0x2cc, None, "cpz_1 mata-mata da second"); // cpz1: 6º × 3º e 5º × 4º da Second

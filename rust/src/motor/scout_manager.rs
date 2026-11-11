@@ -244,8 +244,8 @@ pub(crate) unsafe extern "thiscall" fn send_scout_reports(this: usize, list: usi
 /// the club's manager.
 ///
 /// Ret 8; SEH frame for the local news item: `SCOUT_MANAGER::send_scout_report_news(r, how_many)`, from the reports
-/// (`send_scout_reports`). News 0x138e (`exe::new_newsitem`): count (up to 3), `scout_report::REPORT_MODE`, the scout
-/// (`exe::write_staff_name_ref_to_news` with `scout_report::PLAYER_NAME_REF`), `scout_report::PLAYER_AGE`,
+/// (`send_scout_reports`). News 0x138e (`exe::new_newsitem`): count (up to 3), `scout_report::REPORT_MODE`, the scouted
+/// player (`exe::write_staff_name_ref_to_news` with `scout_report::PLAYER_NAME_REF`), `scout_report::PLAYER_AGE`,
 /// `scout_report::POSITION_MASK`, club `scout_report::CLUB_ID`, the match data (`FN_WRITE_MATCH_RECORD_TO_NEWS`),
 /// `scout_report::HAS_MATCH`, `scout_report::LEAGUE_MATCH`, `scout_report::ELIGIBILITY_NOTE`,
 /// `scout_report::WORK_PERMIT_GRANTED`, from each of the records (`scout_report::SCOUT_NAME_REF` + 0x67 × k) +0xc, +0,

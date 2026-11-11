@@ -1103,9 +1103,9 @@ pub(crate) unsafe fn free_empty_exchange_list(o: Offer) {
     o.set_exchange_players(Llist(0));
 }
 
-/// The seller accepts the bid: status 5; on loans, target interest below 0.75 gives the refusal to move; exchange
-/// players wanting more than 1.5 times the seller's wage cap leave, with their value added to the fee; the offer goes
-/// to the next slice. Ret 8; SEH frame with no destructor on the normal path (the local STAFF_CONTRACT of
+/// The seller accepts the bid: status 5; for a player job, target interest below 0.75 gives the refusal to move;
+/// exchange players wanting more than 1.5 times the seller's wage cap leave, with their value added to the fee; the
+/// offer goes to the next slice. Ret 8; SEH frame with no destructor on the normal path (the local STAFF_CONTRACT of
 /// `construct_staff_contract`): `TRANSFER_MANAGER::accept_transfer_bid(slot, mark)`, the selling club accepts the bid.
 /// The target is `target_staff_id()`, the buyer `buyer_club_id()` and the seller the club of the target's contract
 /// (except type 5). `response_round` = 0; with `mark`, `player_aware` = 1 and the player marked as under offer in the
@@ -1114,7 +1114,7 @@ pub(crate) unsafe fn free_empty_exchange_list(o: Offer) {
 /// human managers (`news_club_has_human_manager`, stdcall: ecx = `G_NEWS` is not read) between buyer and seller; the
 /// acceptance news (`post_offer_accepted_news`).
 ///
-/// - Loan (`job_type()` = `job_kind::PLAYER`): the status the buyer would give (1 if human; otherwise
+/// - Player job (`job_type()` = `job_kind::PLAYER`): the status the buyer would give (1 if human; otherwise
 /// `get_squad_status_for_club`: push 0; push buyer; push target, ret 0xc) goes in the low byte of the `mark` dword, and
 /// the target's interest (`staff_interest_in_joining_club`: push &reason; push that dword; push 0; push 0; push buyer;
 /// push target; mov ecx, `shortlist_manager()` -> thiscall, ret 0x18, returns ST0) below 0.75 (or NaN): the refusal to
@@ -2649,8 +2649,8 @@ pub(crate) unsafe fn is_falkirk_name_exception(p: Staff, agulha: usize, offer: C
 }
 
 /// Decides the work permit: by the permit record (matches and refusals), a non-player by reputation, the 2001
-/// exceptions, potential above 8500, wage above 34999, youth above 190, under 5 caps no, over 20 with a strong nation
-/// yes, and the 16-match national side history (over 11 or 70%), which advances with new matches. Ret 0x14:
+/// exceptions, world reputation above 8500, wage above 34999, youth above 190, under 5 caps no, over 20 with a strong
+/// nation yes, and the 16-match national side history (over 11 or 70%), which advances with new matches. Ret 0x14:
 /// `TRANSFER_MANAGER::is_work_permit_granted(p, _nation, offer, record, sorteio)`, from the permit in the scouting list
 /// (`passes_work_permit_check`, without offer, record or random), from the accepted contract offer
 /// (`complete_accepted_contract_offer`, with the offer) and from the offer's permits (`check_offer_work_permits`). The
@@ -2661,13 +2661,13 @@ pub(crate) unsafe fn is_falkirk_name_exception(p: Staff, agulha: usize, offer: C
 /// < 4; with an offer, the same rule if the loan ends after the offer (`contract::CONTRACT_EXPIRES`) or the contract
 /// club is not the offer's (`contract::CLUB`), and granted if the loan does not end after. Non-player (`non_player()`
 /// without sheet `player()`): reputation (`world_reputation()`) above 160. In 2001, the two cases of Collin and Devon
-/// at Falkirk. Potential (`world_reputation()` of the sheet) above 8500 (with random: 8000 + random(1000)); offer wage
-/// (+0xc) above 34999; under 24 years with ability (`potential_ability()`) above 190: granted. Fewer than 5 caps
-/// (`int_apps()`): not granted; more than 20 with the nation's reputation (`reputation()`) above 3000 and under 32
-/// years: granted. The history advances with the national side's new matches (`[[G_NATIONAL_TEAMS]+4]` + nation id ×
-/// 0x6e + 2; each one pushes a zero bit) and the count stays. The window: 16 matches, or those of the two-year period
-/// (`count_results_in_period`, up to 16) from 2003; with more than 11 matches marked (random: 11 − random(3) +
-/// random(3)) or more than 70% (70 − random(10) + random(10)): granted.
+/// at Falkirk. World reputation (`world_reputation()` of the sheet) above 8500 (with random: 8000 + random(1000));
+/// offer wage (`.wage()`) above 34999; under 24 years with ability (`potential_ability()`) above 190: granted. Fewer
+/// than 5 caps (`int_apps()`): not granted; more than 20 with the nation's reputation (`reputation()`) above 3000 and
+/// under 32 years: granted. The history advances with the national side's new matches (`[[G_NATIONAL_TEAMS]+4]` +
+/// nation id × 0x6e + 2; each one pushes a zero bit) and the count stays. The window: 16 matches, or those of the
+/// two-year period (`count_results_in_period`, up to 16) from 2003; with more than 11 matches marked (random: 11 −
+/// random(3) + random(3)) or more than 70% (70 − random(10) + random(10)): granted.
 /// Original: `TRANSFER_MANAGER::is_work_permit_granted` (0x8c7950, transfer_manager.cpp, thiscall, ret 0x14).
 pub(crate) unsafe extern "thiscall" fn is_work_permit_granted(this: usize, p: usize, _nation: usize, offer: usize, record: usize, sorteio: u32) -> u32 {
     let this = TransferManagerFields(this);
@@ -2723,7 +2723,7 @@ pub(crate) unsafe extern "thiscall" fn is_work_permit_granted(this: usize, p: us
             return 1;
         }
     }
-    if !offer.is_null() && read_usize(offer.addr() + offer::TARGET_STAFF_ID) as i32 > 0x88b7 {
+    if !offer.is_null() && offer.wage() > 0x88b7 {
         return 1;
     }
     let age = (p.age() as u8) as i8;
@@ -2940,11 +2940,11 @@ pub(crate) unsafe fn in_free_transfer_queue(p: usize) -> bool {
 /// exchange, the reason (club ≠ buyer) + 4 and 0; otherwise the cheapest of the squad ((`contract::HAPPINESS` of the
 /// contract + 100) × value `staff::VALUE`, with `contract::HAPPINESS` ≤ 0, without a sheet, without a type 5 contract
 /// in `G_CONTRACT_LOOKUP_RESULT`, without offers `get_offers_for_player`, exchanges `get_exchange_offers_for_player` or
-/// future transfer `get_future_transfer`, outside the free queue and not of type 0xb, 0xf or 0xd) leaves for free
-/// (`add_free_release_records` on `G_STAFF_RECORDS`, `free_transfer_staff` with −1); none, the reason + 4 and 0. Then
-/// the marked staff slots: 5 coaches (+0x19f), 3 physios (+0x1cf), 7 scouts (+0x1b3), those of the club counted by
-/// pointer and those of the partner only with a live id, and the assistant (`assistant_manager()` of the club or of the
-/// partner, occupied); over the limit, the reason + 0x22 and 0. Returns 1.
+/// future transfer `get_future_transfer`, outside the free queue and with job (`staff::JOB_FOR_CLUB`) 0xb, 0xf or 0xd)
+/// leaves for free (`add_free_release_records` on `G_STAFF_RECORDS`, `free_transfer_staff` with −1); none, the reason +
+/// 4 and 0. Then the marked staff slots: 5 coaches (+0x19f), 3 physios (+0x1cf), 7 scouts (+0x1b3), those of the club
+/// counted by pointer and those of the partner only with a live id, and the assistant (`assistant_manager()` of the
+/// club or of the partner, occupied); over the limit, the reason + 0x22 and 0. Returns 1.
 /// Original: `TRANSFER_MANAGER::check_squad_limits` (0x8cd450, transfer_manager.cpp, thiscall, ret 0x10).
 pub(crate) unsafe extern "thiscall" fn check_squad_limits(this: usize, club: usize, o: usize, count_queue: u32, reason: *mut u16) -> u32 {
     let o = Offer(o);
@@ -5674,7 +5674,7 @@ pub(crate) unsafe extern "thiscall" fn fill_squad_restrictions(this: usize, fixt
 /// (`home_club()`/`home_side_mark()` or `away_club()`/`away_side_mark()`) goes to `exe::tactics_get_selected_player`.
 /// Over the (`squad_rules()` & 0xf) + 11 slots, the slot's person (`players[k]` or the tactic `G_TACTICS`
 /// `exe::tactics_get_selected_player`) counts if foreign in the club's nation (`database_is_staff_foreign` with 1; type
-/// 1, also outside the EU, `database_is_staff_eu_national`) or over the age (`year_of_birth()`, type 3): +2 (starters)
+/// 1, also outside the EU, `database_is_staff_eu_national`) or over the age (`.age()`, type 3): +2 (starters)
 /// or +3 (the others) and +4 (all). The count goes into `out`; exceeding the limit, 1 and, with `msg`, the warning
 /// (`FN_LANGLIB_SPRINTF`) by the type, the count and the limit.
 /// Original: `transfer_manager_check_matchday_squad_limit` (0x8cf880, transfer_manager.cpp, thiscall (this em ecx), ret 0x18).
@@ -5704,7 +5704,7 @@ pub(crate) unsafe extern "thiscall" fn transfer_manager_check_matchday_squad_lim
             let count = match kind {
                 2 => exe::database_is_staff_foreign(p, club.nation().addr(), 1) != 0,
                 1 => exe::database_is_staff_foreign(p, club.nation().addr(), 1) != 0 && exe::database_is_staff_eu_national(p, club.nation().addr()) == 0,
-                3 => (p.year_of_birth() as u8) as i8 > l[1] as i8,
+                3 => p.age() as i8 > l[1] as i8,
                 _ => false,
             };
             if count {
@@ -6759,12 +6759,12 @@ pub(crate) unsafe fn find_work_permit_record(this: TransferManagerFields, person
 /// the local date: `TRANSFER_MANAGER::update_work_permit_on_move(person, club)`: if the player needs a permit at the
 /// new club (`player_needs_work_permit` with 1) and already has one: replaces the permit's nation
 /// (`work_permit::NATION_ID`) with the club's (`nation()`), zeroes `work_permit::MATCHES_PLAYED` and
-/// `work_permit::MATCHES_MISSED` and, if the nation changed and neither has flag `world_region::UK_AND_IRELAND`
-/// (`actual_region()`), writes today's year (`work_permit::YEAR`); a club without a nation: the "Error" box 0x1dc2.
-/// Without a permit: the new one (`add_work_permit` with today's year, sorting), after today + 52 weeks
-/// (`exe::date_add_weeks`, unused). If he does not need one (`player_needs_work_permit` is called again) or without a
-/// club: removes whatever permit he has (flag 0x20, the last one in its place, count − 1 and re-sorts with
-/// `exe::crt_qsort`).
+/// `work_permit::MATCHES_MISSED` and, if the nation changed, unless both nations are in region
+/// `world_region::UK_AND_IRELAND` (`actual_region()`), writes today's year (`work_permit::YEAR`); a club without a
+/// nation: the "Error" box 0x1dc2. Without a permit: the new one (`add_work_permit` with today's year, sorting), after
+/// today + 52 weeks (`exe::date_add_weeks`, unused). If he does not need one (`player_needs_work_permit` is called
+/// again) or without a club: removes whatever permit he has (flag 0x20, the last one in its place, count − 1 and
+/// re-sorts with `exe::crt_qsort`).
 /// Original: `TRANSFER_MANAGER::update_work_permit_on_move` (0x8c7e20, transfer_manager.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn update_work_permit_on_move(this: usize, person: usize, club: usize) {
     let this = TransferManagerFields(this);
@@ -7028,7 +7028,7 @@ pub(crate) unsafe extern "thiscall" fn collapse_offer(this: usize, offer: usize,
 /// turned off (DESLIGADAS) from 2026-10-30 to 2026-10-31, when the test criterion changed and the list was emptied: with the detour the career in Rust mode left the reference be54a138 (bisection of
 /// the 38 routines of batch 253); the original builds the offer and the contract in locals the constructors (`exe::new_transfer_offer`,
 /// `construct_staff_contract`) do not fully fill, and the stack residue of those bytes goes into the stored offer, where the copy puts
-/// zero; the copy stays in the code and does not run
+/// zero; since then the routine is hooked again
 /// Original: `TRANSFER_MANAGER::make_loan_offer` (0x8bed60, transfer_manager.cpp, thiscall, ret 0x18).
 pub(crate) unsafe extern "thiscall" fn make_loan_offer(this: usize, player: usize, club: usize, end: usize, percentage: u32, a5: u32, a6: u32) -> u32 {
     let field = |o: &[u8; 0x44], k: usize| u32::from_le_bytes([o[k], o[k + 1], o[k + 2], o[k + 3]]);
@@ -7125,16 +7125,17 @@ pub(crate) unsafe extern "thiscall" fn process_due_future_transfers(this: usize)
 /// A club rejects the offer: counts the offer's attempt; by the refusing side, a random(2 × attempts) rejects or
 /// withdraws the offer, otherwise it is rescheduled with the delay news. Ret 0xc:
 /// `TRANSFER_MANAGER::club_rejects_offer(offer, club, reason)`: outside states 0x11/0x12 (`status()`), counts the
-/// attempt (`response_round`). Refusal by the selling club (id = `buyer_club_id()`): state 0x12
+/// attempt (`response_round`). Refusal by the buying club (id = `buyer_club_id()`): state 0x12
 /// (`offer_status::REFUSED_BY_BUYER`); reason 8 (16 bits) reschedules (`schedule_offer` with 7, 0) and exits;
 /// otherwise, with no human club in the player's contract (`target_staff_id()`; contract in `G_CONTRACT_LOOKUP_RESULT`,
 /// `contract_type()` & 0x3f ≠ 5, `exe::human_manager_is_human_club`) and more than one attempt, a random(2 × attempts)
 /// different from 0 rejects the offer (`reject_transfer_offer` with the offer's address, 0, 6) and exits. Refusal by
 /// the other side: state 0x11 (`offer_status::REFUSED_BY_SELLING_SIDE`), unsettles the player
-/// (`unsettle_player_after_bid`); with a computer selling club and the random draw, withdraws the offer
-/// (`withdraw_transfer_offer`); with reason 8 the rest reschedules and exits (without the attempts test). At the end:
-/// reschedules and gives the delay news (`post_transfer_delay_request_news` with the whole reason, as the original
-/// pushes it).
+/// (`unsettle_player_after_bid`); with reason 8, a computer buying club (`buyer_club_id()`) and a random(2 × attempts)
+/// different from 0 withdraw the offer (`withdraw_transfer_offer`) and it exits, otherwise it reschedules and exits
+/// (without the more-than-one-attempt test); with another reason, a computer buying club with more than one attempt and
+/// the same random draw withdraws the offer and exits. At the end: reschedules and gives the delay news
+/// (`post_transfer_delay_request_news` with the whole reason, as the original pushes it).
 /// Original: `TRANSFER_MANAGER::club_rejects_offer` (0x8c36b0, transfer_manager.cpp, thiscall, ret 0xc).
 pub(crate) unsafe extern "thiscall" fn club_rejects_offer(this: usize, offer: usize, club: usize, reason: u32) {
     let offer = Offer(offer);
@@ -8322,14 +8323,14 @@ pub(crate) unsafe extern "thiscall" fn queue_free_transfer(manager: usize, perso
 }
 
 /// Counts the open negotiations of the player's club that include him in a part exchange and, if asked, lists the offer
-/// indices. Ret 8: counts the negotiations (`[+0xc]`, `[+0x10]` of them) of the club of the player's contract
-/// (`buyer_club_id()`) whose offer (`[manager]` + 4 × `slot_index()`) is still open (states 2, 3, 4, 0x10 and 0x14 not;
-/// 0xf only with `response_round()` < 3) and that have the player in the exchange list (`exchange_players()`); with
-/// `out`, puts the offer index in it (`exe::llist_add_tail`, 4 bytes). A player outside the database or without a
-/// contract: 0.
+/// indices. Ret 8: goes through the negotiation slots (`.negotiations()`, `.negotiation_capacity()` of them, empty
+/// slots skipped) and counts those of the club of the player's contract (`buyer_club_id()`) whose offer (`[manager]` +
+/// 4 × `slot_index()`) is still open (states 2, 3, 4, 0x10 and 0x14 not; 0xf only with `response_round()` < 3) and that
+/// have the player in the exchange list (`exchange_players()`); with `out`, puts the offer index in it
+/// (`exe::llist_add_tail`, 4 bytes). A player outside the database or without a contract: 0.
 /// Original: `TRANSFER_MANAGER::get_exchange_negotiations_for_player` (0x8c5fc0, transfer_manager.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn get_exchange_negotiations_for_player(manager: usize, person: usize, out: usize) -> i32 {
-    let manager = Staff(manager);
+    let manager = TransferManagerFields(manager);
     if person != 0 && *(person as *const i32) >= read_i32(G_STAFF_COUNT) {
         return 0;
     }
@@ -8344,10 +8345,10 @@ pub(crate) unsafe extern "thiscall" fn get_exchange_negotiations_for_player(mana
         return 0;
     }
     let club = read_u32(p);
-    let negotiations = manager.common_name();
+    let negotiations = manager.negotiations();
     let mut total = 0;
     let mut i = 0;
-    while i < read_i32(manager.addr() + staff::DATE_OF_BIRTH) {
+    while i < manager.negotiation_capacity() as i32 {
         let neg = Offer(read_usize(negotiations + i as usize * 4));
         i += 1;
         if neg.is_null() || (neg.buyer_club_id() as u32) != club {

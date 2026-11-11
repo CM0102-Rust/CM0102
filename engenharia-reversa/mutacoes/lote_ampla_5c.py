@@ -5,7 +5,7 @@ MUTACOES = [
     ('c_k0_b', '                if v > 0x4b { 1 } else if v >= 0x28 { 2 } else if v >= 10 { 3 } else { low(-30) }', '                if v > 0x4b { 1 } else if v >= 0x28 { 3 } else if v >= 10 { 3 } else { low(-30) }'),
     ('c_tipo5_b', '    if c.contract_type() & 0x3f == 5 {\n        return 8;', '    if c.contract_type() & 0x3f == 5 {\n        return 7;'),
     ('r_banco', '            cod2[i] = w(curtos, j);', '            cod2[i] = w(codes, j);'),
-    ('r_idade', '            3 => !p.is_null() && read_i8(rule + 1) < (p.year_of_birth() as i8),', '            3 => !p.is_null() && read_i8(rule + 1) <= (p.year_of_birth() as i8),'),
+    ('r_idade', '            3 => !p.is_null() && read_i8(rule + 1) < (p.age() as i8),', '            3 => !p.is_null() && read_i8(rule + 1) <= (p.age() as i8),'),
     ('n_veterano', '            Some(0x9689e0)', '            Some(0x968968)'),
     ('t_item', '        if *p == read_i32(e) {', '        if *p == read_i32(e + 4) {'),
     ('f_estado', '        2 | 3 | 4 | 0x10 | 0x14 => 1,', '        2 | 3 | 0x10 | 0x14 => 1,'),

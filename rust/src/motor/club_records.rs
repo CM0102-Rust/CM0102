@@ -408,9 +408,9 @@ pub(crate) unsafe fn copy_transfer_record(a: usize, o: usize, d: usize) {
 /// reference (`exe::fill_staff_name_ref`, at `FEE_PAID_HOLDER`), the seller (`FEE_PAID_OTHER_CLUB_ID`), today's date
 /// (`FEE_PAID_DATE`) and the loan flag (`FEE_PAID_FLAG`: `exchange_players()` ≠ 0); if it is above the all-time record
 /// it is copied there, and if it passes 1000 × (reputation + 300) (`is_big_transfer`): the record goes to the news
-/// queue (`exe::club_records_queue_record_news`, 0x1c, if it is not there yet) and the manager (`chairman()`) comes to
-/// favour the person (`exe::staff_add_favoured_staff`, forced). The same for the seller in the received record
-/// (`club_record::FEE_RECEIVED`; the queue with 0x1d, without the favouring). Returns 1.
+/// queue (`exe::club_records_queue_record_news`, 0x1c, if it is not there yet) and the chairman (`chairman()`,
+/// `club::CHAIRMAN`) comes to favour the person (`exe::staff_add_favoured_staff`, forced). The same for the seller in
+/// the received record (`club_record::FEE_RECEIVED`; the queue with 0x1d, without the favouring). Returns 1.
 /// Original: `Club_Records::update_transfer_fee_records` (0x448760, club_records.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, t: usize) -> u32 {
     let t = Offer(t);

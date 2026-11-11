@@ -1239,24 +1239,24 @@ pub(crate) unsafe extern "thiscall" fn queue_signing_celebration_story(this: usi
 
 // simplification: the news item goes to the manager’s inbox (allocates) and draws: original only; the copy carries the branch.
 
-/// `Media::queue_sale_unrest_story(old, new, p, comp)` (SEH frame for the local news item), called by the transfer
+/// `Media::queue_sale_unrest_story(old, new, p, teammate)` (SEH frame for the local news item), called by the transfer
 /// reactions (`process_transfer_squad_reactions`): news item 0xbe4 of the team mate unhappy at the sale, to the old
 /// club's manager.
 ///
-/// An old club with a manager (`.manager()`), not a national side (`is_national_team`), a team mate and a player with a
-/// player sheet (`.player()`). The news item 0xbe4: the manager, the team mate and the player (id and the three keys of
-/// each), the ids of the two clubs, draw(2) (+2 if the team mate's `.professionalism()` is not above draw(5) + 10), the
-/// outlet (`exe::media_pick_outlet_type_for_club`), the pundit (`exe::punditlist_pick_random_pundit` with the nation
-/// `.nation()` or −1) and 2; it goes to the old club's manager (`exe::news_send_to_club_manager`).
+/// An old club with a manager (`.manager()`), not a national side (`is_national_team`), a team mate and a player, each
+/// with a player sheet (`.player()`). The news item 0xbe4: the manager, the team mate and the player (id and the three
+/// keys of each), the ids of the two clubs, draw(2) (+2 if the team mate's `.professionalism()` is not above draw(5) +
+/// 10), the outlet (`exe::media_pick_outlet_type_for_club`), the pundit (`exe::punditlist_pick_random_pundit` with the
+/// nation `.nation()` or −1) and 2; it goes to the old club's manager (`exe::news_send_to_club_manager`).
 /// Original: `Media::queue_sale_unrest_story` (0x75cfc0, media.cpp, thiscall).
-pub(crate) unsafe extern "thiscall" fn queue_sale_unrest_story(_this: usize, old: usize, new: usize, p: usize, comp: usize) {
+pub(crate) unsafe extern "thiscall" fn queue_sale_unrest_story(_this: usize, old: usize, new: usize, p: usize, teammate: usize) {
     let p = Staff(p);
-    let comp = Staff(comp);
+    let teammate = Staff(teammate);
     let old = Club(old);
     if old.is_null() || old.manager().addr() == 0 || is_national_team(old.addr()) != 0 {
         return;
     }
-    if comp.is_null() || read_usize(comp.addr() + competition::FOREGROUND_COLOUR) == 0 || p.is_null() || p.player().is_null() {
+    if teammate.is_null() || teammate.player().is_null() || p.is_null() || p.player().is_null() {
         return;
     }
     covered!("cqa_13 unsettling news");
@@ -1264,7 +1264,7 @@ pub(crate) unsafe extern "thiscall" fn queue_sale_unrest_story(_this: usize, old
     let nt = local.as_mut_ptr() as usize;
     exe::new_newsitem(nt, 0xbe4, 0);
     let mut k: i8 = 0;
-    for quem in [old.manager().addr(), comp.addr(), p.addr()] {
+    for quem in [old.manager().addr(), teammate.addr(), p.addr()] {
         exe::newsitem_set_slot(nt, k, read_usize(quem) as u32);
         for j in 1..4usize {
             exe::newsitem_set_slot(nt, k + j as i8, read_usize(read_usize(quem + 4 * j) + names::ID) as u32);
@@ -1274,7 +1274,7 @@ pub(crate) unsafe extern "thiscall" fn queue_sale_unrest_story(_this: usize, old
     exe::newsitem_set_slot(nt, 0xc, read_usize(old.addr()) as u32);
     exe::newsitem_set_slot(nt, 0xd, read_usize(new) as u32);
     let r = friendly_random(5);
-    let s = if (comp.professionalism() as i32) > r + 10 { friendly_random(2) } else { friendly_random(2) + 2 };
+    let s = if (teammate.professionalism() as i32) > r + 10 { friendly_random(2) } else { friendly_random(2) + 2 };
     exe::newsitem_set_slot(nt, 0xe, s as u32);
     let v = exe::media_pick_outlet_type_for_club(old);
     exe::newsitem_set_slot(nt, 0xf, v);
@@ -2461,14 +2461,14 @@ pub(crate) unsafe extern "stdcall" fn media_queue_player_apology_news(player: us
 /// and caps (`this` is not read).
 ///
 /// 150 rounds; in each it draws people (`exe::utils_random` with `G_STAFF_COUNT`, 110 bytes in `G_STAFF_TABLE`) until
-/// it finds one aged (`staff::AGE`) ≥ 37, with national team caps (`staff::INT_APPS`) ≥ 50, a sheet
-/// (`staff::NON_PLAYER`), no club (`staff::CLUB_JOB`) if he has a contract (`staff::PLAYER`) and who is not the club's
-/// manager (`.manager()`); the 100th try ends the round. The weight is a draw of the nation's reputation
+/// it finds one aged (`staff::AGE`) ≥ 37, with national team caps (`staff::INT_APPS`) ≥ 50, a non-player record
+/// (`staff::NON_PLAYER`), no club (`staff::CLUB_JOB`) if he has a player record (`staff::PLAYER`) and who is not the
+/// club's manager (`.manager()`); the 100th try ends the round. The weight is a draw of the nation's reputation
 /// (`staff::NATION`, `.reputation()`) × caps, doubled if he is from the subject's nation (without a subject: he must be
 /// from the club's nation, `.nation()`). From another nation: the reputation must beat 6500 + a draw of 100, the
-/// sheet's `non_player::WORLD_REPUTATION` ≥ 6000 and the subject must not dislike him (`exe::staff_is_disliked_by`).
-/// The one with the highest weight is kept (the first accepted always gets in). Without a club and without a subject:
-/// 0.
+/// non-player record's `non_player::WORLD_REPUTATION` ≥ 6000 and the subject must not dislike him
+/// (`exe::staff_is_disliked_by`). The one with the highest weight is kept (the first accepted always gets in). Without
+/// a club and without a subject: 0.
 /// Original: `Media::pick_former_international_pundit` (0x72b810, media.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn pick_former_international_pundit(_this: usize, club: usize, subject: usize) -> usize {
     let subject = Staff(subject);
@@ -2958,7 +2958,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
 /// `Media::post_financial_trouble_news(club)` (SEH frame without a destructor): posts news item 0x1790 of the club in
 /// financial trouble to the managers of the nation, or to all for a big club.
 ///
-/// With the club, the nation (`.nation()`), the sheet (`.stadium()`, with `player_sheet::PENALTIES`) and the division
+/// With the club, the nation (`.nation()`), the stadium (`.stadium()`, with a city `stadium::CITY`) and the division
 /// (`.division()`), it builds news item 0x1790 in a local (`exe::new_newsitem` with 0) with the data 0 = club id, 1 =
 /// reputation (`.reputation()`) and 2 = draw(2) (`exe::utils_random`); a club with reputation 9000 or more in a
 /// division with `.reputation()` above 12: to all managers (`exe::news_send_to_all_managers`); otherwise to those of
@@ -2971,7 +2971,7 @@ pub(crate) unsafe extern "thiscall" fn post_financial_trouble_news(_this: usize,
         return;
     }
     let sheet = club.stadium();
-    if sheet.is_null() || read_usize(sheet.addr() + player_sheet::PENALTIES) == 0 || club.division().addr() == 0 {
+    if sheet.is_null() || sheet.city() == 0 || club.division().addr() == 0 {
         return;
     }
     covered!("cpk_6 financial trouble");
@@ -2994,8 +2994,8 @@ pub(crate) unsafe extern "thiscall" fn post_financial_trouble_news(_this: usize,
 /// `Media::pick_rival_manager_id(club)`: returns the id of the manager of a rival of the same league and much bigger,
 /// or of a drawn club in a league clash, who passes the draws; or −1.
 ///
-/// With a manager (`.manager()`) with a contract (`.non_player()`) and a league (`.division()`; without a league, only
-/// a national side, `exe::database_is_national_team`): the first of the manager's rejected list
+/// With a manager (`.manager()`) with a non-player record (`.non_player()`) and a league (`.division()`; without a
+/// league, only a national side, `exe::database_is_national_team`): the first of the manager's rejected list
 /// (`exe::staff_get_disliked_staff`) with a manager record and rating (`non_player::CURRENT_REPUTATION`) + 750 < rating
 /// (never: the draw(3) there does not happen); then each rival (+0xb3, +0xb7, +0xbb) with a manager who passes the
 /// draws, of the same league and with reputation (`.reputation()`) above the club's + 750, with draw(3) ≠ 0; then up to

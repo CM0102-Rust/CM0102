@@ -2541,7 +2541,7 @@ pub(crate) unsafe extern "C" fn rate_player(person: usize, player: usize, club: 
     let f = if a > read_f64(rdata::F64_1000) { (a - read_f64(rdata::F64_1000)) * read_f64(rdata::F64_0_000125) + read_f64(rdata::F64_1) } else { 1.0 };
     let base = sheet.leadership() as f64 * f - (enc * enc + read_f64(rdata::F64_5)) * read_f64(rdata::F64_0_1);
     let mut v = ftol(base + y + x + read_f64(rdata::F64_0_5)) as i16;
-    let age = p.year_of_birth() as i8;
+    let age = p.age() as i8;
     let k = if age < 0x12 {
         Some(read_f64(rdata::F64_0_5))
     } else if age < 0x15 {
@@ -2596,7 +2596,7 @@ pub(crate) unsafe extern "C" fn apply_squad_rule(
         match read_i8(rule + 0) {
             1 => !p.is_null() && exe::database_is_staff_foreign(p, (nation) as usize, 1) != 0 && exe::database_is_staff_eu_national(p, (nation) as usize) == 0,
             2 => !p.is_null() && exe::database_is_staff_foreign(p, (nation) as usize, 1) != 0,
-            3 => !p.is_null() && read_i8(rule + 1) < (p.year_of_birth() as i8),
+            3 => !p.is_null() && read_i8(rule + 1) < (p.age() as i8),
             _ => false,
         }
     };

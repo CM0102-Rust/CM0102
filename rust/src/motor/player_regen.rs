@@ -61,7 +61,7 @@ pub(crate) unsafe fn cap_current_ability(f: PlayerSheet, ceiling: i16, n: i32) {
 }
 
 /// Rebuilds a retired person from the regen queue as a young player: player record, nation, names, languages, age and
-/// ability, reputations, birth date, personality attributes and, by chance, a club.
+/// ability, reputations, birth date, physical and mental attributes and, by chance, a club.
 ///
 /// `PLAYER_REGEN::regenerate_as_youth_player(p)`, from the regen queue (`process_regen_queue`) for every young regen. A
 /// person not retired (bits 0x30 of `staff_state::STATUS_FLAGS` of the 79-byte record) or with a club (`club_job()`):
@@ -82,13 +82,14 @@ pub(crate) unsafe fn cap_current_ability(f: PlayerSheet, ceiling: i16, n: i32) {
 /// zero) by the `number_staff()` (23..27 or 17..23 years) and by the PA; otherwise by the record's position and the age
 /// by random(10000) (15..18 rare, 16..18, 17..20, 21..26). The reputations (`home_reputation()`,
 /// `current_reputation()`, `world_reputation()`), the ability caps, the birth year and day, the age
-/// (`exe::database_get_staff_age`), the personality attributes (`player_sheet::ACCELERATION`,
+/// (`exe::database_get_staff_age`), the physical and mental attributes (`player_sheet::ACCELERATION`,
 /// `player_sheet::PLAYER_PACE`, `player_sheet::AGILITY`, `player_sheet::JUMPING`, `player_sheet::NATURAL_FITNESS`,
 /// `player_sheet::WORK_RATE`, `player_sheet::STAMINA`, `player_sheet::STRENGTH`, `player_sheet::ANTICIPATION`,
 /// `player_sheet::DECISIONS`, `player_sheet::IMPORTANT_MATCHES`, `player_sheet::LEADERSHIP`,
 /// `player_sheet::CONSISTENCY`) by age; under 19 and a nation with `nation::LEAGUE_SELECTED`, with 3/4, the best club
 /// (`exe::player_regen_pick_best_club_for_player`) and the contract (`FN_PLAYER_REGEN_SIGN_FOR_CLUB`, news
-/// `exe::player_regen_post_youth_promotion_news` at a human club and the chairman (`club::CHAIRMAN`) may like him,
+/// `exe::player_regen_post_youth_promotion_news` at a human club; with a potential (`player_sheet::POTENTIAL_ABILITY`)
+/// above 80, the chairman (`club::CHAIRMAN`) favours him when draw(100) is below his `interference()`,
 /// `exe::staff_add_favoured_staff`); otherwise, by chance, a club of the nation
 /// (`exe::player_regen_pick_club_from_nation_list`). Without a club and under 20, the reputations up to 1250 and
 /// `world_reputation()` = 1. At the end, the attributes normalised (`exe::staff_normalise_player_physical_attributes`,
@@ -1019,9 +1020,9 @@ pub(crate) unsafe extern "thiscall" fn process_retirements(this: usize) {
 /// unused; SEH frame with no destructor on the normal path). No person, a player with job 8 or 5 (`job_for_club()`), no
 /// club, or a club without a human manager (`FN_NEWS_CLUB_HAS_HUMAN_MANAGER`): nothing. News 0xbba (local): 0..3 the
 /// person (id and the `names::ID` of `staff::FIRST_NAME`/`staff::SECOND_NAME`/`staff::COMMON_NAME`), 4 the reason, 5
-/// announced, 6 the club (−1 if none), 7 the nation (`nation()`) with the national team caps (`int_apps()`) or −1, 8
-/// the job (0xf becomes 8, 0xd becomes 6), 9 the reputation, 0xa `job_for_nation()`, 0xb player record and non-player
-/// record, 0xc the age, 0xd the non-player record, 0xe the player record. The interested clubs
+/// announced, 6 the club (−1 if none), 7 the nation (`nation()`) if he has national caps (`int_apps()` ≠ 0), otherwise
+/// −1, 8 the job (0xf becomes 8, 0xd becomes 6), 9 the national caps (`int_apps()`), 0xa `job_for_nation()`, 0xb player
+/// record and non-player record, 0xc the age, 0xd the non-player record, 0xe the player record. The interested clubs
 /// (`exe::transfer_manager_collect_player_news_recipients` on `G_TRANSFER_MANAGER` with 0xa, up to 30, only for a
 /// player). A major nation (`league_standard()` above 8) and a star (`world_reputation()` of the player record above
 /// 8500, or a manager of job 5 with non-player `world_reputation()` above 8750): to everyone
@@ -1131,12 +1132,12 @@ pub(crate) unsafe extern "stdcall" fn player_regen_post_retirement_news(p: usize
 /// `player_regen_post_youth_promotion_news(j, c)` (stdcall, ret 8; SEH frame with no destructor on the normal path),
 /// from the young regen (`regenerate_as_youth_player`). No player or club: nothing. News 0xbce (local): 0..3 the player
 /// (id and the `names::ID` of `staff::FIRST_NAME`/`staff::SECOND_NAME`/`staff::COMMON_NAME`), 4 the club id, 5 the age,
-/// 6 the club's strength (`training()`) above 15. The assistant manager (`assistant_manager()`) and the five coaches
-/// (`coaches()`) give their opinion until the first one who gives a verdict: the perceived reputation = random(2500) +
-/// club reputation (`reputation()`) / 2 + strength × 12.5 (`rdata::F64_12_5`, truncated); the two perceived abilities
-/// (`exe::match_man_judge_player_ability` with 2 and with 1) against reputation / 50 + 75 (verdict 2) and reputation /
-/// 100 + 50 (1). With a verdict: 7 assistant?, 8..0xb who (id and names), 0xc and 0xd the verdicts; otherwise −1.
-/// Delivered at the club's scope (`exe::news_send_by_scope`).
+/// 6 the club's training facilities (`training()`) above 15. The assistant manager (`assistant_manager()`) and the five
+/// coaches (`coaches()`) give their opinion until the first one who gives a verdict: the perceived reputation =
+/// random(2500) + club reputation (`reputation()`) / 2 + training × 12.5 (`rdata::F64_12_5`, truncated); the two
+/// perceived abilities (`exe::match_man_judge_player_ability` with 2 and with 1) against reputation / 50 + 75 (verdict
+/// 2) and reputation / 100 + 50 (1). With a verdict: 7 assistant?, 8..0xb who (id and names), 0xc and 0xd the verdicts;
+/// otherwise −1. Delivered at the club's scope (`exe::news_send_by_scope`).
 /// Original: `player_regen_post_youth_promotion_news` (0x7a8ba0, player_regen.cpp, stdcall).
 pub(crate) unsafe extern "stdcall" fn player_regen_post_youth_promotion_news(j: usize, c: usize) {
     let j = Staff(j);
@@ -1580,7 +1581,7 @@ pub(crate) unsafe fn set_retirement_dates(person: Staff, out: usize, away: unsaf
 /// `build_initial_retirement_list`), does the person with a club (`club_job()`) retire this season? The contract
 /// (contract_with_current_club) and the status (contract_status). Without a player record (`player()`): without a
 /// manager record (`non_player()`) always; with it, when past the limit (non_player_age_limit); reason 0x20. A player:
-/// past the record's limit (player_age_limit), v = ⌊⌊1 − (age − limit) × 0.1 (`rdata::F64_0_1`)⌋ × ability
+/// past the record's limit (player_age_limit), v = ⌊⌊1 − (age − limit) × 0.1 (`rdata::F64_0_1`)⌋ × current reputation
 /// (`current_reputation()`)⌋ (16 bits); over 45, reason 1. A club without a competition (`division()`; without a club,
 /// a nation without `league_selected()`): random(3) ≠ 0 retires, otherwise only a negative status with a club.
 /// Otherwise: v ≥ 5000 or `current_ability()` > 80, no; `current_ability()` < 10 or v < 1500, yes; with a club, only a
@@ -1666,17 +1667,17 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_initial_retirement(_th
 /// `grievances()` in the contract and `attacker()`/`attacking_midfielder()` of the record = 20, or the high nibble of
 /// `squad_status()` = 7; with a club and a contract with wage (`wage()`) above 750 × (`loyalty()` + 10) until after
 /// this year (`contract_expires_year()`), it drops 1 (and 1 more with `loyalty()` < 6). v = ⌊(1 − (age − limit) × 0.075
-/// (`rdata::F64_0_075`)) × ability (`current_reputation()`)⌋ (16 bits). Reason 1: over 45; over 34 without a club and
-/// unemployed for more than 65 days (since `date_joined_club()`, `FN_DATE_DAYS_SINCE`); 3 years above the limit, over
-/// 31 and the contract's `unhappy_flag()` > 5; 4 above: without a club; or a contract less than 300 days from its end
-/// (`exe::staff_contract_days_to_end_date`), status below 50 and manager (`non_player()`) or `ambition()` > random(20)
-/// with potential × 0.85 (`rdata::F64_0_85`) above the current ability (`potential_ability()` and `current_ability()`).
-/// Then v > 5500, no. A club in a competition not running in the game (`G_COMP_OBJECT_TABLE`[id] = 0, or without
-/// `division()`; without a club, a nation without `league_selected()`): random(3) = 0 retires; with a club and a
-/// negative status too; otherwise only with v < 3500. Otherwise as in `player_regen_check_initial_retirement`
-/// (`current_ability()` > 100 no; `current_ability()` < 10 or v < 1500 yes; with a club only a negative status; without
-/// a club reason 2 with random(25 × `stamina()`) = 0). Whoever retires: the output and the dates (without a valid key
-/// nation, set_dates_no_key_nation, near today); returns 1.
+/// (`rdata::F64_0_075`)) × current reputation (`current_reputation()`)⌋ (16 bits). Reason 1: over 45; over 34 without a
+/// club and unemployed for more than 65 days (since `date_joined_club()`, `FN_DATE_DAYS_SINCE`); 3 years above the
+/// limit, over 31 and the contract's `unhappy_flag()` > 5; 4 above: without a club; or a contract less than 300 days
+/// from its end (`exe::staff_contract_days_to_end_date`), status below 50 and manager (`non_player()`) or `ambition()`
+/// > random(20) with potential × 0.85 (`rdata::F64_0_85`) above the current ability (`potential_ability()` and
+/// `current_ability()`). Then v > 5500, no. A club in a competition not running in the game (`G_COMP_OBJECT_TABLE`[id]
+/// = 0, or without `division()`; without a club, a nation without `league_selected()`): random(3) = 0 retires; with a
+/// club and a negative status too; otherwise only with v < 3500. Otherwise as in
+/// `player_regen_check_initial_retirement` (`current_ability()` > 100 no; `current_ability()` < 10 or v < 1500 yes;
+/// with a club only a negative status; without a club reason 2 with random(25 × `stamina()`) = 0). Whoever retires: the
+/// output and the dates (without a valid key nation, set_dates_no_key_nation, near today); returns 1.
 /// Original: `player_regen_check_retirement` (0x7a7310, player_regen.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn player_regen_check_retirement(_this: usize, person: usize, out: usize) -> u8 {
     let person = Staff(person);
@@ -2010,20 +2011,21 @@ pub(crate) unsafe fn job_exit_regions(person: Staff) -> Vec<(usize, usize)> {
 // simplification: the history goes to the file (does not run twice) and the copy without it only writes [0xae1080]: only the
 // original; the copy takes the branch.
 
-/// Scores a person as the donor of non-player data: −10000 when under 31 or flagged; otherwise random draws and
-/// attribute terms.
+/// Scores a person as the donor of non-player data: −10000 with a non-player record, when retiring or retired, or under
+/// 31; otherwise random draws and attribute terms.
 ///
 /// `player_regen_score_non_player_candidate(person)` (stdcall, ret 4): the person's score as donor of the non-player
 /// data (from `player_regen_pick_staff_for_non_player_data`, for each non-player person). −10000 with `non_player()`,
 /// with bits 0x30 (`staff_state_status_flags::RETIREMENT_STATE`) of `staff_state::STATUS_FLAGS` of the 79-byte record
 /// (`G_STAFF_STATE_TABLE`) or under 31 (`age()`). Otherwise random 150 × (age − 31); with a club (`club_job()`) with
-/// reputation (`reputation()`) and a player record (`player()`), + 250 × (current ability `current_reputation()` ÷
-/// reputation); with a player record, + random(⌊(`leadership()` ÷ 2)³⌋) (pow `game_pow` and _ftol), +100 with
-/// `world_reputation()` > 7500 and +50 with `current_reputation()` > 7500; the attributes + 5 × (3 × (`temperament()` +
-/// `pressure()`) + 2 × (`loyalty()` + `determination()`) + `adaptability()`) + ⌊`professionalism()`²⌋ +
-/// ⌊`ambition()`²⌋. With a club: a random draw of the score (+75 if the club has no `manager()`); without a club: +
-/// (`int_apps()`)², and the score doubles if the player's `world_reputation()` exceeds a random(10000) (it reads the
-/// player record without checking, as the original does). Hot (every person on each call): no counter.
+/// reputation (`reputation()`) and a player record (`player()`), + 250 × (the player's current reputation
+/// `current_reputation()` ÷ the club's reputation); with a player record, + random(⌊(`leadership()` ÷ 2)³⌋) (pow
+/// `game_pow` and _ftol), +100 with `world_reputation()` > 7500 and +50 with `current_reputation()` > 7500; the
+/// attributes + 5 × (3 × (`temperament()` + `pressure()`) + 2 × (`loyalty()` + `determination()`) + `adaptability()`) +
+/// ⌊`professionalism()`²⌋ + ⌊`ambition()`²⌋. With a club: a random draw of the score (+75 if the club has no
+/// `manager()`); without a club: + (`int_apps()`)², and the score doubles if the player's `world_reputation()` exceeds
+/// a random(10000) (it reads the player record without checking, as the original does). Hot (every person on each
+/// call): no counter.
 /// Original: `player_regen_score_non_player_candidate` (0x7a7150, player_regen.cpp, stdcall, ret 4).
 pub(crate) unsafe extern "stdcall" fn player_regen_score_non_player_candidate(person: usize) -> i32 {
     let person = Staff(person);
@@ -2572,9 +2574,9 @@ pub(crate) unsafe fn player_regen_is_on_shortlist(person: Staff) -> bool {
 /// (`club_job()`) and without `national_job()`, with `current_reputation()` of the record below 50 and random(5) = 0.
 /// Without it, with a player record (`player()`): off the list (checked again), without a club and without
 /// `national_job()`, unemployed for more than 365 days (365 × (year − year of `date_joined_club_year()`) − day of
-/// `date_joined_club()` + day) and random(the player's rating `player_sheet::CURRENT_REPUTATION`) < 750. With neither
-/// record: always. Retires: the output (26 bytes) receives the person, reason 0x10 (`set_reason`), `set_announced(0)`,
-/// the club (`set_club_id`, −1 if none) and the game date at +8 and +0x10; returns 1. Otherwise 0.
+/// `date_joined_club()` + day) and random(the player's current reputation, `player_sheet::CURRENT_REPUTATION`) < 750.
+/// With neither record: always. Retires: the output (26 bytes) receives the person, reason 0x10 (`set_reason`),
+/// `set_announced(0)`, the club (`set_club_id`, −1 if none) and the game date at +8 and +0x10; returns 1. Otherwise 0.
 /// Original: `player_regen_check_unemployed_retirement` (0x7a8050, player_regen.cpp, stdcall, ret 8).
 pub(crate) unsafe extern "stdcall" fn player_regen_check_unemployed_retirement(person: usize, out: usize) -> u8 {
     let out = RetirementEntry(out);
@@ -2739,17 +2741,19 @@ pub(crate) unsafe extern "thiscall" fn find_retirement_entry(regen: usize, id: *
     0
 }
 
-/// Returns the random score of how well the club suits the youth player: reputation against ability, youth facilities,
-/// human control and nation.
+/// Returns the random score of how well the club suits the youth player: reputation against the player's reputation and
+/// ability, training facilities, human control and nation.
 ///
 /// The score of `club` for the young `player` (random(score), `exe::utils_random`): 5000 + reputation (`reputation()`)
-/// minus its distances to the ability (player record `player()`: `current_reputation()`, and `potential_ability()`,
-/// `current_ability()` × 50); with `potential_ability()` above random(20) + 100, the youth bonus (`training()`, 20 =
-/// guaranteed, otherwise random(`training()`) > random(20)); a club of an active competition (`G_COMP_OBJECT_TABLE`)
-/// with `potential_ability()` > 50: the human club state (`G_CLUB_STATE_TABLE`) and the reputation against the squad
-/// (`squad`); the youth coach (`manager()` → `non_player()`) of a computer club (`exe::human_manager_is_human_club`) or
-/// the human's bonus; the same nation (`nation()` of the player and of the club) and the Welsh clubs (Swansea, Cardiff,
-/// Wrexham) and Scotland (`KEY_NATION_SCOTLAND`). Only the low 16 bits of the score count.
+/// minus its distances to the player's current reputation (player record `player()`: `current_reputation()`) and to his
+/// potential and current ability × 50 (`potential_ability()`, `current_ability()`); with `potential_ability()` above
+/// random(20) + 100, the training facilities bonus (`training()`, 20 = guaranteed, otherwise random(`training()`) >
+/// random(20)); a club of an active competition (`G_COMP_OBJECT_TABLE`) with `potential_ability()` > 50: the human club
+/// state (`G_CLUB_STATE_TABLE`) and the reputation against the squad (`squad`); the manager's work with young players
+/// (`manager()` → `non_player()`: `youngsters()`, `judging_potential()`) at a computer club
+/// (`exe::human_manager_is_human_club`) or the human's bonus; the same nation (`nation()` of the player and of the
+/// club) and the Welsh clubs (Swansea, Cardiff, Wrexham) and Scotland (`KEY_NATION_SCOTLAND`). Only the low 16 bits of
+/// the score count.
 /// Original: `player_regen_score_club_for_player` (0x7ad220, player_regen.cpp, stdcall).
 pub(crate) unsafe extern "stdcall" fn player_regen_score_club_for_player(player: usize, club: usize, squad: i8) -> i32 {
     let player = Staff(player);

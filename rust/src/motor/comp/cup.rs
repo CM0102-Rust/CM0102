@@ -2676,7 +2676,8 @@ pub(crate) unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: us
 
 /// Builds the cup's fixture tree: allocates the ties of each round, clears them, links each tie to a slot in the next
 /// round (by pair or drawn, the side by a coin toss; with no slot, two rounds ahead), puts each round's teams into its
-/// ties (drawn, the cup nation's club at home) and numbers the first tie of each round. Returns 1.
+/// ties (drawn, the club whose stadium is the cup's venue at home) and numbers the first tie of each round. Returns 1.
+///
 /// `Cup::map_fixture_tree()`, called when the cups are created (22 calls up to 2002-06-01). The tie arrays of each
 /// round (`exe::crt_malloc`: 4 per round and `0x35` per tie; out of memory, the "Memory Allocation Error" box of line
 /// `0x8b` or `0x9e` and the game stops; a round with no ties, the box of line `0x95` and -1); flag `+5` of each team
@@ -2691,9 +2692,10 @@ pub(crate) unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: us
 /// the destination round (`cup_tie::FEEDER_ROUND`); the slot stores the tie (`+0xa/+0xc`) and the source round
 /// (`+0xe/+0x10`). Then the teams of each round (`cup_round::NEW_TEAMS`, from `cup_round::FIRST_NEW_TEAM`) go into its
 /// ties: the first by pair or drawn (`tie_rules::SEEDED_DRAW`: the first fully free), the side by coin toss, and in a
-/// taken slot the team of nation `venue_stadium_id()` becomes the home team (no slot: the box of line `0x1c2` or
-/// `0x222` and -1). With no ties in the first round, `run_by_stages` = 1. Finally the number of the first tie of each
-/// round (`cup_round::FIRST_TIE_NUMBER`), from back to front.
+/// taken slot, with the cup's `venue_stadium_id()` set, the away team whose club stadium (`.stadium()`) is that venue
+/// becomes the home team (no slot: the box of line `0x1c2` or `0x222` and -1). With no ties in the first round,
+/// `run_by_stages` = 1. Finally the number of the first tie of each round (`cup_round::FIRST_TIE_NUMBER`), from back to
+/// front.
 /// Original: `Cup::map_fixture_tree` (0x518790, Cup.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn map_fixture_tree(this: usize) -> i32 {
     let this = Cup(this);

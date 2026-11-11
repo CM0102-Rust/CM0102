@@ -724,18 +724,20 @@ pub(crate) unsafe fn leave_euro_competition(club: Club) {
 /// qualified or knocked out; whoever leaves gets `club::CONTINENTAL_COMP_ID` = -1 (`leave_euro_competition`); returns
 /// 0. `EuropeanCup::update_staff_records_for_status(club, outcome, stage, _a, game, end)`, the Champions League's
 /// virtual +0x44. Returns 0. Comp = +4. - In qualifying (stage 0xff): outcome 0 or 1, the qualification by the
-/// fixture's round (`fixture::ROUND_NUMBER`): in round 0, with `.stage_label()` and the `cup_round::ROUND_CODE` + 0x68
-/// (+0x6f) of the round table (`.round_table()`) and the weight `scale_by_round`(1, 0x14, 0, 2); in any other, 0x41c, 0
-/// and `scale_by_round`(1, 0x14, round, 2). Outcome 0xff or 2: the elimination (`european_cup_add_knocked_out_record`)
-/// with the fixture's `fixture::ROUND_PREFIX` and `fixture::ROUND_NAME` and the weight `scale_by_round`(1, 0x14, round,
-/// 2), and the club leaves (`club::CONTINENTAL_COMP_ID` = −1). - In phase 1 (stage < 8): 6, the qualification (0x44a,
-/// −1, 0x32); 0xfe, the non-qualification (0x449, 0x32) and the club leaves. - In phase 2 (8 to 11): 6, the
-/// qualification (0, 0x78, 0x32); 0xfe, the non-qualification (0x44a, 0x32) and the club leaves. - In the knockout
-/// (12): 1, the title (`exe::staff_records_add_cup_winners_record`, thiscall(records, club, game, end), ret 0xc) and
-/// the club leaves; 2, runner-up (`exe::staff_records_add_cup_runners_up_record`, likewise) and the club leaves; 0, the
-/// qualification (0, the `cup_round::ROUND_CODE` + 0x68 of the fixture's round in the knockout stage's round table
-/// (`.stages()` + 0x30, `.round_table()`, `cup_round::SIZE` bytes), `scale_by_round`(0x4b, 0x64, round, 2)); 0xff, the
-/// elimination (0, the fixture's `fixture::ROUND_NAME`, `scale_by_round`(0x4b, 0x64, round, 2)) and the club leaves.
+/// fixture's round (`fixture::ROUND_NUMBER`): in round 0, with `.stage_label()` and the round code of the next round
+/// (round 1: `cup_round::ROUND_CODE` + `cup_round::SIZE`, +0x6f of the round table `.round_table()`) and the weight
+/// `scale_by_round`(1, 0x14, 0, 2); in any other, 0x41c, 0 and `scale_by_round`(1, 0x14, round, 2). Outcome 0xff or 2:
+/// the elimination (`european_cup_add_knocked_out_record`) with the fixture's `fixture::ROUND_PREFIX` and
+/// `fixture::ROUND_NAME` and the weight `scale_by_round`(1, 0x14, round, 2), and the club leaves
+/// (`club::CONTINENTAL_COMP_ID` = −1). - In phase 1 (stage < 8): 6, the qualification (0x44a, −1, 0x32); 0xfe, the
+/// non-qualification (0x449, 0x32) and the club leaves. - In phase 2 (8 to 11): 6, the qualification (0, 0x78, 0x32);
+/// 0xfe, the non-qualification (0x44a, 0x32) and the club leaves. - In the knockout (12): 1, the title
+/// (`exe::staff_records_add_cup_winners_record`, thiscall(records, club, game, end), ret 0xc) and the club leaves; 2,
+/// runner-up (`exe::staff_records_add_cup_runners_up_record`, likewise) and the club leaves; 0, the qualification (0,
+/// the round code of the round after the fixture's (`cup_round::ROUND_CODE` + `cup_round::SIZE` from the fixture's
+/// round entry) in the knockout stage's round table (`.stages()` + 0x30, `.round_table()`, `cup_round::SIZE` bytes),
+/// `scale_by_round`(0x4b, 0x64, round, 2)); 0xff, the elimination (0, the fixture's `fixture::ROUND_NAME`,
+/// `scale_by_round`(0x4b, 0x64, round, 2)) and the club leaves.
 /// Original: `EuropeanCup::update_staff_records_for_status` (0x584ae0, european_cup.cpp, thiscall, ret 0x18).
 pub(crate) unsafe extern "thiscall" fn european_cup_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, _a: u32, game: usize, end: u32) -> u32 {
     let this = Cup(this);

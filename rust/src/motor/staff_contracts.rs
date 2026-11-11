@@ -293,7 +293,7 @@ pub(crate) unsafe fn should_withdraw_transfer_request(this: Contract) -> Option<
 ///
 /// `STAFF_CONTRACT::check_transfer_request_withdrawal(ctx)`: when the decision (`should_withdraw_transfer_request`)
 /// says so, withdraws the request (`exe::contract_manager_post_transfer_request_withdrawn_news` on `G_CONTRACT_MANAGER`
-/// with the contract and `ctx`), clears bit 3 of `.transfer_status()`, the happiness in the contract (`.set_morale()`)
+/// with the contract and `ctx`), clears bit 3 of `.transfer_status()`, the morale in the contract (`.set_morale()`)
 /// becomes the person's `staff::PROFESSIONALISM` + `staff::LOYALTY` + 5, clears `.unhappy_flag()` and raises
 /// `.happiness()` to 15; and each grievance that is set (bits 0x10, 1, 4, 8, 0x100, 0x80, 0x10000 of `.grievances()`,
 /// in that order) is cleared, checks again (`exe::staff_contract_check_transfer_request_withdrawal` with the previous
@@ -383,8 +383,8 @@ pub(crate) unsafe extern "thiscall" fn set_flags(c: usize, marks: u32) {
 /// (`contract::SQUAD_STATUS` >> 4) and is neither 0 nor 7; otherwise, the contract's. The desired contract
 /// (`exe::staff_contract_set_to_desired_contract` into a local contract, with the contract's club, −1, the status and
 /// 0xb) and the ratio 100 × value of the current contract (`calc_contract_value`, as f32) / value of the desired one
-/// (zero value: ratio 0). Signed less than 15 × adaptability (+0x59) + 100 days ago (from `contract::DATE_STARTED`,
-/// ceiling 500): ratio + 50 + 7.5 × adaptability − days / 2. Ratio below 50: 1; below 80: 3; otherwise 2.
+/// (zero value: ratio 0). Signed less than 15 × loyalty (`.loyalty()`) + 100 days ago (from `contract::DATE_STARTED`,
+/// ceiling 500): ratio + 50 + 7.5 × loyalty − days / 2. Ratio below 50: 1; below 80: 3; otherwise 2.
 /// Original: `get_contract_satisfaction` (0x866620, staff_contracts.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn get_contract_satisfaction(this: usize, person: usize) -> u8 {
     let person = Staff(person);
@@ -475,15 +475,16 @@ pub(crate) unsafe extern "thiscall" fn construct_staff_contract(this: usize) -> 
     this.addr()
 }
 
-/// The staff criterion: an 8-bit score (id mod 7, ratings, age, reputation, number of roles) decides, by the roles,
-/// whether it returns 1.
+/// The staff criterion (whether the person wants to leave): an 8-bit score (id mod 7, personality ratings, morale, the
+/// player's reputation, number of grievance groups) decides, by the grievances, whether it returns 1.
 ///
-/// The criterion of staff member `t` (person `[t]` in `G_STAFF_TABLE`, `staff::SIZE` bytes; club `.club()` in
-/// `G_CLUB_TABLE`, `club::SIZE` bytes; functions in `[t+0x45]`): 0 if the person is the club's manager or assistant
-/// (`.manager()`, `.assistant_manager()`) or has no function; otherwise an 8-bit score (id mod 7 + `staff::LOYALTY` +
-/// `staff::PRESSURE` + `staff::PROFESSIONALISM`, deductions for low ratings and for age, `.morale()` in bands, the
-/// club's reputation, minus the number of functions above one) decides, by the functions and the ratings, whether it
-/// returns 1.
+/// The criterion of contract `t` (person `[t]` in `G_STAFF_TABLE`, `staff::SIZE` bytes; club `.club()` in
+/// `G_CLUB_TABLE`, `club::SIZE` bytes; grievance bits `.grievances()`): 0 if the person is the club's manager or
+/// assistant (`.manager()`, `.assistant_manager()`) or has no grievance; otherwise an 8-bit score (id mod 7 +
+/// `staff::LOYALTY` + `staff::PRESSURE` + `staff::PROFESSIONALISM`, deductions for low ratings and for a
+/// `staff::TEMPERAMENT` of 1, `.morale()` in bands, deductions for the player's `.current_reputation()` above 5750 and
+/// 7250, and, with more than one grievance group set, deductions by the number of groups) decides, by the grievances,
+/// the ratings and `.transfer_status()`, whether it returns 1.
 /// Original: `staff_criterion` (0x866f60, staff_contracts.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn staff_criterion(t: usize) -> u32 {
     let t = Contract(t);

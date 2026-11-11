@@ -1289,13 +1289,14 @@ pub(crate) unsafe extern "stdcall" fn player_stats_get_goals_for_club(person: us
     s // cps10: the goals for the club
 }
 
-/// Returns the competition weight by the club's two competitions (500/1000/300/100).
+/// Returns the weight of language `code` for the person by his two nationalities (500/1000/300/100).
 ///
-/// The weight of competition `code` for player `p` by the club's two competitions (`.nation()` and `.second_nation()`):
-/// in the four special competitions (`KEY_NATION_SWEDEN` with 0x16/0x20, `KEY_NATION_NORWAY` with 0x1e/0x20,
-/// `KEY_NATION_DENMARK` with 0x16/0x1e, `KEY_NATION_BELGIUM` with 7) and in the competition's codes
-/// `.second_language()`/`.third_language()`: 500/1000/500/300 by the first, 300/500/300/100 by the second; no
-/// competition, 0. Returns only `ax`.
+/// The weight of language `code` for person `p` by his nation (`.nation()`) and second nation (`.second_nation()`): in
+/// the four special cases (`KEY_NATION_SWEDEN` with languages 0x16/0x20, `KEY_NATION_NORWAY` with 0x1e/0x20,
+/// `KEY_NATION_DENMARK` with 0x16/0x1e, `KEY_NATION_BELGIUM` with 7) and in the nation's languages
+/// `.second_language()`/`.third_language()`: 500/1000/500/300 by the first nation, 300/500/300/100 by the second; no
+/// nation, 0. The nation's first language (`nation::FIRST_LANGUAGE`) is not tested here. The caller at `0x7c0120` runs
+/// it for each language code and turns the weight into a fluency. Returns only `ax`.
 /// Original: `competition_weight` (0x7c6930, player_stats.cpp, stdcall).
 pub(crate) unsafe extern "stdcall" fn competition_weight(p: usize, code: i8) -> u16 {
     let p = Staff(p);

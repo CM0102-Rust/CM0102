@@ -397,10 +397,10 @@ pub(crate) unsafe extern "C" fn human_manager_get_stand_in_manager(club: usize) 
 
 /// Tells whether the fixture is the one the human manager chose to watch.
 ///
-/// Whether `fixture` is the one the human chose to watch: his record (`human_manager_record::WATCHED_FIXTURE`..) with
-/// the same competition (`+0x3f`), dates (`.day()`, `.year()`), club (`+0`), `.round_number()` and both sides
-/// (`.home_club_id()`, `.away_club_id()`). Null fixture or human out of range: the original routine runs (error box and
-/// 0).
+/// Whether `fixture` is the one the human chose to watch: his record (the copy of the watched fixture at
+/// `human_manager_record::WATCHED_FIXTURE`..) with the same `.time_slice()`, dates (`.day()`, `.year()`), competition
+/// (`.comp_id()`), `.round_number()` and both sides (`.home_club_id()`, `.away_club_id()`). Null fixture or human out
+/// of range: the original routine runs (error box and 0).
 /// Original: `HUMAN_MANAGER::is_watching_fixture` (0x5fe290, human_manager.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn is_watching_fixture(this: usize, fixture: usize, human: usize) -> u32 {
     let fixture = Fixture(fixture);
