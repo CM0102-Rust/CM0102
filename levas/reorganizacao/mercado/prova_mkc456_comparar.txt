@@ -1,0 +1,15 @@
+    pool nao paginado 2.91 -> 2.87 GB, paginado 5.79 -> 5.79 GB
+execucao 1: parou em 2002-151, 911873152 sorteios, impressao bc9dc7e5fbc2fcde, partidas 36018/321baef65defc312, banco 067ded2ffaeafa1c, 2513 s
+    date: 1000000000 comparacoes, 0 divergencias
+    engine: 10000000000 comparacoes, 0 divergencias
+    random: 1000000000 comparacoes, 0 divergencias
+game.cfg restaurado; auto_setup.cfg removido
+engine: DIVERGENCE add_cup_winners_record(club 0x1be41184) renovados 7 (o first in the sheet 0 de 24; away of the band: false) original=MemorySnapshot([(1be41204, [8b, 8]), (ae2470, [39, 1, ba, 7, 0, 0, 0, 0]), (22839e08, [60, 9, 60, 9, b0, 4]), (19212c42, [8d, 18, 0, 0, 77, 44, 0, 0, eb, 64, 0, 0, 0, 0, 0, 0, ce, 0, d1, 7, 0, 0, 0, 0, 9a, 8, 0, 0, 0, 98, 7, 0, 0, 74, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 74, 5, 0, 0, 1, 0, cc, 7, 1, 0, 0, 0, 5a, 1, b7, 7, 0, 0, 0, 0, 74, 5, 0, 0, 1, 0, cc, 7, 1, 0, 0, 0, 39, 1, d1, 7, 0, 0, 0, 0, 74, 5, 0, 0, 1, 0, cc, 7, 1, 0, 0, 0, 39, 1, d1, 7, 0, 0, 0, 0, 19, 33, 0, 0, 1, 0, 0, 0, 22, 0, e, 0, 9, 0, b, 0, 20, 0, 0, 0, 20, 0, 0, 0, 0, 0, 3, 0, 0, 0, 47, e, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 99, 2f, 0, 0, 24, 2e, 0, 0, 0, 0, 0, 0, 45, 0, 0, 0, ff, ff, ff, ff, b3, 2, 0, 0, 2b, 0, 0, 0]), (1da0b64b, [14]), (21b481a4, [64]), (21b4b7b4, [64]), (21b2c724, [0]), (21b47664, [64]), (21b50764, [64]), (21b78f84, [57]), (21b2c224, [64]), (21b387a4, [0]), (21b2f6a4, [64]), (21b4c254, [0]), (21aa0f44, [0]), (21b48884, [64]), (21b42704, [64]), (21b39ab4, [28]), (21b41d54, [51]), (21b448c4, [51]), (21ad7fe4, [64])]) rust=MemorySnapshot([(1be41204, [8b, 8]), (ae2470, [39, 1, d0, 7, 0, 0, 0, 0]), (22839e08, [60, 9, 60, 9, b0, 4]), (19212c42, [8d, 18, 0, 0, 77, 44, 0, 0, eb, 64, 0, 0, 0, 0, 0, 0, ce, 0, d1, 7, 0, 0, 0, 0, 9a, 8, 0, 0, 0, 98, 7, 0, 0, 74, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 74, 5, 0, 0, 1, 0, cc, 7, 1, 0, 0, 0, 5a, 1, b7, 7, 0, 0, 0, 0, 74, 5, 0, 0, 1, 0, cc, 7, 1, 0, 0, 0, 39, 1, d1, 7, 0, 0, 0, 0, 74, 5, 0, 0, 1, 0, cc, 7, 1, 0, 0, 0, 39, 1, d1, 7, 0, 0, 0, 0, 19, 33, 0, 0, 1, 0, 0, 0, 22, 0, e, 0, 9, 0, b, 0, 20, 0, 0, 0, 20, 0, 0, 0, 0, 0, 3, 0, 0, 0, 47, e, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 99, 2f, 0, 0, 24, 2e, 0, 0, 0, 0, 0, 0, 45, 0, 0, 0, ff, ff, ff, ff, b3, 2, 0, 0, 2b, 0, 0, 0]), (1da0b64b, [14]), (21b481a4, [64]), (21b4b7b4, [64]), (21b2c724, [0]), (21b47664, [64]), (21b50764, [64]), (21b78f84, [57]), (21b2c224, [64]), (21b387a4, [0]), (21b2f6a4, [64]), (21b4c254, [0]), (21aa0f44, [0]), (21b48884, [64]), (21b42704, [64]), (21b39ab4, [28]), (21b41d54, [51]), (21b448c4, [51]), (21ad7fe4, [64])])
+branch mkc_4 finland ai out of season
+branch mkc_4 finland autumn
+branch mkc_4 finland deadline
+branch mkc_4 finland period
+branch mkc_5 northern ireland loan
+branch mkc_5 northern ireland period
+branch mkc_6 ireland loan counted
+branch mkc_6 ireland window closed
