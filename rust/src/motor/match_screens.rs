@@ -3818,7 +3818,7 @@ pub(crate) unsafe extern "C" fn refresh_match_stats_values() {
     let item = get_screen_param(9) as u32;
     let copy = get_screen_param(0x1d);
     let e = displayed_match_state(p0);
-    let _byte = |k: usize, d: u32| {
+    let stat_cell = |k: usize, d: u32| {
         if copy == 0 || (read_u8(e.addr() + k) as i32) != (read_u8(copy + k) as i32) {
             format(BUF, FORMAT_D, read_u8(e.addr() + k) as i32);
             exe::screenmanager_set_widget_text(sm, item.wrapping_add(d), BUF);
@@ -3842,14 +3842,14 @@ pub(crate) unsafe extern "C" fn refresh_match_stats_values() {
         }
     };
 
-    read_i8(0x127 + 0);
-    read_i8(0x74c + 2);
-    read_i8(0x128 + 3);
-    read_i8(0x74d + 5);
+    stat_cell(0x127, 0);
+    stat_cell(0x74c, 2);
+    stat_cell(0x128, 3);
+    stat_cell(0x74d, 5);
     diferenca(match_record::HOME_SHOTS, 0x128, 6);
     diferenca(match_record::AWAY_SHOTS, 0x74d, 8);
     for (k, d) in [(0x129, 9), (0x74e, 0xb), (0x12a, 0xc), (0x74f, 0xe), (0x12b, 0xf), (0x750, 0x11), (0x12c, 0x12), (0x751, 0x14), (0x12d, 0x15), (0x752, 0x17)] {
-        read_i8(k + d);
+        stat_cell(k, d);
     }
     write_percent_pair(match_record::HOME_PASSES, 0x130, 0x132, 0x18, false);
     write_percent_pair(match_record::AWAY_PASSES, 0x755, 0x757, 0x1a, false);
@@ -3858,7 +3858,7 @@ pub(crate) unsafe extern "C" fn refresh_match_stats_values() {
     write_percent_pair(match_record::HOME_HEADERS, 0x138, 0x13a, 0x1e, false);
     write_percent_pair(match_record::AWAY_HEADERS, 0x138, 0x13a, 0x20, true);
     for (k, d) in [(0x12e, 0x21), (0x753, 0x23), (0x12f, 0x24), (0x754, 0x26)] {
-        read_i8(k + d);
+        stat_cell(k, d);
     }
     save_match_snapshot(copy, e);
 }
