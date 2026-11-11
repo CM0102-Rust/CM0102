@@ -5,7 +5,7 @@ MUTACOES = [
     ('lt_ultimo_dia', '        return 0xff; // outside the last day', '        return 0xfe; // outside the last day'),
     ('cu_clube', '    d(0x1c, pointer(0xc, G_CLUB_TABLE, 0x245)); // home club', '    d(0x1c, pointer(0x10, G_CLUB_TABLE, 0x245)); // home club'),
     ('cu_sem_destaque', '    4 // no highlight', '    3 // no highlight'),
-    ('cu_semana', '    write_u8(e + cup_round::SLOT_WEEKDAY, week as u8); // day of the week', '    write_u8(e + cup_round::SLOT_WEEKDAY, (week as u8).wrapping_add(1)); // day of the week'),
+    ('cu_semana', '    e.set_slot_weekday(week as u8); // day of the week', '    e.set_slot_weekday((week as u8).wrapping_add(1)); // day of the week'),
     ('fm_espelho', '*q = 0xb0u8.wrapping_sub(d) ^ (0xf8u8.wrapping_sub(c) & 0xf); // espelho', '*q = 0xa0u8.wrapping_sub(d) ^ (0xf8u8.wrapping_sub(c) & 0xf); // espelho'),
     ('rg_mesma_nacao', '        s = s.wrapping_add(0x3e8); // same nation', '        s = s.wrapping_add(0x7d0); // same nation'),
     ('hm_outra_partida', '    if same { 1 } else { 0 } // another match', '    if same { 1 } else { 1 } // another match'),

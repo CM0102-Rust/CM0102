@@ -11,7 +11,7 @@ MUTACOES = [
     ('cph_interesse_ordem', 'if *n != 0 {\n        media_crt_qsort(read_u32(this + media_fields::TRANSFER_INTERESTS) as usize, *n, 0x19, 0x757ea0);', 'if *n < 0 {\n        media_crt_qsort(read_u32(this + media_fields::TRANSFER_INTERESTS) as usize, *n, 0x19, 0x757ea0); // mutacao: sem reordenar'),
     ('cph_pedido_data', 'exe::date_operator_3d(r + 8, (&mut local) as *mut [u8; 8] as usize, r + 0x19);', 'exe::date_operator_3d(r + 8, (&mut local) as *mut [u8; 8] as usize, r + 8); // mutacao: a data fica'),
     ('cph_apelido_fim', 'write_u32(end - 0x1e, u32::MAX);', 'write_u32(end - 0x1e, 0); // mutacao: id 0'),
-    ('cph_pendente_fim', 'write_u32(end, u32::MAX); // the last one without a person', 'write_u32(end, 0); // mutacao: pessoa 0'),
+    ('cph_pendente_fim', 'write_u32(end.addr(), u32::MAX); // the last one without a person', 'write_u32(end.addr(), 0); // mutacao: pessoa 0'),
     ('cph_desempregado_tecnico', 'manager.current_reputation() < 50 && friendly_random(5) == 0 // the weak manager', 'manager.current_reputation() < 49 && friendly_random(5) == 0 // mutacao: 49'),
     ('cph_desempregado_sorteio', 'friendly_random(rating) < 0x2ee // the roll by the rating', 'friendly_random(rating) < 700 // mutacao: 700'),
     ('cph_permissao_oferta', 'return 1; // the offer’s player', 'return 0; // mutacao: nunca precisa'),

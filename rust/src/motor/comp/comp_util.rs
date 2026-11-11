@@ -414,15 +414,16 @@ pub(crate) unsafe extern "C" fn comp_util_sort_and_shuffle_top_clubs(clubs: usiz
 /// [pt] A nota de um clube na estatística da liga (0x4b02e0): pesos 1 nos 4 atributos (+0x72..+0x75; +0x75 e +0x74 com
 /// o peso [0x968968]) ou, com menos de 25 jogos (+4), proporcionais aos jogos; a média ponderada, na ordem do x87.
 pub(crate) unsafe fn league_stats_rating(e: usize, b73: f64) -> f64 {
+    let e = CompStatsClub(e);
     let (mut p, mut k73, mut k72) = (read_f64(rdata::F64_0_5), 1.0f64, 1.0f64);
-    let games = read_u8(e + 4);
+    let games = read_u8(e.addr() + 4);
     if games < 0x19 {
         let v = games as f64;
         p = v * read_f64(rdata::F64_0_02);
         k73 = v * read_f64(rdata::F64_0_04);
         k72 = read_f64(rdata::F64_4) - v * read_f64(rdata::F64_0_1200480192);
     }
-    let s = read_u8(e + comp_stats_club::WORST_POSITION) as f64 * p + read_u8(e + comp_stats_club::FINAL_POSITION) as f64 * k72 + b73 * k73 + read_u8(e + comp_stats_club::BEST_POSITION) as f64 * p;
+    let s = e.worst_position() as f64 * p + e.final_position() as f64 * k72 + b73 * k73 + e.best_position() as f64 * p;
     s / (p + p + k72 + k73)
 }
 
@@ -460,18 +461,18 @@ pub(crate) unsafe extern "C" fn comp_util_get_league_clash_type(a: usize, b: usi
     if league.is_null() || league.comp_stats() == 0 {
         return 0;
     }
-    let ea = exe::comp_stats_find_club_entry(league.comp_stats(), a);
-    let eb = exe::comp_stats_find_club_entry(league.comp_stats(), b);
-    if ea == 0 || eb == 0 || league.current_stage() as i32 != -1 || league.comp_type() != 2 {
+    let ea = CompStatsClub(exe::comp_stats_find_club_entry(league.comp_stats(), a));
+    let eb = CompStatsClub(exe::comp_stats_find_club_entry(league.comp_stats(), b));
+    if ea.is_null() || eb.is_null() || league.current_stage() as i32 != -1 || league.comp_type() != 2 {
         return 0;
     }
-    let (a73, b73) = (read_u8(ea + comp_stats_club::CURRENT_POSITION) as i32, read_u8(eb + comp_stats_club::CURRENT_POSITION) as i32);
+    let (a73, b73) = (ea.current_position() as i32, eb.current_position() as i32);
     let clubs = league.club_count() as i32;
     if (a73 - b73).abs() > ftol(clubs as f64 * read_f64(rdata::F64_0_25)) as i16 as i32 {
         return 0;
     }
-    let (na, nb) = (league_stats_rating(ea, a73 as f64), league_stats_rating(eb, b73 as f64));
-    let (a74, b74) = (read_u8(ea + comp_stats_club::BEST_POSITION) as f64, read_u8(eb + comp_stats_club::BEST_POSITION) as f64);
+    let (na, nb) = (league_stats_rating(ea.addr(), a73 as f64), league_stats_rating(eb.addr(), b73 as f64));
+    let (a74, b74) = (ea.best_position() as f64, eb.best_position() as f64);
     let virtual98 = || {
         let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(league.addr()) + 0x98));
         f(league.addr())

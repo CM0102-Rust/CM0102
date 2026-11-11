@@ -331,9 +331,9 @@ pub(crate) unsafe extern "thiscall" fn compare_sell_season_tickets(this: usize, 
         return o(this, apply);
     }
     let mut regions = vec![(this, 0x167)];
-    let est = club.stadium().addr();
-    if est != 0 {
-        regions.push((est + stadium::STADIUM_CAPACITY, 4));
+    let est = Stadium(club.stadium().addr());
+    if !est.is_null() {
+        regions.push((est.addr() + stadium::STADIUM_CAPACITY, 4));
     }
     regions.extend(crate::rng::STATE_REGIONS);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, apply), || crate::rng::without_counting(|| sell_season_tickets(this, apply)));

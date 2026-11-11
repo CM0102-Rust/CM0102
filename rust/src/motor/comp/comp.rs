@@ -488,11 +488,12 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_club(club: usize) -> u
 /// do estádio (+0x38 a cidade, +0x1f a nação) entre as nações-chave ativas; sem estádio, cidade, nação ou fora da
 /// tabela, 3. Devolve só `al`.
 pub(crate) unsafe extern "C" fn comp_active_key_nation_of_stadium(stadium: usize) -> u8 {
+    let stadium = Stadium(stadium);
     let u = |a: usize| read_usize(a);
-    if stadium == 0 || read_usize(stadium + stadium::CITY) == 0 || u(read_usize(stadium + stadium::CITY) + city::NATION) == 0 {
+    if stadium.is_null() || stadium.city() == 0 || u(stadium.city() + city::NATION) == 0 {
         return 3;
     }
-    match find_key_nation_index(u(read_usize(stadium + stadium::CITY) + city::NATION)) {
+    match find_key_nation_index(u(stadium.city() + city::NATION)) {
         Some(k) => {
             crate::comparison::branch("cqb_12 stadium key nation");
             read_u8(key_nation_entry(k) + key_nation_record::ACTIVE_INDEX) // cqb12: the active index of the stadium’s nation

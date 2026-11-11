@@ -3968,7 +3968,7 @@ pub(crate) unsafe fn player_move_injected(p: MatchPlayer, x: i8, y: i8, code: i1
     let mut carries = carries_in;
     let (ox, oy) = (p.cell_x(), p.cell_y());
     p.set_busy((((p.busy() as u8)).wrapping_add(1)) as i8);
-    let mut perdeu = false;
+    let mut lost = false;
     if x == ox && y == oy && code != 0xf && code != 0x100 {
         release_marked_players(m.addr(), p, call);
         return;
@@ -4115,14 +4115,14 @@ pub(crate) unsafe fn player_move_injected(p: MatchPlayer, x: i8, y: i8, code: i1
             add(e, if t & 0x30 != 0 && player_table(e.addr()) & 0x880 != 0 { -0x3b } else { -0x46 });
         }
         if p.injury_pending() != 0 {
-            perdeu = true;
+            lost = true;
         } else if mode != 4 && at16 < 1 {
             let r = random(ftol(p.technique() as f64 * read_f32(rdata::F32_5) as f64 + read_f32(rdata::F32_75) as f64));
             if r == 0 && (e.is_null() || nota < at16) {
-                perdeu = true;
+                lost = true;
             }
         }
-        if perdeu {
+        if lost {
             crate::comparison::branch("movement loses the ball");
             m.set_momentum_b(0u32 as i32);
             m.set_possession_side(0xffu8 as i8);
@@ -4214,7 +4214,7 @@ pub(crate) unsafe fn player_move_injected(p: MatchPlayer, x: i8, y: i8, code: i1
         move_action_commentary_injected(m, p, e, code, nx, ny, carries, mode, call);
         let _ = &mut carries;
     }
-    grid_step_injected(m, p, ox, oy, nx, ny, perdeu, call);
+    grid_step_injected(m, p, ox, oy, nx, ny, lost, call);
 }
 
 /// Commentary for the action of a player passing with the ball (codes 0xf, 0x11, 0x12) by area, flank, marker and
@@ -4667,7 +4667,7 @@ pub(crate) unsafe fn punish_move_foul_injected(m: Engine, e: MatchPlayer, p: Mat
 /// [pt] O passo na grade e o que vem depois: vagas da casa (+0x215e, 0x5a bytes por casa, 11 vagas por
 /// lado e a conta em +0x58), o mais adiantado, os marcados, o desgaste, a bola e a direcao.
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe fn grid_step_injected(m: Engine, p: MatchPlayer, ox: i8, oy: i8, nx: i8, ny: i8, perdeu: bool, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+pub(crate) unsafe fn grid_step_injected(m: Engine, p: MatchPlayer, ox: i8, oy: i8, nx: i8, ny: i8, lost: bool, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let narrate = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, code: u32, a3: u32, a4: u32| {
         call(FN_MATCH_EVENTS_ADD_EVENT, m.commentator(), [code, m.addr() as u32, a3, a4, u32::MAX]);
     };
@@ -4769,7 +4769,7 @@ pub(crate) unsafe fn grid_step_injected(m: Engine, p: MatchPlayer, ox: i8, oy: i
         }
         tire_fatigue(p.addr(), k, -1);
     }
-    if p == m.ball_holder() || perdeu {
+    if p == m.ball_holder() || lost {
         m.set_ball_x(((p.cell_x() as u8)) as i8);
         m.set_ball_y(((p.cell_y() as u8)) as i8);
         let (bx, by) = (m.ball_x(), m.ball_y());

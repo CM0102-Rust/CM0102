@@ -484,15 +484,6 @@ impl Club {
     pub(crate) unsafe fn set_continental_comp_id(self, v: u32) {
         write_u32(self.0 + club::CONTINENTAL_COMP_ID, v)
     }
-    /// `club::EURO_FLAG` (+0x1db). Name: community.
-    #[inline(always)]
-    pub(crate) unsafe fn euro_flag(self) -> i32 {
-        read_i32(self.0 + club::EURO_FLAG)
-    }
-    #[inline(always)]
-    pub(crate) unsafe fn set_euro_flag(self, v: i32) {
-        write_i32(self.0 + club::EURO_FLAG, v)
-    }
     /// `club::EURO_SEEDING` (+0x1df). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn euro_seeding(self) -> u8 {
@@ -14610,14 +14601,14 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_goals_against(self, v: i32) {
         write_i32(self.0 + manager_record::GOALS_AGAINST, v)
     }
-    /// `manager_record::MONTH_AWARDS` (+0x9e). Name: verified.
+    /// `manager_record::AWARDS` (+0x9e). Name: verified.
     #[inline(always)]
-    pub(crate) unsafe fn month_awards(self) -> u16 {
-        read_u16(self.0 + manager_record::MONTH_AWARDS)
+    pub(crate) unsafe fn awards(self) -> u16 {
+        read_u16(self.0 + manager_record::AWARDS)
     }
     #[inline(always)]
-    pub(crate) unsafe fn set_month_awards(self, v: u16) {
-        write_u16(self.0 + manager_record::MONTH_AWARDS, v)
+    pub(crate) unsafe fn set_awards(self, v: u16) {
+        write_u16(self.0 + manager_record::AWARDS, v)
     }
     /// `manager_record::PLAYERS_BOUGHT` (+0xa0). Name: read.
     #[inline(always)]

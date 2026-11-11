@@ -179,24 +179,24 @@ pub(crate) unsafe fn random_or_tape(n: i32) -> i32 {
 pub(crate) unsafe fn match_performance_code(result: MatchRecord, side: usize, player: Staff) -> u32 {
     let id = read_usize(player.addr());
     for k in 0..0x14usize {
-        let e = result.addr() + match_record::ROW_STAFF_ID + side * 0x625 + k * 0x49;
-        if read_usize(e) != id {
+        let e = MatchRecordRow(result.addr() + match_record::ROW_STAFF_ID + side * 0x625 + k * 0x49);
+        if read_usize(e.addr()) != id {
             continue;
         }
-        let mut c: u32 = match read_u8(e + match_record_row::GOALS) {
+        let mut c: u32 = match e.goals() {
             1 => 2,
             2 => 8,
             3 => 0x20,
             4..=8 => 0x40,
             _ => 0,
         };
-        if read_u8(e + match_record_row::MINUTE_LEFT_PITCH) != 0xff {
+        if e.minute_left_pitch() != 0xff {
             c |= 4;
         }
         if (result.man_of_the_match_id() as usize) == read_usize(player.player().addr()) {
             c |= 0x10;
         }
-        if (read_u8(e + match_record_row::PENALTIES_TAKEN) as i32) - (read_u8(e + match_record_row::PENALTIES_SCORED) as i32) == 1 {
+        if (e.penalties_taken() as i32) - (e.penalties_scored() as i32) == 1 {
             c |= 1;
         }
         return c;
@@ -975,8 +975,8 @@ pub(crate) unsafe extern "thiscall" fn select_squad(this: usize, nacao: usize, k
                 if j == 0 || exe::injury_get_player_injury_status(read_usize(G_INJURY), j) != 2 || read_u8(j + staff::PLAYING_SQUAD) & marca == 0 {
                     continue;
                 }
-                let l = exe::injury_get_player_injury(read_usize(G_INJURY), j);
-                if l != 0 && read_i16(l + injury_entry::TRAINING_DAYS_LEFT) > 10 {
+                let l = InjuryEntry(exe::injury_get_player_injury(read_usize(G_INJURY), j));
+                if !l.is_null() && l.training_days_left() > 10 {
                     exe::tactics_remove_player_from_selection(tactic(), elenco, j, time, 1);
                     write_u8(j + staff::PLAYING_SQUAD, read_u8(j + staff::PLAYING_SQUAD) & 3);
                     write_usize(j + staff::NATIONAL_JOB, 0);
@@ -1619,7 +1619,8 @@ pub(crate) static INTERNATIONAL_RESULT_DRY_RUN: AtomicBool = AtomicBool::new(fal
 ///
 /// [pt] A vaga `k` (0..20) da escalação do lado `lado` no resumo do jogo `m`: m + 0x625 × lado + 0x190 + 0x49 × k.
 pub(crate) fn lineup_slot(m: usize, side: usize, k: usize) -> usize {
-    m.wrapping_add(0x625 * side + match_record::ROW_STAFF_ID + 0x49 * k)
+    let side = MatchRecord(side);
+    m.wrapping_add(0x625 * side.addr() + match_record::ROW_STAFF_ID + 0x49 * k)
 }
 
 /// Person in a lineup slot if it counts (id != -1 and starter, or sub who came on) and is in range of the staff table.
@@ -1627,8 +1628,9 @@ pub(crate) fn lineup_slot(m: usize, side: usize, k: usize) -> usize {
 /// [pt] A pessoa da vaga, se a vaga conta (id ≠ −1 e titular, ou reserva que entrou: +0x32 ≠ 0xff) e a pessoa está na
 /// faixa (id < [0xae2364]; o ponteiro nulo passa sem o teste, como na original).
 pub(crate) unsafe fn lineup_slot_person(slot: usize, k: usize) -> Option<usize> {
-    let id = read_usize(slot) as i32;
-    if id == -1 || (k >= 11 && *((slot + match_record_row::MINUTE_ON) as *const u8) == 0xff) {
+    let slot = MatchRecordRow(slot);
+    let id = read_usize(slot.addr()) as i32;
+    if id == -1 || (k >= 11 && (slot.minute_on() as u8) == 0xff) {
         return None;
     }
     let p = read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE));
@@ -1728,12 +1730,12 @@ pub(crate) unsafe extern "thiscall" fn record_international_result(this: usize, 
             let games = (club_nation_record(this, Club(club)) + 2) as *mut i16;
             core::ptr::write_unaligned(games, core::ptr::read_unaligned(games).wrapping_add(1));
             for k in 0..20usize {
-                let slot = lineup_slot(m, lado, k);
-                let id = read_usize(slot) as i32;
+                let slot = MatchRecordRow(lineup_slot(m, lado, k));
+                let id = read_usize(slot.addr()) as i32;
                 if id == -1 {
                     continue;
                 }
-                if k >= 11 && *((slot + match_record_row::MINUTE_ON) as *const u8) == 0xff { // cpw12: the substitute who did not come on
+                if k >= 11 && (slot.minute_on() as u8) == 0xff { // cpw12: the substitute who did not come on
                     crate::comparison::branch("cpw_12 reserve not coming on");
                     continue;
                 }
@@ -1750,7 +1752,7 @@ pub(crate) unsafe extern "thiscall" fn record_international_result(this: usize, 
                 }
                 crate::comparison::branch("cpw_12 national team match");
                 write_u8(person + staff::INT_APPS, read_u8(person + staff::INT_APPS).wrapping_add(1)); // cpw12: one match
-                write_u8(person + staff::INT_GOALS, read_u8(person + staff::INT_GOALS).wrapping_add(read_u8(slot + match_record_row::GOALS))); // cpw12: os gols
+                write_u8(person + staff::INT_GOALS, read_u8(person + staff::INT_GOALS).wrapping_add(slot.goals())); // cpw12: os gols
                 if !INTERNATIONAL_RESULT_DRY_RUN.load(Relaxed) {
                     // the original pushes edx with the short of the matches below and the high part of 55 × nation id
                     let id_nation = read_usize(read_usize(club + club::NATION)) as u32;

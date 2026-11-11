@@ -2465,11 +2465,11 @@ pub(crate) unsafe extern "thiscall" fn get_time_slice(_this: usize, comp: usize,
 /// de doença na véspera do jogo.
 pub(crate) unsafe extern "thiscall" fn add_away_trip_illness_risk(_this: usize, f: usize) {
     let f = Fixture(f);
-    let stadium = f.stadium();
-    if stadium == 0 {
+    let stadium = Stadium(f.stadium());
+    if stadium.is_null() {
         return;
     }
-    let city = read_usize(stadium + stadium::CITY);
+    let city = stadium.city();
     if city == 0 {
         return;
     }

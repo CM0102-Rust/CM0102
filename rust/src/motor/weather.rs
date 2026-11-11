@@ -106,12 +106,12 @@ pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, game: usi
             if cap > 0x4e20 {
                 return 0;
             }
-            let mandante = home.professional_status() == 1;
+            let home_side = home.professional_status() == 1;
             let n = if cap > 0x30d4 {
                 0xfa
             } else if cap > 0x1388 {
-                if mandante { 0x96 } else { 0x1e }
-            } else if mandante {
+                if home_side { 0x96 } else { 0x1e }
+            } else if home_side {
                 0x32
             } else {
                 0xa
@@ -131,14 +131,14 @@ pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, game: usi
             if cap > 0x3a98 {
                 return 0;
             }
-            let mandante = home.professional_status() == 1;
-            if cap > 0x1d4c && mandante {
+            let home_side = home.professional_status() == 1;
+            if cap > 0x1d4c && home_side {
                 if friendly_random(4) != 0 {
                     return 5;
                 }
                 return abandon_if_draw_zero(4);
             }
-            if cap <= 0x1d4c && !mandante {
+            if cap <= 0x1d4c && !home_side {
                 if friendly_random(0x19) != 0 {
                     return 5;
                 }
@@ -245,9 +245,9 @@ pub(crate) unsafe extern "thiscall" fn get_match_weather(this: usize, s: *mut u8
     }
     let mut cid = 0usize;
     if !game.is_null() {
-        let est = game.stadium();
-        if est != 0 {
-            cid = read_usize(est + stadium::CITY);
+        let est = Stadium(game.stadium());
+        if !est.is_null() {
+            cid = est.city();
         }
     }
     if cid == 0 {
@@ -444,8 +444,8 @@ pub(crate) unsafe extern "thiscall" fn get_pitch_condition(_this: usize, clima: 
     if game == 0 {
         return 0;
     }
-    let est = read_usize(game + fixture::STADIUM);
-    if est == 0 || read_u8(est + stadium::COVERED) != 0 {
+    let est = Stadium(read_usize(game + fixture::STADIUM));
+    if est.is_null() || est.covered() != 0 {
         return 0;
     }
     let sum = (read_u16(game + fixture::DAY) as i32)
@@ -455,8 +455,8 @@ pub(crate) unsafe extern "thiscall" fn get_pitch_condition(_this: usize, clima: 
     let h = sum % 20;
     let chuva = *clima.add(1);
     let t = *clima.add(2) as i8;
-    let mark = read_u8(est + stadium::UNDER_SOIL_HEATING) != 0;
-    let places = read_i32(est + stadium::CAPACITY);
+    let mark = est.under_soil_heating() != 0;
+    let places = est.capacity();
     let morno = (1..0x1d).contains(&t);
     if chuva == 5 && morno {
         if mark {

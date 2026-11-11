@@ -170,7 +170,7 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_quarter_finals(this: usize) 
     let mut expected = vivos.clone();
     found.sort_unstable();
     expected.sort_unstable();
-    let left = away.iter().all(|&c| read_i32(c + club::EURO_FLAG) == -1);
+    let left = away.iter().all(|&c| read_i32(c + club::CONTINENTAL_COMP_ID) == -1);
     let same = found == expected && left && stage.team_count() == 8 && (this.current_stage() as i32) == 0xc;
     SCOREBOARD.record(same, || format!("draw_quarter_finals({:#x}) expected={:x?} list={:x?} left={} +0x30={}", this.addr(), expected, found, left, (this.current_stage() as i32)));
 }

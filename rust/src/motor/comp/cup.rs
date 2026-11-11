@@ -301,21 +301,21 @@ pub(crate) unsafe fn club_fixtures_until(club: u32, comp: u32, (ano, dia): (i32,
 pub(crate) unsafe extern "thiscall" fn post_draw_news(this: usize, round: u32, tie: u32) {
     let this = Cup(this);
     let ri = round as i16 as i32;
-    let t = tie_of_round(this, ri, tie as i16 as i32);
+    let t = CupTie(tie_of_round(this, ri, tie as i16 as i32));
     let (mut a1, mut a2, mut b1, mut b2, mut casa) = (0usize, 0usize, 0usize, 0usize, 0usize);
-    let h = read_i16(t);
-    if h != -1 && read_i16(t + cup_tie::AWAY_TEAM) != -1 {
+    let h = read_i16(t.addr());
+    if h != -1 && t.away_team() != -1 {
         return;
     }
     if read_i16(round_entry(this, ri) + cup_round::TIES) < 2 {
         return;
     }
     if h == -1 {
-        let r2 = read_i16(t + cup_tie::HOME_LINK_ROUND);
+        let r2 = t.home_link_round();
         if r2 == -1 {
             return;
         }
-        let o = tie_of_round(this, r2 as i32, read_i16(t + cup_tie::HOME_LINK_TIE) as i32);
+        let o = tie_of_round(this, r2 as i32, t.home_link_tie() as i32);
         let (x, y) = (read_i16(o), read_i16(o + 2));
         if x == -1 || y == -1 {
             return;
@@ -326,13 +326,13 @@ pub(crate) unsafe extern "thiscall" fn post_draw_news(this: usize, round: u32, t
         casa = read_usize(cup_team_entry(this, h));
     }
     let away;
-    let v = read_i16(t + cup_tie::AWAY_TEAM);
+    let v = t.away_team();
     if v == -1 {
-        let r2 = read_i16(t + cup_tie::AWAY_LINK_ROUND);
+        let r2 = t.away_link_round();
         if r2 == -1 {
             return;
         }
-        let o = tie_of_round(this, r2 as i32, read_i16(t + cup_tie::AWAY_LINK_TIE) as i32);
+        let o = tie_of_round(this, r2 as i32, t.away_link_tie() as i32);
         let (x, y) = (read_i16(o), read_i16(o + 2));
         if x == -1 || y == -1 {
             return;
@@ -445,10 +445,10 @@ pub(crate) unsafe fn place_team_in_tie(cup: usize, r: i32, round: u32, e: usize,
     write_u16(t + jogo, read_i16(e + 4) as u16);
     let next = read_i16(e + 2);
     if next != -1 {
-        let v = tie_of_round(Cup(cup), next as i32, read_i16(e + 4) as i32);
-        write_u16(v + cup_tie::FEEDER_ROUND, round as u16);
-        write_u16(v + cup_tie::FEEDER_TIE, cur as u16);
-        write_u16(v + cup_tie::FEEDER_SIDE, home as u16);
+        let v = CupTie(tie_of_round(Cup(cup), next as i32, read_i16(e + 4) as i32));
+        v.set_feeder_round(round as u16);
+        v.set_feeder_tie(cur as u16);
+        v.set_feeder_side(home as u16);
     }
 }
 
@@ -657,7 +657,7 @@ pub(crate) unsafe extern "thiscall" fn check_round_teams_for_nation(cup: usize, 
         let s = exe::utils_random(read_i16(round_entry(Cup(cup), r) + cup_round::TIES) as i32);
         let start = s as i16;
         let mut cur = s;
-        let mandante = loop {
+        let home_side = loop {
             let t = tie_of_round(Cup(cup), r, cur as i16 as i32);
             let mut side: Option<bool> = None;
             if second {
@@ -709,7 +709,7 @@ pub(crate) unsafe extern "thiscall" fn check_round_teams_for_nation(cup: usize, 
                 return;
             }
         };
-        place_team_in_tie(cup, r, round, e, cur, mandante); // cqb11: a entrada vai ao confronto sorteado
+        place_team_in_tie(cup, r, round, e, cur, home_side); // cqb11: a entrada vai ao confronto sorteado
         j = j.wrapping_add(1);
     }
     exe::crt_free(array);
@@ -769,10 +769,10 @@ pub(crate) unsafe fn send_prize_news(cup: Cup, club: usize, value: i32, next: u3
 /// [pt] Os prêmios da rodada `r`: (ao vencedor, ao perdedor), do registro (+0x60/+0x64) ou do fundo (−1); None quando a
 /// divisão da original cairia (divisor zero ou estouro). `contar`: o contador do ramo do fundo (não no comparador).
 pub(crate) unsafe fn round_prizes(cup: Cup, r: i32, count: bool) -> Option<(i32, i32)> {
-    let e = round_record(cup, r);
-    let (mut ao_vencedor, mut ao_perdedor) = (read_i32(e + cup_round::WINNER_PRIZE), read_i32(e + cup_round::LOSER_PRIZE));
+    let e = CupRound(round_record(cup, r));
+    let (mut ao_vencedor, mut ao_perdedor) = (e.winner_prize(), e.loser_prize());
     if ao_vencedor == -1 {
-        let (fundo, resta, confrontos) = (cup.prize_fund(), cup.round_count() as i32 - r, read_i16(e + cup_round::TIES) as i32);
+        let (fundo, resta, confrontos) = (cup.prize_fund(), cup.round_count() as i32 - r, e.ties() as i32);
         if resta == 0 || confrontos == 0 || (fundo == i32::MIN && resta == -1) {
             return None;
         }
@@ -828,12 +828,12 @@ pub(crate) unsafe extern "thiscall" fn pay_round_prize_money(cup: usize, winner:
     if fixture.round_name() == 0x136 && outcome == 1 {
         outcome = 3;
     }
-    let e = round_record(cup, r);
+    let e = CupRound(round_record(cup, r));
     let mut next = 0u32;
     if r + 1 < cup.round_count() as i32 {
-        let w = read_u16(e + cup_round::ROUND_CODE + 0x68);
+        let w = read_u16(e.addr() + cup_round::ROUND_CODE + 0x68);
         if w != 0x8c {
-            next = (e as u32 & 0xffff_0000) | w as u32; // mov bp, [ebp+0x6f]: only the low word of ebp changes
+            next = (e.addr() as u32 & 0xffff_0000) | w as u32; // mov bp, [ebp+0x6f]: only the low word of ebp changes
         }
     }
     if ao_vencedor != 0 {
@@ -1031,10 +1031,10 @@ pub(crate) unsafe fn round_ties_array(cup: Cup, r: u32) -> usize {
 /// [pt] Algum time definido (≠ −1) de algum confronto da rodada ainda sem clube (o vencedor de um confronto anterior em
 /// aberto): a rodada não pode ser sorteada.
 pub(crate) unsafe fn round_has_open_team(cup: Cup, r: u32) -> bool {
-    let reg = round_record_by_dword(cup, r);
+    let reg = CupRound(round_record_by_dword(cup, r));
     let mut t = round_ties_array(cup, r);
     let mut k = 0i32;
-    while k < read_i16(reg + cup_round::TIES) as i32 {
+    while k < reg.ties() as i32 {
         for lado in [0usize, 2] {
             let x = read_i16(t + lado);
             if x != -1 && read_usize(cup.team_table().wrapping_add((x as isize * 6) as usize)) == 0 {
@@ -1086,8 +1086,8 @@ pub(crate) fn cup_date_is_after(a: &[u8; 8], b: &[u8; 8]) -> bool {
 /// seleções (0x76d940 em [0xb74318]: push comp; ecx = as seleções; sem add esp -> ret 4; a cópia Rust é stdcall(comp))
 /// ou exe::friendly_is_friendly_competition(0x5c6710 em [0xae2c74]: push comp; ecx = o Friendly -> thiscall, ret 4).
 pub(crate) unsafe fn skips_draw_news(cup: Cup, r: u32) -> bool {
-    let reg = round_record_by_dword(cup, r);
-    if read_i16(reg + cup_round::TIES) < 2 || read_i16(reg + cup_round::TIE_RULES) & tie_rules::FIXED_BRACKET != 0 {
+    let reg = CupRound(round_record_by_dword(cup, r));
+    if reg.ties() < 2 || reg.tie_rules() & tie_rules::FIXED_BRACKET != 0 {
         return true;
     }
     if read_usize(G_NATIONAL_TEAMS) != 0 {
@@ -1677,8 +1677,8 @@ pub(crate) unsafe extern "thiscall" fn get_fixture_side_teams(this: usize, round
     }
     let count = G_CUP_POSSIBLE_TEAM_COUNT as *mut i32;
     *count = 0;
-    let reg = read_usize(this.tie_tables() + round as usize * 4) + (game as usize).wrapping_mul(0x35);
-    let (c, r, j) = if side as u8 != 0 { (read_i16(reg), reg + cup_tie::HOME_LINK_ROUND, reg + cup_tie::HOME_LINK_TIE) } else { (read_i16(reg + cup_tie::AWAY_TEAM), reg + cup_tie::AWAY_LINK_ROUND, reg + cup_tie::AWAY_LINK_TIE) };
+    let reg = CupTie(read_usize(this.tie_tables() + round as usize * 4) + (game as usize).wrapping_mul(0x35));
+    let (c, r, j) = if side as u8 != 0 { (read_i16(reg.addr()), reg.addr() + cup_tie::HOME_LINK_ROUND, reg.addr() + cup_tie::HOME_LINK_TIE) } else { (reg.away_team(), reg.addr() + cup_tie::AWAY_LINK_ROUND, reg.addr() + cup_tie::AWAY_LINK_TIE) };
     if c != -1 {
         *out = c;
         *count = 1;
@@ -2225,10 +2225,10 @@ pub(crate) unsafe extern "thiscall" fn randomize_round_teams(cup: usize, round: 
         write_u16(t + jogo, read_i16(e + 4) as u16);
         let next = read_i16(e + 2);
         if next != -1 {
-            let v = tie_of_round(Cup(cup), next as i32, read_i16(e + 4) as i32);
-            write_u16(v + cup_tie::FEEDER_ROUND, round as u16);
-            write_u16(v + cup_tie::FEEDER_TIE, s as u16);
-            write_u16(v + cup_tie::FEEDER_SIDE, home as u16);
+            let v = CupTie(tie_of_round(Cup(cup), next as i32, read_i16(e + 4) as i32));
+            v.set_feeder_round(round as u16);
+            v.set_feeder_tie(s as u16);
+            v.set_feeder_side(home as u16);
         }
     }
     exe::crt_free(array);
@@ -2270,11 +2270,11 @@ pub(crate) unsafe extern "thiscall" fn separate_shared_stadium_ties(cup: usize, 
         let home_i = read_i16(fi);
         let mut j = i + 1;
         while (j as i16) < n {
-            let fj = tie_of_round(Cup(cup), r, j as i16 as i32);
+            let fj = CupTie(tie_of_round(Cup(cup), r, j as i16 as i32));
             let mut dividem = false;
             for lado in [0usize, 2] {
                 let a = if lado == 0 { home_i } else { read_i16(fi + 2) };
-                let b = read_i16(fj + lado);
+                let b = read_i16(fj.addr() + lado);
                 if a != -1 && b != -1 {
                     crate::comparison::branch("cpq_11 stadium compared");
                     let (sa, signed_byte_at) = (stadium(a), stadium(b));
@@ -2285,14 +2285,14 @@ pub(crate) unsafe extern "thiscall" fn separate_shared_stadium_ties(cup: usize, 
                 }
             }
             if dividem {
-                swap_tie_sides(fj);
-                let next = read_i16(fj + cup_tie::HOME_LINK_ROUND);
+                swap_tie_sides(fj.addr());
+                let next = fj.home_link_round();
                 if next != -1 {
-                    write_u16(tie_of_round(Cup(cup), next as i32, read_i16(fj + cup_tie::HOME_LINK_TIE) as i32) + 8, 1);
+                    write_u16(tie_of_round(Cup(cup), next as i32, fj.home_link_tie() as i32) + 8, 1);
                 }
-                let next = read_i16(fj + cup_tie::AWAY_LINK_ROUND);
+                let next = fj.away_link_round();
                 if next != -1 {
-                    write_u16(tie_of_round(Cup(cup), next as i32, read_i16(fj + cup_tie::AWAY_LINK_TIE) as i32) + 8, 0);
+                    write_u16(tie_of_round(Cup(cup), next as i32, fj.away_link_tie() as i32) + 8, 0);
                 }
                 break;
             }
@@ -2757,12 +2757,12 @@ pub(crate) unsafe extern "C" fn cup_set_round_draw_date(rounds: usize, round: u3
 /// ano-base); o horário (byte) em +6 e as marcas do mando em +0x13. Devolve o registro.
 pub(crate) unsafe extern "C" fn cup_set_round_match_date(rounds: usize, round: u32, day: u32, month: u32, years: u32, week: u32, hour: u32, base: u32, mando: u32) -> usize {
     let (d, a) = date_on_weekday(day, month, base.wrapping_add(years), week);
-    let r = round_record_from_base(rounds, round);
-    write_u16(r + cup_round::DAY, d); // match day
-    write_u8(r + cup_round::YEAR_OFFSET, a.wrapping_sub(base as u8));
-    write_u8(r + cup_round::TIME_SLICE, hour as u8);
-    write_u32(r + cup_round::VENUE_VALUE, mando);
-    r
+    let r = CupRound(round_record_from_base(rounds, round));
+    r.set_day((d) as i16); // match day
+    r.set_year_offset(a.wrapping_sub(base as u8));
+    r.set_time_slice(hour as u8);
+    r.set_venue_value((mando) as usize);
+    r.addr()
 }
 
 /// Address of cup round r: 104-byte record in [cup + 0xa3].
@@ -3082,9 +3082,9 @@ pub(crate) unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: us
                         crate::comparison::branch("cqc_7 match moved to the date");
                         r.set_day(read_i16(pt) as u16); // cqc7: o dia marcado
                         r.set_year(read_i16(pt + 2) as u16);
-                        let v = cup_round_entry(this, round) + j;
-                        r.set_time_slice(read_u8(v + cup_round::SLOT_TIME_SLICE)); // cqc7: a fatia marcada
-                        r.set_stage(read_u8(v + cup_round::SLOT_CODE));
+                        let v = CupRound(cup_round_entry(this, round) + j);
+                        r.set_time_slice(v.slot_time_slice()); // cqc7: a fatia marcada
+                        r.set_stage(v.slot_code());
                         exe::stadium_set_fixture_venue(read_usize(G_STADIUM), read_usize(cup_round_entry(this, round) + j + cup_round::SLOT_VENUE), r, this.venue_stadium_id());
                         exe::fixture_manager_add_fixture(read_usize(G_FIXTURE_MANAGER), r, 1);
                         if dp != 0 {
@@ -3490,11 +3490,11 @@ pub(crate) unsafe extern "C" fn cup_set_round_match_day(rounds: usize, round: i1
     if !(0..8).contains(&slot) || !(-1..=6).contains(&week) || !(-1..3).contains(&hour) || !(-1..=3).contains(&code) {
         return original_fn::<unsafe extern "C" fn(usize, i16, i16, i16, i8, i8, u32) -> u32>(IDX_CUP_SET_ROUND_MATCH_DAY)(rounds, round, slot, week, hour, code, mando);
     }
-    let e = rounds.wrapping_add((round as isize * 104 + slot as isize * 7) as usize);
-    write_u8(e + cup_round::SLOT_WEEKDAY, week as u8); // day of the week
-    write_u8(e + cup_round::SLOT_TIME_SLICE, hour as u8);
-    write_u8(e + cup_round::SLOT_CODE, code as u8);
-    write_u32(e + cup_round::SLOT_VENUE, mando);
+    let e = CupRound(rounds.wrapping_add((round as isize * 104 + slot as isize * 7) as usize));
+    e.set_slot_weekday(week as u8); // day of the week
+    e.set_slot_time_slice(hour as u8);
+    e.set_slot_code(code as u8);
+    e.set_slot_venue(mando);
     mando
 }
 

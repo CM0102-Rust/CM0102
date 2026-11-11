@@ -144,22 +144,22 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
     let mut factor: f64 = 0.5;
     let mut weight = match_weight(club, fixture, &mut factor);
     // the contest (by the match’s national team +0x18)
-    let ev = fixture.stadium();
+    let ev = Stadium(fixture.stadium());
     let city = |p: usize| p != 0 && read_usize(p + stadium::CITY) != 0;
     let mut aj: i32 = 0;
     if manager_manager_is_national_team(club) != 0 {
-        if city(ev) && read_usize(read_usize(ev + stadium::CITY) + city::NATION) == club.nation().addr() {
+        if city(ev.addr()) && read_usize(ev.city() + city::NATION) == club.nation().addr() {
             aj = -20;
-        } else if club.stadium().addr() == ev {
+        } else if club.stadium().addr() == ev.addr() {
             aj = -20;
-        } else if other.stadium().addr() == ev {
+        } else if other.stadium().addr() == ev.addr() {
             aj = 20;
-        } else if city(ev) && read_usize(read_usize(ev + stadium::CITY) + city::NATION) == other.nation().addr() {
+        } else if city(ev.addr()) && read_usize(ev.city() + city::NATION) == other.nation().addr() {
             aj = 20;
         }
-    } else if club.stadium().addr() == ev {
+    } else if club.stadium().addr() == ev.addr() {
         aj = -20;
-    } else if other.stadium().addr() == ev {
+    } else if other.stadium().addr() == ev.addr() {
         aj = if other.nation() != club.nation() { 30 } else { 20 };
     }
     let limitar = |q: i32| {
@@ -353,17 +353,17 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
     }
     // the derby and the rival
     let rival = club.rival1() == other.addr() || club.rival2() == other.addr() || club.rival3() == other.addr();
-    let f1 = club.stadium().addr();
-    let same = f1 != 0 && other.stadium().addr() != 0 && read_usize(f1 + stadium::CITY) == other.stadium().city();
+    let f1 = Stadium(club.stadium().addr());
+    let same = !f1.is_null() && other.stadium().addr() != 0 && f1.city() == other.stadium().city();
     if same {
         fl |= if rival { 0x40 } else { 0x80 };
     } else if rival {
         fl |= 0x80;
-        if f1 != 0 {
-            let e1 = read_usize(f1 + stadium::CITY);
-            let f2 = other.stadium().addr();
-            if e1 != 0 && f2 != 0 {
-                let e2 = read_usize(f2 + stadium::CITY);
+        if !f1.is_null() {
+            let e1 = f1.city();
+            let f2 = Stadium(other.stadium().addr());
+            if e1 != 0 && !f2.is_null() {
+                let e2 = f2.city();
                 if e2 != 0 {
                     let x = read_f64(e1 + city::LONGITUDE) - read_f64(e2 + city::LONGITUDE);
                     let y = read_f64(e1 + city::LATITUDE) - read_f64(e2 + city::LATITUDE);
@@ -1658,10 +1658,10 @@ pub(crate) unsafe extern "thiscall" fn get_player_match_rating_verdict(_this: us
     if person != 0 && exe::match_stats_read_match_record(read_usize(G_MATCH_STATS), fixture, r) != 0 {
         'busca: for lado in 0..2usize {
             for k in 0..20usize {
-                let s = sides + lado * 0x625 + match_record_team::ROWS + k * 0x49;
-                let id = read_usize(s) as i32;
+                let s = MatchRecordRow(sides + lado * 0x625 + match_record_team::ROWS + k * 0x49);
+                let id = read_usize(s.addr()) as i32;
                 if id != -1 && person == month_ratings_staff_by_id(id) && k < 11 {
-                    let rating = read_u8(s + match_record_row::MATCH_GRADE);
+                    let rating = s.match_grade();
                     v = if rating < 7 { 0xff } else if rating > 7 { 1 } else { 0 };
                     break 'busca;
                 }
@@ -1812,8 +1812,8 @@ pub(crate) unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j:
     let rating: unsafe extern "C" fn(usize, u32) -> i8 = core::mem::transmute(FN_NON_PLAYER_ATTRIBUTE_RATING);
     BOARD_VETO_SEEDED_RAND.store(false, Relaxed);
     if comprando as u8 != 0 {
-        let l = exe::injury_get_player_injury(read_usize(G_INJURY), j);
-        if l != 0 && read_i16(l + injury_entry::DAYS_OUT) > 0x14 {
+        let l = InjuryEntry(exe::injury_get_player_injury(read_usize(G_INJURY), j));
+        if !l.is_null() && l.days_out() > 0x14 {
             let mut semeou = false;
             for k in 0..3usize {
                 let f = Staff(club.physios(k));
@@ -1836,9 +1836,9 @@ pub(crate) unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j:
                     }
                 }
                 let r = exe::utils_random(200); // cpy12: the severity random draw
-                if read_i16(l + injury_entry::DAYS_OUT) as i32 > r.wrapping_add(0x19) {
+                if l.days_out() as i32 > r.wrapping_add(0x19) {
                     let a = exe::utils_random((0x29 - n()) * 5);
-                    let b = exe::utils_random(read_i16(l + injury_entry::DAYS_OUT) as i32);
+                    let b = exe::utils_random(l.days_out() as i32);
                     if a < b {
                         return 0x2000;
                     }

@@ -26,8 +26,8 @@ pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, club: usi
     let mut ids = [0i16; 20];
     let mut n = 0usize;
     if t == 2 || t == 4 {
-        let est = club.stadium().addr();
-        if est == 0 || read_usize(est + stadium::CITY) == 0 {
+        let est = Stadium(club.stadium().addr());
+        if est.is_null() || est.city() == 0 {
             return -1;
         }
         let l = read_usize(this + 4);

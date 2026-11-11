@@ -12,7 +12,7 @@ MUTACOES = [
     ('cpp_nota_do_candidato', '    if rating >= rating_minimum { 1 } else { 0 }', '    if rating >= rating_minimum + 0.5 { 1 } else { 0 } // mutacao: a nota minima mais alta'),
     ('cpp_cargo_pessoa_nula', '        return 0; // null person', '        return 1; // mutacao: a pessoa nula pode', 'cpp_4 null person'),
     ('cpp_queda_sem_arredondar', '    Some(ftol(d / y + read_f64(rdata::F64_0_5)) as u8 as i8)', '    Some(ftol(d / y) as u8 as i8) // mutacao: sem o arredondamento'),
-    ('cpp_goleiro', 'write_u16(v + shortlist_slot::POSITION, 1); // o goleiro', 'write_u16(v + shortlist_slot::POSITION, 2); // mutacao: o goleiro vira libero', 'cpp_5 formation slots'),
+    ('cpp_goleiro', 'v.set_position(1u16 as i16); // o goleiro', 'v.set_position(2u16 as i16); // mutacao: o goleiro vira libero', 'cpp_5 formation slots'),
     ('cpp_verba', 'exe::shortlist_manager_allocate_transfer_budget(this, club); // the transfer budget', '// mutacao: sem redistribuir a verba', 'cpp_5 redo list'),
     ('cpp_suspender', 'write_u8(e + club_shortlist::DAYS, 0x64); // the club suspends the player', '// mutacao: o clube nao suspende o jogador', 'cpp_5 suspend club'),
     ('cpp_listas_conta', 'count = count.wrapping_add(1); // one more club with him in the list', 'count = count.wrapping_add(2); // mutacao: conta dois', 'cpp_6 club added'),

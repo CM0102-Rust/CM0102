@@ -306,16 +306,16 @@ pub(crate) unsafe extern "thiscall" fn step_day_match(day: usize, until_end: u32
         return 0;
     }
     crate::comparison::branch("walk match finished");
-    let mem = exe::crt_operator_new(0xd7a);
-    if mem != 0 {
-        exe::crt_vector_constructor_iterator(mem + match_record::HOME_TEAM, 0x625, 2, 0x453c30, 0x453c10);
+    let mem = MatchRecord(exe::crt_operator_new(0xd7a));
+    if !mem.is_null() {
+        exe::crt_vector_constructor_iterator(mem.addr() + match_record::HOME_TEAM, 0x625, 2, 0x453c30, 0x453c10);
     }
-    write_usize(p + day_match::SUMMARY, mem);
-    if mem == 0 {
+    write_usize(p + day_match::SUMMARY, mem.addr());
+    if mem.is_null() {
         show_error_at(0xa15708, 0x713);
         return 0;
     }
-    exe::match_stats_record_match(u(G_MATCH_STATS, 0), u(p, day_match::ENGINE), mem);
+    exe::match_stats_record_match(u(G_MATCH_STATS, 0), u(p, day_match::ENGINE), mem.addr());
     let engine = u(p, day_match::ENGINE);
     if engine != 0 {
         exe::drop_cm3_match_engine(engine);
@@ -379,9 +379,9 @@ pub(crate) unsafe extern "thiscall" fn close_day_match(_day: usize, p: usize) ->
             if comp == 0 || u(comp, 8) == 0 {
                 continue;
             }
-            let r = exe::comp_stats_find_club_entry(u(competition(id), 8), c);
-            if r != 0 && *((r + comp_stats_club::LOSING_RUN) as *const i32) > 1 {
-                round[k] = *((r + comp_stats_club::LOSING_RUN) as *const u8);
+            let r = CompStatsClub(exe::comp_stats_find_club_entry(u(competition(id), 8), c));
+            if !r.is_null() && (r.losing_run() as i32) > 1 {
+                round[k] = (r.losing_run() as u8);
                 crate::comparison::branch("close human round");
             }
         }
@@ -1771,10 +1771,10 @@ pub(crate) unsafe extern "thiscall" fn network_step(day: usize, p: usize) -> u32
     rever();
     por(pl, 0x10d, exe::utils_get_time_ms());
     exe::match_stats_fill_match_record(u(G_MATCH_STATS, 0), engine, u(p, day_match::SUMMARY), 1);
-    let s = u(u(day, match_day_fields::HUMAN_MATCH), 0x5f);
-    let swap = if s != 0 {
+    let s = MatchRecord(u(u(day, match_day_fields::HUMAN_MATCH), 0x5f));
+    let swap = if !s.is_null() {
         let a = exe::match_day_get_period_rank(read_u16(u(p, day_match::SUMMARY) + match_record::PERIOD_END) as u32, 1) as i8;
-        let b = exe::match_day_get_period_rank(read_u16(s + match_record::PERIOD_END) as u32, 1) as i8;
+        let b = exe::match_day_get_period_rank(s.period_end() as u32, 1) as i8;
         a > b || read_i16(u(p, day_match::SUMMARY) + match_record::MINUTE) > read_i16(u(u(day, match_day_fields::HUMAN_MATCH), 0x5f) + match_record::MINUTE)
     } else {
         true

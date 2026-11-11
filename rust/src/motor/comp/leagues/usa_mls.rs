@@ -4,8 +4,8 @@ use super::*;
 ///
 /// [pt] A linha `i` da tabela (+0xb1, linhas de 0x3b bytes) da liga ou fase `t`: o clube (+0) e os pontos (+0x19, word).
 pub(crate) unsafe fn table_row_club_points(t: League, i: usize) -> (usize, i16) {
-    let l = t.table() + i * 0x3b;
-    (read_usize(l), read_i16(l + league_table_row::POINTS))
+    let l = LeagueTableRow(t.table() + i * 0x3b);
+    (read_usize(l.addr()), l.points())
 }
 
 /// Writes the 6-read_i8(club + points) record k into a byte vector.

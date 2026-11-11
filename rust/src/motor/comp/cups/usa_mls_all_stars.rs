@@ -228,33 +228,33 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_create_round_table(this
     }
     *rounds = 1;
     *extra = 0;
-    let t = exe::crt_malloc(0x68);
-    if t == 0 {
+    let t = CupRound(exe::crt_malloc(0x68));
+    if t.is_null() {
         show_error_at(0xaa20a0, 0x9a);
         return 0;
     }
     crate::comparison::branch("cqm_12 all-star game fixture");
     let year = this.year() as i32 as u32;
-    exe::cup_set_round_draw_date(t, 0, 0xf, 5, 0, 5, year);
-    exe::cup_set_round_match_date(t, 0, 2, 7, 0, 6, 1, year, 0); // cqm12: the All-Star Game on 2 August
-    let w = |o: usize, v: u16| write_u16(t + o, v);
-    let d = |o: usize, v: u32| write_u32(t + o, v);
+    exe::cup_set_round_draw_date(t.addr(), 0, 0xf, 5, 0, 5, year);
+    exe::cup_set_round_match_date(t.addr(), 0, 2, 7, 0, 6, 1, year, 0); // cqm12: the All-Star Game on 2 August
+    let w = |o: usize, v: u16| write_u16(t.addr() + o, v);
+    let d = |o: usize, v: u32| write_u32(t.addr() + o, v);
     w(0x18, 2);
     w(0x1c, 2);
     w(7, 0);
     w(9, 0);
     w(0xb, 0);
     w(0xd, 0x20);
-    write_u8(t + cup_round::MATCH_CATEGORY, 8);
+    t.set_match_category(8);
     w(0x1a, 1);
     w(0xf, 0);
     w(0x1e, 0);
-    write_u8(t + cup_round::SINGLE_LEG_FLAG, 0);
-    write_u8(t + cup_round::LEGS, 1);
-    write_u8(t + cup_round::LEG_GAP_DAYS, 0);
+    t.set_single_leg_flag(0);
+    t.set_legs(1);
+    t.set_leg_gap_days(0);
     d(0x5c, 0);
     d(0x60, 0);
     d(0x64, 0);
-    t
+    t.addr()
 }
 

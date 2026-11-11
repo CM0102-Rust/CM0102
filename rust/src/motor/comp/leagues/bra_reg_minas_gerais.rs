@@ -82,9 +82,9 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_create_final_stage(t
         }
         let mut i: i16 = 0;
         while i < this.club_count() {
-            let row = this.table() + i as usize * 0x3b;
-            if read_usize(row) == read_usize(list) {
-                write_u8(row + league_table_row::STATUS, 5);
+            let row = LeagueTableRow(this.table() + i as usize * 0x3b);
+            if read_usize(row.addr()) == read_usize(list) {
+                row.set_status(5);
             }
             i += 1;
         }
@@ -173,9 +173,10 @@ pub(crate) unsafe fn bra_reg_minas_gerais_comp_stats_club_entry(this: usize, clu
 
 /// Writes the club's current, lowest and highest progress codes (+0x73, +0x74, +0x75).
 pub(crate) unsafe fn write_progress_codes(e: usize, current: u8, minimum: u8, maxima: u8) {
-    write_u8(e + comp_stats_club::CURRENT_POSITION, current);
-    write_u8(e + comp_stats_club::BEST_POSITION, minimum);
-    write_u8(e + comp_stats_club::WORST_POSITION, maxima);
+    let e = CompStatsClub(e);
+    e.set_current_position(current);
+    e.set_best_position(minimum);
+    e.set_worst_position(maxima);
 }
 
 /// Minas Gerais, Parana and Rio: writes the club progress codes (current, lowest and highest position); in the round

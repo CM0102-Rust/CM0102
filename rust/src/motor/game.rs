@@ -675,9 +675,9 @@ pub(crate) unsafe extern "thiscall" fn transfer_manager_get_shortlist_manager(ma
 ///
 /// [pt] { 0x5d5ac0 } (thiscall, ret 4, game.cpp): a entrada de 6 bytes do jogador na tabela do treino
 /// ([treino+0x651d]), pelo id dos dados do jogador ([[jogador+0x61]]).
-pub(crate) unsafe extern "thiscall" fn training_manager_get_player_entry(treino: usize, player: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn training_manager_get_player_entry(training: usize, player: usize) -> usize {
     let player = Staff(player);
-    let table = read_usize(treino + training_manager_fields::PLAYER_ENTRIES);
+    let table = read_usize(training + training_manager_fields::PLAYER_ENTRIES);
     let id = read_i32(player.player().addr());
     (table as isize + id as isize * 6) as usize
 }

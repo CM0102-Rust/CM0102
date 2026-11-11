@@ -359,8 +359,8 @@ pub(crate) fn serie_b_zones() -> [u8; 64] {
 pub(crate) unsafe fn tie_on_zone_boundary(league: League, z: &[u8; 64]) -> bool {
     let n = league.club_count() as i32 - 1;
     (0..n.max(0) as usize).any(|i| {
-        let l = ita_ser_a_table_row(league, i);
-        read_i16(l + league_table_row::POINTS) == read_i16(l + 0x3b + league_table_row::POINTS) && z[i.min(63)] != z[(i + 1).min(63)]
+        let l = LeagueTableRow(ita_ser_a_table_row(league, i));
+        l.points() == read_i16(l.addr() + 0x3b + league_table_row::POINTS) && z[i.min(63)] != z[(i + 1).min(63)]
     })
 }
 
@@ -410,9 +410,9 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_for_date(this: usize, to
     let mut i: i16 = 0;
     if n > 0 {
         loop {
-            let l = ita_ser_a_table_row(this, i as usize);
-            let points = read_i16(l + league_table_row::POINTS);
-            if points == read_i16(l + 0x54) && z[(i as usize).min(63)] != z[(i as usize + 1).min(63)] { // cql4: the Serie A pair at the boundary
+            let l = LeagueTableRow(ita_ser_a_table_row(this, i as usize));
+            let points = l.points();
+            if points == read_i16(l.addr() + 0x54) && z[(i as usize).min(63)] != z[(i as usize + 1).min(63)] { // cql4: the Serie A pair at the boundary
                 exe::ita_league_sort_clubs_level_on_points(this, points as u16 as u32);
                 this.set_stage_count(1);
                 let v = exe::crt_malloc(4);
@@ -513,11 +513,11 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_staff_records_for_status
                     core::ptr::copy_nonoverlapping((l - 0x3b) as *const u8, l as *mut u8, 0x3b);
                     let l2 = this.table() + i as usize * 0x3b;
                     core::ptr::copy_nonoverlapping(tmp.as_ptr(), (l2 - 0x3b) as *mut u8, 0x3b);
-                    let l3 = this.table() + i as usize * 0x3b;
-                    write_u8(l3 + 4, i as u8);
-                    write_u8(l3 - 0x3b + 4, (i as u8).wrapping_sub(1));
-                    write_u8(l3 + league_table_row::STATUS, 0xff);
-                    write_u8(l3 - 0x3b + league_table_row::STATUS, 0xff);
+                    let l3 = LeagueTableRow(this.table() + i as usize * 0x3b);
+                    write_u8(l3.addr() + 4, i as u8);
+                    write_u8(l3.addr() - 0x3b + 4, (i as u8).wrapping_sub(1));
+                    l3.set_status(0xff);
+                    write_u8(l3.addr() - 0x3b + league_table_row::STATUS, 0xff);
                     break;
                 }
             }

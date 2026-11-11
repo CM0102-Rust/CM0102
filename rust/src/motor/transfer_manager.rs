@@ -640,12 +640,12 @@ pub(crate) unsafe extern "thiscall" fn ai_respond_to_bid(this: usize, slot: usiz
     // of +0xb and bits 2..4 and 0..1 of +0x24; 0x840d80 reads here only the position, +0x24 (type 4) and +0xf (compared with
     // the swap player, who is not the seller’s): the copy zeroes
     let mut vl = [0u8; 0x28];
-    let pv = vl.as_mut_ptr() as usize;
+    let pv = ShortlistSlot(vl.as_mut_ptr() as usize);
     let mut best_attraction: i8 = -1;
     let mut swap_refused: u32 = 0;
-    exe::date_date_54a110(pv + shortlist_slot::DATE);
+    exe::date_date_54a110(pv.addr() + shortlist_slot::DATE);
     vl[0x24] = (vl[0x24] & 0xe4) | 4;
-    write_usize(pv + shortlist_slot::PRICE, 10000);
+    pv.set_price(10000u32 as i32);
     let o = Offer(read_usize(slot));
     let target = Staff((transfer_manager_staff_by_id(o.target_staff_id())).addr());
     let buyer = transfer_manager_club_by_id(o.buyer_club_id());
@@ -727,9 +727,9 @@ pub(crate) unsafe extern "thiscall" fn ai_respond_to_bid(this: usize, slot: usiz
             } else {
                 0x40
             };
-            write_u16(pv + shortlist_slot::POSITION, w);
+            pv.set_position((w) as i16);
             let mut out: i32 = 0;
-            let mut v = exe::shortlist_manager_value_player_for_club(read_usize(read_usize(G_TRANSFER_MANAGER) + transfer_manager_fields::SHORTLIST_MANAGER), seller, j, pv, &mut out, -1, 0);
+            let mut v = exe::shortlist_manager_value_player_for_club(read_usize(read_usize(G_TRANSFER_MANAGER) + transfer_manager_fields::SHORTLIST_MANAGER), seller, j, pv.addr(), &mut out, -1, 0);
             if v > ceiling {
                 v = ceiling;
             }
@@ -3649,9 +3649,9 @@ pub(crate) unsafe extern "thiscall" fn update_appearance_clauses_after_match(thi
         let base = fixture + side as usize * 0x625;
         let mut k: i8 = 0;
         while k < 0x14 {
-            let v = base + k as usize * 0x49;
-            let id = read_usize(v + match_record::ROW_STAFF_ID) as i32;
-            if id != -1 && read_u8(v + match_record::ROW_POSITION) != 0xfb && (k < 0xb || read_u8(v + match_record::ROW_MINUTE_ON) != 0xff) {
+            let v = MatchRecord(base + k as usize * 0x49);
+            let id = (v.row_staff_id() as usize) as i32;
+            if id != -1 && v.row_position() != 0xfb && (k < 0xb || v.row_minute_on() != 0xff) {
                 let p = staff_records_staff_by_id(id as usize);
                 if p.player().addr() == 0 {
                     break;

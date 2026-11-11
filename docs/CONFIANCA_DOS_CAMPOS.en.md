@@ -18,7 +18,7 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 
 | Level | Fields |
 |---|---|
-| community | 247 |
+| community | 246 |
 | verified | 165 |
 | read | 1545 |
 | inferred | 163 |
@@ -44,7 +44,7 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `call_up_entry` | 0 | 0 | 1 | 0 |
 | `career_entry` | 0 | 0 | 8 | 0 |
 | `city` | 6 | 0 | 0 | 0 |
-| `club` | 43 | 0 | 2 | 0 |
+| `club` | 42 | 0 | 2 | 0 |
 | `club_discipline_record` | 0 | 0 | 3 | 0 |
 | `club_history_fields` | 0 | 1 | 0 | 0 |
 | `club_match_record` | 0 | 4 | 5 | 0 |

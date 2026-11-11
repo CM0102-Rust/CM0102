@@ -79,7 +79,7 @@ pub(crate) unsafe fn comment_standing_with(this: Engine, side: u32, call: AddEve
     let count_t = || exe::comp_util_is_league_division(read_i32(t()));
     let object = || read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((read_i32(t()) as usize).wrapping_mul(4)));
     let commentator = || this.commentator();
-    let fala = |c: &mut dyn FnMut(usize, [u32; 7]), code: u32, l: u32| c(commentator(), [code, this.addr() as u32, u32::MAX, l, u32::MAX, u32::MAX, 0]);
+    let say = |c: &mut dyn FnMut(usize, [u32; 7]), code: u32, l: u32| c(commentator(), [code, this.addr() as u32, u32::MAX, l, u32::MAX, u32::MAX, 0]);
     // the aggregate score with the 5th output (fase3): in the original it lands on the argument itself
     let resolved = |l: i8| -> bool {
         let (mut a, mut b, mut c, mut d, mut e) = (0i8, 0i8, 0u8, 0u8, 0u8);
@@ -87,24 +87,24 @@ pub(crate) unsafe fn comment_standing_with(this: Engine, side: u32, call: AddEve
     };
     let bl = side as u8 as i8;
     if read_i16(t() + fixture::ROUND_PREFIX) == 0 && count_t() == 0 && read_i16(t() + fixture::ROUND_NAME) == 0x82 && resolved(bl) {
-        fala(call, event::THROUGH_TO_FINAL, side);
+        say(call, event::THROUGH_TO_FINAL, side);
         return;
     }
     if count_t() != 0 {
         let club = read_usize(t() + if bl != 0 { 0x20 } else { 0x1c });
         if exe::league_would_result_clinch_title(object(), club, t()) != 0 {
-            fala(call, event::WON_COMPETITION, side);
+            say(call, event::WON_COMPETITION, side);
             return;
         }
     } else if read_i16(t() + fixture::ROUND_NAME) == 0x96 && resolved(bl) {
-        fala(call, event::WON_COMPETITION, side);
+        say(call, event::WON_COMPETITION, side);
         return;
     }
     if this.live_match() != 0 {
         let (mut casa, mut fora, mut classificado, mut x, mut y) = (0i8, 0i8, 0u8, 0u8, 0u8);
         exe::cm3_match_engine_get_goal_margin(this, bl, &mut casa, &mut fora, &mut classificado, &mut x, &mut y, 0);
         if casa > fora || (casa == fora && classificado != 0) {
-            fala(call, event::SILENT_WON_MATCH, side);
+            say(call, event::SILENT_WON_MATCH, side);
         } else {
             let mut sum = 0.0f64;
             let mut n = 0i8;
@@ -121,12 +121,12 @@ pub(crate) unsafe fn comment_standing_with(this: Engine, side: u32, call: AddEve
             let x = average * read_f64(rdata::F64_0_5) - read_f64(rdata::F64_2);
             if bl == 0 {
                 if average < read_f64(rdata::F64_7) && x * strength(0x20) < strength(0x1c) {
-                    fala(call, event::BOO_OFF_PITCH, 0);
+                    say(call, event::BOO_OFF_PITCH, 0);
                 }
                 return;
             }
             if average < read_f64(rdata::F64_6_67) && x * strength(0x1c) < strength(0x20) * read_f64(rdata::F64_0_8) {
-                fala(call, event::BOO_OFF_PITCH, side);
+                say(call, event::BOO_OFF_PITCH, side);
             }
         }
     }
@@ -143,7 +143,7 @@ pub(crate) unsafe fn comment_standing_with(this: Engine, side: u32, call: AddEve
     } else if read_i16(t() + fixture::ROUND_NAME) == 0x96 && resolved(0) {
         return;
     }
-    fala(call, event::FINAL_WHISTLE, 0);
+    say(call, event::FINAL_WHISTLE, 0);
 }
 
 /// Adds the match commentary about side `lado`'s qualification situation (group decided, tie already resolved, ahead on
@@ -377,10 +377,10 @@ pub(crate) unsafe extern "thiscall" fn move_fixtures_for_tv(this: usize, data: u
                 if this.stage_index() == read_u8(f + fixture::STAGE_INDEX) {
                     let mut s: i32;
                     if read_u8(v + league_round_date::TV_SLOT_KIND) == 3 {
-                        let est = read_usize(f + fixture::STADIUM);
+                        let est = Stadium(read_usize(f + fixture::STADIUM));
                         s = 50;
-                        if exe::database_is_national_team(read_usize(f + fixture::HOME_CLUB)) != 0 && est != 0 && read_usize(est + stadium::CITY) != 0 {
-                            let g = read_usize(read_usize(est + stadium::CITY) + city::NATION);
+                        if exe::database_is_national_team(read_usize(f + fixture::HOME_CLUB)) != 0 && !est.is_null() && est.city() != 0 {
+                            let g = read_usize(est.city() + city::NATION);
                             if read_usize(read_usize(f + fixture::HOME_CLUB) + club::NATION) == g || read_usize(read_usize(f + fixture::AWAY_CLUB) + club::NATION) == g {
                                 s = 100;
                             }
@@ -2615,12 +2615,12 @@ pub(crate) unsafe extern "C" fn league_compare_table_rows_h2h(a: usize, b: usize
             return f(a, b);
         }
     }
-    let o = col.wrapping_mul(14);
-    let (pa, pb) = (read_i16(a + o + league_table_row::POINTS), read_i16(b + o + league_table_row::POINTS));
+    let o = LeagueTableRow(col.wrapping_mul(14));
+    let (pa, pb) = (read_i16(a + o.addr() + league_table_row::POINTS), read_i16(b + o.addr() + league_table_row::POINTS));
     if pa != pb {
         return pb as i32 - pa as i32;
     }
-    if read_u8(a + o + league_table_row::PLAYED) == 0 && *((b + o + league_table_row::PLAYED) as *const u8) == 0 {
+    if read_u8(a + o.addr() + league_table_row::PLAYED) == 0 && *((b + o.addr() + league_table_row::PLAYED) as *const u8) == 0 {
         return (read_usize(read_usize(a)) as i32).wrapping_sub(read_usize(read_usize(b)) as i32);
     }
     let dif = read_i8(b + 4) as i32 - read_i8(a + 4) as i32; // the tie’s position
@@ -2843,12 +2843,12 @@ pub(crate) unsafe fn is_sort_tie(a: usize, b: usize, col: usize) -> bool {
             return f(a, b) == 0;
         }
     }
-    let o = col.wrapping_mul(14);
-    let (pa, pb) = (read_i16(a + o + league_table_row::POINTS), read_i16(b + o + league_table_row::POINTS));
+    let o = LeagueTableRow(col.wrapping_mul(14));
+    let (pa, pb) = (read_i16(a + o.addr() + league_table_row::POINTS), read_i16(b + o.addr() + league_table_row::POINTS));
     if pa != pb {
         return false;
     }
-    if read_u8(a + o + league_table_row::PLAYED) == 0 && read_u8(b + o + league_table_row::PLAYED) == 0 {
+    if read_u8(a + o.addr() + league_table_row::PLAYED) == 0 && read_u8(b + o.addr() + league_table_row::PLAYED) == 0 {
         let (ca, cb) = (read_usize(a), read_usize(b));
         if ca == 0 || cb == 0 {
             return true;
@@ -3527,7 +3527,7 @@ pub(crate) unsafe extern "thiscall" fn final_day_margin_needed(league: usize, ro
     let extra = (league.win_points() as i8) as i32;
     let pos = row.position();
     let clubs = league.club_count();
-    let table = league.table();
+    let table = LeagueTableRow(league.table());
     let criterio = league.tiebreaks() as u8;
     if (row.played() as i32) < league.round_count() as i32 - 1 || row.status() != 0xff {
         return 0xff; // outside the last day
@@ -3563,22 +3563,22 @@ pub(crate) unsafe extern "thiscall" fn final_day_margin_needed(league: usize, ro
         }
         None
     };
-    if (league.league_flags() as u8) & (league_flags::CHAMPION_STATUS as u8) != 0 && *((table + league_table_row::STATUS) as *const u8) != 5 {
+    if (league.league_flags() as u8) & (league_flags::CHAMPION_STATUS as u8) != 0 && table.status() != 5 {
         if pos > 0 {
             let v = p(row.addr()) + extra;
-            if v > p(table) {
+            if v > p(table.addr()) {
                 return 0xff;
             }
-            if v == p(table) && (criterio == 1 || criterio == 2) {
-                return goal_margin_to_reach(league, row, LeagueTableRow(table));
+            if v == p(table.addr()) && (criterio == 1 || criterio == 2) {
+                return goal_margin_to_reach(league, row, LeagueTableRow(table.addr()));
             }
         } else if clubs > 1 {
-            let v = read_i16(table + 0x54) as i32 + extra;
-            if v > p(table) {
+            let v = read_i16(table.addr() + 0x54) as i32 + extra;
+            if v > p(table.addr()) {
                 *out = 0x14;
                 return 0xff;
             }
-            if v != p(table) {
+            if v != p(table.addr()) {
                 return 0xff;
             }
             *out = 0x14;

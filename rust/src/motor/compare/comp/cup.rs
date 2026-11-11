@@ -38,29 +38,29 @@ pub(crate) unsafe extern "thiscall" fn compare_create_tie_fixtures(this: usize, 
             return r;
         }
     }
-    let t = tie_of_round(this, ri, k);
-    let full = read_i16(t) != -1 && read_i16(t + cup_tie::AWAY_TEAM) != -1;
-    let e = round_entry(this, ri);
-    let duas = read_u8(e + cup_round::LEGS) == 2;
-    let home = if full { read_usize(cup_team_entry(this, read_i16(t))) } else { 0 };
+    let t = CupTie(tie_of_round(this, ri, k));
+    let full = read_i16(t.addr()) != -1 && t.away_team() != -1;
+    let e = CupRound(round_entry(this, ri));
+    let duas = e.legs() == 2;
+    let home = if full { read_usize(cup_team_entry(this, read_i16(t.addr()))) } else { 0 };
     let ic = if home != 0 { read_usize(home) as u32 } else { u32::MAX };
     let check = ad == 0 && full && ic != u32::MAX;
     // the end of the window: the round’s date (+ the days until the second leg), tomorrow or the next round’s date (+0x6b/+0x6d), the
     // that comes next, + 14 days. On a clash, 0x5aa680 reschedules the match (0x5ab510): cup (type 2) up to the date of the
     // next round (without it, 2 weeks), the other types up to 2 weeks later; with more leagues it happens (the 1st round
     // of cup 101, 2001-225, went more than 7 days)
-    let first_leg = (read_u8(e + cup_round::YEAR_OFFSET) as i8 as i32 + this.year() as i32, read_i16(e + cup_round::DAY) as i32);
-    let last = if duas { add_days_to_day_year(first_leg, read_u8(e + cup_round::LEG_GAP_DAYS) as i32) } else { first_leg };
+    let first_leg = (e.year_offset() as i8 as i32 + this.year() as i32, e.day() as i32);
+    let last = if duas { add_days_to_day_year(first_leg, e.leg_gap_days() as i32) } else { first_leg };
     let tomorrow = add_days_to_day_year((read_i16(G_CURRENT_DATE_YEAR) as u16 as i32, read_i16(G_CURRENT_DATE) as i32), 1);
     let next = if ri < this.round_count() as i32 - 1 {
-        (read_u8(e + 0x6d) as i8 as i32 + this.year() as i32, read_i16(e + 0x6b) as i32)
+        (read_u8(e.addr() + 0x6d) as i8 as i32 + this.year() as i32, read_i16(e.addr() + 0x6b) as i32)
     } else {
         last
     };
     let end = add_days_to_day_year(last.max(tomorrow).max(next), 14);
     let before = if check { club_fixtures_until(ic, id, end) } else { 0 };
     let r = o(this.addr(), round, tie, adiar);
-    let mark = read_u8(t + cup_tie::FIXTURE_STATE);
+    let mark = t.fixture_state();
     let mut ok = r == 1 && mark == if ad != 0 { 2 } else { 3 };
     let mut expected = 0;
     let mut after = 0;
@@ -246,11 +246,11 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_round(cup: usize, round: u32
     let before_ac = cup.next_draw_round();
     let r = o(cup.addr(), round);
     let mut ok = r == 1;
-    let reg = round_record_by_dword(cup, round);
-    for k in 0..read_i16(reg + cup_round::TIES).max(0) as usize {
+    let reg = CupRound(round_record_by_dword(cup, round));
+    for k in 0..reg.ties().max(0) as usize {
         ok &= read_u8(round_ties_array(cup, round) + k * 0x35 + 0x34) == 1;
     }
-    let sum = if !skips_draw_news(cup, round) && read_i16(reg + cup_round::ROUND_CODE) != 0x8c { 1 } else { 0 };
+    let sum = if !skips_draw_news(cup, round) && reg.round_code() != 0x8c { 1 } else { 0 };
     ok &= cup.next_draw_round() == before_ac.wrapping_add(sum);
     SCOREBOARD.record(ok, || format!("draw_round(round {}) marks of the confrontos ou +0xac ({} -> {}) diferem of the plan", round as i32, before_ac, cup.next_draw_round()));
     r
@@ -342,8 +342,8 @@ pub(crate) unsafe extern "thiscall" fn compare_get_fixture_side_teams(this: usiz
     if out.is_null() || round < 0 || round > this.round_count() as i32 || this.team_table() == 0 || game == -1 {
         return o(this.addr(), round, game, side, out); // simplification: the box, original only
     }
-    let reg = read_usize(this.tie_tables() + round as usize * 4) + (game as usize).wrapping_mul(0x35);
-    let (c, r, j) = if side as u8 != 0 { (read_i16(reg), reg + cup_tie::HOME_LINK_ROUND, reg + cup_tie::HOME_LINK_TIE) } else { (read_i16(reg + cup_tie::AWAY_TEAM), reg + cup_tie::AWAY_LINK_ROUND, reg + cup_tie::AWAY_LINK_TIE) };
+    let reg = CupTie(read_usize(this.tie_tables() + round as usize * 4) + (game as usize).wrapping_mul(0x35));
+    let (c, r, j) = if side as u8 != 0 { (read_i16(reg.addr()), reg.addr() + cup_tie::HOME_LINK_ROUND, reg.addr() + cup_tie::HOME_LINK_TIE) } else { (reg.away_team(), reg.addr() + cup_tie::AWAY_LINK_ROUND, reg.addr() + cup_tie::AWAY_LINK_TIE) };
     let mut expected = vec![0i16; 0x100];
     let mut n: i32 = 0;
     if c != -1 {
@@ -630,11 +630,11 @@ pub(crate) unsafe extern "thiscall" fn compare_map_fixture_tree(this: usize) -> 
     let mut error: Option<(i32, i32)> = None;
     'fora: for rd in 0..(m - 1).max(0) {
         for p in 0..read_i16(comp_cup_round(this, rd) + 0x1a) as i32 {
-            let c = cup_tie(this, rd, p);
-            let target = read_i16(c + cup_tie::FEEDER_ROUND) as i32;
-            let a = read_i16(c + cup_tie::FEEDER_SIDE) == 1;
+            let c = CupTie(cup_tie(this, rd, p));
+            let target = (c.feeder_round() as i16) as i32;
+            let a = (c.feeder_side() as i16) == 1;
             let ok = (target == rd + 1 || target == rd + 2) && {
-                let v = cup_tie(this, target, read_i16(c + cup_tie::FEEDER_TIE) as i32);
+                let v = cup_tie(this, target, (c.feeder_tie() as i16) as i32);
                 read_i16(v + if a { 0xa } else { 0xc }) as i32 == p && read_i16(v + if a { 0xe } else { 0x10 }) as i32 == rd
             };
             if !ok {
@@ -689,8 +689,8 @@ pub(crate) unsafe extern "C" fn compare_cup_set_round_match_day(rounds: usize, r
     if !(0..8).contains(&slot) || !(-1..=6).contains(&week) || !(-1..3).contains(&hour) || !(-1..=3).contains(&code) {
         return o(rounds, round, slot, week, hour, code, mando);
     }
-    let e = rounds.wrapping_add((round as isize * 104 + slot as isize * 7) as usize);
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(e + cup_round::SLOT_VENUE, 7)], || o(rounds, round, slot, week, hour, code, mando),
+    let e = CupRound(rounds.wrapping_add((round as isize * 104 + slot as isize * 7) as usize));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(e.addr() + cup_round::SLOT_VENUE, 7)], || o(rounds, round, slot, week, hour, code, mando),
         || cup_set_round_match_day(rounds, round, slot, week, hour, code, mando));
     SCOREBOARD.record(igual && r == n, || format!("cup_set_round_match_day({}, {}) {:x?} x {:x?}", round, slot, mo, mr));
     r

@@ -72,9 +72,9 @@ pub(crate) unsafe extern "stdcall" fn fog_after_match(fixture: usize, data: usiz
             continue;
         }
         for vaga in 0..20usize {
-            let e = data + lado * 0x625 + match_record::ROW_STAFF_ID + vaga * 0x49;
-            let i = read_i32(e);
-            if i == -1 || read_i32(e + 4) == -1 || (vaga > 10 && *((e + match_record_row::MINUTE_ON) as *const u8) == 0xff) {
+            let e = MatchRecordRow(data + lado * 0x625 + match_record::ROW_STAFF_ID + vaga * 0x49);
+            let i = read_i32(e.addr());
+            if i == -1 || read_i32(e.addr() + 4) == -1 || (vaga > 10 && (e.minute_on() as u8) == 0xff) {
                 continue;
             }
             let p = read_usize(G_STAFF_TABLE).wrapping_add((i as usize).wrapping_mul(staff::SIZE));

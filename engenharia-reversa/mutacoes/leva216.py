@@ -8,5 +8,5 @@ MUTACOES = [
     ('cr_sequencia', '    write_u32(this, read_u32(source)); // jogos', '    write_u32(this, read_u32(source) ^ 1); // jogos'),
     ('ha_ninguem_assiste', '    0 // nobody watches', '    1 // nobody watches'),
     ('ha_apelido', '    found // apelido', '    found ^ 1 // apelido'),
-    ('ha_motivo', 'write_u8(this + retirement_entry::REASON, read_u8(source + retirement_entry::REASON)); // motivo', 'write_u8(this + retirement_entry::REASON, read_u8(source + retirement_entry::REASON) ^ 1); // motivo'),
+    ('ha_motivo', 'this.set_reason(source.reason()); // motivo', 'this.set_reason(source.reason() ^ 1); // motivo'),
 ]

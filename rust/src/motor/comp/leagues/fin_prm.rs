@@ -1212,16 +1212,17 @@ pub(crate) fn div_trunc(a: i32, b: i32) -> i32 {
 /// +0xa0, saldo) e, com estádio próprio (+0x6d, +0x69), a manutenção ((sorteio(15) + 1) × 0,01 + 0,85) × o +0x3c do
 /// estádio (+0x12c, +0x8c, menos no saldo). Fora dela: metade de cada um para os dois.
 pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, fixture: usize, result: usize) {
+    let result = MatchRecord(result);
     let fixture = Fixture(fixture);
-    if result == 0 || fixture.is_null() {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_PROCESS_MATCH_INCOME)(table, fixture.addr(), result); // a caixa
+    if result.is_null() || fixture.is_null() {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_PROCESS_MATCH_INCOME)(table, fixture.addr(), result.addr()); // a caixa
     }
     let Some(mandante) = match_club_finance(table, fixture, 0x1c) else { return };
     let Some(visitante) = match_club_finance(table, fixture, 0x20) else { return };
     let (mut tv, mut publico, mut renda) = (0i32, 0i32, 0i32);
-    if read_i32(result + match_record::ATTENDANCE) != 0 {
-        publico = read_i32(result + match_record::ATTENDANCE);
-        renda = read_i32(result + match_record::GATE_RECEIPTS);
+    if (result.attendance() as i32) != 0 {
+        publico = (result.attendance() as i32);
+        renda = result.gate_receipts();
         let q = div_trunc(1, friendly_random(10).wrapping_add(2));
         crate::comparison::branch("cqb_1 paying attendance");
         tv = ftol((q as f64 + read_f64(rdata::F64_1_75)) * publico as f64); // cqb1: TV by attendance (1,75);

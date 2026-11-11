@@ -412,7 +412,7 @@ pub(crate) unsafe fn eng_second_comp_stats_club_entry(this: usize, club: usize) 
 /// pior vira `alto`; no mata-mata (fase 0), 1, 2 e 3 viram `baixo`, `baixo` + 1 e `baixo` + 2 (a melhor, a pior e a
 /// fase); noutra fase, como vieram.
 pub(crate) unsafe fn set_club_stage_status(this: usize, club: usize, stage: u8, current: u8, best: u8, worst: u8, low: u8, high: u8) {
-    let e = eng_second_comp_stats_club_entry(this, club);
+    let e = CompStatsClub(eng_second_comp_stats_club_entry(this, club));
     let (mut m, mut p, mut a) = (best, worst, current);
     if stage == 0xff {
         if m >= low && m <= high {
@@ -432,9 +432,9 @@ pub(crate) unsafe fn set_club_stage_status(this: usize, club: usize, stage: u8, 
         p = map(p);
         a = map(a);
     }
-    write_u8(e + comp_stats_club::CURRENT_POSITION, a);
-    write_u8(e + comp_stats_club::BEST_POSITION, m);
-    write_u8(e + comp_stats_club::WORST_POSITION, p);
+    e.set_current_position(a);
+    e.set_best_position(m);
+    e.set_worst_position(p);
 }
 
 /// Comparer of the stage status: side by side on the entry's 3 bytes; only the original without an entry.
@@ -442,11 +442,11 @@ pub(crate) unsafe fn set_club_stage_status(this: usize, club: usize, stage: u8, 
 /// [pt] O comparador das duas: a entrada é achada antes (a original e a cópia acham a mesma; a ordem dos clubes já fica
 /// pronta) e as duas rodam lado a lado nos 3 bytes dela. Sem entrada (a original gravaria no nulo): só a original.
 pub(crate) unsafe fn compare_club_stage_status(name: &str, this: usize, club: usize, original: impl FnOnce(), copy: impl FnOnce()) {
-    let e = eng_second_comp_stats_club_entry(this, club);
-    if e == 0 {
+    let e = CompStatsClub(eng_second_comp_stats_club_entry(this, club));
+    if e.is_null() {
         return original();
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(e + comp_stats_club::CURRENT_POSITION, 3)], original, copy);
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(e.addr() + comp_stats_club::CURRENT_POSITION, 3)], original, copy);
     SCOREBOARD.record(igual, || format!("{}({:#x}, {:#x}) original={:x?} rust={:x?}", name, this, club, mo, mr));
 }
 

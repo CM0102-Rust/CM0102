@@ -57,7 +57,6 @@ pub(crate) mod club {
     pub(crate) const SCOUTS: usize = 0x1b3; // 28 byte(s), int[][7]
     pub(crate) const PHYSIOS: usize = 0x1cf; // 12 byte(s), int[][3]
     pub(crate) const CONTINENTAL_COMP_ID: usize = 0x1db; // id of the continental competition the club is entered in (-1 none); 4 byte(s), int
-    pub(crate) const EURO_FLAG: usize = 0x1db; // 4 byte(s), int
     pub(crate) const EURO_SEEDING: usize = 0x1df; // 1 byte(s), byte
     pub(crate) const TEAM_SELECTED: usize = 0x1e0; // 80 byte(s), int[][20]
     pub(crate) const HAS_LINKED_CLUB: usize = 0x244; // 1 byte(s), byte
@@ -1789,7 +1788,7 @@ pub(crate) mod manager_record {
     pub(crate) const LOSSES: usize = 0x94; // 2 byte(s): matches lost
     pub(crate) const GOALS_FOR: usize = 0x96; // 4 byte(s): goals scored
     pub(crate) const GOALS_AGAINST: usize = 0x9a; // 4 byte(s): goals conceded
-    pub(crate) const MONTH_AWARDS: usize = 0x9e; // 2 byte(s): number of monthly awards won by the manager [verified: r = get_manager_record (0x86f5b0, 210-byte record); Staff_Records::add_month_award_record (0x86c8c0, community: counts it for a manager) increments this word; g]
+    pub(crate) const AWARDS: usize = 0x9e; // 2 byte(s): number of awards won by the manager (manager of the month and of the year: both 0x86c8c0 and 0x86c390 increment it) [verified: r = get_manager_record (0x86f5b0, 210-byte record); Staff_Records::add_month_award_record (0x86c8c0, community: counts it for a manager) increments this word; g]
     pub(crate) const PLAYERS_BOUGHT: usize = 0xa0; // 2 byte(s): number of players bought
     pub(crate) const PLAYERS_SOLD: usize = 0xa2; // 2 byte(s): number of players sold
     pub(crate) const PURCHASES_TOTAL: usize = 0xa4; // 8 byte(s): total spent on players (i64)

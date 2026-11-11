@@ -62,8 +62,8 @@ pub(crate) unsafe fn offer_renewal_if_due(club: Club, p: Staff, k: Contract) {
         return;
     }
     // 0x849ce0: push 0; push 0; push p; push club; mov ecx, [[0xde1f54]+0x856] -> thiscall (ret 0x10)
-    let v = exe::shortlist_manager_find_club_shortlist_entry(read_usize(read_usize(G_TRANSFER_MANAGER) + transfer_manager_fields::SHORTLIST_MANAGER), club, p, 0, 0);
-    if v == 0 || read_i32(v + shortlist_slot::TARGET_STAFF_ID) != read_i32(p.addr()) {
+    let v = ShortlistSlot(exe::shortlist_manager_find_club_shortlist_entry(read_usize(read_usize(G_TRANSFER_MANAGER) + transfer_manager_fields::SHORTLIST_MANAGER), club, p, 0, 0));
+    if v.is_null() || (v.target_staff_id() as i32) != read_i32(p.addr()) {
         return;
     }
     if STAFF_HISTORY_DRY_RUN.load(Relaxed) {
@@ -188,15 +188,15 @@ pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, 
     let weight = comp.reputation();
     raise_champion_reputation(club, weight, true); // cqd13: the reputation of the league champion
     if club.division().addr() != 0 {
-        let b = club.stadium().addr();
-        if b != 0 {
+        let b = Stadium(club.stadium().addr());
+        if !b.is_null() {
             let x = club.max_attendance();
             if x < 150000 && x < club.attendance().wrapping_add(500) {
                 club.set_max_attendance(x.wrapping_add((weight as i32).wrapping_mul(20)));
             }
-            let y = read_i32(b + stadium::EXPANSION_CAPACITY);
+            let y = b.expansion_capacity();
             if y < 120000 {
-                write_i32(b + stadium::EXPANSION_CAPACITY, y.wrapping_add(((weight as i32).wrapping_add(20)).wrapping_mul(25)));
+                b.set_expansion_capacity(y.wrapping_add(((weight as i32).wrapping_add(20)).wrapping_mul(25)));
             }
         }
     }
@@ -1192,8 +1192,8 @@ pub(crate) unsafe fn will_renew_contract(club: Club, p: usize, c: Contract) -> b
     if days(G_CURRENT_DATE, c.date_started(), read_usize(c.addr() + contract::DATE_STARTED + 4)) <= 0x12c {
         return false;
     }
-    let e = exe::shortlist_manager_find_club_shortlist_entry(gt.shortlist_manager(), club, p, 0, 0);
-    e != 0 && read_usize(e + shortlist_slot::TARGET_STAFF_ID) == read_usize(p)
+    let e = ShortlistSlot(exe::shortlist_manager_find_club_shortlist_entry(gt.shortlist_manager(), club, p, 0, 0));
+    !e.is_null() && e.target_staff_id() == read_usize(p)
 }
 
 /// Offers a contract renewal (`contract_manager_offer_contract` on G_CONTRACT_MANAGER: player, no club or terms, slot −1, factor 1.0, mode 1).

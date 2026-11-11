@@ -312,23 +312,23 @@ pub(crate) unsafe extern "thiscall" fn in_the_box(this: usize) -> u8 {
 /// "o melhor de dois sorteios". A ordem dos 15 sorteios e a do original.
 pub(crate) unsafe extern "thiscall" fn draw_moment(this: usize) {
     let this = MatchPlayer(this);
-    let grava = |o: usize, v: i32| write_u8(this.addr() + o, v as u8);
+    let write = |o: usize, v: i32| write_u8(this.addr() + o, v as u8);
     let best_of_two = |n: i32| {
         let a = random(n);
         let b = random(n);
         if b > a { b } else { a }
     };
     let base = ftol(this.stamina() as f64 * read_f32(rdata::F32_0_002499999944) as f64) as i16 as i32;
-    grava(0x104, best_of_two(base + (this.base_pace() as i32) - 0x19));
-    grava(0x10a, best_of_two(this.base_positioning() as i32));
-    grava(0x107, random(this.base_movement() as i32));
-    grava(0x108, random(this.base_marking() as i32));
-    grava(0x109, random(this.base_flair() as i32));
-    grava(0x10b, best_of_two(this.base_vision() as i32));
-    grava(0x106, best_of_two(this.base_decisions() as i32));
-    grava(0x105, random(this.base_anticipation() as i32));
-    grava(0x10d, random(this.base_work_rate() as i32));
-    grava(0x10c, random(this.base_agility() as i32));
+    write(0x104, best_of_two(base + (this.base_pace() as i32) - 0x19));
+    write(0x10a, best_of_two(this.base_positioning() as i32));
+    write(0x107, random(this.base_movement() as i32));
+    write(0x108, random(this.base_marking() as i32));
+    write(0x109, random(this.base_flair() as i32));
+    write(0x10b, best_of_two(this.base_vision() as i32));
+    write(0x106, best_of_two(this.base_decisions() as i32));
+    write(0x105, random(this.base_anticipation() as i32));
+    write(0x10d, random(this.base_work_rate() as i32));
+    write(0x10c, random(this.base_agility() as i32));
 }
 
 /// Reads the u16 position-table entry [engine + 0x8ebc + 4 x side][position] for player p, without range check.
@@ -7836,7 +7836,7 @@ pub(crate) unsafe fn period_completed_with(m: Engine, call: &mut dyn FnMut(usize
     let t = Fixture(m.r#match());
     let tb = |o: usize| (t.addr() + o) as *mut i8;
     let commentator = m.commentator();
-    let fala = |c: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, code: u32| {
+    let say = |c: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, code: u32| {
         c(0x6d6f70, commentator, [code, m.addr() as u32, u32::MAX, 0, u32::MAX]);
     };
     let classificar = |c: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32| {
@@ -7871,7 +7871,7 @@ pub(crate) unsafe fn period_completed_with(m: Engine, call: &mut dyn FnMut(usize
             }
             *tb(fixture::HOME_GOALS_HALF_TIME) = m.score();
             *tb(fixture::AWAY_GOALS_HALF_TIME) = m.score_side1();
-            fala(call, event::HALF_TIME_WHISTLE);
+            say(call, event::HALF_TIME_WHISTLE);
             m.set_clock(0x1ef);
             m.set_stoppage_time(0);
             call(FN_CM3_MATCH_ENGINE_REBUILD_TEAM_MATCH_STATS, m.addr(), [0x3de, 0, 0, 0, 0]);
@@ -7922,7 +7922,7 @@ pub(crate) unsafe fn period_completed_with(m: Engine, call: &mut dyn FnMut(usize
                 if t.home_goals() != t.away_goals() {
                     return encerrar_antes(call);
                 }
-                fala(call, event::END_OF_NINETY_MINUTES);
+                say(call, event::END_OF_NINETY_MINUTES);
                 m.set_clock(0x3de);
                 m.set_stoppage_time(0);
                 m.set_period_end(period::EXTRA_TIME_FIRST_HALF_END);
@@ -7937,7 +7937,7 @@ pub(crate) unsafe fn period_completed_with(m: Engine, call: &mut dyn FnMut(usize
             if rule & 4 == 0 && t.away_goals() != cl && rule & 0x4000 == 0 {
                 return encerrar_antes(call);
             }
-            fala(call, event::END_OF_NINETY_MINUTES);
+            say(call, event::END_OF_NINETY_MINUTES);
             m.set_clock(0x3de);
             m.set_stoppage_time(0);
             m.set_period_end(period::EXTRA_TIME_FIRST_HALF_END);
@@ -7961,7 +7961,7 @@ pub(crate) unsafe fn period_completed_with(m: Engine, call: &mut dyn FnMut(usize
             if !passed(0x483) {
                 return 0;
             }
-            fala(call, event::HALF_TIME_EXTRA_TIME);
+            say(call, event::HALF_TIME_EXTRA_TIME);
             m.set_clock(0x483);
             m.set_stoppage_time(0);
             m.set_period_end(period::EXTRA_TIME_END);

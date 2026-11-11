@@ -30,6 +30,6 @@ MUTACOES = [
     ('i_ultima', '    write_u8(last - 2, 0);', '    write_u8(last - 2, 1);'),
     ('tr_recusa', '        return 0; // refused, no second question', '        return 1; // refused, no second question'),
     ('lt_ultimo_dia', '        return 0xff; // outside the last day', '        return 0xfe; // outside the last day'),
-    ('ha_motivo', 'write_u8(this + retirement_entry::REASON, read_u8(source + retirement_entry::REASON)); // motivo', 'write_u8(this + retirement_entry::REASON, read_u8(source + retirement_entry::REASON) ^ 1); // motivo'),
+    ('ha_motivo', 'this.set_reason(source.reason()); // motivo', 'this.set_reason(source.reason() ^ 1); // motivo'),
     ('dq13_reduzida', 'ability * read_f64(rdata::F64_0_1) + (v + v)', 'ability * read_f64(rdata::F64_0_1) * 2.0 + (v + v)'),
 ]

@@ -3178,11 +3178,11 @@ pub(crate) unsafe fn form_bonus(p: Staff, f: PlayerSheet, club: Club, who: Staff
 ///
 /// [pt] O desconto do histórico do jogador (0x62ed70, +0x28).
 pub(crate) unsafe fn injury_history_penalty(p: Staff, l4c: i32) -> i32 {
-    let h = exe::injury_get_player_injury(read_usize(G_INJURY), p);
-    if h == 0 {
+    let h = InjuryEntry(exe::injury_get_player_injury(read_usize(G_INJURY), p));
+    if h.is_null() {
         return l4c;
     }
-    let w = read_i16(h + injury_entry::DAYS_OUT) as i32;
+    let w = h.days_out() as i32;
     l4c + if w <= 10 { -2 * w } else { -20 - w }
 }
 
@@ -3756,9 +3756,9 @@ pub(crate) unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, 
             let m = (l4c - 5) as f64;
             l4c = ftol(if y < m { y } else { m });
         }
-        let h = exe::injury_get_player_injury(bd, p);
-        if h != 0 {
-            l4c -= read_i16(h + injury_entry::DAYS_LEFT) as i32;
+        let h = InjuryEntry(exe::injury_get_player_injury(bd, p));
+        if !h.is_null() {
+            l4c -= h.days_left() as i32;
         }
         l4c = age_and_foreigner_adjust(p, f, club, flags, pos, masc, age, count, l4c);
     }
@@ -4137,8 +4137,8 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
 ///
 /// [pt] O desconto da flag 0x4000 pelo histórico (0x62ed70, +0x2c).
 pub(crate) unsafe fn injury_history_penalty_2c(p: Staff, l4c: i32) -> i32 {
-    let h = exe::injury_get_player_injury(read_usize(G_INJURY), p);
-    if h == 0 { l4c } else { l4c - read_i16(h + injury_entry::DAYS_LEFT) as i32 }
+    let h = InjuryEntry(exe::injury_get_player_injury(read_usize(G_INJURY), p));
+    if h.is_null() { l4c } else { l4c - h.days_left() as i32 }
 }
 
 /// The fatigue of match player `reg` to subtract from stamina (`+0x35`).

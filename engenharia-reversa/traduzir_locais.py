@@ -72,6 +72,13 @@ bonus:bonus sorteados:drawn sorteado:drawn escolhidos:chosen candidatos:candidat
 falto:missing restante:remaining restantes:remaining quantidade:amount limiar:threshold saldo:balance ganho:gain
 perda:loss chance:chance ofertante:bidder interessado:interested lista_negra:blacklist recusa:refusal aceite:accept'''.split())
 # as palavras inglesas que o próprio dicionário produz contam como inglês (nomes já meio traduzidos)
+# round 30 (11/11/2026, the outside reader's round 12: vaga, caiu, feliz, folego, grava, por, fala...)
+D.update(dict(x.split(':') for x in '''lance:play mandante:home_side visitante:away_side estadio:stadium premio:prize
+formacoes:formations bloco:block momento:moment ambicao:ambition cumprida:served velha:old parada:stop feito:done
+caiu:fell feliz:happy folego:stamina grava:write fala:say quantas:how_many ganhou:won perdeu:lost empate:draw
+vitoria:win derrota:defeat gols:goals gol:goal falta:foul cartao:card amarelo:yellow vermelho:red escolha:choice
+escolhido:chosen proposta:proposal resposta:reply pedido:request dinheiro:money salario:wage verba:funds
+torcida:supporters diretoria:board treino:training treinador:coach olheiro:scout juiz:referee arbitro:referee'''.split()))
 INGLES_DO_DIC = set(w for v in D.values() for w in v.split('_'))
 PREP = {'do': 'of', 'da': 'of', 'de': 'of', 'dos': 'of', 'das': 'of', 'no': 'in', 'na': 'in', 'nos': 'in', 'nas': 'in',
         'em': 'in', 'com': 'with', 'sem': 'without', 'por': 'by', 'pelo': 'by', 'pela': 'by', 'ao': 'to', 'para': 'for',

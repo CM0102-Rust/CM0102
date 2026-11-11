@@ -22,7 +22,7 @@ MUTACOES = [
     ('cpr9_treinador_fica', 'clear(0x19f, 5); // cpr9: the coach slots', '// mutacao: as vagas de treinador ficam', 'cpr_9 coach'),
     ('cpr9_vaga_nao_abre', 'exe::manager_manager_add_job_vacancy(read_usize(G_MANAGER_MANAGER), c, person); // cpr9: the manager slot opens', '// mutacao: a vaga nao abre', 'cpr_9 manager'),
     ('cpr10_lesionado_como_recuperando', 'return 2; // cpr10: lesionado', 'return 1; // mutacao: lesionado como recuperando'),
-    ('cpr10_recuperando_como_pronto', '(days < read_i16(l + injury_entry::DAYS_OUT) as i32) as u8 // cpr10: recuperando a forma', '0 // mutacao: recuperando como pronto'),
+    ('cpr10_recuperando_como_pronto', '(days < l.days_out() as i32) as u8 // cpr10: recuperando a forma', '0 // mutacao: recuperando como pronto'),
     ('cpr10_decisao_mais_tarde', 'injury_date_add_days(G_CURRENT_DATE, (random(5) + 1) as u32, &mut d); // cpr10: the decision in 1 to 5 days', 'injury_date_add_days(G_CURRENT_DATE, (random(5) + 2) as u32, &mut d); // mutacao: 2 a 6 dias', 'cpr_10 new decision'),
     ('cpr11_reputacao_invertida', 'rb - ra // the club with the highest reputation first', 'ra - rb // mutacao: a menor primeiro', 'cpr_11 projecao pela reputacao'),
     ('cpr11_pontos_invertidos', 'read_i16(b + league_projection::PROJECTED_POINTS) as i32 - read_i16(a + league_projection::PROJECTED_POINTS) as i32 // most points first', 'read_i16(a + league_projection::PROJECTED_POINTS) as i32 - read_i16(b + league_projection::PROJECTED_POINTS) as i32 // mutacao: os menos primeiro'),

@@ -295,10 +295,10 @@ pub(crate) unsafe extern "C" fn cqt4_update_average_attendance(league: usize) {
     }
     let mut i = 0i32;
     while i < n {
-        let e = t + 0x76 * i as usize;
-        let c = club_at(read_usize(e) as isize);
-        let pos = read_u8(e + comp_stats_club::CURRENT_POSITION);
-        let prevista = read_u8(e + comp_stats_club::FINAL_POSITION);
+        let e = CompStatsClub(t + 0x76 * i as usize);
+        let c = club_at(read_usize(e.addr()) as isize);
+        let pos = e.current_position();
+        let prevista = e.final_position();
         let owner = c.own_stadium() != 0;
         let add = |v: i32| c.set_attendance(c.attendance().wrapping_add(v));
         let d = (prevista as i16).wrapping_sub(pos as i16).wrapping_add(1);
@@ -347,9 +347,9 @@ pub(crate) unsafe extern "C" fn cqt4_update_average_attendance(league: usize) {
                 let v = ftol(val as f64 * f);
                 add(exe::utils_random(v));
             }
-            let games = read_u8(e + 5);
+            let games = read_u8(e.addr() + 5);
             if games != 0 {
-                let val = (read_i32(e + 6) / games as i32).wrapping_add(c.attendance().wrapping_mul(4));
+                let val = (read_i32(e.addr() + 6) / games as i32).wrapping_add(c.attendance().wrapping_mul(4));
                 c.set_attendance(ftol(val as f64 * f * 0.2));
             }
         } else if relegation() != 0
@@ -384,9 +384,9 @@ pub(crate) unsafe extern "C" fn cqt4_update_average_attendance(league: usize) {
             };
             let v = ftol(val as f64 * f);
             add(exe::utils_random(v));
-            let games = read_u8(e + 5);
+            let games = read_u8(e.addr() + 5);
             if games != 0 {
-                let val = (read_i32(e + 6) / games as i32).wrapping_add(c.attendance().wrapping_mul(4));
+                let val = (read_i32(e.addr() + 6) / games as i32).wrapping_add(c.attendance().wrapping_mul(4));
                 c.set_attendance(ftol(val as f64 * 0.2)); // cqt4: the mix with the real attendance
             }
             crate::comparison::branch("cqt_4 attendance of mid-table");
@@ -691,9 +691,9 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_final_stage(this: usiz
         }
         let mut i: i16 = 0;
         while i < this.club_count() {
-            let row = this.table() + i as usize * 0x3b;
-            if read_usize(row) == read_usize(list) {
-                write_u8(row + league_table_row::STATUS, 5);
+            let row = LeagueTableRow(this.table() + i as usize * 0x3b);
+            if read_usize(row.addr()) == read_usize(list) {
+                row.set_status(5);
             }
             i += 1;
         }

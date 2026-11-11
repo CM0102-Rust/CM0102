@@ -113,9 +113,9 @@ pub(crate) unsafe extern "thiscall" fn compare_transfer_manager_get_shortlist_ma
 }
 
 /// Comparer for `training_manager_get_player_entry`.
-pub(crate) unsafe extern "thiscall" fn compare_training_manager_get_player_entry(treino: usize, player: usize) -> usize {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_TRAINING_MANAGER_GET_PLAYER_ENTRY)(treino, player);
-    let n = training_manager_get_player_entry(treino, player);
+pub(crate) unsafe extern "thiscall" fn compare_training_manager_get_player_entry(training: usize, player: usize) -> usize {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_TRAINING_MANAGER_GET_PLAYER_ENTRY)(training, player);
+    let n = training_manager_get_player_entry(training, player);
     SCOREBOARD.record(r == n, || format!("training_manager_get_player_entry original={:#x} rust={:#x}", r, n));
     r
 }

@@ -59,9 +59,10 @@ pub(crate) fn ban_days(code: i32, e: i8) -> Option<u16> {
 /// ([0xae2c90], 0x417c10), +0x10 = 3, +0x1c o id do jogador (+0), +0x6f = (+0x48 do jogador == 0). Devolve 1; sem
 /// suspensão, 0 sem gravar nada.
 pub(crate) unsafe extern "thiscall" fn make_points_ban(this: usize, r: usize, j: usize, by_games: u32) -> u32 {
-    let code = match read_u8(j + match_record_row::YELLOW_CARDS) {
-        0 => read_i8(j + match_record_row::FIRST_CARD_OFFENCE) as i32, // cpu10: the foul of the first type
-        1 => read_i8(j + match_record_row::SECOND_CARD_OFFENCE) as i32,
+    let j = MatchRecordRow(j);
+    let code = match j.yellow_cards() {
+        0 => j.first_card_offence() as i32, // cpu10: the foul of the first type
+        1 => j.second_card_offence() as i32,
         _ => return 0,
     };
     let escala = read_i8(this + 6);
@@ -83,8 +84,8 @@ pub(crate) unsafe extern "thiscall" fn make_points_ban(this: usize, r: usize, j:
     let mut today = [0u32; 2];
     exe::date_operator_3d(r + 4, today.as_mut_ptr() as usize, G_CURRENT_DATE);
     write_u8(r + ban_record::REASON, 3);
-    write_u32(r + pending_ban::PERSON_ID, read_usize(j) as u32);
-    write_u8(r + 0x6f, (read_u8(j + 0x48) == 0) as u8);
+    write_u32(r + pending_ban::PERSON_ID, read_usize(j.addr()) as u32);
+    write_u8(r + 0x6f, (read_u8(j.addr() + 0x48) == 0) as u8);
     1 // cpu10: the punishment carried out
 }
 

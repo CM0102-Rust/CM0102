@@ -447,11 +447,12 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
 /// o tamanho por `strlen` depois de cada marca, como a original; sem evento, sem texto ou sem o
 /// trecho pedido, 0. Marca desconhecida avisa 0xb10.
 pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i32, variant: u32) -> usize {
+    let ctx = MatchRecord(ctx);
     const BUF: usize = 0xb67ea0;
     const TEMP: usize = 0xb67dd8;
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let format_text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-    if ev == 0 || ctx == 0 {
+    if ev == 0 || ctx.is_null() {
         return 0;
     }
     let k = (((*(ev as *const u16) & 0x7fff) as i32 - 0x1f40) as i16) as isize;
@@ -583,7 +584,7 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
                     b'P' | b'p' => {
                         let (lado, idx) = if t(pos + 2) == b'1' && b(5) != 0xff { (b(5), b(6)) } else { (b(7), b(8)) };
                         if lado != 0xff {
-                            exe::match_events_format_player_name(ctx, lado as i8 as i32, idx as i8 as i32, name.as_mut_ptr(), 0xc8, 0, 0, 1);
+                            exe::match_events_format_player_name(ctx.addr(), lado as i8 as i32, idx as i8 as i32, name.as_mut_ptr(), 0xc8, 0, 0, 1);
                             sufixo(pos + 3, &mut suf);
                             let r = exe::langlib_apply_grammar_modifier(name.as_ptr() as usize, 0xad9c64 as *const u8, suf.as_ptr(), 0x64, 0x64);
                             if t(pos + 3) == b'C' || t(pos + 3) == b'c' {
@@ -596,7 +597,7 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
                     b'T' | b't' => {
                         let two = t(pos + 2) == b'2';
                         let home = b(6) != 0;
-                        let id = if two == home { *(ctx as *const usize) } else { *((ctx + 4) as *const usize) };
+                        let id = if two == home { *(ctx.addr() as *const usize) } else { *((ctx.addr() + 4) as *const usize) };
                         let club = Club((*(G_CLUB_TABLE as *const usize)).wrapping_add(id.wrapping_mul(club::SIZE)));
                         prefixo(pos, &mut pre);
                         sufixo(pos + 2, &mut suf);
@@ -635,11 +636,11 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
                     b'R' | b'r' => {
                         if t(pos + 2) == b'f' {
                             let fixed = if x as u8 == b'R' { 0xa15a14usize } else { 0xa159e0 };
-                            let referee = core::ptr::read_unaligned((ctx + match_record::REFEREE_ID) as *const i32);
+                            let referee = ctx.referee_id();
                             if referee <= -1 {
                                 format_text(dest(out), fixed);
                             } else {
-                                let rest = ((b(7) as i8 as i32 + b(5) as i8 as i32 + core::ptr::read_unaligned((ctx + 4) as *const i32)) % 5) as i8;
+                                let rest = ((b(7) as i8 as i32 + b(5) as i8 as i32 + core::ptr::read_unaligned((ctx.addr() + 4) as *const i32)) % 5) as i8;
                                 let sheet = (*(G_OFFICIAL_TABLE as *const usize)).wrapping_add((referee as usize).wrapping_mul(0x2b));
                                 let mode = if exe::langlib_get_language() == 4 && rest == 0 {
                                     1
@@ -738,12 +739,13 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
 /// (+0x2d6c, +0x2dac = peso x volume / 100).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize, ctx: usize, comp: i32, panel: u32, width: i32, quebrar: u32, font: usize, mode: u32) -> u32 {
+    let ctx = MatchRecord(ctx);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let format_text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     const SOM: usize = G_SCREEN_MANAGER;
     const TABELA: isize = 0xb68788;
 
-    if ev == 0 || ctx == 0 || panel as u16 == 0xffff {
+    if ev == 0 || ctx.is_null() || panel as u16 == 0xffff {
         return 0;
     }
     let eu = || *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
@@ -775,8 +777,8 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
         }
         // the colours of the move’s club (the side’s kit)
         let side = b(6);
-        let mut club_id = if side != 0 { *((ctx + 4) as *const usize) } else { *(ctx as *const usize) };
-        let kit = *((ctx as isize + side as i8 as isize * 1573 + (match_record::HOME_KIT as isize)) as *const u8) as u32;
+        let mut club_id = if side != 0 { *((ctx.addr() + 4) as *const usize) } else { *(ctx.addr() as *const usize) };
+        let kit = *((ctx.addr() as isize + side as i8 as isize * 1573 + (match_record::HOME_KIT as isize)) as *const u8) as u32;
         exe::database_get_club_kit_colours((*(G_CLUB_TABLE as *const usize)).wrapping_add(club_id.wrapping_mul(club::SIZE)), kit, (cor1.as_mut_ptr()) as *mut u32, (cor2.as_mut_ptr()) as *mut u32);
         let mut s = core::ptr::read_unaligned((sons() as isize + which() * 0x110 + (event_variant::LIVE_TEXT as isize)) as *const usize);
         let v = b(0xd) as i8;
@@ -903,7 +905,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                                 }
                                 whole[n] = 0;
                                 let short = (exe::font_text_width(font, whole.as_ptr()) as i16) < 0x12c;
-                                exe::match_events_format_player_name(ctx, lado_j as i8 as i32, idx as i8 as i32, name.as_mut_ptr(), 0xc8, short as u32, mode, 1);
+                                exe::match_events_format_player_name(ctx.addr(), lado_j as i8 as i32, idx as i8 as i32, name.as_mut_ptr(), 0xc8, short as u32, mode, 1);
                                 sufixo(pos + 3, &mut suf);
                                 let r = exe::langlib_apply_grammar_modifier(name.as_ptr() as usize, 0xad9c64 as *const u8, suf.as_ptr(), 0x64, 0x64);
                                 if t(pos + 3) == b'C' || t(pos + 3) == b'c' {
@@ -916,7 +918,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                         b'T' | b't' => {
                             let two = t(pos + 2) == b'2';
                             let home = b(6) != 0;
-                            let id = if two == home { *(ctx as *const usize) } else { *((ctx + 4) as *const usize) };
+                            let id = if two == home { *(ctx.addr() as *const usize) } else { *((ctx.addr() + 4) as *const usize) };
                             let club = Club((*(G_CLUB_TABLE as *const usize)).wrapping_add(id.wrapping_mul(club::SIZE)));
                             prefixo(pos, &mut pre);
                             sufixo(pos + 2, &mut suf);
@@ -956,9 +958,9 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                         b'O' | b'o' => {
                             // the other club’s colours
                             let side = b(6);
-                            club_id = if side != 0 { *(ctx as *const usize) } else { *((ctx + 4) as *const usize) };
+                            club_id = if side != 0 { *(ctx.addr() as *const usize) } else { *((ctx.addr() + 4) as *const usize) };
                             let a = (side == 0) as isize;
-                            let kit = *((ctx as isize + a * 1573 + (match_record::HOME_KIT as isize)) as *const u8) as u32;
+                            let kit = *((ctx.addr() as isize + a * 1573 + (match_record::HOME_KIT as isize)) as *const u8) as u32;
                             exe::database_get_club_kit_colours((*(G_CLUB_TABLE as *const usize)).wrapping_add(club_id.wrapping_mul(club::SIZE)), kit, (cor1.as_mut_ptr()) as *mut u32, (cor2.as_mut_ptr()) as *mut u32);
                             *(dest(out) as *mut u8) = 0;
                         }
@@ -972,13 +974,13 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                                 *(dest(out) as *mut u8) = 0;
                             } else {
                                 let fixed = if x == b'R' { 0xa15a14usize } else { 0xa159e0 };
-                                let referee = core::ptr::read_unaligned((ctx + match_record::REFEREE_ID) as *const i32);
+                                let referee = ctx.referee_id();
                                 if referee <= -1 {
                                     format_text(dest(out), fixed);
                                 } else {
                                     let sum = (b(7) as i8 as i32)
                                         .wrapping_add(b(5) as i8 as i32)
-                                        .wrapping_add(core::ptr::read_unaligned((ctx + 4) as *const i32))
+                                        .wrapping_add(core::ptr::read_unaligned((ctx.addr() + 4) as *const i32))
                                         .wrapping_add(club_id as i32);
                                     let rest = (sum % 5) as i8;
                                     let sheet = (*(G_OFFICIAL_TABLE as *const usize)).wrapping_add((referee as usize).wrapping_mul(0x2b));

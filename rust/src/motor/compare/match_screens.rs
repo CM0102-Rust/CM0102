@@ -97,13 +97,13 @@ pub(crate) unsafe extern "C" fn compare_build_match_screen() {
         extra.push((f, 1));
         extra.push((f + 0xea, 4));
     }
-    let p = get_screen_param(0);
-    if p != 0 && get_screen_param(1) as u8 != 1 {
+    let p = LiveMatch(get_screen_param(0));
+    if !p.is_null() && get_screen_param(1) as u8 != 1 {
         let _rd = |a: usize| read_usize(a);
-        let espectadores = read_usize(p + live_match::SPECTATORS);
+        let espectadores = p.spectators();
         extra.push(((espectadores as isize + 0xc5 + read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize * 4) as usize, 4));
         extra.push((espectadores + match_spectators::COUNT, 1));
-        let pm = Engine(read_usize(p + live_match::ENGINE));
+        let pm = Engine((p.engine() as usize));
         if !pm.is_null() && pm.commentator() != 0 {
             extra.push((pm.commentator() + 0x2db0, 1));
         }
@@ -174,13 +174,13 @@ pub(crate) unsafe extern "C" fn compare_refresh_possession_bar() {
 /// aloca) e com a atualização pela rede.
 pub(crate) unsafe extern "C" fn compare_draw_match_overview_panel(top: *mut i32, base: *mut i32) {
     let o = original_fn::<unsafe extern "C" fn(*mut i32, *mut i32)>(IDX_DRAW_MATCH_OVERVIEW_PANEL);
-    let p0 = get_screen_param(0);
+    let p0 = LiveMatch(get_screen_param(0));
     let photo = get_screen_param(0x1d);
-    let commentator = p0 != 0
-        && read_u32(read_usize(p0 + live_match::RECORD) + 0x53) == 0
+    let commentator = !p0.is_null()
+        && read_u32(p0.record() + 0x53) == 0
         && get_screen_param(7) != 0;
     let reg = screen_update_regions(false);
-    if overview_would_error() || commentator || (p0 != 0 && photo == 0) || reg.is_none() {
+    if overview_would_error() || commentator || (!p0.is_null() && photo == 0) || reg.is_none() {
         // simplification: warning, sound, allocation and network do not run twice; those paths are proved in Rust mode
         return o(top, base);
     }
@@ -596,8 +596,8 @@ pub(crate) unsafe extern "C" fn compare_match_screens_handle_latest_scores_cycle
 
 /// Comparer for `handle_team_stats_input`.
 pub(crate) unsafe extern "C" fn compare_handle_team_stats_input(item: u32) -> i32 {
-    let p0 = get_screen_param(0);
-    let redesenha = read_u32(G_MATCH_SCREEN_LIVE_DATA_FLAG) != 0 && *(read_usize(p0 + live_match::SPECTATORS) as *const u8) & 4 != 0;
+    let p0 = LiveMatch(get_screen_param(0));
+    let redesenha = read_u32(G_MATCH_SCREEN_LIVE_DATA_FLAG) != 0 && *(p0.spectators() as *const u8) & 4 != 0;
     compare_resposta("handle_team_stats_input", item, original_fn(432), handle_team_stats_input, redesenha)
 }
 

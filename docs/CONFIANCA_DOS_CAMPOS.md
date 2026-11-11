@@ -18,7 +18,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 
 | Nível | Campos |
 |---|---|
-| comunidade | 247 |
+| comunidade | 246 |
 | conferido | 165 |
 | lido | 1545 |
 | inferido | 163 |
@@ -44,7 +44,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `call_up_entry` | 0 | 0 | 1 | 0 |
 | `career_entry` | 0 | 0 | 8 | 0 |
 | `city` | 6 | 0 | 0 | 0 |
-| `club` | 43 | 0 | 2 | 0 |
+| `club` | 42 | 0 | 2 | 0 |
 | `club_discipline_record` | 0 | 0 | 3 | 0 |
 | `club_history_fields` | 0 | 1 | 0 | 0 |
 | `club_match_record` | 0 | 4 | 5 | 0 |

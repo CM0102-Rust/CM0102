@@ -1616,10 +1616,10 @@ pub(crate) unsafe fn add_month_award_record_body(this: usize, p: Staff, club: us
     append_person_history_by_id(write, this, read_usize(p.addr()), &e);
     let (t3d, t28) = (p.job_for_club(), p.job_for_nation());
     if t3d == 5 || t3d == 0xc || t28 == 5 || t28 == 0xc {
-        let r = staff_records_manager_record(this, p);
-        if r != 0 {
+        let r = ManagerRecord(staff_records_manager_record(this, p));
+        if !r.is_null() {
             crate::comparison::branch("cpv_13 manager award");
-            let a = (r + manager_record::MONTH_AWARDS) as *mut u16;
+            let a = (r.addr() + manager_record::AWARDS) as *mut u16;
             core::ptr::write_unaligned(a, core::ptr::read_unaligned(a).wrapping_add(1)); // cpv13: counts the prize
         }
         return;
@@ -1642,8 +1642,8 @@ pub(crate) unsafe fn add_month_award_record_body(this: usize, p: Staff, club: us
     let gt = read_usize(G_TRANSFER_MANAGER);
     if gt != 0 {
         if exe::date_days_since(G_CURRENT_DATE, (k.date_started()) as u32, read_usize(k.addr() + contract::DATE_STARTED + 4) as u32) > 0x12c {
-            let x = exe::shortlist_manager_find_club_shortlist_entry(read_usize(read_usize(G_TRANSFER_MANAGER) + transfer_manager_fields::SHORTLIST_MANAGER), contract_club_except_type5(p), p, 0, 0);
-            if x != 0 && read_usize(x + shortlist_slot::TARGET_STAFF_ID) == read_usize(p.addr()) {
+            let x = ShortlistSlot(exe::shortlist_manager_find_club_shortlist_entry(read_usize(read_usize(G_TRANSFER_MANAGER) + transfer_manager_fields::SHORTLIST_MANAGER), contract_club_except_type5(p), p, 0, 0));
+            if !x.is_null() && x.target_staff_id() == read_usize(p.addr()) {
                 crate::comparison::branch("cpv_13 renewal");
                 offer_renewal(p.addr());
             }
@@ -1941,13 +1941,13 @@ pub(crate) unsafe fn set_friendly_windows(ptrs: usize, n: i32, write: bool) -> V
             if write {
                 // the league start dates that the original builds and does not use (locals only)
                 let (mut t1, mut t2, mut t3, mut t4, mut t5, mut t6) = ([0u8; 8], [0u8; 8], [0u8; 8], [0u8; 8], [0u8; 8], [0u8; 8]);
-                let x = comp.round_table();
-                let year = read_i8(x + cup_round::YEAR_OFFSET) as i16 as u16 as u32;
-                let r = exe::new_date((&mut t1) as *mut [u8; 8] as usize, read_u16(x + cup_round::DAY) as u32, year);
+                let x = CupRound(comp.round_table());
+                let year = (x.year_offset() as i8) as i16 as u16 as u32;
+                let r = exe::new_date((&mut t1) as *mut [u8; 8] as usize, (x.day() as u16) as u32, year);
                 exe::date_operator_3d((&mut t2) as *mut [u8; 8] as usize, (&mut t3) as *mut [u8; 8] as usize, r);
-                if read_u8(x + cup_round::LEGS) == 2 {
-                    let r = exe::new_date((&mut t4) as *mut [u8; 8] as usize, read_u16(x + cup_round::DAY) as u32, year);
-                    let r = exe::date_add_days(r, (&mut t5) as *mut [u8; 8] as usize, read_i8(x + cup_round::LEG_GAP_DAYS) as i16 as u16 as u32);
+                if x.legs() == 2 {
+                    let r = exe::new_date((&mut t4) as *mut [u8; 8] as usize, (x.day() as u16) as u32, year);
+                    let r = exe::date_add_days(r, (&mut t5) as *mut [u8; 8] as usize, (x.leg_gap_days() as i8) as i16 as u16 as u32);
                     exe::date_operator_3d((&mut t6) as *mut [u8; 8] as usize, (&mut t3) as *mut [u8; 8] as usize, r);
                 }
             }

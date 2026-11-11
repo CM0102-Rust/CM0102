@@ -396,11 +396,11 @@ pub(crate) unsafe fn post_match_players_with(fixture: usize, t: usize, call: &mu
     let mut ja_34 = false;
     for lado in 0..2usize {
         let club = Club(club_of(read(t + 4 * lado)));
-        let ts = t + lado * 0x625;
+        let ts = MatchRecord(t + lado * 0x625);
         let other = t + (lado == 0) as usize * 0x625;
         let scoreboard = |r: usize| ub(r + match_record::HOME_SHOOTOUT_GOALS) + ub(r + match_record::HOME_TEAM);
         for k in 0..20usize {
-            let row = ts + 0x1c5 + k * 0x49;
+            let row = ts.addr() + 0x1c5 + k * 0x49;
             let id = read(row - 0x35);
             if id == -1 {
                 continue;
@@ -414,14 +414,14 @@ pub(crate) unsafe fn post_match_players_with(fixture: usize, t: usize, call: &mu
                 let nota1 = exe::comp_stats_get_player_stat(comp, read_usize(p + staff::PLAYER), 1);
                 let nota11 = exe::comp_stats_get_player_stat(comp, read_usize(p + staff::PLAYER), 0x11);
                 if c != 0 && matches!(read_u8(c + contract::SQUAD_STATUS) & 0xf0, 0x10 | 0x20 | 0x30) {
-                    let x = exe::shortlist_manager_find_club_shortlist_entry(g(g(G_TRANSFER_MANAGER) + transfer_manager_fields::SHORTLIST_MANAGER), club, p, 0, 0);
-                    let passes = test_600a50(club.addr(), 0, 1, 0, 0) != 0 || (x != 0 && read(x + shortlist_slot::TARGET_STAFF_ID) == read(p));
-                    let d = w(ts + match_record::HOME_SIDE_REPUTATION) as f64;
+                    let x = ShortlistSlot(exe::shortlist_manager_find_club_shortlist_entry(g(g(G_TRANSFER_MANAGER) + transfer_manager_fields::SHORTLIST_MANAGER), club, p, 0, 0));
+                    let passes = test_600a50(club.addr(), 0, 1, 0, 0) != 0 || (!x.is_null() && read(x.addr() + shortlist_slot::TARGET_STAFF_ID) == read(p));
+                    let d = w(ts.addr() + match_record::HOME_SIDE_REPUTATION) as f64;
                     if passes
                         && w(row + 3) > 0x1388
                         && (d * 1.1 < w(row + 3) as f64 || d * 0.9 < w(row + 7) as f64 || d * 0.024 < w(read_usize(p + staff::PLAYER) + 5) as f64)
                         && *(row as *const u8) <= 6
-                        && scoreboard(ts) <= scoreboard(other)
+                        && scoreboard(ts.addr()) <= scoreboard(other)
                         && ((random(10) + 5) as f64) < nota1
                         && (read_i8(read_usize(p + staff::PLAYER) + player_sheet::PLAYER_MORALE) as i32) < random(10)
                         && average() + 0.2 > nota11
@@ -434,7 +434,7 @@ pub(crate) unsafe fn post_match_players_with(fixture: usize, t: usize, call: &mu
             }
             if esp != 0 && comp != 0 && *((t + match_record::NO_STATISTICS) as *const u8) == 0 {
                 let nota1 = exe::comp_stats_get_player_stat(comp, read_usize(p + staff::PLAYER), 1);
-                if read_u8(row) >= 9 && scoreboard(ts) >= scoreboard(other) && ((random(5) + 2) as f64) < nota1 && !ja_34 {
+                if read_u8(row) >= 9 && scoreboard(ts.addr()) >= scoreboard(other) && ((random(5) + 2) as f64) < nota1 && !ja_34 {
                     let m = average();
                     let nota11 = exe::comp_stats_get_player_stat(comp, read_usize(p + staff::PLAYER), 0x11);
                     let r = random(9);
@@ -475,20 +475,20 @@ pub(crate) unsafe fn post_match_players_with(fixture: usize, t: usize, call: &mu
             }
         }
         // the manager and the assistants
-        let id = read(ts + match_record::HOME_MANAGER_ID);
+        let id = read(ts.addr() + match_record::HOME_MANAGER_ID);
         if id > -1 {
             crate::comparison::branch("players manager");
             let manager = Staff((g(G_STAFF_TABLE) as isize + id as isize * 0x6e) as usize);
             let (mut da, mut db, mut dc) = (0i16, 0i16, 0i16);
             if !manager.is_null() && !manager.non_player().is_null() {
                 let f = manager.non_player();
-                da = w(ts + match_record::HOME_MANAGER_CURRENT_REPUTATION).wrapping_sub(w(f.addr() + non_player::CURRENT_REPUTATION));
+                da = w(ts.addr() + match_record::HOME_MANAGER_CURRENT_REPUTATION).wrapping_sub(w(f.addr() + non_player::CURRENT_REPUTATION));
                 f.set_current_reputation(w(f.addr() + non_player::CURRENT_REPUTATION).wrapping_add(da));
                 let f = manager.non_player();
-                db = w(ts + match_record::HOME_MANAGER_HOME_REPUTATION).wrapping_sub(w(f.addr() + 8));
+                db = w(ts.addr() + match_record::HOME_MANAGER_HOME_REPUTATION).wrapping_sub(w(f.addr() + 8));
                 write_i16(f.addr() + 8, w(f.addr() + 8).wrapping_add(db));
                 let f = manager.non_player();
-                dc = w(ts + match_record::HOME_MANAGER_WORLD_REPUTATION).wrapping_sub(w(f.addr() + non_player::WORLD_REPUTATION));
+                dc = w(ts.addr() + match_record::HOME_MANAGER_WORLD_REPUTATION).wrapping_sub(w(f.addr() + non_player::WORLD_REPUTATION));
                 f.set_world_reputation(w(f.addr() + non_player::WORLD_REPUTATION).wrapping_add(dc));
             }
             for k in -1i32..5 {
@@ -505,7 +505,7 @@ pub(crate) unsafe fn post_match_players_with(fixture: usize, t: usize, call: &mu
                 }
             }
         }
-        club.set_reputation(w(ts + match_record::HOME_SIDE_REPUTATION));
+        club.set_reputation(w(ts.addr() + match_record::HOME_SIDE_REPUTATION));
     }
 }
 

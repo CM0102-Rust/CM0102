@@ -7,7 +7,7 @@ MUTACOES = [
     ('a_conta', "            *((day + match_day_fields::FINISHED_COUNT) as *mut i32) += 1;", "            *((day + match_day_fields::FINISHED_COUNT) as *mut i32) += 2;"),
     ('a_fim', "    let end = |e: u8| e == 2 || e == 8;", "    let end = |e: u8| e == 2;"),
     ('f_copia', "    core::ptr::copy((p + day_match::FIXTURE_COPY) as *const u8, game.addr() as *mut u8, 0x4f);", "    core::ptr::copy((p + day_match::FIXTURE_COPY) as *const u8, game.addr() as *mut u8, 0x4e);"),
-    ('f_rodada', "            if r != 0 && *((r + comp_stats_club::LOSING_RUN) as *const i32) > 1 {", "            if r != 0 && *((r + comp_stats_club::LOSING_RUN) as *const i32) > 0 {"),
+    ('f_rodada', "            if !r.is_null() && (r.losing_run() as i32) > 1 {", "            if !r.is_null() && (r.losing_run() as i32) > 0 {"),
     ('f_contratos', "    two(u(G_CONTRACT_MANAGER, 0), 0x4ca6d0);\n", ""),
     ('f_suspensoes', "    two(u(G_DISCIPLINE, 0), 0x55ca00);\n", ""),
     ('f_estados', "    two(u(G_INJURY, 0), 0x62c080);\n", ""),

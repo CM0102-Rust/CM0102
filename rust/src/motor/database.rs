@@ -4368,8 +4368,8 @@ pub(crate) unsafe extern "C" fn database_staff_matches_names(person: usize, name
 /// com C0), 1 se maior, 0 se igual.
 pub(crate) unsafe fn order_by_city_coordinate(ca: usize, cb: usize, d: usize) -> i32 {
     let city = |c: Club| {
-        let e = c.stadium().addr();
-        if e == 0 { 0 } else { read_usize(e + stadium::CITY) }
+        let e = Stadium(c.stadium().addr());
+        if e.is_null() { 0 } else { e.city() }
     };
     let (xa, xb) = (city(Club(ca)), city(Club(cb)));
     let x = if xa != 0 { read_f64(xa + d) } else { read_f64(rdata::F64_0) };

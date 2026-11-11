@@ -29,7 +29,7 @@ MUTACOES = [
     ('cpu9_goleiro_so_com_20', 'if goal >= 0xf { // cpu9: goalkeeper from 15 up', 'if goal >= 0x14 { // mutacao: so a nota 20 vai para o programa dos goleiros', 'cpu_9 goalkeeper'),
     ('cpu10_um_jogo_a_mais', 'write_u8(r, jogos); // cpu10: the suspension matches', 'write_u8(r, jogos.wrapping_add(1)); // mutacao: um jogo a mais', 'cpu_10 punishment'),
     ('cpu10_sem_punicao', '1 // cpu10: the punishment carried out', '0 // mutacao: diz que nao ha suspensao', 'cpu_10 punishment'),
-    ('cpu10_falta_do_outro_campo', '0 => read_i8(j + match_record_row::FIRST_CARD_OFFENCE) as i32, // cpu10: the foul of the first type', '0 => read_i8(j + 0x2f) as i32, // mutacao: o codigo do outro campo', 'cpu_10 punishment'),
+    ('cpu10_falta_do_outro_campo', '0 => j.first_card_offence() as i32, // cpu10: the foul of the first type', '0 => read_i8(j.addr() + 0x2f) as i32, // mutacao: o codigo do outro campo', 'cpu_10 punishment'),
     ('cpu11_x_par', 'write_u32(cel, coord); // cpu11: a coordenada', 'write_u32(cel, coord & !1); // mutacao: x par', 'cpu_11 coordinate recorded'),
     ('cpu11_sem_dobro', 'dist = dist.wrapping_add(dist); // cpu11: o dobro', '// mutacao: sem o dobro', 'cpu_11 distance doubled'),
     ('cpu11_sem_empate', 'if dist <= best[p] { // cpu11: the tie goes into the list', 'if dist < best[p] { // mutacao: sem empates', 'cpu_11 tie in the list'),

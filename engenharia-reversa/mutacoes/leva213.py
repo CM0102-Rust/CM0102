@@ -6,6 +6,6 @@ MUTACOES = [
     ('nt_marca', 'value); // mark in the box', 'value ^ 1); // mark in the box'),
     ('nt_humano', '    1 // humano\n', '    0 // humano\n'),
     ('cr_ano_sorteio', '    write_u8(r + 2, a.wrapping_sub(base as u8)); // year of the draw', '    write_u8(r + 2, a.wrapping_sub(base as u8).wrapping_add(1)); // year of the draw'),
-    ('cr_dia_jogo', 'd); // match day', 'd.wrapping_add(1)); // match day'),
+    ('cr_dia_jogo', '(d) as i16); // match day', '(d.wrapping_add(1)) as i16); // match day'),
     ('fr_menos_um', '                *id = 0xffff_ffff;', '                *id = 0xffff_fffe;'),
 ]

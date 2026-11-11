@@ -24,21 +24,21 @@ pub(crate) unsafe extern "thiscall" fn record_match_ratings(this: usize, game: u
     let mut side = fixture.wrapping_add(0x190);
     for l in 0..2 { // cpw5: os dois lados
         for k in 0..0x14usize {
-            let e = side + k * 0x49;
-            if read_u8(e + match_record_row::POSITION) == 0xfb {
+            let e = MatchRecordRow(side + k * 0x49);
+            if e.position() == 0xfb {
                 continue;
             }
-            if k >= 0xb && read_u8(e + match_record_row::MINUTE_ON) == 0xff {
+            if k >= 0xb && (e.minute_on() as u8) == 0xff {
                 continue;
             }
-            let p = month_ratings_staff_by_id(read_i32(e));
+            let p = month_ratings_staff_by_id(read_i32(e.addr()));
             if p != 0 && read_i32(p) >= read_i32(G_STAFF_COUNT) {
                 continue;
             }
             if l == 1 {
                 crate::comparison::branch("cpw_5 away side ratings");
             }
-            exe::month_ratings_add_player_rating(this, e);
+            exe::month_ratings_add_player_rating(this, e.addr());
         }
         side += 0x625;
     }
@@ -49,8 +49,9 @@ pub(crate) unsafe extern "thiscall" fn record_match_ratings(this: usize, game: u
 /// [pt] A nota da partida (+0x35 da vaga, sem sinal) soma na palavra +8 do registro de 12 bytes e o byte +0xa conta mais um
 /// jogo.
 pub(crate) unsafe fn add_match_rating(r: usize, e: usize) {
+    let e = MatchRecordRow(e);
     let s = (r + 8) as *mut u16;
-    core::ptr::write_unaligned(s, core::ptr::read_unaligned(s).wrapping_add(read_u8(e + match_record_row::MATCH_GRADE) as u16));
+    core::ptr::write_unaligned(s, core::ptr::read_unaligned(s).wrapping_add(e.match_grade() as u16));
     write_u8(r + month_rating_entry::MATCHES, read_u8(r + month_rating_entry::MATCHES).wrapping_add(1));
 }
 

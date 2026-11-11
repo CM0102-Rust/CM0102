@@ -1108,7 +1108,7 @@ pub(crate) unsafe extern "thiscall" fn get_language_fluency(this: usize, person:
             }
         }
     }
-    let fala = |l: u8| {
+    let say = |l: u8| {
         if (person.nation().first_language() as u8) == l {
             return true;
         }
@@ -1117,11 +1117,11 @@ pub(crate) unsafe extern "thiscall" fn get_language_fluency(this: usize, person:
     };
     if !club.is_null() {
         let n = club.nation();
-        if !n.is_null() && fala(n.first_language() as u8) {
+        if !n.is_null() && say(n.first_language() as u8) {
             return 10;
         }
     }
-    if fala(language) {
+    if say(language) {
         return 10;
     }
     let base = read_usize(this + player_stats_fields::LANGUAGES);

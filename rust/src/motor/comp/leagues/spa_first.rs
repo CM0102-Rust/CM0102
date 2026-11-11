@@ -519,7 +519,7 @@ pub(crate) unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u3
 /// 17 e 18 viram 16) e a pior (+0x75; 17 e 18 viram 19): a faixa de 17 a 18 da Primera não conta como faixa própria
 /// [inferência: as posições de 17 a 18 juntam-se à vizinha de cima na melhor e à de baixo na pior].
 pub(crate) unsafe extern "thiscall" fn spa_first_set_club_progress(this: usize, club: usize, _stage: u32, current: u32, best: u32, worst: u32) {
-    let e = exe::comp_stats_find_club_entry(read_usize(this + 8), club);
+    let e = CompStatsClub(exe::comp_stats_find_club_entry(read_usize(this + 8), club));
     let m = match best as u8 {
         0x11 | 0x12 => 0x10,
         v => v,
@@ -528,9 +528,9 @@ pub(crate) unsafe extern "thiscall" fn spa_first_set_club_progress(this: usize, 
         0x11 | 0x12 => 0x13,
         v => v,
     };
-    write_u8(e + comp_stats_club::CURRENT_POSITION, current as u8);
-    write_u8(e + comp_stats_club::BEST_POSITION, m);
-    write_u8(e + comp_stats_club::WORST_POSITION, p);
+    e.set_current_position(current as u8);
+    e.set_best_position(m);
+    e.set_worst_position(p);
 }
 
 /// the Primera: discipline 0x1a, only the league; finally, if the nation lacks bit 4 of +0x11c [inference: the lower

@@ -693,6 +693,7 @@ pub(crate) unsafe fn staff_of_summary_slot(slot: usize) -> Option<usize> {
 /// do resumo = 1 e +0x22, +0x27 × +0x18 (a original usa o +0x27 de novo); cada um só com o byte e o valor positivos.
 /// Sem bônus no amistoso (0x5c6710), no jogo da competição [0x9cf684] e nos contratos de tipo 5 e 6.
 pub(crate) unsafe fn match_bonuses_for_slot(game: Fixture, contract: Contract, slot: usize, word: i16) -> [Option<i32>; 3] {
+    let slot = MatchRecordRow(slot);
     let comp = game.competition();
     if !comp.is_null() && (exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), comp) != 0 || read_usize(game.addr()) == read_usize(KEY_CLUB_COMP_RESERVE)) {
         return [None; 3];
@@ -701,11 +702,11 @@ pub(crate) unsafe fn match_bonuses_for_slot(game: Fixture, contract: Contract, s
     if kind == 6 || kind == 5 {
         return [None; 3];
     }
-    let g = read_u8(slot + match_record_row::GOALS) as i32;
-    let a = read_u8(slot + match_record_row::ASSISTS) as i32;
+    let g = slot.goals() as i32;
+    let a = slot.assists() as i32;
     let um = (g != 0 && contract.goal_bonus() > 0).then(|| g.wrapping_mul(contract.goal_bonus()));
     let two = (a != 0 && contract.assist_bonus() > 0).then(|| a.wrapping_mul(contract.assist_bonus()));
-    let three = (word == 1 && read_i8(slot + match_record_row::GOALS_CONCEDED) != 0 && contract.clean_sheet_bonus() > 0).then(|| a.wrapping_mul(contract.clean_sheet_bonus()));
+    let three = (word == 1 && slot.goals_conceded() != 0 && contract.clean_sheet_bonus() > 0).then(|| a.wrapping_mul(contract.clean_sheet_bonus()));
     [um, two, three]
 }
 
@@ -769,8 +770,8 @@ pub(crate) unsafe extern "thiscall" fn update_after_match(this: usize, game: usi
         let fin = exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), club);
         let base = summary + lado * 0x625;
         for k in 0..20usize {
-            let slot = base + match_stats_record::HOME_LINEUP + k * 0x49;
-            let Some(person) = staff_of_summary_slot(slot) else { continue };
+            let slot = MatchRecordRow(base + match_stats_record::HOME_LINEUP + k * 0x49);
+            let Some(person) = staff_of_summary_slot(slot.addr()) else { continue };
             let contract = if exe::database_is_national_team(club) != 0 {
                 0
             } else {
@@ -778,16 +779,16 @@ pub(crate) unsafe extern "thiscall" fn update_after_match(this: usize, game: usi
                 if c == 0 {
                     continue;
                 }
-                for v in match_bonuses_for_slot(game, Contract(c), slot, read_i16(base + 0x154 + 2 * k)).into_iter().flatten() {
+                for v in match_bonuses_for_slot(game, Contract(c), slot.addr(), read_i16(base + 0x154 + 2 * k)).into_iter().flatten() {
                     exe::finance_pay_bonuses(fin, v);
                 }
                 c
             };
             let minutos: i8 = if k < 11 {
-                let v = read_i8(slot + match_record_row::MINUTE_OFF);
+                let v = slot.minute_off();
                 if v > -1 { v } else { 0x5a }
             } else {
-                let v = read_i8(slot + match_record_row::MINUTE_ON);
+                let v = slot.minute_on();
                 if v <= -1 {
                     0
                 } else {
@@ -795,7 +796,7 @@ pub(crate) unsafe extern "thiscall" fn update_after_match(this: usize, game: usi
                     if e <= 0 { 0 } else { e as i8 }
                 }
             };
-            if k < 11 || read_i8(slot + match_record_row::MINUTE_ON) != -1 {
+            if k < 11 || slot.minute_on() != -1 {
                 let q = ((minutos as i32 * 10) / 90) as i8;
                 if exe::database_is_national_team(club) != 0 {
                     let r = read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person).wrapping_mul(0x4f)) + 9;
@@ -817,7 +818,7 @@ pub(crate) unsafe extern "thiscall" fn update_after_match(this: usize, game: usi
                 }
             }
             if exe::database_is_national_team(club) == 0 && (read_i32(game.addr()) < 0 || exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), game.competition()) == 0) {
-                let testa = k >= 11 || !(minutos > 0x1e || read_i8(slot + match_record_row::INJURED_OFF) != 0 || read_i8(slot + match_record_row::FINAL_STAMINA) < 0x46);
+                let testa = k >= 11 || !(minutos > 0x1e || slot.injured_off() != 0 || slot.final_stamina() < 0x46);
                 let mal = testa && {
                     crate::comparison::branch("cqa_8 tests the morale");
                     let m = read_i8(contract + contract::MORALE) as i32;

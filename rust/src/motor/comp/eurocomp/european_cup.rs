@@ -818,7 +818,7 @@ pub(crate) unsafe fn european_cup_add_knocked_out_record(club: usize, comp: usiz
     exe::staff_records_add_knocked_out_record(eng_second_staff_records(), club, comp, stage, round, x);
 }
 
-/// Removes the club from its European competition this season (EURO_FLAG +0x1db = -1).
+/// Removes the club from its European competition this season (CONTINENTAL_COMP_ID +0x1db = -1).
 ///
 /// [pt] O clube sai da competição europeia da temporada (+0x1db = −1).
 pub(crate) unsafe fn leave_euro_competition(club: Club) {
@@ -1424,7 +1424,7 @@ pub(crate) unsafe fn nation_coefficient_word(club: Club) -> usize {
 /// sinal): 1 e 2 → 1 (p3: 0xd), 3 → 0x11, 4 → 0x19; abaixo de 12: 1 e 2 → 1 (p3: 7), 3 → 9, 4 → 0xd; os outros
 /// códigos e as fases de 12 em diante passam como estão.
 pub(crate) unsafe extern "thiscall" fn european_cup_set_club_progress(this: usize, club: usize, stage: u32, p1: u32, p2: u32, p3: u32) {
-    let e = exe::comp_stats_find_club_entry(read_usize(this + 8), club);
+    let e = CompStatsClub(exe::comp_stats_find_club_entry(read_usize(this + 8), club));
     let (stage, p1, p2, p3) = (stage as u8 as i8, p1 as u8, p2 as u8, p3 as u8);
     let (c73, c74, c75) = if stage == -1 {
         let m = |p: u8, um: u8| match p {
@@ -1454,9 +1454,9 @@ pub(crate) unsafe extern "thiscall" fn european_cup_set_club_progress(this: usiz
     } else {
         (p1, p2, p3)
     };
-    write_u8(e + comp_stats_club::BEST_POSITION, c74);
-    write_u8(e + comp_stats_club::CURRENT_POSITION, c73);
-    write_u8(e + comp_stats_club::WORST_POSITION, c75);
+    e.set_best_position(c74);
+    e.set_current_position(c73);
+    e.set_worst_position(c75);
 }
 
 /// Builds the round table: in the group stages, the 6-round schedule (phase 1 dates in September and October and phase

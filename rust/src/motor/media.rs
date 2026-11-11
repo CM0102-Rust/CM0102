@@ -246,9 +246,9 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
             let (pd, pa) = ((person.date_joined_club() as i16), (person.date_joined_club_year() as i16) as u16);
             let after = ra > pa || (ra == pa && rd > pd);
             if after && vinc != 0 && read_u8(vinc + contract::LEAVING_ON_BOSMAN) == 0 && exe::staff_is_transfer_listed_or_requested(person, 0) == 0 {
-                let feliz = read_i8(vinc + contract::HAPPINESS) as i32;
+                let happy = read_i8(vinc + contract::HAPPINESS) as i32;
                 let s = friendly_random(0x32);
-                if feliz > s + 0x28 && friendly_random(0x1e) == 0 {
+                if happy > s + 0x28 && friendly_random(0x1e) == 0 {
                     crate::comparison::branch("cqc_10 will not sell");
                     exe::news_create_not_for_sale_story(person, dono, read_usize(dono + club::CHAIRMAN), 0);
                     let mut j = 0i32;
