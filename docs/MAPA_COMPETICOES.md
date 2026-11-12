@@ -2,7 +2,7 @@
 
 Gerado por `python engenharia-reversa/competicoes.py` (o mapa de funções de maxevans60, CC BY 4.0, e a cobertura de uma carreira com as 8 ligas `ENG ESP ITA FRA BRA JPN AUS USA` até 2002-06-01, `levas/competicoes/`; as rotinas já em Rust não levam contador). "falta" = chamada ao menos uma vez nessa carreira e ainda não está em Rust (a lista para `candidatos.py --competicoes` fica em `docs/cobertura_competicoes.txt`).
 
-**Total:** 2695 funções, 1475.7 KB; em Rust 829 (36.1% dos bytes); faltam 130 (152.5 KB).
+**Total:** 2695 funções, 1475.7 KB; em Rust 838 (36.2% dos bytes); faltam 130 (152.5 KB).
 
 | Grupo | Funções | KB | Rust | Falta (KB) | Progresso |
 |---|---|---|---|---|---|
@@ -13,7 +13,7 @@ Gerado por `python engenharia-reversa/competicoes.py` (o mapa de funções de ma
 | Continentais fora da Europa | 203 | 105.2 | 33 | 31 (22.9) | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **15.2%** |
 | Copa do Mundo e eliminatórias | 158 | 92.4 | 20 | 28 (24.6) | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **12.7%** |
 | Torneios amistosos | 17 | 4.5 | 0 | 0 (0.0) | ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜ **0.0%** |
-| Regras de transferência por nação (`transfer/*_rules.cpp`) | 126 | 26.7 | 39 | 0 (0.0) | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **37.3%** |
+| Regras de transferência por nação (`transfer/*_rules.cpp`) | 126 | 26.7 | 48 | 0 (0.0) | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **42.2%** |
 
 ## Por arquivo
 
@@ -131,16 +131,16 @@ Só os arquivos com alguma rotina que falta; ordem: grupo, depois o que falta.
 | `brazil_rules.cpp` | rules | 3 | 1 | 0 (0.0) |
 | `croatia_rules.cpp` | rules | 2 | 1 | 0 (0.0) |
 | `england_rules.cpp` | rules | 7 | 5 | 0 (0.0) |
-| `finland_rules.cpp` | rules | 4 | 1 | 0 (0.0) |
+| `finland_rules.cpp` | rules | 4 | 4 | 0 (0.0) |
 | `france_rules.cpp` | rules | 10 | 2 | 0 (0.0) |
-| `germany_rules.cpp` | rules | 7 | 1 | 0 (0.0) |
+| `germany_rules.cpp` | rules | 7 | 2 | 0 (0.0) |
 | `greece_rules.cpp` | rules | 4 | 1 | 0 (0.0) |
 | `holland_rules.cpp` | rules | 1 | 1 | 0 (0.0) |
-| `ireland_rules.cpp` | rules | 6 | 2 | 0 (0.0) |
+| `ireland_rules.cpp` | rules | 6 | 4 | 0 (0.0) |
 | `italy_rules.cpp` | rules | 9 | 3 | 0 (0.0) |
 | `korea_rules.cpp` | rules | 3 | 1 | 0 (0.0) |
-| `northern_ireland_rules.cpp` | rules | 4 | 1 | 0 (0.0) |
-| `norway_rules.cpp` | rules | 6 | 1 | 0 (0.0) |
+| `northern_ireland_rules.cpp` | rules | 4 | 3 | 0 (0.0) |
+| `norway_rules.cpp` | rules | 6 | 2 | 0 (0.0) |
 | `poland_rules.cpp` | rules | 2 | 1 | 0 (0.0) |
 | `portugal_rules.cpp` | rules | 5 | 1 | 0 (0.0) |
 | `russia_rules.cpp` | rules | 4 | 2 | 0 (0.0) |

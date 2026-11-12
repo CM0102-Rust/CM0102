@@ -24,7 +24,7 @@ alguns nomes de pasta e de documento ficaram em português; o README principal, 
 é uma leva (a unidade de trabalho: algumas rotinas reescritas, desviadas no exe original e testadas juntas antes de
 publicar; `levas/N/` guarda os resultados de cada uma).
 
-**Estado:** 288 levas, 2206 rotinas em Rust, cada uma comparada com a original, direto ou pela rotina que a chama (o motor de partidas sem as telas está 100% em Rust; o save passa de 2 GB, até 4 GB); quanto falta, módulo a módulo: [`docs/PLACAR.md`](docs/PLACAR.md); por arquivo do exe inteiro:
+**Estado:** 289 levas, 2215 rotinas em Rust, cada uma comparada com a original, direto ou pela rotina que a chama (o motor de partidas sem as telas está 100% em Rust; o save passa de 2 GB, até 4 GB); quanto falta, módulo a módulo: [`docs/PLACAR.md`](docs/PLACAR.md); por arquivo do exe inteiro:
 [`docs/PLACAR_ARQUIVOS.md`](docs/PLACAR_ARQUIVOS.md) (2.093 das 6.709 funções, 29,6% do código). A leva 284 está
 integrada e 2.092 rotinas estão desviadas; desde 07/11/2026 a reescrita está parada para uma **reorganização** que deixa
 o código legível para a publicação (campos e registros com nome, nomes e cabeçalhos em inglês, cada passo provado com a

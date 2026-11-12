@@ -2,11 +2,12 @@
 
 Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os arquivos-fonte do mapa de [maxevans60](https://github.com/maxevans60/cm0102-function-map) (CC BY 4.0). Uma função conta quando o início dela é desviado para Rust (`Prologue` em `rust/src/motor.rs`). O placar do motor de partidas, pelas nossas fronteiras, fica em `PLACAR.md`.
 
-**Exe inteiro:** 2207 de 6709 funções, 1790.3 de 5528.0 KB (**32.39%**) · 179 de 393 arquivos com rotinas em Rust
+**Exe inteiro:** 2216 de 6709 funções, 1791.6 de 5528.0 KB (**32.41%**) · 179 de 393 arquivos com rotinas em Rust
 
 | Arquivo | Funções | KB | Progresso |
 |---|---|---|---|
 | `Db_files.cpp` | 40/40 | 13.0/13.0 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 **100.0%** |
+| `finland_rules.cpp` | 4/4 | 0.9/0.9 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 **100.0%** |
 | `holland_rules.cpp` | 1/1 | 0.3/0.3 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 **100.0%** |
 | `match_day.cpp` | 20/20 | 16.6/16.6 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 **100.0%** |
 | `match_eng.cpp` | 129/129 | 119.2/119.2 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 **100.0%** |
@@ -52,6 +53,7 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `bra_reg_sp.cpp` | 6/10 | 3.4/4.0 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **84.9%** |
 | `shortlist_manager.cpp` | 40/54 | 60.8/71.7 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **84.8%** |
 | `bra_reg_goias.cpp` | 7/11 | 3.8/4.5 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **83.7%** |
+| `ireland_rules.cpp` | 4/6 | 0.8/1.0 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **83.6%** |
 | `bra_nat_second.cpp` | 7/12 | 4.3/5.1 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **83.5%** |
 | `fra_second.cpp` | 4/7 | 3.3/4.0 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **83.5%** |
 | `con_merc_cup.cpp` | 11/16 | 5.0/6.1 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **82.1%** |
@@ -65,6 +67,7 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `turkey_rules.cpp` | 2/3 | 0.5/0.6 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **80.6%** |
 | `ita_ser_a.cpp` | 7/18 | 16.2/20.3 | 🟩🟩🟩🟩🟩🟩🟩🟩⬜⬜ **80.0%** |
 | `fix_man.cpp` | 31/37 | 17.9/22.4 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **79.9%** |
+| `northern_ireland_rules.cpp` | 3/4 | 0.5/0.6 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **79.5%** |
 | `stadium.cpp` | 11/17 | 8.8/11.3 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **77.5%** |
 | `fra_lge_cup.cpp` | 3/7 | 2.4/3.1 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **77.5%** |
 | `eng_fa_cup.cpp` | 4/12 | 5.3/6.9 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **76.6%** |
@@ -108,7 +111,6 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `player_regen.cpp` | 41/51 | 27.1/44.7 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **60.7%** |
 | `ita_cup.cpp` | 8/17 | 4.5/7.5 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **60.6%** |
 | `ita_c1_super.cpp` | 3/6 | 1.0/1.6 | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **59.8%** |
-| `ireland_rules.cpp` | 2/6 | 0.5/1.0 | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **57.4%** |
 | `greece_rules.cpp` | 1/4 | 0.2/0.4 | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **57.1%** |
 | `weather.cpp` | 8/16 | 4.2/7.3 | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **57.0%** |
 | `formation.cpp` | 24/45 | 14.8/26.5 | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **56.0%** |
@@ -119,7 +121,6 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `world_cup.cpp` | 9/26 | 7.6/15.2 | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **50.2%** |
 | `officials_manager.cpp` | 12/34 | 5.8/12.0 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **48.4%** |
 | `usa_mls.cpp` | 15/22 | 5.8/12.5 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **46.7%** |
-| `northern_ireland_rules.cpp` | 1/4 | 0.3/0.6 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **46.2%** |
 | `asia_club_champ.cpp` | 6/15 | 3.6/8.2 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **43.9%** |
 | `european_cup.cpp` | 17/50 | 12.6/29.3 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **43.0%** |
 | `transfer_manager.cpp` | 132/199 | 71.7/167.1 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **42.9%** |
@@ -133,15 +134,15 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `awol.cpp` | 10/19 | 4.2/11.9 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **35.2%** |
 | `spain_rules.cpp` | 2/7 | 0.6/1.7 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **34.9%** |
 | `Area.cpp` | 3/15 | 2.0/5.9 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **34.7%** |
-| `finland_rules.cpp` | 1/4 | 0.3/0.9 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **34.5%** |
 | `oceania_nations.cpp` | 5/16 | 2.4/7.1 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **33.8%** |
 | `scout_manager.cpp` | 20/39 | 7.3/23.0 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **31.5%** |
 | `manager_manager.cpp` | 44/98 | 35.3/129.4 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **27.2%** |
+| `norway_rules.cpp` | 2/6 | 0.4/1.5 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **26.6%** |
+| `germany_rules.cpp` | 2/7 | 0.4/1.7 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **25.2%** |
 | `human_manager.cpp` | 20/61 | 6.2/25.5 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **24.4%** |
 | `Setup.cpp` | 10/107 | 28.1/120.6 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **23.3%** |
 | `fifa_rankings.cpp` | 9/20 | 2.1/9.6 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **22.0%** |
 | `news.cpp` | 26/33 | 9.8/49.0 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **20.0%** |
-| `norway_rules.cpp` | 1/6 | 0.3/1.5 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **19.1%** |
 | `france_rules.cpp` | 2/10 | 0.5/2.5 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **18.6%** |
 | `goldcup.cpp` | 11/57 | 5.8/32.6 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **17.7%** |
 | `argentina_rules.cpp` | 1/12 | 0.2/1.3 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **17.4%** |
@@ -149,7 +150,6 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `key_nation.cpp` | 9/27 | 2.2/12.9 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **16.8%** |
 | `bra_champ_cup.cpp` | 2/16 | 1.1/6.6 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **16.2%** |
 | `portugal_rules.cpp` | 1/5 | 0.2/1.6 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **15.4%** |
-| `germany_rules.cpp` | 1/7 | 0.2/1.7 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **14.4%** |
 | `league_stage.cpp` | 2/6 | 1.1/7.7 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **14.0%** |
 | `fifa_confed.cpp` | 1/20 | 1.2/8.5 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **13.9%** |
 | `discipline.cpp` | 21/38 | 5.3/38.6 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **13.6%** |

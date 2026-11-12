@@ -1,4 +1,1 @@
 # ordem da fila (fila.py); um item por linha
-mkc_4
-mkc_5
-mkc_6
