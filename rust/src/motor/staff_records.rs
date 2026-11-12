@@ -31,9 +31,10 @@ pub(crate) unsafe fn raise_champion_reputation(club: Club, weight: i16, champion
 
 /// Adds d to the contract morale byte (+0x44), clamped to −100..100.
 pub(crate) unsafe fn add_contract_morale(k: usize, d: i32) {
-    let c = read_i8(k + contract::MORALE);
+    let k = Contract(k);
+    let c = k.morale();
     let x = c as i32 + d;
-    write_i8(k + contract::MORALE, if x > 100 { 100 } else if x < -100 { -100 } else { c.wrapping_add(d as i8) });
+    k.set_morale(if x > 100 { 100 } else if x < -100 { -100 } else { c.wrapping_add(d as i8) });
 }
 
 /// Offers a contract renewal (`contract_manager_offer_contract`, factor 1.0) to an own-club player when the transfer manager exists, the
@@ -69,7 +70,7 @@ pub(crate) unsafe fn add_lineup_histories(this: usize, club: Club, lineup: usize
         if id == -1 {
             continue;
         }
-        let p = read_usize(G_STAFF_TABLE).wrapping_add((id as u32).wrapping_mul((staff::SIZE as u32)) as usize);
+        let p = read_usize(G_STAFF_TABLE).wrapping_add((id as u32).wrapping_mul(staff::SIZE as u32) as usize);
         if p != 0 && read_i32(p) >= read_i32(G_STAFF_COUNT) {
             continue;
         }
@@ -154,7 +155,7 @@ pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, 
     let weight = comp.reputation();
     raise_champion_reputation(club, weight, true); // cqd13: the reputation of the league champion
     if club.division().addr() != 0 {
-        let b = Stadium(club.stadium().addr());
+        let b = club.stadium();
         if !b.is_null() {
             let x = club.max_attendance();
             if x < 150000 && x < club.attendance().wrapping_add(500) {
@@ -732,7 +733,7 @@ pub(crate) unsafe fn update_cup_placed_club(this: usize, club: Club, game: Fixtu
         if id == -1 {
             continue;
         }
-        let p = read_usize(G_STAFF_TABLE).wrapping_add((id as u32).wrapping_mul((staff::SIZE as u32)) as usize);
+        let p = read_usize(G_STAFF_TABLE).wrapping_add((id as u32).wrapping_mul(staff::SIZE as u32) as usize);
         if p != 0 && read_i32(p) >= read_i32(G_STAFF_COUNT) {
             continue;
         }
