@@ -1,0 +1,2 @@
+compilado (leitor cqy, 12/11/2026, continuação): junto com cqy_1..5 sobre o commit 759c98f9d (cargo build --release sem erro e sem aviso no código do item; também com as 2 mutações). Não rodado no jogo.
+prova pedida: 8 ligas (LIGAS) ou ENG (a 0x4b4420 roda 79 vezes na de ENG); comparação lado a lado (compare_text_writer) até 2002-01-01; Rust x2 e detector até 2002-06-01; as mutações são de texto: acusadas pelo comparador, não pela carreira.

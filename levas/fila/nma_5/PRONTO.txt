@@ -1,0 +1,20 @@
+NAO PROVADO NO JOGO (o brief da lista nma manda so compilar): compila com o motor atual (copia propria de rust/ e
+cm0102-base/ no scratchpad, 12/11/2026): cargo check --release sem avisos nas linhas do item; com as 4 mutacoes
+aplicadas, cargo build --release ok; as ancoras das mutacoes tem 1 ocorrencia cada no motor + item. Prologos
+(6a ff 68 db d8 95 00 / 6a ff 68 83 d8 95 00) e os bytes inteiros (6224 / 2928, com as tabelas de saltos) iguais no
+cm0102-1080.exe. Logica transcrita da desmontagem (0x755860..0x7570b0 e 0x74b060..0x74bbd0).
+
+O que a prova precisa (sessao principal): comparacao ENG ate 2002-06-01 (a cobertura da 18 chamadas da 0x755860 e
+107 da 0x74b060), Rust x2 com detector, as 4 mutacoes.
+- 0x755860: o titulo roda em toda historia de boato; o corpo so quando a tela da noticia pede o corpo (ou a resposta
+  automatica). Quais aberturas (tipo 0, 1, 36, outros) e quantos clubes a carreira roda nao se sabe de antemao: os
+  covered! "nma_5 rumour lead kind 0/1/36/other", "nma_5 rumour clubs", "nma_5 rumour agent human/quoted" dizem; o
+  comparador nomeia o pedaco na divergencia. As mutacoes do texto (titulo) so o comparador ve.
+- Ramos em que o original le memoria nao escrita (a copia le zero): a lista de clubes vazia (slot 15 = 0 ou lista
+  ate o slot 0x32) le o 1o clube do quadro sem valor; a linha do empresario "citado" (tipo 1/2) sem empresario
+  (slot 10 = -1) usa o nome do empresario nao formatado. Se aparecer divergencia so nesses casos, e isso.
+- 0x74b060: comparador por ensaio (sem entregar, sem o log e sem a resposta); as caixas so andam para clube/divisao/
+  pais com tecnico humano. A mutacao do tom muda os sorteios (comparador); a da resposta muda a resposta do tecnico
+  da IA e o efeito na torcida e na diretoria (comparador pelo log e carreira).
+
+compilacao conjunta (12/11/2026, leitor nma): nma_2 nma_3 nma_4 nma_5 nma_6 nma_8 aplicados juntos sobre o motor da principal, cargo build --release ok, sem avisos novos; ancoras unicas. nma_6: player_story_piece renomeada player_story_response_piece (colidia com a do nma_3).

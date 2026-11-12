@@ -1707,7 +1707,7 @@ bytes). Constantes lidas do exe: 1/300 (0x968e60), 3,15 (0x968e58), 0,99 (0x968e
   2 e 3 com reputação atual > 6750, ou idade < 24 e potencial > 100; 5 com potencial > 100; 4 nunca.
 - **Período protegido da FIFA** (0x868210; 0x4c847f..0x4c85fe): contrato tipo 2, sem empréstimo, que acaba **depois**
   de hoje + 182, fora do período protegido (0x868210 = 0 e a saída ≠ 0), sem aposentadoria (0x7a7eb0), cargo 11: a IA
-  (idade < 32) renova pelos mesmos estatutos (fator 1,0); clube humano: notícia 7 (0x4d6790; Bosman pela idade em
+  (idade < 32) renova pelos estatutos, mas o 2 renova direto, sem a condição de antes da mudança das regras (fator 1,0; corrigido na leitura do item `mke_2`, 12/11/2026); clube humano: notícia 7 (0x4d6790; Bosman pela idade em
   hoje + 182 ≥ 24 e 0x8d0a70).
 - **Tipo 1 (fim de contrato vencido)** (0x4c8603..0x4c883b): sem empréstimo, passados 31 dias do fim, querendo sair
   (0x866f60) ou saindo pelo Bosman (+0x49), sem ofertas nem trocas nem fila: notícia 1 ao clube humano; cargos 12, 13

@@ -1,0 +1,2 @@
+compilado em 12/11/2026 (leitor cqx): os 14 itens cqx_1..14 aplicados juntos numa copia do rust/ (cargo build --release sem erro nem aviso no codigo novo) e com todas as mutacoes aplicadas de uma vez (compila); prologos conferidos contra o cm0102.exe; rotinas iguais no cm0102-1080.exe. Sem jogo rodado.
+Prova: as posicoes previstas rodam na criacao (primeiro dia) e na virada; nada as le ate junho, entao as mutacoes so caem pelo comparador lado a lado: --confirmar 2001-08-20 com LIGAS. 

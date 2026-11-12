@@ -1,0 +1,2 @@
+NAO PROVADO NO JOGO (leitor sma, 12/11/2026): compila com o motor atual (759c98f9d, copia propria com os itens sma_1..8, 0 avisos dos itens; todas as mutacoes aplicadas juntas tambem compilam, ancoras 1 ocorrencia); prologos iguais nos dois exes; logica transcrita da desmontagem (pacotes/). Comparador compare_text_writer (texto, vinculos e gerador); as mutacoes de texto sao acusadas pela comparacao (aceito em 12/11/2026).
+Falta: comparacao ENG (as noticias desses tipos precisam sair ate a data da comparacao) e Rust x2 com detector. Sem LIGAS.

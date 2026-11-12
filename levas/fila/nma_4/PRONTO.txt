@@ -1,0 +1,30 @@
+NAO PROVADO NO JOGO (o brief da lista nma manda so compilar): Media::write_player_praise_news_text (0x744f80..0x74af60,
+24.288 bytes, 7.247 instrucoes) portada inteira, um desvio so (prologo 64 a1 00 00 00 00; os 24.288 bytes iguais no
+cm0102-1080.exe), em pedacos com nome e covered! proprio: praise_read_slots/praise_setup/praise_outlet/praise_names (o
+cabecalho), um pedaco por tipo de historia (praise_body_future_international 0x29, _youngster 0x2a, _praised 0x2b,
+_call_up 0x2c e fora da faixa, _on_the_rise 0x2d, _big_move 0x2e, _attitude 0x2f, _world_class 0x30, _world_class_b 0x31,
+_impresses 0x32, _world_stage 0x33, _competition 0x34 com praise_competition_v0/v1/v2/other), praise_reply (a resposta),
+praise_headline (a manchete) e praise_links (os vinculos). Compila com o motor atual (copia propria de rust/ e
+cm0102-base/ da base de 12/11/2026, cargo check e cargo build --release ok, 0 avisos do item, 12/11/2026); as 4 mutacoes
+aplicadas juntas tambem compilam (cargo build --release ok) e as ancoras tem 1 ocorrencia cada no motor + item.
+Conferencia mecanica contra a desmontagem (rascunho nmaC_work/sym.py e cmp.py): as 119 chamadas a langlib_sprintf com o
+mesmo numero de argumentos e, onde o resolvedor simbolico reconhece o operando (genero do clube, da posicao, do veiculo,
+do cargo; nome do clube; os buffers), na mesma ordem; todas as constantes de texto da rotina aparecem na copia.
+
+Falta a sessao principal:
+- comparacao ate 2002-06-01 (ENG): a rotina roda 191 vezes (manchete e corpo das historias de elogio, chamada por
+  NewsItem::write_text 0x77bc80). O texto nao entra no save: o que prova e o comparador (cadeia e vinculos, original x
+  Rust num Text local), que nomeia o pedaco na mensagem (piece ...). Nao se sabe quais tipos (0x29..0x34) a carreira ENG
+  escreve: os covered! "nma_4 praise <tipo>" dizem quais rodaram; tipo que nao rode fica sem prova (anotar);
+- Rust x2 com detector ate 2002-06-01 (a rotina so escreve texto; nao deve mudar a carreira);
+- as 4 mutacoes (corpo invertido, veiculo nacional/estrangeiro trocado, condicao da manchete invertida, o jogador ligado
+  como clube) so sao acusadas pelo comparador da rotina, como as da nma_3; todas em pedacos que rodam em toda chamada
+  (corpo, veiculo por tipo, manchete, vinculos).
+Defeitos da original (copiados ou anotados): o texto do vinculo da partida (0x7d3) e o byte do quadro +0x4c, iniciado so
+na manchete (vazio) e no corpo do tipo 0x34 (o placar); no corpo dos outros tipos com registro de partida e lixo da
+pilha (a copia escreve vazio; o comparador nao compara esse texto nesse caso). No tipo 0x2b, com o indice do clube
+negativo e sem nenhuma das bandeiras de pontos fortes, a variante vira clube % 4 = -1 para sempre (laco infinito,
+copiado). O tipo 0x34 sem registro de partida mostra a caixa "Error" (media.cpp 0x4743), copiada (no comparador aparece
+duas vezes).
+
+compilacao conjunta (12/11/2026, leitor nma): nma_2 nma_3 nma_4 nma_5 nma_6 nma_8 aplicados juntos sobre o motor da principal, cargo build --release ok, sem avisos novos; ancoras unicas. nma_6: player_story_piece renomeada player_story_response_piece (colidia com a do nma_3).

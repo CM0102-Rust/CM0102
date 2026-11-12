@@ -1,0 +1,3 @@
+compilado (leitor cqy, 12/11/2026): os 4 itens cqy_1..4 aplicados juntos numa cópia de rust/ e cm0102-base/ (cargo build --release sem erro e sem aviso no código dos itens; também com as 11 mutações aplicadas juntas). Não rodado no jogo.
+prova pedida: 8 ligas (LIGAS); comparação até 2001-12-01 (os grupos da 1a fase na criação da carreira e na virada; a fase 7 em 14/set, os grupos da 3a fase em 28/set e a final em 9/nov de 2001); Rust x2 e detector até 2002-06-01; mutações pela carreira até 2002-06-01 (as 3 mudam datas de jogos da Série C de 2001).
+fases.py do agente C precisou do 'add reg, imm' (o extra das fases de grupos é fase + 0x420 / + 0x476): a cópia com o remendo está no scratchpad cqy/fases.py.

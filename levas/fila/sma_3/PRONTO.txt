@@ -1,0 +1,4 @@
+NAO PROVADO NO JOGO (leitor sma, 12/11/2026): compila com o motor atual (copia propria, 0 avisos do item; mutacoes compilam, ancoras 1 ocorrencia cada); prologos iguais nos dois exes, sem trocas no 1080; logica transcrita da desmontagem (pacotes/0x448260 e 0x453120).
+Falta: comparacao ENG (0x453120 roda 7 vezes e 0x448260 40 vezes ate 2002-06-01; a 0x448260 so pelo fim de temporada da nacao 0x447880, que talvez caia depois de 2002-01-01: se a comparacao da cadeia nao chegar la, o comparador dela nao roda); Rust x2 com detector. As 2 mutacoes nao mudam a carreira (os registros e as noticias nao sao lidos de volta ate 2002-06-01): so os comparadores lado a lado (os 0x389 bytes da foto; os 0xe0 da noticia) as acusam. Se a regra exigir a carreira, o item sai (ver o relatorio). Sem LIGAS.
+
+12/11/2026 (sessao principal): as mutacoes acusadas so pelo comparador valem como prova (aceito).

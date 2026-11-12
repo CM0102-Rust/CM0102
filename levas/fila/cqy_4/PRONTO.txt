@@ -1,0 +1,3 @@
+compilado (leitor cqy, 12/11/2026): junto com cqy_1..4 (cargo build --release sem erro e sem aviso no código do item; também com as mutações). Não rodado no jogo.
+prova pedida: 8 ligas (LIGAS); a fase com árvore é a do mata-mata da Liga dos Campeões depois dos grupos (março de 2002): comparação até 2002-04-01 (o comparador confere o plano: ligações de volta e cada classificado num confronto só); Rust x2 e detector até 2002-06-01; mutações pela carreira até 2002-06-01 (as 2 mudam quem joga contra quem nas quartas ou nas semifinais).
+se o contador 'cqy_4 entrant at home' não rodar até 2002-06-01 na carreira de 8 ligas, o item sai (a cobertura diz 2 chamadas, mas não diz de qual copa: conferir pelo contador).

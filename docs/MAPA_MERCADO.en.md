@@ -1720,7 +1720,7 @@ bytes). Constants read from the exe: 1/300 (0x968e60), 3.15 (0x968e58), 0.99 (0x
   1.0); 2 and 3 with current reputation > 6750, or age < 24 and potential > 100; 5 with potential > 100; 4 never.
 - **FIFA protected period** (0x868210; 0x4c847f..0x4c85fe): a type 2 contract, no loan, ending **after** today + 182,
   outside the protected period (0x868210 = 0 and the output ≠ 0), not retiring (0x7a7eb0), job 11: the AI (age < 32)
-  renews by the same statuses (factor 1.0); human club: news 7 (0x4d6790; Bosman by the age at today + 182 ≥ 24 and
+  renews by status, but status 2 renews directly, without the condition it has before the rules change (factor 1.0; corrected when reading item `mke_2`, 12/11/2026); human club: news 7 (0x4d6790; Bosman by the age at today + 182 ≥ 24 and
   0x8d0a70).
 - **Type 1 (expired contract)** (0x4c8603..0x4c883b): no loan, 31 days past the end, wanting to leave (0x866f60) or
   leaving on a Bosman (+0x49), with no offers, exchanges or queue: news 1 to the human club; jobs 12, 13 (AI) and 15

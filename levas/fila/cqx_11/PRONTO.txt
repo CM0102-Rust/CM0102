@@ -1,0 +1,2 @@
+compilado em 12/11/2026 (leitor cqx): os 14 itens cqx_1..14 aplicados juntos numa copia do rust/ (cargo build --release sem erro nem aviso no codigo novo) e com todas as mutacoes aplicadas de uma vez (compila); prologos conferidos contra o cm0102.exe; rotinas iguais no cm0102-1080.exe. Sem jogo rodado.
+Prova: cqx11_sem_a_base_da_copa pela carreira (a Intertoto de julho/agosto de 2001 com clubes das 4 ligas europeias); cqx11_vitoria_vale_1 pelo comparador (--confirmar 2001-08-20). Os dois registros sao passageiros.

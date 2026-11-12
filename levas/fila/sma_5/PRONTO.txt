@@ -1,0 +1,4 @@
+NAO PROVADO NO JOGO (leitor sma, 12/11/2026): compila com o motor atual (copia propria, 0 avisos do item; a mutacao compila, ancora 1 ocorrencia); prologo igual nos dois exes, sem trocas no 1080; a tabela dos 43 orgaos (vaga, condicao, construtor) tirada da desmontagem (pacotes/0x55d420).
+Falta: comparacao ENG (roda 1 vez, na criacao do jogo; o comparador so roda a original e confere as vagas preenchidas contra as ligas selecionadas); Rust x2 com detector; a mutacao (a Inglaterra com o orgao da Escocia, 0x7e2470) deve mudar suspensoes e escalacoes, mas pode parar o jogo se o orgao escoces nao servir as competicoes inglesas: se travar, trocar por outra (ex.: o argumento 0 no construtor ingles) ou o item sai. Sem LIGAS.
+
+12/11/2026: a mutacao trocada (pedido da sessao principal) pela sma5_orgao_ingles_argumento_0 (o orgao ingles construido com o argumento 0, como o original faz com dados antigos); compila; falta ver na cadeia se muda o resultado sem travar.

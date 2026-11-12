@@ -1,0 +1,21 @@
+NAO PROVADO NO JOGO (o brief da lista nma manda so compilar). Compila com o motor atual (copia propria de rust/ e
+cm0102-base/ a partir do scratchpad\base, 12/11/2026): cargo check --release sem avisos das linhas do item; cargo build
+--release ok com as 4 mutacoes aplicadas (o unico aviso novo e o da propria mutacao 3, que deixa club_manager_supports
+sem uso); as 4 ancoras tem 1 ocorrencia cada no motor + item. Prologo 6a ff 64 a1 00 00 00 00 (push -1; mov eax,
+fs:[0]). Logica transcrita da desmontagem inteira (0x72d270..0x732b5e, 6731 instrucoes, os deslocamentos de esp
+resolvidos por quadro; 139 chamadas ao formatador com os argumentos na ordem empurrada).
+
+Falta a sessao principal:
+- comparacao ate 2002-06-01 (ENG; a carreira passa 103 vezes pela rotina: manchete e corpo). O comparador compara a
+  cadeia e os vinculos e lista os pedacos que a copia rodou (outlet, o tipo da historia, draw result, manager reply ou
+  club manager reply, links; headline); qualquer divergencia diz em que pedaco olhar;
+- Rust x2 com detector (o texto nao entra no save; a carreira nao deve mudar);
+- as 4 mutacoes: mudam o texto e sao acusadas pelo comparador nos pedacos que rodam em toda chamada (links, outlet,
+  headline) e na resposta do tecnico do clube (club manager reply; se a carreira de ferias so produzir resposta do
+  humano ou nenhuma, a 3a escapa e deve sair).
+Pedacos que talvez so a comparacao veja: quais tipos de historia (campo 9) a carreira ENG gera nao e sabido sem rodar;
+os contadores covered! ("nma_3 <pedaco>") dizem quais rodaram. Ramos de risco conhecidos: a vida particular (tipo 1)
+com variante acima de 6 (o original imprime o buffer sem iniciar: divergencia esperada se rodar); a manchete do tipo
+0x11 com variante -1 (divisao por zero nos dois).
+
+compilacao conjunta (12/11/2026, leitor nma): nma_2 nma_3 nma_4 nma_5 nma_6 nma_8 aplicados juntos sobre o motor da principal, cargo build --release ok, sem avisos novos; ancoras unicas. nma_6: player_story_piece renomeada player_story_response_piece (colidia com a do nma_3).
