@@ -1,0 +1,98 @@
+# LIGAS = ENG KOR ARG ITA FRA ESP AUS; ATE = 2002-08-01
+0x404250	560	arg_prm.cpp	ArgPrm::ArgPrm	Constructs the Argentine Premier Division on League, then loads saved data or sets up rule
+0x404480	16	arg_prm.cpp	shared_return_true	Returns 1 as a shared override of three different competition vtable slots.
+0x404570	4048	arg_prm.cpp	ArgPrm::create_schedule	Builds the 19-round schedule template of the first half from August for stage -1, or the s
+0x405540	304	arg_prm.cpp	ArgPrm::create_table	Allocates the 20-row table, fills it with the clubs of the Argentine Premier Division, set
+0x405670	176	arg_prm.cpp	ArgPrm::set_up_rules	Sets the Argentine league rules, with the Second Division as the lower league, and builds 
+0x405950	768	arg_prm.cpp	ArgPrm::create_stages	Creates the two half-season League_Stage objects of the Argentine Premier Division from th
+0x405c50	80	arg_prm.cpp	ArgPrm::add_result	Adds a match to the table and its stage, then adds it again with stats off and the fixture
+0x405ca0	592	arg_prm.cpp	ArgPrm::record_season_honours	Relegates the two clubs with the lowest points average, marks them in the table and both s
+0x405ef0	1664	arg_prm.cpp	ArgPrm::init_relegation_averages	Allocates the 0x13-byte relegation average rows and seeds them with fixed points from two 
+0x406570	640	arg_prm.cpp	ArgPrm::update_relegation_averages	Copies season points and matches into the relegation average rows, works out each three-se
+0x406bf0	560	arg_second.cpp	ArgSecond::ArgSecond	Constructs the Argentine second division on League, loads it from the temp file or sets ru
+0x406f00	3536	arg_second.cpp	ArgSecond::create_schedule	Builds the schedule of match dates for one stage of the Argentine second division season.
+0x407cd0	384	arg_second.cpp	ArgSecond::fill_league_table	Allocates the 25-row league table and fills it with the clubs whose division is the second
+0x407e50	176	arg_second.cpp	ArgSecond::set_up_rules	Sets the second division rule bytes and points values, then builds the season schedule thr
+0x4080c0	240	arg_second.cpp	ArgSecond::advance_stage	Moves to the next stage and builds the zone stages, the promotion cup stage or the promoti
+0x4081b0	1152	arg_second.cpp	ArgSecond::create_zone_stages	Splits 24 clubs of the first phase table into three zones of eight and builds a League_Sta
+0x408630	736	arg_second.cpp	ArgSecond::create_promotion_cup_stage	Relegates the two clubs with the worst points average, then builds the eight-club Second P
+0x408910	960	arg_second.cpp	ArgSecond::create_promotion_playoffs	Builds the two promotion play-off ties that pair second division clubs with first division
+0x408cd0	480	arg_second.cpp	ArgSecond::update_staff_records_for_status	Updates staff records and table status for promotion, play-off and relegation outcomes, de
+0x4093f0	2096	arg_second.cpp	ArgSecond::init_relegation_averages	Allocates the relegation averages table and seeds each listed club with its points and gam
+0x409c20	960	arg_second.cpp	ArgSecond::update_relegation_averages	Copies league and stage points into the averages table, shifts the three season columns on
+0x409fe0	608	arg_second.cpp	ArgSecond::set_predicted_positions	Sorts the 25 clubs by strength and stores grouped predicted positions 1, 2, 4, 6, 8 and up
+0x40a3e0	368	argentina_awards.cpp	ArgentinaAwards::init_awards	Creates the two team awards, one for the first division and one for the second division.
+0x411d90	80	aus_nsl.cpp	AusNsl::record_season_honours	Records the grand final winner, runner-up and regular season leader in the competition his
+0x411de0	400	aus_nsl.cpp	AusNsl::start_new_season	Archives last season, increments the year and rebuilds the rules, table and fixtures of th
+0x412540	320	australia_awards.cpp	AustraliaAwards::AustraliaAwards	Builds the Australia awards object, loads it from a save file when one is given, or create
+0x412680	1088	australia_awards.cpp	AustraliaAwards::init_awards	Allocates the nine-award table and builds one team award, three month awards and five year
+0x43d340	5712	brazil_awards.cpp	BrazilAwards::init_awards	Creates the 58 Brazilian awards, team and yearly awards for both national divisions and fo
+0x56b4b0	592	eng_auto_cup.cpp	EngAutoCup::start_new_season	Frees last season's cup data and stages, archives the stats, advances the year and rebuild
+0x56b700	48	eng_auto_cup.cpp	EngAutoCup::set_up_rounds	Sets a prize fund of 400000 and builds the round table of the Auto Windscreens cup.
+0x56d130	432	eng_cc_cup.cpp	EngCcCup::start_new_season	Frees last season's cup data, archives the stats, advances the year and allocates a fresh 
+0x56d9b0	432	eng_charity.cpp	EngCharity::start_new_season	Frees last season's Charity Shield data, archives the stats, moves the year on and picks t
+0x570390	448	eng_fa_cup.cpp	EngFaCup::start_new_season	Frees last season's FA Cup data, archives the stats, moves the year on and reallocates the
+0x572e30	448	eng_first.cpp	EngFirst::start_new_season	Frees the table, schedule and play-off stages, archives the season, moves the year on and 
+0x574e60	576	eng_prm.cpp	EngPrm::exchange_conference_clubs_unplayed	When the Conference is not played, promotes its strongest club to the Third Division if it
+0x576820	448	eng_second.cpp	EngSecond::start_new_season	Clears the old season, archives the stats, moves the year on and rebuilds the rules, table
+0x578170	448	eng_third.cpp	EngThird::start_new_season	Clears the old season, archives the stats, moves the year on and rebuilds the rules, table
+0x578780	320	england_awards.cpp	EnglandAwards::EnglandAwards	Builds the England awards object, loads it from a save file when one is given, or creates 
+0x5788c0	3408	england_awards.cpp	EnglandAwards::init_awards	Allocates the award table and constructs the yearly, monthly and team awards of each Engli
+0x5bae50	432	fra_cup.cpp	FraCup::start_new_season	Frees last season's cup data, archives the stats, advances the year and rebuilds entrants,
+0x5bc4d0	688	fra_first.cpp	FraFirst::start_new_season	Runs promotion and relegation, swaps clubs between CFA and National, rebuilds the table an
+0x5bc780	512	fra_first.cpp	FraFirst::exchange_cfa_national_clubs	Promotes the top CFA clubs into National, six in 2001 and four later, and moves relegated 
+0x5bd420	432	fra_lge_cup.cpp	FraLgeCup::start_new_season	Frees last season's cup data, archives the stats, advances the year and rebuilds the entra
+0x5bf160	448	fra_second.cpp	FraSecond::start_new_season	Frees the old table, schedule and stages, archives the stats, increments the year and rebu
+0x5bf9a0	416	fra_super.cpp	FraSuper::start_new_season	Clears the finished French Super Cup, archives its stats, moves the year on and sets up th
+0x5c07c0	448	fra_third.cpp	FraThird::start_new_season	Frees the old table and stages, archives the stats, moves the year on, then rebuilds rules
+0x5c0a20	2112	france_awards.cpp	FranceAwards::init_awards	Allocates the table of 21 French awards and creates its year awards and the team awards of
+0x63caa0	416	ita_c1_super.cpp	ItaC1Super::start_new_season	Clears the finished Serie C1 Super Cup, archives its stats, moves the year on and sets up 
+0x63d780	464	ita_c_cup.cpp	ItaCCup::start_new_season	Clears the finished Serie C Italian Cup, archives its stats, moves the year on and picks t
+0x63f3e0	464	ita_cup.cpp	ItaCup::start_new_season	Clears last season's tables and stages, increments the season, picks new entrants and rebu
+0x641700	736	ita_ser_a.cpp	ItaSerA::start_new_season	Runs promotion and relegation for the Italian pyramid, exchanges Serie C2 or Serie D clubs
+0x641fc0	512	ita_ser_a.cpp	ItaSerA::exchange_serie_c2_clubs_unplayed	When Serie C2 is not played, moves the six best Serie C2 clubs into Serie C1 A and relegat
+0x642410	544	ita_ser_a.cpp	ItaSerA::process_promotion_relegation_chain	Records final positions in each Italian division and swaps clubs between Serie A, B, C1 an
+0x642630	352	ita_ser_a.cpp	ita_ser_a_regroup_serie_c1_clubs	Sorts the 36 Serie C1 clubs into Serie C1 B and Serie C1 A, and tells each moved human man
+0x646960	448	ita_ser_b.cpp	ItaSerB::start_new_season	Frees the old table and schedule, archives the stats, moves the year on and rebuilds rules
+0x64b820	448	ita_ser_c1a.cpp	ItaSerC1a::start_new_season	Frees the old table, schedule and play-off stages, archives the stats, moves the year on a
+0x64f9e0	448	ita_ser_c1b.cpp	ItaSerC1b::start_new_season	Frees last season's table, schedule and play-off stages, archives the stats, moves the yea
+0x650050	176	ita_ser_c1b.cpp	ItaSerC1b::record_final_positions	Stores each club's previous division and final place from the table, then sets places 2 on
+0x65fc90	416	ita_super.cpp	ItaSuper::start_new_season	Clears the finished Italian Super Cup, archives its stats, moves the year on and picks the
+0x65fec0	4096	italy_awards.cpp	ItalyAwards::init_awards	Allocates the award table and constructs the yearly, monthly and team awards of each Itali
+0x666720	912	japan_awards.cpp	JapanAwards::init_awards	Allocates the eight-award table and builds four year awards and four team awards for the J
+0x66a460	464	kor_fa_cup.cpp	KorFaCup::KorFaCup	Constructs the Korean FA Cup on Cup, loads it from disk or collects entrants and builds th
+0x66a720	976	kor_fa_cup.cpp	KorFaCup::create_round_table	Allocates and fills the five-round table of the Korean FA Cup with draw dates, match dates
+0x66aaf0	464	kor_fa_cup.cpp	KorFaCup::collect_entrants	Fills the 32-entry entrant list with 22 top Korean clubs from outside the K League, then a
+0x66acc0	432	kor_fa_cup.cpp	KorFaCup::start_new_season	Frees last season's cup data, archives the stats, advances the year and rebuilds entrants,
+0x66ae70	528	kor_league.cpp	KorLeague::KorLeague	Constructs the Korean league on the League base, loads saved state or sets rules, builds t
+0x66b130	2672	kor_league.cpp	KorLeague::create_schedule	Builds the 27-round match date template of the Korean league season, with a later start da
+0x66bba0	288	kor_league.cpp	KorLeague::create_table	Allocates the league table and fills it with the ten clubs whose division is this league, 
+0x66bcc0	160	kor_league.cpp	KorLeague::set_up_rules	Sets the Korean league rule bytes, points values and tiebreak list, then builds the season
+0x66bd60	416	kor_league.cpp	KorLeague::start_new_season	Resets the Korean league for a new season, archives statistics, rebuilds rules, table and 
+0x66bf00	576	kor_league_cup.cpp	KorLeagueCup::KorLeagueCup	Constructs the Korean league cup on the League base, selects ten clubs, builds group A, it
+0x66c240	1040	kor_league_cup.cpp	KorLeagueCup::create_schedule	Builds the round template for a stage, ten group rounds for stage 0 or a semi-final and fi
+0x66c770	256	kor_league_cup.cpp	KorLeagueCup::create_group_a_table	Allocates the five-row group A table from the even-numbered seeded clubs and sends the gro
+0x66c870	144	kor_league_cup.cpp	KorLeagueCup::set_up_rules	Sets the league cup rule bytes, points values and prize fund, then builds the group schedu
+0x66c900	464	kor_league_cup.cpp	KorLeagueCup::start_new_season	Resets the league cup for a new season, deletes old stages, selects the clubs again and re
+0x66cad0	144	kor_league_cup.cpp	KorLeagueCup::advance_stage	Moves the league cup to its next stage and creates the knockout stage on the first advance
+0x66cb60	496	kor_league_cup.cpp	KorLeagueCup::create_group_b_stage	Creates the five-club group B League_Stage from the odd-numbered seeded clubs and sends it
+0x66cd50	464	kor_league_cup.cpp	KorLeagueCup::create_knockout_stage	Creates the four-club knockout Cup_Stage, pairing each group winner with the other group's
+0x66cf20	368	kor_league_cup.cpp	KorLeagueCup::select_teams	Collects the clubs of the top Korean league into the ten-entry team list and sorts them by
+0x66d090	336	kor_league_cup.cpp	KorLeagueCup::update_staff_records_for_status	Adds staff history records for a club's league cup outcome, such as qualified, failed to q
+0x66d3a0	688	kor_league_cup.cpp	KorLeagueCup::set_predicted_positions	Sorts the ten cup clubs by reputation and stores predicted final positions by knockout rou
+0x66d820	448	kor_super_cup.cpp	KorSuperCup::KorSuperCup	Constructs the Korean Super Cup on the Cup base, loads saved state or picks its two clubs 
+0x66dad0	320	kor_super_cup.cpp	KorSuperCup::create_round_table	Builds the single round of the Korean Super Cup, a one-match final between two clubs.
+0x66dc10	640	kor_super_cup.cpp	KorSuperCup::create_table	Picks the two Super Cup clubs, the Korean League champion and the Korean FA Cup winner, wi
+0x66de90	416	kor_super_cup.cpp	KorSuperCup::start_new_season	Resets the Super Cup for a new season, frees old tables, archives statistics, picks the tw
+0x66e030	320	korea_awards.cpp	KoreaAwards::KoreaAwards	Constructs the Korean awards on NationAwards, sets its nation record, then loads the award
+0x66e170	864	korea_awards.cpp	KoreaAwards::init_awards	Allocates the table of seven Korean awards and creates one team award, one month award and
+0x84df70	448	spa_cup.cpp	SpaCup::start_new_season	Frees last season's cup data, archives the stats, advances the year and rebuilds the entry
+0x84feb0	528	spa_first.cpp	SpaFirst::start_new_season	Resolves B team clashes, runs Spanish promotion and relegation, exchanges lower clubs, reb
+0x8500c0	576	spa_first.cpp	SpaFirst::exchange_second_division_clubs_unplayed	Without Segunda B, relegates Second Division clubs to group B1 and promotes as many from t
+0x850700	384	spa_first.cpp	SpaFirst::process_promotion_relegation_chain	Records final positions and swaps clubs between the First and Second Divisions, then betwe
+0x853830	368	spa_lower.cpp	SpaLower::start_new_season	Archives the season, frees the table, schedule and stage objects, then sets up rules, refi
+0x855d80	448	spa_second.cpp	SpaSecond::start_new_season	Archives the season, frees the table, schedule and stage objects, then sets up rules, refi
+0x858cd0	416	spa_super.cpp	SpaSuper::start_new_season	Clears the finished Spanish Super Cup, archives its stats, moves the year on and picks the
+0x858f30	912	spain_awards.cpp	SpainAwards::init_awards	Allocates the table of eight Spanish awards and creates a team award and three year awards
+0x906980	320	usa_awards.cpp	UsaAwards::UsaAwards	Builds the USA awards object on NationAwards with month ratings, then loads the awards fro
+0x906ac0	848	usa_awards.cpp	UsaAwards::init_awards	Creates the seven USA awards, a month award, five year awards and a team award for the MLS

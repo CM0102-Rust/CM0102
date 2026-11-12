@@ -28,3 +28,17 @@ Para cada função da sua lista:
 Não faça commit; não mexa em `rust/src` da cópia principal, em `levas/<N>`, no `ordem.txt` nem nas bancadas. Outros
 leitores trabalham ao mesmo tempo com os outros prefixos: se precisar de uma rotina de outra lista, leia, não porte.
 Relatório curto em português: os itens, o que ficou de fora e por quê, defeitos do original achados, dúvidas.
+
+## Rodada 2: o mundo inteiro (12/11/2026)
+
+As listas `mwa` a `mwg` são as funções que só rodam com todas as nações carregadas até 2002-08-01, depois da virada de
+temporada (`docs/cobertura_mundo.txt`, a contagem de cada uma). Diferenças desta rodada:
+- No `rotinas.py` de cada item: `LIGAS` = a linha `# LIGAS` do topo da sua lista (Inglaterra e as nações do grupo, os
+  códigos de 3 letras do `nation.dat`; `mwg` escolhe por item as nações em que a rotina roda) e `ATE = '2002-08-01'`.
+  Itens com `LIGAS` e `ATE` iguais entram juntos numa leva; a cadeia muta, compara e roda as carreiras com essas ligas
+  até essa data.
+- As ligas de uma nação são quase iguais entre si (o mesmo método em `xxx_prm`, `xxx_first`, `xxx_second`...): porte
+  por arquivo inteiro e reuse o molde das irmãs já portadas (`rust/src/motor/comp/`).
+- Notícias e textos: `compare_text_writer` (`compare/media.rs`).
+- A carreira de teste começa em 2001-07: ligas que viram a temporada em junho/julho de 2002 rodam a virada uma vez;
+  diga no `PRONTO.txt` em que data cada rotina roda, se souber.

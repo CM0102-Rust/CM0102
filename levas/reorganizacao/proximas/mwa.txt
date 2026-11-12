@@ -1,0 +1,81 @@
+# LIGAS = ENG IRL NIR; ATE = 2002-08-01
+0x6340a0	464	ire_chal_cup.cpp	IreChalCup::IreChalCup	Constructs the Irish Challenge Cup on Cup and, when no saved data loads, collects its entr
+0x634360	1136	ire_chal_cup.cpp	IreChalCup::create_round_table	Builds the six-round table of the Irish Challenge Cup with draw dates, match dates and tea
+0x6347d0	656	ire_chal_cup.cpp	IreChalCup::collect_entrants	Fills the 42-entry entrant list with five random clubs from each of four regional leagues 
+0x634a60	432	ire_chal_cup.cpp	IreChalCup::start_new_season	Frees last season's cup data, archives the stats, moves the year on and rebuilds the entra
+0x634c40	544	ire_first.cpp	IreFirst::IreFirst	Constructs the Irish First Division on League, then loads saved data or sets up rules, tab
+0x634f40	2512	ire_first.cpp	IreFirst::create_schedule	Builds the 34 or 36 round league schedule from August to April for stage -1, or the one-ro
+0x635910	400	ire_first.cpp	IreFirst::create_table	Counts the clubs of the Irish First Division, sets three or four league cycles and fills o
+0x635aa0	144	ire_first.cpp	IreFirst::set_up_rules	Sets the Irish First Division rule bytes, with the Premier Division above and no lower lea
+0x635b30	448	ire_first.cpp	IreFirst::start_new_season	Frees last season's table, schedule and play-off stages, archives the statistics, then reb
+0x635cf0	208	ire_first.cpp	IreFirst::advance_stage	Waits for the Irish Premier Division to finish, updates its positions and starts the promo
+0x635dc0	608	ire_first.cpp	IreFirst::create_promotion_playoff_stage	Pairs the First Division club in the play-off place with the Premier Division play-off clu
+0x6364a0	464	ire_leinster_cup.cpp	IreLeinsterCup::IreLeinsterCup	Constructs the Leinster Senior Cup on Cup, then loads saved data or picks its clubs, build
+0x636760	800	ire_leinster_cup.cpp	IreLeinsterCup::create_round_table	Builds the four knockout rounds of the 16-club Leinster cup, from August to a March final,
+0x636a80	416	ire_leinster_cup.cpp	IreLeinsterCup::select_clubs	Fills the 16-club entry list with four Leinster Senior League clubs and the Leinster clubs
+0x636c20	432	ire_leinster_cup.cpp	IreLeinsterCup::start_new_season	Frees last season's club list and rounds, archives the statistics, advances the year and s
+0x636dd0	592	ire_lge_cup.cpp	IreLgeCup::IreLgeCup	Constructs the Irish League Cup on the League base, collects 26 entrants, builds the own t
+0x637120	896	ire_lge_cup.cpp	IreLgeCup::create_schedule	Builds the date template of a stage: three group matchdays for stages 0 to 6, or three kno
+0x6375c0	256	ire_lge_cup.cpp	IreLgeCup::create_table	Sets the own table to three clubs, allocates it, fills it with the first three entrants an
+0x6376c0	144	ire_lge_cup.cpp	IreLgeCup::set_up_rules	Sets the points, tiebreak and promotion rule fields of the Irish League Cup and builds its
+0x637760	464	ire_lge_cup.cpp	IreLgeCup::start_new_season	Frees last season's table, entrants and stages, then collects new entrants and rebuilds th
+0x637930	144	ire_lge_cup.cpp	IreLgeCup::advance_stage	Moves the current stage index on by one and creates the knockout stage when the index reac
+0x6379c0	576	ire_lge_cup.cpp	IreLgeCup::create_group_stage	Takes the next unused entrants from the pool and builds a League_Stage group for the given
+0x637c00	464	ire_lge_cup.cpp	IreLgeCup::create_knockout_stage	Collects the eight group winners and builds the knockout Cup_Stage in stage slot 7, then d
+0x637dd0	832	ire_lge_cup.cpp	IreLgeCup::collect_entrants	Fills a 26-entry pool with Irish clubs, placing them into regional buckets by reserve divi
+0x638110	336	ire_lge_cup.cpp	IreLgeCup::update_staff_records_for_status	Adds staff history records for group qualification or failure and for knockout exits, wins
+0x638420	624	ire_lge_cup.cpp	IreLgeCup::set_predicted_positions	Sorts the entrants by reputation and stores predicted final positions in Comp_Stats by the
+0x6387a0	464	ire_munster_cup.cpp	IreMunsterCup::IreMunsterCup	Constructs the Munster Senior Cup on the Cup base, collects its 20 entrants, builds the ro
+0x638a60	976	ire_munster_cup.cpp	IreMunsterCup::create_round_table	Builds the five-round date and tie template of the Munster cup for 20 entrants, from a pre
+0x638e30	672	ire_munster_cup.cpp	IreMunsterCup::collect_entrants	Builds the 20 entrants from the top 16 clubs of one division and four Munster league clubs
+0x6390d0	432	ire_munster_cup.cpp	IreMunsterCup::start_new_season	Frees last season's data, archives the statistics, collects new entrants and sets up the r
+0x639280	448	ire_pres_cup.cpp	IrePresCup::IrePresCup	Constructs the Irish President's Cup on the Cup base, picks its two entrants and builds th
+0x639530	320	ire_pres_cup.cpp	IrePresCup::create_round_table	Builds the single-round date template of the President's Cup, a one-off final.
+0x639670	432	ire_pres_cup.cpp	IrePresCup::collect_entrants	Picks the two highest-placed clubs of last season's top division that are based in Leinste
+0x639820	416	ire_pres_cup.cpp	IrePresCup::start_new_season	Frees last season's data, archives the statistics, picks new entrants and sets up the roun
+0x639bb0	560	ire_prm.cpp	IrePrm::IrePrm	Constructs the Irish Premier Division on League, then loads saved data or sets up rules, t
+0x639e90	2224	ire_prm.cpp	IrePrm::create_schedule	Builds the Premier Division round template for stage -1, with 36 rounds when ten clubs mee
+0x63a740	448	ire_prm.cpp	IrePrm::create_table	Counts Premier Division clubs, accepts only ten or twelve, sets the meetings count to four
+0x63a900	176	ire_prm.cpp	IrePrm::set_up_rules	Sets the Premier Division rule bytes, with the Irish First Division as the league below, a
+0x63a9b0	432	ire_prm.cpp	IrePrm::start_new_season	Runs promotion and relegation, archives the stats, rebuilds rules, table and fixtures, and
+0x63acd0	432	ire_super_cup.cpp	IreSuperCup::IreSuperCup	Constructs the Irish Super Cup on League, then loads saved data or sets its rules, schedul
+0x63af60	352	ire_super_cup.cpp	IreSuperCup::create_schedule	Builds the three-round Super Cup template for stage -1, with rounds on 27 June, 29 June an
+0x63b0c0	576	ire_super_cup.cpp	IreSuperCup::create_table	Fills the four-club table with Irish clubs entered in the Champions League, UEFA Cup and I
+0x63b300	448	ire_super_cup.cpp	IreSuperCup::update_for_date	Builds the table, fixtures and predicted positions once in the season year, then runs the 
+0x63b4c0	144	ire_super_cup.cpp	IreSuperCup::set_up_rules	Sets the Super Cup rule bytes, with no league above or below and one meeting, and builds t
+0x63b550	240	ire_super_cup.cpp	IreSuperCup::start_new_season	Frees the table and schedule, archives the stats, deletes the stage objects, moves to the 
+0x63b640	336	ireland_awards.cpp	IrelandAwards::IrelandAwards	Constructs the Irish awards on NationAwards, sets the nation record, then loads saved awar
+0x63b790	1920	ireland_awards.cpp	IrelandAwards::init_awards	Allocates the table of eighteen Irish awards and creates the year, month and team awards o
+0x789df0	448	nir_charity.cpp	NirCharity::NirCharity	Constructs the Northern Irish charity cup, loads its saved state or picks its teams and bu
+0x78a0a0	320	nir_charity.cpp	NirCharity::create_round_table	Builds the single-round table of the charity match with its draw and match dates, for the 
+0x78a1e0	560	nir_charity.cpp	NirCharity::select_teams	Picks the league champion and the cup winner as the two teams, taking the league runner-up
+0x78a410	416	nir_charity.cpp	NirCharity::start_new_season	Frees last season's charity cup data, archives the stats, moves the year on and picks the 
+0x78a5b0	464	nir_cup.cpp	NirCup::NirCup	Constructs the Northern Irish Cup and, when no saved data loads, collects entrants and bui
+0x78a870	1056	nir_cup.cpp	NirCup::create_round_table	Builds the five-round knockout table of the Irish Cup, from 32 clubs down to the final, wi
+0x78ac90	416	nir_cup.cpp	NirCup::collect_entrants	Fills the 32-entry entrant list with twelve shuffled Northern Irish lower division clubs, 
+0x78ae30	432	nir_cup.cpp	NirCup::start_new_season	Frees last season's cup data, archives the stats, moves the year on and rebuilds the entra
+0x78b010	544	nir_first.cpp	NirFirst::NirFirst	Constructs the Northern Irish First Division on the League base and, when no saved data lo
+0x78b310	2368	nir_first.cpp	NirFirst::create_schedule	Builds the 36-matchday league schedule for stage -1, or the one two-legged play-off round 
+0x78bc50	288	nir_first.cpp	NirFirst::create_table	Allocates the ten-row table, fills it with the clubs of the Northern Irish First Division 
+0x78bd70	160	nir_first.cpp	NirFirst::set_up_rules	Sets the First Division rule bytes, four meetings a season and the Premier Division as the
+0x78be10	448	nir_first.cpp	NirFirst::start_new_season	Frees last season's table, schedule and play-off stage, archives the stats, moves the year
+0x78bfd0	208	nir_first.cpp	NirFirst::advance_stage	Once the Premier Division is complete, moves the stage counter on and builds the promotion
+0x78c0a0	608	nir_first.cpp	NirFirst::create_playoff_stage	Builds the two-club promotion play-off between the First Division club with play-off statu
+0x78c780	592	nir_lge_cup.cpp	NirLgeCup::NirLgeCup	Constructs the Northern Irish League Cup on League, then loads saved data or collects 20 e
+0x78cad0	992	nir_lge_cup.cpp	NirLgeCup::create_schedule	Builds a stage's date template, with five group matchdays from late August for stages 0 to
+0x78cfd0	256	nir_lge_cup.cpp	NirLgeCup::create_table	Sets the own table to five clubs, allocates it, fills it with the first five entrants and 
+0x78d0d0	144	nir_lge_cup.cpp	NirLgeCup::set_up_rules	Sets the points, tiebreak and promotion rule fields of the Northern Irish League Cup, a pr
+0x78d160	464	nir_lge_cup.cpp	NirLgeCup::start_new_season	Frees last season's table, entrants and stages, archives the stats, then collects new entr
+0x78d330	144	nir_lge_cup.cpp	NirLgeCup::advance_stage	Moves the current stage index on by one and creates the knockout stage when the index reac
+0x78d3c0	576	nir_lge_cup.cpp	NirLgeCup::create_group_stage	Takes the next five unused entrants from the pool and builds a League_Stage group for the 
+0x78d600	512	nir_lge_cup.cpp	NirLgeCup::create_knockout_stage	Collects the top two clubs of the own table and of the three groups and builds the eight-c
+0x78d800	448	nir_lge_cup.cpp	NirLgeCup::collect_entrants	Fills a 20-entry pool with Northern Irish clubs, placing them in four buckets of five by r
+0x78d9c0	336	nir_lge_cup.cpp	NirLgeCup::update_staff_records_for_status	Adds staff history records for group qualification or failure and for knockout exits, wins
+0x78dcd0	624	nir_lge_cup.cpp	NirLgeCup::set_predicted_positions	Sorts the entrants by reputation and stores predicted final positions in Comp_Stats by the
+0x78e070	528	nir_prm.cpp	NirPrm::NirPrm	Constructs the Northern Irish Premier Division on League, then loads saved data or sets up
+0x78e330	2352	nir_prm.cpp	NirPrm::create_schedule	Builds the 36-round schedule template of the Northern Irish Premier Division from mid Augu
+0x78ec60	288	nir_prm.cpp	NirPrm::create_table	Allocates the ten-row table, fills it with the Premier Division clubs and sets the prize f
+0x78ed80	176	nir_prm.cpp	NirPrm::set_up_rules	Sets the Premier Division rule bytes, with no upper league and the division in global 0x9c
+0x78ee30	432	nir_prm.cpp	NirPrm::start_new_season	Runs promotion and relegation, archives the stats, rebuilds rules, table and fixtures, res
+0x792d80	320	northern_ireland_awards.cpp	NorthernIrelandAwards::NorthernIrelandAwards	Constructs the Northern Ireland awards on NationAwards, sets its nation, then loads saved 
+0x792ec0	1440	northern_ireland_awards.cpp	NorthernIrelandAwards::init_awards	Allocates the table of thirteen awards: one national year award, and for each of two divis

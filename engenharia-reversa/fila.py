@@ -12,6 +12,8 @@ Cada item fica em levas/fila/<nome>/:
                prólogo contra o cm0102-1080.exe; nenhuma das duas é acusada de "alterada no 1080")
                LIGAS = 'ENG ESP ...' (opcional): item de competições de outras nações; só se junta a itens com as mesmas
                ligas, a leva ganha levas/N/LIGAS e a cadeia compara e muta com elas até 2002-06-01 (03/11/2026)
+               ATE = 'AAAA-MM-DD' (opcional, 12/11/2026): a data final da cadeia (mutações, jogo real e carreiras);
+               só se junta a itens com a mesma; com ela o jogo real roda na cadeia (não fica para a auditoria)
                DOCS = (titulo pt, titulo en, [(nome, nome_en, endereco, arquivo, convencao, o que faz pt, en)])
   mutacoes.py  MUTACOES = [(nome, trecho, troca)]  (mesmo formato de mutacoes/levaN.py)
 A ordem está em levas/fila/ordem.txt (um nome por linha).
@@ -76,7 +78,7 @@ def do_lote(ordem_):
     """Os itens da próxima leva: o primeiro da ordem e os seguintes do mesmo tipo (MOTOR, SAVE), até ITENS_POR_LEVA."""
     def tipo(nome):
         rot = runpy.run_path(os.path.join(FILA, nome, 'rotinas.py'))
-        return bool(rot.get('MOTOR')), bool(rot.get('SAVE')), rot.get('LIGAS', '')
+        return bool(rot.get('MOTOR')), bool(rot.get('SAVE')), rot.get('LIGAS', ''), rot.get('ATE', '')
     lote = [ordem_[0]]
     for nome in ordem_[1:]:
         if len(lote) == ITENS_POR_LEVA:
@@ -126,6 +128,9 @@ def materializar(nomes, n, base, antes):
     ligas = runpy.run_path(os.path.join(FILA, nomes[0], 'rotinas.py')).get('LIGAS')
     if ligas:  # leva de competições: a cadeia compara e muta com essas ligas até 2002-06-01 (ver cadeia.sh)
         open(os.path.join(destino, 'LIGAS'), 'w', encoding='utf-8').write(ligas + '\n')
+    ate = runpy.run_path(os.path.join(FILA, nomes[0], 'rotinas.py')).get('ATE')
+    if ate:  # 12/11/2026: a data final da cadeia (ex.: 2002-08-01, depois da virada); com ela o jogo real roda na cadeia
+        open(os.path.join(destino, 'ATE'), 'w', encoding='utf-8').write(ate + '\n')
     open(os.path.join(destino, 'integrar.py'), 'w', encoding='utf-8').write(INTEGRAR.format(n=n, rotinas=rotinas, base=base))
     with open(os.path.join(R, 'engenharia-reversa', 'mutacoes', f'leva{n}.py'), 'w', encoding='utf-8') as f:
         uso = f'--prova-save {n}' if save else '--carreira 2002-06-01'

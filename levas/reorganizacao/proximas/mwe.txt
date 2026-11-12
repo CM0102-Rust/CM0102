@@ -1,0 +1,90 @@
+# LIGAS = ENG SWE FIN NOR POR; ATE = 2002-08-01
+0x592250	464	fin_cup.cpp	FinCup::FinCup	Constructs the Finnish cup on Cup, loads it from disk or collects entrants and builds the 
+0x592510	1296	fin_cup.cpp	FinCup::create_round_table	Allocates and fills the seven-round table of the Finnish cup with draw dates, match dates 
+0x592a20	736	fin_cup.cpp	FinCup::collect_entrants	Fills the 76-entry six-byte entrant list with 44 shuffled top clubs, then one division's c
+0x592d00	432	fin_cup.cpp	FinCup::start_new_season	Frees last season's cup data, archives the stats, advances the year and rebuilds entrants,
+0x592eb0	560	fin_first.cpp	FinFirst::FinFirst	Constructs the Finnish First Division with its rules, North group table, fixtures, Comp_St
+0x5931c0	2224	fin_first.cpp	FinFirst::create_schedule	Builds the round dates of the 27-round group league or the cup round templates of the thre
+0x593a70	272	fin_first.cpp	FinFirst::create_table	Allocates the 10-row table and fills it with the clubs of the Finnish First Division North
+0x593b80	160	fin_first.cpp	FinFirst::set_up_rules	Sets the league rules of the Finnish First Division and builds the base league schedule.
+0x593c20	496	fin_first.cpp	FinFirst::start_new_season	Archives the season, deletes the old stages and rebuilds the rules, North table, fixtures 
+0x593e10	384	fin_first.cpp	FinFirst::set_club_progress	Writes a club's three progress codes in its Comp_Stats entry, mapping play-off results to 
+0x593f90	240	fin_first.cpp	FinFirst::advance_stage	Moves to the next stage, building the play-off stages after the groups and the Premier Div
+0x594080	1424	fin_first.cpp	FinFirst::create_play_off_stages	Picks four Second Division clubs for promotion, then builds the promotion play-off stage 1
+0x594610	512	fin_first.cpp	FinFirst::create_premier_play_off_stage	Builds stage 3, a two-club tie between the First Division play-off winner and the Premier 
+0x594810	512	fin_first.cpp	FinFirst::update_staff_records_for_status	Adds staff history records and sets table status bytes for group winners, play-off qualifi
+0x594cd0	736	fin_first.cpp	FinFirst::create_south_group_stage	Collects the ten Finnish First Division South clubs and builds the League_Stage of that gr
+0x594ff0	368	fin_first.cpp	FinFirst::set_predicted_positions	Sorts the clubs of the North table and the South group stage and gives them alternating pr
+0x5954b0	1728	fin_prm.cpp	FinPrm::create_schedule	Builds the 33-round schedule template of the Finnish Premier Division from late April to l
+0x595b70	288	fin_prm.cpp	FinPrm::create_table	Allocates the 12-row table, fills it with the Finnish Premier Division clubs and sets the 
+0x595c90	176	fin_prm.cpp	FinPrm::set_up_rules	Sets the Finnish Premier Division rule bytes, with no upper league and the First Division 
+0x595d40	448	fin_prm.cpp	FinPrm::start_new_season	Runs Finnish promotion and relegation, refreshes and regroups the First Division clubs, re
+0x5a8f70	320	finland_awards.cpp	FinlandAwards::FinlandAwards	Constructs the Finland awards object, loading it from the save or creating the month ratin
+0x5a90b0	1536	finland_awards.cpp	FinlandAwards::init_awards	Allocates the table of fourteen Finland award objects for year, month and team awards.
+0x78f020	464	nor_cup.cpp	NorCup::NorCup	Constructs the Norwegian cup on Cup, then loads saved data or collects entrants, builds th
+0x78f2e0	1456	nor_cup.cpp	NorCup::create_round_table	Allocates and fills the seven-round table of the Norwegian cup from April, with draw dates
+0x78f890	768	nor_cup.cpp	NorCup::collect_entrants	Fills the 128-entry six-byte entrant list with Norwegian league clubs, flagging the top di
+0x78fb90	432	nor_cup.cpp	NorCup::start_new_season	Frees last season's cup data, archives the stats, advances the year and rebuilds the entra
+0x78fd40	544	nor_first.cpp	NorFirst::NorFirst	Constructs the Norwegian First Division on League, then loads saved data or sets up rules,
+0x790040	2400	nor_first.cpp	NorFirst::create_schedule	Builds the 26-round or 30-round league schedule from April for stage -1, or the one-round 
+0x7909a0	352	nor_first.cpp	NorFirst::create_table	Allocates the table, counts the clubs of the Norwegian First Division and fills 16 rows, o
+0x790b00	144	nor_first.cpp	NorFirst::set_up_rules	Sets the Norwegian First Division rule bytes, with the Premier Division above and no lower
+0x790b90	448	nor_first.cpp	NorFirst::start_new_season	Archives the season, deletes the old stages and rebuilds rules, table, fixtures and predic
+0x790d50	208	nor_first.cpp	NorFirst::advance_stage	Moves to the next stage once the Premier Division is complete, and builds the promotion pl
+0x790e20	608	nor_first.cpp	NorFirst::create_play_off_stage	Builds stage 0, a two-club tie between the First Division club with play-off status and th
+0x791500	528	nor_prm.cpp	NorPrm::NorPrm	Constructs the Norwegian Premier Division on League, then loads saved data or sets up rule
+0x7917c0	3616	nor_prm.cpp	NorPrm::create_schedule	Builds the 26-round schedule template of the Norwegian Premier Division from April to Octo
+0x7925e0	288	nor_prm.cpp	NorPrm::create_table	Allocates the 14-row table, fills it with the clubs of the Norwegian Premier Division and 
+0x792700	160	nor_prm.cpp	NorPrm::set_up_rules	Sets the Norwegian Premier Division rule bytes, with no upper league and the First Divisio
+0x7927a0	448	nor_prm.cpp	NorPrm::start_new_season	Runs promotion and relegation for the Norwegian divisions, regroups the Second Division, r
+0x792960	480	nor_prm.cpp	nor_prm_swap_first_and_second_division_clubs	Promotes four chosen Norwegian Second Division clubs to the First Division and moves First
+0x793940	320	norway_awards.cpp	NorwayAwards::NorwayAwards	Constructs the Norway awards object on the NationAwards base, then loads saved awards or c
+0x793a80	2112	norway_awards.cpp	NorwayAwards::init_awards	Allocates the table of eleven Norway awards and creates its year awards, team awards and m
+0x7cd980	464	por_cup.cpp	PorCup::PorCup	Builds the Portuguese Cup on Cup, loads it from disk or collects its entrants, builds the 
+0x7cdc40	1504	por_cup.cpp	PorCup::create_round_table	Allocates the eight-round Portuguese Cup table and sets the draw date, match dates, ties a
+0x7ce220	800	por_cup.cpp	PorCup::collect_entrants	Fills the 164-place entrant list with Portuguese clubs from the lowest divisions upwards, 
+0x7ce540	432	por_cup.cpp	PorCup::start_new_season	Frees last season's tables, archives the statistics, adds one to the year and rebuilds the
+0x7ce720	528	por_prm.cpp	PorPrm::PorPrm	Builds the Portuguese Premier Division on League, loads it from the temp file or sets rule
+0x7ce9e0	3616	por_prm.cpp	PorPrm::create_schedule	Builds the 34-round schedule template of the Premier Division from late August, with three
+0x7cf800	304	por_prm.cpp	PorPrm::create_table	Allocates the 18-row table, fills it with the Premier Division clubs, sets the prize fund 
+0x7cf930	176	por_prm.cpp	PorPrm::set_up_rules	Sets the Premier Division rules with relegation to the Second Division 0x9cf610 and builds
+0x7cf9e0	528	por_prm.cpp	PorPrm::start_new_season	Runs B team checks and promotion and relegation, rebuilds the table and fixtures, then sta
+0x7cfbf0	320	por_prm.cpp	PorPrm::process_promotion_relegation_chain	Records final positions and moves clubs between the Premier and Second Divisions, and betw
+0x7cfd30	576	por_prm.cpp	PorPrm::exchange_second_division_with_zones	When Second Division B is not played, relegates the marked Second Division clubs to the no
+0x7d0950	528	por_second.cpp	PorSecond::PorSecond	Builds the Portuguese Second Division on League, loads it from the temp file or sets rules
+0x7d0c40	2272	por_second.cpp	PorSecond::create_schedule	Builds the 34-round schedule template of the Second Division from late August, with one ma
+0x7d1520	384	por_second.cpp	PorSecond::create_table	Allocates the 18-row table, fills it with the Second Division clubs, marks B teams of Prem
+0x7d16a0	192	por_second.cpp	PorSecond::set_up_rules	Sets the Second Division rules with promotion to the Premier Division and relegation to Se
+0x7d1760	448	por_second.cpp	PorSecond::start_new_season	Frees the table, schedule and stages, archives the statistics, adds one to the year and re
+0x7d2e40	448	por_super.cpp	PorSuper::PorSuper	Constructs the Portuguese Super Cup, loads it or selects the two teams, builds the round t
+0x7d30f0	368	por_super.cpp	PorSuper::create_round_table	Builds the one-round table of the Super Cup, a two-legged final, with a different second-l
+0x7d3260	560	por_super.cpp	PorSuper::select_teams	Picks the league champion and the cup winner as the two Super Cup teams, taking the cup ru
+0x7d3490	416	por_super.cpp	PorSuper::start_new_season	Frees last season's team list and round data, increments the year, selects the new teams a
+0x7d36c0	1312	portugal_awards.cpp	PortugalAwards::init_awards	Creates the Portuguese year and team awards for the first and second divisions and stores 
+0x88cbb0	592	swe_cup.cpp	SweCup::SweCup	Constructs the Swedish cup on Cup, then loads saved data or builds the entrants, rounds, f
+0x88cf40	1632	swe_cup.cpp	SweCup::create_round_table	Builds the two-round table of a preliminary section for stages below 7, or the six-round m
+0x88d5a0	240	swe_cup.cpp	SweCup::collect_entrants	Fills the 30-entry six-byte entrant list at +0xa7 with the first 30 clubs of the club pool
+0x88d690	528	swe_cup.cpp	SweCup::start_new_season	Frees last season's cup data, archives the stats, advances the year and rebuilds the club 
+0x88d8a0	112	swe_cup.cpp	SweCup::update_for_date	Starts a new cup season on day 1 of month index 6 when the cup is complete, then runs the 
+0x88da20	896	swe_cup.cpp	SweCup::build_club_pool	Collects 244 Swedish clubs from four divisions into the pool at +0xb2 and deals them into 
+0x88dda0	560	swe_cup.cpp	SweCup::create_preliminary_stage	Takes the next 31 or 30 clubs from the pool and builds the Cup_Stage of that preliminary s
+0x88dfd0	144	swe_cup.cpp	SweCup::advance_stage	Moves to the next stage, asserting at the last stage, and builds the 64-club main draw whe
+0x88e060	656	swe_cup.cpp	SweCup::create_main_draw_stage	Collects the 64 qualified clubs from the base entrant list and the seven preliminary stage
+0x88e2f0	304	swe_cup.cpp	SweCup::update_staff_records_for_status	Adds a staff history record when a club goes out or through in a preliminary stage, or win
+0x88e420	352	swe_cup.cpp	SweCup::rank_teams	Sorts the club pool and gives each club a final position in Comp_Stats from the round in w
+0x88e5e0	544	swe_first.cpp	SweFirst::SweFirst	Constructs the Swedish First Division on League, then loads it or sets up the rules, 16-cl
+0x88e8e0	1712	swe_first.cpp	SweFirst::create_schedule	Builds the round dates of the 30-round league for stage -1, or the one-round two-legged pl
+0x88ef90	256	swe_first.cpp	SweFirst::create_table	Allocates the 16-row table and fills it with the clubs of the Swedish First Division.
+0x88f090	192	swe_first.cpp	SweFirst::set_up_rules	Sets the league rules of the Swedish First Division, with promotion to the Premier Divisio
+0x88f150	448	swe_first.cpp	SweFirst::start_new_season	Archives the season, deletes the old stages and rebuilds the rules, table, fixtures and pr
+0x88f310	208	swe_first.cpp	SweFirst::advance_stage	Moves to the next stage once the Premier Division is complete, and builds the promotion pl
+0x88f3e0	544	swe_first.cpp	SweFirst::create_play_off_stage	Builds stage 0, a two-club tie between the First Division club with play-off status and th
+0x88fb10	752	swe_prm.cpp	SwePrm::SwePrm	Constructs the Swedish Premier Division on League, files clubs under the Second or Lower D
+0x88feb0	1408	swe_prm.cpp	SwePrm::create_schedule	Builds the round dates of the 26-round Premier Division season from April to November for 
+0x890430	288	swe_prm.cpp	SwePrm::create_table	Allocates the 14-row table, fills it with the clubs of the Swedish Premier Division and se
+0x890550	160	swe_prm.cpp	SwePrm::set_up_rules	Sets the league rules of the Swedish Premier Division, with relegation to the First Divisi
+0x8905f0	512	swe_prm.cpp	SwePrm::start_new_season	Runs promotion and relegation through the Swedish pyramid, reassigns Second Division secti
+0x8907f0	400	swe_prm.cpp	SwePrm::process_promotion_relegation_chain	Records final positions and moves clubs between the Premier, First and Second Divisions an
+0x890980	448	swe_prm.cpp	swe_prm_promote_regional_clubs_to_first_division	When the Second Division is not playable, promotes three regional Second Division clubs to
+0x890c70	1792	swe_prm.cpp	swe_prm_assign_second_division_sections	Deals the 72 Swedish Second Division clubs into six regional sections of twelve by locatio
+0x8937b0	1088	sweden_awards.cpp	SwedenAwards::init_awards	Allocates the ten-entry award array and builds the Swedish year and team awards, with an e

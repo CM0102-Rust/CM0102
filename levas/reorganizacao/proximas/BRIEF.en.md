@@ -28,3 +28,17 @@ For each function on your list:
 No commits; do not touch the main copy's `rust/src`, `levas/<N>`, `ordem.txt` or the benches. Other readers work at the
 same time on the other prefixes: if you need a routine from another list, read it, do not port it. Short report in
 Portuguese: the items, what was left out and why, defects of the original found, doubts.
+
+## Round 2: the whole world (12/11/2026)
+
+The `mwa` to `mwg` lists are the functions that only run with every nation loaded to 2002-08-01, past the season
+turnover (`docs/cobertura_mundo.txt` has each one's call count). What is different in this round:
+- In each item's `rotinas.py`: `LIGAS` = the `# LIGAS` line at the top of your list (England and the group's nations,
+  the 3-letter codes of `nation.dat`; `mwg` picks per item the nations where the routine runs) and `ATE = '2002-08-01'`.
+  Items with the same `LIGAS` and `ATE` go into one batch; the chain mutates, compares and runs the careers with those
+  leagues to that date.
+- A nation's leagues are nearly identical (the same method in `xxx_prm`, `xxx_first`, `xxx_second`...): port whole
+  files and reuse the mould of the sisters already ported (`rust/src/motor/comp/`).
+- News and texts: `compare_text_writer` (`compare/media.rs`).
+- The test career starts in 2001-07: leagues whose season turns over in June/July 2002 run the turnover once; say in
+  `PRONTO.txt` on which date each routine runs, if you know.

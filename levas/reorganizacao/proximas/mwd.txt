@@ -1,0 +1,129 @@
+# LIGAS = ENG POL TUR GRE HRV RUS; ATE = 2002-08-01
+0x513e10	544	cro_a1.cpp	CroA1::CroA1	Constructs the Croatian First Division on League, then loads saved data or sets up rules, 
+0x5140e0	1744	cro_a1.cpp	CroA1::create_schedule	Builds the 30-round league schedule from late July to May for stage -1, or the one-round p
+0x5147b0	304	cro_a1.cpp	CroA1::create_table	Allocates the 16-row table, fills it with the clubs of the Croatian First Division, sets t
+0x5148e0	192	cro_a1.cpp	CroA1::set_up_rules	Sets the Croatian league rules, with the second division group of 0x9cf8a8 as the lower le
+0x5149a0	560	cro_a1.cpp	CroA1::start_new_season	Promotes and relegates clubs, realigns the second division groups, clears the old season a
+0x514bd0	144	cro_a1.cpp	CroA1::advance_stage	Moves the current stage index at +0x30 on by one and creates the play-off stage when it re
+0x514c60	624	cro_a1.cpp	CroA1::create_playoff_stage	Pairs adjacent table clubs level on points into a play-off Cup_Stage, or ends the competit
+0x514ed0	544	cro_a1.cpp	cro_a1_swap_second_and_third_tier_clubs	Promotes the four top Croatian clubs of the third division groups into the second division
+0x515310	544	cro_a2a.cpp	CroA2a::CroA2a	Constructs this Croatian second division on League, loads it from the temp file or sets ru
+0x5155e0	1744	cro_a2a.cpp	CroA2a::create_schedule	Builds the 30-round season template for stage -1 or a one-round tie-break play-off templat
+0x515cb0	304	cro_a2a.cpp	CroA2a::create_table	Allocates the 16-row table, fills it with the clubs of comp id 0x9cf8a8, then sets the pri
+0x515de0	192	cro_a2a.cpp	CroA2a::set_up_rules	Sets the rule bytes and linked comp ids of this Croatian second division, then builds the 
+0x515ea0	448	cro_a2a.cpp	CroA2a::start_new_season	Frees the old table, schedule and play-off data, archives Comp_Stats, increments the year 
+0x516430	544	cro_a2b.cpp	CroA2b::CroA2b	Constructs this Croatian second division on League, loads it from the temp file or sets ru
+0x516700	1744	cro_a2b.cpp	CroA2b::create_schedule	Builds the 30-round season template for stage -1 or a one-round tie-break play-off templat
+0x516dd0	304	cro_a2b.cpp	CroA2b::create_table	Allocates the 16-row table, fills it with the clubs of comp id 0x9cf8ac, then sets the pri
+0x516f00	192	cro_a2b.cpp	CroA2b::set_up_rules	Sets the rule bytes and linked comp ids of this Croatian second division, then builds the 
+0x516fc0	448	cro_a2b.cpp	CroA2b::start_new_season	Frees the old table, schedule and play-off data, archives Comp_Stats, increments the year 
+0x517180	144	cro_a2b.cpp	CroA2b::advance_stage	Moves the current stage index on by one and builds the tie-break play-off stage when the i
+0x517210	624	cro_a2b.cpp	CroA2b::create_tiebreak_playoff_stage	Pairs adjacent table rows level on the row value at +0x19 into play-off ties and builds th
+0x517480	464	cro_cup.cpp	CroCup::CroCup	Constructs the Croatian cup on Cup, loads it from disk or collects entrants and builds the
+0x517740	1136	cro_cup.cpp	CroCup::create_round_table	Allocates and fills the six-round table of the Croatian cup with draw dates, match dates a
+0x517bb0	432	cro_cup.cpp	CroCup::collect_entrants	Fills the 48-entry six-byte entrant list with the second division clubs and a random seed,
+0x517d60	432	cro_cup.cpp	CroCup::start_new_season	Frees last season's cup data, archives the stats, advances the year and rebuilds entrants,
+0x517fa0	1024	croatia_awards.cpp	CroatiaAwards::init_awards	Allocates the nine-award table and creates one team award and two year awards for each of 
+0x5e88a0	592	gre_cup.cpp	GreCup::GreCup	Constructs the Greek Cup on League, then loads saved data or picks the 44 entrants and bui
+0x5e8bf0	1360	gre_cup.cpp	GreCup::create_schedule	Builds the six-round group schedule for stages below 10, or the five-round knockout table 
+0x5e9260	240	gre_cup.cpp	GreCup::create_table	Allocates the four-row table of the cup's own first group, fills it from entrant column 0 
+0x5e9350	144	gre_cup.cpp	GreCup::set_up_rules	Sets the Greek Cup group rule bytes, with no leagues above or below and a 600000 prize fun
+0x5e93f0	464	gre_cup.cpp	GreCup::start_new_season	Clears the old season and stages, moves the year on, picks new entrants and rebuilds rules
+0x5e95c0	144	gre_cup.cpp	GreCup::advance_stage	Moves the current stage index on by one and creates the knockout stage when it reaches sta
+0x5e9650	512	gre_cup.cpp	GreCup::create_group_stage	Creates a four-club League_Stage for one Greek Cup group from entrant column stage plus on
+0x5e9850	560	gre_cup.cpp	GreCup::create_knockout_stage	Collects the 11 group runners-up and the 11 shuffled group winners into a 22-club Cup_Stag
+0x5e9a80	544	gre_cup.cpp	GreCup::collect_entrants	Builds the 44-club entrant list from 16 sorted lower division clubs, then all second divis
+0x5e9ca0	336	gre_cup.cpp	GreCup::update_staff_records_for_status	Adds the staff record for a club that leaves a group, goes out of or passes a knockout rou
+0x5ea060	624	gre_cup.cpp	GreCup::set_predicted_positions	Sorts a copy of the entrants by reputation and gives each club a predicted final position 
+0x5ea410	528	gre_prm.cpp	GrePrm::GrePrm	Constructs the Greek First Division on League, loads it from the temp file or sets rules, 
+0x5ea6d0	1680	gre_prm.cpp	GrePrm::create_schedule	Builds the 26-round season schedule of the Greek First Division from September to May, or 
+0x5ead60	304	gre_prm.cpp	GrePrm::create_table	Allocates the 14-row table, fills it with the clubs of the Greek First Division, sets the 
+0x5eae90	192	gre_prm.cpp	GrePrm::set_up_rules	Sets the Greek First Division rule bytes with no division above and the Second Division be
+0x5eaf50	464	gre_prm.cpp	GrePrm::start_new_season	Swaps Second and Third Division clubs, frees the old table and schedule, archives Comp_Sta
+0x5eb120	400	gre_prm.cpp	gre_prm_swap_second_and_third_division_clubs	Promotes the two best Third Division clubs to the Second Division and moves the relegated 
+0x5eb2b0	528	gre_second.cpp	GreSecond::GreSecond	Constructs the Greek Second Division on League, loads it from the temp file or sets rules,
+0x5eb570	1856	gre_second.cpp	GreSecond::create_schedule	Builds the 30-round season schedule of the Greek Second Division from September to April, 
+0x5ebcb0	304	gre_second.cpp	GreSecond::create_table	Allocates the 14-row table, fills it with the clubs of the Greek Second Division, sets the
+0x5ebde0	176	gre_second.cpp	GreSecond::set_up_rules	Sets the Greek Second Division rule bytes with the First Division above and no division be
+0x5ebe90	432	gre_second.cpp	GreSecond::start_new_season	Frees the old table and schedule, archives Comp_Stats, increments the year and rebuilds ru
+0x5ec040	448	gre_super.cpp	GreSuper::GreSuper	Constructs the Greek Super Cup on Cup and, when no saved data loads, picks its two clubs a
+0x5ec2f0	320	gre_super.cpp	GreSuper::create_round_table	Builds the one-round table of the Greek Super Cup with its draw and match dates for two te
+0x5ec430	640	gre_super.cpp	GreSuper::select_teams	Picks the Greek First Division champion and the Greek Cup winner, or the league runner-up 
+0x5ec6b0	416	gre_super.cpp	GreSuper::start_new_season	Clears the finished Greek Super Cup, archives its stats, moves the year on and sets up the
+0x5ec8e0	1104	greece_awards.cpp	GreeceAwards::init_awards	Allocates the ten-award table and creates two national year awards, then a team award and 
+0x7c7d80	464	pol_cup.cpp	PolCup::PolCup	Constructs the Polish FA Cup on Cup, then loads saved data or collects entrants and builds
+0x7c8040	1296	pol_cup.cpp	PolCup::create_round_table	Allocates and fills the seven-round table of the Polish FA Cup with draw dates, match date
+0x7c8550	848	pol_cup.cpp	PolCup::collect_entrants	Fills the 52-entry entrant list with Polish Second Division, Lower Division and First Divi
+0x7c88a0	432	pol_cup.cpp	PolCup::start_new_season	Frees last season's cup data, archives the stats, advances the year and rebuilds the entra
+0x7c8a80	688	pol_first.cpp	PolFirst::PolFirst	Constructs the Polish First Division, then loads saved data or sets up rules, the first gr
+0x7c8df0	1632	pol_first.cpp	PolFirst::create_schedule	Builds a 14-round schedule template for the group stage from July to November, or for the 
+0x7c9450	576	pol_first.cpp	PolFirst::create_table	Seeds the sixteen Polish First Division clubs into two groups of eight by last position, f
+0x7c9690	176	pol_first.cpp	PolFirst::set_up_rules	Sets the Polish First Division rule bytes, with two stages, no upper league and the Second
+0x7c9740	448	pol_first.cpp	PolFirst::start_new_season	Runs promotion and relegation, moves Lower Division clubs up, rebuilds the groups and fixt
+0x7c9900	464	pol_first.cpp	PolFirst::create_second_group_stage	Builds the second group of eight Polish clubs as a League_Stage with the stage 0 schedule 
+0x7c9ad0	144	pol_first.cpp	PolFirst::advance_stage	Moves the Polish First Division to its next stage, builds the final stage after the groups
+0x7c9b60	1232	pol_first.cpp	PolFirst::create_final_stage	Puts the top four of each group in the championship group and the rest in the relegation g
+0x7ca030	432	pol_first.cpp	pol_first_promote_lower_division_clubs	Promotes four shuffled Polish Lower Division clubs to the Second Division and moves the bo
+0x7ca1e0	192	pol_first.cpp	PolFirst::set_predicted_positions	Sorts the sixteen Polish First Division clubs by strength and stores each rank as the club
+0x7ca4e0	464	pol_lge_cup.cpp	PolLgeCup::PolLgeCup	Constructs the Polish League Cup on Cup and, when no saved data loads, collects its entran
+0x7ca7a0	1424	pol_lge_cup.cpp	PolLgeCup::create_round_table	Builds the six-round table of the Polish League Cup, with an extra opening round in 2001, 
+0x7cad30	688	pol_lge_cup.cpp	PolLgeCup::collect_entrants	Fills the six-byte entrant list with 34 clubs, or 36 in 2001, from the Polish Second and F
+0x7cafe0	432	pol_lge_cup.cpp	PolLgeCup::start_new_season	Frees last season's cup data, archives the stats, advances the year and rebuilds the entra
+0x7cb1d0	544	pol_second.cpp	PolSecond::PolSecond	Constructs the Polish Second Division on League, loads it from the temp file or sets rules
+0x7cb4a0	2384	pol_second.cpp	PolSecond::create_schedule	Builds the 34-round season template, or 38 rounds in 2001, for stage -1 and the one-round 
+0x7cbdf0	336	pol_second.cpp	PolSecond::create_table	Allocates the 18-row table, or 20 rows in 2001, fills it with the Polish Second Division c
+0x7cbf40	192	pol_second.cpp	PolSecond::set_up_rules	Sets the Polish Second Division rule bytes with two stages and the First Division above an
+0x7cc000	448	pol_second.cpp	PolSecond::start_new_season	Frees the old table, schedule and stages, archives Comp_Stats, increments the year and reb
+0x7cc1c0	208	pol_second.cpp	PolSecond::advance_stage	Moves to the play-off stage once the Polish First Division is complete, building the promo
+0x7cc290	512	pol_second.cpp	PolSecond::create_play_off_stage	Pairs two Second Division clubs with play-off status against two First Division clubs and 
+0x7cc920	448	pol_super.cpp	PolSuper::PolSuper	Constructs the Polish Super Cup on Cup and, when no saved data loads, picks its two clubs 
+0x7ccbd0	320	pol_super.cpp	PolSuper::create_round_table	Builds the one-round table of the Polish Super Cup with its draw and match dates for two t
+0x7ccd10	640	pol_super.cpp	PolSuper::select_teams	Picks the Polish First Division champion and the Polish Cup winner, or the cup runner-up w
+0x7ccf90	416	pol_super.cpp	PolSuper::start_new_season	Clears the finished Polish Super Cup, archives its stats, moves the year on and sets up th
+0x7cd1c0	1136	poland_awards.cpp	PolandAwards::init_awards	Allocates the ten-award table and builds a team award, three year awards and a month award
+0x7e9210	496	rus_cup.cpp	RusCup::RusCup	Constructs the Russian Cup, loads it or selects its 48 entrants, builds the round table an
+0x7e9530	1136	rus_cup.cpp	RusCup::create_round_table	Builds the six-round table of the Russian Cup with dates, team counts and replay rules for
+0x7e99a0	880	rus_cup.cpp	RusCup::select_entrants	Fills the 48-team entry list with Russian first division clubs, 14 top clubs of the six se
+0x7e9d10	432	rus_cup.cpp	RusCup::start_new_season	Frees last season's team list and round data, increments the year, selects new entrants, s
+0x7e9f30	528	rus_first.cpp	RusFirst::RusFirst	Constructs the Russian First Division on League, then loads saved data or sets up rules, t
+0x7ea220	1184	rus_first.cpp	RusFirst::create_schedule	Builds the 36-round schedule template of the Russian First Division from month index 3 to 
+0x7ea6c0	336	rus_first.cpp	RusFirst::create_table	Allocates the 18-row table, picks the 18 strongest First Division clubs and moves any surp
+0x7ea810	176	rus_first.cpp	RusFirst::set_up_rules	Sets the Russian First Division rule bytes, with the Premier League above and no lower lea
+0x7ea8c0	448	rus_first.cpp	RusFirst::start_new_season	Frees the table, schedule and stages, archives the season, moves the year on and rebuilds 
+0x7eaa80	544	rus_prm.cpp	RusPrm::RusPrm	Constructs the Russian Premier League on League, then loads saved data or sets up rules, t
+0x7ead50	2240	rus_prm.cpp	RusPrm::create_schedule	Builds the 30-round league schedule, with other dates when Russia plays at a finals, or th
+0x7eb610	304	rus_prm.cpp	RusPrm::create_table	Allocates the 16-row table, fills it with the Russian Premier League clubs, sets the prize
+0x7eb740	192	rus_prm.cpp	RusPrm::set_up_rules	Sets the Russian Premier League rule bytes, with no upper league and the First Division be
+0x7eb800	512	rus_prm.cpp	RusPrm::start_new_season	Runs Russian promotion and relegation, exchanges First and Second Division clubs, rebuilds
+0x7ebc40	480	rus_prm.cpp	RusPrm::update_staff_records_for_status	For a play-off winner, puts the winning club above the loser in the table, then reruns the
+0x7ebe20	832	rus_prm.cpp	rus_prm_exchange_first_and_second_division_clubs	Promotes the strongest club of each pair of Russian second division zones to the first div
+0x7ec2a0	864	russia_awards.cpp	RussiaAwards::init_awards	Allocates the seven-award table and creates the player of the year award plus two team awa
+0x8fc3b0	464	tur_cup.cpp	TurCup::TurCup	Constructs the Turkish Cup, loads it from disk or collects its 64 entrants, builds the rou
+0x8fc670	1312	tur_cup.cpp	TurCup::create_round_table	Builds the seven-round Turkish Cup table with draw and match dates for each round of the s
+0x8fcb90	544	tur_cup.cpp	TurCup::collect_entrants	Fills the 64-entry six-byte entrant list with Turkish clubs, premier clubs at the end and 
+0x8fcdb0	432	tur_cup.cpp	TurCup::start_new_season	Frees last season's cup data, archives the stats, advances the season and rebuilds the ent
+0x8fcf60	528	tur_first.cpp	TurFirst::TurFirst	Constructs the Turkish first division, loads it from the temp file or sets its rules, tabl
+0x8fd220	2976	tur_first.cpp	TurFirst::create_schedule	Builds the 34-round Turkish first division schedule with a date and match slots for each r
+0x8fddc0	464	tur_first.cpp	TurFirst::create_table	Allocates the 18-row table, fills it with the Turkish premier clubs and pays each club 100
+0x8fdf90	176	tur_first.cpp	TurFirst::set_up_rules	Sets the Turkish first division rules, with no higher division and one lower competition, 
+0x8fe040	528	tur_first.cpp	TurFirst::start_new_season	Runs Turkish promotion and relegation and the third tier reshuffle, then rebuilds the tabl
+0x8fe250	336	tur_first.cpp	TurFirst::process_promotion_relegation_chain	Records final positions in the three Turkish divisions and moves clubs between the premier
+0x8fe3a0	480	tur_first.cpp	tur_first_promote_lower_clubs_to_third_tier	Moves the top ten clubs of the lowest Turkish division into the third tier and drops each 
+0x8fe6f0	528	tur_second.cpp	TurSecond::TurSecond	Constructs the Turkish second division, loads it from the temp file or sets its rules, tab
+0x8fe9b0	1952	tur_second.cpp	TurSecond::create_schedule	Builds the 38-round Turkish second division schedule with a date and match slots for each 
+0x8ff150	304	tur_second.cpp	TurSecond::create_table	Allocates the 20-row table, fills it with the clubs of the Turkish second division and pay
+0x8ff280	176	tur_second.cpp	TurSecond::set_up_rules	Sets the Turkish second division rules, linking the premier division above and the third t
+0x8ff330	400	tur_second.cpp	TurSecond::start_new_season	Frees last season's table and schedule, archives the stats and rebuilds the rules, table a
+0x8ff4c0	576	tur_second_b.cpp	TurSecondB::TurSecondB	Builds the Turkish second division B league, then loads it from the temp file or sets up r
+0x8ff7e0	2784	tur_second_b.cpp	TurSecondB::create_schedule	Builds the round dates and match slots of the schedule for one stage of the Turkish second
+0x9002c0	416	tur_second_b.cpp	TurSecondB::create_table	Allocates the 10 row league table and fills it with the clubs whose division is this leagu
+0x900460	160	tur_second_b.cpp	TurSecondB::set_up_rules	Sets the points, tie break and promotion rules of the league, then builds its schedule thr
+0x900500	448	tur_second_b.cpp	TurSecondB::start_new_season	Archives the old season, deletes the stages, then rebuilds rules, table, fixtures and the 
+0x9006c0	192	tur_second_b.cpp	TurSecondB::advance_stage	Moves to the next stage and builds the promotion and classification groups at stage 4 or t
+0x900780	816	tur_second_b.cpp	TurSecondB::create_group_stage	Collects the 10 clubs of one regional group and creates its League_Stage as stage 0 to 3.
+0x900ab0	592	tur_second_b.cpp	TurSecondB::create_promotion_group	Takes the qualified clubs of the five first phase tables and creates the 10 club promotion
+0x900d00	832	tur_second_b.cpp	TurSecondB::create_classification_groups	Creates five 8 club groups, stages 5 to 9, from the clubs that did not qualify and carries
+0x901040	656	tur_second_b.cpp	TurSecondB::create_playoff_stage	Builds the 8 club playoff cup stage from the qualified promotion group clubs and the five 
+0x9012d0	800	tur_second_b.cpp	TurSecondB::update_staff_records_for_status	Records group qualification, promotion, relegation and playoff results in staff records an
+0x901950	368	tur_second_b.cpp	TurSecondB::set_predicted_positions	Sorts the clubs of each of the five first phase tables by strength and stores each rank as
+0x901d00	720	turkey_awards.cpp	TurkeyAwards::init_awards	Creates the six Turkish awards, two year awards and four divisional team awards for the tw

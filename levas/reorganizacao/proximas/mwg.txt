@@ -1,0 +1,102 @@
+# LIGAS = ENG + as nacoes do item (ver BRIEF); ATE = 2002-08-01
+0x75db00	14176	Menubar.cpp	menubar_build	Builds the game menu bar for the current human manager, with the game, team, manager and m
+0x81b890	544	Setup.cpp	setup_run_front_end	Checks CM3_QSTART, sets the date to 1 Jan 2001, reads -seed and -nonetwork, runs the Setup
+0x830520	256	Setup.cpp	setup_set_game_start_date	Sets the game start date from the first selected nation's league entry and caps a European
+0x8386f0	240	Setup.cpp	build_comp_object_table	Allocates the competition object table with one slot for each club_comp record and stores 
+0x838c60	176	Setup.cpp	find_free_human_manager_row	Returns the first free row among the 16 human manager staff rows at the end of the staff t
+0x838d10	208	Setup.cpp	count_human_managers	Counts the human manager rows in use and, when asked, counts only those that a network pla
+0x838de0	48	Setup.cpp	is_current_manager_being_created	Returns 1 when the current player slot has a manager row whose state is still being made, 
+0x839340	496	Setup.cpp	nation_matches_region_filter	Tests whether a nation belongs to a region named in a setup file filter such as ALL, EUROP
+0x4142c0	32	award_manager.cpp	AWARD_MANAGER::add_year_award_record	Appends a year award history record to the first file list of the award manager.
+0x414300	32	award_manager.cpp	AWARD_MANAGER::add_team_award_record	Appends a team award history record to the second file list of the award manager.
+0x414340	176	award_manager.cpp	AWARD_MANAGER::find_nation_awards	Returns the nation award object of the given nation from the 30-slot table, or asserts whe
+0x4143f0	48	award_manager.cpp	AWARD_MANAGER::write_award_news	Passes a news text request to the award object chosen by nation index and award index thro
+0x4147f0	240	award_manager.cpp	AWARD_MANAGER::add_shortlist	Appends a shortlist pointer to the award manager's growable shortlist array, growing it by
+0x415600	64	award_screens.cpp	ScreenManager::add_menu_area	Adds a display area with style 0x30 under the given parent item on the current screen's di
+0x415640	96	award_screens.cpp	ScreenManager::add_menu_item	Adds a text menu item with a link type and link data to a display area of the current scre
+0x417440	336	award_shortlist.cpp	AWARD_SHORTLIST::AWARD_SHORTLIST	Builds a shortlist from a 14-byte scope record, allocating 14-byte entries for its capacit
+0x4178a0	384	award_shortlist.cpp	AWARD_SHORTLIST::add_entry	Appends a candidate with player id, club id or minus one, score and zero votes, and return
+0x417a20	496	award_shortlist.cpp	AWARD_SHORTLIST::announce	Sorts the entries by name, registers the shortlist with the award manager and sends the sh
+0x417c50	912	award_shortlist.cpp	AWARD_SHORTLIST::pick_winners	Sorts entries by score, lets each computer club within the award scope vote for a weighted
+0x41b3d0	1264	background.cpp	setup_background_system	Reads pics.cfg from the pictures folder and fills the eleven background picture sections w
+0x43f7f0	7664	cash.cpp	cash_set_currency	Sets the active currency: exchange rate, scale factors, unit suffixes for thousands, milli
+0x442ab0	880	club_history.cpp	Club_History::Club_History	Constructs the club history store: checks for the game CD, opens the league and cup histor
+0x468b10	48	club_screens.cpp	Display::get_widget_id	Returns the action id of a display widget, or zero when the widget index is minus one.
+0x468b40	80	club_screens.cpp	ScreenManager::get_widget_action_id	Returns the action id of a clicked widget, or the injected action id when the widget is mi
+0x49db00	4032	comp_screens.cpp	comp_screens_add_fixture_row	Adds one fixture row to a fixtures list, with date, teams, score or postponed and abandone
+0x57a6d0	448	eur_super_cup.cpp	EurSuperCup::start_new_season	Clears the finished European Super Cup, archives its stats, moves the year on and picks th
+0x583480	544	european_awards.cpp	EuropeanAwards::init_awards	Allocates the table of four European year awards and creates each YEAR_AWARD, reporting an
+0x584d60	576	european_cup.cpp	EuropeanCup::start_new_season	Frees last season's tables and stages, archives the stats, moves to the next season and re
+0x5afce0	32	fog_of_war.cpp	FOG_OF_WAR::daily_update	Runs the daily knowledge update on each of the sixteen fog of war maps that exists.
+0x5c5310	608	friendly.cpp	Friendly::send_tournament_invitations	Queues a tournament on the pending invitation list and sends an invitation news item to ea
+0x5c5820	1824	friendly.cpp	Friendly::process_tournament_replies	Settles invitation replies for a friendly tournament and, when all clubs accept, fills its
+0x5d72c0	2064	game_config.cpp	Config::Config	Builds the game settings object, loads language.ldb, allowed_fonts.txt and game.cfg, appli
+0x5d7c60	960	game_config.cpp	Config::set_option	Sets one option value in its bit group of the option word at +4, and starts or stops sound
+0x5d8020	592	game_config.cpp	Config::set_language	Selects a language, sets its default currency, picks a font that the language allows, and 
+0x5d8310	208	game_config.cpp	Config::set_default_currency	Sets the currency byte at +0xc to the default currency of the language index at +8, with z
+0x5d8480	1728	game_config.cpp	Config::apply_and_save	Applies the settings to the game, changing language, currency, display mode, sound and bac
+0x5ef270	192	hall_of_fame.cpp	HallOfFame::add_calendar_year_entry	Adds a human manager's score to table 0 (January to December) when the staff id is one of 
+0x5ef330	688	hall_of_fame.cpp	HallOfFame::add_league_entry	Maps a nation id to its hall of fame league table 1 to 27 and adds a human manager's score
+0x5ef5e0	912	hall_of_fame.cpp	HallOfFame::try_add_entry	Builds an entry with the manager's name, club and nation, and replaces the lowest entry of
+0x5efaa0	608	hall_of_fame.cpp	HallOfFame::load	Reads hall_of_fame.bin into the table, checks the header and checksum, and clears the tabl
+0x5efd00	48	hall_of_fame.cpp	hall_of_fame_import_buffer_init	Static initialiser that constructs the 2800 entry import buffer at 0xb0be38 and registers 
+0x5f0680	320	hall_of_fame.cpp	hall_of_fame_unscramble_and_check	Unscrambles a hall of fame buffer with the key table 0x9cdc88, by byte swaps and XOR, and 
+0x5face0	64	host_country.cpp	HostCountry::alternate_oceania_club_champ_host	Switches the host of every Oceania Club Championship entry between two fixed nations each 
+0x632910	432	inter_amer_cup.cpp	InterAmerCup::start_new_season	Frees the season data, archives the statistics, advances the year, then selects the clubs 
+0x632b30	752	international_awards.cpp	InternationalAwards::init_awards	Allocates the table of six international awards and creates each one as a year award with 
+0x633920	464	intertoto_cup.cpp	IntertotoCup::start_new_season	Frees the season data, archives the statistics, advances the year, then collects new entra
+0x667150	8176	key_nation.cpp	key_nation_build_table	Fills the 35 entry key nation table with nation, continent, comp creation function and sea
+0x669140	64	key_nation.cpp	key_nation_number_active_entries	Gives each active key nation entry a running index at +0x14 and stores the count of active
+0x669180	272	key_nation.cpp	key_nation_create_all_comps	Calls the comp creation function of each active key nation entry and shows a version error
+0x66a0c0	64	key_nation.cpp	key_nation_sorted_order	Sorts the 35 key nation entry indices into screen order and returns the static index array
+0x66a280	208	key_nation.cpp	NATION_MENU_SPLIT::NATION_MENU_SPLIT	Fills a nation menu split object with the selected nation count and the first letter of th
+0x66a350	16	key_nation.cpp	NATION_MENU_SPLIT::part_count	Returns 2 when a nation menu holds more than 16 nations and needs two parts, else 1.
+0x66a360	208	key_nation.cpp	NATION_MENU_SPLIT::format_header	Writes the header of one part of a split nation menu, such as Nations A to the split lette
+0x6aaa90	224	manager_manager.cpp	MANAGER_MANAGER::post_fa_request_reply_news	Queues a type 0x1789 FA reply to a club manager's referee complaint or postponement reques
+0x765bf0	544	mini_cup.cpp	MiniCup::MiniCup	Constructs a four-club mini cup, stores its entrants and dates, builds the round table and
+0x765f70	800	mini_cup.cpp	MiniCup::create_round_table	Builds the three-round table of a mini cup from its start date when called for the whole c
+0x766290	240	mini_cup.cpp	MiniCup::set_up_clubs	Sets the cup's club count to four and copies the four given clubs into a new six-byte entr
+0x766500	736	mini_league.cpp	MiniLeague::MiniLeague	Constructs a friendly mini league on the League base, builds its schedule, table, fixtures
+0x766970	640	mini_league.cpp	MiniLeague::create_schedule	Builds a three round schedule on consecutive days from the start date for the whole mini l
+0x766bf0	256	mini_league.cpp	MiniLeague::alloc_table	Allocates the league table of 59 byte rows for the team count and places each given club i
+0x767f60	64	month_ratings.cpp	MONTH_RATINGS::reset	Frees the month ratings entries, sets the count and capacity to zero and stores the new mo
+0x7683c0	864	nation_awards.cpp	NationAwards::award_player_of_year_from_ratings	Collects the best players from the season ratings with club, nation, division and age filt
+0x768720	544	nation_awards.cpp	nation_awards_award_top_three_from_ratings	Takes the three best candidates from the season ratings, records them as year award winner
+0x768b20	464	nation_awards.cpp	nation_awards_award_from_shortlist	Takes the top three entries of a year award shortlist, clears the shortlist and records th
+0x7690c0	704	nation_awards.cpp	nation_awards_award_tournament_player	Picks the three best players of a competition stats table, crediting the national team in 
+0x769380	1392	nation_awards.cpp	nation_awards_award_player_of_year_by_stats	Scores each player with season stats who meets the nation filters, weights by club reputat
+0x7698f0	512	nation_awards.cpp	NationAwards::award_team_of_season	Nominates players of a league stats table for a team award by average rating, lowering the
+0x769af0	384	nation_awards.cpp	NationAwards::award_tournament_team	Nominates players of a competition stats table for a team award, crediting the national te
+0x76e3b0	3568	national_teams.cpp	NationalTeams::write_call_up_news_text	Writes the headline or body of the news item about called up players for one club, naming 
+0x770d20	16912	national_teams.cpp	NationalTeams::write_club_players_international_text	Writes the news text on how a club's players did for their nation, with wording chosen by 
+0x795360	112	notes.cpp	Notes::post_due_reminders	Walks the staff notes of all 16 manager slots and posts a reminder news item for each note
+0x797d60	144	oceania_club_champ.cpp	OceaniaClubChamp::start_new_season	Frees the table, the schedule and the stages, archives Comp_Stats, moves on two years, pic
+0x7e4be0	192	record_utils.cpp	match_record_has_more_goals	Returns true when the first match record has more total goals than the second.
+0x7e5780	912	record_utils.cpp	format_duration_text	Writes a number of days as exact text such as '3 weeks' or approximate text such as 'about
+0x7e7760	240	ruling_body.cpp	RulingBody::RulingBody	Base constructor of every ruling body that sets the vtable, creates its list, clears the m
+0x8d5420	6096	transfer_manager.cpp	TRANSFER_MANAGER::write_offer_rejected_news_text	Writes the headline or body of the news that a club rejected, dismissed or cancelled an of
+0x8e08e0	2160	transfer_manager.cpp	TRANSFER_MANAGER::write_transfer_agreed_news_text	Writes the news headline or body saying a transfer or player swap was agreed, with the dat
+0x8e7810	224	transfer_offer.cpp	TRANSFER_OFFER::init_loan_offer	Resets an offer record for a loan offer from a club for a player, with no fee, default cla
+0x902ee0	464	uefa_cup.cpp	UefaCup::start_new_season	Starts a new UEFA Cup season: frees the tables, archives the stats, adds one to the year a
+0x9030b0	48	uefa_cup.cpp	UefaCup::set_up_rounds	Sets the UEFA Cup prize fund to 3,000,000 and builds its round table.
+0x90d2f0	512	virtual_staff.cpp	VIRTUAL_STAFF::fill_fixture_squads	Adds a fixture to the list and tops up both clubs' squads with virtual players, retrying w
+0x90d6b0	432	virtual_staff.cpp	VIRTUAL_STAFF::release_fixture	Removes a finished fixture's virtual players from both clubs, or moves them to a viewed cl
+0x90d8f0	496	virtual_staff.cpp	VIRTUAL_STAFF::count_available_players	Counts a club's real players that can play by position group, drops leftover virtual playe
+0x90dae0	1344	virtual_staff.cpp	VIRTUAL_STAFF::top_up_club_squad	Creates virtual players for each position group where a club has fewer available players t
+0x90e020	128	virtual_staff.cpp	VIRTUAL_STAFF::get_player_position_group	Returns the position group of a player from his position ratings, or 0xff when the staff r
+0x90e0a0	1728	virtual_staff.cpp	VIRTUAL_STAFF::create_virtual_player	Creates virtual staff and player records at the given ids, named from the club's nation wi
+0x910410	656	wc_african_cup.cpp	WcAfricanCup::start_new_season	Frees all stages and entry tables, moves the year on in steps of four, archives statistics
+0x913360	304	wc_asia_league.cpp	WcAsiaLeague::start_new_season	Resets the Asian qualifying league for a new cycle: frees stages and lists, archives stats
+0x915ff0	608	wc_concacaf_cup.cpp	WcConcacafCup::start_new_season	Frees the old tables and stages, moves the cup year on by four, picks new entrants and reb
+0x916cd0	912	wc_concacaf_cup.cpp	WcConcacafCup::create_central_american_groups	Creates the two Central American group leagues as stages 0 and 1 from the seeded entrant s
+0x919430	496	wc_europe_league.cpp	WcEuropeLeague::start_new_season	Starts a new campaign by freeing old stages, moving the year on by four, rebuilding the po
+0x91ef40	400	wc_oceania_league.cpp	WcOceaniaLeague::start_new_season	Frees the stages, archives the stats, moves the year on in steps of four and rebuilds the 
+0x921470	288	wc_south_american_league.cpp	WcSouthAmericanLeague::start_new_season	Frees last campaign's table, archives its stats, moves the campaign year on by four and re
+0x92bda0	432	world_club_cup.cpp	WorldClubCup::start_new_season	Starts the new season: frees the round data, archives Comp_Stats, moves the year on by one
+0x92cea0	592	world_cup.cpp	WorldCup::build_fate_news_text	Writes the news text for a nation's World Cup fate, from winning or placing to going throu
+0x92d310	32	world_cup.cpp	WorldCup::record_season_honours	Passes the season honours call to the knockout stage object and clears the current competi
+0x92d4b0	144	world_cup.cpp	WorldCup::advance_stage	Moves the World Cup to its next stage and builds the knockout stage when stage seven start
+0x92d770	720	world_cup.cpp	WorldCup::create_knockout_stage	Builds the sixteen-team knockout Cup_Stage from the group winners and runners-up of paired
+0x92fc80	368	world_cup_awards.cpp	WorldCupAwards::init_awards	Allocates the two-entry award table and constructs one yearly player award and one team aw
+0x9315d0	192	year_ratings.cpp	YEAR_RATINGS::record_match_ratings	Adds the rating of the first eleven players of both teams in a match to the year ratings w
+0x931690	1040	year_ratings.cpp	YEAR_RATINGS::add_player_rating	Finds or appends the player's 21-byte entry, growing the table by 400, then adds competiti

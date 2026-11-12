@@ -1,0 +1,115 @@
+# LIGAS = ENG BEL HOL GER DEN; ATE = 2002-08-01
+0x41d050	464	bel_fa_cup.cpp	BelFaCup::BelFaCup	Constructs the Belgian cup, loads it from disk or collects entrants and builds the round t
+0x41d310	1472	bel_fa_cup.cpp	BelFaCup::create_round_table	Allocates and fills the eight-round table of the Belgian cup with draw dates, match dates 
+0x41d8d0	704	bel_fa_cup.cpp	BelFaCup::collect_entrants	Fills the 112-entry six-byte entrant list with Belgian clubs, the top divisions shuffled f
+0x41db90	432	bel_fa_cup.cpp	BelFaCup::start_new_season	Frees last season's cup data, archives the stats, advances the year and rebuilds entrants,
+0x41dd40	544	bel_first.cpp	BelFirst::BelFirst	Constructs the Belgian First Division on League, then loads saved data or sets up rules, t
+0x41e010	2208	bel_first.cpp	BelFirst::create_schedule	Builds the 34-round schedule template of the Belgian First Division from mid August to May
+0x41e8b0	304	bel_first.cpp	BelFirst::create_table	Allocates the 18-row table, fills it with the clubs of the Belgian First Division, sets th
+0x41e9e0	176	bel_first.cpp	BelFirst::set_up_rules	Sets the Belgian First Division rule bytes, with no upper league and the Second Division b
+0x41ea90	512	bel_first.cpp	BelFirst::start_new_season	Runs promotion and relegation for all Belgian divisions, regroups the Third Division, then
+0x41f030	560	bel_second.cpp	BelSecond::BelSecond	Constructs the Belgian Second Division on League with a four-entry stage array, then loads
+0x41f340	2608	bel_second.cpp	BelSecond::create_schedule	Builds the 34-round season template for stage -1, a six-round play-off group for stage 3 o
+0x41fd70	304	bel_second.cpp	BelSecond::create_table	Allocates the 18-row table, fills it with the clubs of the Belgian Second Division, pays e
+0x41fea0	176	bel_second.cpp	BelSecond::set_up_rules	Sets the Belgian Second Division rules with the First Division above and the Third Divisio
+0x41ff50	448	bel_second.cpp	BelSecond::start_new_season	Frees the old table, schedule and stages, archives Comp_Stats, increments the year and reb
+0x420110	144	bel_second.cpp	BelSecond::add_result	Adds a match to the full table, then to the period stage of its round, first creating that
+0x4201a0	144	bel_second.cpp	BelSecond::advance_stage	Moves the current stage index on by one and builds the promotion play-off group when it re
+0x420230	672	bel_second.cpp	BelSecond::create_playoff_group	Fills the promotion play-off group up to four clubs with the best non-period winners, then
+0x4204d0	432	bel_second.cpp	BelSecond::create_period_stage	Builds the League_Stage of one of the three season periods with all 18 clubs and makes it 
+0x420ef0	464	bel_super.cpp	BelSuper::BelSuper	Constructs the Belgian Super Cup on Cup and, when no saved data loads, picks its two clubs
+0x4211b0	320	bel_super.cpp	BelSuper::create_round_table	Builds the one-round table of the Belgian Super Cup with its draw and match dates for two 
+0x4212f0	592	bel_super.cpp	BelSuper::select_teams	Picks the Belgian First Division champion and the Belgian Cup winner, or the league runner
+0x421540	432	bel_super.cpp	BelSuper::start_new_season	Clears the finished Belgian Super Cup, archives its stats, moves the year on and sets up t
+0x4216f0	560	bel_third.cpp	BelThird::BelThird	Constructs the Belgian Third Division on League, loads it from the temp file or sets rules
+0x421a00	2784	bel_third.cpp	BelThird::create_schedule	Builds the 30 league match dates of a group, or the cup rounds of the title decider and th
+0x4224e0	528	bel_third.cpp	BelThird::fill_league_table	Allocates the 16-row group A table and fills it with Third Division clubs that came from T
+0x4226f0	192	bel_third.cpp	BelThird::set_up_rules	Sets the third division rule bytes and points values, the Second Division as the promotion
+0x4227b0	448	bel_third.cpp	BelThird::start_new_season	Starts a new season: frees the old table and stages, archives Comp_Stats, increments the y
+0x422970	736	bel_third.cpp	BelThird::create_group_b_stage	Collects the 16 clubs of this division that came from Third Division B and builds the grou
+0x422c50	160	bel_third.cpp	BelThird::add_result	Adds a group result to the league table, then adds it to the period table that its match d
+0x422cf0	640	bel_third.cpp	BelThird::find_or_create_period_stage	Returns the stage index of a group's period table, and on request creates it as a League_S
+0x422f70	352	bel_third.cpp	BelThird::update_positions_and_status	Updates the tables, then for each group marks the winner of the current period table as qu
+0x4230d0	576	bel_third.cpp	BelThird::update_staff_records_for_status	Updates staff records and table status for league outcomes and for the title decider, prom
+0x423640	208	bel_third.cpp	BelThird::advance_stage	Waits for the Second Division to finish, then moves to the next stage and at stage 7 build
+0x423710	368	bel_third.cpp	BelThird::create_title_decider_stage	Builds the two-club title decider between the group A and group B leaders as cup stage 7.
+0x423880	800	bel_third.cpp	BelThird::create_promotion_playoff_stage	Tops up each group to three play-off clubs, then builds the seven-club promotion play-off 
+0x423ba0	864	bel_third.cpp	BelThird::create_relegation_playoff_stage	Ranks the clubs of Belgian Fourth Divisions A to D, stores the top four for promotion, and
+0x424030	384	bel_third.cpp	BelThird::set_predicted_positions	Sorts the clubs of each group by strength and stores a predicted position for each club in
+0x424510	1200	belgium_awards.cpp	BelgiumAwards::init_awards	Allocates the table of eleven Belgian awards and creates each year award and team award, r
+0x5509b0	464	den_cup.cpp	DenCup::DenCup	Constructs the Danish cup on Cup, then loads saved data or collects entrants, builds the r
+0x550c70	1488	den_cup.cpp	DenCup::create_round_table	Builds the eight-round table of the Danish cup with draw dates, match dates and round rule
+0x551240	704	den_cup.cpp	DenCup::collect_entrants	Fills the 92-entry six-byte entrant list with Danish lower division, Second Division, Firs
+0x551500	432	den_cup.cpp	DenCup::start_new_season	Frees last season's cup data, archives the stats, advances the year and rebuilds the entra
+0x5516f0	528	den_first.cpp	DenFirst::DenFirst	Constructs the Danish First Division on League, then loads saved data or sets up rules, ta
+0x5519b0	2272	den_first.cpp	DenFirst::create_schedule	Builds the 30-round schedule template of the Danish First Division from early August, with
+0x552290	288	den_first.cpp	DenFirst::create_table	Allocates the 16-row table, fills it with the clubs of the Danish First Division and sets 
+0x5523b0	160	den_first.cpp	DenFirst::set_up_rules	Sets the Danish First Division rule bytes, with the Premier Division above and the Second 
+0x552450	400	den_first.cpp	DenFirst::start_new_season	Frees last season's table and schedule, archives stats, advances the year and rebuilds rul
+0x5525e0	624	den_prm.cpp	DenPrm::DenPrm	Constructs the Danish Premier Division on League, moves Kvalifikationsraekken clubs to the
+0x552900	4048	den_prm.cpp	DenPrm::create_schedule	Builds the 33-round schedule template of the Danish Premier Division from late July, with 
+0x5538d0	304	den_prm.cpp	DenPrm::create_table	Allocates the 12-row table, fills it with the Danish Premier Division clubs, sets the priz
+0x553a00	160	den_prm.cpp	DenPrm::set_up_rules	Sets the Danish Premier Division rule bytes, with no upper league and the First Division b
+0x553aa0	528	den_prm.cpp	DenPrm::start_new_season	Runs Danish promotion and relegation, refreshes the Second Division from the lower divisio
+0x553cb0	464	den_prm.cpp	DenPrm::refresh_second_division_clubs	Promotes four shuffled Danish lower division clubs into the Second Division and moves rele
+0x553e80	528	den_second.cpp	DenSecond::DenSecond	Constructs the Danish Second Division on League, loads it from the temp file or builds rul
+0x554170	2256	den_second.cpp	DenSecond::create_schedule	Builds the 30-round schedule of the Danish Second Division from August, with different spr
+0x554a40	288	den_second.cpp	DenSecond::create_table	Allocates the 16-row table, fills it with the clubs of the Danish Second Division and sets
+0x554b60	160	den_second.cpp	DenSecond::set_up_rules	Sets the Danish Second Division rules with the First Division above and no division below,
+0x554c00	448	den_second.cpp	DenSecond::start_new_season	Frees the old table, schedule and stages, archives Comp_Stats, increments the year and reb
+0x554e50	1104	denmark_awards.cpp	DenmarkAwards::init_awards	Allocates the table of ten Danish awards: one national year award, and for each of three d
+0x5d8c20	464	ger_cup.cpp	GerCup::GerCup	Constructs the German cup, loads it from the temp file or collects entrants, builds rounds
+0x5d8ee0	1168	ger_cup.cpp	GerCup::create_round_table	Builds the six-round table of the German cup with draw dates, match dates and round rules,
+0x5d9370	1040	ger_cup.cpp	GerCup::collect_entrants	Fills the 64-entry six-byte entrant list with shuffled lower German clubs, then the Second
+0x5d9780	432	ger_cup.cpp	GerCup::start_new_season	Frees the entrant list, round table and rounds, archives the stats, moves the year on and 
+0x5d99b0	528	ger_first.cpp	GerFirst::GerFirst	Constructs the German First Division on League, then loads saved data or sets up rules, ta
+0x5d9c70	5568	ger_first.cpp	GerFirst::create_schedule	Builds the 34-round schedule template of the German First Division for stage -1 with round
+0x5db230	464	ger_first.cpp	GerFirst::create_table	Allocates the 18-row table and fills it with First Division clubs, and in 2001 moves clubs
+0x5db400	160	ger_first.cpp	GerFirst::set_up_rules	Sets the First Division rule bytes, with no upper league and the Second Division below, an
+0x5db4a0	544	ger_first.cpp	GerFirst::start_new_season	Runs promotion and relegation for the German pyramid, exchanges Regional clubs, rebuilds t
+0x5db6c0	240	ger_first.cpp	GerFirst::process_promotion_relegation_chain	Records final positions and swaps clubs between the First and Second Divisions, then betwe
+0x5db7b0	464	ger_first.cpp	ger_first_exchange_regional_clubs_unplayed	When German Regional is not played, promotes the four strongest eligible Regional clubs to
+0x5dbbd0	896	ger_first.cpp	ger_first_split_regional_north_south	Splits the 36 German Regional clubs into North and South groups of 18 by city latitude, ke
+0x5dc0e0	464	ger_lge_cup.cpp	GerLgeCup::GerLgeCup	Constructs the German League Cup on Cup, then loads saved data or collects its six entrant
+0x5dc3a0	864	ger_lge_cup.cpp	GerLgeCup::create_round_table	Builds the three-round table of the German League Cup for stage -1 with draw dates, match 
+0x5dc700	736	ger_lge_cup.cpp	GerLgeCup::collect_entrants	Fills the six-entry list with the top six of last season's First Division, seeding the Ger
+0x5dc9e0	432	ger_lge_cup.cpp	GerLgeCup::start_new_season	Frees last season's cup data, archives the stats, advances the year and rebuilds entrants,
+0x5de2e0	528	ger_second.cpp	GerSecond::GerSecond	Constructs the German Second Division on League, then loads saved data or sets up rules, t
+0x5de5d0	3296	ger_second.cpp	GerSecond::create_schedule	Builds the 34-round schedule template of the German Second Division from late July to May 
+0x5df2b0	304	ger_second.cpp	GerSecond::create_table	Allocates the 18-row table, fills it with the clubs of the German Second Division, sets th
+0x5df3e0	176	ger_second.cpp	GerSecond::set_up_rules	Sets the German Second Division rule bytes, with the First Division above and an optional 
+0x5df490	448	ger_second.cpp	GerSecond::start_new_season	Clears the old season, archives statistics, moves the year on and rebuilds rules, table an
+0x5df650	320	germany_awards.cpp	GermanyAwards::GermanyAwards	Constructs the German awards on NationAwards and loads them from the file, or creates the 
+0x5df790	1504	germany_awards.cpp	GermanyAwards::init_awards	Allocates the fourteen-entry award table and constructs the German year, team and month aw
+0x5f3450	400	hol_cup.cpp	HolCup::HolCup	Constructs the Dutch cup on the League base, installs vtable 0x96b7b8 and, when no temp fi
+0x5f36e0	1392	hol_cup.cpp	HolCup::create_schedule	Builds the round schedule for a stage: three group dates for stages 0 to 18 and six knocko
+0x5f3d70	256	hol_cup.cpp	HolCup::create_group_table	Sets the cup's own group to four clubs, builds its table from the first four entrants and 
+0x5f3e70	144	hol_cup.cpp	HolCup::set_up_rules	Sets the points, tiebreak and squad rules and the prize value of the cup, then creates the
+0x5f3f00	16	hol_cup.cpp	HolCup::record_season_honours	Passes the season honours call on to the knockout stage object in stage slot 19.
+0x5f3f10	272	hol_cup.cpp	HolCup::start_new_season	Frees last season's table, schedule, entrants and stages, archives the stats, moves the ye
+0x5f4020	368	hol_cup.cpp	HolCup::update_for_date	On the first full update of the season, selects entrants, builds the main group and create
+0x5f4190	144	hol_cup.cpp	HolCup::advance_stage	Moves the current stage on and builds the knockout stage when the stage reaches 19, or rep
+0x5f4220	608	hol_cup.cpp	HolCup::create_group_stage	Moves the next entrants into a new League_Stage group for one stage, with three clubs in s
+0x5f4480	928	hol_cup.cpp	HolCup::create_knockout_stage	Pairs the twenty group winners with group runners-up at random, adds six seeded entrants a
+0x5f4820	1312	hol_cup.cpp	HolCup::select_entrants	Fills an 86-slot entrant list with Dutch league and amateur clubs, removes duplicates, shu
+0x5f4d40	336	hol_cup.cpp	HolCup::update_staff_records_for_status	Adds staff history records for qualification or group exit in stages 0 to 18, and knock-ou
+0x5f5120	624	hol_cup.cpp	HolCup::set_predicted_positions	Sorts the entrants by reputation and gives them predicted final positions by knockout roun
+0x5f5490	544	hol_first.cpp	HolFirst::HolFirst	Constructs the Dutch First Division on League with six stages, then loads saved data or bu
+0x5f5790	2736	hol_first.cpp	HolFirst::create_schedule	Builds the 34-round First Division schedule for stage -1 and the six-round templates of th
+0x5f6240	256	hol_first.cpp	HolFirst::create_table	Allocates the 18-row table and fills it with the clubs of the Dutch First Division.
+0x5f6340	176	hol_first.cpp	HolFirst::set_up_rules	Sets the First Division rule bytes, clears the four period winner flags, links the Premier
+0x5f63f0	448	hol_first.cpp	HolFirst::start_new_season	Archives the season, deletes the old period and play-off stages, then rebuilds the rules, 
+0x5f65b0	160	hol_first.cpp	HolFirst::add_result	Adds a result to the main table, then also adds it to the period table of the match's roun
+0x5f6650	208	hol_first.cpp	HolFirst::advance_stage	Waits for the Premier Division to finish, settles its table, moves to the next stage and b
+0x5f6720	944	hol_first.cpp	HolFirst::create_play_off_groups	Tops the period winners up to six qualifiers, adds two Premier Division play-off clubs and
+0x5f6ad0	592	hol_first.cpp	HolFirst::create_period_stage	Builds the League_Stage of one of the four period tables with all First Division clubs and
+0x5f7610	528	hol_prm.cpp	HolPrm::HolPrm	Constructs the Dutch Premier Division on League, then loads saved data or builds rules, ta
+0x5f78d0	2912	hol_prm.cpp	HolPrm::create_schedule	Builds the 34-round schedule template of the Dutch Premier Division from mid-August for st
+0x5f8430	304	hol_prm.cpp	HolPrm::create_table	Allocates the 18-row table, fills it with the Dutch Premier Division clubs, sets the prize
+0x5f8560	176	hol_prm.cpp	HolPrm::set_up_rules	Sets the Premier Division rule bytes, with no league above and the First Division below, a
+0x5f8610	464	hol_prm.cpp	HolPrm::start_new_season	Runs promotion and relegation, rebuilds the Premier Division table and fixtures, and start
+0x5f8820	448	hol_super.cpp	HolSuper::HolSuper	Constructs the Dutch Super Cup on Cup and, when no saved data loads, picks its two clubs a
+0x5f8ad0	320	hol_super.cpp	HolSuper::create_round_table	Builds the one-round table of the Dutch Super Cup with its draw and match dates for two te
+0x5f8c10	560	hol_super.cpp	HolSuper::select_teams	Picks the Dutch First Division champion and the Dutch Cup winner, or the league runner-up 
+0x5f8e40	416	hol_super.cpp	HolSuper::start_new_season	Clears the finished Dutch Super Cup, archives its stats, moves the year on and sets up the
+0x5f9070	1104	holland_awards.cpp	HollandAwards::init_awards	Allocates the table of ten Dutch awards and creates each year award and team award for the

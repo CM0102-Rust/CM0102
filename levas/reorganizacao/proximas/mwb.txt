@@ -1,0 +1,71 @@
+# LIGAS = ENG SCO WAL; ATE = 2002-08-01
+0x7ec980	464	sco_chal_cup.cpp	ScoChalCup::ScoChalCup	Constructs the Scottish Challenge Cup on Cup, then loads saved data or collects entrants, 
+0x7ecc40	976	sco_chal_cup.cpp	ScoChalCup::create_round_table	Allocates and fills the five-round table of the Scottish Challenge Cup with draw dates, ma
+0x7ed010	288	sco_chal_cup.cpp	ScoChalCup::collect_entrants	Fills the 30-entry six-byte entrant list with the clubs of the Scottish First, Second and 
+0x7ed130	432	sco_chal_cup.cpp	ScoChalCup::start_new_season	Frees last season's cup data, archives the stats, advances the year and rebuilds entrants,
+0x7ed310	464	sco_fa_cup.cpp	ScoFaCup::ScoFaCup	Constructs the Scottish Cup on Cup, then loads saved data or collects entrants, builds the
+0x7ed5d0	1312	sco_fa_cup.cpp	ScoFaCup::create_round_table	Allocates and fills the seven-round table of the Scottish Cup with draw dates, match dates
+0x7edaf0	800	sco_fa_cup.cpp	ScoFaCup::collect_entrants	Fills the 50-entry entrant list with eight non-league Scottish clubs, the Second and Third
+0x7ede10	432	sco_fa_cup.cpp	ScoFaCup::start_new_season	Frees last season's cup data, archives the stats, advances the year and rebuilds entrants,
+0x7edfc0	576	sco_first.cpp	ScoFirst::ScoFirst	Constructs the Scottish First Division on League, then loads saved data or sets up rules, 
+0x7ee2e0	2640	sco_first.cpp	ScoFirst::create_schedule	Builds the 36-round schedule of the Scottish First Division from August for stage -1, or t
+0x7eed30	288	sco_first.cpp	ScoFirst::create_table	Allocates the ten-row table, fills it with the clubs of the Scottish First Division and se
+0x7eee50	176	sco_first.cpp	ScoFirst::set_up_rules	Sets the First Division rules with the Premier Division above and Second Division below, o
+0x7eef00	512	sco_first.cpp	ScoFirst::start_new_season	Frees last season's table, schedule and stages, archives the stats, advances the year, the
+0x7ef100	368	sco_first.cpp	ScoFirst::set_club_progress	In the 1999 season stores a club's three progress codes in its stats entry with play-off c
+0x7ef9e0	480	sco_lge_cup.cpp	ScoLgeCup::ScoLgeCup	Constructs the Scottish League Cup, loads it from disk or allocates the 40-club entrant li
+0x7efcb0	1408	sco_lge_cup.cpp	ScoLgeCup::create_round_table	Builds the six-round Scottish League Cup table with draw dates, match dates and round rule
+0x7f0230	464	sco_lge_cup.cpp	ScoLgeCup::update_for_date	Collects the entrants and builds rounds, fixture tree and ranking once the season year sta
+0x7f0930	432	sco_lge_cup.cpp	ScoLgeCup::start_new_season	Frees last season's cup data, archives the stats, advances the year and allocates a fresh 
+0x7f0b80	592	sco_prm.cpp	ScoPrm::ScoPrm	Constructs the Scottish Premier Division on League, then loads saved data or sets up rules
+0x7f0e80	6560	sco_prm.cpp	ScoPrm::create_schedule	Builds the 36-round 1999 schedule or the 38-round later schedule for stage -1, and five-ro
+0x7f2820	336	sco_prm.cpp	ScoPrm::create_table	Allocates the 10-row, later 12-row, table, fills it with Scottish Premier Division clubs, 
+0x7f2970	256	sco_prm.cpp	ScoPrm::set_up_rules	Sets the Scottish Premier Division rule bytes, with no upper league and the First Division
+0x7f2a70	688	sco_prm.cpp	ScoPrm::start_new_season	Runs the Scottish promotion and relegation step, rebuilds rules, table and fixtures, then 
+0x7f2d20	112	sco_prm.cpp	ScoPrm::update_for_date	Creates the split stages once every club has played 33 games in the three-stage season, th
+0x7f2d90	640	sco_prm.cpp	ScoPrm::create_split_stages	Copies the top six and bottom six table clubs into two League_Stage objects with the split
+0x7f3250	528	sco_second.cpp	ScoSecond::ScoSecond	Constructs the Scottish Second Division on League, then loads saved data or sets up rules,
+0x7f3540	2368	sco_second.cpp	ScoSecond::create_schedule	Builds the 36-round schedule template of the Scottish Second Division for stage -1 and ret
+0x7f3e80	256	sco_second.cpp	ScoSecond::create_table	Allocates the 10-row table and fills it with the clubs of the Scottish Second Division.
+0x7f3f80	176	sco_second.cpp	ScoSecond::set_up_rules	Sets the Second Division rule bytes, with the First Division above and the Third Division 
+0x7f4030	448	sco_second.cpp	ScoSecond::start_new_season	Frees last season's Second Division data, archives the stats, moves the year on and rebuil
+0x7f41f0	528	sco_third.cpp	ScoThird::ScoThird	Constructs the Scottish Third Division on the League base, loads it from the temp file or 
+0x7f44e0	2368	sco_third.cpp	ScoThird::create_schedule	Builds the 36-matchday league schedule for stage -1 and returns null for any other stage.
+0x7f4e20	256	sco_third.cpp	ScoThird::create_table	Allocates the 10-row league table and fills it with the clubs of the Scottish Third Divisi
+0x7f4f20	144	sco_third.cpp	ScoThird::set_up_rules	Sets the Third Division rules with two promoted clubs and no relegation, then builds the l
+0x7f4fb0	448	sco_third.cpp	ScoThird::start_new_season	Clears the old season, archives the stats, moves the year on and rebuilds the rules, table
+0x7f5170	320	scotland_awards.cpp	ScotlandAwards::ScotlandAwards	Builds the Scottish awards on NationAwards, sets the nation record, then loads saved award
+0x7f52b0	2832	scotland_awards.cpp	ScotlandAwards::init_awards	Allocates the table of 27 Scottish awards and creates the year, month and team awards of t
+0x90ead0	320	wales_awards.cpp	WalesAwards::WalesAwards	Constructs the Welsh awards on NationAwards, sets the Wales nation record, then loads save
+0x90ec10	768	wales_awards.cpp	WalesAwards::init_awards	Allocates the six-award table and creates one team award, four year awards and one month a
+0x924420	464	wel_cup.cpp	WelCup::WelCup	Constructs the Welsh cup on Cup, loads saved data or collects entrants, and builds the rou
+0x9246e0	976	wel_cup.cpp	WelCup::create_round_table	Builds the five-round table of the Welsh cup for stage -1 with draw dates, match dates and
+0x924ab0	416	wel_cup.cpp	WelCup::collect_entrants	Fills the 32-entry Welsh Cup entrant list with up to 14 Welsh lower division clubs, then c
+0x924c50	432	wel_cup.cpp	WelCup::start_new_season	Frees last season's cup data, archives the stats, advances the year and rebuilds the entra
+0x924e30	528	wel_first.cpp	WelFirst::WelFirst	Constructs the League of Wales on League, then loads saved data or sets rules, builds the 
+0x9250f0	2624	wel_first.cpp	WelFirst::create_schedule	Builds the 34-round League of Wales schedule from mid August, with the last rounds placed 
+0x925c50	160	wel_first.cpp	WelFirst::set_up_rules	Sets the League of Wales rule bytes, with no upper or lower league, and builds the season 
+0x925cf0	416	wel_first.cpp	WelFirst::start_new_season	Frees last season's table and schedule, archives stats, advances the year and rebuilds rul
+0x925e90	592	wel_lge_cup.cpp	WelLgeCup::WelLgeCup	Constructs the Welsh League Cup on League, then loads saved data or collects 18 entrants a
+0x9261e0	1024	wel_lge_cup.cpp	WelLgeCup::create_schedule	Builds a stage's date template, with six group matchdays from late August for stages 0 to 
+0x926700	256	wel_lge_cup.cpp	WelLgeCup::create_table	Sets the own table to three clubs, allocates it, fills it with the first entrant of each s
+0x926800	144	wel_lge_cup.cpp	WelLgeCup::set_up_rules	Sets the points, tiebreak and promotion rule fields of the Welsh League Cup, a prize fund 
+0x926890	16	wel_lge_cup.cpp	WelLgeCup::record_season_honours	Forwards the season honours call to the knockout stage held in the sixth stage slot.
+0x9268a0	464	wel_lge_cup.cpp	WelLgeCup::start_new_season	Frees last season's table, entrants and stages, archives the stats, then collects new entr
+0x926a70	144	wel_lge_cup.cpp	WelLgeCup::advance_stage	Moves the current stage index on by one and creates the knockout stage when the index reac
+0x926b00	512	wel_lge_cup.cpp	WelLgeCup::create_group_stage	Takes three entrants from the pool column of the given group and builds a three-club Leagu
+0x926d00	784	wel_lge_cup.cpp	WelLgeCup::create_knockout_stage	Builds the eight-club knockout Cup_Stage from the six group winners and the two best runne
+0x927010	464	wel_lge_cup.cpp	WelLgeCup::collect_entrants	Fills an 18-entry pool with Welsh league clubs, sorts them by reputation and shuffles each
+0x9271e0	336	wel_lge_cup.cpp	WelLgeCup::update_staff_records_for_status	Adds staff history records for group qualification or failure and for knockout exits, wins
+0x9274f0	624	wel_lge_cup.cpp	WelLgeCup::set_predicted_positions	Sorts the entrants by reputation and stores predicted final positions in Comp_Stats by the
+0x9277f0	576	wel_prm_cup.cpp	WelPrmCup::WelPrmCup	Constructs the Welsh Premier Cup on the League base, loads saved data or builds the entran
+0x927b30	1040	wel_prm_cup.cpp	WelPrmCup::create_schedule	Builds the round template of a stage, six group rounds for stage 0 or the quarter-final, s
+0x928060	256	wel_prm_cup.cpp	WelPrmCup::create_group_table	Sets the team count to four, allocates the league table, fills it with entrants 0, 2, 4 an
+0x928160	144	wel_prm_cup.cpp	WelPrmCup::set_up_rules	Sets the Welsh Premier Cup points, match and stage rules, then builds the schedule of the 
+0x9281f0	464	wel_prm_cup.cpp	WelPrmCup::start_new_season	Clears the table and schedule, archives the statistics, deletes the stages, moves the year
+0x9283c0	144	wel_prm_cup.cpp	WelPrmCup::advance_stage	Moves the stage counter on, asserts when it passes the last stage and creates the knockout
+0x928450	512	wel_prm_cup.cpp	WelPrmCup::create_group_stage	Creates a four-team League_Stage for the second group from entrants 1, 3, 5 and 7 and send
+0x928650	528	wel_prm_cup.cpp	WelPrmCup::create_knockout_stage	Builds the eight quarter-finalists from the top two of both groups and the four seeded clu
+0x928860	656	wel_prm_cup.cpp	WelPrmCup::build_entrant_list	Builds the twelve-club entrant list from the Welsh Cup winner, top League of Wales clubs a
+0x928af0	336	wel_prm_cup.cpp	WelPrmCup::update_staff_records_for_status	Writes staff history records for a club's group qualification or exit and its knockout exi
+0x928e00	688	wel_prm_cup.cpp	WelPrmCup::set_predicted_positions	Sorts the twelve entrants by strength and stores predicted final positions in the competit
