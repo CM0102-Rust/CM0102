@@ -2,7 +2,7 @@
 MUTACOES = [
     ('dq10_contar', '            n = n.wrapping_add(1);\n        }\n        n\n', '            n = n.wrapping_add(2);\n        }\n        n\n'),
     ('dq10_reunir', 'array.add(i), squad_slot(Club(club), i)', 'array.add(i), squad_slot(Club(club), 49 - i)'),
-    ('dq10_dirigido', '    (*((read_usize(club + club::NATION) + nation::LEAGUE_SELECTED) as *const u8) & league_selected::PLAYABLE != 0) as u8', '    (*((read_usize(club + 0x53) + 0x11c) as *const u8) & 4 != 0) as u8'),
+    ('dq10_dirigido', '    (*((club.nation().addr() + nation::LEAGUE_SELECTED) as *const u8) & league_selected::PLAYABLE != 0) as u8', '    (*((read_usize(club.addr() + 0x53) + 0x11c) as *const u8) & 4 != 0) as u8'),
     ('dq11_nao_jogador', '        last = read_u8(array + 3 * k);', '        last = read_u8(array + 3 * k + 1);'),
     ('dq11_jogador', 'write_u8(player + d as usize, read_u8(array + 3 * i));', 'write_u8(player + d as usize, read_u8(array + 3 * i + 1));'),
     ('dq11_normalizar', '    let delta = (-5i32).wrapping_sub', '    let delta = (-4i32).wrapping_sub'),

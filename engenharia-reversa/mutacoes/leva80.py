@@ -6,7 +6,7 @@ MUTACOES = [
     ('t_menos4', "    read_usize(this.wrapping_add(k.wrapping_mul(4)).wrapping_sub(4))", "    read_usize(this.wrapping_add(k.wrapping_mul(4)))"),
     ('s_200', "home(k) & setor != 0 && home(k) & (slot_cells::CENTRE as u16) != 0", "home(k) & setor != 0"),
     ('s_fe', "        c == k || (c == 0xfe && *((p + 1) as *const u8) == k)", "        c == k"),
-    ('s_sem', "    if players == 0 {\n        return 1;\n    }\n    (0..20usize)", "    if players == 0 {\n        return 0;\n    }\n    (0..20usize)"),
+    ('s_sem', "    if players.is_null() {\n        return 1;\n    }\n    (0..20usize)", "    if players.is_null() {\n        return 0;\n    }\n    (0..20usize)"),
     ('v_ff', "== code).unwrap_or(0xff)", "== code).unwrap_or(0xb)"),
     ('d_48', "        if *b & 4 != 0 && *b & 8 != 0 {", "        if *b & 4 != 0 {"),
     ('d_menos1', "        write_i32(this + formation_fields::DESIGNATED_PEOPLE + 4 * k, -1);", "        write_i32(this + formation_fields::DESIGNATED_PEOPLE + 4 * k, 0);"),

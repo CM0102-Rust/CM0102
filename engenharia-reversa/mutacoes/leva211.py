@@ -8,5 +8,5 @@ MUTACOES = [
     ('o_fator', '        5 => rep.wrapping_mul(550),', '        5 => rep.wrapping_mul(551),'),
     ('o_outra', 'e != 0 && *((e + offer::TARGET_STAFF_ID) as *const i32) == id)', 'e != 0 && *((e + offer::TARGET_STAFF_ID) as *const i32) != id)'),
     ('r_base', '/ 10 + 0x1194) as i16);', '/ 10 + 0x1195) as i16);'),
-    ('n_troca', 'read_u32(game + 4), read_u32(game + 0),', 'read_u32(game + 0), read_u32(game + 4),'),
+    ('n_troca', 'read_u32(game.addr() + 4), read_u32(game.addr() + 0),', 'read_u32(game.addr() + 0), read_u32(game.addr() + 4),'),
 ]
