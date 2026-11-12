@@ -67,8 +67,8 @@ pub(crate) unsafe fn uefa_cup_build_entrants(this: Cup) -> i32 {
                     break;
                 }
                 let c = base + j as u16 as usize * club::SIZE;
-                let nation = read_usize(c + club::NATION);
-                if nation != 0 && *((nation + nation::LEAGUE_SELECTED) as *const u8) == 0 && read_i16(nation + nation::REPUTATION) < 0x7d0 && read_usize(c + club::CONTINENTAL_COMP_ID) as i32 == -1 {
+                let nation = Nation(read_usize(c + club::NATION));
+                if !nation.is_null() && nation.league_selected() == 0 && nation.reputation() < 0x7d0 && read_usize(c + club::CONTINENTAL_COMP_ID) as i32 == -1 {
                     covered!("cqs_9 club filling uefa");
                     let e = k as i32 as usize * 6;
                     k = k.wrapping_add(1);

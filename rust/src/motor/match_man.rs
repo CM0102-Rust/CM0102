@@ -3088,6 +3088,7 @@ pub(crate) unsafe fn age_and_foreigner_adjust(p: Staff, f: PlayerSheet, club: Cl
 /// Adjustment by contract (flag 0x2000000): days without club, wage vs owner and satisfaction, age, goalkeeper, injury
 /// and appearances.
 pub(crate) unsafe fn contract_adjust(p: Staff, f: PlayerSheet, club: Club, contract: usize, age: i8, mut l4c: i32) -> i32 {
+    let contract = Contract(contract);
     let fb = |k: usize| signed_byte_at(f.addr(), k);
     let mul = |l: i32, k: f64| ftol(l as f64 * k);
     let owner = p.club_job();
@@ -3098,7 +3099,7 @@ pub(crate) unsafe fn contract_adjust(p: Staff, f: PlayerSheet, club: Club, contr
     } else {
         let lim = owner.reputation() as i32 - 0x4e2;
         let dx = club.reputation();
-        let ax = read_i8(contract + contract::HAPPINESS) as i16;
+        let ax = contract.happiness() as i16;
         let cl = age;
         let k = if dx as i32 > lim {
             let ax = ax.wrapping_add(0x64);

@@ -164,15 +164,15 @@ pub(crate) unsafe fn match_wrap_up_with(m: Engine, call: &mut dyn FnMut(usize, u
             if person != 0 && read_usize(p + match_player::PLAYER) != 0 && *(person as *const i32) < read_i32(G_STAFF_COUNT) {
                 call(FN_UPDATE_PLAYER_REPUTATION_AFTER_MATCH, p, [person as u32, meu as u32, outro as u32, (read_i8(p + match_player::MATCH_GRADE) as f32).to_bits(), read_u8(m.addr()) as u32 | 1 << 8]);
                 if list_global() != 0 && exe::database_is_national_team(meu) == 0 && read_i8(pt + fixture::HOME_SIDE_MARK) != 0 {
-                    let ct = contract(read_usize(G_CONTRACT_MANAGER), person, meu);
-                    if ct != 0
+                    let ct = Contract(contract(read_usize(G_CONTRACT_MANAGER), person, meu));
+                    if !ct.is_null()
                         && meu != 0
                         && person != read_usize(meu + club::MANAGER)
                         && read_usize(pt + fixture::COMPETITION) != 0
                         && exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), read_usize(pt + fixture::COMPETITION)) == 0
                         && read_i8(p + match_player::MINUTE_OFF) != -1
                         && read_i8(p + match_player::INJURY_MINUTE) == -1
-                        && read_i8(ct + contract::HAPPINESS) > 0
+                        && ct.happiness() > 0
                         && read_i16(read_usize(p + match_player::PLAYER) + player_sheet::CURRENT_REPUTATION) > 0x109a
                         && fixture() != 0
                         && read_i8(fixture() + fixture::HOME_SIDE_MARK) != 0
@@ -2839,7 +2839,7 @@ pub(crate) unsafe extern "C" fn staff_get_player_strength_flags(person: usize, o
     let mut f = natural_position_bits(j().addr(), [1, 4, 2, 8, 0x10, 0x20, 0x40], 0);
     let r = random(3);
     let id = read_usize(person.addr()) as u32;
-    let nibble = (read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add(id.wrapping_mul((staff_state::SIZE as u32)) as usize).wrapping_add(0xb)) & 0xf) as i32;
+    let nibble = (read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add(id.wrapping_mul(staff_state::SIZE as u32) as usize).wrapping_add(0xb)) & 0xf) as i32;
     if nibble > r && read_usize(G_TRANSFER_MANAGER) != 0 && exe::transfer_manager_get_future_transfer(read_usize(G_TRANSFER_MANAGER), person, 0) == 0 {
         f += 0x1000000;
     }
@@ -3950,7 +3950,7 @@ pub(crate) unsafe extern "C" fn database_staff_matches_names(person: usize, name
 /// city uses [0x9689a0] for ca and 0 for cb.
 pub(crate) unsafe fn order_by_city_coordinate(ca: usize, cb: usize, d: usize) -> i32 {
     let city = |c: Club| {
-        let e = Stadium(c.stadium().addr());
+        let e = c.stadium();
         if e.is_null() { 0 } else { e.city() }
     };
     let (xa, xb) = (city(Club(ca)), city(Club(cb)));
@@ -5457,7 +5457,7 @@ pub(crate) unsafe extern "C" fn database_trim_club_table(size: u32) {
         }
     }
     write_i32(G_CLUB_COUNT, row);
-    let r = exe::crt_realloc(rd(G_CLUB_TABLE), (row as u32).wrapping_mul((club::SIZE as u32)));
+    let r = exe::crt_realloc(rd(G_CLUB_TABLE), (row as u32).wrapping_mul(club::SIZE as u32));
     write_usize(G_NAT_CLUB_TABLE, rd(G_CLUB_TABLE).wrapping_add(((row - gi(0xae2360)) as usize).wrapping_mul(club::SIZE)));
     if r != rd(G_CLUB_TABLE) {
         database_fatal_error(0x4ca);
@@ -6263,7 +6263,7 @@ pub(crate) unsafe extern "C" fn database_trim_senior_and_b_team_squads() {
     let partner: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let _rd = |a: usize| read_usize(a);
     let goalkeeper = |q: Staff| {
-        let j = PlayerSheet(q.player().addr());
+        let j = q.player();
         !j.is_null() && j.goalkeeper() >= 0xf
     };
     let mut club = read_usize(G_CLUB_TABLE);
@@ -6501,15 +6501,16 @@ pub(crate) unsafe fn ab_team_regions() -> Vec<(usize, usize)> {
 /// `set_club_job` for a club). Returns 1. Null club: 0. Null person: the original ("Error" box and 0).
 /// Original: `database_remove_staff_from_club` (0x53c190, Database.cpp, cdecl).
 pub(crate) unsafe extern "C" fn database_remove_staff_from_club(club: usize, person: usize, data: usize, disable: u32, how_player: u32) -> u32 {
+    let club = Club(club);
     let person = Staff(person);
-    if club == 0 {
+    if club.is_null() {
         return 0;
     }
     if person.is_null() {
-        return original_fn::<unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32>(IDX_DATABASE_REMOVE_STAFF_FROM_CLUB)(club, person.addr(), data, disable, how_player);
+        return original_fn::<unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32>(IDX_DATABASE_REMOVE_STAFF_FROM_CLUB)(club.addr(), person.addr(), data, disable, how_player);
     }
     let gi = |a: usize| read_i32(a);
-    let national_team = || gi(club) >= gi(G_CLUB_COUNT).wrapping_sub(gi(G_NATION_COUNT).wrapping_mul(2));
+    let national_team = || gi(club.addr()) >= gi(G_CLUB_COUNT).wrapping_sub(gi(G_NATION_COUNT).wrapping_mul(2));
     if data != 0 {
         let d = if national_team() { person.addr() + staff::DATE_JOINED_NATION } else { person.addr() + staff::DATE_JOINED_CLUB };
         write_u16(d + 2, read_u16(data + 2));
@@ -6520,9 +6521,9 @@ pub(crate) unsafe extern "C" fn database_remove_staff_from_club(club: usize, per
     if how_player != 0 {
         job = if matches!(job, 0xb | 0xc | 0xd | 0xf) { 0xb } else { 0 };
     }
-    let clear = |d: usize| write_usize(club + d, 0);
+    let clear = |d: usize| write_usize(club.addr() + d, 0);
     // the first of the `k` slots starting at +d that holds the person, cleared; false if none does
-    let remove_of_home = |d: usize, k: usize| match (0..k).find(|&j| read_usize(club + (d + 4 * j)) == person.addr()) {
+    let remove_of_home = |d: usize, k: usize| match (0..k).find(|&j| read_usize(club.addr() + (d + 4 * j)) == person.addr()) {
         Some(j) => {
             clear(d + 4 * j);
             true
@@ -6535,10 +6536,10 @@ pub(crate) unsafe extern "C" fn database_remove_staff_from_club(club: usize, per
         2..=4 => remove_of_home(0xc3, 3),
         5 => {
             let ok = remove_of_home(0xcf, 1);
-            let id = gi(club);
+            let id = gi(club.addr());
             let n = gi(G_CLUB_COUNT);
             if ok && id >= n.wrapping_sub(gi(G_NATION_COUNT).wrapping_mul(2)) && id < n.wrapping_sub(gi(G_NATION_COUNT)) {
-                let s = Club(exe::database_get_national_u21_team(read_usize(club + club::NATION)));
+                let s = Club(exe::database_get_national_u21_team(club.nation().addr()));
                 if s.manager() == person {
                     write_usize(s.addr() + club::MANAGER, 0); // the U21 coach
                 }
@@ -7006,15 +7007,16 @@ pub(crate) unsafe extern "C" fn database_collect_club_squad(club: usize, array: 
 /// (`league_selected::PLAYABLE`, flagged).
 /// Original: `club_can_be_managed` (0x544820, Database.cpp, cdecl).
 pub(crate) unsafe extern "C" fn club_can_be_managed(club: usize) -> u8 {
-    if club == 0 || read_usize(club + club::NATION) == 0 {
+    let club = Club(club);
+    if club.is_null() || club.nation().addr() == 0 {
         return 0;
     }
-    let id = *(club as *const i32);
+    let id = *(club.addr() as *const i32);
     let (n, total) = (*(G_NATION_COUNT as *const i32), *(G_CLUB_COUNT as *const i32));
     if id >= total.wrapping_sub(n.wrapping_add(n)) {
-        return (id < total.wrapping_sub(n) && core::ptr::read_unaligned((read_usize(club + club::NATION) + nation::NUMBER_STAFF) as *const i32) > 0x96) as u8;
+        return (id < total.wrapping_sub(n) && core::ptr::read_unaligned((club.nation().addr() + nation::NUMBER_STAFF) as *const i32) > 0x96) as u8;
     }
-    if read_usize(club + club::DIVISION) == 0 {
+    if club.division().addr() == 0 {
         return 0;
     }
     // simplification: the original uses the argument’s own place as output; it is only read with a partner, and by then it has been written
@@ -7026,11 +7028,11 @@ pub(crate) unsafe extern "C" fn club_can_be_managed(club: usize) -> u8 {
     if table == 0 {
         return 0;
     }
-    let comp = *(read_usize(club + club::DIVISION) as *const i32);
+    let comp = *(club.division().addr() as *const i32);
     if *((table as isize).wrapping_add((comp as isize).wrapping_mul(4)) as *const u32) == 0 {
         return 0;
     }
-    (*((read_usize(club + club::NATION) + nation::LEAGUE_SELECTED) as *const u8) & league_selected::PLAYABLE != 0) as u8
+    (*((club.nation().addr() + nation::LEAGUE_SELECTED) as *const u8) & league_selected::PLAYABLE != 0) as u8
 }
 
 /// The inverse of `database_non_player_to_attribute_vector`: the low byte of each of the 21 three-byte cells of `array`
@@ -7442,14 +7444,15 @@ pub(crate) unsafe fn copy_formatted_name(target: usize, source: usize) {
 /// Null person or destination, size (i16) < 0x69 or style outside 1..7: the original (error box and 0).
 /// Original: `database_format_staff_name` (0x53dba0, Database.cpp, cdecl).
 pub(crate) unsafe extern "C" fn database_format_staff_name(person: usize, target: usize, size: u32, style: u32) -> u32 {
+    let person = Staff(person);
     let e = style as u8;
-    if person == 0 || target == 0 || (size as i16) < 0x69 || !(1..=7).contains(&e) {
-        return original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_DATABASE_FORMAT_STAFF_NAME)(person, target, size, style);
+    if person.is_null() || target == 0 || (size as i16) < 0x69 || !(1..=7).contains(&e) {
+        return original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_DATABASE_FORMAT_STAFF_NAME)(person.addr(), target, size, style);
     }
     let fmt: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
-    let (nome, sobrenome) = (read_usize(person + 4), read_usize(person + 8));
+    let (nome, sobrenome) = (read_usize(person.addr() + 4), read_usize(person.addr() + 8));
     let apelidos = read_usize(G_HUMAN_MANAGER);
-    let common = if apelidos != 0 && exe::human_manager_has_nickname(apelidos, person, (0) as u32) != 0 { exe::human_manager_get_nickname(apelidos, person, (0) as u32) } else { read_usize(person + staff::COMMON_NAME) };
+    let common = if apelidos != 0 && exe::human_manager_has_nickname(apelidos, person, (0) as u32) != 0 { exe::human_manager_get_nickname(apelidos, person, (0) as u32) } else { person.common_name() };
     write_u8(target, 0);
     let (c, n, s) = (has_text(common), has_text(nome), has_text(sobrenome));
     let letra = |p: usize| read_i8(p) as i32;
@@ -7517,19 +7520,20 @@ pub(crate) unsafe extern "C" fn database_format_staff_name(person: usize, target
 /// Any other kit: only the defaults. Returns 1. Null club: the original (defaults, "Error" box and 0).
 /// Original: `database_get_club_kit_colours` (0x53b640, Database.cpp, cdecl).
 pub(crate) unsafe extern "C" fn database_get_club_kit_colours(club: usize, kit: u32, front: *mut u16, bottom: *mut u16) -> u32 {
-    if club == 0 {
-        return original_fn::<unsafe extern "C" fn(usize, u32, *mut u16, *mut u16) -> u32>(IDX_DATABASE_GET_CLUB_KIT_COLOURS)(club, kit, front, bottom);
+    let club = Club(club);
+    if club.is_null() {
+        return original_fn::<unsafe extern "C" fn(usize, u32, *mut u16, *mut u16) -> u32>(IDX_DATABASE_GET_CLUB_KIT_COLOURS)(club.addr(), kit, front, bottom);
     }
     // simplification: the original pushes dwords with only the low byte written (the rest is stack garbage);
     // 0x5e4800 does & 0xff on all three, so the extended bytes give the same pixel
     core::ptr::write_unaligned(front, read_u16(G_GUI_COLOUR_BLUE));
     core::ptr::write_unaligned(bottom, read_u16(G_GUI_COLOUR_PALE_GREY));
     let (a, b) = match kit as u8 {
-        1 => (read_usize(club + club::FORE_COLOUR1), read_usize(club + club::BACK_COLOUR1)), // casa
+        1 => (club.fore_colour1(), club.back_colour1()), // casa
         2 | 3 => {
             let d = if kit as u8 == 2 { 0x8b } else { 0x93 };
-            let (a, b) = (read_usize(club + d), read_usize(club + (d + 4)));
-            if a == 0 || b == 0 { (read_usize(club + club::BACK_COLOUR1), read_usize(club + club::FORE_COLOUR1)) } else { (a, b) }
+            let (a, b) = (read_usize(club.addr() + d), read_usize(club.addr() + (d + 4)));
+            if a == 0 || b == 0 { (club.back_colour1(), club.fore_colour1()) } else { (a, b) }
         }
         _ => return 1,
     };
@@ -7636,8 +7640,8 @@ pub(crate) unsafe extern "C" fn staff_adjust_morale(person: usize, delta: u32, l
     };
     new = if new < 1 { 1 } else if new > 20 { 20 } else { new };
     if limitar != 0 && d > 0 {
-        let v = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), person, person.club_job());
-        if v != 0 && read_u32(v + contract::GRIEVANCES) != 0 && new >= morale {
+        let v = Contract(exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), person, person.club_job()));
+        if !v.is_null() && v.grievances() != 0 && new >= morale {
             new = morale;
         }
     }
@@ -8185,17 +8189,18 @@ pub(crate) unsafe fn attribute_rating(v: f64) -> u8 {
 /// attribute out of range: "Error" box and 0xff (the original). Only al is returned.
 /// Original: `staff_compute_player_attribute` (0x543540, Database.cpp, cdecl).
 pub(crate) unsafe extern "C" fn staff_compute_player_attribute(person: usize, player: usize, attribute: u32) -> u8 {
+    let player = PlayerSheet(player);
     let person = Staff(person);
     let a = attribute as u8 as i8;
-    if person.is_null() || !(1..=0x1f).contains(&a) || player == 0 {
-        return original_fn::<unsafe extern "C" fn(usize, usize, u32) -> u8>(IDX_STAFF_COMPUTE_PLAYER_ATTRIBUTE)(person.addr(), player, attribute);
+    if person.is_null() || !(1..=0x1f).contains(&a) || player.is_null() {
+        return original_fn::<unsafe extern "C" fn(usize, usize, u32) -> u8>(IDX_STAFF_COMPUTE_PLAYER_ATTRIBUTE)(person.addr(), player.addr(), attribute);
     }
     // simplification: the original pushes the whole register with the byte at the bottom; both only read the byte
-    let byte = |d: usize| read_i8(player + d) as u8;
-    let ability = read_i16(player + 5) as i32;
-    let rating = |d: usize| attribute_rating((2 * read_i8(player + d) as i32 + ability) as f64);
-    let rating_h = |d: usize| attribute_rating(ability as f64 * read_f64(rdata::F64_0_1) + (2 * read_i8(player + d) as i32) as f64);
-    let goalkeeper = read_i8(player + player_sheet::GOALKEEPER);
+    let byte = |d: usize| read_i8(player.addr() + d) as u8;
+    let ability = read_i16(player.addr() + 5) as i32;
+    let rating = |d: usize| attribute_rating((2 * read_i8(player.addr() + d) as i32 + ability) as f64);
+    let rating_h = |d: usize| attribute_rating(ability as f64 * read_f64(rdata::F64_0_1) + (2 * read_i8(player.addr() + d) as i32) as f64);
+    let goalkeeper = player.goalkeeper();
     match a {
         1 => byte(player_sheet::ACCELERATION),
         2 => byte(player_sheet::AGGRESSION),

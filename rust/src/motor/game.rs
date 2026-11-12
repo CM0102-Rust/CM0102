@@ -511,17 +511,17 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
                 continue;
             }
             let club = contract_club_record(game_get_contract_and_store(p.addr()));
-            let v = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, club);
-            if v == 0 {
+            let v = Contract(exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, club));
+            if v.is_null() {
                 continue;
             }
-            if read_usize(v + contract::GRIEVANCES) & (grievances::UNHAPPY_WITH_TRAINING as usize) != 0 && friendly_random(p.professionalism() as i32) == 0 {
+            if (v.grievances() as usize) & (grievances::UNHAPPY_WITH_TRAINING as usize) != 0 && friendly_random(p.professionalism() as i32) == 0 {
                 and_foul = true;
-            } else if read_usize(v + contract::GRIEVANCES) & 0x30000 != 0 && friendly_random(p.professionalism() as i32) == 0 {
+            } else if (v.grievances() as usize) & 0x30000 != 0 && friendly_random(p.professionalism() as i32) == 0 {
                 and_foul = true;
             } else {
                 let a = p.professionalism() as i32;
-                if a >= 5 || read_usize(v + contract::GRIEVANCES) & 0x7800 == 0 || friendly_random(a) != 0 {
+                if a >= 5 || (v.grievances() as usize) & 0x7800 == 0 || friendly_random(a) != 0 {
                     continue;
                 }
                 and_foul = true;

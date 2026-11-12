@@ -288,7 +288,7 @@ pub(crate) unsafe extern "thiscall" fn step_day_match(day: usize, until_end: u32
         show_error_at(0xa15708, 0x713);
         return 0;
     }
-    exe::match_stats_record_match(u(G_MATCH_STATS, 0), u(p, day_match::ENGINE), mem.addr());
+    exe::match_stats_record_match(u(G_MATCH_STATS, 0), u(p, day_match::ENGINE), mem);
     let engine = u(p, day_match::ENGINE);
     if engine != 0 {
         exe::drop_cm3_match_engine(engine);
@@ -1367,8 +1367,8 @@ pub(crate) fn post_match_gates() -> [usize; 15] {
 
 /// The flags (+0x40..+0x48) of the person's contract at a club as a comparer region, or None.
 pub(crate) unsafe fn contract_flags_region(person: usize, club: usize) -> Option<(usize, usize)> {
-    let c = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), person, club);
-    (c != 0).then_some((c + contract::FLAGS, 9))
+    let c = Contract(exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), person, club));
+    (!c.is_null()).then_some((c.addr() + contract::FLAGS, 9))
 }
 
 /// The current human leaves the match he was watching; with no other human watching, the match runs to the end, is

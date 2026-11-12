@@ -118,13 +118,13 @@ pub(crate) unsafe fn set_up_all_star_teams(this: Cup) -> i32 {
     let mut k = exe::utils_random(6) as u8; // cqr6: the stadium drawn among 6
     let mut i = 0usize;
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
-        let c = usa_mls_all_stars_club_by_index(i);
-        let league = read_usize(c + club::DIVISION);
+        let c = Club(usa_mls_all_stars_club_by_index(i));
+        let league = c.division().addr();
         if league != 0 && read_usize(league) == read_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) && ((exe::usa_mls_get_club_division(c) as u32) as i16) as i32 == conferencia {
             if k == 0 {
                 covered!("cqr_6 all-star game stadium");
-                let first = read_usize(this.team_table());
-                write_usize(first + club::STADIUM, read_usize(c + club::STADIUM)); // cqr6: the stadium of the drawn club
+                let first = Club(read_usize(this.team_table()));
+                write_usize(first.addr() + club::STADIUM, c.stadium().addr()); // cqr6: the stadium of the drawn club
                 write_u8(read_usize(this.team_table()) + club::OWN_STADIUM, 0);
                 break;
             }
@@ -193,8 +193,8 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_create_round_table(this
     }
     covered!("cqm_12 all-star game fixture");
     let year = this.year() as i32 as u32;
-    exe::cup_set_round_draw_date(t.addr(), 0, 0xf, 5, 0, 5, year);
-    exe::cup_set_round_match_date(t.addr(), 0, 2, 7, 0, 6, 1, year, 0); // cqm12: the All-Star Game on 2 August
+    exe::cup_set_round_draw_date(t, 0, 0xf, 5, 0, 5, year);
+    exe::cup_set_round_match_date(t, 0, 2, 7, 0, 6, 1, year, 0); // cqm12: the All-Star Game on 2 August
     let w = |o: usize, v: u16| write_u16(t.addr() + o, v);
     let d = |o: usize, v: u32| write_u32(t.addr() + o, v);
     w(cup_round::TEAMS, 2);

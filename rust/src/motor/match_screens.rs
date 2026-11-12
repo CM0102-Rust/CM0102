@@ -641,9 +641,9 @@ pub(crate) unsafe extern "C" fn build_match_screen() {
     // the league table of the match (for national teams by the continent of the human’s club; cup match by stage)
     let ligas = |k: isize| rd((rd(G_COMP_OBJECT_TABLE) as isize + k * 4) as usize);
     let comp = p.fixture() as i32 as isize;
-    let entry = ligas(comp);
+    let entry = League(ligas(comp));
     let mut league: usize = 0;
-    if entry != 0 {
+    if !entry.is_null() {
         let national_teams = read_i32(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) as isize;
         let candidata = if comp == national_teams {
             if sx(p.addr() + live_match::STAGE_INDEX) >= 2 {
@@ -662,7 +662,7 @@ pub(crate) unsafe extern "C" fn build_match_screen() {
             }
         } else {
             let stage = p.stage_index();
-            Some(if stage == -1 { entry } else { rd((rd(entry + league::STAGES) as isize + stage as isize * 4) as usize) })
+            Some(if stage == -1 { entry.addr() } else { rd((rd(entry.addr() + league::STAGES) as isize + stage as isize * 4) as usize) })
         };
         if let Some(l) = candidata {
             league = l;
@@ -784,7 +784,7 @@ pub(crate) unsafe extern "C" fn handle_match_screen_input(item: u32) -> i32 {
     }
     if mode == 1 {
         if (p.engine() as usize) == 0 {
-            exe::match_day_start_watched_match(read_usize(G_MATCH_DAY), p.addr());
+            exe::match_day_start_watched_match(read_usize(G_MATCH_DAY), p);
         }
         if (p.engine() as usize) == 0 {
             return 0;
@@ -1800,7 +1800,7 @@ pub(crate) unsafe extern "C" fn match_screens_draw_live_league_table(league: usi
                 } else {
                     let a = s + 0x180;
                     core::ptr::copy_nonoverlapping(game.addr() as *const u8, a as *mut u8, 0x4f);
-                    exe::match_screens_tally_live_score(p0.addr(), k as u32, a);
+                    exe::match_screens_tally_live_score(p0, k as u32, a);
                     exe::league_apply_result_to_table(local, a, local.table(), read_usize(local.addr() + league::CLUB_COUNT) as u32, 1, 0, 0);
                 }
             }
@@ -4885,7 +4885,7 @@ pub(crate) unsafe extern "C" fn open_match_screen(slot: u32, fixture: usize) {
         *n = (*n).wrapping_add(1);
     }
     if fixture.engine() == 0 {
-        exe::match_day_start_watched_match(read_usize(G_MATCH_DAY), fixture.addr());
+        exe::match_day_start_watched_match(read_usize(G_MATCH_DAY), fixture);
         if fixture.engine() != 0 {
             exe::screenmanager_set_screen_param(SCREEN_MANAGER, 1, 2, 0);
         }

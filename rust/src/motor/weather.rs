@@ -405,17 +405,18 @@ pub(crate) unsafe extern "thiscall" fn get_temperature(_this: usize, band: u32, 
 /// otherwise 0.
 /// Original: `Weather::get_pitch_condition` (0x923970, weather.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn get_pitch_condition(_this: usize, clima: *const u8, game: usize) -> u8 {
-    if game == 0 {
+    let game = Fixture(game);
+    if game.is_null() {
         return 0;
     }
-    let est = Stadium(read_usize(game + fixture::STADIUM));
+    let est = Stadium(game.stadium());
     if est.is_null() || est.covered() != 0 {
         return 0;
     }
-    let sum = (read_u16(game + fixture::DAY) as i32)
-        .wrapping_add(read_i32(game + fixture::AWAY_CLUB_ID))
-        .wrapping_add(read_i32(game + fixture::HOME_CLUB_ID))
-        .wrapping_add(read_i32(game));
+    let sum = (game.day() as i32)
+        .wrapping_add(game.away_club_id() as i32)
+        .wrapping_add(game.home_club_id() as i32)
+        .wrapping_add(read_i32(game.addr()));
     let h = sum % 20;
     let chuva = *clima.add(1);
     let t = *clima.add(2) as i8;

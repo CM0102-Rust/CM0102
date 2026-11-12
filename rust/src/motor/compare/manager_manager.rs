@@ -216,10 +216,10 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_club_manager(this: usize, 
             if p.is_null() || p.player().is_null() {
                 continue;
             }
-            let ct = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p);
-            if ct != 0 {
+            let ct = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p));
+            if !ct.is_null() {
                 // 0x10000000 is read at +0x40 (0x8676f0) and cleared at +0x45 (0x8674e0): cannot be checked
-                sobra |= (exe::staff_contract_get_flags(ct) & 0x180) | (read_usize(ct + contract::GRIEVANCES) as u32 & 0x889_2608);
+                sobra |= (exe::staff_contract_get_flags(ct) & 0x180) | ((ct.grievances() as usize) as u32 & 0x889_2608);
             }
         }
     }

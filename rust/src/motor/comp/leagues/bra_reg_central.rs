@@ -70,6 +70,7 @@ pub(crate) unsafe fn record_state_league_stage(this: usize, club: usize, st: u8,
 /// State league knockout: finds the club's table row; champion gets the champion record and destination 5, eliminated
 /// get the knocked-out record (weight scaled by round) and destination -2; returns (row, destination).
 pub(crate) unsafe fn record_state_knockout(this: League, club: usize, st: u8, game: usize, rounds: u32, fazer: bool) -> (usize, u8) {
+    let game = Fixture(game);
     let comp = this.competition().addr();
     let n = this.club_count() as i32;
     let mut i = 0i32;
@@ -91,8 +92,8 @@ pub(crate) unsafe fn record_state_knockout(this: League, club: usize, st: u8, ga
                     // simplification: the original pushes eax (caller garbage above the word) and whole ecx/edx; the
                     // 0x4bf850 and 0x86c000 only read the words: the words are passed.
                     covered!("cqk_7 state league eliminated");
-                    let weight = exe::comp_util_scale_by_round(0x1e, 0x32, read_i16(game + fixture::ROUND_NUMBER) as u16 as u32, rounds) as u32;
-                    exe::staff_records_add_knocked_out_record(read_usize(G_STAFF_RECORDS), club, comp, read_i16(game + fixture::ROUND_PREFIX) as u16 as u32, read_i16(game + fixture::ROUND_NAME) as u16 as u32, weight); // cqk7: the eliminated club record
+                    let weight = exe::comp_util_scale_by_round(0x1e, 0x32, game.round_number() as u16 as u32, rounds) as u32;
+                    exe::staff_records_add_knocked_out_record(read_usize(G_STAFF_RECORDS), club, comp, game.round_prefix() as u16 as u32, game.round_name() as u16 as u32, weight); // cqk7: the eliminated club record
                 }
                 let l = this.table() + league_table_row::SIZE * i as usize;
                 if fazer {

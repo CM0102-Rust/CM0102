@@ -704,20 +704,21 @@ pub(crate) unsafe fn competition_date_word(this: League, day: u32, month: u32, y
 
 /// Runs the original set_up_rules and checks the fields, +0xb6 date, +0xb8 and return value 1.
 pub(crate) unsafe fn check_set_up_rules(name: &str, this: usize, fields: &[(usize, u8, u32)], data: (u32, u32, i16, u32), b8: u16, o: impl FnOnce() -> u32) -> u32 {
-    let word = competition_date_word(League(this), data.0, data.1, data.2, data.3);
+    let this = League(this);
+    let word = competition_date_word(this, data.0, data.1, data.2, data.3);
     let r = o();
     let mut errados: [(usize, u32); 4] = [(0, 0); 4];
     let mut k = 0;
     for &(off, n, v) in fields {
-        let (lido, v) = if n == 1 { (read_u8(this + off) as u32, v & 0xff) } else { (read_u16(this + off) as u32, v & 0xffff) };
+        let (lido, v) = if n == 1 { (read_u8(this.addr() + off) as u32, v & 0xff) } else { (read_u16(this.addr() + off) as u32, v & 0xffff) };
         if lido != v && k < 4 {
             errados[k] = (off, lido);
             k += 1;
         }
     }
-    let b6 = read_u16(this + league::NEXT_DRAW_DAY);
-    let lido8 = read_u16(this + league::NEXT_DRAW_YEAR_OFFSET);
-    SCOREBOARD.record(r == 1 && k == 0 && b6 == word && lido8 == b8, || format!("{}({:#x}) returned {} fields errados {:x?} date {:#x} prevista {:#x} +0xb8 {:#x}", name, this, r, &errados[..k], b6, word, lido8));
+    let b6 = this.next_draw_day() as u16;
+    let lido8 = this.next_draw_year_offset() as u16;
+    SCOREBOARD.record(r == 1 && k == 0 && b6 == word && lido8 == b8, || format!("{}({:#x}) returned {} fields errados {:x?} date {:#x} prevista {:#x} +0xb8 {:#x}", name, this.addr(), r, &errados[..k], b6, word, lido8));
     r
 }
 

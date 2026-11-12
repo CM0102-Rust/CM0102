@@ -1,0 +1,19 @@
+"""Integra a 285a leva ao motor.rs (gerado por fila.py: as âncoras são achadas no motor.rs)."""
+import os
+import re
+aqui = os.path.dirname(os.path.abspath(__file__))
+p = os.path.join(aqui, '..', '..', 'rust', 'src', 'motor.rs')
+s = open(p, encoding='utf-8').read()
+ROTINAS = [('construct_bra_nat_first', 4364368, [106, 255, 104, 41, 68, 149, 0]), ('construct_bra_nat_second', 4374080, [106, 255, 104, 153, 68, 149, 0]), ('construct_jap_j1', 6695728, [106, 255, 104, 249, 192, 149, 0]), ('construct_aus_nsl', 4263568, [106, 255, 104, 217, 57, 149, 0]), ('construct_bra_nat_third', 4379328, [106, 255, 104, 9, 69, 149, 0]), ('construct_jap_j2', 6702272, [106, 255, 104, 137, 193, 149, 0]), ('construct_usa_mls', 9465728, [106, 255, 104, 121, 83, 150, 0]), ('bra_reg_minas_gerais_add_result', 4411696, [83, 139, 92, 36, 12]), ('bra_reg_parana_add_result', 4425440, [83, 139, 92, 36, 12]), ('bra_reg_rio_add_result', 4435744, [83, 139, 92, 36, 12]), ('jap_j1_add_result', 6699328, [83, 139, 92, 36, 12]), ('jap_j2_create_schedule', 6702976, [138, 68, 36, 4, 129, 236, 0, 2, 0, 0]), ('construct_eng_fa_cup', 5697600, [106, 255, 104, 153, 130, 149, 0]), ('construct_eng_cc_cup', 5685920, [106, 255, 104, 169, 129, 149, 0]), ('construct_eng_charity', 5690240, [106, 255, 104, 249, 129, 149, 0]), ('construct_spa_cup', 8703824, [106, 255, 104, 73, 38, 150, 0]), ('construct_spa_super', 8750768, [106, 255, 104, 121, 40, 150, 0]), ('spa_cup_collect_entrants', 8706320, [129, 236, 28, 3, 0, 0]), ('construct_fra_cup', 6005040, [106, 255, 104, 249, 152, 149, 0]), ('construct_fra_lge_cup', 6015360, [106, 255, 104, 249, 153, 149, 0]), ('construct_fra_super', 6026016, [106, 255, 104, 217, 154, 149, 0]), ('construct_jap_emp_cup', 6692144, [106, 255, 104, 169, 192, 149, 0]), ('construct_jap_j_cup', 6706048, [106, 255, 104, 217, 193, 149, 0]), ('construct_jap_super', 6708592, [106, 255, 104, 41, 194, 149, 0]), ('construct_uefa_cup', 9446112, [106, 255, 104, 217, 81, 150, 0]), ('construct_eur_super_cup', 5742848, [106, 255, 104, 57, 135, 149, 0]), ('construct_intertoto_cup', 6500272, [106, 255, 104, 233, 178, 149, 0]), ('asia_cup_winner_select_qualified_clubs', 4249648, [184, 152, 21, 0, 0]), ('asia_cup_winner_create_zone_stage', 4251120, [100, 161, 0, 0, 0, 0]), ('asia_cup_winner_rank_teams', 4252592, [129, 236, 0, 2, 0, 0]), ('wc_oceania_league_update_for_date', 9565136, [106, 255, 104, 70, 91, 150, 0]), ('wc_oceania_league_init_group_table', 9563136, [129, 236, 4, 2, 0, 0]), ('wc_oceania_league_create_second_group_stage', 9564576, [106, 255, 104, 30, 91, 150, 0]), ('world_club_cup_pick_qualifiers', 9615536, [184, 164, 17, 0, 0]), ('inter_amer_cup_select_teams', 6497408, [184, 164, 17, 0, 0]), ('con_merc_cup_set_predicted_positions', 4991632, [129, 236, 28, 2, 0, 0]), ('bra_nat_first_exchange_state_league_clubs', 4370736, [129, 236, 112, 2, 0, 0]), ('bra_nat_first_refresh_third_division_clubs', 4371744, [129, 236, 8, 2, 0, 0]), ('jap_j2_start_new_season', 6705648, [129, 236, 0, 2, 0, 0])]
+BASE = 2092
+m = re.search(r'\n\}\nconst N: usize = (\d+);', s)
+assert m and int(m.group(1)) == BASE, ('o motor.rs mudou desde a materialização', m and m.group(1), BASE)
+# one line per routine in `routines! { .. }` (rust/src/motor.rs; read by engenharia-reversa/tabela_motor.py)
+linhas = ''.join('\n    Prologue { address: %#x, bytes: &[%s] } => %s, compare_%s;' % (e, ', '.join('0x%02x' % b for b in bs), a, a)
+                 for a, e, bs in ROTINAS)
+s = s[:m.start()] + linhas + '\n}\nconst N: usize = %d;' % (BASE + len(ROTINAS)) + s[m.end():]
+anc = 'compare_value!(compare_staff_criterion, staff_criterion, IDX_STAFF_CRITERION, () -> u32);\n'
+assert s.count(anc) == 1
+s = s.replace(anc, anc + '\n' + open(os.path.join(aqui, 'codigo.rs'), encoding='utf-8').read().strip('\n') + '\n')
+open(p, 'w', encoding='utf-8').write(s)
+print('ok')

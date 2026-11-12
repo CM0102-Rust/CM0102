@@ -654,8 +654,8 @@ pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, attempt: 
         write_u8(uefa.entrant_book() + (n * 6) as usize + 4, 5);
         uefa.set_entrant_count(((uefa.entrant_count() as u16).wrapping_add(1)) as i16);
         write_usize(read_usize(e) + club::CONTINENTAL_COMP_ID, read_usize(KEY_CLUB_COMP_UEFA_CUP));
-        let quarto = read_usize(exe::league_get_table_row(read_usize(this.stages() + b * 4), (3) as i32));
-        write_usize(quarto + club::CONTINENTAL_COMP_ID, usize::MAX);
+        let quarto = Club(read_usize(exe::league_get_table_row(read_usize(this.stages() + b * 4), (3) as i32)));
+        quarto.set_continental_comp_id((usize::MAX) as u32);
     }
     let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(uefa.addr()) + comp_vtable::SET_PREDICTED_POSITIONS));
     predicted(uefa.addr());
@@ -740,6 +740,7 @@ pub(crate) unsafe fn leave_euro_competition(club: Club) {
 /// `scale_by_round`(0x4b, 0x64, round, 2)) and the club leaves.
 /// Original: `EuropeanCup::update_staff_records_for_status` (0x584ae0, european_cup.cpp, thiscall, ret 0x18).
 pub(crate) unsafe extern "thiscall" fn european_cup_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, _a: u32, game: usize, end: u32) -> u32 {
+    let game = Fixture(game);
     let this = Cup(this);
     let d = outcome as u8;
     let f = stage as u8;
@@ -747,7 +748,7 @@ pub(crate) unsafe extern "thiscall" fn european_cup_update_staff_records_for_sta
     if f == 0xff {
         match d {
             0 | 1 => {
-                let r = read_i16(game + fixture::ROUND_NUMBER);
+                let r = game.round_number();
                 if r == 0 {
                     let weight = scale_by_round(1, 0x14, 0, 2);
                     let round = read_i16(this.round_table() + cup_round::ROUND_CODE + 0x68) as u16 as u32;
@@ -759,9 +760,9 @@ pub(crate) unsafe extern "thiscall" fn european_cup_update_staff_records_for_sta
                 }
             }
             0xff | 2 => {
-                let weight = scale_by_round(1, 0x14, read_i16(game + fixture::ROUND_NUMBER), 2);
+                let weight = scale_by_round(1, 0x14, game.round_number(), 2);
                 // simplification: +0x32 and +0x30 go in registers with garbage in the high 16 bits; 0x86c000 only uses the words.
-                european_cup_add_knocked_out_record(club, comp, read_i16(game + fixture::ROUND_PREFIX) as u16 as u32, read_i16(game + fixture::ROUND_NAME) as u16 as u32, weight);
+                european_cup_add_knocked_out_record(club, comp, game.round_prefix() as u16 as u32, game.round_name() as u16 as u32, weight);
                 covered!("cpz_4 out in qualifying");
                 leave_euro_competition(Club(club)); // cpz4: whoever is knocked out in qualifying leaves the European competition
             }
@@ -794,17 +795,17 @@ pub(crate) unsafe extern "thiscall" fn european_cup_update_staff_records_for_sta
                 leave_euro_competition(Club(club));
             }
             0 => {
-                let weight = scale_by_round(0x4b, 0x64, read_i16(game + fixture::ROUND_NUMBER), 2);
+                let weight = scale_by_round(0x4b, 0x64, game.round_number(), 2);
                 let knockout = Cup(read_usize(this.stages() + 0x30));
                 let rounds = knockout.round_table();
-                let r = read_i16(game + fixture::ROUND_NUMBER) as i32;
+                let r = game.round_number() as i32;
                 // the upper bits of the register the original pushes are those of the stages pointer (+0xc)
                 let round = (this.stages() as u32 & 0xffff_0000) | read_i16(rounds.wrapping_add((r as usize).wrapping_mul(cup_round::SIZE)) + cup_round::ROUND_CODE + 0x68) as u16 as u32;
                 european_cup_add_qualified_record(club, comp, 0, round, weight);
             }
             0xff => {
-                let weight = scale_by_round(0x4b, 0x64, read_i16(game + fixture::ROUND_NUMBER), 2);
-                european_cup_add_knocked_out_record(club, comp, 0, read_i16(game + fixture::ROUND_NAME) as u16 as u32, weight);
+                let weight = scale_by_round(0x4b, 0x64, game.round_number(), 2);
+                european_cup_add_knocked_out_record(club, comp, 0, game.round_name() as u16 as u32, weight);
                 leave_euro_competition(Club(club));
             }
             _ => {}
@@ -911,9 +912,9 @@ pub(crate) unsafe fn active_entrants(this: Cup, without_7: bool, v: *mut usize) 
     let mut i: i16 = 0;
     while i < this.entrant_capacity() {
         let e = this.entrant_book().wrapping_add((i as i32 as usize).wrapping_mul(6));
-        let c = read_usize(e);
-        if read_i32(c + club::CONTINENTAL_COMP_ID) == read_i32(read_usize(this.addr() + 4)) && !(without_7 && read_u8(e + 4) == 7) {
-            core::ptr::write_unaligned(v.add(n as i32 as usize), c);
+        let c = Club(read_usize(e));
+        if (c.continental_comp_id() as i32) == read_i32(read_usize(this.addr() + 4)) && !(without_7 && read_u8(e + 4) == 7) {
+            core::ptr::write_unaligned(v.add(n as i32 as usize), c.addr());
             n = n.wrapping_add(1);
         }
         i += 1;
@@ -1208,11 +1209,11 @@ pub(crate) unsafe fn nation_coefficient_word(club: Club) -> usize {
     if table == 0 || nation == 0 {
         return 0;
     }
-    let s = exe::database_get_national_team(nation);
-    if s == 0 {
+    let s = Club(exe::database_get_national_team(nation));
+    if s.is_null() {
         return 0;
     }
-    table.wrapping_add((read_u8(s + club::EURO_SEEDING) as i8 as isize * 18) as usize + uefa_seeding_nation::SEASON_POINTS)
+    table.wrapping_add((s.euro_seeding() as i8 as isize * 18) as usize + uefa_seeding_nation::SEASON_POINTS)
 }
 
 /// Converts the three progress codes by stage (qualifying, phase 1, phase 2) and writes them to `.current_position()`,

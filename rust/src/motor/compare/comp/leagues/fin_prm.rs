@@ -268,7 +268,7 @@ pub(crate) unsafe extern "thiscall" fn compare_sell_season_tickets(this: usize, 
         return o(this, apply);
     }
     let mut regions = vec![(this, 0x167)];
-    let est = Stadium(club.stadium().addr());
+    let est = club.stadium();
     if !est.is_null() {
         regions.push((est.addr() + stadium::STADIUM_CAPACITY, 4));
     }

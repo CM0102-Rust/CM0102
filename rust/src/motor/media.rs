@@ -716,7 +716,7 @@ pub(crate) unsafe extern "stdcall" fn media_format_response_option_label(kind: u
 
 /// Staff record of id (0x6e bytes each in G_STAFF_TABLE).
 pub(crate) unsafe fn media_staff_by_id(id: i32) -> usize {
-    read_usize(G_STAFF_TABLE).wrapping_add((id as u32).wrapping_mul((staff::SIZE as u32)) as usize)
+    read_usize(G_STAFF_TABLE).wrapping_add((id as u32).wrapping_mul(staff::SIZE as u32) as usize)
 }
 
 /// Staff natural position mask (`staff_get_natural_position_mask`).
@@ -811,11 +811,12 @@ pub(crate) unsafe fn apply_event_flags_or_stop(c: usize, marks: u32, person: Sta
 
 /// STAFF_CONTRACT clear_grievances (`exe::staff_contract_clear_grievances`); in the dry run stops first if the transfer request would be withdrawn.
 pub(crate) unsafe fn clear_grievances_or_stop(c: usize, queixas: u32) -> bool {
+    let c = Contract(c);
     if MEDIA_REACTION_DRY_RUN.load(Relaxed) {
-        let before = read_usize(c + contract::GRIEVANCES);
-        write_usize(c + contract::GRIEVANCES, before & !(queixas as usize));
-        let retira = should_withdraw_transfer_request(Contract(c)).is_some();
-        write_usize(c + contract::GRIEVANCES, before);
+        let before = c.grievances() as usize;
+        c.set_grievances((before & !(queixas as usize)) as u32);
+        let retira = should_withdraw_transfer_request(c).is_some();
+        c.set_grievances((before) as u32);
         if retira {
             MEDIA_REACTION_STOPPED.store(true, Relaxed);
             return true;
@@ -1684,8 +1685,8 @@ pub(crate) unsafe extern "thiscall" fn queue_player_gratitude_news(this: usize, 
     if player.is_null() || player.player().is_null() || club.is_null() || club.manager().addr() == 0 {
         return;
     }
-    let contract = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), player, club);
-    if contract == 0 {
+    let contract = Contract(exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), player, club));
+    if contract.is_null() {
         return;
     }
     covered!("cpo_7 gratitude");
@@ -1704,7 +1705,7 @@ pub(crate) unsafe extern "thiscall" fn queue_player_gratitude_news(this: usize, 
             break;
         }
     }
-    let f45 = read_usize(contract + contract::GRIEVANCES);
+    let f45 = contract.grievances() as usize;
     let mut t = kind;
     if in_list || f45 & 0x2000 != 0 || f45 & 8 != 0 {
         if [0xe, 0, 2, 9, 0x23, 4, 7].contains(&(kind as i16)) {
@@ -1825,8 +1826,8 @@ pub(crate) unsafe extern "thiscall" fn post_player_criticism_reaction_news(_this
     if player.is_null() || player.player().is_null() || club.is_null() || club.manager().addr() == 0 {
         return;
     }
-    let contract = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), player, club);
-    if contract == 0 {
+    let contract = Contract(exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), player, club));
+    if contract.is_null() {
         return;
     }
     covered!("cpo_7 reaction to criticism");
@@ -1834,7 +1835,7 @@ pub(crate) unsafe extern "thiscall" fn post_player_criticism_reaction_news(_this
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
     construir(n, 0xbdc, 0);
-    let f45 = read_usize(contract + contract::GRIEVANCES);
+    let f45 = contract.grievances() as usize;
     let mark = (f45 & 0x2000 != 0 || f45 & 8 != 0)
         && (player.professionalism() as i32) < 0xa
         && (player.temperament() as i32) > 0xa
@@ -1851,7 +1852,7 @@ pub(crate) unsafe extern "thiscall" fn post_player_criticism_reaction_news(_this
         if cat_ok && ((player.age() as i8) as i32) > 0x16 {
             if (player.loyalty() as i32) < 0xa && (player.ambition() as i32) > 0xf && (player.temperament() as i32) < 6 {
                 reaction = if mark && r == 2 { 3 } else { 1 };
-            } else if days_since_arrival(player) > 0x3e8 && (player.loyalty() as i32) > 0xf && read_usize(contract + contract::GRIEVANCES) & 0x181 == 0 {
+            } else if days_since_arrival(player) > 0x3e8 && (player.loyalty() as i32) > 0xf && (contract.grievances() as usize) & 0x181 == 0 {
                 reaction = if mark && r == 2 { 4 } else { 2 };
             }
         }

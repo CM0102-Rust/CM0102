@@ -221,7 +221,7 @@ pub(crate) unsafe extern "C" fn cqt4_update_average_attendance(league: usize) {
     let league = League(league);
     let table_c = read_usize(G_COMP_OBJECT_TABLE);
     let cima = if league.upper_division_id() == -1 { 0 } else { read_usize(table_c + 4 * (league.upper_division_id() as usize)) };
-    let low = if (league.lower_division_id() as i32) == -1 { 0 } else { read_usize(table_c + 4 * league.lower_division_id()) };
+    let low = League(if (league.lower_division_id() as i32) == -1 { 0 } else { read_usize(table_c + 4 * league.lower_division_id()) });
     let mut f = 1.0f64;
     let reg = league.competition().addr();
     if reg != 0 && read_usize(reg + competition::NATION) != 0 {
@@ -310,19 +310,19 @@ pub(crate) unsafe extern "C" fn cqt4_update_average_attendance(league: usize) {
         } else if relegation() != 0
             && pos as i32 > league.club_count() as i32 - (league.relegated_count() as i8) as i32
         {
-            if low != 0 {
-                let mut a = read_i16(read_usize(low + 4) + competition::REPUTATION).wrapping_sub(league.competition().reputation());
+            if !low.is_null() {
+                let mut a = read_i16(read_usize(low.addr() + 4) + competition::REPUTATION).wrapping_sub(league.competition().reputation());
                 if a > -1 {
                     a = -1;
                 }
                 let mut v = ftol(c.reputation() as f64 * a as f64 * f * 0.2).min(-100);
-                if read_i32(low + league::LOWER_DIVISION_ID) == -1 {
+                if (low.lower_division_id() as i32) == -1 {
                     let r = exe::utils_random(0x2ee);
                     v = v.wrapping_mul(2).wrapping_sub(0xfa).wrapping_sub(r);
                 }
                 let r = exe::utils_random(v);
                 add(r.wrapping_add(v));
-                let rb = league_comp_reputation(League(low));
+                let rb = league_comp_reputation(low);
                 let lim = if rb > 7 { ftol(rb.wrapping_mul(3000) as f64 * f) } else { ftol(rb.wrapping_mul(2000) as f64 * f) };
                 cap_attendance(c, lim);
                 covered!("cqt_4 attendance of relegated");

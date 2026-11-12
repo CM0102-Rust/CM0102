@@ -552,7 +552,7 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
                     b'P' | b'p' => {
                         let (lado, idx) = if t(pos + 2) == b'1' && b(5) != 0xff { (b(5), b(6)) } else { (b(7), b(8)) };
                         if lado != 0xff {
-                            exe::match_events_format_player_name(ctx.addr(), lado as i8 as i32, idx as i8 as i32, name.as_mut_ptr(), 0xc8, 0, 0, 1);
+                            exe::match_events_format_player_name(ctx, lado as i8 as i32, idx as i8 as i32, name.as_mut_ptr(), 0xc8, 0, 0, 1);
                             sufixo(pos + 3, &mut suf);
                             let r = exe::langlib_apply_grammar_modifier(name.as_ptr() as usize, 0xad9c64 as *const u8, suf.as_ptr(), 0x64, 0x64);
                             if t(pos + 3) == b'C' || t(pos + 3) == b'c' {
@@ -866,7 +866,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                                 }
                                 whole[n] = 0;
                                 let short = (exe::font_text_width(font, whole.as_ptr()) as i16) < 0x12c;
-                                exe::match_events_format_player_name(ctx.addr(), lado_j as i8 as i32, idx as i8 as i32, name.as_mut_ptr(), 0xc8, short as u32, mode, 1);
+                                exe::match_events_format_player_name(ctx, lado_j as i8 as i32, idx as i8 as i32, name.as_mut_ptr(), 0xc8, short as u32, mode, 1);
                                 sufixo(pos + 3, &mut suf);
                                 let r = exe::langlib_apply_grammar_modifier(name.as_ptr() as usize, 0xad9c64 as *const u8, suf.as_ptr(), 0x64, 0x64);
                                 if t(pos + 3) == b'C' || t(pos + 3) == b'c' {

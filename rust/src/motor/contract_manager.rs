@@ -2599,13 +2599,13 @@ pub(crate) unsafe fn decision_reminder_dates(this: usize, person: Staff, data: u
     let mut l: u8 = 100;
     if !person.player().is_null() {
         let id = read_usize(person.addr()) as i32;
-        let c = if person.is_null() || id >= read_usize(G_STAFF_COUNT) as i32 {
+        let c = Contract(if person.is_null() || id >= read_usize(G_STAFF_COUNT) as i32 {
             0
         } else {
             let i = read_usize(read_usize(G_STAFF_STATE_TABLE).wrapping_add((id as usize).wrapping_mul(staff_state::SIZE))) as i32;
             if i < 0 { 0 } else { read_usize(this).wrapping_add((i as usize).wrapping_mul(0x50)) }
-        };
-        l = read_u8(c + contract::MORALE).wrapping_add(100);
+        });
+        l = (c.morale() as u8).wrapping_add(100);
         if l <= 0x50 {
             return (v, k);
         }

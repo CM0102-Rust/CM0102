@@ -823,9 +823,9 @@ pub(crate) unsafe extern "thiscall" fn record_tactic_result(this: usize, game: u
         let g = a / p;
         let h = g * q2;
         let r = p / b;
-        core::ptr::write_unaligned((l + tactic_stats::ALL_OUT_ATTACK_SCORE) as *mut f64 , r * h * g);
-        core::ptr::write_unaligned((l + tactic_stats::ATTACK_SCORE) as *mut f64 , r * g * q2 * q); // cpz5: the ratio of the normal stance
-        core::ptr::write_unaligned((l + tactic_stats::DEFENSIVE_SCORE) as *mut f64 , r * r * h);
+        write_f64(l + tactic_stats::ALL_OUT_ATTACK_SCORE, r * h * g);
+        write_f64(l + tactic_stats::ATTACK_SCORE, r * g * q2 * q); // cpz5: the ratio of the normal stance
+        write_f64(l + tactic_stats::DEFENSIVE_SCORE, r * r * h);
     }
     1
 }
@@ -1161,10 +1161,10 @@ pub(crate) unsafe extern "thiscall" fn get_club_tactic(this: usize, club: usize,
     let prontas = read_i32(this + tactics_fields::PRESET_TACTIC_COUNT);
     if index < prontas { // cpx8: preset or own tactic
         covered!("cpx_8 preset tactic");
-        read_usize(this + tactics_fields::PRESET_TACTICS).wrapping_add(index.wrapping_mul((formation_fields::SIZE as i32)) as usize) // cpx8: o bloco pronto
+        read_usize(this + tactics_fields::PRESET_TACTICS).wrapping_add(index.wrapping_mul(formation_fields::SIZE as i32) as usize) // cpx8: o bloco pronto
     } else {
         covered!("cpx_8 own tactic");
-        read_usize(this + tactics_fields::CUSTOM_TACTICS).wrapping_add(index.wrapping_sub(prontas).wrapping_mul((formation_fields::SIZE as i32)) as usize) // cpx8: the own block
+        read_usize(this + tactics_fields::CUSTOM_TACTICS).wrapping_add(index.wrapping_sub(prontas).wrapping_mul(formation_fields::SIZE as i32) as usize) // cpx8: the own block
     }
 }
 
@@ -1251,7 +1251,7 @@ pub(crate) unsafe extern "thiscall" fn tactic_slot_person(t: usize, club: usize,
     }
     if exe::database_is_national_team(club) != 0 {
         let national = p.national_job();
-        if national.is_null() || national.nation().addr() != club.nation().addr() {
+        if national.is_null() || national.nation() != club.nation() {
             core::ptr::write_unaligned(home, -1);
             return 0;
         }

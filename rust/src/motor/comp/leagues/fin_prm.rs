@@ -1239,7 +1239,7 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, fixtur
         fin_prm_add_i32(fin + b, v);
         add_to_balance(Finance(fin), v as i64);
     };
-    if fixture.neutral_venue() == 0 && fixture.home_club().division().addr() == fixture.competition().addr() {
+    if fixture.neutral_venue() == 0 && fixture.home_club().division() == fixture.competition() {
         let x = money as f64;
         add(mandante, 0x158, 0xb8, ftol(x * read_f64(rdata::F64_0_75)));
         add(visitante, 0x158, 0xb8, ftol(x * read_f64(rdata::F64_0_25)));

@@ -746,7 +746,7 @@ pub(crate) unsafe extern "thiscall" fn set_default_schedules(this: usize) {
     }
     for h in 0..0x10i32 {
         let id = read_i32(G_STAFF_COUNT).wrapping_sub(h).wrapping_sub(1);
-        let person = read_usize(G_STAFF_TABLE).wrapping_add((id as u32).wrapping_mul((staff::SIZE as u32)) as usize);
+        let person = read_usize(G_STAFF_TABLE).wrapping_add((id as u32).wrapping_mul(staff::SIZE as u32) as usize);
         for (vaga, t) in [(0usize, -1i8), (1, 0), (2, 1), (3, 2), (4, 3), (5, 4)] {
             exe::training_schedule_set_type(human_schedule_slot(this, person, vaga), vaga as i8, t);
         }

@@ -3,16 +3,16 @@ use super::*;
 /// Allocates a marker competition (0xa3 bytes, Comp::Comp, vtable, +0x42 = 1, id record of global g at +4, +0x50 =
 /// 0xff); 0 without memory.
 pub(crate) unsafe fn new_marker_comp(vtabela: usize, g: usize) -> usize {
-    let c = exe::crt_operator_new(0xa3);
-    if c == 0 {
+    let c = League(exe::crt_operator_new(0xa3));
+    if c.is_null() {
         return 0;
     }
     exe::new_comp(c);
-    write_usize(c, vtabela);
-    write_u8(c + league::CLUB_SIDES, 1);
-    write_usize(c + 4, comp_record_of_key(g));
-    write_u8(c + league::DISCIPLINE_RULE, 0xff);
-    c
+    write_usize(c.addr(), vtabela);
+    c.set_club_sides(1);
+    write_usize(c.addr() + 4, comp_record_of_key(g));
+    c.set_discipline_rule(0xff);
+    c.addr()
 }
 
 /// Builds the French first division: discipline `discipline_rule::FRANCE`; two placeholder competitions (the CFA and

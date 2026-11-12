@@ -202,8 +202,8 @@ pub(crate) unsafe fn play_with(j: MatchPlayer, strength: i16, height: f32, style
                     if a > random(0x14) {
                         let fixture = m.r#match();
                         let club = Club(read_usize(fixture + if j.side() == 0 { 0x20 } else { 0x1c }));
-                        let k = club.nation().addr();
-                        if k != 0 && read_i8(k + nation::FIRST_LANGUAGE) == 8 {
+                        let k = club.nation();
+                        if !k.is_null() && k.first_language() == 8 {
                             narrate(call, event::SILENT_OFF_OFF_OFF, 0, 0, u32::MAX);
                         }
                     }
@@ -215,23 +215,23 @@ pub(crate) unsafe fn play_with(j: MatchPlayer, strength: i16, height: f32, style
                 }
             }
             if sound != 0x1f7a {
-                let c = exe::cm3_match_engine_pick_restart_taker(m, (j.side() == 0) as i8, m.restart_type(), 0);
-                if c == 0 {
+                let c = MatchPlayer(exe::cm3_match_engine_pick_restart_taker(m, (j.side() == 0) as i8, m.restart_type(), 0));
+                if c.is_null() {
                     narrate(call, sound, u32::MAX, zero(j.addr()), u32::MAX);
                 } else {
                     if t == 7 {
-                        narrate(call, event::RESTART_INDIRECT_FREEKICK, read_u8(c + match_player::COMMENTARY_ID) as u32 , zero(j.addr()), u32::MAX);
+                        narrate(call, event::RESTART_INDIRECT_FREEKICK, c.commentary_id() as u32 , zero(j.addr()), u32::MAX);
                     } else {
                         narrate(call, sound, u32::MAX, zero(j.addr()), u32::MAX);
                     }
                     if sound == 0x1f79 {
-                        let far = (read_i8(c + match_player::SIDE) == 1 && read_i8(c + match_player::CELL_Y) < 4) || (read_i8(c + match_player::SIDE) == 0 && read_i8(c + match_player::CELL_Y) > 7);
+                        let far = (c.side() == 1 && c.cell_y() < 4) || (c.side() == 0 && c.cell_y() > 7);
                         if t == 7 {
-                            if far && !area_of(c, j.side() == 1) {
-                                narrate(call, event::FREE_KICK_CHANCE_INDIRECT, read_u8(c + match_player::COMMENTARY_ID) as u32 , zero(j.addr()), u32::MAX);
+                            if far && !area_of(c.addr(), j.side() == 1) {
+                                narrate(call, event::FREE_KICK_CHANCE_INDIRECT, c.commentary_id() as u32 , zero(j.addr()), u32::MAX);
                             }
                         } else if far {
-                            narrate(call, if (2..=6).contains(&j.cell_x()) { event::FREE_KICK_CHANCE_CENTRAL } else { event::FREE_KICK_CHANCE_WIDE }, read_u8(c + match_player::COMMENTARY_ID) as u32 , zero(j.addr()), u32::MAX);
+                            narrate(call, if (2..=6).contains(&j.cell_x()) { event::FREE_KICK_CHANCE_CENTRAL } else { event::FREE_KICK_CHANCE_WIDE }, c.commentary_id() as u32 , zero(j.addr()), u32::MAX);
                         }
                     }
                 }
@@ -328,6 +328,7 @@ pub(crate) use crate::conteiner::{abrir_no_conteiner, buscar_no_conteiner, posic
 /// assistant (+0xd3) and the 5 of +0x19f gain a quarter of the difference (between 1 and 10000); the club's +0x80 =
 /// +0x18e.
 pub(crate) unsafe fn post_match_players_with(fixture: usize, t: usize, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+    let fixture = Fixture(fixture);
     let ch = core::cell::RefCell::new(call);
     let register = |r: usize, pa: usize, t: usize| (ch.borrow_mut())(0x5afe00, r, [pa as u32, t as u32, 0, 0, 0]);
     let news = |n: usize, p: usize, c: usize, tp: u32, pa: usize, z: u32| (ch.borrow_mut())(0x72c1f0, n, [p as u32, c as u32, tp, pa as u32, z]);
@@ -346,11 +347,11 @@ pub(crate) unsafe fn post_match_players_with(fixture: usize, t: usize, call: &mu
         let d = read_f64(b + player_stats_fields::RATED_COUNT);
         if d != 0.0 { read_f64(b + player_stats_fields::RATING_SUM) / d } else { 6.8 }
     };
-    let esp = exe::national_teams_is_finals_comp(g(G_NATIONAL_TEAMS), (read(fixture + fixture::COMPETITION) as u32) as u32 as usize);
+    let esp = exe::national_teams_is_finals_comp(g(G_NATIONAL_TEAMS), (read(fixture.addr() + fixture::COMPETITION) as u32) as u32 as usize);
     if read_u8(G_ATTRIBUTE_MASKING_ENABLED) != 0 && g(G_FOG_OF_WAR) != 0 {
-        register(g(G_FOG_OF_WAR), fixture, t);
+        register(g(G_FOG_OF_WAR), fixture.addr(), t);
     }
-    let comp = if read(fixture) > -1 { g(g(g(G_COMP_OBJECT_TABLE) + read(fixture) as usize * 4) + 8) } else { 0 };
+    let comp = if read(fixture.addr()) > -1 { g(g(g(G_COMP_OBJECT_TABLE) + read(fixture.addr()) as usize * 4) + 8) } else { 0 };
     let mut ja_34 = false;
     for lado in 0..2usize {
         let club = Club(club_of(read(t + 4 * lado)));
@@ -358,7 +359,7 @@ pub(crate) unsafe fn post_match_players_with(fixture: usize, t: usize, call: &mu
         let other = t + (lado == 0) as usize * 0x625;
         let scoreboard = |r: usize| ub(r + match_record::HOME_SHOOTOUT_GOALS) + ub(r + match_record::HOME_TEAM);
         for k in 0..20usize {
-            let row = ts.addr() + 0x1c5 + k * 0x49;
+            let row = ts.addr() + match_record::ROW_MATCH_GRADE + k * 0x49;
             let id = read(row - 0x35);
             if id == -1 {
                 continue;
@@ -367,7 +368,7 @@ pub(crate) unsafe fn post_match_players_with(fixture: usize, t: usize, call: &mu
             if read_usize(p + staff::PLAYER) == 0 || (p != 0 && read(p) >= read(G_STAFF_COUNT)) {
                 continue;
             }
-            if comp != 0 && read(fixture + fixture::COMPETITION) == (club.division().addr() as i32) && *((t + match_record::NO_STATISTICS) as *const u8) == 0 {
+            if comp != 0 && read(fixture.addr() + fixture::COMPETITION) == (club.division().addr() as i32) && *((t + match_record::NO_STATISTICS) as *const u8) == 0 {
                 let c = contract(g(G_CONTRACT_MANAGER), p, club.addr());
                 let nota1 = exe::comp_stats_get_player_stat(comp, read_usize(p + staff::PLAYER), 1);
                 let nota11 = exe::comp_stats_get_player_stat(comp, read_usize(p + staff::PLAYER), 0x11);
@@ -386,7 +387,7 @@ pub(crate) unsafe fn post_match_players_with(fixture: usize, t: usize, call: &mu
                         && average() - 0.2 < nota11
                     {
                         covered!("players news 0x11");
-                        news(g(G_MEDIA), p, club.addr(), 0x11, fixture, 0);
+                        news(g(G_MEDIA), p, club.addr(), 0x11, fixture.addr(), 0);
                     }
                 }
             }
@@ -398,7 +399,7 @@ pub(crate) unsafe fn post_match_players_with(fixture: usize, t: usize, call: &mu
                     let r = random(9);
                     if r as f64 * 0.1 + m + 0.5 < nota11 {
                         covered!("players news 0x34");
-                        news_34(g(G_MEDIA), p, club.addr(), 0x34, fixture);
+                        news_34(g(G_MEDIA), p, club.addr(), 0x34, fixture.addr());
                         ja_34 = true;
                     }
                 }

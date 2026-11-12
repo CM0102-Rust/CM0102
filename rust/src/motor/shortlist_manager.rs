@@ -377,7 +377,7 @@ pub(crate) unsafe fn average_reputation3(f: PlayerSheet) -> i32 {
 /// Club reputation adjusted by stadium city attraction.
 pub(crate) unsafe fn reputation_by_stadium(club: Club) -> i32 {
     let rep = club.reputation() as i32;
-    let e = Stadium(club.stadium().addr());
+    let e = club.stadium();
     let city = if !e.is_null() { e.city() } else { 0 };
     if city == 0 {
         return ftol(rep as f64 * read_f64(rdata::F64_0_2857142857));

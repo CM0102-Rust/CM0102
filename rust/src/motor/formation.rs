@@ -55,6 +55,7 @@ pub(crate) unsafe extern "thiscall" fn manager_table(this: usize, manager: usize
 /// sector flagged 0x200 and returns 0 if none; with no player list returns 1, otherwise 1 if any of the 20 players
 /// (0x1be-byte records, slot in +0x19, or +0x1a when +0x19 is 0xfe) occupies that slot.
 pub(crate) unsafe extern "thiscall" fn sector_slot_taken(this: usize, mask: u32, players: usize) -> u32 {
+    let players = MatchPlayer(players);
     let (mut setor, mut lado) = (0u16, 0u16);
     exe::formation_split_position_code(mask, &mut setor, &mut lado);
     let home = |k: usize| read_u16(this + formation_fields::SLOT_CELLS + 2 * k);
@@ -62,11 +63,11 @@ pub(crate) unsafe extern "thiscall" fn sector_slot_taken(this: usize, mask: u32,
         Some(k) => k as u8,
         None => return 0,
     };
-    if players == 0 {
+    if players.is_null() {
         return 1;
     }
     (0..20usize).any(|i| {
-        let p = players + match_player::POSITION + i * 0x1be;
+        let p = players.addr() + match_player::POSITION + i * 0x1be;
         let c = read_u8(p);
         c == k || (c == 0xfe && *((p + 1) as *const u8) == k)
     }) as u32
@@ -203,29 +204,30 @@ pub(crate) unsafe extern "thiscall" fn mark_stars(this: usize, side: i8) {
 /// 16 bits). Null `p`: as in the original (error box and 0).
 /// Original: `position_mask` (0x5b7d20, formation.cpp, cdecl).
 pub(crate) unsafe extern "C" fn position_mask(p: usize) -> u16 {
-    if p == 0 {
-        return original_fn::<unsafe extern "C" fn(usize) -> u16>(IDX_POSITION_MASK)(p);
+    let p = PlayerSheet(p);
+    if p.is_null() {
+        return original_fn::<unsafe extern "C" fn(usize) -> u16>(IDX_POSITION_MASK)(p.addr());
     }
     let mut m = 0u16;
     let mut level = 15i8;
     loop {
-        if read_i8(p + player_sheet::GOALKEEPER) >= level {
+        if p.goalkeeper() >= level {
             m |= 1;
         }
-        if read_i8(p + player_sheet::DEFENDER) >= level {
+        if p.defender() >= level {
             m |= 4;
         }
-        if read_i8(p + player_sheet::SWEEPER) >= level {
+        if p.sweeper() >= level {
             m |= 2;
         }
-        if read_i8(p + player_sheet::DEFENSIVE_MIDFIELDER) >= level {
+        if p.defensive_midfielder() >= level {
             m |= 8;
-        } else if read_i8(p + player_sheet::ATTACKING_MIDFIELDER) >= level {
+        } else if p.attacking_midfielder() >= level {
             m |= 0x20;
-        } else if read_i8(p + player_sheet::MIDFIELDER) >= level {
+        } else if p.midfielder() >= level {
             m |= 0x10;
         }
-        if read_i8(p + player_sheet::ATTACKER) >= level {
+        if p.attacker() >= level {
             m |= 0x40;
         }
         level -= 1;
@@ -233,13 +235,13 @@ pub(crate) unsafe extern "C" fn position_mask(p: usize) -> u16 {
             break;
         }
     }
-    if read_i8(p + player_sheet::RIGHT_SIDE) >= 15 {
+    if p.right_side() >= 15 {
         m |= 0x800;
     }
-    if read_i8(p + player_sheet::LEFT_SIDE) >= 15 {
+    if p.left_side() >= 15 {
         m |= 0x80;
     }
-    if read_i8(p + player_sheet::CENTRAL) >= 15 {
+    if p.central() >= 15 {
         m |= 0x200;
     }
     m

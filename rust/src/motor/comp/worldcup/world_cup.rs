@@ -328,33 +328,34 @@ pub(crate) unsafe extern "thiscall" fn world_cup_create_group_stage(this: usize,
 /// nation; mov ecx, [`G_NATIONAL_TEAMS`] -> thiscall, ret 8) and the vector is freed (`exe::crt_free`).
 /// Original: `WorldCup::set_predicted_positions` (0x92f680, world_cup.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn world_cup_set_predicted_positions(this: usize) {
-    if read_usize(this + 8) == 0 {
+    let this = League(this);
+    if read_usize(this.addr() + 8) == 0 {
         show_error_at(0xad5888, 0x671);
         return;
     }
-    if read_i16(this + league::ENTRANT_COUNT) < 0x20 {
+    if this.entrant_count() < 0x20 {
         show_error_at(0xad5888, 0x678);
-        write_u16(this + league::ENTRANT_COUNT, 0x20);
+        this.set_entrant_count(0x20u16 as i16);
     }
-    let v = exe::crt_malloc(((read_i16(this + league::ENTRANT_COUNT) as i32) << 2) as u32);
+    let v = exe::crt_malloc(((this.entrant_count() as i32) << 2) as u32);
     if v == 0 {
         show_error_at(0xad5888, 0x680);
         return;
     }
     let mut i = 0i16;
-    while i < read_i16(this + league::ENTRANT_COUNT) {
-        write_usize(v + i as usize * 4, read_usize(read_usize(this + league::ENTRANT_BOOK) + i as usize * 6));
+    while i < this.entrant_count() {
+        write_usize(v + i as usize * 4, read_usize(this.entrant_book() + i as usize * 6));
         i += 1;
     }
-    exe::crt_qsort(v, read_i16(this + league::ENTRANT_COUNT) as i32 as u32, 4, 0x4b07d0);
+    exe::crt_qsort(v, this.entrant_count() as i32 as u32, 4, 0x4b07d0);
     const FAIXAS: [u32; 32] = [1, 2, 3, 4, 5, 5, 5, 5, 9, 9, 9, 9, 9, 9, 9, 9, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19];
     for (k, &p) in FAIXAS.iter().enumerate() {
-        exe::comp_stats_set_club_final_position(read_usize(this + 8), read_usize(v + k * 4), p);
+        exe::comp_stats_set_club_final_position(read_usize(this.addr() + 8), read_usize(v + k * 4), p);
     }
     let mut i = 0i16;
-    while i < read_i16(this + league::ENTRANT_COUNT) {
+    while i < this.entrant_count() {
         covered!("cqf_5 nation competition");
-        exe::nationalteams_set_current_competition(read_usize(G_NATIONAL_TEAMS), read_usize(read_usize(v + i as usize * 4) + club::NATION), read_usize(this + 4));
+        exe::nationalteams_set_current_competition(read_usize(G_NATIONAL_TEAMS), read_usize(read_usize(v + i as usize * 4) + club::NATION), read_usize(this.addr() + 4));
         i += 1; // cqf5: the next nation
     }
     exe::crt_free(v);
@@ -443,16 +444,17 @@ pub(crate) unsafe fn written_group_round_bytes(t: usize) -> Vec<u8> {
 /// `league::ENTRANT_COUNT` goes up; when full, the box for line 0x456.
 /// Original: `WorldCup::add_qualified_team` (0x92e740, world_cup.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn add_qualified_team(this: usize, club: usize) {
-    let n = read_i16(this + league::ENTRANT_COUNT);
-    if n >= read_i16(this + league::ENTRANT_CAPACITY) {
+    let this = League(this);
+    let n = this.entrant_count();
+    if n >= this.entrant_capacity() {
         show_error_at(0xad5888, 0x456);
         return;
     }
     covered!("cqf_6 qualified nation");
-    let e = read_usize(this + league::ENTRANT_BOOK).wrapping_add((n as i32 * 6) as usize);
+    let e = this.entrant_book().wrapping_add((n as i32 * 6) as usize);
     write_u8(e + 4, 6);
-    write_usize(read_usize(this + league::ENTRANT_BOOK).wrapping_add((read_i16(this + league::ENTRANT_COUNT) as i32 * 6) as usize), club);
-    write_u16(this + league::ENTRANT_COUNT, (read_i16(this + league::ENTRANT_COUNT) as u16).wrapping_add(1));
+    write_usize(this.entrant_book().wrapping_add((this.entrant_count() as i32 * 6) as usize), club);
+    this.set_entrant_count(((this.entrant_count() as u16).wrapping_add(1)) as i16);
 }
 
 /// Sets the World Cup seeds (holder, hosts, reputation) and the pots by continent; does nothing for the 2002 World Cup.

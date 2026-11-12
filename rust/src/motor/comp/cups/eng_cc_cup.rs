@@ -194,7 +194,8 @@ pub(crate) unsafe fn eng_cc_cup_club_by_index(i: i16) -> usize {
 
 /// Returns the id of the club's division competition (club +0x57 → +0), or None without a division.
 pub(crate) unsafe fn division_comp_id(c: usize) -> Option<usize> {
-    let d = read_usize(c + club::DIVISION);
+    let c = Club(c);
+    let d = c.division().addr();
     if d == 0 { None } else { Some(read_usize(d)) }
 }
 
@@ -211,10 +212,10 @@ pub(crate) unsafe fn eng_cc_cup_write_entrant(this: Cup, k: i32, club: usize, cl
 pub(crate) unsafe fn eng_cc_cup_enter_division_clubs(this: Cup, n: &mut i32, id: usize, class: impl Fn(usize) -> u8) {
     let mut i: i16 = 0;
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
-        let c = eng_cc_cup_club_by_index(i);
-        if let Some(d) = division_comp_id(c) {
-            if *n != this.team_count() as i32 && d == read_usize(id) && read_usize(c + club::CONTINENTAL_COMP_ID) as i32 == -1 {
-                eng_cc_cup_write_entrant(this, *n, c, class(c));
+        let c = Club(eng_cc_cup_club_by_index(i));
+        if let Some(d) = division_comp_id(c.addr()) {
+            if *n != this.team_count() as i32 && d == read_usize(id) && (c.continental_comp_id() as usize) as i32 == -1 {
+                eng_cc_cup_write_entrant(this, *n, c.addr(), class(c.addr()));
                 *n += 1;
                 if *n == this.team_count() as i32 {
                     return;
@@ -227,7 +228,8 @@ pub(crate) unsafe fn eng_cc_cup_enter_division_clubs(this: Cup, n: &mut i32, id:
 
 /// True if the club's last-season competition (+0x5b) is division `de`.
 pub(crate) unsafe fn came_from_division(c: usize, of: usize) -> bool {
-    let p = read_usize(c + club::LAST_DIVISION);
+    let c = Club(c);
+    let p = c.last_division().addr();
     p != 0 && read_usize(p) == read_usize(of)
 }
 

@@ -32,7 +32,7 @@ pub(crate) unsafe extern "thiscall" fn record_match_ratings(this: usize, game: u
             if l == 1 {
                 covered!("cpw_5 away side ratings");
             }
-            exe::month_ratings_add_player_rating(this, e.addr());
+            exe::month_ratings_add_player_rating(this, e);
         }
         side += 0x625;
     }

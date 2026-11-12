@@ -7,11 +7,12 @@ use super::*;
 /// of the campaign
 /// Original: `WcOceaniaLeague::update_staff_records_for_status` (0x91e840, wc_oceania_league.cpp, thiscall, ret 0x18).
 pub(crate) unsafe extern "thiscall" fn wc_oceania_league_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, out: usize, game: usize, _a6: u32) -> u32 {
+    let game = Fixture(game);
     let (d, f) = (outcome as u8, stage as u8 as i8);
     let comp = read_usize(this + 4);
     let eliminar = |weight: u32| {
         // simplification: +0x30 and +0x32 go in registers with garbage in the high 16 bits; 0x86c000 only uses the words
-        european_cup_add_knocked_out_record(club, comp, read_i16(game + fixture::ROUND_PREFIX) as u16 as u32, read_i16(game + fixture::ROUND_NAME) as u16 as u32, weight);
+        european_cup_add_knocked_out_record(club, comp, game.round_prefix() as u16 as u32, game.round_name() as u16 as u32, weight);
         clear_national_team_competition(Club(club));
     };
     if f < 1 {

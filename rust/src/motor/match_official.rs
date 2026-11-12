@@ -158,6 +158,7 @@ pub(crate) unsafe extern "thiscall" fn punish_foul(this: usize, j: usize, kind: 
 /// in the box); without `flag`, a red by `severidade` (with `expulsar`, flag +0x16), a yellow against random(6), or
 /// disposition -25. Counts the foul on the player (+0x14) and the fouled count on `outro` (+0x15).
 pub(crate) unsafe extern "thiscall" fn punish_move(this: usize, j: usize, other: usize, kind: *mut u8, x: i8, severity: i8, flag: u8, weight: *mut f32, send_off: u8) {
+    let other = MatchPlayer(other);
     let j = MatchPlayer(j);
     *weight = 1.5;
     if j.position() < 0 {
@@ -202,7 +203,7 @@ pub(crate) unsafe extern "thiscall" fn punish_move(this: usize, j: usize, other:
         _ => return,
     }
     j.set_fouls((j.fouls()).wrapping_add(1));
-    write_u8(other + match_player::FOULS_SUFFERED, read_u8(other + match_player::FOULS_SUFFERED).wrapping_add(1));
+    other.set_fouls_suffered(other.fouls_suffered().wrapping_add(1));
 }
 
 /// Referee: looks for an attacker of side `lado_b` caught offside on a ball to row `y` (passing row `linha`). Returns
@@ -232,20 +233,20 @@ pub(crate) unsafe extern "thiscall" fn look_for_offside(this: usize, side_b: i8,
         return 0;
     }
     for k in 0..20 {
-        let p = engine.player(side_b, k).addr();
-        if read_i8(p + match_player::POSITION) < 0 || p == passador {
+        let p = MatchPlayer(engine.player(side_b, k).addr());
+        if p.position() < 0 || p.addr() == passador {
             continue;
         }
         if passador != 0 {
             if (exe::match_player_is_in_penalty_area(passador, (side_b == 0) as u8) as u32) as u8 == 0 {
                 continue;
             }
-            let dist = match_player_distance_to_cell(p, 4, y);
+            let dist = match_player_distance_to_cell(p.addr(), 4, y);
             if ((random(4) + 1) as f64) < dist as f64 || dist.is_nan() {
                 continue;
             }
         }
-        let (py, a) = (read_i8(p + match_player::CELL_Y) as i32, read_i8(p + match_player::MOMENT_MOVEMENT) as i32);
+        let (py, a) = (p.cell_y() as i32, p.moment_movement() as i32);
         let (linha_d, sinal, perto) = match side_b {
             0 => (l0 as i32, 1, -25i16),
             1 => (l1 as i32, -1, -15i16),
@@ -253,18 +254,18 @@ pub(crate) unsafe extern "thiscall" fn look_for_offside(this: usize, side_b: i8,
         };
         if py == linha_d - 2 * sinal && random(6 * a + 500) == 0 {
             *v = (*v).wrapping_add(perto);
-            return p;
+            return p.addr();
         }
         if py == linha_d - sinal && random(ftol((a as f64) * (a as f64) * (a as f64) + read_f64(rdata::F64_25))) == 0 {
             *v = (*v).wrapping_add(-15);
-            return p;
+            return p.addr();
         }
         if py == linha_d && random(3) != 0 && a < random(0x12) {
             *v = (*v).wrapping_add(15);
-            return p;
+            return p.addr();
         }
         if (py - linha_d) * sinal > 0 && a < random(0x64) {
-            return p;
+            return p.addr();
         }
     }
     0
@@ -433,9 +434,9 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
             factor *= (read_f64(rdata::F64_6) - z as f64) * read_f64(rdata::F64_0_1) + read_f64(rdata::F64_1);
         }
     }
-    let fixture = m.r#match();
-    if fixture != 0 {
-        let comp = *((fixture + fixture::COMPETITION) as *const usize);
+    let fixture = Fixture(m.r#match());
+    if !fixture.is_null() {
+        let comp = fixture.competition().addr();
         let friendly = *(G_FRIENDLY as *const usize);
         if comp != 0 && friendly != 0 {
             if exe::friendly_is_friendly_competition(friendly, comp) != 0 {

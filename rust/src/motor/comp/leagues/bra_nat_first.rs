@@ -575,6 +575,7 @@ pub(crate) unsafe fn serie_c_staff_records(this: League, club: usize, status: u3
 
 /// Baiano update_staff_records_for_status (`bra_reg_bahia_update_staff_records_for_status`), like Série A's but the club row comes from the table (+0xb1).
 pub(crate) unsafe fn baiano_staff_records(this: League, club: usize, status: u32, stage: u32, game: usize, fazer: bool) -> (u32, usize, u8) {
+    let game = Fixture(game);
     let (st, fa) = (status as u8, stage as u8);
     let comp = this.competition().addr();
     if fa == 0xff {
@@ -610,8 +611,8 @@ pub(crate) unsafe fn baiano_staff_records(this: League, club: usize, status: u32
                     // simplification: the original pushes the whole registers (eax with the caller’s garbage above the
                     // word, ecx with the upper half of the table pointer); 0x4bf850 and 0x86c000 only read the
                     // words (0x4b0870 / `as u16`): the words go.
-                    let weight = exe::comp_util_scale_by_round(0x1e, 0x32, read_i16(game + fixture::ROUND_NUMBER) as u16 as u32, 2) as u32;
-                    exe::staff_records_add_knocked_out_record(read_usize(G_STAFF_RECORDS), club, comp, read_i16(game + fixture::ROUND_PREFIX) as u16 as u32, read_i16(game + fixture::ROUND_NAME) as u16 as u32, weight);
+                    let weight = exe::comp_util_scale_by_round(0x1e, 0x32, game.round_number() as u16 as u32, 2) as u32;
+                    exe::staff_records_add_knocked_out_record(read_usize(G_STAFF_RECORDS), club, comp, game.round_prefix() as u16 as u32, game.round_name() as u16 as u32, weight);
                 }
                 let l = this.table() + league_table_row::SIZE * i as usize;
                 if fazer {

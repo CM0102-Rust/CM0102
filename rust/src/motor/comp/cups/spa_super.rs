@@ -114,18 +114,18 @@ pub(crate) unsafe fn select_japanese_super_cup_teams(this: usize) -> (i32, i32) 
         Some(l) => l,
         None => return (-1, 0),
     };
-    let a = latest_placed_club(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1, 0); // cqm12: the J1 champion
-    if !set_team_slot(l, 0, a, F, 0xca) {
+    let a = Club(latest_placed_club(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1, 0)); // cqm12: the J1 champion
+    if !set_team_slot(l, 0, a.addr(), F, 0xca) {
         return (0, 0);
     }
-    if read_usize(a + club::NATION) == 0 && !set_team_slot(l, 0, latest_placed_club(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1, 1), F, 0xd6) {
+    if a.nation().addr() == 0 && !set_team_slot(l, 0, latest_placed_club(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1, 1), F, 0xd6) {
         return (0, 0);
     }
-    let b = latest_placed_club(KEY_CLUB_COMP_JAPANESE_EMPEROR_S_CUP, 0);
-    if !set_team_slot(l, 1, b, F, 0xe0) {
+    let b = Club(latest_placed_club(KEY_CLUB_COMP_JAPANESE_EMPEROR_S_CUP, 0));
+    if !set_team_slot(l, 1, b.addr(), F, 0xe0) {
         return (0, 0);
     }
-    if read_usize(b + club::NATION) == 0 && !set_team_slot(l, 1, latest_placed_club(KEY_CLUB_COMP_JAPANESE_EMPEROR_S_CUP, 1), F, 0xec) {
+    if b.nation().addr() == 0 && !set_team_slot(l, 1, latest_placed_club(KEY_CLUB_COMP_JAPANESE_EMPEROR_S_CUP, 1), F, 0xec) {
         return (0, 0);
     }
     if read_usize(l) == read_usize(l + 6) {

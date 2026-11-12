@@ -670,11 +670,12 @@ pub(crate) unsafe extern "C" fn comp_util_classify_tie_result_for_news(club: usi
 /// (only the low part reaches `exe::newsitem_set_slot`).
 /// Original: `comp_util_write_fixture_to_news_slots` (0x4afeb0, comp_util.cpp, cdecl).
 pub(crate) unsafe extern "C" fn comp_util_write_fixture_to_news_slots(game: usize, news: usize, cursor: *mut u8) -> u32 {
-    let b = |o: usize| read_i8(game + o) as i32 as u32;
-    let s = |o: usize| read_i16(game + o) as i32 as u32;
+    let game = Fixture(game);
+    let b = |o: usize| read_i8(game.addr() + o) as i32 as u32;
+    let s = |o: usize| read_i16(game.addr() + o) as i32 as u32;
     let values = [
-        read_u32(game + fixture::HOME_CLUB_ID), read_u32(game + fixture::AWAY_CLUB_ID), b(fixture::HOME_RESULT_MARK), b(fixture::AWAY_RESULT_MARK), read_u32(game + 4), read_u32(game + 0), b(fixture::STAGE_INDEX), s(fixture::ROUND_PREFIX), s(fixture::ROUND_NAME),
-        b(fixture::HOME_GOALS), b(fixture::AWAY_GOALS), b(fixture::HOME_AGGREGATE), b(fixture::AWAY_AGGREGATE), b(fixture::HOME_GOALS_EXTRA_TIME), b(fixture::AWAY_GOALS_EXTRA_TIME), (read_u16(game + fixture::DAY) as u32), (read_u16(game + fixture::YEAR) as u32), read_u32(game + 8),
+        (game.home_club_id() as u32), (game.away_club_id() as u32), b(fixture::HOME_RESULT_MARK), b(fixture::AWAY_RESULT_MARK), read_u32(game.addr() + 4), read_u32(game.addr() + 0), b(fixture::STAGE_INDEX), s(fixture::ROUND_PREFIX), s(fixture::ROUND_NAME),
+        b(fixture::HOME_GOALS), b(fixture::AWAY_GOALS), b(fixture::HOME_AGGREGATE), b(fixture::AWAY_AGGREGATE), b(fixture::HOME_GOALS_EXTRA_TIME), b(fixture::AWAY_GOALS_EXTRA_TIME), (game.day() as u32), (game.year() as u32), read_u32(game.addr() + 8),
     ];
     let mut k = *cursor;
     let mut r = 0;

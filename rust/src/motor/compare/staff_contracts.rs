@@ -69,16 +69,17 @@ pub(crate) unsafe extern "thiscall" fn compare_get_expiry_band(this: usize) -> u
 
 /// Comparer for `clear_all_grievances`.
 pub(crate) unsafe extern "thiscall" fn compare_clear_all_grievances(this: usize, check: u32) {
+    let this = Contract(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_CLEAR_ALL_GRIEVANCES);
     if check != 0 {
-        return o(this, check);
+        return o(this.addr(), check);
     }
-    let mut reg = vec![(this + contract::GRIEVANCES, 4)];
-    if let Some(c) = database_staff_state_record(staff_of_contract(Contract(this))) {
+    let mut reg = vec![(this.addr() + contract::GRIEVANCES, 4)];
+    if let Some(c) = database_staff_state_record(staff_of_contract(this)) {
         reg.push((c, 79));
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, check), || clear_all_grievances(this, check));
-    SCOREBOARD.record(igual, || format!("clear_all_grievances({:x}) {:x?} x {:x?}", this, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this.addr(), check), || clear_all_grievances(this.addr(), check));
+    SCOREBOARD.record(igual, || format!("clear_all_grievances({:x}) {:x?} x {:x?}", this.addr(), mo, mr));
 }
 
 /// Comparer for `check_transfer_request_withdrawal`.
@@ -96,24 +97,25 @@ pub(crate) unsafe extern "thiscall" fn compare_check_transfer_request_withdrawal
 
 /// Comparer for `set_flags`.
 pub(crate) unsafe extern "thiscall" fn compare_set_flags(c: usize, marks: u32) {
+    let c = Contract(c);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_SET_FLAGS);
     if marks as i32 > 0x1000 {
-        return o(c, marks);
+        return o(c.addr(), marks);
     }
-    let mut regions = vec![(c + contract::FLAGS, 4)];
+    let mut regions = vec![(c.addr() + contract::FLAGS, 4)];
     regions.extend(crate::rng::STATE_REGIONS);
     let before = crate::comparison::MemorySnapshot::read(&regions);
     MISS_TRAINING_DRY_RUN.store(true, Relaxed);
     MISS_TRAINING_DECISION.store(0, Relaxed);
-    crate::rng::pause_trace(|| crate::rng::without_counting(|| set_flags(c, marks)));
+    crate::rng::pause_trace(|| crate::rng::without_counting(|| set_flags(c.addr(), marks)));
     MISS_TRAINING_DRY_RUN.store(false, Relaxed);
     let pediu = MISS_TRAINING_DECISION.load(Relaxed) != 0;
     let mr = crate::comparison::MemorySnapshot::read(&regions);
     before.write_back();
-    o(c, marks);
+    o(c.addr(), marks);
     let mo = crate::comparison::MemorySnapshot::read(&regions);
     let same = if pediu { mo.0[0] == mr.0[0] } else { mo == mr };
-    SCOREBOARD.record(same, || format!("set_flags({:#x}, {:#x}) pediu={} original={:x?} rust={:x?}", c, marks, pediu, mo, mr));
+    SCOREBOARD.record(same, || format!("set_flags({:#x}, {:#x}) pediu={} original={:x?} rust={:x?}", c.addr(), marks, pediu, mo, mr));
 }
 
 /// Comparer for `get_contract_satisfaction`.

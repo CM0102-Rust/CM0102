@@ -660,7 +660,7 @@ pub(crate) unsafe extern "thiscall" fn ai_respond_to_bid(this: usize, slot: usiz
             };
             pv.set_position((w) as i16);
             let mut out: i32 = 0;
-            let mut v = exe::shortlist_manager_value_player_for_club(read_usize(read_usize(G_TRANSFER_MANAGER) + transfer_manager_fields::SHORTLIST_MANAGER), seller, j, pv.addr(), &mut out, -1, 0);
+            let mut v = exe::shortlist_manager_value_player_for_club(read_usize(read_usize(G_TRANSFER_MANAGER) + transfer_manager_fields::SHORTLIST_MANAGER), seller, j, pv, &mut out, -1, 0);
             if v > ceiling {
                 v = ceiling;
             }
@@ -7280,7 +7280,7 @@ pub(crate) unsafe extern "thiscall" fn get_offer_response_delay(this: usize, off
     let c = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p));
     write_usize(G_CONTRACT_LOOKUP_RESULT, c.addr());
     let owner = Club(if !c.is_null() && c.contract_type() & 0x3f != 5 { (friendly_club_by_id(c.club())).addr() } else { 0 });
-    let k = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, owner);
+    let k = Contract(exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, owner));
     let mut deadline: u16 = 0x16d;
     let r = nation_transfer_rules_or_zero(this, buyer.nation());
     if r != 0 {
@@ -7302,7 +7302,7 @@ pub(crate) unsafe extern "thiscall" fn get_offer_response_delay(this: usize, off
         *slices = (exe::utils_random(3) as u8).wrapping_add(1);
         return;
     }
-    let status: i8 = if k != 0 { read_u8(k + contract::HAPPINESS) as i8 } else { -100 };
+    let status: i8 = if !k.is_null() { (k.happiness() as u8) as i8 } else { -100 };
     // simplification: the original pushes the role in a register with garbage above; 0x53b620 only reads the byte
     if exe::database_is_player_job((offer.job_type() as u32) as i8) != 0 && p.player().is_null() {
         show_error_at(0xa8d514, 0x29c3);
@@ -7901,7 +7901,7 @@ pub(crate) unsafe extern "thiscall" fn get_fixture_rules_scope(_this: usize, fix
     let fixture = Fixture(fixture);
     let comp = fixture.competition();
     if read_usize(comp.addr()) == read_usize(KEY_CLUB_COMP_RESERVE) {
-        let n = Nation(fixture.home_club().nation().addr());
+        let n = fixture.home_club().nation();
         *nation = n.addr();
         *continent = if !n.is_null() { n.continent() } else { 0 };
         *kind = 1;

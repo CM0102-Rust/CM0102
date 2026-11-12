@@ -222,7 +222,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: Fixture, result: usize,
         if !SCOUT_MATCH_DRY_RUN.load(Relaxed) {
             covered!("cqf_10 club history");
             // 0x7bd310: push resultado; push jogo; mov ecx, [this+0x170] -> thiscall, ret 8
-            exe::player_search_record_scouted_club_match(read_usize(this + player_search_fields::SCOUTED_CLUB_RECORD), game, result.addr());
+            exe::player_search_record_scouted_club_match(read_usize(this + player_search_fields::SCOUTED_CLUB_RECORD), game, result);
         }
     }
     // the dates: today before the start (+0x1a5: day, +0x1a7: year) leaves; before the end (+0x1ad/+0x1af) only with a player
@@ -388,7 +388,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: Fixture, result: usize,
             };
             covered!("cqf_10 evaluate player");
             let n = ((read_u8(current + 5) as i32 * 0x28 - 0x104).wrapping_mul(rating as i8 as i32)) / 2;
-            exe::player_search_report_on_player(this, p, reg, n, mode, game, result.addr(), mark);
+            exe::player_search_report_on_player(this, p, reg, n, mode, game, result, mark);
             if (read_u8(reg + scout_report::REPORT_MODE) as i8) > -1 {
                 exe::llist_add_tail(out, reg, 0x67);
             }

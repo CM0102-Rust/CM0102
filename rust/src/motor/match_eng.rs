@@ -4777,11 +4777,12 @@ pub(crate) unsafe fn retake_shot_with(c: &ShotLocals, apply: bool, desfazer: boo
 /// Decrements the goal counters of player p (+0x3d..+0x45 words and the +0xc byte) when a goal is disallowed or
 /// retaken.
 pub(crate) unsafe fn undo_goal_stats(p: usize) {
+    let p = MatchPlayer(p);
     for o in [0x3d, 0x3f, 0x41, 0x43, 0x45] {
-        let w = (p + o) as *mut i16;
+        let w = (p.addr() + o) as *mut i16;
         *w = (*w).wrapping_sub(1);
     }
-    let b = (p + match_player::GOALS) as *mut u8;
+    let b = (p.addr() + match_player::GOALS) as *mut u8;
     *b = (*b).wrapping_sub(1);
 }
 

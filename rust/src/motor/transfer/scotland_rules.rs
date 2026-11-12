@@ -30,10 +30,11 @@ pub(crate) unsafe fn refuse_outside_window(this: usize, msg: usize, reason: *mut
 
 /// Loan refusal with reason m and text formato built from the record's byte +0x37 and name at +4.
 pub(crate) unsafe fn refuse_loan(msg: usize, reason: *mut u16, formato: usize, r: usize, m: u16) -> u32 {
+    let r = Nation(r);
     if msg != 0 {
         let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-        let g = read_u8(r + nation::GENDER_NAME) as i8 as i32;
-        text(msg, formato, g, g, r + 4);
+        let g = r.gender_name() as i8 as i32;
+        text(msg, formato, g, g, r.addr() + 4);
     }
     if !reason.is_null() {
         *reason = m;

@@ -477,12 +477,14 @@ pub(crate) unsafe fn usa_mls_add_failed_to_qualify_record(club: usize, comp: usi
 
 /// comp_util_scale_by_round: weight 50..70 by the match round.
 pub(crate) unsafe fn weight_by_round(game: usize) -> u32 {
-    exe::comp_util_scale_by_round(0x32, 0x46, read_i16(game + fixture::ROUND_NUMBER) as u16 as u32, 2) as u32 
+    let game = Fixture(game);
+    exe::comp_util_scale_by_round(0x32, 0x46, game.round_number() as u16 as u32, 2) as u32 
 }
 
 /// The MLS stage-end outcome (`usa_mls_update_staff_records_for_status`): qualified, failed or knocked-out records by situation and phase; dry run
 /// without effects when `fazer` is false.
 pub(crate) unsafe fn mls_stage_outcome(this: usize, club: usize, status: u32, stage: u32, game: usize, fazer: bool) -> u32 {
+    let game = Fixture(game);
     let (st, fa) = (status as u8, stage as u8 as i8);
     let comp = read_usize(this + 4);
     if fa < 2 {
@@ -513,13 +515,13 @@ pub(crate) unsafe fn mls_stage_outcome(this: usize, club: usize, status: u32, st
             if fazer {
                 // simplification: the original pushes whole eax/ecx/edx (garbage above the words: the caller’s, the half
                 // from above this); 0x4bf850 and 0x86bdd0 only read the words: the words go.
-                let weight = weight_by_round(game);
-                bra_nat_first_add_qualified_record(club, comp, read_i16(game + fixture::ROUND_PREFIX) as u16 as u32, read_i16(game + fixture::ROUND_NAME) as u16 as u32, weight);
+                let weight = weight_by_round(game.addr());
+                bra_nat_first_add_qualified_record(club, comp, game.round_prefix() as u16 as u32, game.round_name() as u16 as u32, weight);
             }
         } else if st == 0xff || st == 2 {
             if fazer {
-                let weight = weight_by_round(game);
-                exe::staff_records_add_knocked_out_record(read_usize(G_STAFF_RECORDS), club, comp, read_i16(game + fixture::ROUND_PREFIX) as u16 as u32, read_i16(game + fixture::ROUND_NAME) as u16 as u32, weight);
+                let weight = weight_by_round(game.addr());
+                exe::staff_records_add_knocked_out_record(read_usize(G_STAFF_RECORDS), club, comp, game.round_prefix() as u16 as u32, game.round_name() as u16 as u32, weight);
             }
         }
         return 0;
@@ -548,9 +550,10 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_update_staff_records_for_status(t
 /// and without the statistics block `.comp_stats()`, which is saved and restored). Returns 1.
 /// Original: `UsaMls::add_result` (0x9099d0, usa_mls.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn usa_mls_add_result(this: usize, game: usize, stats: u32) -> u32 {
+    let game = Fixture(game);
     let this = League(this);
-    if read_i8(game + fixture::STAGE_INDEX) < 2 {
-        write_u8(game + fixture::STAGE_INDEX, 0xff);
+    if (game.stage_index() as i8) < 2 {
+        game.set_stage_index(0xff);
     }
     exe::league_add_result(this, game, stats);
     if this.current_stage() != 1 {
@@ -558,17 +561,17 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_add_result(this: usize, game: usi
     }
     let stored = this.comp_stats();
     this.set_comp_stats((0) as usize);
-    write_u8(game + fixture::STAGE_INDEX, 0);
+    game.set_stage_index(0);
     let estagio = |k: usize| -> (usize, unsafe extern "thiscall" fn(usize, usize, u32) -> u32) {
         let e = read_usize(this.stages() + 4 * k);
         (e, core::mem::transmute(read_usize(read_usize(e) + comp_vtable::ADD_RESULT)))
     };
     let (e0, f0) = estagio(0);
-    f0(e0, game, stats);
-    write_u8(game + fixture::STAGE_INDEX, 1);
+    f0(e0, game.addr(), stats);
+    game.set_stage_index(1);
     let (e1, f1) = estagio(1);
     covered!("cqk_9 mls second conference");
-    f1(e1, game, stats); // cqk9: the match in the second conference table
+    f1(e1, game.addr(), stats); // cqk9: the match in the second conference table
     this.set_comp_stats((stored as u32) as usize);
     1
 }

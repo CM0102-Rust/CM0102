@@ -2,7 +2,8 @@ use super::*;
 
 /// True if the club's division (+0x57) has the competition id in global g.
 pub(crate) unsafe fn eng_auto_cup_is_in_comp(c: usize, g: usize) -> bool {
-    let l = read_usize(c + club::DIVISION);
+    let c = Club(c);
+    let l = c.division().addr();
     l != 0 && read_usize(l) == read_usize(g)
 }
 
@@ -349,10 +350,10 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_rank_teams(this: usize) {
     exe::crt_qsort(v, n as u32, 4, 0x4b07d0);
     let n = this.team_count() as i32;
     exe::crt_qsort(v + n as usize * 4, n as u32, 4, 0x4b07d0);
-    let a = read_usize(v);
-    let b = read_usize(v + this.team_count() as i32 as usize * 4);
+    let a = Club(read_usize(v));
+    let b = Club(read_usize(v + this.team_count() as i32 as usize * 4));
     covered!("cqs_6 trophy standings");
-    if read_i16(a + club::REPUTATION) > read_i16(b + club::REPUTATION) {
+    if a.reputation() > b.reputation() {
         exe::comp_stats_set_club_final_position(read_usize(this.addr() + 8), a, 1);
         exe::comp_stats_set_club_final_position(read_usize(this.addr() + 8), read_usize(v + this.team_count() as i32 as usize * 4), 2);
     } else {

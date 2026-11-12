@@ -1070,11 +1070,11 @@ pub(crate) unsafe extern "thiscall" fn get_international_duty_club(this: usize, 
             } else {
                 pl.set_cursor(pl.head());
                 loop {
-                    let j = exe::llist_get_next(pl);
-                    if j == 0 {
+                    let j = Fixture(exe::llist_get_next(pl));
+                    if j.is_null() {
                         break;
                     }
-                    if read_usize(j + fixture::COMPETITION) == opponent {
+                    if j.competition().addr() == opponent {
                         servico = true;
                         break;
                     }
@@ -1935,7 +1935,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_can_change_squad(this: usi
             if msg != 0 {
                 let mut name = [0u8; 0x12c];
                 exe::database_format_staff_name(p, (name.as_mut_ptr()) as *mut u8 as usize, 0x12c, 1);
-                let other = Nation(p.national_job().nation().addr());
+                let other = p.national_job().nation();
                 let g = other.short_gender_name() as i8 as i32;
                 text(msg, 0xa5b460, g, g, name.as_ptr(), other.addr() + nation::SHORT_NAME);
             }
@@ -2637,7 +2637,7 @@ pub(crate) unsafe extern "thiscall" fn call_up_replacement(this: usize, nation: 
             continue;
         }
         if q.nation() != Nation(nation) {
-            let record = read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_i32(q.addr()).wrapping_mul((staff_state::SIZE as i32)) as usize);
+            let record = read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_i32(q.addr()).wrapping_mul(staff_state::SIZE as i32) as usize);
             if !team.is_null() || q.int_apps() != 0 || read_u8(record + staff_state::EXTRA_FLAGS) & extra_flags::PLAYED_U21_INTERNATIONAL != 0 || q.second_nation() != Nation(nation) {
                 continue;
             }

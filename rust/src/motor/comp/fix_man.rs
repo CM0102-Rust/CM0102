@@ -83,11 +83,11 @@ pub(crate) unsafe extern "thiscall" fn fix_man_daily_update(this: usize) {
                     let mut in_the = read_usize(list + 6);
                     write_usize(list + llist::CURSOR, in_the);
                     while in_the != 0 {
-                        let f = read_usize(in_the);
-                        if read_usize(f) != read_usize(KEY_CLUB_COMP_RESERVE) || read_u8(f + fixture::CATEGORY) != 1 {
+                        let f = Fixture(read_usize(in_the));
+                        if read_usize(f.addr()) != read_usize(KEY_CLUB_COMP_RESERVE) || f.category() != 1 {
                             break;
                         }
-                        if !fix_man_is_human_club(read_usize(f + fixture::HOME_CLUB)) && !fix_man_is_human_club(read_usize(f + fixture::AWAY_CLUB)) {
+                        if !fix_man_is_human_club(f.home_club().addr()) && !fix_man_is_human_club(f.away_club().addr()) {
                             exe::llist_get_prev(list);
                             covered!("cqd_6 friendly discarded");
                             exe::llist_remove_node(list, in_the); // cqd6: yesterday’s friendly leaves the list
@@ -1236,8 +1236,8 @@ pub(crate) unsafe extern "thiscall" fn resolve_same_day_clash(this: usize, game:
     exe::date_date_54a110((&mut b) as *mut [u8; 8] as usize);
     let mut severity: u32 = 0; // [esp+0x10]: the uncased target of the table and the severity from 0x5ad780
     write_usize(conflitos + llist::CURSOR, read_usize(conflitos + 2));
-    let other = exe::llist_get_next(conflitos);
-    if game == 0 || other == 0 {
+    let other = Fixture(exe::llist_get_next(conflitos));
+    if game == 0 || other.is_null() {
         if !SAME_DAY_CLASH_DRY_RUN.load(Relaxed) {
             show_error_at(0x9cc208, 0xde6); // "E:\dev\CM3\cm3 00-01\cm3\code\comp\fix_man.cpp"
         }
@@ -1245,10 +1245,10 @@ pub(crate) unsafe extern "thiscall" fn resolve_same_day_clash(this: usize, game:
     }
     let (mut novo, mut velho) = ([0u8; 0x50], [0u8; 0x50]);
     core::ptr::copy_nonoverlapping(game as *const u8, novo.as_mut_ptr(), 0x4f);
-    core::ptr::copy_nonoverlapping(other as *const u8, velho.as_mut_ptr(), 0x4f);
+    core::ptr::copy_nonoverlapping(other.addr() as *const u8, velho.as_mut_ptr(), 0x4f);
     let (mut tmp, mut tmp2) = ([0u8; 8], [0u8; 8]);
     // simplification: the high bytes of the two 16-bit pushes do not count (0x549ef0 reads the word)
-    let r = new(&mut tmp, read_i16(other + fixture::DAY) as u16 as u32, read_i16(other + fixture::YEAR) as u16 as u32);
+    let r = new(&mut tmp, (other.day() as i16) as u16 as u32, (other.year() as i16) as u16 as u32);
     exe::date_operator_3d((&mut a) as *mut [u8; 8] as usize, (&mut tmp2) as *mut [u8; 8] as usize, (r) as *mut [u8; 8] as usize);
     let target = match exe::date_get_weekday((&mut a) as *mut [u8; 8] as usize) as i16 {
         0 | 5 => 6,
@@ -1259,18 +1259,18 @@ pub(crate) unsafe extern "thiscall" fn resolve_same_day_clash(this: usize, game:
     };
     covered!("cqb_13 target day");
     exe::date_get_nearest_weekday((&mut a) as *mut [u8; 8] as usize, target, (&mut b) as *mut [u8; 8] as usize); // cqb13: the target weekday
-    let n = novo.as_mut_ptr() as usize;
+    let n = Fixture(novo.as_mut_ptr() as usize);
     let v = Fixture(velho.as_mut_ptr() as usize);
-    let mut pn = read_i16(read_usize(n + fixture::COMPETITION) + competition::REPUTATION);
+    let mut pn = read_i16(n.competition().addr() + competition::REPUTATION);
     let mut pv = v.competition().reputation();
-    if exe::database_is_national_team(read_usize(n + fixture::HOME_CLUB)) != 0 {
+    if exe::database_is_national_team(n.home_club().addr()) != 0 {
         pn = pn.wrapping_add(0x15);
     }
     if exe::database_is_national_team(v.home_club()) != 0 {
         pv = pv.wrapping_add(0x15);
     }
     let new_wins = pn > pv // cqb13: the higher priority stays
-        || (pn == pv && read_i16(read_usize(n + fixture::HOME_CLUB) + club::REPUTATION) > v.home_club().reputation());
+        || (pn == pv && read_i16(n.home_club().addr() + club::REPUTATION) > v.home_club().reputation());
     if new_wins {
         covered!("cqb_13 new one wins");
     }
@@ -1287,7 +1287,7 @@ pub(crate) unsafe extern "thiscall" fn resolve_same_day_clash(this: usize, game:
         exe::fixture_manager_add_fixture(this, game, 0);
         (v.addr(), game)
     } else {
-        (n, other)
+        (n.addr(), other.addr())
     };
     write_u16(sai + fixture::DAY, u16::from_le_bytes([b[0], b[1]]));
     write_u16(sai + fixture::YEAR, u16::from_le_bytes([b[2], b[3]]));
@@ -1539,17 +1539,17 @@ pub(crate) unsafe extern "thiscall" fn reschedule_club_fixtures_near_date(this: 
     find_club_fixtures_between(this, a.as_ptr(), b.as_ptr(), read_u32(club), lp);
     list_rewind(lp);
     loop {
-        let p = contract_manager_list_next(lp);
-        if p == 0 {
+        let p = Fixture(contract_manager_list_next(lp));
+        if p.is_null() {
             break;
         }
         let mut old = [0u8; 8];
-        date_from_day_year_ptr(old.as_mut_ptr(), read_u16(p + fixture::DAY) as u32, read_u16(p + fixture::YEAR) as u32);
-        if fix_man_remove_fixture(this, p) != 0 {
+        date_from_day_year_ptr(old.as_mut_ptr(), p.day() as u32, p.year() as u32);
+        if fix_man_remove_fixture(this, p.addr()) != 0 {
             covered!("cpz_8 match rescheduled by national team");
             exe::fixture_manager_find_new_fixture_date(this, p);
-            fix_man_add_fixture(this, p, 1);
-            fix_man_queue_fixture_moved_news(this, p, Fixture(0), old.as_ptr() as usize);
+            fix_man_add_fixture(this, p.addr(), 1);
+            fix_man_queue_fixture_moved_news(this, p.addr(), Fixture(0), old.as_ptr() as usize);
         }
     }
     list_destroy(lp);
@@ -1570,17 +1570,18 @@ pub(crate) unsafe fn news_slot(n: usize, k: u32) -> u32 {
 
 /// News item already in the list for the same fixture (slots 0,1,2,0xe,0xf vs fixture +0xc,+0x10,+0,+0x40,+0x41), or 0.
 pub(crate) unsafe fn find_queued_fixture_news(l: usize, f: usize) -> usize {
+    let f = Fixture(f);
     list_rewind(l);
     loop {
         let it = contract_manager_list_next(l);
         if it == 0 {
             return 0;
         }
-        if news_slot(it, 0) == read_u32(f + fixture::HOME_CLUB_ID)
-            && news_slot(it, 1) == read_u32(f + fixture::AWAY_CLUB_ID)
-            && news_slot(it, 2) == read_u32(f)
-            && news_slot(it, 0xe) as i32 == read_i8_as_i32(f + fixture::HOME_SIDE_MARK)
-            && news_slot(it, 0xf) as i32 == read_i8_as_i32(f + fixture::AWAY_SIDE_MARK)
+        if news_slot(it, 0) == (f.home_club_id() as u32)
+            && news_slot(it, 1) == (f.away_club_id() as u32)
+            && news_slot(it, 2) == read_u32(f.addr())
+            && news_slot(it, 0xe) as i32 == ((f.home_side_mark() as i8) as i32)
+            && news_slot(it, 0xf) as i32 == (f.away_side_mark() as i32)
         {
             return it;
         }
@@ -1600,6 +1601,7 @@ pub(crate) unsafe fn find_queued_fixture_news(l: usize, f: usize) -> usize {
 /// queue (`exe::llist_add_tail`, 0xdf).
 /// Original: `FIXTURE_MANAGER::queue_fixture_moved_news` (0x5aac70, fix_man.cpp, thiscall, ret 0xc).
 pub(crate) unsafe extern "thiscall" fn queue_fixture_moved_news(this: usize, f: usize, causa: usize, old: usize) {
+    let causa = Fixture(causa);
     let f = Fixture(f);
     if read_usize(this + fixture_manager::MOVED_NEWS_QUEUE) == 0 && !FIXTURE_MOVED_NEWS_DRY_RUN.load(Relaxed) {
         let m = exe::crt_operator_new(0xe);
@@ -1633,9 +1635,9 @@ pub(crate) unsafe extern "thiscall" fn queue_fixture_moved_news(this: usize, f: 
     exe::newsitem_set_slot(nt, 6, f.year() as u32);
     exe::newsitem_set_slot(nt, 0xe, ((f.home_side_mark() as i8) as i32) as u32);
     exe::newsitem_set_slot(nt, 0xf, (f.away_side_mark() as i32) as u32);
-    if causa != 0 {
-        fields(nt, 7, causa);
-        exe::newsitem_set_slot(nt, 0xd, read_u16(causa + fixture::YEAR) as u32);
+    if !causa.is_null() {
+        fields(nt, 7, causa.addr());
+        exe::newsitem_set_slot(nt, 0xd, causa.year() as u32);
     } else {
         exe::newsitem_set_slot(nt, 7, u32::MAX);
         exe::newsitem_set_slot(nt, 0xc, read_i16_as_i32(old) as u32);
@@ -2131,11 +2133,11 @@ pub(crate) unsafe extern "thiscall" fn is_stadium_in_use(this: usize, stadium: u
             let l = get_fixture_list_rewound(this, year, day, (year & 0xffff_ff00) | s as u8 as u32, g as u32);
             if l != 0 {
                 loop {
-                    let f = list_next_item(l);
-                    if f == 0 {
+                    let f = Fixture(list_next_item(l));
+                    if f.is_null() {
                         break;
                     }
-                    let e = read_usize(f + fixture::STADIUM);
+                    let e = f.stadium();
                     if e != 0 && e == stadium { // the match stadium
                         return 1;
                     }

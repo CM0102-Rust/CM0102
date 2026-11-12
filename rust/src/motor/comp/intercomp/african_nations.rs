@@ -321,6 +321,7 @@ pub(crate) unsafe fn african_nations_record_final_result(f: usize, club: usize, 
 ///
 /// Returns 0.
 pub(crate) unsafe fn national_tournament_staff_records(name: u8, this: League, club: usize, outcome: u32, stage: u32, game: usize, a6: u32, groups: i8) -> u32 {
+    let game = Fixture(game);
     let (d, f) = (outcome as u8, stage as u8 as i8);
     let comp = this.competition().addr();
     if f < groups {
@@ -338,25 +339,25 @@ pub(crate) unsafe fn national_tournament_staff_records(name: u8, this: League, c
     } else if f == groups {
         match d {
             0 => {
-                let r = read_i16(game + fixture::ROUND_NUMBER);
+                let r = game.round_number();
                 let weight = scale_by_round(0x28, 0x64, r, 3);
                 let knockout = Cup(read_usize(this.stages() + groups as usize * 4));
                 let round = read_i16(knockout.round_table().wrapping_add((r as isize * (cup_round::SIZE as isize)) as usize) + cup_round::ROUND_CODE + 0x68) as u16 as u32;
-                european_cup_add_qualified_record(club, comp, read_i16(game + fixture::ROUND_PREFIX) as u16 as u32, round, weight);
+                european_cup_add_qualified_record(club, comp, game.round_prefix() as u16 as u32, round, weight);
             }
             0xff => {
-                let weight = scale_by_round(0x28, 0x64, read_i16(game + fixture::ROUND_NUMBER), 3);
+                let weight = scale_by_round(0x28, 0x64, game.round_number(), 3);
                 // simplification: +0x32 and +0x30 go in registers with garbage in the high 16 bits; 0x86c000 only uses the words
                 if name == 0 {
                     covered!("cqj_10 african out in knockout");
-                    european_cup_add_knocked_out_record(club, comp, read_i16(game + fixture::ROUND_PREFIX) as u16 as u32, read_i16(game + fixture::ROUND_NAME) as u16 as u32, weight); // cqj10: those knocked out in the African Cup knockout
+                    european_cup_add_knocked_out_record(club, comp, game.round_prefix() as u16 as u32, game.round_name() as u16 as u32, weight); // cqj10: those knocked out in the African Cup knockout
                 } else {
-                    european_cup_add_knocked_out_record(club, comp, read_i16(game + fixture::ROUND_PREFIX) as u16 as u32, read_i16(game + fixture::ROUND_NAME) as u16 as u32, weight);
+                    european_cup_add_knocked_out_record(club, comp, game.round_prefix() as u16 as u32, game.round_name() as u16 as u32, weight);
                 }
             }
-            1 => african_nations_record_final_result(0x86a800, club, game, a6),
-            2 => african_nations_record_final_result(0x86b0b0, club, game, a6),
-            3 => african_nations_record_final_result(0x86b710, club, game, a6),
+            1 => african_nations_record_final_result(0x86a800, club, game.addr(), a6),
+            2 => african_nations_record_final_result(0x86b0b0, club, game.addr(), a6),
+            3 => african_nations_record_final_result(0x86b710, club, game.addr(), a6),
             _ => {}
         }
     }

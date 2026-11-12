@@ -16,6 +16,7 @@ use super::*;
 /// 0xff, relegation and `league_table_row::STATUS` = 3.
 /// Original: `ItaSerC2a::update_staff_records_for_status` (0x654180, ita_ser_c2a.cpp, thiscall, ret 0x18).
 pub(crate) unsafe extern "thiscall" fn ita_ser_c2a_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, _a4: u32, game: usize, _a6: u32) -> u32 {
+    let game = Fixture(game);
     let this = League(this);
     let s = status as u8;
     let comp = this.competition().addr();
@@ -59,10 +60,10 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_c2a_update_staff_records_for_stat
                         return 0;
                     }
                     2 | 0xff => {
-                        let weight = exe::comp_util_scale_by_round(0x1e, 0x32, read_i16(game + fixture::ROUND_NUMBER) as u16 as u32, 2) as u32;
+                        let weight = exe::comp_util_scale_by_round(0x1e, 0x32, game.round_number() as u16 as u32, 2) as u32;
                         // simplification: the original pushes the match’s stage (+0x32) and round (+0x30) as words in
                         // registers with garbage in the high 16 bits; 0x86c000 only reads the words.
-                        exe::staff_records_add_knocked_out_record(eng_second_staff_records(), club, comp, read_i16(game + fixture::ROUND_PREFIX) as u16 as u32, read_i16(game + fixture::ROUND_NAME) as u16 as u32, weight);
+                        exe::staff_records_add_knocked_out_record(eng_second_staff_records(), club, comp, game.round_prefix() as u16 as u32, game.round_name() as u16 as u32, weight);
                         write_u8(this.table() + (i as usize) * league_table_row::SIZE + league_table_row::STATUS, 0xfe);
                         return 0;
                     }

@@ -411,6 +411,7 @@ pub(crate) unsafe fn compare_league_day(name: &str, this: League, full: u32, fai
 /// rule: the winner of the tie-break match finishes ahead of the other.
 /// Original: `ItaSerA::update_staff_records_for_status` (0x641dc0, ita_ser_a.cpp, thiscall, ret 0x18).
 pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, a4: u32, game: usize, a6: u32) -> u32 {
+    let game = Fixture(game);
     let this = League(this);
     if stage as u8 == 0xff {
         return exe::league_update_staff_records_for_status(this, club, status, 0xffff_ffff, a4, game, a6);
@@ -422,7 +423,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_staff_records_for_status
     this.set_table_column(0);
     exe::league_sort_table(this, (0) as u32 as usize);
     let t = this.table();
-    let (a, b) = (read_usize(game + fixture::HOME_CLUB), read_usize(game + fixture::AWAY_CLUB));
+    let (a, b) = (game.home_club().addr(), game.away_club().addr());
     let mut i: i16 = 0;
     while i < this.club_count() {
         let l = t + i as usize * 0x3b;

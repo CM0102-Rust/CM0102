@@ -594,7 +594,8 @@ pub(crate) unsafe fn is_italian_club(c: usize) -> bool {
 
 /// Club's previous-season league position (+0x5f, signed byte; 0 = champion [inference]).
 pub(crate) unsafe fn last_season_position(c: usize) -> i8 {
-    read_i8(c + club::LAST_POSITION)
+    let c = Club(c);
+    c.last_position() as i8 
 }
 
 /// Shuffles n pointers from v (CompUtil shuffle_pointer_array, cdecl).

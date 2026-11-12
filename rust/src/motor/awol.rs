@@ -609,10 +609,10 @@ pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, person: usize)
     if *m & (person_flags::MISSED_TRAINING as u8) != 0 {
         return;
     }
-    let k2 = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
-    if k2 != 0 && read_u8(k2 + contract::MORALE) as i8 <= -100 {
+    let k2 = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person));
+    if !k2.is_null() && (k2.morale() as u8) as i8 <= -100 {
         for bit in [0x2000u32, 0x800] {
-            if read_usize(k2 + contract::GRIEVANCES) as u32 & bit != 0
+            if (k2.grievances() as usize) as u32 & bit != 0
                 && friendly_random((person.professionalism() as u8) as i8 as i32 + 10) == 0
                 && friendly_random((person.loyalty() as u8) as i8 as i32 + 10) == 0
             {

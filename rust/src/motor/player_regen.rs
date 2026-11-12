@@ -1093,7 +1093,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_post_retirement_news(p: usize
     } else if (!f.is_null() && f.world_reputation() > 0x1d4c) || (!nj.is_null() && nj.current_reputation() > 0x1c52 && cargo5()) {
         exe::news_send_to_nation_managers(mn, nw, pais);
         let c = p.club_job();
-        if !c.is_null() && c.nation().addr() != p.nation().addr() {
+        if !c.is_null() && c.nation() != p.nation() {
             exe::news_send_to_nation_managers(read_usize(G_NEWS), nw, c.nation().addr());
         }
     } else {
@@ -1407,7 +1407,7 @@ pub(crate) unsafe extern "thiscall" fn add_player_data_to_pool(this: usize, pers
         }
     }
     covered!("cpu_9 player bench");
-    let record = Staff(read_usize(G_STAFF_TABLE).wrapping_add((person as u32).wrapping_mul((staff::SIZE as u32)) as usize));
+    let record = Staff(read_usize(G_STAFF_TABLE).wrapping_add((person as u32).wrapping_mul(staff::SIZE as u32) as usize));
     let item = read_usize(this + player_regen_fields::PLAYER_DATA_POOL).wrapping_add(read_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT) << 4);
     write_usize(item, read_usize(record.player().addr()));
     write_usize(item + regen_pool_item::NATION_ID, nation as usize);
@@ -1432,10 +1432,11 @@ pub(crate) unsafe fn contract_with_current_club(person: Staff) -> usize {
 
 /// Status byte of the club contract (+0x3d); -100 without contract.
 pub(crate) unsafe fn contract_status(c2: usize) -> i8 {
-    if c2 == 0 {
+    let c2 = Contract(c2);
+    if c2.is_null() {
         0x9cu8 as i8
     } else {
-        read_i8(c2 + contract::HAPPINESS)
+        c2.happiness()
     }
 }
 
@@ -2549,7 +2550,7 @@ pub(crate) unsafe extern "thiscall" fn remove_retirement(this: usize, key: usize
     let mut k = ((s.wrapping_sub(array) as u32 as u64 * 0x4ec4ec4f) >> 35) as i32; // o lugar (/ 26)
     while k < read_u32(this + player_regen_fields::RETIREMENT_COUNT) as i32 - 1 {
         let r = RetirementEntry((read_u32(this + player_regen_fields::RETIREMENTS) as usize).wrapping_add(k as usize * 26));
-        exe::retire_record_assign(r.addr(), r.addr() + retirement_entry::SIZE);
+        exe::retire_record_assign(r, r.addr() + retirement_entry::SIZE);
         k += 1;
     }
     let end = RetirementEntry((read_u32(this + player_regen_fields::RETIREMENTS) as usize).wrapping_add((read_u32(this + player_regen_fields::RETIREMENT_COUNT) as usize).wrapping_mul(26)).wrapping_sub(26));
@@ -2950,7 +2951,7 @@ pub(crate) unsafe extern "thiscall" fn process_regen_queue(this: usize) {
             return;
         }
         covered!("cpw_10 queued regen");
-        exe::player_regen_regenerate_as_youth_player(this, read_usize(G_STAFF_TABLE).wrapping_add((id as u32).wrapping_mul((staff::SIZE as u32)) as usize));
+        exe::player_regen_regenerate_as_youth_player(this, read_usize(G_STAFF_TABLE).wrapping_add((id as u32).wrapping_mul(staff::SIZE as u32) as usize));
         let mut j = 0i32;
         while j < read_i32(this + player_regen_fields::REGEN_QUEUE_COUNT) - 1 {
             let e = read_usize(this + player_regen_fields::REGEN_QUEUE).wrapping_add((j as u32).wrapping_mul(0xc) as usize);

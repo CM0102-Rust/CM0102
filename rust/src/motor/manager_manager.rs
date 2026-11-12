@@ -32,7 +32,7 @@ pub(crate) unsafe fn match_weight(club: Club, fixture: Fixture, factor: &mut f64
     if fixture.home_side_mark() == 0 {
         return read_f64(rdata::F64_0_1);
     }
-    if comp.addr() == fixture.home_club().division().addr() {
+    if comp == fixture.home_club().division() {
         *factor = comp.reputation() as i32 as f64 * read_f64(rdata::F64_0_06) + read_f64(rdata::F64_0_27);
         return read_f64(rdata::F64_1);
     }
@@ -128,16 +128,16 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
     if manager_manager_is_national_team(club) != 0 {
         if city(ev.addr()) && read_usize(ev.city() + city::NATION) == club.nation().addr() {
             aj = -20;
-        } else if club.stadium().addr() == ev.addr() {
+        } else if club.stadium() == ev {
             aj = -20;
-        } else if other.stadium().addr() == ev.addr() {
+        } else if other.stadium() == ev {
             aj = 20;
         } else if city(ev.addr()) && read_usize(ev.city() + city::NATION) == other.nation().addr() {
             aj = 20;
         }
-    } else if club.stadium().addr() == ev.addr() {
+    } else if club.stadium() == ev {
         aj = -20;
-    } else if other.stadium().addr() == ev.addr() {
+    } else if other.stadium() == ev {
         aj = if other.nation() != club.nation() { 30 } else { 20 };
     }
     let limitar = |q: i32| {
@@ -331,7 +331,7 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
     }
     // the derby and the rival
     let rival = club.rival1() == other.addr() || club.rival2() == other.addr() || club.rival3() == other.addr();
-    let f1 = Stadium(club.stadium().addr());
+    let f1 = club.stadium();
     let same = !f1.is_null() && other.stadium().addr() != 0 && f1.city() == other.stadium().city();
     if same {
         fl |= if rival { 0x40 } else { 0x80 };
@@ -339,7 +339,7 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
         fl |= 0x80;
         if !f1.is_null() {
             let e1 = f1.city();
-            let f2 = Stadium(other.stadium().addr());
+            let f2 = other.stadium();
             if e1 != 0 && !f2.is_null() {
                 let e2 = f2.city();
                 if e2 != 0 {
@@ -2757,7 +2757,7 @@ pub(crate) unsafe extern "thiscall" fn process_ban_appeals(this: usize) {
                 }
             }
             exe::manager_manager_post_ban_appeal_result_news(this, p, item.result(), item.matches_cut(), item.days_cut(), read_u8(item.addr() + 0x18));
-            exe::llist_remove(list(), item.addr());
+            exe::llist_remove(list(), item);
         }
         k += 1;
     }
@@ -3156,18 +3156,18 @@ pub(crate) unsafe extern "thiscall" fn remove_club_manager(this: usize, club: us
         if p.is_null() || p.player().is_null() {
             continue;
         }
-        let ct = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p);
-        if ct == 0 {
+        let ct = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p));
+        if ct.is_null() {
             continue;
         }
         for (m, f) in CONTRACT_FLAGS_BY_READER {
             if exe::staff_contract_get_flags(ct) & m != 0 {
                 let erase: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(f);
-                erase(ct, m);
+                erase(ct.addr(), m);
             }
         }
         for m in CONTRACT_FLAGS_AT_45 {
-            if read_usize(ct + contract::GRIEVANCES) as u32 & m != 0 {
+            if (ct.grievances() as usize) as u32 & m != 0 {
                 exe::staff_contract_clear_grievances(ct, m);
             }
         }
@@ -3536,8 +3536,8 @@ pub(crate) unsafe extern "thiscall" fn get_departure_reason(this: usize, id: u32
     for k in 0..0x32 {
         let p = Staff((club.squad(k) as u32) as usize);
         if !p.is_null() && (p.player().addr() as u32) != 0 {
-            let c = exe::contract_manager_get_contract_for_club(read_u32(G_CONTRACT_MANAGER) as usize, p, club);
-            if c != 0 && read_u32(c + contract::GRIEVANCES) & 0x1000_0000 != 0 {
+            let c = Contract(exe::contract_manager_get_contract_for_club(read_u32(G_CONTRACT_MANAGER) as usize, p, club));
+            if !c.is_null() && c.grievances() & 0x1000_0000 != 0 {
                 queixosos = queixosos.wrapping_add(1);
             }
         }

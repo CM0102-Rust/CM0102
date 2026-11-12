@@ -338,10 +338,11 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_factor(this: usize, f: f32)
 
 /// Comparer for `engine_punish_move`.
 pub(crate) unsafe extern "thiscall" fn compare_engine_punish_move(this: usize, j: usize, other: usize, kind: *mut u8, x: i8, sev: i8, flag: u8, weight: *mut f32, send_off: u8) {
+    let other = MatchPlayer(other);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, *mut u8, i8, i8, u8, *mut f32, u8)>(IDX_ENGINE_PUNISH_MOVE);
     let mut reg = card_regions(this, j, kind, weight);
-    reg.push((other + match_player::FOULS_SUFFERED, 1));
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, j, other, kind, x, sev, flag, weight, send_off), || crate::rng::without_counting(|| engine_punish_move(this, j, other, kind, x, sev, flag, weight, send_off)));
+    reg.push((other.addr() + match_player::FOULS_SUFFERED, 1));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, j, other.addr(), kind, x, sev, flag, weight, send_off), || crate::rng::without_counting(|| engine_punish_move(this, j, other.addr(), kind, x, sev, flag, weight, send_off)));
     SCOREBOARD.record(igual, || format!("engine_punish_move original={:x?} rust={:x?}", mo, mr));
 }
 
@@ -633,7 +634,7 @@ pub(crate) unsafe extern "thiscall" fn compare_contest(m: usize, x: u32, y: u32)
         // the original read stack garbage as an advantage (see `tackle_contest_with`): counts the part
         let n = CONTEST_STACK_GARBAGE.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
         if n <= 20 || n.is_power_of_two() {
-            linha(&format!("engine: LIXO_DE_PILHA contest({}, {}) advantage without reply of the juiz ({} ate now): {}", x as i8, y as i8, n, tape_detail()));
+            linha(&format!("engine: LIXO_DE_PILHA contest({}, {}) advantage without reply of the referee ({} ate now): {}", x as i8, y as i8, n, tape_detail()));
         }
         SCOREBOARD.record(true, String::new);
         return r;
@@ -713,12 +714,13 @@ pub(crate) unsafe extern "C" fn compare_kit(club: usize, other: usize, any: u32)
 /// Comparer for `develop_player`.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "C" fn compare_develop_player(jm: usize, person: usize, club: usize, rep: usize, comp: usize, rating: f32, average_b: u32, strong: u32) {
+    let jm = MatchPlayer(jm);
     let person = Staff(person);
     type F = unsafe extern "C" fn(usize, usize, usize, usize, usize, f32, u32, u32);
     let o = original_fn::<F>(IDX_DEVELOP_PLAYER);
     if is_recording_wrap_up_calls() {
-        call_recording(FN_UPDATE_PLAYER_REPUTATION_AFTER_MATCH, jm, [person.addr() as u32, club as u32, rep as u32, rating.to_bits(), average_b & 0xff | (strong & 0xff) << 8], || {
-            o(jm, person.addr(), club, rep, comp, rating, average_b, strong);
+        call_recording(FN_UPDATE_PLAYER_REPUTATION_AFTER_MATCH, jm.addr(), [person.addr() as u32, club as u32, rep as u32, rating.to_bits(), average_b & 0xff | (strong & 0xff) << 8], || {
+            o(jm.addr(), person.addr(), club, rep, comp, rating, average_b, strong);
             0
         });
         return;
@@ -726,13 +728,13 @@ pub(crate) unsafe extern "C" fn compare_develop_player(jm: usize, person: usize,
     let st = person.player();
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(st.addr() + player_sheet::CURRENT_ABILITY, 0xa), (st.addr() + player_sheet::PLAYER_MORALE, 1)]);
-    if jm != 0 {
-        reg.extend([(jm + match_player::MATCH_FORM, 1), (jm + match_player::NEW_CURRENT_REPUTATION, 6)]);
+    if !jm.is_null() {
+        reg.extend([(jm.addr() + match_player::MATCH_FORM, 1), (jm.addr() + match_player::NEW_CURRENT_REPUTATION, 6)]);
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(jm, person.addr(), club, rep, comp, rating, average_b, strong), || {
-        crate::rng::without_counting(|| develop_player(jm, person.addr(), club, rep, comp, rating, average_b, strong))
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(jm.addr(), person.addr(), club, rep, comp, rating, average_b, strong), || {
+        crate::rng::without_counting(|| develop_player(jm.addr(), person.addr(), club, rep, comp, rating, average_b, strong))
     });
-    SCOREBOARD.record(igual, || format!("develop_player(rating {} game {}) original={:x?} rust={:x?}", rating, jm != 0, mo, mr));
+    SCOREBOARD.record(igual, || format!("develop_player(rating {} game {}) original={:x?} rust={:x?}", rating, !jm.is_null(), mo, mr));
 }
 
 /// Comparer for `opposition_challenge`.

@@ -334,12 +334,13 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_select_qualified_clubs(thi
 /// positions; the runner-up gets the runner-up record
 /// Original: `ConmebolLiber::update_staff_records_for_status` (0x4c4080, conmebol_liber.cpp, thiscall, ret 0x18).
 pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, _a4: u32, game: usize, a6: u32) -> u32 {
+    let game = Fixture(game);
     let this = League(this);
     let (d, f) = (outcome as u8, stage as u8 as i8);
     let comp = this.competition().addr();
     let final_ = |g: usize| {
         let h: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(g);
-        h(eng_second_staff_records(), club, game, a6);
+        h(eng_second_staff_records(), club, game.addr(), a6);
     };
     if f < 7 {
         if d == 6 {
@@ -350,16 +351,16 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_staff_records_for_s
     } else if f == 7 {
         match d {
             0xff => {
-                let weight = scale_by_round(0x32, 0x64, read_i16(game + fixture::ROUND_NUMBER), 4);
+                let weight = scale_by_round(0x32, 0x64, game.round_number(), 4);
                 // simplification: +0x30 goes in a register with garbage in the high 16 bits; 0x86c000 only uses the word
-                european_cup_add_knocked_out_record(club, comp, read_i16(game + fixture::ROUND_PREFIX) as u16 as u32, read_i16(game + fixture::ROUND_NAME) as u16 as u32, weight);
+                european_cup_add_knocked_out_record(club, comp, game.round_prefix() as u16 as u32, game.round_name() as u16 as u32, weight);
             }
             0 => {
-                let weight = scale_by_round(0x32, 0x64, read_i16(game + fixture::ROUND_NUMBER), 4);
+                let weight = scale_by_round(0x32, 0x64, game.round_number(), 4);
                 let knockout = Cup(read_usize(this.stages() + 0x1c));
-                let r = read_i16(game + fixture::ROUND_NUMBER) as isize;
+                let r = game.round_number() as isize;
                 let round = (knockout.addr() as u32 & 0xffff_0000) | read_u16(knockout.round_table().wrapping_add((r * (cup_round::SIZE as isize)) as usize) + cup_round::ROUND_CODE + 0x68) as u32;
-                european_cup_add_qualified_record(club, comp, read_u16(game + fixture::ROUND_PREFIX) as u32, round, weight);
+                european_cup_add_qualified_record(club, comp, (game.round_prefix() as u16) as u32, round, weight);
             }
             1 => {
                 final_(0x86a800);

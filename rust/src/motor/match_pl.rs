@@ -816,7 +816,8 @@ pub(crate) unsafe extern "thiscall" fn add_disposition(this: usize, side_b: i8, 
 /// word `match_player::STARTING_POSITION`
 /// Original: `read_1bc` (0x717400, thiscall, `ax`).
 pub(crate) unsafe extern "thiscall" fn read_1bc(this: usize) -> u16 {
-    read_u16(this + match_player::STARTING_POSITION)
+    let this = MatchPlayer(this);
+    this.starting_position()
 }
 
 /// Adds `v` to the match player's busy counter (+0x2b).
@@ -3115,8 +3116,8 @@ pub(crate) unsafe fn shot_outcome_goal(m: Engine, p: MatchPlayer, g: MatchPlayer
     *goals = (*goals).wrapping_add(1);
     let r = random(5);
     let club = || {
-        let pt = m.r#match();
-        read_usize((if side != 0 { pt + fixture::HOME_CLUB } else { pt + fixture::AWAY_CLUB }) + 0)
+        let pt = Fixture(m.r#match());
+        read_usize((if side != 0 { pt.addr() + fixture::HOME_CLUB } else { pt.addr() + fixture::AWAY_CLUB }) + 0)
     };
     let manager_8 = || {
         let t = read_usize((club()) + club::NATION);
@@ -3643,7 +3644,7 @@ pub(crate) unsafe fn player_move_injected(p: MatchPlayer, x: i8, y: i8, code: i1
         release_marked_players(m.addr(), p, call);
         return;
     }
-    let with_ball = || p.addr() == m.ball_holder().addr();
+    let with_ball = || p == m.ball_holder();
     if !with_ball() {
         tackle_injury_with(m, p, code, 0, -1, 1, call);
     }

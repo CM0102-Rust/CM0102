@@ -820,8 +820,8 @@ pub(crate) unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est
     let m = marks as u8;
     let mut rating: i32 = 100000;
     if m & 8 != 0 {
-        let cc = Stadium(home.stadium().addr());
-        let cf = Stadium(away.stadium().addr());
+        let cc = home.stadium();
+        let cf = away.stadium();
         let (cidc, cidf) = (if !cc.is_null() { cc.city() } else { 0 }, if !cf.is_null() { cf.city() } else { 0 });
         let cide = est.city();
         if !cc.is_null() && cidc != 0 && !cf.is_null() && cidf != 0 && cide != 0 && est.capacity() > 0x2710 {
@@ -914,7 +914,7 @@ pub(crate) unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est
 /// Original: `Stadium::get_travel_distance_factor` (0x85d8a0, stadium.cpp, thiscall, ret 0x14).
 pub(crate) unsafe extern "thiscall" fn get_travel_distance_factor(_this: usize, game: usize, cid_est: usize, cid_club: usize, base: f64) -> f64 {
     let game = Fixture(game);
-    let nation = Nation(game.away_club().nation().addr());
+    let nation = game.away_club().nation();
     let r = (nation.state_of_development() as i8) as i32 as f64;
     let dy = read_f64(cid_est + city::LONGITUDE) - read_f64(cid_club + city::LONGITUDE);
     let dx = read_f64(cid_est + city::LATITUDE) - read_f64(cid_club + city::LATITUDE);
@@ -940,7 +940,7 @@ pub(crate) unsafe extern "thiscall" fn get_travel_distance_factor(_this: usize, 
     if kind == 0xa && f < read_f64(rdata::F64_0_2) {
         return read_f64(rdata::F64_0_2);
     }
-    if f < read_f64(rdata::F64_0_05) && game.home_club().nation().addr() == nation.addr() {
+    if f < read_f64(rdata::F64_0_05) && game.home_club().nation() == nation {
         return read_f64(rdata::F64_0_05);
     }
     if f < read_f64(rdata::F64_0_03) {

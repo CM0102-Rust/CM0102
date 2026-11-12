@@ -579,8 +579,8 @@ pub(crate) unsafe extern "thiscall" fn send_fixture_list_news(this: usize, list:
     if this.stage_index() == stage_index::MAIN && (this.current_stage() as i32) >= 0 {
         let mut j: u8 = 0;
         loop {
-            let stage = read_usize(this.stages() + (j as i8 as isize * 4) as usize);
-            if read_u8(stage + league::COMP_TYPE) == 2 {
+            let stage = League(read_usize(this.stages() + (j as i8 as isize * 4) as usize));
+            if stage.comp_type() == 2 {
                 exe::league_send_fixture_list_news(stage, list);
             }
             j = j.wrapping_add(1);
@@ -1648,8 +1648,8 @@ pub(crate) unsafe extern "thiscall" fn announce_team_status(league: usize, club:
         return 0;
     }
     if league.stage_index() == stage_index::MAIN && stage as u8 != 0xff {
-        let f = read_usize(league.stages().wrapping_add((stage as u8 as i8 as isize as usize).wrapping_mul(4)));
-        round = read_i16(f + league::STAGE_ID);
+        let f = League(read_usize(league.stages().wrapping_add((stage as u8 as i8 as isize as usize).wrapping_mul(4))));
+        round = f.stage_id();
     }
     covered!("cpx_11 situation news");
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
@@ -2171,9 +2171,9 @@ pub(crate) unsafe extern "thiscall" fn apply_result_to_table(league: usize, p: u
     let mut pontuador = league.addr();
     let id = league.competition().addr();
     if id != 0 && read_usize(G_COMP_OBJECT_TABLE) != 0 {
-        let comp = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(id).wrapping_mul(4)));
-        if read_u8(comp + league::COMP_TYPE) == 2 {
-            pontuador = comp;
+        let comp = League(read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(id).wrapping_mul(4))));
+        if comp.comp_type() == 2 {
+            pontuador = comp.addr();
         }
     }
     let n = n as i16;
@@ -3263,7 +3263,7 @@ pub(crate) unsafe extern "thiscall" fn final_day_margin_needed(league: usize, ro
                 return 0xff;
             }
             if v == p(table.addr()) && (criterio == 1 || criterio == 2) {
-                return goal_margin_to_reach(league, row, LeagueTableRow(table.addr()));
+                return goal_margin_to_reach(league, row, table);
             }
         } else if clubs > 1 {
             let v = read_i16(table.addr() + 0x54) as i32 + extra;
@@ -3371,7 +3371,7 @@ pub(crate) unsafe extern "thiscall" fn update_head_to_head(league: usize, table:
         return;
     }
     let e = head_to_head_record(table, row, opponent);
-    let add = |o: usize, v: i16| core::ptr::write_unaligned((e + o) as *mut i16 , core::ptr::read_unaligned((e + o) as *mut i16).wrapping_add(v));
+    let add = |o: usize, v: i16| write_i16(e + o, core::ptr::read_unaligned((e + o) as *mut i16).wrapping_add(v));
     write_u8(e + 4, read_u8(e + 4).wrapping_add(1));
     if pro > contra {
         write_u8(e + 5, read_u8(e + 5).wrapping_add(1));
