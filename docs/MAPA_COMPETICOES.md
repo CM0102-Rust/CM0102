@@ -2,16 +2,16 @@
 
 Gerado por `python engenharia-reversa/competicoes.py` (o mapa de funções de maxevans60, CC BY 4.0, e a cobertura de uma carreira com as 8 ligas `ENG ESP ITA FRA BRA JPN AUS USA` até 2002-06-01, `levas/competicoes/`; as rotinas já em Rust não levam contador). "falta" = chamada ao menos uma vez nessa carreira e ainda não está em Rust (a lista para `candidatos.py --competicoes` fica em `docs/cobertura_competicoes.txt`).
 
-**Total:** 2695 funções, 1475.7 KB; em Rust 768 (32.0% dos bytes); faltam 184 (208.5 KB).
+**Total:** 2695 funções, 1475.7 KB; em Rust 804 (34.8% dos bytes); faltam 148 (167.5 KB).
 
 | Grupo | Funções | KB | Rust | Falta (KB) | Progresso |
 |---|---|---|---|---|---|
 | Base: Liga, Copa, comp, calendário, sorteios | 396 | 272.6 | 259 | 20 (74.2) | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **49.2%** |
-| Ligas nacionais (formato de cada divisão) | 1048 | 647.8 | 270 | 35 (43.2) | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **32.6%** |
-| Copas nacionais | 526 | 228.3 | 81 | 28 (22.6) | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **20.9%** |
-| Competições europeias | 221 | 98.2 | 83 | 31 (15.6) | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **48.4%** |
-| Continentais fora da Europa | 203 | 105.2 | 25 | 39 (26.7) | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **11.6%** |
-| Copa do Mundo e eliminatórias | 158 | 92.4 | 17 | 31 (26.2) | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **11.1%** |
+| Ligas nacionais (formato de cada divisão) | 1048 | 647.8 | 284 | 21 (20.5) | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **36.1%** |
+| Copas nacionais | 526 | 228.3 | 90 | 19 (10.5) | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **26.2%** |
+| Competições europeias | 221 | 98.2 | 91 | 23 (11.9) | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **52.2%** |
+| Continentais fora da Europa | 203 | 105.2 | 29 | 35 (24.7) | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **13.5%** |
+| Copa do Mundo e eliminatórias | 158 | 92.4 | 18 | 30 (25.7) | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **11.6%** |
 | Torneios amistosos | 17 | 4.5 | 0 | 0 (0.0) | ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜ **0.0%** |
 | Regras de transferência por nação (`transfer/*_rules.cpp`) | 126 | 26.7 | 33 | 0 (0.0) | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **34.0%** |
 
@@ -36,23 +36,22 @@ Só os arquivos com alguma rotina que falta; ordem: grupo, depois o que falta.
 | `usa_mls.cpp` | leagues | 22 | 15 | 2 (5.6) |
 | `bra_nat_first.cpp` | leagues | 16 | 10 | 1 (2.3) |
 | `bra_nat_second.cpp` | leagues | 12 | 6 | 1 (2.3) |
-| `bra_reg_minas_gerais.cpp` | leagues | 14 | 10 | 2 (2.3) |
-| `bra_reg_parana.cpp` | leagues | 13 | 9 | 2 (2.3) |
-| `bra_reg_rio.cpp` | leagues | 14 | 9 | 2 (2.3) |
-| `bra_reg_central.cpp` | leagues | 11 | 7 | 2 (2.2) |
-| `bra_reg_bahia.cpp` | leagues | 10 | 6 | 2 (2.2) |
-| `bra_reg_north.cpp` | leagues | 9 | 5 | 2 (2.2) |
-| `bra_reg_pern.cpp` | leagues | 10 | 6 | 2 (2.2) |
-| `bra_reg_santa.cpp` | leagues | 10 | 6 | 2 (2.2) |
-| `bra_reg_goias.cpp` | leagues | 11 | 6 | 2 (2.2) |
-| `bra_reg_gaucho.cpp` | leagues | 13 | 7 | 2 (2.1) |
-| `bra_reg_sp.cpp` | leagues | 10 | 5 | 3 (2.0) |
-| `bra_reg_northeast.cpp` | leagues | 9 | 5 | 2 (2.0) |
 | `aus_nsl.cpp` | leagues | 16 | 7 | 1 (2.0) |
 | `jap_j1.cpp` | leagues | 15 | 8 | 1 (1.7) |
 | `bra_nat_third.cpp` | leagues | 16 | 11 | 1 (1.6) |
-| `league_stage.cpp` | leagues | 6 | 0 | 2 (1.1) |
 | `sub_league.cpp` | leagues | 4 | 0 | 1 (0.7) |
+| `bra_reg_central.cpp` | leagues | 11 | 8 | 1 (0.4) |
+| `bra_reg_goias.cpp` | leagues | 11 | 7 | 1 (0.4) |
+| `bra_reg_sp.cpp` | leagues | 10 | 6 | 2 (0.4) |
+| `bra_reg_bahia.cpp` | leagues | 10 | 7 | 1 (0.4) |
+| `bra_reg_gaucho.cpp` | leagues | 13 | 8 | 1 (0.4) |
+| `bra_reg_north.cpp` | leagues | 9 | 6 | 1 (0.4) |
+| `bra_reg_northeast.cpp` | leagues | 9 | 6 | 1 (0.4) |
+| `bra_reg_pern.cpp` | leagues | 10 | 7 | 1 (0.4) |
+| `bra_reg_santa.cpp` | leagues | 10 | 7 | 1 (0.4) |
+| `bra_reg_minas_gerais.cpp` | leagues | 14 | 11 | 1 (0.3) |
+| `bra_reg_parana.cpp` | leagues | 13 | 10 | 1 (0.3) |
+| `bra_reg_rio.cpp` | leagues | 14 | 10 | 1 (0.3) |
 | `arg_second.cpp` | leagues | 18 | 1 | 0 (0.0) |
 | `eng_first.cpp` | leagues | 10 | 7 | 0 (0.0) |
 | `eng_prm.cpp` | leagues | 11 | 4 | 0 (0.0) |
@@ -69,60 +68,61 @@ Só os arquivos com alguma rotina que falta; ordem: grupo, depois o que falta.
 | `ita_ser_c1b.cpp` | leagues | 12 | 8 | 0 (0.0) |
 | `ita_ser_c2a.cpp` | leagues | 13 | 1 | 0 (0.0) |
 | `jap_j2.cpp` | leagues | 7 | 5 | 0 (0.0) |
+| `league_stage.cpp` | leagues | 6 | 2 | 0 (0.0) |
 | `spa_first.cpp` | leagues | 15 | 5 | 0 (0.0) |
 | `spa_lower.cpp` | leagues | 7 | 4 | 0 (0.0) |
 | `spa_second.cpp` | leagues | 7 | 4 | 0 (0.0) |
-| `bra_cup.cpp` | cups | 8 | 4 | 2 (6.8) |
 | `bra_champ_cup.cpp` | cups | 16 | 2 | 10 (3.6) |
 | `cup_stage.cpp` | cups | 7 | 2 | 1 (2.7) |
-| `eng_fa_cup.cpp` | cups | 12 | 3 | 1 (2.2) |
-| `ita_cup.cpp` | cups | 17 | 7 | 4 (1.8) |
 | `usa_mls_all_stars.cpp` | cups | 8 | 4 | 2 (1.7) |
-| `ita_c_cup.cpp` | cups | 17 | 8 | 3 (1.5) |
-| `eng_auto_cup.cpp` | cups | 15 | 7 | 2 (0.9) |
-| `usa_open_cup.cpp` | cups | 6 | 3 | 1 (0.5) |
-| `ita_c1_super.cpp` | cups | 6 | 2 | 1 (0.4) |
-| `ita_super.cpp` | cups | 6 | 2 | 1 (0.4) |
+| `ita_cup.cpp` | cups | 17 | 8 | 3 (1.2) |
+| `ita_c_cup.cpp` | cups | 17 | 9 | 2 (0.9) |
+| `eng_auto_cup.cpp` | cups | 15 | 8 | 1 (0.3) |
+| `bra_cup.cpp` | cups | 8 | 6 | 0 (0.0) |
 | `eng_cc_cup.cpp` | cups | 8 | 4 | 0 (0.0) |
 | `eng_charity.cpp` | cups | 6 | 3 | 0 (0.0) |
+| `eng_fa_cup.cpp` | cups | 12 | 4 | 0 (0.0) |
 | `fra_cup.cpp` | cups | 9 | 3 | 0 (0.0) |
 | `fra_lge_cup.cpp` | cups | 7 | 3 | 0 (0.0) |
 | `fra_super.cpp` | cups | 6 | 3 | 0 (0.0) |
 | `gre_cup.cpp` | cups | 19 | 1 | 0 (0.0) |
 | `ire_lge_cup.cpp` | cups | 17 | 1 | 0 (0.0) |
+| `ita_c1_super.cpp` | cups | 6 | 3 | 0 (0.0) |
+| `ita_super.cpp` | cups | 6 | 3 | 0 (0.0) |
 | `jap_emp_cup.cpp` | cups | 7 | 4 | 0 (0.0) |
 | `jap_j_cup.cpp` | cups | 6 | 4 | 0 (0.0) |
 | `jap_super.cpp` | cups | 6 | 4 | 0 (0.0) |
 | `spa_cup.cpp` | cups | 7 | 4 | 0 (0.0) |
 | `spa_super.cpp` | cups | 7 | 3 | 0 (0.0) |
+| `usa_open_cup.cpp` | cups | 6 | 4 | 0 (0.0) |
 | `asia_club_champ.cpp` | eurocomp | 15 | 5 | 5 (3.5) |
-| `conmebol_merc.cpp` | eurocomp | 16 | 6 | 4 (2.2) |
 | `world_club_champ.cpp` | eurocomp | 18 | 0 | 3 (2.0) |
-| `european_cup.cpp` | eurocomp | 50 | 16 | 2 (1.6) |
-| `con_merc_cup.cpp` | eurocomp | 16 | 9 | 3 (1.0) |
+| `european_cup.cpp` | eurocomp | 50 | 17 | 1 (1.1) |
 | `asia_cup_winner.cpp` | eurocomp | 17 | 7 | 2 (0.9) |
 | `asia_super_cup.cpp` | eurocomp | 7 | 2 | 2 (0.9) |
 | `con_champ.cpp` | eurocomp | 8 | 4 | 2 (0.9) |
-| `conmebol_liber.cpp` | eurocomp | 16 | 9 | 2 (0.8) |
-| `oceania_club_champ.cpp` | eurocomp | 16 | 8 | 2 (0.5) |
+| `con_merc_cup.cpp` | eurocomp | 16 | 10 | 2 (0.7) |
 | `uefa_cup.cpp` | eurocomp | 11 | 4 | 1 (0.5) |
 | `inter_amer_cup.cpp` | eurocomp | 6 | 2 | 1 (0.5) |
 | `world_club_cup.cpp` | eurocomp | 6 | 2 | 1 (0.5) |
+| `conmebol_merc.cpp` | eurocomp | 16 | 9 | 1 (0.3) |
+| `oceania_club_champ.cpp` | eurocomp | 16 | 9 | 1 (0.2) |
 | `intertoto_cup.cpp` | eurocomp | 13 | 6 | 1 (0.1) |
+| `conmebol_liber.cpp` | eurocomp | 16 | 11 | 0 (0.0) |
 | `eur_super_cup.cpp` | eurocomp | 6 | 3 | 0 (0.0) |
 | `euro_champ_qual.cpp` | intercomp | 32 | 4 | 9 (8.6) |
-| `oceania_nations.cpp` | intercomp | 16 | 0 | 8 (4.9) |
 | `euro_champ.cpp` | intercomp | 25 | 0 | 5 (3.5) |
+| `oceania_nations.cpp` | intercomp | 16 | 3 | 5 (3.4) |
 | `olympics.cpp` | intercomp | 16 | 0 | 4 (2.9) |
 | `asia_nations.cpp` | intercomp | 17 | 0 | 5 (2.8) |
 | `goldcup.cpp` | intercomp | 57 | 10 | 3 (2.1) |
 | `fifa_confed.cpp` | intercomp | 20 | 1 | 3 (1.0) |
-| `african_nations.cpp` | intercomp | 20 | 10 | 2 (0.9) |
+| `african_nations.cpp` | intercomp | 20 | 11 | 1 (0.4) |
 | `wc_concacaf_cup.cpp` | worldcup | 21 | 0 | 5 (5.8) |
 | `world_cup.cpp` | worldcup | 26 | 9 | 3 (4.1) |
 | `wc_african_cup.cpp` | worldcup | 20 | 0 | 5 (4.0) |
-| `wc_oceania_league.cpp` | worldcup | 21 | 5 | 6 (3.6) |
 | `wc_asia_league.cpp` | worldcup | 23 | 1 | 4 (3.2) |
+| `wc_oceania_league.cpp` | worldcup | 21 | 6 | 5 (3.2) |
 | `wc_south_american_league.cpp` | worldcup | 17 | 1 | 5 (3.1) |
 | `wc_europe_league.cpp` | worldcup | 30 | 1 | 3 (2.4) |
 | `argentina_rules.cpp` | rules | 12 | 1 | 0 (0.0) |

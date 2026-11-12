@@ -1,17 +1,4 @@
 # ordem da fila (fila.py); um item por linha
-cqv_4
-cqv_5
-cqv_6
-cqv_7
-cqv_8
-cqv_9
-cqv_10
-cqv_11
-cqv_12
-cqv_13
-cqw_1
-cqw_2
-cqw_3
 cqw_4
 cqw_5
 cqw_10

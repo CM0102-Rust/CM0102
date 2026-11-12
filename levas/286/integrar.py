@@ -1,0 +1,19 @@
+"""Integra a 286a leva ao motor.rs (gerado por fila.py: as âncoras são achadas no motor.rs)."""
+import os
+import re
+aqui = os.path.dirname(os.path.abspath(__file__))
+p = os.path.join(aqui, '..', '..', 'rust', 'src', 'motor.rs')
+s = open(p, encoding='utf-8').read()
+ROTINAS = [('construct_league_stage', 6861056, [106, 255, 104, 235, 202, 149, 0]), ('destroy_league_stage', 6862496, [106, 255, 104, 40, 203, 149, 0]), ('construct_ita_super', 6682224, [106, 255, 104, 185, 189, 149, 0]), ('construct_ita_c1_super', 6538720, [106, 255, 104, 217, 183, 149, 0]), ('construct_usa_open_cup', 9481904, [106, 255, 104, 249, 84, 150, 0]), ('construct_bra_cup', 4355120, [106, 255, 104, 217, 67, 149, 0]), ('bra_cup_select_entrants', 4357888, [129, 236, 64, 5, 0, 0]), ('eng_fa_cup_collect_entrants', 5700272, [129, 236, 52, 7, 0, 0]), ('construct_ita_cup', 6547712, [106, 255, 104, 201, 184, 149, 0]), ('construct_ita_c_cup', 6540352, [106, 255, 104, 41, 184, 149, 0]), ('construct_eng_auto_cup', 5679664, [106, 255, 104, 25, 129, 149, 0]), ('construct_european_cup', 5781440, [106, 255, 104, 121, 138, 149, 0]), ('oceania_nations_update_for_date', 7971072, [106, 255, 104, 38, 236, 149, 0]), ('oceania_nations_select_and_draw_teams', 7970352, [129, 236, 84, 2, 0, 0]), ('oceania_nations_create_group_table', 7968160, [129, 236, 4, 2, 0, 0]), ('conmebol_merc_create_quarter_final_stage', 5002192, [106, 255, 104, 124, 107, 149, 0]), ('conmebol_liber_set_predicted_positions', 4997648, [129, 236, 28, 2, 0, 0]), ('conmebol_merc_set_predicted_positions', 5003920, [129, 236, 28, 2, 0, 0]), ('conmebol_liber_start_new_season', 4995456, [129, 236, 0, 2, 0, 0]), ('conmebol_merc_start_new_season', 5001280, [129, 236, 0, 2, 0, 0]), ('con_merc_cup_start_new_season', 4988848, [129, 236, 0, 2, 0, 0]), ('oceania_club_champ_set_predicted_positions', 7964224, [129, 236, 0, 2, 0, 0]), ('african_nations_set_predicted_positions', 4204496, [129, 236, 0, 2, 0, 0]), ('wc_oceania_league_set_predicted_positions', 9568048, [129, 236, 0, 2, 0, 0]), ('bra_reg_bahia_create_schedule', 4388304, [138, 68, 36, 4, 129, 236, 0, 2, 0, 0]), ('bra_reg_central_create_schedule', 4392880, [138, 68, 36, 4, 129, 236, 0, 2, 0, 0]), ('bra_reg_gaucho_create_schedule', 4397760, [138, 68, 36, 4, 129, 236, 0, 2, 0, 0]), ('bra_reg_goias_create_schedule', 4402768, [138, 68, 36, 4, 129, 236, 0, 2, 0, 0]), ('bra_reg_minas_gerais_create_schedule', 4407376, [138, 68, 36, 4, 129, 236, 0, 2, 0, 0]), ('bra_reg_north_create_schedule', 4412992, [138, 68, 36, 4, 129, 236, 0, 2, 0, 0]), ('bra_reg_northeast_create_schedule', 4417264, [138, 68, 36, 4, 129, 236, 0, 2, 0, 0]), ('bra_reg_parana_create_schedule', 4421376, [138, 68, 36, 4, 129, 236, 0, 2, 0, 0]), ('bra_reg_pern_create_schedule', 4426736, [138, 68, 36, 4, 129, 236, 0, 2, 0, 0]), ('bra_reg_rio_create_schedule', 4431168, [138, 68, 36, 4, 129, 236, 0, 2, 0, 0]), ('bra_reg_santa_create_schedule', 4437040, [138, 68, 36, 4, 129, 236, 0, 2, 0, 0]), ('bra_reg_sp_create_schedule', 4441504, [138, 68, 36, 4, 129, 236, 0, 2, 0, 0])]
+BASE = 2131
+m = re.search(r'\n\}\nconst N: usize = (\d+);', s)
+assert m and int(m.group(1)) == BASE, ('o motor.rs mudou desde a materialização', m and m.group(1), BASE)
+# one line per routine in `routines! { .. }` (rust/src/motor.rs; read by engenharia-reversa/tabela_motor.py)
+linhas = ''.join('\n    Prologue { address: %#x, bytes: &[%s] } => %s, compare_%s;' % (e, ', '.join('0x%02x' % b for b in bs), a, a)
+                 for a, e, bs in ROTINAS)
+s = s[:m.start()] + linhas + '\n}\nconst N: usize = %d;' % (BASE + len(ROTINAS)) + s[m.end():]
+anc = 'compare_value!(compare_staff_criterion, staff_criterion, IDX_STAFF_CRITERION, () -> u32);\n'
+assert s.count(anc) == 1
+s = s.replace(anc, anc + '\n' + open(os.path.join(aqui, 'codigo.rs'), encoding='utf-8').read().strip('\n') + '\n')
+open(p, 'w', encoding='utf-8').write(s)
+print('ok')
