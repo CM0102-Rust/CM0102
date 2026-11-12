@@ -1,5 +1,6 @@
 
 
+
 // The bits of the records' flag fields by name, from the field readers (engenharia-reversa/nomear_bits.py;
 // verdicts in levas/reorganizacao/leitores_de_campo/). Each constant says what the bit means and how far to trust
 // the name: verified (concrete evidence), read (one clear reading), inferred (a guess).

@@ -1,10 +1,4 @@
 # ordem da fila (fila.py); um item por linha
-cqw_4
-cqw_5
-cqw_10
-cqw_11
-cqw_12
-cqw_13
 mka_1
 mka_2
 mkb_1
@@ -17,8 +11,6 @@ mkd_3
 mkd_4
 mkd_6
 mkd_7
-mkc_2
-mkc_3
 mkc_4
 mkc_5
 mkc_6
