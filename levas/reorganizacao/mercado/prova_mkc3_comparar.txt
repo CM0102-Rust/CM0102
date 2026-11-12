@@ -1,0 +1,9 @@
+    pool nao paginado 2.70 -> 2.68 GB, paginado 5.82 -> 5.70 GB
+execucao 1: parou em 2002-151, 1648348192 sorteios, impressao 4aebf794bf455927, partidas 63130/a865261e7b173a21, banco 132436fdfc00d143, 5545 s
+    date: 1000000000 comparacoes, 0 divergencias
+    engine: 10000000000 comparacoes, 0 divergencias
+    random: 1000000000 comparacoes, 0 divergencias
+game.cfg restaurado; auto_setup.cfg removido
+branch mkc_3 russia period
+branch mkc_3 turkey deadline
+branch mkc_3 wales period
