@@ -45,6 +45,7 @@ Um item é um pacote de até 3 rotinas portadas, escrito antes da hora em `levas
 - O comparador confere **só o que a rotina garante na saída**. Campo que outra rotina reescreve depois (ex.: a 0x6827d0 reescreve +0xa7) acusa à toa.
 - Quando a rotina não pode rodar duas vezes, roda só a original e o plano é conferido depois (o modelo das `cqt`/`cqk`); os calendários vão lado a lado (a máquina da `cqp_11`: `Cqp11Op`, `cqp11_tabela`, `cqp11_comparar`).
 - Pedir de novo a tabela de rodadas de uma copa mostra a caixa "Cup.cpp 1278": não refaça o plano na comparação.
+- Rotina que escreve o texto de uma notícia num objeto Text: `compare_text_writer(out, || original(.., out), |t| copia(.., t), || descrição)` (em `compare/media.rs`, 12/11/2026). A original escreve no Text de verdade e a cópia num Text local, lado a lado; o texto, os vínculos e o gerador de sorteios têm de bater. Cada objeto Text recebe o texto uma vez só: nunca escreva os dois no mesmo. As mutações de texto são acusadas pela comparação, não pela carreira (o texto não volta à simulação).
 
 ## Provar (na sua cópia, nunca nas bancadas)
 

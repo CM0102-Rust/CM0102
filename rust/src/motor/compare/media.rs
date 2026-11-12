@@ -374,3 +374,38 @@ pub(crate) unsafe extern "thiscall" fn compare_pick_rival_manager_id(this: usize
 pub(crate) unsafe extern "thiscall" fn compare_queue_manager_fa_complaint_story(this: usize, club: usize, person: usize, kind: u32, a: u32, b: u32, c: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32)>(IDX_QUEUE_MANAGER_FA_COMPLAINT_STORY)(this, club, person, kind, a, b, c)
 }
+
+/// What a Text object holds (comp_text.cpp: `+0` the string, `+4` the link list; each link holds its text at +0, the
+/// type at +0xc8 and the data at +0xcc): the string and the links (text, type, data), for the text comparers.
+pub(crate) unsafe fn text_contents(t: usize) -> (Vec<u8>, Vec<(Vec<u8>, u32, u32)>) {
+    let text = |p: usize| if p == 0 { Vec::new() } else { core::ffi::CStr::from_ptr(p as *const core::ffi::c_char).to_bytes().to_vec() };
+    let mut links = Vec::new();
+    let l = read_usize(t + 4);
+    if l != 0 {
+        list_rewind(l);
+        loop {
+            let e = exe::llist_get_next(l);
+            if e == 0 {
+                break;
+            }
+            links.push((text(e), read_u32(e + 0xc8), read_u32(e + 0xcc)));
+        }
+    }
+    (text(read_usize(t)), links)
+}
+
+/// The comparer of a routine that writes a news text into a Text object (`out`): the original writes into `out`, the
+/// copy into a fresh local Text side by side (the random generator's state restored, the copy's draws not counted);
+/// the strings and the links must be equal and the generator must end in the same state. A Text is written once per
+/// object, so the two never share one. `rust` gets the address of the local Text; `what` names the call in the message.
+pub(crate) unsafe fn compare_text_writer(out: usize, original: impl FnOnce(), rust: impl FnOnce(usize), what: impl Fn() -> String) {
+    let mut local = [0usize; 2];
+    let lp = local.as_mut_ptr() as usize;
+    let (_, _, same_rng, _, _) = crate::comparison::side_by_side(&crate::rng::STATE_REGIONS, original, || crate::rng::without_counting(|| rust(lp)));
+    let (mo, mr) = (text_contents(out), text_contents(lp));
+    exe::drop_text(local.as_mut_ptr());
+    let show = |t: &(Vec<u8>, Vec<(Vec<u8>, u32, u32)>)| {
+        format!("{:?} {:x?}", String::from_utf8_lossy(&t.0), t.1.iter().map(|l| (String::from_utf8_lossy(&l.0).into_owned(), l.1, l.2)).collect::<Vec<_>>())
+    };
+    SCOREBOARD.record(same_rng && mo == mr, || format!("{}: original {} rust {}", what(), show(&mo), show(&mr)));
+}

@@ -45,6 +45,7 @@ An item is a package of up to 3 ported routines, written ahead of time in `levas
 - The comparer checks **only what the routine guarantees on exit**. A field that another routine rewrites later (e.g. 0x6827d0 rewrites +0xa7) gives false alarms.
 - When the routine can't run twice, only the original runs and the plan is checked afterwards (the `cqt`/`cqk` model); schedules go side by side (the `cqp_11` machine: `Cqp11Op`, `cqp11_tabela`, `cqp11_comparar`).
 - Asking a cup for its round table again shows the "Cup.cpp 1278" box: don't rebuild the plan during the comparison.
+- A routine that writes a news text into a Text object: `compare_text_writer(out, || original(.., out), |t| copy(.., t), || description)` (in `compare/media.rs`, 12/11/2026). The original writes into the real Text and the copy into a local one, side by side; the text, the links and the random generator must match. Each Text object takes the text once: never write both into the same one. Text mutations are caught by the comparison, not by the career (the text does not flow back into the simulation).
 
 ## Proving (in your own copy, never in the benches)
 
