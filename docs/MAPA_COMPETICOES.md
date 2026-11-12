@@ -2,12 +2,12 @@
 
 Gerado por `python engenharia-reversa/competicoes.py` (o mapa de funções de maxevans60, CC BY 4.0, e a cobertura de uma carreira com as 8 ligas `ENG ESP ITA FRA BRA JPN AUS USA` até 2002-06-01, `levas/competicoes/`; as rotinas já em Rust não levam contador). "falta" = chamada ao menos uma vez nessa carreira e ainda não está em Rust (a lista para `candidatos.py --competicoes` fica em `docs/cobertura_competicoes.txt`).
 
-**Total:** 2695 funções, 1475.7 KB; em Rust 828 (35.9% dos bytes); faltam 130 (152.5 KB).
+**Total:** 2695 funções, 1475.7 KB; em Rust 829 (36.1% dos bytes); faltam 130 (152.5 KB).
 
 | Grupo | Funções | KB | Rust | Falta (KB) | Progresso |
 |---|---|---|---|---|---|
 | Base: Liga, Copa, comp, calendário, sorteios | 396 | 272.6 | 259 | 20 (74.2) | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **49.2%** |
-| Ligas nacionais (formato de cada divisão) | 1048 | 647.8 | 288 | 17 (12.2) | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **37.4%** |
+| Ligas nacionais (formato de cada divisão) | 1048 | 647.8 | 289 | 17 (12.2) | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **38.0%** |
 | Copas nacionais | 526 | 228.3 | 91 | 18 (10.1) | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **26.4%** |
 | Competições europeias | 221 | 98.2 | 98 | 16 (8.5) | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **55.7%** |
 | Continentais fora da Europa | 203 | 105.2 | 33 | 31 (22.9) | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **15.2%** |
