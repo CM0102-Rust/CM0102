@@ -1,0 +1,61 @@
+0x40e860	448	asia_nations.cpp	AsiaNations::AsiaNations	Constructs the AFC Asian Cup on the League base, moves the year to the next edition and se
+0x40eb00	1584	asia_nations.cpp	AsiaNations::create_schedule	Builds the round schedule of the Asian Cup, three group rounds for the group stages and fo
+0x40f4c0	208	asia_nations.cpp	AsiaNations::set_up_rules	Sets the Asian Cup league rules and the draw date of day 5, month 5 and builds the schedul
+0x40f590	16	asia_nations.cpp	AsiaNations::record_season_honours	Passes the season honours call on to the knockout stage object held in the third stage slo
+0x410170	560	asia_nations.cpp	AsiaNations::update_for_date	On the draw date draws the nations, builds the first group table and fixtures and the othe
+0x57a890	544	euro_champ.cpp	EuroChamp::EuroChamp	Constructs the European Championship on the League base, moves the year to the next finals
+0x57ab90	1600	euro_champ.cpp	EuroChamp::create_schedule	Builds the round schedule of the European Championship, three group rounds for each of the
+0x57b630	256	euro_champ.cpp	EuroChamp::set_up_rules	Sets the European Championship league rules, the seeding and draw dates and builds the sch
+0x57bd80	928	euro_champ.cpp	EuroChamp::set_up_team_list	Allocates the sixteen-entry nation list, adds the host nations and fills the other slots w
+0x57c620	240	euro_champ.cpp	EuroChamp::update_for_date	On the seeding date seeds the nations into pots and on the draw date runs the group draw, 
+0x57ce10	592	euro_champ_qual.cpp	EuroChampQual::EuroChampQual	Constructs the European Championship qualifying league on League, sets vtable 0x96a0d4, st
+0x57d190	1056	euro_champ_qual.cpp	EuroChampQual::create_schedule	Builds the round template for a stage, ten group matchdays for each group or one play-off 
+0x57dab0	3376	euro_champ_qual.cpp	EuroChampQual::draw_groups	Draws the qualifying entrants into the groups, from a fixed draw for 1998 or by random pot
+0x57ed10	576	euro_champ_qual.cpp	EuroChampQual::create_group_stage	Creates a League_Stage for one qualifying group from its drawn nations and posts the group
+0x57f600	800	euro_champ_qual.cpp	EuroChampQual::collect_entrants	Counts the European hosts of the finals, then lists the other European national teams as e
+0x57f920	240	euro_champ_qual.cpp	EuroChampQual::create_runners_up_stage	Creates the nine-team runners-up league stage, stores it in the stage array at index +0x10
+0x57fa10	848	euro_champ_qual.cpp	EuroChampQual::update_runners_up_table	Ranks each group runner-up on results against the top four of its group and copies that ro
+0x57fd60	624	euro_champ_qual.cpp	EuroChampQual::update_for_date	On the draw date it draws the next qualifying groups and fixtures, otherwise it refreshes 
+0x5806d0	688	euro_champ_qual.cpp	EuroChampQual::set_predicted_positions	Sorts the entered nations and sets each one's predicted final position band, using seeding
+0x58b310	368	fifa_confed.cpp	FifaConfed::FifaConfed	Constructs the FIFA Confederations Cup on the League base, moves the year to an odd year, 
+0x58bdb0	192	fifa_confed.cpp	FifaConfed::set_up_rules	Sets the Confederations Cup league rules, builds the group schedule and stores the draw da
+0x58c4b0	512	fifa_confed.cpp	FifaConfed::update_for_date	On the draw date selects the nations, sets predicted positions, builds both groups and the
+0x58cf70	1264	fifa_rankings.cpp	FIFA_RANKINGS::record_match_result	Scores a finished international match from both nations' strength tiers and appends a poin
+0x5e0f50	656	goldcup.cpp	GoldCup::build_fate_news_text	Writes the news text for a nation's Copa America fate, from quarter-final qualification to
+0x5e18a0	1072	goldcup.cpp	GoldCup::create_knockout_stage	Ranks the three third-placed nations, then builds the eight-team knockout Cup_Stage from t
+0x5f97c0	432	host_country.cpp	HostCountry::HostCountry	Waits for the game CD, then loads the host table from HostCountry.tmp or builds the defaul
+0x798b60	1952	oceania_nations.cpp	OceaniaNations::create_schedule	Builds the round schedule of the Oceania Nations Cup, three group rounds for the two group
+0x799690	208	oceania_nations.cpp	OceaniaNations::set_up_rules	Sets the Oceania Nations Cup league rules and the draw date of day 5, month 2 and builds t
+0x79a320	368	oceania_nations.cpp	OceaniaNations::set_predicted_positions	Sorts the six drawn nations and gives them predicted final places 1, 2, 3, 3, 5 and 5.
+0x79f530	448	olympics.cpp	Olympics::Olympics	Constructs the Olympic football league, rounds the year up to an Olympic year, loads saved
+0x79f7d0	1744	olympics.cpp	Olympics::create_schedule	Builds the round template for a stage, three group rounds for stages 0 to 2 or four knocko
+0x7a0230	208	olympics.cpp	Olympics::set_up_rules	Sets the Olympic points, match and draw date rules, then creates the schedule for the grou
+0x7a11c0	544	olympics.cpp	Olympics::update_for_date	On the draw date runs the finalist draw, predicted positions, the group A table, fixtures 
+0x90f210	704	wc_african_cup.cpp	WcAfricanCup::WcAfricanCup	Constructs the African World Cup qualifying cup, sets vtable 0x970ad0, aligns the year to 
+0x90f600	1504	wc_african_cup.cpp	WcAfricanCup::create_round_table	Builds the round template for a stage, a two-legged first round, six or ten group matchday
+0x910120	320	wc_african_cup.cpp	WcAfricanCup::build_first_round_entries	Sets the entry count to 50, 48 or 46 and builds six-byte first round entries from the rank
+0x9106a0	640	wc_african_cup.cpp	WcAfricanCup::collect_entrants	Counts African World Cup hosts and holders, then lists the other African national teams as
+0x9111d0	976	wc_african_cup.cpp	WcAfricanCup::rank_teams	Sorts the entrants, releases the continent's national team competitions and gives each ent
+0x911bf0	512	wc_asia_league.cpp	WcAsiaLeague::WcAsiaLeague	Constructs the Asian World Cup qualifying league, snaps the year to the qualifying cycle, 
+0x911f00	1536	wc_asia_league.cpp	WcAsiaLeague::create_schedule	Builds the round dates of one qualifying stage: six for a first round group, ten for a sec
+0x913140	544	wc_asia_league.cpp	WcAsiaLeague::update_for_date	On the draw date, draws the first round groups, creates this group's fixtures and the nine
+0x913f60	672	wc_asia_league.cpp	WcAsiaLeague::build_entrant_list	Lists the Asian national teams that enter qualifying, leaving out World Cup hosts and hold
+0x914de0	2352	wc_concacaf_cup.cpp	WcConcacafCup::create_round_table	Builds the round table for one stage: three Caribbean knockout rounds for stage -1, or the
+0x915d40	256	wc_concacaf_cup.cpp	WcConcacafCup::build_team_table	Allocates the knockout team table of 6-byte entries for the Caribbean entrants, copying ea
+0x915e40	416	wc_concacaf_cup.cpp	WcConcacafCup::update_for_date	On 10 January of the cup year marks every entrant and stage team as busy with this competi
+0x916250	2208	wc_concacaf_cup.cpp	WcConcacafCup::select_entrants	Fills the 35-slot entrant list with 25 Caribbean and 10 Central and North American nations
+0x917db0	656	wc_concacaf_cup.cpp	WcConcacafCup::rank_teams	Sorts a copy of the entrants and gives each nation a starting position in the Comp_Stats t
+0x9185c0	960	wc_europe_league.cpp	WcEuropeLeague::create_schedule	Builds the round dates for a group stage, or the two-legged November play-off round templa
+0x919e30	784	wc_europe_league.cpp	WcEuropeLeague::build_entry_pool	Counts exempt European hosts and the holder, collects up to fifty other European nations, 
+0x91a500	688	wc_europe_league.cpp	WcEuropeLeague::update_for_date	On the draw date, draws the groups and creates every group and runners-up stage, then refr
+0x91df90	560	wc_oceania_league.cpp	WcOceaniaLeague::WcOceaniaLeague	Builds the Oceania World Cup qualifying section, moves the year to the campaign start and 
+0x91e2e0	1376	wc_oceania_league.cpp	WcOceaniaLeague::create_schedule	Returns the round template of a stage: five group match days, the two-legged tie of the gr
+0x91f0d0	208	wc_oceania_league.cpp	WcOceaniaLeague::advance_stage	Moves to the next stage, building the group winners' tie first and then the play-off once 
+0x9202b0	560	wc_south_american_league.cpp	WcSouthAmericanLeague::WcSouthAmericanLeague	Builds the South American World Cup qualifying league, rounds its campaign year to a four-
+0x920590	1216	wc_south_american_league.cpp	WcSouthAmericanLeague::create_schedule	Builds the round template of the double round robin with 18 rounds for ten nations or 14 r
+0x920d10	416	wc_south_american_league.cpp	WcSouthAmericanLeague::count_exempt_nations	Counts the next World Cup hosts and the holder that belong to South America into +0xee and
+0x920eb0	400	wc_south_american_league.cpp	WcSouthAmericanLeague::build_team_slots	Allocates the table for ten minus the exempt count and fills it with South American nation
+0x921160	560	wc_south_american_league.cpp	WcSouthAmericanLeague::update_for_date	On the start date creates the fixtures, sorts the table and enters each nation in the comp
+0x92bf50	608	world_cup.cpp	WorldCup::WorldCup	Constructs the FIFA World Cup, moves the year to the next finals year and loads or builds 
+0x92d200	272	world_cup.cpp	WorldCup::set_up_rules	Sets the World Cup league rules and the seeding and draw dates, then builds the schedule o
+0x92da40	3328	world_cup.cpp	WorldCup::set_up_team_list	Fills the 32-slot World Cup nation list with the holder, the hosts and a default list of k

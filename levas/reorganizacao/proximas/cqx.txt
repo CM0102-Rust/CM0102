@@ -1,0 +1,40 @@
+0x40b950	1392	asia_club_champ.cpp	AsiaClubChamp::select_qualified_clubs	Fills the 32 qualifier slots with one club a nation, the first 16 from one nation list and
+0x40bec0	432	asia_club_champ.cpp	AsiaClubChamp::create_second_zone_cup_stage	Builds stage 0 as a Cup_Stage knockout for the second 16 qualified clubs and stores it as 
+0x40c5b0	368	asia_club_champ.cpp	AsiaClubChamp::update_staff_records_for_status	Records a club's Asian Club Championship result in staff records, such as a knockout exit,
+0x40c720	768	asia_club_champ.cpp	AsiaClubChamp::rank_teams	Sorts the clubs of both zones and gives each its starting final position, from 1 down to 1
+0x40e260	336	asia_cup_winner.cpp	AsiaCupWinner::update_staff_records_for_status	Records a club's Asian Cup Winners' Cup result in staff records, such as a knockout exit, 
+0x410c50	464	asia_super_cup.cpp	AsiaSuperCup::start_new_season	In month 5 clears the finished Asian Super Cup, archives its stats, moves the year on and 
+0x430340	368	bra_reg_bahia.cpp	BraRegBahia::set_predicted_positions	Sorts the table clubs by strength and stores predicted final positions, with third place s
+0x431610	432	bra_reg_central.cpp	BraRegCentral::set_predicted_positions	Sorts the table clubs by strength and gives predicted places 1, 2, two 3rds, four 5ths and
+0x432980	368	bra_reg_gaucho.cpp	BraRegGaucho::set_predicted_positions	Sorts the table clubs by strength and gives predicted places 1, 2, two 3rds and then 5 onw
+0x433b40	432	bra_reg_goias.cpp	BraRegGoias::set_predicted_positions	Sorts the Goias clubs by strength and stores predicted finishes as winner, runner-up, two 
+0x434f80	336	bra_reg_minas_gerais.cpp	BraRegMinasGerais::set_predicted_positions	Sorts the Minas Gerais clubs by strength and stores each rank, from first to last, as the 
+0x436280	368	bra_reg_north.cpp	BraRegNorth::set_predicted_positions	Sorts the table clubs by strength and stores predicted final positions, with third place s
+0x437290	368	bra_reg_northeast.cpp	BraRegNortheast::set_predicted_positions	Sorts the table clubs by strength and stores predicted final positions, with third place s
+0x438590	336	bra_reg_parana.cpp	BraRegParana::set_predicted_positions	Sorts the table clubs by strength and stores predicted final positions as winner, runner-u
+0x4398d0	368	bra_reg_pern.cpp	BraRegPern::set_predicted_positions	Sorts the table clubs by strength and stores predicted final positions, with third place s
+0x43add0	336	bra_reg_rio.cpp	BraRegRio::set_predicted_positions	Sorts the table clubs by strength and stores predicted final positions 1 to 12 in Comp_Sta
+0x43c110	368	bra_reg_santa.cpp	BraRegSanta::set_predicted_positions	Sorts the table clubs by strength and gives predicted places 1, 2, two 3rds and then 5 onw
+0x43c4a0	32	bra_reg_sp.cpp	BraRegSp::points_for_result	Passes the points query for a club and fixture straight to the League base method.
+0x43d140	368	bra_reg_sp.cpp	BraRegSp::set_predicted_positions	Sorts the table clubs by strength and gives predicted places 1, 2, two 3rds and then 5 onw
+0x4c1440	432	con_champ.cpp	ConChamp::start_new_season	Frees the season data, archives the statistics, advances the season year, then rebuilds th
+0x4c2940	336	con_merc_cup.cpp	ConMercCup::update_staff_records_for_status	Adds the staff history records for a club that qualifies from its group, fails to qualify,
+0x4c5960	304	conmebol_merc.cpp	ConmebolMerc::update_staff_records_for_status	Adds the staff history records for a club that qualifies from its group, goes out, reaches
+0x4c6970	512	conmebol_seeding.cpp	ConmebolSeeding::load_from_temp_file	Reads the nation quota count, quota records, season year and cup winner from conmebol_seed
+0x56bee0	304	eng_auto_cup.cpp	EngAutoCup::update_staff_records_for_status	Adds the staff history record for a club's Auto Windscreens result, such as knocked out, r
+0x584550	1088	european_cup.cpp	EuropeanCup::build_fate_news_text	Writes the news text for a club that qualifies for phase 1, drops into the UEFA Cup, fails
+0x633290	112	intertoto_cup.cpp	IntertotoCup::process_fixture	Adds UEFA coefficient points to the nations of both clubs from the fixture result, then ru
+0x63e270	336	ita_c_cup.cpp	ItaCCup::update_staff_records_for_status	Adds the staff history record for a club that leaves a group, goes out, reaches a round, w
+0x63e580	624	ita_c_cup.cpp	ItaCCup::set_predicted_positions	Sorts the entrants by strength and sets each club's expected final position in the stats f
+0x63f130	288	ita_cup.cpp	ItaCup::build_fate_news_text	Writes the news text for a club's group or knockout result, including the through to first
+0x63ff00	336	ita_cup.cpp	ItaCup::update_staff_records_for_status	Adds the staff history record for a club's group qualification, group exit, knockout exit,
+0x640210	624	ita_cup.cpp	ItaCup::set_predicted_positions	Sorts the entrants by strength and stores a predicted final position for each club in the 
+0x797a90	176	oceania_club_champ.cpp	OceaniaClubChamp::update_staff_records_for_status	Adds staff history records for qualifying from or going out in the group stage, and for wi
+0x85ba40	1120	stadium.cpp	Stadium::load_from_temp_file	Reads the stadium booking list and venue list from Stadium.tmp in CM3_TEMP into this objec
+0x88c6d0	672	sub_league.cpp	SubLeague::SubLeague	Constructs a mini league table for a given set of clubs, fills it from the fixtures they p
+0x903120	480	uefa_cup.cpp	UefaCup::collect_club_list	Allocates an array of the UEFA Cup clubs, either all entrants or the clubs of one round pi
+0x905230	736	uefa_seeding.cpp	UefaSeeding::load_from_temp_file	Reads the seeding object from uefa_seeding.tmp, rebuilds each entry's nation pointer and r
+0x905790	288	uefa_seeding.cpp	UefaSeeding::record_cup_semi_final_losers	Stores the two losing semi-finalists of a European nation's domestic cup in the first matc
+0x929390	1296	world_club_champ.cpp	WorldClubChamp::create_schedule	Builds the round dates for the three group rounds of stages below 2 and the semi-final and
+0x929bb0	192	world_club_champ.cpp	WorldClubChamp::set_up_rules	Sets the match rules, points and place counts of the championship, builds its schedule and
+0x92a6b0	512	world_club_champ.cpp	WorldClubChamp::update_for_date	On the start date picks the entrants, predicts positions and draws the three groups, then 

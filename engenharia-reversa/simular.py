@@ -57,8 +57,16 @@ def limpar_temporarios():
         os.remove(nome)
 
 
+def mundo():
+    """'MUNDO' (12/11/2026): ENG e todas as nacoes do nation.dat (codigo de 3 letras em +0x53, registro de 290 bytes)."""
+    d = open(os.path.join(JOGO, 'Data', 'nation.dat'), 'rb').read()
+    cods = {d[i + 0x53:i + 0x56].decode('latin1') for i in range(0, len(d) - 289, 290)}
+    return ' '.join(['ENG'] + sorted(c for c in cods if c.isalpha() and c.isupper() and c != 'ENG'))
+
+
 def linhas_carreira(ligas='ENG', fundo='', motor='nao'):
     """As linhas do auto_setup.cfg da carreira automatica de ferias (formato em docs/VERSAO_SEM_TELA.md)."""
+    ligas = mundo() if ligas == 'MUNDO' else ligas
     return ['LANGUAGE=POR', 'DATABASE=MINIMUM', 'MATCH_STATS=NORMAL', 'FOREGROUND_LEAGUES=' + ligas,
             'BACKGROUND_LEAGUES=' + fundo, 'ENABLE_MATCH_ENGINE=' + ('YES' if motor == 'sim' else 'NO'),
             'ENABLE_COMPUTER_BIDS=YES', 'ON_HOLIDAY=YES']

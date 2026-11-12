@@ -1,0 +1,29 @@
+0x51a150	7888	Cup.cpp	Cup::process_fixture	Processes a played cup fixture, decides the tie, moves the winner into the next round, pay
+0x51fc00	5360	Cup.cpp	Cup::load_from_disk	Reads the cup state, rounds, teams, fixtures and stage objects from its CM3_TEMP temporary
+0x4259a0	400	bra_champ_cup.cpp	BraChampCup::BraChampCup	Constructs the Brazilian Champions Cup on League, then loads its saved state or selects th
+0x426130	256	bra_champ_cup.cpp	BraChampCup::create_preliminary_table	Sets the team count to three, allocates the preliminary group table, fills it from the fir
+0x4262c0	256	bra_champ_cup.cpp	BraChampCup::start_new_season	Frees last season's table, schedule and stages, archives the statistics, moves the year on
+0x4263c0	176	bra_champ_cup.cpp	BraChampCup::advance_stage	Moves the stage counter on, creates the group stages at stage 0 and the semi-final stage a
+0x426470	688	bra_champ_cup.cpp	BraChampCup::create_group_stages	Builds two four-club group stages, each with one preliminary qualifier and three seeded en
+0x426720	480	bra_champ_cup.cpp	BraChampCup::create_semi_final_stage	Builds the four-club knockout stage from the top two clubs of each group, crossing the pai
+0x426900	432	bra_champ_cup.cpp	BraChampCup::update_staff_records_for_status	Adds qualified, failed to qualify, knocked out, winner or runner-up records for a club by 
+0x426ab0	368	bra_champ_cup.cpp	BraChampCup::set_predicted_positions	Stores fixed predicted final positions 1, 2, 3, 3, 5, 5, 7, 7 and 9 for the nine entrants 
+0x426c20	352	bra_champ_cup.cpp	BraChampCup::set_club_progress	Maps the raw stage codes of a club to positions for the preliminary or group stage and sto
+0x427320	272	bra_champ_cup.cpp	BraChampCup::start_preliminary_stage	Sets predicted positions, builds the preliminary table and its fixtures, sorts the table a
+0x42d620	1648	bra_nat_third.cpp	BraNatThird::create_schedule	Builds the schedule of a stage, with 14 rounds for the first groups, six rounds for the th
+0x4b0b80	14496	comp_util.cpp	comp_util_write_cup_tie_result_news	Builds the news text for a club winning or losing a cup tie, with score, round name, extra
+0x4b4420	368	comp_util.cpp	comp_util_write_cup_win_or_defeat_news	Builds a short news line saying a club wins in, or is defeated in, a named cup round.
+0x4b4590	704	comp_util.cpp	comp_util_write_group_qualify_news	Builds a news line saying a team qualifies, or fails to qualify, from a competition group.
+0x4b4850	24736	comp_util.cpp	comp_util_get_stage_name	Writes the localised name of a round, group or stage id into a buffer in full, short or pl
+0x4bfa30	1344	comp_util.cpp	comp_util_format_comp_stage_round_label	Writes a label of competition, stage and round names into a buffer, using the long or shor
+0x5241e0	2800	cup_stage.cpp	Cup_Stage::map_fixture_tree	Allocates and resets the per-round tie arrays, links each tie winner to a slot in the next
+0x5a9cf0	992	fix_man.cpp	FIXTURE_MANAGER::FIXTURE_MANAGER	Builds a fixture store year block of 366 days with three slice lists, and checks the CD an
+0x5ac060	848	fix_man.cpp	FIXTURE_MANAGER::save_fixtures	Writes every fixture of the block to fixtures_<year>.tmp and, when asked on the main block
+0x5acee0	2208	fix_man.cpp	FIXTURE_MANAGER::scan_fixtures	Scans the fixture store from a cursor date in either direction and copies fixtures that ma
+0x5c1f80	800	friendly.cpp	Friendly::Friendly	Builds the friendly competition, waits for the CM01/02 CD, then sets the comp record, seas
+0x5c3040	2976	friendly.cpp	Friendly::plan_preseason_tournaments_and_tours	For each active league in its pre-season, groups an AI club with three opponents into a to
+0x5c8a00	3120	friendly.cpp	Friendly::load_from_temp_file	Reads the friendly state from Friendly.tmp in CM3_TEMP and rebuilds tournaments, friendly 
+0x687b10	5808	league.cpp	League::load_from_temp_file	Reads the league state from the CM3_TEMP file named by competition id or by season, includ
+0x9072d0	3888	usa_mls.cpp	UsaMls::create_schedule	Builds the date template of one stage: 12, 22 or 32 league rounds, the two-round play-off 
+0x9086e0	1824	usa_mls.cpp	UsaMls::create_season_fixtures	Makes the first division fixtures, builds the other two division stages and adds the cross
+0x90a980	1328	usa_mls_all_stars.cpp	UsaMlsAllStars::select_squads	Collects fit MLS players by conference, sorts them and fills the squads of the two All-Sta

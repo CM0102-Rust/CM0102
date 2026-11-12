@@ -1,0 +1,36 @@
+0x444930	11008	club_records.cpp	Club_Records::update_records_for_match	Updates both clubs' season and all-time records after a match, from attendance and scores 
+0x447880	2192	club_records.cpp	Club_Records::end_season_for_nation	For each club of a nation, folds the season records into the all-time records, archives th
+0x448260	560	club_records.cpp	season_history_entry_construct	Constructs a club season history snapshot by running the Date constructors of its match, r
+0x44c650	17440	club_records.cpp	club_records_write_record_news_text	Reads a serialised broken club record from a news item and writes its headline and story t
+0x453120	2672	club_records.cpp	club_records_write_record_news_fields	Writes the club id, the record type and the fields of one broken club record into the slot
+0x5554a0	752	discipline.cpp	Discipline::Discipline	Constructs the discipline object, opens ban_history.tmp, allocates the per-player table an
+0x557280	1120	discipline.cpp	Discipline::post_ban_news	Builds a type 0x7d2 news item with the ban fields and game date, and sends it to the club 
+0x5576e0	16848	discipline.cpp	Discipline::write_ban_news_text	Writes the text of the ban news item with the ban length, scope, match report sentence and
+0x55d420	3504	discipline.cpp	Discipline::create_rule_sets	Allocates the 43-entry ruling body table and constructs one 0x23-byte ruling body object p
+0x5fb430	608	human_manager.cpp	HUMAN_MANAGER::HUMAN_MANAGER	Waits for the CM01/02 CD, then loads the human records from a save or allocates sixteen re
+0x5fb810	1264	human_manager.cpp	HUMAN_MANAGER::reset_human_record	Resets a human manager's record to defaults: preset 0 tactics in all slots, default folder
+0x62a680	544	injury.cpp	Injury::Injury	Waits for the CM01/02 CD, opens the injury history temporary file, then loads the injury s
+0x62ef30	6064	injury.cpp	injury_get_type_name	Writes the localised name of an injury type into a buffer, with or without an indefinite a
+0x631580	2112	injury.cpp	injury_write_recovery_news_text	Writes the text of the return to light training or full training news, with wording for il
+0x68dbf0	1264	manager_manager.cpp	MANAGER_MANAGER::MANAGER_MANAGER	Waits for the game CD, creates the five job lists, then loads club board records from a sa
+0x68f9c0	3440	manager_manager.cpp	MANAGER_MANAGER::daily_update	Runs the daily manager market: monthly board expectations, weekly confidence update, pendi
+0x694440	2112	manager_manager.cpp	MANAGER_MANAGER::build_board_expectation_text	Writes the board's season expectation sentence for a club from the expectation flag bits.
+0x697c40	12128	manager_manager.cpp	MANAGER_MANAGER::weekly_board_confidence_update	Recalculates every club's board confidence each week from league position against expectat
+0x69d1b0	6560	manager_manager.cpp	score_staff_for_job	Scores how well a staff member fits a job type at a club from reputation, likes, dislikes,
+0x69ebc0	3072	manager_manager.cpp	MANAGER_MANAGER::appoint_manager_to_club	Moves a manager from his old jobs, opens vacancies there, posts the appointment news and i
+0x6a1190	2416	manager_manager.cpp	news_manager_under_pressure_text	Writes the headline or body of a story about board pressure on a manager, a shortlist for 
+0x6a1d60	4256	manager_manager.cpp	news_manager_departure_text	Writes the headline or body of the news that a club or national team manager resigned, ret
+0x6a3060	1808	manager_manager.cpp	news_manager_appointment_text	Writes the headline or body of the news that a club appointed or promoted someone to be it
+0x6a4ae0	352	manager_manager.cpp	MANAGER_MANAGER::news_board_expectations_text	Writes the headline or body of a board's season expectations, choosing the headline from t
+0x6a4d40	576	manager_manager.cpp	MANAGER_MANAGER::news_board_confidence_update_text	Writes the headline or body of the board or FA confidence update, adding links to players 
+0x6a6310	1712	manager_manager.cpp	MANAGER_MANAGER::news_board_match_reaction_text	Writes the headline or body of the board's reaction to a derby or other match, rebuilding 
+0x6a69c0	7600	manager_manager.cpp	MANAGER_MANAGER::build_board_match_reaction_text	Writes the board's or FA's opinion of a match result, from scoreline, derby and friendly s
+0x6a9e60	2416	manager_manager.cpp	MANAGER_MANAGER::handle_fa_request	Handles a manager's referee complaint or postponement request to the FA, moving a fixture 
+0x76a4e0	560	national_teams.cpp	NationalTeams::NationalTeams	Waits for the game CD, then builds the FIFA rankings and the national team tables, from th
+0x76a840	944	national_teams.cpp	NationalTeams::init_tables	Builds the per-nation table for a new game, counting eligible players, sizing the selectio
+0x7a5380	880	player_regen.cpp	PLAYER_REGEN::PLAYER_REGEN	Waits for the game CD, allocates the four regen lists, and builds the retirement list fres
+0x7aa4c0	2080	player_regen.cpp	player_regen_write_retirement_announcement_text	Builds the title and body text of the news that a staff member announces his decision to r
+0x7bfd50	4016	player_stats.cpp	PlayerStats::PlayerStats	Checks for the game CD, opens the history temp file, loads saved stats or builds fresh tab
+0x7f6760	832	scout_manager.cpp	SCOUT_MANAGER::SCOUT_MANAGER	Checks for the CM01/02 CD, then loads the scout manager from a save or builds 160 player s
+0x868390	1072	staff_records.cpp	Staff_Records::Staff_Records	Waits for the CM01/02 CD, opens the staff and club history temp lists, allocates the manag
+0x893dc0	9248	tactics.cpp	Tactics::Tactics	Builds the tactics store by finding the CD, loading the AI and preset formation files or t

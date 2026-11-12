@@ -14,6 +14,8 @@
 #   ligas, e o jogo real comparando ate 2002-06-01 (fim de temporada: acessos, copas, vagas). Desde 05/11/2026 (Lucas)
 #   esse jogo real fica adiado ("=== JOGO REAL ADIADO") e roda uma vez so, acumulado, na auditoria das 8 ligas;
 #   COMPARAR_LIGAS=1 o roda na cadeia.
+#   LIGAS = MUNDO (12/11/2026): todas as nacoes do nation.dat (simular.py), ate 2002-08-01 (passa pela virada de
+#   temporada); o jogo real comparando roda na cadeia (nao e adiado: a auditoria das 8 ligas nao cobre essas rotinas).
 # Saida completa em levas/N/cadeia.txt. Com a base divergindo, o mutacoes.py sai com erro e o resto
 # nao roda. Testes pesados passam pela trava do laboratorio (laboratorio.py).
 RAIZ="$(cd "$(dirname "$0")/.." && pwd)"
@@ -23,9 +25,11 @@ mkdir -p "$RAIZ/levas/$N"
 cd "$RAIZ/engenharia-reversa"
 CONF="--confirmar $DATA"; [ "$DATA" = "-" ] && CONF=""
 SAVE=""; [ -f "$RAIZ/levas/$N/SAVE" ] && SAVE=1
-MODO="--carreira 2002-06-01 $CONF --confirmar-pt"; [ -n "$SAVE" ] && MODO="--prova-save $N"
+FIM=2002-06-01; [ "$(head -1 "$RAIZ/levas/$N/LIGAS" 2>/dev/null | tr -d '\r')" = MUNDO ] && FIM=2002-08-01
+MODO="--carreira $FIM $CONF --confirmar-pt"; [ -n "$SAVE" ] && MODO="--prova-save $N"
 LIGAS=""; ATE_REAL=2002-01-01; LIM_REAL=3600
-if [ -f "$RAIZ/levas/$N/LIGAS" ]; then LIGAS="$(head -1 "$RAIZ/levas/$N/LIGAS" | tr -d '\r')"; ATE_REAL=2002-06-01; LIM_REAL=30000; fi
+if [ -f "$RAIZ/levas/$N/LIGAS" ]; then LIGAS="$(head -1 "$RAIZ/levas/$N/LIGAS" | tr -d '\r')"; ATE_REAL=$FIM; LIM_REAL=30000; fi
+LIM_CAR=2400; [ "$LIGAS" = MUNDO ] && LIM_CAR=20000
 L=(); M=(); [ -n "$LIGAS" ] && L=(--ligas "$LIGAS") && M=(--ligas "$LIGAS" --limite 3600)
 (if python -u mutacoes.py mutacoes/leva$N.py $MODO "${M[@]}"; then
   if [ -n "$SAVE" ]; then
@@ -33,7 +37,7 @@ L=(); M=(); [ -n "$LIGAS" ] && L=(--ligas "$LIGAS") && M=(--ligas "$LIGAS" --lim
     echo "=== PROVA DO SAVE"
     python -u prova_save.py --leva $N
   fi
-  if [ -n "$LIGAS" ] && [ "$COMPARAR_LIGAS" != 1 ]; then
+  if [ -n "$LIGAS" ] && [ "$LIGAS" != MUNDO ] && [ "$COMPARAR_LIGAS" != 1 ]; then
     # 05/11/2026 (Lucas): a comparacao longa de 8 ligas roda uma vez so, depois de muitas levas (auditoria.ps1, de madrugada)
     echo "=== JOGO REAL ADIADO (comparacao de 8 ligas ate 2002-06-01 acumulada na auditoria; COMPARAR_LIGAS=1 roda aqui)"
   else
@@ -46,7 +50,7 @@ L=(); M=(); [ -n "$LIGAS" ] && L=(--ligas "$LIGAS") && M=(--ligas "$LIGAS" --lim
   fi
   python laboratorio.py | head -1
   echo "=== CARREIRA"
-  python -u simular.py --ate 2002-06-01 --motor sim --modo rust --repetir 2 --detector --limite 2400 "${L[@]}" && python -u simular.py --ate 2002-06-01 --motor sim --modo original --limite 2400 "${L[@]}"
+  python -u simular.py --ate $FIM --motor sim --modo rust --repetir 2 --detector --limite $LIM_CAR "${L[@]}" && python -u simular.py --ate $FIM --motor sim --modo original --limite $LIM_CAR "${L[@]}"
   python laboratorio.py | head -1
 else
   echo "=== MUTACOES FALHARAM"

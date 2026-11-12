@@ -1,0 +1,11 @@
+0x5ce2d0	30544	game.cpp	game_daily_staff_update	Walks every staff record each day and applies injury recovery, morale, contract wishes, re
+0x5d5ae0	1072	game.cpp	game_season_update_pass	Handles each of the 35 season entries on its update day, starting new seasons, and archive
+0x72d270	23056	media.cpp	Media::write_player_media_story_news_text	Writes the headline or body of a media story about a player, naming the outlet type and qu
+0x73e870	10160	media.cpp	Media::apply_team_story_response	Applies the effects of the manager's response to a team media story, changing supporter an
+0x741020	3888	media.cpp	Media::apply_player_story_response	Applies the effects of the manager's response to a media story about a player, changing hi
+0x744f80	24288	media.cpp	Media::write_player_praise_news_text	Writes the headline or body of a media story that praises a player, with the outlet, pundi
+0x74b060	2928	media.cpp	Media::post_team_media_story	Posts a media story about a club or national team, such as a relegation tip or fan unrest,
+0x755860	6224	media.cpp	Media::write_transfer_rumour_news_text	Writes the headline or body of a transfer rumour story, quoting the agent or press on the 
+0x77bc80	28400	news.cpp	NewsItem::write_text	Clears the text object and writes the headline or body of a news item by calling the write
+0x782b70	5520	news.cpp	NewsItem::get_action_button	Writes the button label and screen handler of a news item and returns 2 for a needed reply
+0x785b20	480	news.cpp	News::News	Asks for the CM01/02 CD until a CD drive holds cm0102.exe, then loads news.dat or sets up 
