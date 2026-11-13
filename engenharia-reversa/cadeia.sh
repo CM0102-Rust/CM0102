@@ -16,6 +16,8 @@
 #   COMPARAR_LIGAS=1 o roda na cadeia.
 #   LIGAS = MUNDO (12/11/2026): todas as nacoes do nation.dat (simular.py), ate 2002-08-01 (passa pela virada de
 #   temporada); o jogo real comparando roda na cadeia (nao e adiado: a auditoria das 8 ligas nao cobre essas rotinas).
+#   levas/N/ATE (12/11/2026, criado pelo fila.py): a data final de tudo (ex.: 2002-08-01 com as ligas dos itens);
+#   o jogo real tambem roda na cadeia.
 # Saida completa em levas/N/cadeia.txt. Com a base divergindo, o mutacoes.py sai com erro e o resto
 # nao roda. Testes pesados passam pela trava do laboratorio (laboratorio.py).
 RAIZ="$(cd "$(dirname "$0")/.." && pwd)"
@@ -26,6 +28,7 @@ cd "$RAIZ/engenharia-reversa"
 CONF="--confirmar $DATA"; [ "$DATA" = "-" ] && CONF=""
 SAVE=""; [ -f "$RAIZ/levas/$N/SAVE" ] && SAVE=1
 FIM=2002-06-01; [ "$(head -1 "$RAIZ/levas/$N/LIGAS" 2>/dev/null | tr -d '\r')" = MUNDO ] && FIM=2002-08-01
+[ -f "$RAIZ/levas/$N/ATE" ] && FIM="$(head -1 "$RAIZ/levas/$N/ATE" | tr -d '\r')"
 MODO="--carreira $FIM $CONF --confirmar-pt"; [ -n "$SAVE" ] && MODO="--prova-save $N"
 LIGAS=""; ATE_REAL=2002-01-01; LIM_REAL=3600
 if [ -f "$RAIZ/levas/$N/LIGAS" ]; then LIGAS="$(head -1 "$RAIZ/levas/$N/LIGAS" | tr -d '\r')"; ATE_REAL=$FIM; LIM_REAL=30000; fi
@@ -37,7 +40,7 @@ L=(); M=(); [ -n "$LIGAS" ] && L=(--ligas "$LIGAS") && M=(--ligas "$LIGAS" --lim
     echo "=== PROVA DO SAVE"
     python -u prova_save.py --leva $N
   fi
-  if [ -n "$LIGAS" ] && [ "$LIGAS" != MUNDO ] && [ "$COMPARAR_LIGAS" != 1 ]; then
+  if [ -n "$LIGAS" ] && [ "$LIGAS" != MUNDO ] && [ ! -f "$RAIZ/levas/$N/ATE" ] && [ "$COMPARAR_LIGAS" != 1 ]; then
     # 05/11/2026 (Lucas): a comparacao longa de 8 ligas roda uma vez so, depois de muitas levas (auditoria.ps1, de madrugada)
     echo "=== JOGO REAL ADIADO (comparacao de 8 ligas ate 2002-06-01 acumulada na auditoria; COMPARAR_LIGAS=1 roda aqui)"
   else
