@@ -1,0 +1,6 @@
+compilado em 12/11/2026 (leitor mwc): os 17 itens mwc_1..17 aplicados juntos numa copia do rust/ (cargo build --release
+sem erro e sem aviso no codigo novo) e com as 50 mutacoes aplicadas de uma vez (compila; cada trecho aparece uma vez so);
+prologos conferidos contra o cm0102.exe; as rotinas inteiras iguais no cm0102-1080.exe. Sem jogo rodado.
+Prova: LIGAS = ENG BEL HOL GER DEN, ATE = 2002-08-01. Cada start_new_season roda uma vez, na virada da temporada
+2001/02 (contagem 1): a comparacao tem de chegar la (junho/julho de 2002). So o original roda no comparador (confere o
+ano +1); a mutacao (ano +2) e pega pelo comparador.

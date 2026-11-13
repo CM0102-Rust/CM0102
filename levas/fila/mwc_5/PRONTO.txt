@@ -1,0 +1,10 @@
+compilado em 12/11/2026 (leitor mwc): os 17 itens mwc_1..17 aplicados juntos numa copia do rust/ (cargo build --release
+sem erro e sem aviso no codigo novo) e com as 50 mutacoes aplicadas de uma vez (compila; cada trecho aparece uma vez so);
+prologos conferidos contra o cm0102.exe; as rotinas inteiras iguais no cm0102-1080.exe. Sem jogo rodado.
+Prova: LIGAS = ENG BEL HOL GER DEN, ATE = 2002-08-01. O construtor roda uma vez, na criacao do jogo (julho de 2001); set_up_rules,
+create_table e create_schedule rodam na criacao e de novo na virada de 2002 (start_new_season da liga, junho/julho;
+contagem 2 na cobertura do mundo). A comparacao precisa chegar a virada para ver a segunda chamada.
+Mutacoes: a disciplina inglesa no construtor (so a carreira: suspensoes na liga); 2 pontos por vitoria nas regras (a carreira:
+a classificacao e quem sobe e cai na virada); o dinheiro de TV x10 ou a cota do fundo x10 na tabela (a carreira: as
+financas; na Eerste Divisie, sem fundo nem TV, as linhas 0 e 1 trocadas: o comparador e os jogos).
+Depende do mwc_1 (os ajudantes das ligas): integrar na mesma leva ou depois.

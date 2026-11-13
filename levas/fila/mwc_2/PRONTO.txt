@@ -1,0 +1,6 @@
+compilado em 12/11/2026 (leitor mwc): os 17 itens mwc_1..17 aplicados juntos numa copia do rust/ (cargo build --release
+sem erro e sem aviso no codigo novo) e com as 50 mutacoes aplicadas de uma vez (compila; cada trecho aparece uma vez so);
+prologos conferidos contra o cm0102.exe; as rotinas inteiras iguais no cm0102-1080.exe. Sem jogo rodado.
+Prova: LIGAS = ENG BEL HOL GER DEN, ATE = 2002-08-01. create_schedule roda na criacao e na virada (contagem 2; as
+dinamarquesas e a Bundesliga trocam de tabela na virada: ano par / temporada depois de 2001). Mutacoes: a rodada 5 da
+temporada 2001/02 uma semana depois (a carreira e o comparador lado a lado).

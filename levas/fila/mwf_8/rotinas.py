@@ -1,0 +1,19 @@
+# As viradas de temporada de duas ligas (e a das ligas inferiores espanholas, 0x853830, com corpo próprio: sem ordem,
+# previstas nem expectativas: spa_lower_clear_season e as três etapas), no molde da Série B brasileira (bra_nat_second_start_new_season, já em
+# Rust: o mesmo código de máquina, só mudam o arquivo das caixas, as linhas e a rotina da tabela; conferido instrução
+# por instrução pelo norm.py do leitor mwf). Leitor mwf (12/11/2026), rodada 2 (o mundo até 2002-08-01): cada uma roda
+# 1 vez, na virada da temporada da sua nação (meados de 2002).
+# Convenções: virtual +0x08 (start_new_season) chamada pela primeira divisão da nação -> thiscall, ret 0.
+# Comparador: só a original (libera e refaz a liga), com o ano +1 (compare_state_league_new_season).
+LIGAS = 'ENG KOR ARG ITA FRA ESP AUS'
+ATE = '2002-08-01'
+SAVE = False
+ROTINAS = [('ita_ser_c1b_start_new_season', 0x64f9e0, [0x81, 0xec, 0x00, 0x02, 0x00, 0x00]),
+           ('spa_second_start_new_season', 0x855d80, [0x81, 0xec, 0x00, 0x02, 0x00, 0x00]),
+           ('spa_lower_start_new_season', 0x853830, [0x81, 0xec, 0x00, 0x02, 0x00, 0x00])]
+DOCS = ('as viradas da Série C1 B, da Segunda Divisão espanhola e das ligas inferiores espanholas',
+        'the season turnovers of Serie C1 B, the Spanish Second Division and the Spanish lower leagues',
+        [('ita_ser_c1b_start_new_season', 'ItaSerC1b::start_new_season', '0x64f9e0', 'ita_ser_c1b.cpp', 'thiscall, ret 0', 'regra: a virada da temporada da Série C1 B arquiva a temporada nas estatísticas, limpa a tabela, as datas e as fases, passa ao ano seguinte e refaz as regras, a tabela (ItaSerC1b::create_table), os jogos e a ordem; depois as posições previstas, as expectativas da diretoria e a renovação dos árbitros', 'rule: at the season turnover Serie C1 B archives the season in the statistics, clears the table, the dates and the stages, moves to the next year and rebuilds the rules, the table (ItaSerC1b::create_table), the fixtures and the order; then the predicted positions, the board expectations and the referee renewal'),
+         ('spa_second_start_new_season', 'SpaSecond::start_new_season', '0x855d80', 'spa_second.cpp', 'thiscall, ret 0', 'regra: a virada da temporada da Segunda Divisão espanhola arquiva a temporada nas estatísticas, limpa a tabela, as datas e as fases, passa ao ano seguinte e refaz as regras, a tabela (SpaSecond::create_table), os jogos e a ordem; depois as posições previstas, as expectativas da diretoria e a renovação dos árbitros', 'rule: at the season turnover the Spanish Second Division archives the season in the statistics, clears the table, the dates and the stages, moves to the next year and rebuilds the rules, the table (SpaSecond::create_table), the fixtures and the order; then the predicted positions, the board expectations and the referee renewal'),
+         ('spa_lower_start_new_season', 'SpaLower::start_new_season', '0x853830', 'spa_lower.cpp', 'thiscall, ret 0', 'regra: a virada da temporada de uma liga inferior espanhola arquiva a temporada, limpa a tabela, as datas e as fases, passa ao ano seguinte, refaz as regras, a tabela (os times B da Primeira e da Segunda, depois os melhores outros clubes inferiores) e os jogos e renova os árbitros; sem ordem da tabela, posições previstas nem expectativas da diretoria', 'rule: the season turnover of a Spanish lower league archives the season, clears the table, the dates and the stages, moves to the next year, rebuilds the rules, the table (the B teams of the First and Second Division clubs, then the best other lower clubs) and the fixtures and renews the referees; no table order, predicted positions or board expectations')])
+CAMPOS = [('liga +0x4c, +0xb1, +0xba, +0x30, +0x40 (a virada); valor/ponteiro; grava', 'league +0x4c, +0xb1, +0xba, +0x30, +0x40 (the turnover); value/pointer; writes')]

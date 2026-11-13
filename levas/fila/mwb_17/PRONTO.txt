@@ -1,0 +1,2 @@
+compilado (leitor mwb, 12/11/2026): os 21 itens mwb juntos sobre o motor de 93cf576da (com os 27 itens da ordem.txt antes), cargo build --release sem erro nem aviso novo, e de novo com todas as mutacoes aplicadas; ancoras das mutacoes unicas, rotulos presentes, prologos e rotinas iguais no cm0102-1080.exe. Falta a prova (bancada): LIGAS ENG SCO WAL ate 2002-08-01: comparacao, Rust x2 + detector, mutacoes.
+Quando roda: uma vez, na virada de 2002. So o comparador ve a mutacao (o ano) e, se a virada for antes de 31/7, a 1a rodada da edicao nova que nao acontece.

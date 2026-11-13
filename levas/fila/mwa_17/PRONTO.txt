@@ -1,0 +1,3 @@
+compilado em 12/11/2026 (leitor mwa): os 22 itens mwa_1..22 aplicados juntos numa copia do rust/ e do cm0102-base/ (cargo build --release sem erro nem aviso no codigo novo) e com todas as 64 mutacoes aplicadas de uma vez (compila); prologos conferidos contra o cm0102.exe; rotinas iguais no cm0102-1080.exe; ancoras das mutacoes unicas no motor.rs + fila. Sem jogo rodado.
+Prova: LIGAS = ENG IRL NIR, ATE = 2002-08-01 (comparacao, Rust x2 e mutacoes ate essa data).
+Depende de: mwa_16 (construct_irish_league_cup).

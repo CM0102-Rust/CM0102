@@ -1,0 +1,2 @@
+compilado em 12/11/2026 (leitor mwe): os 17 itens mwe_1..17 aplicados juntos numa copia do rust/ e do cm0102-base/ (cargo build --release sem erro nem aviso no codigo novo) e com todas as mutacoes aplicadas de uma vez (compila); prologos conferidos contra o cm0102.exe; rotinas iguais no cm0102-1080.exe (inteiras); ancoras das mutacoes unicas no motor + fila. Sem jogo rodado.
+Prova: criacao e virada de fim de 2001. O ramo 'primeira norueguesa com 14' so roda se o banco tiver 14 clubes na divisao (provavelmente nao: so a mutacao o liga).

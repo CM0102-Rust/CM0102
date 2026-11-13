@@ -1,0 +1,5 @@
+compilado em 12/11/2026 (leitor mwc): os 17 itens mwc_1..17 aplicados juntos numa copia do rust/ (cargo build --release
+sem erro e sem aviso no codigo novo) e com as 50 mutacoes aplicadas de uma vez (compila; cada trecho aparece uma vez so);
+prologos conferidos contra o cm0102.exe; as rotinas inteiras iguais no cm0102-1080.exe. Sem jogo rodado.
+Prova: LIGAS = ENG BEL HOL GER DEN, ATE = 2002-08-01. create_round_table roda na criacao (o construtor da copa) e na virada
+de 2002 (contagem 2). Comparador lado a lado: a mutacao (um jogo 7 dias depois) e pega por ele.
