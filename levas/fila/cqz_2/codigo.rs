@@ -37,7 +37,7 @@ pub(crate) unsafe extern "thiscall" fn euro_champ_set_up_rules(this: usize) -> u
 /// dates and the return value.
 pub(crate) unsafe extern "thiscall" fn compare_euro_champ_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
-    let r = check_set_up_rules("euro_champ_set_up_rules", this, &EURO_CHAMP_RULE_FIELDS, (0xa, 1, 0, 5), 0, || o(this));
+    let r = check_set_up_rules("euro_champ_set_up_rules", this, &EURO_CHAMP_RULE_FIELDS.iter().copied().filter(|f| f.0 != 0x3a).collect::<Vec<_>>(), (0xa, 1, 0, 5), 0, || o(this));
     let word = competition_date_word(League(this), 0xa, 0, 0, 5);
     let (day, offset) = (read_u16(this + EURO_CHAMP_SEEDING_DAY), read_u16(this + EURO_CHAMP_SEEDING_YEAR_OFFSET));
     SCOREBOARD.record(day == word && offset == 0, || format!("euro_champ_set_up_rules({:#x}): seeding date {:#x} expected {:#x}, offset {}", this, day, word, offset));
@@ -106,10 +106,11 @@ pub(crate) unsafe extern "thiscall" fn world_cup_set_up_rules(this: usize) -> u3
     finish_rules_setup(League(this), word, 0xffff)
 }
 
-/// Comparer for `world_cup_set_up_rules`: original only, then the fields, both dates and the return value.
+/// Comparer for `world_cup_set_up_rules`: original only, then the fields (not `+0x3a`, which the round table at the end
+/// rewrites with the stage id), both dates and the return value.
 pub(crate) unsafe extern "thiscall" fn compare_world_cup_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
-    let r = check_set_up_rules("world_cup_set_up_rules", this, &WORLD_CUP_RULE_FIELDS, (0x1b, 0xb, 0, 0xffff_ffff), 0xffff, || o(this));
+    let r = check_set_up_rules("world_cup_set_up_rules", this, &WORLD_CUP_RULE_FIELDS.iter().copied().filter(|f| f.0 != 0x3a).collect::<Vec<_>>(), (0x1b, 0xb, 0, 0xffff_ffff), 0xffff, || o(this));
     let word = competition_date_word(League(this), 0xf, 0xb, 0, 0xffff_ffff);
     let (day, offset) = (read_u16(this + world_cup_fields::SEEDING_DAY), read_u16(this + world_cup_fields::SEEDING_YEAR_OFFSET));
     SCOREBOARD.record(day == word && offset == 0xffff, || format!("world_cup_set_up_rules({:#x}): seeding date {:#x} expected {:#x}, offset {:#x}", this, day, word, offset));

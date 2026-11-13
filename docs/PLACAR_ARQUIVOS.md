@@ -2,7 +2,7 @@
 
 Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os arquivos-fonte do mapa de [maxevans60](https://github.com/maxevans60/cm0102-function-map) (CC BY 4.0). Uma função conta quando o início dela é desviado para Rust (`Prologue` em `rust/src/motor.rs`). O placar do motor de partidas, pelas nossas fronteiras, fica em `PLACAR.md`.
 
-**Exe inteiro:** 2216 de 6709 funções, 1791.6 de 5528.0 KB (**32.41%**) · 179 de 393 arquivos com rotinas em Rust
+**Exe inteiro:** 2235 de 6709 funções, 1839.0 de 5528.0 KB (**33.27%**) · 179 de 393 arquivos com rotinas em Rust
 
 | Arquivo | Funções | KB | Progresso |
 |---|---|---|---|
@@ -31,6 +31,7 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `jap_emp_cup.cpp` | 4/7 | 3.2/3.5 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **92.0%** |
 | `usa_open_cup.cpp` | 4/6 | 2.4/2.6 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **91.1%** |
 | `eng_first.cpp` | 7/10 | 6.6/7.2 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **90.9%** |
+| `staff_contracts.cpp` | 21/45 | 36.3/39.9 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **90.8%** |
 | `ita_ser_b.cpp` | 7/14 | 18.7/20.6 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **90.7%** |
 | `jap_j_cup.cpp` | 4/6 | 2.2/2.5 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **90.6%** |
 | `poland_rules.cpp` | 1/2 | 0.3/0.3 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **90.5%** |
@@ -41,6 +42,7 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `eng_second.cpp` | 7/10 | 5.6/6.3 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **89.6%** |
 | `bra_reg_parana.cpp` | 10/13 | 4.7/5.2 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **89.6%** |
 | `african_nations.cpp` | 12/20 | 5.9/6.7 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **88.6%** |
+| `shortlist_manager.cpp` | 41/54 | 63.3/71.7 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **88.3%** |
 | `eng_third.cpp` | 7/11 | 5.6/6.4 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **87.1%** |
 | `bra_reg_bahia.cpp` | 7/10 | 3.9/4.5 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **87.1%** |
 | `bra_reg_pern.cpp` | 7/10 | 3.8/4.3 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **86.6%** |
@@ -51,13 +53,11 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `bra_reg_northeast.cpp` | 6/9 | 3.4/4.0 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **85.6%** |
 | `spa_cup.cpp` | 4/7 | 3.8/4.5 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **85.0%** |
 | `bra_reg_sp.cpp` | 6/10 | 3.4/4.0 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **84.9%** |
-| `shortlist_manager.cpp` | 40/54 | 60.8/71.7 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **84.8%** |
 | `bra_reg_goias.cpp` | 7/11 | 3.8/4.5 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **83.7%** |
 | `ireland_rules.cpp` | 4/6 | 0.8/1.0 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **83.6%** |
 | `bra_nat_second.cpp` | 7/12 | 4.3/5.1 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **83.5%** |
 | `fra_second.cpp` | 4/7 | 3.3/4.0 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **83.5%** |
 | `con_merc_cup.cpp` | 11/16 | 5.0/6.1 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **82.1%** |
-| `staff_contracts.cpp` | 20/45 | 32.7/39.9 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **81.9%** |
 | `conmebol_liber.cpp` | 11/16 | 4.8/5.9 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **81.9%** |
 | `korea_rules.cpp` | 1/3 | 0.3/0.3 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **81.8%** |
 | `bra_reg_rio.cpp` | 10/14 | 4.7/5.7 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **81.7%** |
@@ -98,6 +98,7 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `ita_super.cpp` | 3/6 | 1.3/1.9 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **66.9%** |
 | `eng_charity.cpp` | 3/6 | 1.3/2.0 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **66.7%** |
 | `spa_super.cpp` | 3/7 | 1.3/2.0 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **65.4%** |
+| `contract_manager.cpp` | 61/121 | 56.9/87.1 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **65.3%** |
 | `squad_manager.cpp` | 10/16 | 4.5/7.0 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **64.7%** |
 | `eur_super_cup.cpp` | 3/6 | 1.2/1.9 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **64.5%** |
 | `ita_c_cup.cpp` | 9/17 | 4.6/7.2 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **63.5%** |
@@ -117,15 +118,15 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `friendly.cpp` | 48/67 | 23.1/41.7 | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **55.5%** |
 | `usa_mls_all_stars.cpp` | 5/8 | 1.8/3.3 | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **54.2%** |
 | `injury.cpp` | 32/47 | 16.2/30.5 | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **53.1%** |
-| `contract_manager.cpp` | 58/121 | 45.9/87.1 | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **52.7%** |
 | `world_cup.cpp` | 9/26 | 7.6/15.2 | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **50.2%** |
 | `officials_manager.cpp` | 12/34 | 5.8/12.0 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **48.4%** |
+| `transfer_manager.cpp` | 135/199 | 78.0/167.1 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **46.7%** |
 | `usa_mls.cpp` | 15/22 | 5.8/12.5 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **46.7%** |
 | `asia_club_champ.cpp` | 6/15 | 3.6/8.2 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **43.9%** |
+| `national_teams.cpp` | 54/69 | 25.4/58.6 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **43.3%** |
 | `european_cup.cpp` | 17/50 | 12.6/29.3 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **43.0%** |
-| `transfer_manager.cpp` | 132/199 | 71.7/167.1 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **42.9%** |
 | `player_stats.cpp` | 23/34 | 12.2/28.6 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **42.8%** |
-| `national_teams.cpp` | 53/69 | 24.4/58.6 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **41.7%** |
+| `manager_manager.cpp` | 51/98 | 51.8/129.4 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **40.0%** |
 | `wc_oceania_league.cpp` | 8/21 | 3.4/8.8 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **39.1%** |
 | `month_ratings.cpp` | 3/8 | 0.7/1.9 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **37.7%** |
 | `italy_rules.cpp` | 3/9 | 0.9/2.4 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **37.4%** |
@@ -136,27 +137,26 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `Area.cpp` | 3/15 | 2.0/5.9 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **34.7%** |
 | `oceania_nations.cpp` | 5/16 | 2.4/7.1 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **33.8%** |
 | `scout_manager.cpp` | 20/39 | 7.3/23.0 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **31.5%** |
-| `manager_manager.cpp` | 44/98 | 35.3/129.4 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **27.2%** |
 | `norway_rules.cpp` | 2/6 | 0.4/1.5 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **26.6%** |
 | `germany_rules.cpp` | 2/7 | 0.4/1.7 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **25.2%** |
 | `human_manager.cpp` | 20/61 | 6.2/25.5 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **24.4%** |
 | `Setup.cpp` | 10/107 | 28.1/120.6 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **23.3%** |
+| `discipline.cpp` | 22/38 | 8.7/38.6 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **22.5%** |
 | `fifa_rankings.cpp` | 9/20 | 2.1/9.6 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **22.0%** |
 | `news.cpp` | 26/33 | 9.8/49.0 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **20.0%** |
 | `france_rules.cpp` | 2/10 | 0.5/2.5 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **18.6%** |
 | `goldcup.cpp` | 11/57 | 5.8/32.6 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **17.7%** |
 | `argentina_rules.cpp` | 1/12 | 0.2/1.3 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **17.4%** |
 | `ruling_body.cpp` | 3/19 | 1.1/6.7 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **17.1%** |
+| `club_records.cpp` | 37/56 | 10.4/61.6 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **16.9%** |
 | `key_nation.cpp` | 9/27 | 2.2/12.9 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **16.8%** |
 | `bra_champ_cup.cpp` | 2/16 | 1.1/6.6 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **16.2%** |
 | `portugal_rules.cpp` | 1/5 | 0.2/1.6 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **15.4%** |
 | `league_stage.cpp` | 2/6 | 1.1/7.7 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **14.0%** |
 | `fifa_confed.cpp` | 1/20 | 1.2/8.5 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **13.9%** |
-| `discipline.cpp` | 21/38 | 5.3/38.6 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **13.6%** |
 | `game.cpp` | 15/34 | 5.7/43.1 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **13.2%** |
 | `media.cpp` | 33/69 | 24.6/202.1 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **12.2%** |
 | `month_award.cpp` | 2/10 | 0.4/3.2 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **12.1%** |
-| `club_records.cpp` | 35/56 | 7.2/61.6 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **11.7%** |
 | `record_utils.cpp` | 6/32 | 1.4/12.0 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **11.6%** |
 | `cup_stage.cpp` | 2/7 | 0.8/7.7 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **10.5%** |
 | `award_manager.cpp` | 1/22 | 0.6/7.0 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.9%** |

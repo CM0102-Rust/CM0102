@@ -1,0 +1,10 @@
+sem mutacao (199s): ['parou em 2002-151, 2373445518 sorteios, impressao 6a4537848b884d46, partidas 19446/e64b15645a1027e6, banco 9c6523cb92756fb9']
+mutacao mke2_bosman_mantem_bit_8  204s IGUAL A BASE (escapou): parou em 2002-151, 2373445518 sorteios, impressao 6a4537848b884d46, partidas 19446/e64b15645a1027e6, banco 9c6523cb92756fb9
+mutacao mke2_bosman_mantem_bit_8 5263s comparando: engine: 10000000000 comparisons, 0 divergences
+mutacao mke2_bosman_sem_marca   95s ACUSADA: divergiu da base em 2001-341 (95 s)
+mutacao mke5_titulo_e_corpo_trocados  657s ACUSADA: parou em 2002-151, 2373445518 sorteios, impressao 6a4537848b884d46, partidas 19446/4b0e35c188ee888b, banco 9c6523cb92756fb9
+mutacao sma2_sem_olheiros_do_humano  223s IGUAL A BASE (escapou): parou em 2002-151, 2373445518 sorteios, impressao 6a4537848b884d46, partidas 19446/e64b15645a1027e6, banco 9c6523cb92756fb9
+sem mutacao (809s): ['parou em 2002-151, 2373445518 sorteios, impressao 6a4537848b884d46, partidas 19446/e64b15645a1027e6, banco 9c6523cb92756fb9']
+mutacao sma4_sem_selecao_principal 1071s ACUSADA: divergiu da base em 2001-001 (5 s)
+mutacao sma7_vinculo_do_clube_trocado  222s IGUAL A BASE (escapou): parou em 2002-151, 2373445518 sorteios, impressao 6a4537848b884d46, partidas 19446/e64b15645a1027e6, banco 9c6523cb92756fb9
+mutacao sma7_vinculo_do_clube_trocado   30s comparando: engine: DIVERGENCE news_manager_appointment_text(body 1): original "O Scunthorpe United indicou Daniel Hart para o cargo de treinador prin

@@ -2,7 +2,8 @@
 # os primeiros elencos das selecoes saem dela; as convocacoes da temporada tiram jogadores dos clubes:
 # - a reserva principal de cada nacao no maximo 60 em vez de 100 (outros convocaveis);
 # - a reserva sub-21 no maximo 30 em vez de 50;
-# - o elenco B com no maximo 16 em vez de 24.
+# - sem o primeiro elenco principal de cada selecao (so o sub-21 e escolhido na criacao; trocada em 13/11/2026: o
+#   elenco B com no maximo 16 escapava).
 MUTACOES = [
     ('sma4_reserva_principal_60',
      'let size = count.clamp(10, 100) as u8; // sma4: the senior pool size',
@@ -12,8 +13,8 @@ MUTACOES = [
      'let size21 = count.clamp(10, 0x32) as u8; // sma4: the under-21 pool size',
      'let size21 = count.clamp(10, 0x1e) as u8; // mutation: an under-21 pool of at most 30',
      'sma_4 first squads'),
-    ('sma4_elenco_b_16',
-     "write_u8(rec + 0x56, 0x18); // sma4: the B squad's largest size",
-     'write_u8(rec + 0x56, 0x10); // mutation: a B squad of at most 16',
+    ('sma4_sem_selecao_principal',
+     '        exe::nationalteams_select_squad(this, nation, 0, G_CURRENT_DATE, 0usize, 0);',
+     '        let _ = nation; // mutation: no first senior squad',
      'sma_4 first squads'),
 ]
