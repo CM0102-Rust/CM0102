@@ -1,0 +1,19 @@
+"""Integra a 291a leva ao motor.rs (gerado por fila.py: as âncoras são achadas no motor.rs)."""
+import os
+import re
+aqui = os.path.dirname(os.path.abspath(__file__))
+p = os.path.join(aqui, '..', '..', 'rust', 'src', 'motor.rs')
+s = open(p, encoding='utf-8').read()
+ROTINAS = [('asia_club_champ_select_qualified_clubs', 4241744, [184, 148, 21, 0, 0]), ('asia_club_champ_create_second_zone_cup_stage', 4243136, [100, 161, 0, 0, 0, 0]), ('asia_club_champ_rank_teams', 4245280, [129, 236, 0, 2, 0, 0]), ('world_club_champ_create_schedule', 9606032, [129, 236, 0, 2, 0, 0]), ('world_club_champ_set_up_rules', 9608112, [131, 236, 8, 176, 2]), ('world_club_champ_update_for_date', 9610928, [106, 255, 104, 11, 95, 150, 0]), ('bra_reg_bahia_set_predicted_positions', 4391744, [129, 236, 0, 2, 0, 0]), ('bra_reg_central_set_predicted_positions', 4396560, [129, 236, 0, 2, 0, 0]), ('bra_reg_gaucho_set_predicted_positions', 4401536, [129, 236, 0, 2, 0, 0]), ('bra_reg_goias_set_predicted_positions', 4406080, [129, 236, 0, 2, 0, 0]), ('bra_reg_minas_gerais_set_predicted_positions', 4411264, [129, 236, 0, 2, 0, 0]), ('bra_reg_north_set_predicted_positions', 4416128, [129, 236, 0, 2, 0, 0]), ('bra_reg_northeast_set_predicted_positions', 4420240, [129, 236, 0, 2, 0, 0]), ('bra_reg_parana_set_predicted_positions', 4425104, [129, 236, 0, 2, 0, 0]), ('bra_reg_pern_set_predicted_positions', 4430032, [129, 236, 0, 2, 0, 0]), ('bra_reg_rio_set_predicted_positions', 4435408, [129, 236, 0, 2, 0, 0]), ('bra_reg_santa_set_predicted_positions', 4440336, [129, 236, 0, 2, 0, 0]), ('bra_reg_sp_set_predicted_positions', 4444480, [129, 236, 0, 2, 0, 0]), ('ita_cup_set_predicted_positions', 6554128, [129, 236, 32, 2, 0, 0]), ('ita_cup_update_staff_records_for_status', 6553344, [138, 68, 36, 12, 86]), ('ita_cup_build_fate_news_text', 6549808, [138, 68, 36, 12, 60, 7]), ('ita_c_cup_set_predicted_positions', 6546816, [129, 236, 32, 2, 0, 0]), ('ita_c_cup_update_staff_records_for_status', 6546032, [138, 68, 36, 12, 86]), ('asia_super_cup_start_new_season', 4262992, [129, 236, 0, 2, 0, 0]), ('con_champ_start_new_season', 4985920, [129, 236, 0, 2, 0, 0]), ('asia_club_champ_update_staff_records_for_status', 4244912, [138, 68, 36, 12, 86]), ('bra_reg_sp_points_for_result', 4441248, [139, 68, 36, 8, 139, 84, 36, 4]), ('asia_cup_winner_update_staff_records_for_status', 4252256, [138, 68, 36, 12, 86]), ('con_merc_cup_update_staff_records_for_status', 4991296, [138, 68, 36, 12, 86]), ('intertoto_cup_process_fixture', 6501008, [86, 139, 116, 36, 8]), ('eng_auto_cup_update_staff_records_for_status', 5684960, [138, 68, 36, 12, 86]), ('oceania_club_champ_update_staff_records_for_status', 7961232, [138, 68, 36, 12, 60, 1]), ('uefa_cup_collect_club_list', 9449760, [129, 236, 12, 2, 0, 0]), ('uefa_seeding_record_cup_semi_final_losers', 9459600, [139, 84, 36, 4, 129, 236, 0, 2, 0, 0]), ('conmebol_merc_update_staff_records_for_status', 5003616, [138, 68, 36, 12, 86]), ('construct_sub_league', 8963792, [106, 255, 104, 251, 47, 150, 0]), ('european_cup_build_fate_news_text', 5784912, [138, 68, 36, 12, 83])]
+BASE = 2234
+m = re.search(r'\n\}\nconst N: usize = (\d+);', s)
+assert m and int(m.group(1)) == BASE, ('o motor.rs mudou desde a materialização', m and m.group(1), BASE)
+# one line per routine in `routines! { .. }` (rust/src/motor.rs; read by engenharia-reversa/tabela_motor.py)
+linhas = ''.join('\n    Prologue { address: %#x, bytes: &[%s] } => %s, compare_%s;' % (e, ', '.join('0x%02x' % b for b in bs), a, a)
+                 for a, e, bs in ROTINAS)
+s = s[:m.start()] + linhas + '\n}\nconst N: usize = %d;' % (BASE + len(ROTINAS)) + s[m.end():]
+anc = 'compare_value!(compare_staff_criterion, staff_criterion, IDX_STAFF_CRITERION, () -> u32);\n'
+assert s.count(anc) == 1
+s = s.replace(anc, anc + '\n' + open(os.path.join(aqui, 'codigo.rs'), encoding='utf-8').read().strip('\n') + '\n')
+open(p, 'w', encoding='utf-8').write(s)
+print('ok')

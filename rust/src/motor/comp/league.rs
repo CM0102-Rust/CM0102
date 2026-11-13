@@ -3781,6 +3781,9 @@ pub(crate) unsafe extern "thiscall" fn limit_club_division_tier(this: usize, val
 /// check the new-career values only in a new career (a loaded Mineiro can have 2 stages where a new one has 3; found
 /// 11/11/2026 on Lucas's save).
 pub(crate) unsafe fn league_will_load_saved_state(record: usize) -> bool {
+    if LOADING_SAVED_GAME.load(core::sync::atomic::Ordering::Relaxed) {
+        return true; // a saved game is loading: the competitions (cups too, read from the save) take their saved state
+    }
     if record == 0 {
         return false;
     }

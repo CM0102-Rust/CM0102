@@ -8,8 +8,8 @@
 /// Original: `BraRegSp::points_for_result` (0x43c4a0, bra_reg_sp.cpp, thiscall, ret 8).
 unsafe extern "thiscall" fn bra_reg_sp_points_for_result(this: usize, club: usize, fixture: usize) -> u32 {
     covered!("cqx_10 paulista points");
-    let league_points: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x68aad0usize);
-    league_points(this, club, fixture) // cqx10: the League's points
+    let league_points: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(0x68aad0usize);
+    league_points(this, club, fixture) as u32 // cqx10: the League's points
 }
 
 /// Comparer for `bra_reg_sp_points_for_result`: side by side (the query only reads); the returned byte (the caller

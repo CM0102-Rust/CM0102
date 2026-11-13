@@ -2,9 +2,16 @@ use super::*;
 
 // The comparers of the routines in ../setup.rs.
 
-/// Comparer for `load_game_data`.
+/// Set while a saved game loads (13/11/2026): every competition built inside the load takes its saved state, so the
+/// constructor comparers skip the fixed fields a new career writes (`league_will_load_saved_state`).
+pub(crate) static LOADING_SAVED_GAME: core::sync::atomic::AtomicBool = core::sync::atomic::AtomicBool::new(false);
+
+/// Comparer for `load_game_data`: the original, with `LOADING_SAVED_GAME` set around it.
 pub(crate) unsafe extern "C" fn compare_load_game_data(path: *const u8) -> u32 {
-    original_fn::<unsafe extern "C" fn(*const u8) -> u32>(IDX_LOAD_GAME_DATA)(path)
+    LOADING_SAVED_GAME.store(true, core::sync::atomic::Ordering::Relaxed);
+    let r = original_fn::<unsafe extern "C" fn(*const u8) -> u32>(IDX_LOAD_GAME_DATA)(path);
+    LOADING_SAVED_GAME.store(false, core::sync::atomic::Ordering::Relaxed);
+    r
 }
 
 /// Comparer for `create_game_from_setup_file`.

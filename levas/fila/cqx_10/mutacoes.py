@@ -3,6 +3,6 @@
 MUTACOES = [
     ('cqx10_paulista_um_ponto_a_mais',
      'league_points(this, club, fixture) // cqx10: the League\'s points',
-     'league_points(this, club, fixture).wrapping_add(1) // mutation: one point more',
+     '(league_points(this, club, fixture) as u32).wrapping_add(1) // mutation: one point more',
      'cqx_10 paulista points'),
 ]
