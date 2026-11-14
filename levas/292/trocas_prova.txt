@@ -1,0 +1,2 @@
+sem mutacao (1049s): ['parou em 2002-151, 9586191994 sorteios, impressao f79d4f634163eb01, partidas 63286/76553836355ff50b, banco 32b68918f0838235']
+mutacao cqz4_oceania_de_2004   10s ACUSADA: divergiu da base em 2001-001 (10 s)

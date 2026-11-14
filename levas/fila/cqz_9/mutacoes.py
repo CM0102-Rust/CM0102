@@ -6,9 +6,11 @@ MUTACOES = [
      'let stage = read_usize(this.stages() + 8); // cqz9: the knockout is the third stage',
      'if this.addr() != 0 { return; } // mutation: no honours\n    let stage = read_usize(this.stages() + 8);',
      'cqz_9 asian cup honours'),
-    ('cqz9_oceania_previsoes_trocadas',
-     'const OCEANIA_NATIONS_PREDICTED_PLACES: [u32; 6] = [1, 2, 3, 3, 5, 5];',
-     'const OCEANIA_NATIONS_PREDICTED_PLACES: [u32; 6] = [2, 1, 3, 3, 5, 5];',
+    # 14/11/2026: a mutacao antiga mexia na constante que a copia E o comparador usam como referencia, logo nunca
+    # discriminava; agora muda o comportamento da copia (a posicao vai para a selecao seguinte)
+    ('cqz9_previsao_do_vizinho',
+     'read_usize(v + k * 4), p); // cqz9: the place by reputation',
+     'read_usize(v + ((k + 1) % 6) * 4), p); // mutation: the place goes to the next nation',
      'cqz_9 oceania nations predictions'),
     ('cqz9_repescagem_sem_esperar',
      'if complete(south, 1, 1) == 0 { // cqz9: the play-off waits for the South American qualifying',

@@ -1,10 +1,4 @@
 # ordem da fila (fila.py); um item por linha
-cqz_9
-cqz_10
-cqz_11
-cqz_12
-cqz_13
-cqz_14
 sma_8
 nma_2
 nma_3
