@@ -1,0 +1,6 @@
+[8 ligas] sem mutacao (1028s): ['parou em 2002-151, 9586191994 sorteios, impressao f79d4f634163eb01, partidas 63286/76553836355ff50b, banco 32b68918f0838235']
+[8 ligas] mutacao cqz9_previsao_do_vizinho 1030s IGUAL A BASE (escapou): parou em 2002-151, 9586191994 sorteios, impressao f79d4f634163eb01, partidas 63286/76553836355ff50b, banco 32b68918f0838235
+[8 ligas] mutacao cqz9_previsao_do_vizinho 6003s comparando: engine: 10000000000 comparisons, 0 divergences
+[ENG] sem mutacao (159s): ['parou em 2002-151, 2381619106 sorteios, impressao 71041b2198dc814b, partidas 19476/cc18675a498c9be6, banco 607210f581979acc']
+[ENG] mutacao cqz9_previsao_do_vizinho  152s IGUAL A BASE (escapou): parou em 2002-151, 2381619106 sorteios, impressao 71041b2198dc814b, partidas 19476/cc18675a498c9be6, banco 607210f581979acc
+[ENG] mutacao cqz9_previsao_do_vizinho 3558s comparando: engine: 10000000000 comparisons, 0 divergences

@@ -2,7 +2,7 @@
 
 Gerado por `python engenharia-reversa/competicoes.py` (o mapa de funções de maxevans60, CC BY 4.0, e a cobertura de uma carreira com as 8 ligas `ENG ESP ITA FRA BRA JPN AUS USA` até 2002-06-01, `levas/competicoes/`; as rotinas já em Rust não levam contador). "falta" = chamada ao menos uma vez nessa carreira e ainda não está em Rust (a lista para `candidatos.py --competicoes` fica em `docs/cobertura_competicoes.txt`).
 
-**Total:** 2695 funções, 1475.7 KB; em Rust 906 (40.7% dos bytes); faltam 62 (86.4 KB).
+**Total:** 2695 funções, 1475.7 KB; em Rust 920 (41.4% dos bytes); faltam 48 (76.5 KB).
 
 | Grupo | Funções | KB | Rust | Falta (KB) | Progresso |
 |---|---|---|---|---|---|
@@ -10,8 +10,8 @@ Gerado por `python engenharia-reversa/competicoes.py` (o mapa de funções de ma
 | Ligas nacionais (formato de cada divisão) | 1048 | 647.8 | 305 | 1 (3.8) | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **39.3%** |
 | Copas nacionais | 526 | 228.3 | 98 | 11 (4.9) | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **28.7%** |
 | Competições europeias | 221 | 98.2 | 114 | 0 (0.0) | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **64.3%** |
-| Continentais fora da Europa | 203 | 105.2 | 48 | 16 (12.3) | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **25.3%** |
-| Copa do Mundo e eliminatórias | 158 | 92.4 | 29 | 19 (18.0) | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **20.0%** |
+| Continentais fora da Europa | 203 | 105.2 | 54 | 10 (9.6) | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **27.8%** |
+| Copa do Mundo e eliminatórias | 158 | 92.4 | 37 | 11 (10.7) | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **27.8%** |
 | Torneios amistosos | 17 | 4.5 | 0 | 0 (0.0) | ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜ **0.0%** |
 | Regras de transferência por nação (`transfer/*_rules.cpp`) | 126 | 26.7 | 48 | 0 (0.0) | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **42.2%** |
 
@@ -111,20 +111,20 @@ Só os arquivos com alguma rotina que falta; ordem: grupo, depois o que falta.
 | `world_club_champ.cpp` | eurocomp | 18 | 3 | 0 (0.0) |
 | `world_club_cup.cpp` | eurocomp | 6 | 3 | 0 (0.0) |
 | `euro_champ_qual.cpp` | intercomp | 32 | 4 | 9 (8.6) |
-| `goldcup.cpp` | intercomp | 57 | 11 | 2 (1.7) |
-| `euro_champ.cpp` | intercomp | 25 | 2 | 3 (1.7) |
-| `oceania_nations.cpp` | intercomp | 16 | 7 | 1 (0.4) |
-| `asia_nations.cpp` | intercomp | 17 | 4 | 1 (0.0) |
+| `goldcup.cpp` | intercomp | 57 | 12 | 1 (1.0) |
 | `african_nations.cpp` | intercomp | 20 | 12 | 0 (0.0) |
+| `asia_nations.cpp` | intercomp | 17 | 5 | 0 (0.0) |
+| `euro_champ.cpp` | intercomp | 25 | 5 | 0 (0.0) |
 | `fifa_confed.cpp` | intercomp | 20 | 4 | 0 (0.0) |
+| `oceania_nations.cpp` | intercomp | 16 | 8 | 0 (0.0) |
 | `olympics.cpp` | intercomp | 16 | 4 | 0 (0.0) |
 | `wc_concacaf_cup.cpp` | worldcup | 21 | 0 | 5 (5.8) |
 | `wc_african_cup.cpp` | worldcup | 20 | 0 | 5 (4.0) |
-| `world_cup.cpp` | worldcup | 26 | 10 | 2 (3.8) |
-| `wc_europe_league.cpp` | worldcup | 30 | 1 | 3 (2.4) |
-| `wc_asia_league.cpp` | worldcup | 23 | 3 | 2 (1.2) |
-| `wc_south_american_league.cpp` | worldcup | 17 | 5 | 1 (0.5) |
-| `wc_oceania_league.cpp` | worldcup | 21 | 10 | 1 (0.2) |
+| `wc_europe_league.cpp` | worldcup | 30 | 3 | 1 (0.9) |
+| `wc_asia_league.cpp` | worldcup | 23 | 5 | 0 (0.0) |
+| `wc_oceania_league.cpp` | worldcup | 21 | 11 | 0 (0.0) |
+| `wc_south_american_league.cpp` | worldcup | 17 | 6 | 0 (0.0) |
+| `world_cup.cpp` | worldcup | 26 | 12 | 0 (0.0) |
 | `argentina_rules.cpp` | rules | 12 | 1 | 0 (0.0) |
 | `australia_rules.cpp` | rules | 3 | 2 | 0 (0.0) |
 | `belgium_rules.cpp` | rules | 10 | 1 | 0 (0.0) |
