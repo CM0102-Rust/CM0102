@@ -8,6 +8,7 @@
 
 
 
+
 // The virtual method slots the Rust code calls, by name: the offset of each method in the class's vtable, read
 // from the exe's .rdata (engenharia-reversa/nomear_vtables.py; levas/reorganizacao/vtables.json; method names from
 // the community function map). `read_usize(read_usize(comp) + comp_vtable::CREATE_SCHEDULE)` is the address of

@@ -1,0 +1,19 @@
+"""Integra a 295a leva ao motor.rs (gerado por fila.py: as âncoras são achadas no motor.rs)."""
+import os
+import re
+aqui = os.path.dirname(os.path.abspath(__file__))
+p = os.path.join(aqui, '..', '..', 'rust', 'src', 'motor.rs')
+s = open(p, encoding='utf-8').read()
+ROTINAS = [('ire_chal_cup_create_round_table', 6505312, [138, 68, 36, 4, 129, 236, 0, 2, 0, 0]), ('ire_chal_cup_collect_entrants', 6506448, [129, 236, 36, 5, 0, 0]), ('ire_chal_cup_start_new_season', 6507104, [129, 236, 0, 2, 0, 0]), ('ire_leinster_cup_create_round_table', 6514528, [138, 68, 36, 4, 129, 236, 0, 2, 0, 0]), ('ire_leinster_cup_select_clubs', 6515328, [129, 236, 168, 2, 0, 0]), ('ire_leinster_cup_start_new_season', 6515744, [129, 236, 0, 2, 0, 0]), ('ire_munster_cup_create_round_table', 6523488, [138, 68, 36, 4, 129, 236, 0, 2, 0, 0]), ('ire_munster_cup_collect_entrants', 6524464, [129, 236, 176, 2, 0, 0]), ('ire_munster_cup_start_new_season', 6525136, [129, 236, 0, 2, 0, 0]), ('ire_pres_cup_create_round_table', 6526256, [138, 68, 36, 4, 129, 236, 0, 2, 0, 0]), ('ire_pres_cup_collect_entrants', 6526576, [129, 236, 48, 2, 0, 0]), ('ire_pres_cup_start_new_season', 6527008, [129, 236, 0, 2, 0, 0]), ('nir_charity_create_round_table', 7905440, [138, 68, 36, 4, 129, 236, 0, 2, 0, 0]), ('nir_charity_select_teams', 7905760, [129, 236, 0, 2, 0, 0]), ('nir_charity_start_new_season', 7906320, [129, 236, 0, 2, 0, 0]), ('nir_cup_create_round_table', 7907440, [138, 68, 36, 4, 129, 236, 0, 2, 0, 0]), ('nir_cup_collect_entrants', 7908496, [129, 236, 124, 2, 0, 0]), ('nir_cup_start_new_season', 7908912, [129, 236, 0, 2, 0, 0]), ('construct_ire_chal_cup', 6504608, [106, 255, 104, 57, 179, 149, 0]), ('construct_ire_leinster_cup', 6513824, [106, 255, 104, 41, 180, 149, 0]), ('construct_ire_munster_cup', 6522784, [106, 255, 104, 9, 181, 149, 0]), ('construct_ire_pres_cup', 6525568, [106, 255, 104, 89, 181, 149, 0]), ('construct_nir_charity', 7904752, [106, 255, 104, 9, 227, 149, 0]), ('construct_nir_cup', 7906736, [106, 255, 104, 89, 227, 149, 0]), ('construct_nir_prm', 7921776, [106, 255, 104, 169, 228, 149, 0]), ('nir_prm_set_up_rules', 7925120, [83, 86, 139, 241, 187, 1, 0, 0, 0]), ('nir_prm_create_table', 7924832, [129, 236, 0, 2, 0, 0]), ('construct_nir_first', 7909392, [106, 255, 104, 169, 227, 149, 0]), ('nir_first_set_up_rules', 7912816, [83, 86, 139, 241, 186, 4, 0, 0, 0]), ('nir_first_create_table', 7912528, [129, 236, 0, 2, 0, 0]), ('construct_ire_prm', 6527920, [106, 255, 104, 169, 181, 149, 0]), ('ire_prm_set_up_rules', 6531328, [83, 86, 139, 241, 187, 1, 0, 0, 0]), ('ire_prm_create_table', 6530880, [129, 236, 0, 2, 0, 0]), ('construct_ire_first', 6507584, [106, 255, 104, 137, 179, 149, 0]), ('ire_first_set_up_rules', 6511264, [83, 86, 139, 241, 178, 3]), ('ire_first_create_table', 6510864, [129, 236, 0, 2, 0, 0]), ('nir_first_start_new_season', 7912976, [129, 236, 0, 2, 0, 0]), ('nir_first_advance_stage', 7913424, [129, 236, 0, 2, 0, 0]), ('nir_first_create_playoff_stage', 7913632, [100, 161, 0, 0, 0, 0])]
+BASE = 2324
+m = re.search(r'\n\}\nconst N: usize = (\d+);', s)
+assert m and int(m.group(1)) == BASE, ('o motor.rs mudou desde a materialização', m and m.group(1), BASE)
+# one line per routine in `routines! { .. }` (rust/src/motor.rs; read by engenharia-reversa/tabela_motor.py)
+linhas = ''.join('\n    Prologue { address: %#x, bytes: &[%s] } => %s, compare_%s;' % (e, ', '.join('0x%02x' % b for b in bs), a, a)
+                 for a, e, bs in ROTINAS)
+s = s[:m.start()] + linhas + '\n}\nconst N: usize = %d;' % (BASE + len(ROTINAS)) + s[m.end():]
+anc = 'compare_value!(compare_staff_criterion, staff_criterion, IDX_STAFF_CRITERION, () -> u32);\n'
+assert s.count(anc) == 1
+s = s.replace(anc, anc + '\n' + open(os.path.join(aqui, 'codigo.rs'), encoding='utf-8').read().strip('\n') + '\n')
+open(p, 'w', encoding='utf-8').write(s)
+print('ok')

@@ -2,13 +2,13 @@
 
 Gerado por `python engenharia-reversa/competicoes.py` (o mapa de funções de maxevans60, CC BY 4.0, e a cobertura de uma carreira com as 8 ligas `ENG ESP ITA FRA BRA JPN AUS USA` até 2002-06-01, `levas/competicoes/`; as rotinas já em Rust não levam contador). "falta" = chamada ao menos uma vez nessa carreira e ainda não está em Rust (a lista para `candidatos.py --competicoes` fica em `docs/cobertura_competicoes.txt`).
 
-**Total:** 2695 funções, 1475.7 KB; em Rust 920 (41.4% dos bytes); faltam 48 (76.5 KB).
+**Total:** 2695 funções, 1475.7 KB; em Rust 959 (42.6% dos bytes); faltam 48 (76.5 KB).
 
 | Grupo | Funções | KB | Rust | Falta (KB) | Progresso |
 |---|---|---|---|---|---|
 | Base: Liga, Copa, comp, calendário, sorteios | 396 | 272.6 | 264 | 15 (47.4) | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **59.0%** |
-| Ligas nacionais (formato de cada divisão) | 1048 | 647.8 | 305 | 1 (3.8) | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **39.3%** |
-| Copas nacionais | 526 | 228.3 | 98 | 11 (4.9) | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **28.7%** |
+| Ligas nacionais (formato de cada divisão) | 1048 | 647.8 | 320 | 1 (3.8) | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **40.2%** |
+| Copas nacionais | 526 | 228.3 | 122 | 11 (4.9) | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **34.3%** |
 | Competições europeias | 221 | 98.2 | 114 | 0 (0.0) | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **64.3%** |
 | Continentais fora da Europa | 203 | 105.2 | 54 | 10 (9.6) | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **27.8%** |
 | Copa do Mundo e eliminatórias | 158 | 92.4 | 37 | 11 (10.7) | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **27.8%** |
@@ -150,6 +150,6 @@ Só os arquivos com alguma rotina que falta; ordem: grupo, depois o que falta.
 | `usa_rules.cpp` | rules | 2 | 1 | 0 (0.0) |
 | `wales_rules.cpp` | rules | 2 | 2 | 0 (0.0) |
 
-**Não rodam nesta carreira (87 arquivos):** competições de nações fora das 8 ligas, ou que só começam depois de 2002-06-01. Para elas é preciso outra carreira (outras ligas ou mais longa).
+**Não rodam nesta carreira (77 arquivos):** competições de nações fora das 8 ligas, ou que só começam depois de 2002-06-01. Para elas é preciso outra carreira (outras ligas ou mais longa).
 
-`arg_prm.cpp`, `bel_fa_cup.cpp`, `bel_first.cpp`, `bel_second.cpp`, `bel_super.cpp`, `bel_third.cpp`, `cro_a1.cpp`, `cro_a2a.cpp`, `cro_a2b.cpp`, `cro_cup.cpp`, `den_cup.cpp`, `den_first.cpp`, `den_prm.cpp`, `den_second.cpp`, `eng_conf.cpp`, `eng_fa_trophy.cpp`, `fin_cup.cpp`, `fin_first.cpp`, `ger_cup.cpp`, `ger_first.cpp`, `ger_lge_cup.cpp`, `ger_regional.cpp`, `ger_second.cpp`, `gre_prm.cpp`, `gre_second.cpp`, `gre_super.cpp`, `hol_cup.cpp`, `hol_first.cpp`, `hol_prm.cpp`, `hol_super.cpp`, `ire_chal_cup.cpp`, `ire_first.cpp`, `ire_leinster_cup.cpp`, `ire_munster_cup.cpp`, `ire_pres_cup.cpp`, `ire_prm.cpp`, `ire_super_cup.cpp`, `ita_ser_c2b.cpp`, `ita_ser_c2c.cpp`, `japan_rules.cpp`, `kor_fa_cup.cpp`, `kor_league.cpp`, `kor_league_cup.cpp`, `kor_super_cup.cpp`, `mini_cup.cpp`, `mini_league.cpp`, `nir_charity.cpp`, `nir_cup.cpp`, `nir_first.cpp`, `nir_lge_cup.cpp`, `nir_prm.cpp`, `nor_cup.cpp`, `nor_first.cpp`, `nor_prm.cpp`, `pol_cup.cpp`, `pol_first.cpp`, `pol_lge_cup.cpp`, `pol_second.cpp`, `pol_super.cpp`, `por_cup.cpp`, `por_prm.cpp`, `por_second.cpp`, `por_second_b.cpp`, `por_super.cpp`, `rus_cup.cpp`, `rus_first.cpp`, `rus_prm.cpp`, `sco_chal_cup.cpp`, `sco_fa_cup.cpp`, `sco_first.cpp`, `sco_lge_cup.cpp`, `sco_prm.cpp`, `sco_second.cpp`, `sco_third.cpp`, `spa_second_b.cpp`, `swe_cup.cpp`, `swe_first.cpp`, `swe_prm.cpp`, `swe_second.cpp`, `tur_cup.cpp`, `tur_first.cpp`, `tur_second.cpp`, `tur_second_b.cpp`, `wel_cup.cpp`, `wel_first.cpp`, `wel_lge_cup.cpp`, `wel_prm_cup.cpp`
+`arg_prm.cpp`, `bel_fa_cup.cpp`, `bel_first.cpp`, `bel_second.cpp`, `bel_super.cpp`, `bel_third.cpp`, `cro_a1.cpp`, `cro_a2a.cpp`, `cro_a2b.cpp`, `cro_cup.cpp`, `den_cup.cpp`, `den_first.cpp`, `den_prm.cpp`, `den_second.cpp`, `eng_conf.cpp`, `eng_fa_trophy.cpp`, `fin_cup.cpp`, `fin_first.cpp`, `ger_cup.cpp`, `ger_first.cpp`, `ger_lge_cup.cpp`, `ger_regional.cpp`, `ger_second.cpp`, `gre_prm.cpp`, `gre_second.cpp`, `gre_super.cpp`, `hol_cup.cpp`, `hol_first.cpp`, `hol_prm.cpp`, `hol_super.cpp`, `ire_super_cup.cpp`, `ita_ser_c2b.cpp`, `ita_ser_c2c.cpp`, `japan_rules.cpp`, `kor_fa_cup.cpp`, `kor_league.cpp`, `kor_league_cup.cpp`, `kor_super_cup.cpp`, `mini_cup.cpp`, `mini_league.cpp`, `nir_lge_cup.cpp`, `nor_cup.cpp`, `nor_first.cpp`, `nor_prm.cpp`, `pol_cup.cpp`, `pol_first.cpp`, `pol_lge_cup.cpp`, `pol_second.cpp`, `pol_super.cpp`, `por_cup.cpp`, `por_prm.cpp`, `por_second.cpp`, `por_second_b.cpp`, `por_super.cpp`, `rus_cup.cpp`, `rus_first.cpp`, `rus_prm.cpp`, `sco_chal_cup.cpp`, `sco_fa_cup.cpp`, `sco_first.cpp`, `sco_lge_cup.cpp`, `sco_prm.cpp`, `sco_second.cpp`, `sco_third.cpp`, `spa_second_b.cpp`, `swe_cup.cpp`, `swe_first.cpp`, `swe_prm.cpp`, `swe_second.cpp`, `tur_cup.cpp`, `tur_first.cpp`, `tur_second.cpp`, `tur_second_b.cpp`, `wel_cup.cpp`, `wel_first.cpp`, `wel_lge_cup.cpp`, `wel_prm_cup.cpp`
