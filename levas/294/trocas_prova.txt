@@ -1,0 +1,6 @@
+sem mutacao (245s): ['parou em 2002-151, 2382110560 sorteios, impressao 07c15c115589d19e, partidas 19469/bc4a3e0822bf8b4a, banco dfc6e6f0fdc8cf1d']
+mutacao nma6_marcas_da_resposta_3   30s ACUSADA: divergiu da base em 2001-234 (30 s)
+mutacao nma6_marcas_da_resposta_2   35s ACUSADA: divergiu da base em 2001-237 (35 s)
+mutacao nma8_historia_respondida_responde  234s IGUAL A BASE (escapou): parou em 2002-151, 2382110560 sorteios, impressao 07c15c115589d19e, partidas 19469/bc4a3e0822bf8b4a, banco dfc6e6f0fdc8cf1d
+mutacao nma8_historia_respondida_responde 4011s comparando: engine: DIVERGENCE get_action_button piece player (type 0xbd0) original=0 rust=2 handler 0x0 label "" memory equal false
+mutacao nma8_contrato_estado_trocado   15s ACUSADA: divergiu da base em 2001-206 (15 s)
