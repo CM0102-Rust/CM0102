@@ -2,7 +2,7 @@
 
 Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os arquivos-fonte do mapa de [maxevans60](https://github.com/maxevans60/cm0102-function-map) (CC BY 4.0). Uma função conta quando o início dela é desviado para Rust (`Prologue` em `rust/src/motor.rs`). O placar do motor de partidas, pelas nossas fronteiras, fica em `PLACAR.md`.
 
-**Exe inteiro:** 2422 de 6709 funções, 2036.4 de 5528.0 KB (**36.84%**) · 204 de 393 arquivos com rotinas em Rust
+**Exe inteiro:** 2441 de 6709 funções, 2049.7 de 5528.0 KB (**37.08%**) · 207 de 393 arquivos com rotinas em Rust
 
 | Arquivo | Funções | KB | Progresso |
 |---|---|---|---|
@@ -42,6 +42,7 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `spa_second.cpp` | 4/7 | 8.8/9.4 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **93.0%** |
 | `australia_rules.cpp` | 2/3 | 0.4/0.4 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **92.9%** |
 | `sco_fa_cup.cpp` | 4/6 | 2.9/3.2 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **92.6%** |
+| `sco_prm.cpp` | 7/13 | 9.0/9.7 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **92.4%** |
 | `jap_emp_cup.cpp` | 4/7 | 3.2/3.5 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **92.0%** |
 | `ire_munster_cup.cpp` | 4/6 | 2.5/2.7 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **91.4%** |
 | `con_champ.cpp` | 6/8 | 2.4/2.7 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **91.2%** |
@@ -130,6 +131,7 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `Cup.cpp` | 36/47 | 26.1/41.9 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **62.1%** |
 | `Database.cpp` | 165/181 | 92.0/148.5 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **61.9%** |
 | `spa_first.cpp` | 5/15 | 7.2/11.7 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **61.8%** |
+| `sco_lge_cup.cpp` | 4/8 | 2.7/4.4 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **61.7%** |
 | `brazil_rules.cpp` | 1/3 | 0.3/0.5 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **61.3%** |
 | `usa_mls.cpp` | 16/22 | 7.6/12.5 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **61.0%** |
 | `ita_c1_super.cpp` | 3/6 | 1.0/1.6 | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **59.8%** |
@@ -175,6 +177,8 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `discipline.cpp` | 22/38 | 8.7/38.6 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **22.5%** |
 | `world_club_champ.cpp` | 3/18 | 2.0/8.9 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **22.0%** |
 | `fifa_rankings.cpp` | 9/20 | 2.1/9.6 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **22.0%** |
+| `wel_lge_cup.cpp` | 6/17 | 1.4/6.3 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **21.7%** |
+| `wel_prm_cup.cpp` | 5/16 | 1.4/6.3 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **21.5%** |
 | `goldcup.cpp` | 12/57 | 6.4/32.6 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **19.6%** |
 | `france_rules.cpp` | 2/10 | 0.5/2.5 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **18.6%** |
 | `argentina_rules.cpp` | 1/12 | 0.2/1.3 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **17.4%** |
@@ -186,7 +190,6 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `portugal_rules.cpp` | 1/5 | 0.2/1.6 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **15.4%** |
 | `league_stage.cpp` | 2/6 | 1.1/7.7 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **14.0%** |
 | `month_award.cpp` | 2/10 | 0.4/3.2 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **12.1%** |
-| `sco_prm.cpp` | 3/13 | 1.2/9.7 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **11.9%** |
 | `record_utils.cpp` | 6/32 | 1.4/12.0 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **11.6%** |
 | `award_manager.cpp` | 1/22 | 0.6/7.0 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.9%** |
 | `main.cpp` | 4/16 | 0.3/3.0 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.7%** |
@@ -211,4 +214,4 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `library_without_asserts` | 1/243 | 0.3/205.5 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **0.1%** |
 | `arg_second.cpp` | 1/18 | 0.0/13.8 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **0.1%** |
 
-Os outros 189 arquivos ainda não têm rotina em Rust.
+Os outros 186 arquivos ainda não têm rotina em Rust.

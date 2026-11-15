@@ -1,0 +1,22 @@
+troca de mwb21_mata_mata_em_5_rodadas por mwb21_mata_mata_na_fase_zero (15/11/2026)
+motivo: a antiga trocava o numero de rodadas do peso do mata-mata da Copa Premier galesa (scale 3 -> 5 em
+`welsh_cup_staff_records`), que so entra em `comp_util_scale_by_round` (0x4bf850: (alto - baixo) * rodada /
+(rodadas - 1), 0 na rodada 0) e de la no peso do registro do tecnico (0x86bdd0 / 0x86c000: reputacao^2 x peso nos
+pontos do ano, do mes e da temporada). O ramo existe na janela (contadores temporarios na bancada 5: "esc298 prm ko
+8", "esc298 prm ko round over 0 4", "esc298 prm ko final 2"), ou seja a mutacao muda mesmo os pontos de 4 chamadas
+por janela (25 em vez de 12 na rodada 1, 50 em vez de 25 na rodada 2) e ainda assim a carreira nao mudou; e o
+comparador da rotina (`compare_wel_prm_cup_update_staff_records_for_status`) so roda a original e confere o retorno 0,
+de modo que nada a pegaria. A nova poe o mata-mata na fase 0: os dois grupos (8 chamadas por temporada, contador
+"mwb_21 welsh premier cup staff records 16") caem no ramo do mata-mata com os desfechos 6 e 0xfe, que ele nao trata,
+e nenhum clube ganha o registro de classificacao nem o de eliminacao nos grupos.
+prova na bancada 5 (copias/bancada5/esc298.log, carreira ENG SCO WAL ate 2002-08-01):
+sem mutacao (325s): ['parou em 2002-212, 3320159269 sorteios, impressao 458b3ec75b8d3c3b, partidas 21932/8019855eb2bf9d8f, banco cfe3a65e284d839f']
+ramos na base: mwb_21 welsh premier cup staff records 16, esc298 prm group 4, esc298 prm group own table 2, esc298 prm ko 8, esc298 prm ko round over 0 4, esc298 prm ko final 2
+mutacao mwb21_mata_mata_na_fase_zero  291s ACUSADA: divergiu da base em 2002-131 (291 s)
+
+mwb_20 ficou como estava (mwb20_premier_confronto_direto_primeiro): escapa da carreira, mas o comparador
+`eng_prm_compare_league_rules` confere byte a byte os quatro codigos de desempate e o jogo real desta leva compara
+ENG SCO WAL ate 2002-08-01 (levas/298/ATE), cobrindo as duas chamadas de `wel_prm_cup_set_up_rules`
+("mwb_20 welsh premier cup rules 2"). A candidata provada, caso se queira trocar mesmo assim:
+    ('mwb20_categoria_de_copa', 'welsh_cup_rules(2, [1, 2, 4]) // mwb20: the Premier Cup group rules', '{ let mut r = welsh_cup_rules(2, [1, 2, 4]); r.push((league::MATCH_CATEGORY, 1, 6)); r } // mutation: cup category 6', 'mwb_20 welsh premier cup rules'),
+mutacao mwb20_categoria_de_copa   50s ACUSADA: divergiu da base em 2001-247 (50 s)
