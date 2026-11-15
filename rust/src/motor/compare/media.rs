@@ -50,7 +50,7 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_squad_reaction_to_player_st
 /// Whether the original `warn_squad_of_position_rival` reaches its first `exe::injury_get_player_injury_status` call: the
 /// gates of `warn_position_rivals_with` up to that call (the routine's own gates, and one squad player other than the
 /// newcomer with a contract at the club and positive happiness).
-unsafe fn warn_reaches_fitness_update(player: Staff, club: Club) -> bool {
+pub(crate) unsafe fn warn_reaches_fitness_update(player: Staff, club: Club) -> bool {
     if player.is_null() || player.player().is_null() || club.is_null() {
         return false;
     }
