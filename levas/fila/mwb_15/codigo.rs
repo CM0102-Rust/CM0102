@@ -123,8 +123,8 @@ pub(crate) unsafe extern "thiscall" fn sco_prm_update_for_date(this: usize, toda
         let split: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x7f2d90usize);
         split(this);
     }
-    let update: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_UPDATE_FOR_DATE);
-    update(this, today, results)
+    let update: unsafe extern "thiscall" fn(usize, usize, u32) -> u8 = core::mem::transmute(FN_LEAGUE_UPDATE_FOR_DATE);
+    update(this, today, results) as u32 // the callers read only al
 }
 
 /// Comparer for `sco_prm_update_for_date`: only the original runs (the split builds stages and the day update plays
