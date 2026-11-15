@@ -2,7 +2,7 @@
 
 Gerado por `python engenharia-reversa/fronteiras.py --placar` a cada leva. Fronteira de função = alvo de `call` ou rotina já portada; tamanho = até a próxima fronteira.
 
-**Motor de partidas:** 100,0% · **sem as telas:** 100,0% · **executável inteiro:** 2171 de 5524 KB (39,30%) · **2496 cópias Rust**
+**Motor de partidas:** 100,0% · **sem as telas:** 100,0% · **executável inteiro:** 2177 de 5524 KB (39,40%) · **2508 cópias Rust**
 
 | Módulo | Funções | KB | Coberto |
 |---|---|---|---|

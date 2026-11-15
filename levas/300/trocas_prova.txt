@@ -1,0 +1,30 @@
+troca de mwc17_belsuper_disciplina_inglesa por mwc17_belsuper_banco_de_3 e de mwc17_holsuper_disciplina_inglesa por
+mwc17_holsuper_inscritos_belgas (15/11/2026)
+motivo: as antigas punham a regra de disciplina inglesa (`discipline_rule::ENGLAND`, 9) no lugar da das copas belgas
+(`BELGIUM_CUP`, 5) e da holandesa (`HOLLAND`, 15) em `cup::DISCIPLINE_INDEX` (+0x50) dos construtores das duas
+supercopas. O byte e lido no lance de cartao da partida (0x556210: escolhe a entidade da competicao e entrega o cartao
+a ela) e na conferencia da escalacao (`is_player_banned` 0x55d270), ver `docs/MAPA_DISCIPLINA.md`. Cada supercopa joga
+uma partida por edicao e so uma cai na janela (5/8/2001 a belga, 8/8/2001 a holandesa; as da edicao de 2002, em 5/8 e
+8/8/2002, ficam depois do ultimo dia inteiro, 31/7/2002), e os cartoes dessa partida unica, lancados na entidade
+inglesa, nao chegaram a mudar nenhuma suspensao da janela - mas poderiam: a mesma troca na Copa da Liga alema, que joga
+rodadas dentro da temporada, foi acusada em 2002-061. As novas ficam no mesmo item e no mesmo ramo
+("mwc_16 new cup 4"): a belga troca o banco que o construtor escreve (7 convocados e 7 substituicoes -> 3 e 3), que
+muda a unica partida da supercopa na janela; a holandesa, que nao escreve banco (`bench: None`), troca a rotina dos
+inscritos pela da supercopa belga (`BelSuper::select_teams` 0x4212f0 em vez de `HolSuper::select_teams` 0x5f8c10: o
+campeao e o vencedor da copa da Belgica no lugar dos da Holanda).
+prova na bancada 5 (copias/bancada5/esc300.log, carreira ENG BEL HOL GER DEN ate 2002-08-01):
+sem mutacao (546s): ['parou em 2002-212, 5098746656 sorteios, impressao 88f6400acc761b99, partidas 33417/10bc89b7f10b4c2d, banco 79806471110329ae']
+ramos na base: mwc_16 new cup 4
+mutacao mwc17_belsuper_banco_3_3   40s ACUSADA: divergiu da base em 2001-216 (40 s)
+mutacao mwc17_belsuper_inscritos_holandeses   10s ACUSADA: divergiu da base em 2001-001 (10 s)
+mutacao mwc17_holsuper_inscritos_belgas   10s ACUSADA: divergiu da base em 2001-001 (10 s)
+
+(na prova a mutacao do banco foi rodada com o nome `mwc17_belsuper_banco_3_3`, renomeada para
+`mwc17_belsuper_banco_de_3` na lista; `mwc17_belsuper_inscritos_holandeses` - a troca simetrica da rotina dos
+inscritos na supercopa belga - tambem esta provada, caso se prefira ela a do banco. A linha 2001-216 e 5/8/2001, o dia
+da unica partida da Supercopa belga na janela: e a prova de que a supercopa joga mesmo dentro da janela, e por isso a
+mutacao da disciplina foi trocada em vez de explicada.)
+
+as duas escapadas de virada (mwc14_belfacup_ano_mais_2 e mwc14_dencup_ano_mais_2) ficaram como estavam: ver
+levas/300/escapadas.py (a primeira rodada da edicao nova e sorteada em 6/8 e em 1/8, depois do ultimo dia inteiro da
+carreira).
