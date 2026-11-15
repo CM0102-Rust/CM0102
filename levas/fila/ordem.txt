@@ -1,21 +1,4 @@
 # ordem da fila (fila.py); um item por linha
-mwc_1
-mwc_2
-mwc_3
-mwc_4
-mwc_5
-mwc_6
-mwc_7
-mwc_8
-mwc_9
-mwc_10
-mwc_11
-mwc_12
-mwc_13
-mwc_14
-mwc_15
-mwc_16
-mwc_17
 mwd_1
 mwd_2
 mwd_3

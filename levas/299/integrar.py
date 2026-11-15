@@ -1,0 +1,19 @@
+"""Integra a 299a leva ao motor.rs (gerado por fila.py: as âncoras são achadas no motor.rs)."""
+import os
+import re
+aqui = os.path.dirname(os.path.abspath(__file__))
+p = os.path.join(aqui, '..', '..', 'rust', 'src', 'motor.rs')
+s = open(p, encoding='utf-8').read()
+ROTINAS = [('construct_bel_first', 4316480, [106, 255, 104, 169, 63, 149, 0]), ('bel_first_set_up_rules', 4319712, [86, 139, 241, 185, 2, 0, 0, 0]), ('bel_first_create_table', 4319408, [129, 236, 0, 2, 0, 0]), ('bel_first_create_schedule', 4317200, [138, 68, 36, 4, 129, 236, 0, 2, 0, 0]), ('ger_second_create_schedule', 6153680, [138, 68, 36, 4, 129, 236, 0, 2, 0, 0]), ('hol_prm_create_schedule', 6256848, [138, 68, 36, 4, 129, 236, 0, 2, 0, 0]), ('den_first_create_schedule', 5577136, [138, 68, 36, 4, 129, 236, 0, 2, 0, 0]), ('den_second_create_schedule', 5587312, [138, 68, 36, 4, 129, 236, 0, 2, 0, 0]), ('den_prm_create_schedule', 5581056, [138, 68, 36, 4, 129, 236, 0, 2, 0, 0]), ('construct_bel_second', 4321328, [106, 255, 104, 249, 63, 149, 0]), ('bel_second_set_up_rules', 4325024, [83, 86, 139, 241, 176, 3]), ('bel_second_create_table', 4324720, [129, 236, 0, 2, 0, 0]), ('construct_den_prm', 5580256, [106, 255, 104, 41, 123, 149, 0]), ('den_prm_set_up_rules', 5585408, [86, 139, 241, 186, 3, 0, 0, 0]), ('den_prm_create_table', 5585104, [129, 236, 0, 2, 0, 0]), ('construct_den_first', 5576432, [106, 255, 104, 217, 122, 149, 0]), ('den_first_set_up_rules', 5579696, [86, 139, 241, 185, 2, 0, 0, 0]), ('den_first_create_table', 5579408, [129, 236, 0, 2, 0, 0]), ('construct_den_second', 5586560, [106, 255, 104, 121, 123, 149, 0]), ('den_second_set_up_rules', 5589856, [86, 139, 241, 186, 2, 0, 0, 0]), ('den_second_create_table', 5589568, [129, 236, 0, 2, 0, 0]), ('construct_ger_second', 6152928, [106, 255, 104, 153, 166, 149, 0]), ('ger_second_set_up_rules', 6157280, [86, 139, 241, 185, 2, 0, 0, 0]), ('ger_second_create_table', 6156976, [129, 236, 0, 2, 0, 0]), ('construct_hol_prm', 6256144, [106, 255, 104, 233, 173, 149, 0]), ('hol_prm_set_up_rules', 6260064, [83, 86, 139, 241, 178, 3]), ('hol_prm_create_table', 6259760, [129, 236, 0, 2, 0, 0]), ('construct_hol_first', 6247568, [106, 255, 104, 41, 173, 149, 0]), ('hol_first_set_up_rules', 6251328, [83, 86, 139, 241, 184, 2, 0, 0, 0]), ('hol_first_create_table', 6251072, [129, 236, 0, 2, 0, 0]), ('construct_ger_first', 6134192, [106, 255, 104, 137, 165, 149, 0]), ('ger_first_set_up_rules', 6140928, [86, 139, 241, 186, 2, 0, 0, 0]), ('ger_first_create_schedule', 6134896, [138, 68, 36, 4, 129, 236, 0, 2, 0, 0]), ('bel_fa_cup_create_round_table', 4313872, [138, 68, 36, 4, 129, 236, 0, 2, 0, 0]), ('den_cup_create_round_table', 5573744, [138, 68, 36, 4, 129, 236, 0, 2, 0, 0]), ('bel_super_create_round_table', 4329904, [138, 68, 36, 4, 129, 236, 0, 2, 0, 0]), ('hol_super_create_round_table', 6261456, [138, 68, 36, 4, 129, 236, 0, 2, 0, 0]), ('ger_cup_create_round_table', 6131424, [138, 68, 36, 4, 129, 236, 0, 2, 0, 0])]
+BASE = 2440
+m = re.search(r'\n\}\nconst N: usize = (\d+);', s)
+assert m and int(m.group(1)) == BASE, ('o motor.rs mudou desde a materialização', m and m.group(1), BASE)
+# one line per routine in `routines! { .. }` (rust/src/motor.rs; read by engenharia-reversa/tabela_motor.py)
+linhas = ''.join('\n    Prologue { address: %#x, bytes: &[%s] } => %s, compare_%s;' % (e, ', '.join('0x%02x' % b for b in bs), a, a)
+                 for a, e, bs in ROTINAS)
+s = s[:m.start()] + linhas + '\n}\nconst N: usize = %d;' % (BASE + len(ROTINAS)) + s[m.end():]
+anc = 'compare_value!(compare_staff_criterion, staff_criterion, IDX_STAFF_CRITERION, () -> u32);\n'
+assert s.count(anc) == 1
+s = s.replace(anc, anc + '\n' + open(os.path.join(aqui, 'codigo.rs'), encoding='utf-8').read().strip('\n') + '\n')
+open(p, 'w', encoding='utf-8').write(s)
+print('ok')
