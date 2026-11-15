@@ -74,7 +74,7 @@ pub(crate) unsafe extern "thiscall" fn spa_super_select_teams(this: usize) -> i3
 pub(crate) unsafe fn compare_team_list(name: &str, this: Cup, o: impl FnOnce() -> i32, c: impl FnOnce() -> (i32, i32)) -> i32 {
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
-    let reg = [(this.addr() + cup::TEAM_COUNT, 2usize), (G_MOUSE_LEFT_BUTTON_DOWN, 4)];
+    let reg = [(this.addr() + cup::TEAM_COUNT, 2usize), (G_MOUSE_LEFT_BUTTON_DOWN, 4), comp_history_region()];
     let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {
         let r = o();
         lo.set(this.team_table());

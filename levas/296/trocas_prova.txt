@@ -1,0 +1,9 @@
+troca de mwa21_dois_pontos_por_vitoria por mwa21_categoria_de_copa (14/11/2026)
+motivo: os pontos por vitoria da Supercopa da Irlanda (league::WIN_POINTS, +0xc2) so mudam a ordem da tabela de
+quatro clubes; nem os blocos do banco de dados nem o motor das partidas (as duas impressoes do diario) dependem
+dela, e a comparacao para em 2001-232, antes da unica chamada de ire_super_cup_set_up_rules (a virada, 2002-173).
+A categoria (league::MATCH_CATEGORY, +0xc4) e copiada para fixture::CATEGORY e chega as partidas.
+prova na bancada 5 (copias/bancada5/esc296.log, carreira ENG IRL NIR ate 2002-08-01):
+sem mutacao (1142s): ['parou em 2002-212, 3132438070 sorteios, impressao e845307f205c4ca6, partidas 21830/ea59b3f99855a06b, banco e4623a54a5f6caca']
+ramo na base: mwa_21 irish super cup rules 1
+mutacao mwa21_categoria_de_copa 3736s ACUSADA: divergiu da base em 2001-183 (15 s)

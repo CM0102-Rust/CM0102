@@ -47,10 +47,47 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_squad_reaction_to_player_st
         |chamar| squad_reaction_to_story_with(topic, Staff(player), club, ids, n, chamar));
 }
 
+/// Whether the original `warn_squad_of_position_rival` reaches its first `exe::injury_get_player_injury_status` call: the
+/// gates of `warn_position_rivals_with` up to that call (the routine's own gates, and one squad player other than the
+/// newcomer with a contract at the club and positive happiness).
+unsafe fn warn_reaches_fitness_update(player: Staff, club: Club) -> bool {
+    if player.is_null() || player.player().is_null() || club.is_null() {
+        return false;
+    }
+    if (exe::club_count_squad_with_position_mask(club, exe::staff_get_natural_position_mask(player)) as i8) <= 2 {
+        return false;
+    }
+    let div = club.division().addr();
+    if div == 0 || read_usize(read_usize(G_COMP_OBJECT_TABLE) + 4 * read_usize(div)) == 0 {
+        return false;
+    }
+    if player.player().current_reputation() <= 0x128e {
+        return false;
+    }
+    (0..50).any(|i| {
+        let p = Staff(club.squad(i));
+        if p.is_null() || p.player().is_null() || p == player {
+            return false;
+        }
+        let c = Contract(media_contract_for_club(p.addr(), club));
+        !c.is_null() && c.happiness() > 0
+    })
+}
+
 /// Comparer for `warn_squad_of_position_rival`.
+///
+/// `exe::injury_get_player_injury_status` is not a query: it first runs the day's fitness update
+/// (`exe::injury_update_player_fitness`, 0x62c680), which draws (0x62ca4f, 0x62cb18) and writes the person's fitness and
+/// the date of the update; a second call on the same day returns at once (0x62c790) without drawing. Run from here,
+/// before the snapshot, the original's call and the copy's both find the day done and neither draws. Nothing moves that
+/// the original would not move: it does exactly this work at its first squad player with a contract, which is what the
+/// guard checks.
 pub(crate) unsafe extern "thiscall" fn compare_warn_squad_of_position_rival(this: usize, player: usize, club: usize, a: u32, b: u32) {
     let club = Club(club);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(IDX_WARN_SQUAD_OF_POSITION_RIVAL);
+    if warn_reaches_fitness_update(Staff(player), club) {
+        exe::injury_get_player_injury_status(read_usize(G_INJURY), player);
+    }
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((G_CONTRACT_LOOKUP_RESULT, 4));
     if !club.is_null() {

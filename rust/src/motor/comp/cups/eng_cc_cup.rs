@@ -341,7 +341,11 @@ pub(crate) unsafe fn eng_cc_cup_compare_entrant_list(name: &str, this: Cup, reg:
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let nr = core::cell::Cell::new(0i32);
-    let (a, b, igual, _, _) = crate::comparison::side_by_side(reg, || {
+    let mut regs = [(0usize, 0usize); 8];
+    let n = reg.len().min(7);
+    regs[..n].copy_from_slice(&reg[..n]);
+    regs[n] = comp_history_region();
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&regs[..n + 1], || {
         let r = o();
         lo.set(this.team_table());
         r
@@ -393,6 +397,13 @@ pub(crate) unsafe fn collect_auto_cup_entrants(this: Cup) -> (i32, i32) {
         }
     }
     (1, k as i32)
+}
+
+/// The competition history table as a memory region, for the comparers that run a routine calling
+/// `latest_placed_club` twice: `comp_util_get_latest_placed_club` sorts the table (`exe::crt_qsort`), so without
+/// restoring it the copy searches a table ordered differently from the one the original searched.
+pub(crate) unsafe fn comp_history_region() -> (usize, usize) {
+    (read_usize(G_CLUB_COMP_HISTORY_TABLE), 0x1a * read_i32(G_CLUB_COMP_HISTORY_COUNT).max(0) as usize)
 }
 
 /// Club that finished at place (0 champion, 1 runner-up) last season in competition id (`comp_util_get_latest_placed_club`).

@@ -18,6 +18,11 @@
 #   temporada); o jogo real comparando roda na cadeia (nao e adiado: a auditoria das 8 ligas nao cobre essas rotinas).
 #   levas/N/ATE (12/11/2026, criado pelo fila.py): a data final de tudo (ex.: 2002-08-01 com as ligas dos itens);
 #   o jogo real tambem roda na cadeia.
+#   COMPARAR_BANCADA=K (14/11/2026, Lucas: "ta impraticavel assim"): a comparacao do jogo real nao depende das
+#   mutacoes, e e a parte cara de uma leva com ATE (~2 h). Com essa variavel ela roda EM PARALELO numa bancada
+#   (copias/bancadaK, sincronizada do codigo desta copia antes de comecar) enquanto as mutacoes rodam aqui; a saida
+#   dela entra no cadeia.txt no lugar de sempre. Sem a variavel, nada muda. Precisa de uma vaga a mais do laboratorio
+#   (CM_VAGAS) e de uma bancada livre: nunca a mesma que esta rodando outra leva.
 # Saida completa em levas/N/cadeia.txt. Com a base divergindo, o mutacoes.py sai com erro e o resto
 # nao roda. Testes pesados passam pela trava do laboratorio (laboratorio.py).
 RAIZ="$(cd "$(dirname "$0")/.." && pwd)"
@@ -34,6 +39,15 @@ LIGAS=""; ATE_REAL=2002-01-01; LIM_REAL=3600
 if [ -f "$RAIZ/levas/$N/LIGAS" ]; then LIGAS="$(head -1 "$RAIZ/levas/$N/LIGAS" | tr -d '\r')"; ATE_REAL=$FIM; LIM_REAL=30000; fi
 LIM_CAR=2400; [ "$LIGAS" = MUNDO ] && LIM_CAR=20000
 L=(); M=(); [ -n "$LIGAS" ] && L=(--ligas "$LIGAS") && M=(--ligas "$LIGAS" --limite 3600)
+PAR=""
+if [ -n "$COMPARAR_BANCADA" ] && { [ -z "$LIGAS" ] || [ "$LIGAS" = MUNDO ] || [ -f "$RAIZ/levas/$N/ATE" ] || [ "$COMPARAR_LIGAS" = 1 ]; }; then
+  PAR="$RAIZ/levas/$N/jogo_real_paralelo.txt"
+  BAN="$RAIZ/copias/bancada$COMPARAR_BANCADA"
+  python "$RAIZ/engenharia-reversa/bancada.py" sincronizar "$COMPARAR_BANCADA" > /dev/null
+  rm -f "$BAN/jogo_testes/auto_setup.cfg"
+  ( cd "$BAN/engenharia-reversa"     && python -u simular.py --ate $ATE_REAL --motor sim --modo comparar --limite $LIM_REAL "${L[@]}"     && grep -aE "DIVERG|EXCECAO|EXCEPTION" ../jogo_testes/ddraw.log | head -5 | cut -c1-300     && grep -aE "comparacoes|comparisons" ../jogo_testes/ddraw.log | tail -3     && grep -a "sonda_lixo" ../jogo_testes/ddraw.log | tail -1 ) > "$PAR" 2>&1 &
+  ESPERAR=$!
+fi
 (if python -u mutacoes.py mutacoes/leva$N.py $MODO "${M[@]}"; then
   if [ -n "$SAVE" ]; then
     python laboratorio.py | head -1
@@ -46,10 +60,15 @@ L=(); M=(); [ -n "$LIGAS" ] && L=(--ligas "$LIGAS") && M=(--ligas "$LIGAS" --lim
   else
   python laboratorio.py | head -1
   echo "=== JOGO REAL"
+  if [ -n "$PAR" ]; then
+    wait $ESPERAR
+    cat "$PAR"
+  else
   python -u simular.py --ate $ATE_REAL --motor sim --modo comparar --limite $LIM_REAL "${L[@]}"
   grep -aE "DIVERG|EXCECAO|EXCEPTION" ../jogo_testes/ddraw.log | head -5 | cut -c1-300
   grep -aE "comparacoes|comparisons" ../jogo_testes/ddraw.log | tail -3
   grep -a "sonda_lixo" ../jogo_testes/ddraw.log | tail -1
+  fi
   fi
   python laboratorio.py | head -1
   echo "=== CARREIRA"
