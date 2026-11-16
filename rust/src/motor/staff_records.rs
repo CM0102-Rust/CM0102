@@ -43,7 +43,11 @@ pub(crate) unsafe fn offer_renewal_if_due(club: Club, p: Staff, k: Contract) {
     if read_usize(G_TRANSFER_MANAGER) == 0 {
         return;
     }
-    DRY_RUN_STRAY_SCRATCH_DATE.store(false, Relaxed);
+    // exe::date_days_since (0x54cdb0) only rewrites its scratch date (0xae2470) when the two years differ, so a
+    // contract started this year leaves the dry run's mark standing: the address may still hold the original's residue.
+    if read_u16(G_CURRENT_DATE_YEAR) != k.date_started_year() {
+        DRY_RUN_STRAY_SCRATCH_DATE.store(false, Relaxed);
+    }
     if days_between(G_CURRENT_DATE, k.addr() + contract::DATE_STARTED) <= 300 {
         return;
     }
