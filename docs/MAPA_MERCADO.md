@@ -928,7 +928,18 @@ thiscall ret 0x1c. Chamadores: 0x842740 (IA), 0x8d0040 (`can_loan_player`), 0x8f
 2. O contrato principal do jogador (0x4cf5a0). **Sem contrato, tipo (+0x35 & 0x3f) diferente de 2 ou hoje depois do
    fim do contrato: o ano do fim vira 1972** (o ano da data padrão 0x54a110) — um sentinela "impossível".
    Os tipos (tela 0x87cee0, tabela de saltos 0x87dd58) [provado]: 0 inválido, 1 mensal, **2 contrato normal**,
-   5 experiência, 6/7 empréstimo; bit 0x80 = meio período.
+   5 experiência, 6/7 empréstimo; bit 0x80 = meio período. A tabela de saltos só escolhe um **rótulo** (destinos
+   0x87cf31..0x87cf6d, cada um `push` de uma mensagem e `jmp`): "Invalid Contract Type", "Full Time Monthly
+   Contract", "Full Time Contract", "N/A" (3 e 4), "Full Time Trial Contract", "Full Time Loan Contract" (6 e 7).
+   Nenhuma conta.
+   **A unidade do salário na tela não vem do tipo [provado]:** em 0x85e850..0x85e8c0 a linha do salário escolhe a
+   palavra pelos bits do dword [`G_CONFIG`+4] (0xae3138, o objeto de configuração): 0x200000 "per week" (0xa83678),
+   0x400000 "per month" (0xa8365c), 0x800000 "per annum"/"p/a" (0xa83640/0xa83694) — é uma preferência de exibição do
+   jogo, igual para todo contrato. E a folha é cega ao tipo: `Finance::update_wage_bill` (0x598370) soma
+   `contract::WAGE` (+0xc) cru, e o único teste de tipo é `& 0x3f != 6`, para descontar a parte do empréstimo. Logo
+   **+0xc é o mesmo número e a mesma unidade nos dois tipos**: trocar o tipo não muda o custo, e um editor que troque
+   o +0x35 não deve converter o salário (16/11/2026, a pedido do CMRTE: o elenco do Friburguense no CLZ V6.1 aparece
+   "Contrato Mensal" e "por mês", e o "por mês" é a configuração, não o tipo).
 3. Fim mais de 5 anos à frente: 1972.
 4. Enquanto a data (dia do mês de hoje, mês do fim, ano do fim) passa o fim do contrato (+0x2d dia do ano, +0x2f
    ano), o fim recua um mês, o início acompanha se ficar depois do fim; o ano do fim abaixo do atual: 1972.

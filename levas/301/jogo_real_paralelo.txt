@@ -1,0 +1,10 @@
+    pool nao paginado 1.73 -> 1.74 GB, paginado 2.52 -> 2.64 GB
+execucao 1: parou em 2002-212, 5810545455 sorteios, impressao 2ce549afd0fa92fa, partidas 39341/2eed783f734c1ce4, banco 2ea75abb65381249, 13402 s
+    date: 1000000000 comparacoes, 0 divergencias
+    engine: 100000000000 comparacoes, 0 divergencias
+    random: 10000000000 comparacoes, 0 divergencias
+game.cfg restaurado; auto_setup.cfg removido
+date: 1000000000 comparisons, 0 divergences
+random: 10000000000 comparisons, 0 divergences
+engine: 100000000000 comparisons, 0 divergences
+sonda_lixo: value 0x0736; 26564 escalas da 0x6dbc50, 13473 with lixo, 0 mudam se cleared

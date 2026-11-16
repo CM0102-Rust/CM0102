@@ -931,7 +931,17 @@ career (counters of item cqe_6).
 2. The player's main contract (0x4cf5a0). **No contract, a type (+0x35 & 0x3f) other than 2, or today after the
    contract end: the end year becomes 1972** (the year of the default date 0x54a110), an "impossible" sentinel.
    The types (screen 0x87cee0, jump table 0x87dd58) [proved]: 0 invalid, 1 monthly, **2 normal contract**, 5 trial,
-   6/7 loan; bit 0x80 = part time.
+   6/7 loan; bit 0x80 = part time. The jump table only picks a **label** (targets 0x87cf31..0x87cf6d, each one a
+   `push` of a message and a `jmp`): "Invalid Contract Type", "Full Time Monthly Contract", "Full Time Contract",
+   "N/A" (3 and 4), "Full Time Trial Contract", "Full Time Loan Contract" (6 and 7). No arithmetic.
+   **The wage unit on the screen does not come from the type [proved]:** at 0x85e850..0x85e8c0 the wage line picks
+   its word from the bits of the dword [`G_CONFIG`+4] (0xae3138, the config object): 0x200000 "per week" (0xa83678),
+   0x400000 "per month" (0xa8365c), 0x800000 "per annum"/"p/a" (0xa83640/0xa83694) — a display preference of the
+   game, the same for every contract. And the payroll is blind to the type: `Finance::update_wage_bill` (0x598370)
+   sums `contract::WAGE` (+0xc) raw, and its only type test is `& 0x3f != 6`, to subtract the loan's share. So
+   **+0xc is the same number and the same unit in both types**: switching the type does not change the cost, and an
+   editor that flips +0x35 must not convert the wage (16/11/2026, asked by the CMRTE: the Friburguense squad in CLZ
+   V6.1 shows "Monthly Contract" and "per month", and the "per month" is the setting, not the type).
 3. End more than 5 years ahead: 1972.
 4. While the date (today's day of the month, end month, end year) passes the contract end (+0x2d day of the year,
    +0x2f year), the end steps back one month and the start follows if it is after the end; the end year below the
