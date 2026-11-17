@@ -1,0 +1,30 @@
+"""Documentacao da 303a leva. Uso: python docs.py"""
+import os, sys
+import runpy as _rp
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'engenharia-reversa'))
+from gen_docs import fazer, leia, cadeia, prova_save, resultado_pt_en
+
+N = 303
+R = [('tur_cup_collect_entrants', 'TurCup::collect_entrants', '0x8fcb90', 'tur_cup.cpp', 'thiscall, ret 0', 'regra: a Copa da Turquia inscreve 64 clubes, todos da classe 1: 26 da segunda divisão categoria B (os 30 primeiros na ordem do banco, ordenados pela última divisão, tomados do 26º para trás), depois os 20 primeiros da categoria A em ordem inversa, e os da elite do fim da lista para trás', 'rule: the Turkish Cup takes 64 clubs, all class 1: 26 of the second division category B (the first 30 in database order, sorted by their last division, taken from the 26th backwards), then the first 20 of category A in reverse order, and the top-flight clubs from the end of the list backwards'), ('rus_cup_select_entrants', 'RusCup::select_entrants', '0x7e99a0', 'rus_cup.cpp', 'thiscall, ret 0', 'regra: a Copa da Rússia inscreve 48 clubes: os da Primeira Divisão (classe 2; o atual campeão da copa entre eles, classe 1) da 32ª vaga para trás, depois os das zonas da segunda divisão (ordenados por força, os 42 melhores embaralhados) até completar 32, classe 2; depois os da liga principal (classe 1) da 33ª vaga em diante; dá certo quando a lista fica cheia', 'rule: the Russian Cup takes 48 clubs: the First Division clubs (class 2; the cup holder among them class 1) from entry 31 backwards, then the second division zone clubs (sorted by strength, the best 42 shuffled) until 32 are in, class 2; then the Premier League clubs (class 1) from entry 32 on; it succeeds when the list is full'), ('pol_first_set_up_rules', 'PolFirst::set_up_rules', '0x7c9690', 'pol_first.cpp', 'thiscall, ret 0', 'regra: a Primeira Divisão polonesa: 2 turnos, 3 pontos por vitória e 1 por empate; desempate por confronto direto, saldo e gols marcados; 4 na faixa de acesso, ninguém cai direto (o rebaixamento sai da fase final); abaixo a Segunda Divisão; 7 reservas e 3 substituições; bits das regras 8', 'rule: the Polish First Division: 2 legs, 3 points a win and 1 a draw; tie-breaks head to head, goal difference and goals for; 4 in the promotion band, nobody goes down directly (relegation comes from the final stage); the Second Division below; 7 substitutes and 3 substitutions; rule bits 8'), ('pol_second_set_up_rules', 'PolSecond::set_up_rules', '0x7cbf40', 'pol_second.cpp', 'thiscall, ret 0', 'regra: a Segunda Divisão polonesa: como a Primeira, com 2 subindo direto e 2 indo ao mata-mata de acesso, 6 caindo em 2001 (20 clubes) e 4 depois; acima a Primeira; bits das regras 3', 'rule: the Polish Second Division: as the First Division, with 2 going up directly and 2 to the promotion play-off, 6 going down in 2001 (20 clubs) and 4 afterwards; the First Division above; rule bits 3'), ('tur_second_b_set_up_rules', 'TurSecondB::set_up_rules', '0x900460', 'tur_second_b.cpp', 'thiscall, ret 0', 'regra: a segunda divisão turca categoria B: 3 pontos por vitória e 1 por empate; desempate por saldo e gols marcados; 2 ao mata-mata; acima a categoria A; 7 reservas e 3 substituições; bits das regras 2', 'rule: the Turkish second division category B: 3 points a win and 1 a draw; tie-breaks goal difference and goals for; 2 to the play-offs; category A above; 7 substitutes and 3 substitutions; rule bits 2')]
+ESCAPADAS = dict(_rp.run_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'escapadas.py'))['ESCAPADAS'])  # nome: (explicação pt, explicação en)
+tot, ac, esc, ok = cadeia(N)
+assert ok, 'cadeia com divergência ou carreira que não chegou à data'
+RES_PT, RES_EN = resultado_pt_en(N)
+assert set(esc) <= set(ESCAPADAS), ('explicar as escapadas', esc)
+lac_pt = ' '.join(f'`{e}` escapou: {ESCAPADAS[e][0]}.' for e in esc) + (' (lacuna em `PENDENCIAS.md`)' if esc else '')
+lac_en = ' '.join(f'`{e}` escaped: {ESCAPADAS[e][1]}.' for e in esc) + (' (gap in `PENDENCIAS.en.md`)' if esc else '')
+PS = prova_save(N)  # leva do save: mutações e prova pelo .qst gravado com e sem as rotinas (cadeia.sh)
+VIA_PT = 'pela prova do save' if PS else 'pela carreira até 2002-06-01, confirmando no modo comparação as que escapam'
+VIA_EN = 'by the save proof' if PS else 'by the career to 2002-06-01, confirming the escaped ones in comparison mode'
+PS_PT = f'Prova do save (o .qst com e sem as rotinas): {PS}. ' if PS else ''
+PS_EN = f'Save proof (the .qst with and without the routines): {PS.replace("IGUAL", "EQUAL").replace("DIFERENTE", "DIFFERENT")}. ' if PS else ''
+M = (f"`mutacoes/leva{N}.py` ({tot}, {VIA_PT}): {ac} acusadas. {lac_pt} {PS_PT}"
+     f"{RES_PT}")
+ME = (f"`mutacoes/leva{N}.py` ({tot}, {VIA_EN}): {ac} caught. {lac_en} {PS_EN}"
+      f"{RES_EN}")
+fazer(N, 2565, 2565 + len(R), 'os inscritos das copas da Turquia e da Rússia; as regras das divisões polonesas e da segunda divisão turca B', 'the Turkish and Russian cup entrants; the rules of the Polish divisions and the Turkish second division B',
+      [f"| `{a}()` | {e} | {c} | {f}: {d} |" for a, _, e, f, c, d, _ in R],
+      [f"| `{a}()` | {e} | {c} | {f}: {d} |" for a, _, e, f, c, _, d in R],
+      M, ME, [(a, g) for a, g, *_ in R], "'posicao_no_conteiner': 'position_in_container',", secao=('Simulação', 'Simulation'))
+leia(N, 'os inscritos das copas da Turquia e da Rússia; as regras das divisões polonesas e da segunda divisão turca B', 'the Turkish and Russian cup entrants; the rules of the Polish divisions and the Turkish second division B', [(a, e, f + ', ' + c, dp, de) for a, _, e, f, c, dp, de in R], tot, ac, lac_pt, lac_en,
+     campos=[('copa +4, +0x3e, +0xa7 (6 bytes: clube, classe, situação); clube +0x57 divisão', 'cup +4, +0x3e, +0xa7 (6 bytes: club, class, status); club +0x57 division'), ('liga +0x3c, +0xc2..+0xc8, +0xab, +0xdb, +0x42, +0xbe..+0xc1, +0x1c, +0x20, +0xd9, +0x52, +0x49, +0x4a, +0xba', 'league +0x3c, +0xc2..+0xc8, +0xab, +0xdb, +0x42, +0xbe..+0xc1, +0x1c, +0x20, +0xd9, +0x52, +0x49, +0x4a, +0xba')], interessa=[])
