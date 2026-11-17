@@ -34,6 +34,9 @@ def main():
         rodar(sys.executable, os.path.join('levas', str(n), 'docs.py'))
     rodar(sys.executable, os.path.join('engenharia-reversa', 'glossario.py'))
     rodar(sys.executable, os.path.join('engenharia-reversa', 'placar_arquivos.py'))
+    # the readability scoreboard follows each batch too: it froze on 11/11/2026 because nothing here ran it,
+    # and reported 0 calls by address while the code had 209 (17/11/2026)
+    rodar(sys.executable, os.path.join('engenharia-reversa', 'legibilidade.py'))
     rodar(sys.executable, os.path.join('engenharia-reversa', 'competicoes.py'))  # o mapa das competições acompanha cada leva
     leia_en = os.path.join(RAIZ, 'levas', str(n), 'LEIA.en.md')
     titulo = open(leia_en if os.path.exists(leia_en) else os.path.join(RAIZ, 'levas', str(n), 'LEIA.md'), encoding='utf-8').readline().split('—', 1)[-1].strip()

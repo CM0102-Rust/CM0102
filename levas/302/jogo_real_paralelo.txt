@@ -1,0 +1,11 @@
+    pool nao paginado 1.75 -> 1.84 GB, paginado 2.65 -> 2.94 GB
+execucao 1: parou em 2002-212, 5818475951 sorteios, impressao a67b6110927d563a, partidas 39424/1fc5867eeb00df02, banco 368a2333aa8de34c, 12248 s
+    date: 1000000000 comparacoes, 0 divergencias
+    engine: 100000000000 comparacoes, 0 divergencias
+    random: 10000000000 comparacoes, 0 divergencias
+game.cfg restaurado; auto_setup.cfg removido
+engine: DIVERGENCE contract_manager_offer_contract(person 0x1c6b537e, club 0x1be065ee, slot 589, factor 1, mode 2): original 1 rust 1, memory MemorySnapshot([(ffffe50, [21, 3e, 0, 0, d6, 3, 0, 0, 60, 9, 0, 0, 9d, 0, 0, 0, 1f, 0, 0, 0, 1f, 0, 0, 0, ff, ff, ff, ff, 0, 0, 0, 0, 0, 0, 0, 0, 0, 91, 0, d2
+date: 1000000000 comparisons, 0 divergences
+random: 10000000000 comparisons, 0 divergences
+engine: 100000000000 comparisons, 0 divergences
+sonda_lixo: value 0x075b; 26638 escalas da 0x6dbc50, 13496 with lixo, 0 mudam se cleared

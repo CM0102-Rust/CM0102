@@ -117,36 +117,11 @@ pub(crate) unsafe extern "C" fn compare_pick(
             || call() as u32,
         ) as u8;
     }
-    // Probe (comparison only): 0x6dbc50, in mode 2, never writes the short of the 1st extra slot and passes
-    // the stack garbage at the scale (return 0x6dd383). Counts how often it is not zero and whether zeroing it changes
-    // the scale (the original twice: with the garbage and with 0).
-    if crate::detours::RETURN_TO == 0x6dd383 && a5 as u8 != 0 && a15 != 0 {
-        use std::sync::atomic::{AtomicU32, Ordering::Relaxed};
-        static CHAMADAS: AtomicU32 = AtomicU32::new(0);
-        static NAO_ZERO: AtomicU32 = AtomicU32::new(0);
-        static MUDA: AtomicU32 = AtomicU32::new(0);
-        let field = (a15 + 2 * (a4 as u8 as usize)) as *mut u16;
-        let lixo = *field;
-        let k = CHAMADAS.fetch_add(1, Relaxed) + 1;
-        if lixo != 0 {
-            NAO_ZERO.fetch_add(1, Relaxed);
-            let (r1, r2, igual, _, _) = crate::comparison::side_by_side(&[(a6, 4 * n)], call, || {
-                *field = 0;
-                let r = call();
-                *field = lixo;
-                r
-            });
-            if !igual || r1 != r2 {
-                MUDA.fetch_add(1, Relaxed);
-            }
-        }
-        if lixo != 0 || k % 500 == 0 {
-            crate::registro::linha(&format!(
-                "sonda_lixo: value {:#06x}; {} escalas da 0x6dbc50, {} with lixo, {} mudam se cleared",
-                lixo, k, NAO_ZERO.load(Relaxed), MUDA.load(Relaxed)
-            ));
-        }
-    }
+    // A sonda do lixo de pilha de 0x6dbc50 (modo 2, escala do 1o espaco extra) saiu em 17/11/2026: ela media se zerar
+    // o lixo mudava a escala e a resposta foi nao em 13.412 casos de 26.486 escalas, em varias carreiras. Enquanto
+    // existiu, ela chamava a rotina uma vez a mais por ativacao sem restaurar o gerador, e 0x6dbc50 faz 7 sorteios:
+    // consumia ~94 mil sorteios por carreira do fluxo real, e a ativacao depende do lixo (logo do arranjo de memoria),
+    // o que tornava a comparacao irreproduzivel entre builds. Esta em git (ver levas/302/correcoes.md).
     // the output and the static dates that the rating (0x6e2f20) touches
     let reg = [(a6, 4 * n), (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1), (G_SUB_DAYS_RESULT_DATE, 8), (0xae249e, 1)];
     let (r, rr, igual, mo, mr) = crate::comparison::side_by_side(&reg, call, || pick(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15));
