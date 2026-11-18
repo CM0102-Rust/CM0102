@@ -101,8 +101,10 @@ def main():
     for p in arqs:
         for m in LET.finditer(open(p, encoding='utf-8').read()):
             usos[m.group(7)][m.group(3)] += 1
+    # only the exe-wide names: a FN_ const local to one function (motor.rs has some) is out of scope in exe_calls.rs
+    globais = set(re.findall(r'^pub const (FN_\w+):', open(os.path.join(SRC, 'motor', 'exe_fns.rs'), encoding='utf-8').read(), re.M))
     for fn, c in usos.items():
-        if fn in canon:
+        if fn in canon or fn not in globais:
             continue
         sigs = list(c)
         if any('...' in s for s in sigs):

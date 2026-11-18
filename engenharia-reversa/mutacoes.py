@@ -57,6 +57,13 @@ SRC = os.path.join(RAIZ, 'rust', 'src', 'motor.rs')
 DLL = os.path.join(RAIZ, 'rust', 'target', 'i686-pc-windows-msvc', 'release', 'ddraw.dll')
 JOGO = os.path.join(RAIZ, 'jogo_testes' if os.path.isdir(os.path.join(RAIZ, 'jogo_testes')) else 'jogo')  # ver simular.py
 LOG = os.path.join(JOGO, 'ddraw.log')
+
+
+def imprimivel(t):
+    """13/11/2026: a caixa de erro do jogo pode trazer byte que o terminal (cp1252) nao escreve, e o print
+    quebrava a cadeia inteira (293a leva). Troca o que nao couber na saida."""
+    cod = getattr(sys.stdout, 'encoding', None) or 'utf-8'
+    return str(t).encode(cod, 'replace').decode(cod, 'replace')
 LIMITE = 2400  # segundos; o autoteste completo passa de 20 minutos (cresce a cada leva)
 
 
@@ -312,16 +319,16 @@ def main():
             if fim and base:
                 r = [('IGUAL A BASE (escapou): ' if r[0] == base else 'ACUSADA: ') + r[0]]
                 if confirmar and r[0].startswith('IGUAL'):
-                    print('mutacao %-18s %4.0fs %s' % (nome, time.time() - t0, r[0][:150]), flush=True)
+                    print('mutacao %-18s %4.0fs %s' % (nome, time.time() - t0, imprimivel(r[0][:150])), flush=True)
                     t0 = time.time()
                     r = ['comparando: ' + (jogo(confirmar) or ['SEM RESULTADO'])[0]]
                     # ainda sem divergência: o save em português (os ramos por idioma que o inglês não alcança, 26/10)
                     if '--confirmar-pt' in sys.argv and not ('DIVERGENCIA' in r[0] or 'DIVERGENCE' in r[0]) and not ('EXCECAO' in r[0] or 'EXCEPTION' in r[0]):
-                        print('mutacao %-18s %4.0fs %s' % (nome, time.time() - t0, r[0][:150]), flush=True)
+                        print('mutacao %-18s %4.0fs %s' % (nome, time.time() - t0, imprimivel(r[0][:150])), flush=True)
                         t0 = time.time()
                         r = ['comparando (carga pt): ' + carga_comparando()[0]]
                     r = [fora_do_item(nome, r[0])]
-            print('mutacao %-18s %4.0fs %s' % (nome, time.time() - t0, r[0][:150] if r else 'SEM RESULTADO'), flush=True)
+            print('mutacao %-18s %4.0fs %s' % (nome, time.time() - t0, imprimivel(r[0][:150]) if r else 'SEM RESULTADO'), flush=True)
     finally:
         restaurar(textos)
         compilar()

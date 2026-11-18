@@ -20,7 +20,7 @@ MUTACOES = [
     ('cqx6_paulista_1o_e_2o_trocados', 'places: &[1, 2, 3, 3], label: "cqx_6 são paulo predicted"', 'places: &[2, 1, 3, 3], label: "cqx_6 são paulo predicted" /* mutation: 1st and 2nd swapped */', 'cqx_6 são paulo predicted'),
     ('cqx7_copa_da_italia_faixas_de_4', '7, 8, "cqx_7 coppa italia predicted") // cqx7: the Coppa Italia bands of 8', '7, 4, "cqx_7 coppa italia predicted") // mutation: bands of 4', 'cqx_7 coppa italia predicted'),
     ('cqx7_campeao_previsto_em_2', "give(place, &mut idx, &mut next); // cqx7: the final's winner", 'give(place + 1, &mut idx, &mut next); // mutation: the winner predicted 2nd', 'cqx_7 coppa italia predicted'),
-    ('cqx7_vinculo_do_clube_trocado', 'add_link(text, club + 0x38, 0x7d5, club); // cqx7: the club link', 'add_link(text, club + 0x38, 0x7d0, club); // mutation: the competition link type', 'cqx_7 coppa italia through to first round'),
+    ('cqx7_vinculo_do_clube_trocado', 'exe::text_add_link(text, (club + 0x38) as usize as *const u8, 0x7d5, club); // cqx7: the club link', 'exe::text_add_link(text, (club + 0x38) as usize as *const u8, 0x7d0, club); // mutation: the competition link type', 'cqx_7 coppa italia through to first round'),
     ('cqx8_copa_c_faixas_de_8', '0xf, 0x10, "cqx_8 serie c cup predicted") // cqx8: the Serie C cup bands of 16', '0xf, 8, "cqx_8 serie c cup predicted") // mutation: bands of 8', 'cqx_8 serie c cup predicted'),
     ('cqx9_supercopa_em_qualquer_mes', 'if month != 5 { // cqx9: the Asian Super Cup turns over in June', 'if false && month != 5 { // mutation: in any month'),
     ('cqx9_supercopa_sem_primeira_rodada', 'exe::cup_set_up_round(cup, 0); // cqx9: the first round of the new Super Cup', '// mutation: no first round', 'cqx_9 asian super cup turnover'),
@@ -32,5 +32,5 @@ MUTACOES = [
     ('cqx12_lista_sem_o_visitante', 'if away != -1 { // cqx12: the away club of the tie', 'if false && away != -1 { // mutation: without the away club', 'cqx_12 uefa cup round clubs'),
     ('cqx12_semifinalistas_trocados', 'write_u32(e + 4, club_a); // cqx12: the first semi-final loser', 'write_u32(e + 4, club_b); // mutation: the second in the first place', 'cqx_12 semi-final losers'),
     ('cqx14_vitoria_vale_1', 'this.set_win_points(win_points as u8); // cqx14: the win points', 'this.set_win_points(1); // mutation: 1 point a win', 'cqx_14 sub league row'),
-    ('cqx14_vinculo_do_clube_trocado', 'add_link(text, club + 0x38, 0x7d5, club); // cqx14: the club link', 'add_link(text, club + 0x38, 0x7d0, club); // mutation: the competition link type', 'cqx_14 champions league qualifying text'),
+    ('cqx14_vinculo_do_clube_trocado', 'exe::text_add_link(text, (club + 0x38) as usize as *const u8, 0x7d5, club); // cqx14: the club link', 'exe::text_add_link(text, (club + 0x38) as usize as *const u8, 0x7d0, club); // mutation: the competition link type', 'cqx_14 champions league qualifying text'),
 ]

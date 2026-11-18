@@ -38,5 +38,5 @@ MUTACOES = [
     ('cpy12_fisio_sem_sorteio', '                let r = exe::utils_random(200); // cpy12: the severity random draw', '                let r: i32 = 200; // mutacao: sem o sorteio da gravidade', 'cpy_12 physio evaluates'),
     ('cpy13_sem_compensacao', '        exe::finance_pay_wages(fin, comp); // cpy13: the compensation to the club', '        exe::finance_pay_wages(fin, 0); // mutacao: sem a compensação', 'cpy_13 compensation paid'),
     ('cpy13_fica_na_escalacao', '            exe::tactics_remove_player_from_selection(read_usize(G_TACTICS), p.club_job(), p, 1, 1); // cpy13: the line-ups', '            // mutacao: fica na escalação do time principal', 'cpy_13 leaves the current club'),
-    ('cpy13_sem_listas', '        lists(this.shortlist_manager(), p.addr(), club, 4, 2); // cpy13: the status in the scouting lists', '        let _ = lists; // mutacao: sem a situação nas listas', 'cpy_13 released'),
+    ('cpy13_sem_listas', '        exe::shortlist_manager_update_staff_status(this.shortlist_manager(), p, club, 4, 2); // cpy13: the status in the scouting lists', '        let _ = lists; // mutacao: sem a situação nas listas', 'cpy_13 released'),
 ]

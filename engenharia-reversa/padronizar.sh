@@ -26,6 +26,10 @@ for par in club=Club staff=Staff fixture=Fixture match_player=MatchPlayer contra
   python tipar_registros.py --acessos "$mod" --gravar 2>&1 | grep -v "^volta" | tail -1
 done
 python tipar_registros.py --exe --gravar 2>&1 | tail -1
+# raw exe addresses get their name (FN_*), then the inline transmutes become the typed exe:: wrappers: a queue
+# item that still carries `transmute(0x..usize)` enters in style (17/11/2026; 209 had piled up since 11/11)
+python nomear_funcoes.py --gravar 2>&1 | tail -1
+python involucros_exe.py --gravar 2>&1 | grep -v "^volta" | tail -1
 python limpar_tipos.py --gravar 2>&1 | grep -v "^volta" | tail -1
 # the compiler's own fixes (unnecessary parentheses, unused imports and mut), checked by it (readability batch 33)
 (cd ../rust && cargo fix --lib --release --allow-dirty 2>&1 | tail -1)

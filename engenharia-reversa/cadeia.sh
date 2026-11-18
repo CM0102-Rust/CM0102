@@ -44,9 +44,13 @@ if [ -n "$COMPARAR_BANCADA" ] && { [ -z "$LIGAS" ] || [ "$LIGAS" = MUNDO ] || [ 
   PAR="$RAIZ/levas/$N/jogo_real_paralelo.txt"
   BAN="$RAIZ/copias/bancada$COMPARAR_BANCADA"
   python "$RAIZ/engenharia-reversa/bancada.py" sincronizar "$COMPARAR_BANCADA" > /dev/null
+  # compila e instala a DLL na bancada: sincronizar so copia o codigo, e o simular.py nao copia a DLL -- sem isto a
+  # comparacao paralela rodaria com a DLL antiga da bancada, um resultado que nao e o do codigo da leva
+  ( cd "$BAN/rust" && cargo build --release ) || { echo "cargo falhou na bancada $COMPARAR_BANCADA"; exit 1; }
+  cp "$BAN/rust/target/i686-pc-windows-msvc/release/ddraw.dll" "$BAN/jogo_testes/ddraw.dll"
   rm -f "$BAN/jogo_testes/auto_setup.cfg"
-  ( cd "$BAN/engenharia-reversa"     && python -u simular.py --ate $ATE_REAL --motor sim --modo comparar --limite $LIM_REAL "${L[@]}"     && grep -aE "DIVERG|EXCECAO|EXCEPTION" ../jogo_testes/ddraw.log | head -5 | cut -c1-300     && grep -aE "comparacoes|comparisons" ../jogo_testes/ddraw.log | tail -3     && grep -a "sonda_lixo" ../jogo_testes/ddraw.log | tail -1 ) > "$PAR" 2>&1 &
-  ESPERAR=$!
+  rm -f "$PAR" "$PAR.parcial"
+  ( ( cd "$BAN/engenharia-reversa"     && python -u simular.py --ate $ATE_REAL --motor sim --modo comparar --limite $LIM_REAL "${L[@]}"     && grep -aE "DIVERG|EXCECAO|EXCEPTION" ../jogo_testes/ddraw.log | head -5 | cut -c1-300     && grep -aE "comparacoes|comparisons" ../jogo_testes/ddraw.log | tail -3     && grep -a "sonda_lixo" ../jogo_testes/ddraw.log | tail -1 ) > "$PAR.parcial" 2>&1 && mv "$PAR.parcial" "$PAR" ) &
 fi
 (if python -u mutacoes.py mutacoes/leva$N.py $MODO "${M[@]}"; then
   if [ -n "$SAVE" ]; then
@@ -61,7 +65,9 @@ fi
   python laboratorio.py | head -1
   echo "=== JOGO REAL"
   if [ -n "$PAR" ]; then
-    wait $ESPERAR
+    # espera o arquivo do trabalho paralelo aparecer (renomeado so quando ele termina): `wait` nao serve, porque
+    # o trabalho e filho do shell de fora e nao deste subshell -- "is not a child of this shell" (16/11/2026)
+    while [ ! -f "$PAR" ]; do sleep 20; done
     cat "$PAR"
   else
   python -u simular.py --ate $ATE_REAL --motor sim --modo comparar --limite $LIM_REAL "${L[@]}"
