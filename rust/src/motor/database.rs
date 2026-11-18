@@ -7884,7 +7884,7 @@ pub(crate) unsafe extern "C" fn database_club_has_reserve_squad(club: usize) -> 
     if id >= gi(G_CLUB_COUNT).wrapping_sub(gi(G_NATION_COUNT)) {
         return 0; // national team
     }
-    if exe::club_get_linked_b_team(club.addr(), (0) as u32 as *mut u32, 1) != 0 {
+    if exe::club_get_linked_b_team(club, (0) as u32 as *mut u32, 1) != 0 {
         return 0;
     }
     let nation = club.nation();

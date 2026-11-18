@@ -1,4 +1,3 @@
-use super::*;
 
 
 
@@ -1622,3 +1621,5 @@ pub const FN_WCOCEANIALEAGUE_CREATE_PLAYOFF_STAGE: usize = 0x91f800; // WcOceani
 pub const FN_WORLDCUP_SET_UP_RULES: usize = 0x92d200; // WorldCup::set_up_rules
 pub const FN_WORLDCUP_SET_UP_TEAM_LIST: usize = 0x92da40; // WorldCup::set_up_team_list
 pub const FN_9465FC: usize = 0x9465fc; // no name in the map
+pub const FN_PORPRM_CREATE_TABLE: usize = 0x7cf800; // PorPrm::create_table
+pub const FN_PORSUPER_SELECT_TEAMS: usize = 0x7d3260; // PorSuper::select_teams

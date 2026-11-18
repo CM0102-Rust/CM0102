@@ -1867,7 +1867,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
     // the rotation (0x8cf880 points out who rests; 0x6e8910 re-evaluates), at most two rounds
     if *(game.addr() as *const i32) != -2 {
         *((f + 0x2e) as *mut u8) = 0;
-        let mut r = exe::transfer_manager_check_matchday_squad_limit(u(G_TRANSFER_MANAGER, 0), club, game.addr(), 0, f + 0x14c, 2, f + 0x78);
+        let mut r = exe::transfer_manager_check_matchday_squad_limit(u(G_TRANSFER_MANAGER, 0), club, game, 0, f + 0x14c, 2, f + 0x78);
         while r != 0 && *((f + 0x2e) as *mut u8) != 2 {
             let nb = *((f + 0x13) as *mut u8);
             *((f + 0x2e) as *mut u8) = (*((f + 0x2e) as *mut u8)).wrapping_add(1);
@@ -1905,7 +1905,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
             if w != 0 {
                 exe::crt_free(w);
             }
-            r = exe::transfer_manager_check_matchday_squad_limit(u(G_TRANSFER_MANAGER, 0), club, game.addr(), 0, f + 0x14c, 2, f + 0x78);
+            r = exe::transfer_manager_check_matchday_squad_limit(u(G_TRANSFER_MANAGER, 0), club, game, 0, f + 0x14c, 2, f + 0x78);
         }
     }
     if mode as u8 == 1 {
@@ -2505,7 +2505,7 @@ pub(crate) unsafe extern "C" fn rate_player(person: usize, player: usize, club: 
         return -10000;
     }
     let sheet = p.player();
-    let enc = exe::database_get_contract_rating_modifier(p.addr(), club.addr()) as f64;
+    let enc = exe::database_get_contract_rating_modifier(p, club) as f64;
     let mut y = (sheet.world_reputation() as i32 - club.reputation() as i32) as f64 * read_f64(rdata::F64_0_002) + read_f64(rdata::F64_1_5);
     if !(read_f64(rdata::F64_NEG_4) <= y) {
         y = -4.0;

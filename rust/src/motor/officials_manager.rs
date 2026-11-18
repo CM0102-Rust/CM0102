@@ -341,7 +341,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
     let (ini, n) = if comp.is_null() {
         band_of_nation(officials_manager_club_nation_id(home).unwrap_or_else(|| random(nations)))
     } else {
-        if exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), comp.addr()) != 0 {
+        if exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), comp) != 0 {
             band_of_nation(read_i32(home.nation().addr())) // like the original, without checking the nation
         } else {
             let c = Cup(read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_i32(comp.addr()).wrapping_mul(4) as usize)));

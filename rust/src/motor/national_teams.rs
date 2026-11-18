@@ -2855,7 +2855,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_remove_player(this: usize,
         return;
     }
     let reg = read_usize(this + national_teams_fields::NATION_RECORDS).wrapping_add((read_u32(nation.addr()) as usize).wrapping_mul(110));
-    let n = exe::national_teams_get_position_group(player.addr(), (reg as *const i16) as *const i16 as usize, (0) as u8 as u32) as i8 as isize;
+    let n = exe::national_teams_get_position_group(player, (reg as *const i16) as *const i16 as usize, (0) as u8 as u32) as i8 as isize;
     let field = |o: isize| (reg as isize).wrapping_add(n * 4 + o) as usize;
     if read_i16(field(0xf)) < read_i16(player.player().addr() + 9) {
         let mut start = u(reg + 8) as i32;

@@ -239,7 +239,7 @@ pub(crate) unsafe extern "C" fn load_game_data(path: *const u8) -> u32 {
         return 0;
     }
     let mut temporary = [0u8; 0x104];
-    copy_text(temporary.as_mut_ptr(), (exe::utils_build_file_path(0x987da0, 0xad9c64) as *const u8));
+    copy_text(temporary.as_mut_ptr(), exe::utils_build_file_path(0x987da0, 0xad9c64) as *const u8);
     check_game_cd(true);
     if path.is_null() {
         setup_warning(0x233b);

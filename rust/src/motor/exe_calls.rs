@@ -5145,6 +5145,16 @@ pub(crate) mod exe {
         f(a0.addr(), a1, a2)
     }
     #[inline(always)]
+    pub(crate) unsafe fn porprm_create_table(a0: impl Addr) -> u32 {
+        let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_PORPRM_CREATE_TABLE);
+        f(a0.addr())
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn porsuper_select_teams(a0: impl Addr) -> i32 {
+        let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_PORSUPER_SELECT_TEAMS);
+        f(a0.addr())
+    }
+    #[inline(always)]
     pub(crate) unsafe fn pump_messages() {
         let f: unsafe extern "C" fn() = core::mem::transmute(FN_PUMP_MESSAGES);
         f()

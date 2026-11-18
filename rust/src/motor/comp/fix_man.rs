@@ -961,7 +961,7 @@ pub(crate) unsafe extern "thiscall" fn add_fixture(this: usize, game: usize, cle
                             exe::fixture_manager_find_new_fixture_date(this, pc);
                             exe::fixture_manager_add_fixture(this, pc, 0);
                         }
-                        exe::fixture_manager_queue_fixture_moved_news(read_usize(G_FIXTURE_MANAGER), pc, game.addr(), 0);
+                        exe::fixture_manager_queue_fixture_moved_news(read_usize(G_FIXTURE_MANAGER), pc, game, 0);
                     }
                     x = exe::llist_get_next(l);
                 }

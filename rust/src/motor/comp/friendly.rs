@@ -988,7 +988,7 @@ pub(crate) unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entries
                 break;
             }
             q += 4;
-            if exe::human_manager_is_human_club(club.addr(), 1, (1) as u8 as u32, (0) as usize as u32, 0) != 0 {
+            if exe::human_manager_is_human_club(club, 1, (1) as u8 as u32, (0) as usize as u32, 0) != 0 {
                 continue;
             }
             if (club.continental_comp_id() as i32) == read_i32(KEY_CLUB_COMP_INTER_TOTO_CUP) {

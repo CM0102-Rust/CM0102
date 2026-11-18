@@ -1280,12 +1280,12 @@ pub(crate) unsafe extern "stdcall" fn player_regen_sign_for_club(person: usize, 
     exe::contract_manager_add_staff_contract(manager, person, (person.value() as i32) as u32);
     if exe::human_manager_is_human_club(club, 1, 1, 0, 0) != 0 {
         exe::contract_manager_move_to_reserves(read_i32(G_CONTRACT_MANAGER) as usize, person, club);
-        let c = exe::contract_manager_get_contract(read_i32(G_CONTRACT_MANAGER) as usize, person.addr());
+        let c = exe::contract_manager_get_contract(read_i32(G_CONTRACT_MANAGER) as usize, person);
         write_u8(c + contract::SQUAD_STATUS, read_u8(c + contract::SQUAD_STATUS) & 0xf | 0x60);
-        let c = exe::contract_manager_get_contract(read_i32(G_CONTRACT_MANAGER) as usize, person.addr());
+        let c = exe::contract_manager_get_contract(read_i32(G_CONTRACT_MANAGER) as usize, person);
         write_u8(c + contract::CONTRACT_TYPE, read_u8(c + contract::CONTRACT_TYPE) & 0xc1 | 1);
     }
-    let c = exe::contract_manager_get_contract(read_i32(G_CONTRACT_MANAGER) as usize, person.addr());
+    let c = exe::contract_manager_get_contract(read_i32(G_CONTRACT_MANAGER) as usize, person);
     if c != 0 {
         exe::staff_contract_set_default_wage(c, person);
         write_u8(c + contract::SQUAD_NUMBER, 0);

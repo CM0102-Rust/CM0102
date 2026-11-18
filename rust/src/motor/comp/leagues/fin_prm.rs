@@ -2433,7 +2433,7 @@ pub(crate) unsafe extern "thiscall" fn process_club_finance_events(this: usize, 
     }
     let level = (club.addr() + club::TRAINING) as *mut i8;
     if read_u8(est + stadium::UNDER_SOIL_HEATING) != 0 && club.reputation() < 0x109a {
-        exe::finance_post_stadium_works_news(this, club.addr(), (0) as u32 as i32, (7) as u32 as i32);
+        exe::finance_post_stadium_works_news(this, club, (0) as u32 as i32, (7) as u32 as i32);
         club.stadium().set_under_soil_heating(0);
         let n = *level;
         if n == 0x14 {

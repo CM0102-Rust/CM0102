@@ -3483,7 +3483,7 @@ pub(crate) unsafe extern "thiscall" fn free_transfer_staff(this: usize, p: usize
             covered!("cpy_13 compensation paid");
         }
         exe::finance_pay_wages(fin, comp); // cpy13: the compensation to the club
-        exe::shortlist_manager_update_staff_status(this.shortlist_manager(), p.addr(), club, 4, 2); // cpy13: the status in the scouting lists
+        exe::shortlist_manager_update_staff_status(this.shortlist_manager(), p, club, 4, 2); // cpy13: the status in the scouting lists
         if !p.club_job().is_null() {
             covered!("cpy_13 leaves the current club");
             exe::tactics_remove_player_from_selection(read_usize(G_TACTICS), p.club_job(), p, 1, 1); // cpy13: the line-ups
@@ -3953,7 +3953,7 @@ pub(crate) unsafe extern "thiscall" fn post_offer_rejected_news(this: usize, o: 
     exe::newsitem_set_slot(nt, 7, o.status() as i8 as u32);
     exe::newsitem_set_slot(nt, 8, reason as i16 as u32);
     exe::newsitem_set_slot(nt, 9, o.offer_type() as i8 as u32);
-    exe::newsitem_set_slot(nt, 10, (exe::transfer_offer_get_total_value(o.addr(), 0, 0, 0, 1) as u32));
+    exe::newsitem_set_slot(nt, 10, exe::transfer_offer_get_total_value(o, 0, 0, 0, 1) as u32);
     let division = if club != 0 { read_usize(club + club::DIVISION) } else { 0 };
     exe::newsitem_set_slot(nt, 11, if division != 0 { read_usize(division) as u32 } else { u32::MAX });
     for &d in list.iter().take(n.max(0) as usize) {
@@ -4368,7 +4368,7 @@ pub(crate) unsafe extern "thiscall" fn post_transfer_completed_news(this: usize,
     exe::newsitem_set_slot(nt, 5, contract_club_id_or_minus1(p.addr()));
     exe::newsitem_set_slot(nt, 6, o.fee() as u32);
     exe::newsitem_set_slot(nt, 7, 0);
-    exe::newsitem_set_slot(nt, 8, (exe::transfer_offer_get_total_value(o.addr(), 1, 1, 0, 1) as u32));
+    exe::newsitem_set_slot(nt, 8, exe::transfer_offer_get_total_value(o, 1, 1, 0, 1) as u32);
     exe::newsitem_set_slot(nt, 9, o.pre_contract() as i8 as u32);
     exe::newsitem_set_slot(nt, 0xc, o.job_type() as i8 as u32);
     exe::newsitem_set_slot(nt, 0xd, exe::transfer_offer_get_clause_total(o));
@@ -4427,7 +4427,7 @@ pub(crate) unsafe extern "thiscall" fn post_transfer_agreed_news(this: usize, o:
     exe::newsitem_set_slot(nt, 5, contract_club_id_or_minus1(p.addr()));
     exe::newsitem_set_slot(nt, 6, o.fee() as u32);
     exe::newsitem_set_slot(nt, 7, o.pre_contract() as i8 as u32);
-    exe::newsitem_set_slot(nt, 8, (exe::transfer_offer_get_total_value(o.addr(), 0, 1, 0, 1) as u32));
+    exe::newsitem_set_slot(nt, 8, exe::transfer_offer_get_total_value(o, 0, 1, 0, 1) as u32);
     exe::newsitem_set_slot(nt, 9, (((o.completion_timing() << 4) as i8) >> 4) as i32 as u32);
     exe::newsitem_set_slot(nt, 0xa, read_i16(data) as i32 as u32);
     exe::newsitem_set_slot(nt, 0xb, read_i16(data + cm_date::YEAR) as u16 as u32);

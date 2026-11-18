@@ -2069,7 +2069,7 @@ pub(crate) unsafe extern "thiscall" fn value_player_for_club(this: usize, club: 
     let base = read_f64(rdata::F64_1500000);
     let mut x = kk;
     if kk > base {
-        let n2 = exe::match_man_judge_player_ability(club.manager().addr(), p.addr(), club.addr(), (2) as u32 as i8, ((*out / 4) as u32) as u32 as i16) as i32 as f64;
+        let n2 = exe::match_man_judge_player_ability(club.manager().addr(), p, club, (2) as u32 as i8, ((*out / 4) as u32) as u32 as i16) as i32 as f64;
         if n2 < read_f64(rdata::F64_145) {
             let mut a = n2 * read_f64(rdata::F64_0_025) - read_f64(rdata::F64_2_625);
             if !(read_f64(rdata::F64_0) <= a) {
