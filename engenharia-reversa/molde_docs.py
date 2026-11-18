@@ -5,7 +5,9 @@ from gen_docs import fazer, leia, cadeia, prova_save, resultado_pt_en
 
 N = %%N%%
 R = %%R%%
-ESCAPADAS = {}  # nome: (explicação pt, explicação en), quando houver
+# the escapes are explained in escapadas.py next to this file, when there are any (18/11/2026)
+_e = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'escapadas.py')
+ESCAPADAS = {k: (a.rstrip('.'), b.rstrip('.')) for k, (a, b) in (__import__('runpy').run_path(_e)['ESCAPADAS'].items() if os.path.exists(_e) else [])}  # nome: (pt, en)
 tot, ac, esc, ok = cadeia(N)
 assert ok, 'cadeia com divergência ou carreira que não chegou à data'
 RES_PT, RES_EN = resultado_pt_en(N)
