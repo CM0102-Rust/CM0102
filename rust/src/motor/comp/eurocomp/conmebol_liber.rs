@@ -208,9 +208,8 @@ pub(crate) unsafe fn apply_cup_rules(this: League, g: &ContinentalGroupRules, da
 
 /// Comparer: runs the original and checks rule fields, date word, +0xb8, prize and return 1.
 pub(crate) unsafe fn check_cup_rules(name: &str, this: League, g: &ContinentalGroupRules, o: impl FnOnce() -> u32) -> u32 {
-    let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u8; 8];
-    data(d.as_mut_ptr(), g.day, g.month, (this.year() as u16) as u32, g.week);
+    exe::date_date_549f70((d.as_mut_ptr()) as *mut u8 as *mut [u16; 4], g.day, g.month, (this.year() as u16) as u32, g.week);
     let word = core::ptr::read_unaligned(d.as_ptr() as *const u16);
     let r = o();
     let mut errados: [(usize, u32); 4] = [(0, 0); 4];

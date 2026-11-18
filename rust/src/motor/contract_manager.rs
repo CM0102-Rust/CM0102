@@ -149,7 +149,6 @@ pub(crate) unsafe fn set_contract_type_from_job(c: Contract) {
 /// club (`exe::database_add_staff_to_club`); on failure: the box (0x1672, 0x167a) and 0.
 /// Original: `CONTRACT_MANAGER::sign_contract` (0x4cf720, contract_manager.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn sign_contract(this: usize, contract: usize, job: u32) -> u32 {
-    let olheiros: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_SCOUT_MANAGER_SYNC_SCOUT_LISTS);
     let c = Contract(contract);
     let club = transfer_manager_club_by_id(c.club());
     let person = Staff(read_usize(G_STAFF_TABLE).wrapping_add(read_usize(c.addr()).wrapping_mul(staff::SIZE)));
@@ -162,7 +161,7 @@ pub(crate) unsafe extern "thiscall" fn sign_contract(this: usize, contract: usiz
         return 0;
     }
     if !person.club_job().is_null() && exe::human_manager_is_human_club(person.club_job(), 1, (1) as u32, (0) as u32, 0) != 0 {
-        olheiros(read_usize(G_SCOUT_MANAGER), person.club_job().manager().addr());
+        exe::scout_manager_sync_scout_lists(read_usize(G_SCOUT_MANAGER), person.club_job().manager().addr());
         exe::training_manager_update_coach_assignments(read_usize(G_TRAINING_MANAGER), person.club_job(), 0);
     }
     let mut tmp = [0u8; 8];

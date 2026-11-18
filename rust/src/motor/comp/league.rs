@@ -646,7 +646,6 @@ pub(crate) unsafe fn same_date(a: usize, b: usize) -> bool {
 /// Original: `League::update_for_date` (0x6847c0, league.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn league_update_for_date(this: usize, data: usize, full: u32) -> u32 {
     let this = League(this);
-    let anexo: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_COMP_STATS_SEND_RECORD_NEWS);
     // the requested date copied at the start (the original keeps the day|year dword and the leap-year one)
     let d0 = [read_usize(data) as u32, read_usize(data + 4) as u32];
     let pd0 = d0.as_ptr() as usize;
@@ -733,7 +732,7 @@ pub(crate) unsafe extern "thiscall" fn league_update_for_date(this: usize, data:
                 exe::club_records_update_league_position_records(read_usize(G_CLUB_RECORDS), this, 0);
             }
             if this.comp_stats() != 0 {
-                anexo(this.comp_stats());
+                exe::comp_stats_send_record_news(this.comp_stats());
             }
         }
     }
@@ -1633,7 +1632,6 @@ pub(crate) unsafe extern "thiscall" fn league_update_staff_records_for_status(le
 pub(crate) unsafe extern "thiscall" fn announce_team_status(league: usize, club: usize, status: u32, stage: u32, _a: u32, _b: u32) -> u32 {
     let league = League(league);
     let club = Club(club);
-    let nation: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_NATION_MANAGERS);
     // simplification: the original writes only the output byte in a stack dword and pushes the whole dword to 0x786090, which
     // reads the byte; the copy passes the high part zeroed
     let mut out: u32 = 0xff;
@@ -1679,7 +1677,7 @@ pub(crate) unsafe extern "thiscall" fn announce_team_status(league: usize, club:
     match status as u8 {
         5 => {
             if (league.upper_division_id() as usize) as i32 == -1 {
-                nation(news, n, league.competition().nation().addr());
+                exe::news_send_to_nation_managers(news, n, league.competition().nation().addr());
             } else {
                 exe::news_send_to_division_managers(news, n, league.competition().addr());
             }
@@ -3574,7 +3572,6 @@ pub(crate) unsafe extern "thiscall" fn move_club_to_division(_this: usize, club:
 /// Original: `League::draw_team_order` (0x686a70, league.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn draw_team_order(this: usize, clubs: i32) {
     let this = League(this);
-    let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     let n = || this.club_count() as i32;
     let table = || this.table();
     let half_n = n() / 2;
@@ -3595,7 +3592,7 @@ pub(crate) unsafe extern "thiscall" fn draw_team_order(this: usize, clubs: i32) 
         *posto.add(i as usize) = 0;
         i += 1;
     }
-    let semente = sorteio(30000).wrapping_add(1);
+    let semente = exe::utils_random(30000).wrapping_add(1);
     exe::crt_srand((this.year() as i32).wrapping_add(read_i32(G_GAME_RANDOM_SEED)) as u32); // cpu12: a semente
     covered!("cpu_12 drawn order");
     let mut i = 0;
@@ -3660,7 +3657,7 @@ pub(crate) unsafe extern "thiscall" fn draw_team_order(this: usize, clubs: i32) 
                 c = c.wrapping_add(1);
             }
             if rangers != -1 && celtic != -1 {
-                let (primeiro, segundo) = if sorteio(2) != 0 { (celtic, rangers) } else { (rangers, celtic) };
+                let (primeiro, segundo) = if exe::utils_random(2) != 0 { (celtic, rangers) } else { (rangers, celtic) };
                 copy_row_59(grid, table() + primeiro as isize as usize * CUP_LEAGUE_TABLE_ROW_SIZE);
                 copy_row_59(grid + half as usize * CUP_LEAGUE_TABLE_ROW_SIZE, table() + segundo as isize as usize * CUP_LEAGUE_TABLE_ROW_SIZE);
                 k = 1;

@@ -943,7 +943,6 @@ pub(crate) unsafe extern "thiscall" fn add_fixture(this: usize, game: usize, cle
             entrou = true;
             if l != 0 {
                 let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
-                let news: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_FIXTURE_MANAGER_QUEUE_FIXTURE_MOVED_NEWS);
                 write_usize(l + llist::CURSOR, read_usize(l + 2));
                 let mut x = exe::llist_get_next(l);
                 while x != 0 {
@@ -962,7 +961,7 @@ pub(crate) unsafe extern "thiscall" fn add_fixture(this: usize, game: usize, cle
                             exe::fixture_manager_find_new_fixture_date(this, pc);
                             exe::fixture_manager_add_fixture(this, pc, 0);
                         }
-                        news(read_usize(G_FIXTURE_MANAGER), pc, game.addr(), 0);
+                        exe::fixture_manager_queue_fixture_moved_news(read_usize(G_FIXTURE_MANAGER), pc, game.addr(), 0);
                     }
                     x = exe::llist_get_next(l);
                 }

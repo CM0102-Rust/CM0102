@@ -86,7 +86,6 @@ pub(crate) unsafe extern "thiscall" fn add_transfer_offer(this: usize, offer: us
     let this = TransferManagerFields(this);
     let offer = Offer(offer);
     let exit: unsafe extern "C" fn(i32) -> ! = core::mem::transmute(FN_CRT_EXIT);
-    let human: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
 
     let target = offer.target_staff_id();
     let buyer = offer.buyer_club_id();
@@ -194,7 +193,7 @@ pub(crate) unsafe extern "thiscall" fn add_transfer_offer(this: usize, offer: us
     // stack); 0x8c6220 reads the bytes (days as u8, slices as u8)
     let (mut dias, mut fatias) = (0u8, 0u8);
     let agenda = if offer.pre_contract() != 0 {
-        let h = human((transfer_manager_club_by_id(buyer)).addr(), 0, 1, 0, 0);
+        let h = exe::human_manager_is_human_club((transfer_manager_club_by_id(buyer)).addr(), 0, (1) as u8 as u32, (0) as usize as u32, 0);
         write_u8(read_usize(slot(vaga)) + offer::STATUS, 7);
         if h != 0 {
             dias = 0x1c;
@@ -202,7 +201,7 @@ pub(crate) unsafe extern "thiscall" fn add_transfer_offer(this: usize, offer: us
         } else {
             false
         }
-    } else if seller != 0 && human(seller, 0, 1, 0, 0) != 0 {
+    } else if seller != 0 && exe::human_manager_is_human_club(seller, 0, (1) as u8 as u32, (0) as usize as u32, 0) != 0 {
         dias = 0x1c;
         true
     } else {
@@ -233,7 +232,7 @@ pub(crate) unsafe extern "thiscall" fn add_transfer_offer(this: usize, offer: us
             n = exe::llist_get_next(offer.exchange_players());
         }
     }
-    if human((transfer_manager_club_by_id(offer.buyer_club_id())).addr(), 0, 1, 0, 0) != 0 {
+    if exe::human_manager_is_human_club((transfer_manager_club_by_id(offer.buyer_club_id())).addr(), 0, (1) as u8 as u32, (0) as usize as u32, 0) != 0 {
         let p = transfer_manager_staff_by_id(offer.target_staff_id());
         if p.player().addr() != 0 {
             exe::scout_manager_add_to_shortlist(read_usize(G_SCOUT_MANAGER), p, 0);
@@ -565,7 +564,6 @@ pub(crate) unsafe fn show_error_box(file: usize, row: u32) {
 /// Original: `TRANSFER_MANAGER::ai_respond_to_bid` (0x8c8090, transfer_manager.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn ai_respond_to_bid(this: usize, slot: usize, dry_run: u32) {
     let this = TransferManagerFields(this);
-    let responde: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_ON_HOLIDAY);
     let value: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> i32 = core::mem::transmute(FN_TRANSFER_OFFER_GET_WEIGHTED_VALUE);
     // simplification: the local slot (esp+0x58) the original leaves with stack leftover outside the date (+0x1b), of the position word,
     // of +0xb and bits 2..4 and 0..1 of +0x24; 0x840d80 reads here only the position, +0x24 (type 4) and +0xf (compared with
@@ -602,7 +600,7 @@ pub(crate) unsafe extern "thiscall" fn ai_respond_to_bid(this: usize, slot: usiz
         }
         return;
     }
-    if seller != 0 && exe::human_manager_is_human_club(seller, 1, 1, 0, 0) != 0 && responde(read_usize(G_HUMAN_MANAGER), exe::database_get_club_manager(seller)) != 0 {
+    if seller != 0 && exe::human_manager_is_human_club(seller, 1, 1, 0, 0) != 0 && exe::human_manager_is_on_holiday(read_usize(G_HUMAN_MANAGER), exe::database_get_club_manager(seller)) != 0 {
         if exe::human_manager_get_holiday_option(read_usize(G_HUMAN_MANAGER), 0, exe::database_get_club_manager(seller)) != 0 && !o.exchange_players().is_null() {
             exe::transfer_manager_reject_transfer_offer(this, (slot) as usize as *mut usize, 0, 0);
             return;
@@ -869,7 +867,6 @@ pub(crate) unsafe fn score_player_for_seller(person: Staff, position: u16, marks
 pub(crate) unsafe extern "thiscall" fn make_exchange_option(this: usize, buyer: usize, target: usize, offer: usize, out: *mut usize, attraction: *mut i8, value: i32) -> u32 {
     let this = TransferManagerFields(this);
     let offer = Offer(offer);
-    let sheet: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
     let interest: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, usize) -> f64 = core::mem::transmute(FN_SHORTLIST_MANAGER_STAFF_INTEREST_IN_JOINING_CLUB);
     let seller = contract_club_any_type(Staff(target));
     let mut list = [0u8; 0x10]; // a LLIST local (0xe bytes)
@@ -957,7 +954,7 @@ pub(crate) unsafe extern "thiscall" fn make_exchange_option(this: usize, buyer: 
                         x
                     };
                     let cx = Contract(exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), x, contract_club_any_type(cand)));
-                    if cx.is_null() || read_usize(x + staff::CLUB_JOB) != buyer || sheet(read_usize(G_CONTRACT_MANAGER), x) != 0 {
+                    if cx.is_null() || read_usize(x + staff::CLUB_JOB) != buyer || exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), x) != 0 {
                         break 'jogador;
                     }
                     if read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(x).wrapping_mul(staff_state::SIZE)) + staff_state::STATUS_FLAGS) & 0x30 != 0 || cx.contract_type() & 0x3f == 5 {
@@ -3486,8 +3483,7 @@ pub(crate) unsafe extern "thiscall" fn free_transfer_staff(this: usize, p: usize
             covered!("cpy_13 compensation paid");
         }
         exe::finance_pay_wages(fin, comp); // cpy13: the compensation to the club
-        let lists: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) = core::mem::transmute(FN_SHORTLIST_MANAGER_UPDATE_STAFF_STATUS);
-        lists(this.shortlist_manager(), p.addr(), club, 4, 2); // cpy13: the status in the scouting lists
+        exe::shortlist_manager_update_staff_status(this.shortlist_manager(), p.addr(), club, 4, 2); // cpy13: the status in the scouting lists
         if !p.club_job().is_null() {
             covered!("cpy_13 leaves the current club");
             exe::tactics_remove_player_from_selection(read_usize(G_TACTICS), p.club_job(), p, 1, 1); // cpy13: the line-ups
@@ -3924,7 +3920,6 @@ pub(crate) unsafe fn compare_reject_withdraw(name: &str, this: TransferManagerFi
 /// Original: `post_offer_rejected_news` (0x8d5170, transfer_manager.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn post_offer_rejected_news(this: usize, o: usize, reason: u32) {
     let o = Offer(o);
-    let total: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_TRANSFER_OFFER_GET_TOTAL_VALUE);
     let p = Staff((staff_records_staff_by_id(o.target_staff_id())).addr());
     let buyer = friendly_club_by_id(o.buyer_club_id());
     let tipo5 = |c: Contract| c.contract_type() & 0x3f == 5;
@@ -3958,7 +3953,7 @@ pub(crate) unsafe extern "thiscall" fn post_offer_rejected_news(this: usize, o: 
     exe::newsitem_set_slot(nt, 7, o.status() as i8 as u32);
     exe::newsitem_set_slot(nt, 8, reason as i16 as u32);
     exe::newsitem_set_slot(nt, 9, o.offer_type() as i8 as u32);
-    exe::newsitem_set_slot(nt, 10, total(o.addr(), 0, 0, 0, 1));
+    exe::newsitem_set_slot(nt, 10, (exe::transfer_offer_get_total_value(o.addr(), 0, 0, 0, 1) as u32));
     let division = if club != 0 { read_usize(club + club::DIVISION) } else { 0 };
     exe::newsitem_set_slot(nt, 11, if division != 0 { read_usize(division) as u32 } else { u32::MAX });
     for &d in list.iter().take(n.max(0) as usize) {
@@ -4358,7 +4353,6 @@ pub(crate) unsafe fn deliver_transfer_news(nt: usize, o: Offer, list: &[usize], 
 /// Original: `post_transfer_completed_news` (0x8dbef0, transfer_manager.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn post_transfer_completed_news(this: usize, o: usize) {
     let o = Offer(o);
-    let total: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_TRANSFER_OFFER_GET_TOTAL_VALUE);
     let p = Staff((staff_records_staff_by_id(o.target_staff_id())).addr());
     let mut list = [0usize; 0x1e];
     let n = exe::transfer_manager_collect_offer_news_recipients(this, o, 0x5f, list.as_mut_ptr(), 0x1e) as i8;
@@ -4374,7 +4368,7 @@ pub(crate) unsafe extern "thiscall" fn post_transfer_completed_news(this: usize,
     exe::newsitem_set_slot(nt, 5, contract_club_id_or_minus1(p.addr()));
     exe::newsitem_set_slot(nt, 6, o.fee() as u32);
     exe::newsitem_set_slot(nt, 7, 0);
-    exe::newsitem_set_slot(nt, 8, total(o.addr(), 1, 1, 0, 1));
+    exe::newsitem_set_slot(nt, 8, (exe::transfer_offer_get_total_value(o.addr(), 1, 1, 0, 1) as u32));
     exe::newsitem_set_slot(nt, 9, o.pre_contract() as i8 as u32);
     exe::newsitem_set_slot(nt, 0xc, o.job_type() as i8 as u32);
     exe::newsitem_set_slot(nt, 0xd, exe::transfer_offer_get_clause_total(o));
@@ -4418,7 +4412,6 @@ pub(crate) unsafe extern "thiscall" fn post_transfer_completed_news(this: usize,
 /// Original: `post_transfer_agreed_news` (0x8e05d0, transfer_manager.cpp, thiscall).
 pub(crate) unsafe extern "thiscall" fn post_transfer_agreed_news(this: usize, o: usize, data: usize) {
     let o = Offer(o);
-    let total: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_TRANSFER_OFFER_GET_TOTAL_VALUE);
     let p = staff_records_staff_by_id(o.target_staff_id());
     let mut list = [0usize; 0x1e];
     let n = exe::transfer_manager_collect_offer_news_recipients(this, o, 0xf, list.as_mut_ptr(), 0x1e) as i8;
@@ -4434,7 +4427,7 @@ pub(crate) unsafe extern "thiscall" fn post_transfer_agreed_news(this: usize, o:
     exe::newsitem_set_slot(nt, 5, contract_club_id_or_minus1(p.addr()));
     exe::newsitem_set_slot(nt, 6, o.fee() as u32);
     exe::newsitem_set_slot(nt, 7, o.pre_contract() as i8 as u32);
-    exe::newsitem_set_slot(nt, 8, total(o.addr(), 0, 1, 0, 1));
+    exe::newsitem_set_slot(nt, 8, (exe::transfer_offer_get_total_value(o.addr(), 0, 1, 0, 1) as u32));
     exe::newsitem_set_slot(nt, 9, (((o.completion_timing() << 4) as i8) >> 4) as i32 as u32);
     exe::newsitem_set_slot(nt, 0xa, read_i16(data) as i32 as u32);
     exe::newsitem_set_slot(nt, 0xb, read_i16(data + cm_date::YEAR) as u16 as u32);

@@ -349,14 +349,13 @@ pub(crate) unsafe extern "C" fn get_continent_adjective(continent: usize, text: 
     if continent == 0 || text == 0 || (size as u16 as i16) < 0x32 {
         return original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_GET_CONTINENT_ADJECTIVE)(continent, text, size, form);
     }
-    let language: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
     let adjective: unsafe extern "C" fn(u32, u32) -> u8 = core::mem::transmute(FN_GET_ADJECTIVE_FORM_INDEX);
     write_u8(text, 0);
     let own = continent + continent::ADJECTIVE; // the record’s adjective (dbu)
     let table = if form as u8 == 0 {
         None
     } else {
-        match language() {
+        match exe::langlib_get_language() {
             9 => Some((&CONTINENT_ADJECTIVES, 9)),
             5 => Some((&CONTINENT_ADJECTIVES_LANG5, 5)),
             4 => Some((&CONTINENT_NAMES_LANGUAGE_4, 4)),

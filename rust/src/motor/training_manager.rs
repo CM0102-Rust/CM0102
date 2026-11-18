@@ -200,8 +200,7 @@ pub(crate) unsafe extern "thiscall" fn reassign_squad_schedules(this: usize, man
         let c = exe::training_schedule_get_training_load(human_training_schedule(this, manager, *e));
         exe::injury_set_training_load(read_usize(G_INJURY), p, c as u32);
     }
-    let staff: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_TRAINING_MANAGER_UPDATE_COACH_ASSIGNMENTS);
-    staff(this, new, manager);
+    exe::training_manager_update_coach_assignments(this, new, (manager) as usize as u32);
 }
 
 /// the default names of the 167 training schedules

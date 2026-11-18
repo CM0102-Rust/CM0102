@@ -1247,7 +1247,6 @@ pub(crate) unsafe extern "stdcall" fn player_regen_sign_for_club(person: usize, 
     }
     let manager = read_i32(G_CONTRACT_MANAGER) as usize;
     let month_of_end: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_CONTRACT_MANAGER_SEASON_END_MONTH);
-    let contract: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     covered!("cpv_9 regen signed");
     club.set_squad(k, (person.addr() as i32) as usize);
     person.set_club_job(Club((club.addr() as i32) as usize));
@@ -1281,12 +1280,12 @@ pub(crate) unsafe extern "stdcall" fn player_regen_sign_for_club(person: usize, 
     exe::contract_manager_add_staff_contract(manager, person, (person.value() as i32) as u32);
     if exe::human_manager_is_human_club(club, 1, 1, 0, 0) != 0 {
         exe::contract_manager_move_to_reserves(read_i32(G_CONTRACT_MANAGER) as usize, person, club);
-        let c = contract(read_i32(G_CONTRACT_MANAGER) as usize, person.addr());
+        let c = exe::contract_manager_get_contract(read_i32(G_CONTRACT_MANAGER) as usize, person.addr());
         write_u8(c + contract::SQUAD_STATUS, read_u8(c + contract::SQUAD_STATUS) & 0xf | 0x60);
-        let c = contract(read_i32(G_CONTRACT_MANAGER) as usize, person.addr());
+        let c = exe::contract_manager_get_contract(read_i32(G_CONTRACT_MANAGER) as usize, person.addr());
         write_u8(c + contract::CONTRACT_TYPE, read_u8(c + contract::CONTRACT_TYPE) & 0xc1 | 1);
     }
-    let c = contract(read_i32(G_CONTRACT_MANAGER) as usize, person.addr());
+    let c = exe::contract_manager_get_contract(read_i32(G_CONTRACT_MANAGER) as usize, person.addr());
     if c != 0 {
         exe::staff_contract_set_default_wage(c, person);
         write_u8(c + contract::SQUAD_NUMBER, 0);
@@ -2270,14 +2269,13 @@ pub(crate) unsafe fn can_club_bid(player: usize, club: usize) -> bool {
 /// SEH; the partner local is only read when `exe::club_get_linked_b_team` finds it (and writes it).
 /// Original: `PLAYER_REGEN::pick_best_club_for_player` (0x7ad0e0, player_regen.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn pick_best_club_for_player(_this: usize, player: usize) -> usize {
-    let foreigner: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_IS_STAFF_FOREIGN);
     let total = || (read_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
     let (mut melhor, mut melhor_nota) = (0usize, -25000i16);
     let mut eh_a = 0u32;
     let mut club = read_usize(G_CLUB_TABLE);
     let mut i = 0i32;
     while i < total() {
-        let candidate = foreigner(player, read_usize(club + club::NATION), 1) == 0
+        let candidate = exe::database_is_staff_foreign(player, read_usize(club + club::NATION), 1) == 0
             && (exe::club_get_linked_b_team(club, &mut eh_a, 1) == 0 || eh_a != 0)
             && !is_basque_restricted(Staff(player), club);
         if candidate {

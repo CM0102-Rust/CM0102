@@ -354,7 +354,6 @@ pub(crate) unsafe fn is_club_squad_player(p: Staff, club: usize) -> bool {
 /// (`staff_adjust_morale` with −1); positive, random(s) > random(5) raises it (+1).
 /// Original: `game_spread_squad_morale_by_leadership` (0x5ce0b0, game.cpp, cdecl).
 pub(crate) unsafe extern "C" fn game_spread_squad_morale_by_leadership() {
-    let morale: unsafe extern "C" fn(usize, i32, u32) -> u32 = core::mem::transmute(FN_STAFF_ADJUST_MORALE);
     let n = read_usize(G_CLUB_COUNT);
     let mut club = read_usize(G_CLUB_TABLE);
     let end = club.wrapping_add(n.wrapping_mul(club::SIZE));
@@ -397,13 +396,13 @@ pub(crate) unsafe extern "C" fn game_spread_squad_morale_by_leadership() {
                 if s < 0 {
                     let e = friendly_random(s as i32);
                     if e < friendly_random(-5) {
-                        morale(p, -1, 1);
+                        exe::staff_adjust_morale(p, (-1) as i32 as u32, 1);
                     }
                 } else if s > 0 {
                     let e = friendly_random(s as i32);
                     if e > friendly_random(5) {
                         covered!("cps_5 morale rises");
-                        morale(p, 1, 1); // cps5: sobe o moral
+                        exe::staff_adjust_morale(p, (1) as i32 as u32, 1); // cps5: sobe o moral
                     }
                 }
             }

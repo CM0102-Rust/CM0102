@@ -89,9 +89,8 @@ pub(crate) unsafe fn write_date(dst: usize, day: i16, year: u16) {
     if dst == 0 {
         return;
     }
-    let data: unsafe extern "thiscall" fn(*mut u8, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
     let mut b = [0u8; 8];
-    data(b.as_mut_ptr(), day as u16 as u32, year as u32);
+    exe::new_date((b.as_mut_ptr()) as *mut u8 as usize, day as u16 as u32, year as u32);
     core::ptr::copy_nonoverlapping(b.as_ptr(), dst as *mut u8, 8);
 }
 

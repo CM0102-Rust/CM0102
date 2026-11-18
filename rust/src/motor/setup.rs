@@ -222,7 +222,6 @@ pub(crate) unsafe fn check_game_cd(exigir: bool) {
 /// original's two-pass loop ([esp+0x24]; the 1st only sets the total 0x2d) runs the body once.
 /// Original: `load_game_data` (0x82a9c0, Setup.cpp, cdecl).
 pub(crate) unsafe extern "C" fn load_game_data(path: *const u8) -> u32 {
-    let folder: unsafe extern "C" fn(usize, usize) -> *const u8 = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
     let translate: unsafe extern "C" fn(*mut u8, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     covered!("save load game");
     let u = |a: usize| *(a as *const u32);
@@ -240,7 +239,7 @@ pub(crate) unsafe extern "C" fn load_game_data(path: *const u8) -> u32 {
         return 0;
     }
     let mut temporary = [0u8; 0x104];
-    copy_text(temporary.as_mut_ptr(), folder(0x987da0, 0xad9c64));
+    copy_text(temporary.as_mut_ptr(), (exe::utils_build_file_path(0x987da0, 0xad9c64) as *const u8));
     check_game_cd(true);
     if path.is_null() {
         setup_warning(0x233b);

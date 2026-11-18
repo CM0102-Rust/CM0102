@@ -97,7 +97,6 @@ pub(crate) unsafe fn staff_state_byte_0b(person: Staff) -> u8 {
 /// Original: `Shortlist_Manager::make_club_bids` (0x84a020, shortlist_manager.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn make_club_bids(this: usize, club: usize) {
     let club = Club(club);
-    let responde: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_ON_HOLIDAY);
     let renovar: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32, u32) = core::mem::transmute(FN_CONTRACT_MANAGER_OFFER_CONTRACT);
     let mut week = [0u32; 2];
     exe::date_add_days(G_CURRENT_DATE, (&mut week) as *mut [u32; 2] as usize, 7);
@@ -107,7 +106,7 @@ pub(crate) unsafe extern "thiscall" fn make_club_bids(this: usize, club: usize) 
     if exe::database_is_national_team(club) != 0 || exe::human_manager_is_human_club(club, 0, 1, 0, 0) != 0 {
         return;
     }
-    if exe::human_manager_is_human_club(club, 1, 1, 0, 0) != 0 && responde(read_usize(G_HUMAN_MANAGER), exe::database_get_club_manager(club)) != 0
+    if exe::human_manager_is_human_club(club, 1, 1, 0, 0) != 0 && exe::human_manager_is_on_holiday(read_usize(G_HUMAN_MANAGER), exe::database_get_club_manager(club)) != 0
         && exe::human_manager_get_holiday_option(read_usize(G_HUMAN_MANAGER), 4, exe::database_get_club_manager(club)) == 1
     {
         return;
@@ -2070,8 +2069,7 @@ pub(crate) unsafe extern "thiscall" fn value_player_for_club(this: usize, club: 
     let base = read_f64(rdata::F64_1500000);
     let mut x = kk;
     if kk > base {
-        let vista: unsafe extern "C" fn(usize, usize, usize, u32, u32) -> i16 = core::mem::transmute(FN_MATCH_MAN_JUDGE_PLAYER_ABILITY);
-        let n2 = vista(club.manager().addr(), p.addr(), club.addr(), 2, (*out / 4) as u32) as i32 as f64;
+        let n2 = exe::match_man_judge_player_ability(club.manager().addr(), p.addr(), club.addr(), (2) as u32 as i8, ((*out / 4) as u32) as u32 as i16) as i32 as f64;
         if n2 < read_f64(rdata::F64_145) {
             let mut a = n2 * read_f64(rdata::F64_0_025) - read_f64(rdata::F64_2_625);
             if !(read_f64(rdata::F64_0) <= a) {

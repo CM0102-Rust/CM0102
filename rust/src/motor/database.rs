@@ -2739,13 +2739,12 @@ pub(crate) unsafe extern "C" fn staff_is_best_favoured_candidate(person: usize, 
     if person.is_null() || club.is_null() || candidate == 0 || read_usize(G_PLAYER_STATS) == 0 {
         return 0;
     }
-    let age: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
     let id = read_usize(person.addr()) as i32;
     let r6 = id % 6;
     if (person.loyalty() as i32) < r6 + 6 || (person.ambition() as i32) > 15 - r6 {
         return 0;
     }
-    if age(G_CURRENT_DATE, person.date_joined_club(), person.date_joined_club_leap_year()) < id % 28 + 14 {
+    if exe::date_days_since(G_CURRENT_DATE, (person.date_joined_club()) as usize as u32, (person.date_joined_club_leap_year()) as usize as u32) < id % 28 + 14 {
         return 0;
     }
     let target = match favourite_colleague_score(person, club, Staff(candidate)) {
@@ -7879,14 +7878,13 @@ pub(crate) unsafe extern "C" fn database_club_has_reserve_squad(club: usize) -> 
     if club.is_null() {
         return original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_DATABASE_CLUB_HAS_RESERVE_SQUAD)(club.addr());
     }
-    let partner: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let g = |a: usize| read_u32(a);
     let gi = |a: usize| read_i32(a);
     let id = gi(club.addr());
     if id >= gi(G_CLUB_COUNT).wrapping_sub(gi(G_NATION_COUNT)) {
         return 0; // national team
     }
-    if partner(club.addr(), 0, 1) != 0 {
+    if exe::club_get_linked_b_team(club.addr(), (0) as u32 as *mut u32, 1) != 0 {
         return 0;
     }
     let nation = club.nation();

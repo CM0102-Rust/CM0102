@@ -1394,9 +1394,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
 
     let partner: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let pick: AssignPositionsFn = core::mem::transmute(FN_MATCH_MAN_ASSIGN_PLAYERS_TO_POSITIONS);
-    let rodizio: unsafe extern "thiscall" fn(usize, usize, usize, u32, usize, u32, usize) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_CHECK_MATCHDAY_SQUAD_LIMIT);
     #[allow(clippy::type_complexity)]
-    let capitao: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(FN_TACTICS_SET_CAPTAIN_FROM_SLOT);
 
     let club = u(t.addr(), match_manager::CLUB);
     let game = Fixture(u(t.addr(), match_manager::FIXTURE));
@@ -1869,7 +1867,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
     // the rotation (0x8cf880 points out who rests; 0x6e8910 re-evaluates), at most two rounds
     if *(game.addr() as *const i32) != -2 {
         *((f + 0x2e) as *mut u8) = 0;
-        let mut r = rodizio(u(G_TRANSFER_MANAGER, 0), club, game.addr(), 0, f + 0x14c, 2, f + 0x78);
+        let mut r = exe::transfer_manager_check_matchday_squad_limit(u(G_TRANSFER_MANAGER, 0), club, game.addr(), 0, f + 0x14c, 2, f + 0x78);
         while r != 0 && *((f + 0x2e) as *mut u8) != 2 {
             let nb = *((f + 0x13) as *mut u8);
             *((f + 0x2e) as *mut u8) = (*((f + 0x2e) as *mut u8)).wrapping_add(1);
@@ -1907,7 +1905,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
             if w != 0 {
                 exe::crt_free(w);
             }
-            r = rodizio(u(G_TRANSFER_MANAGER, 0), club, game.addr(), 0, f + 0x14c, 2, f + 0x78);
+            r = exe::transfer_manager_check_matchday_squad_limit(u(G_TRANSFER_MANAGER, 0), club, game.addr(), 0, f + 0x14c, 2, f + 0x78);
         }
     }
     if mode as u8 == 1 {
@@ -1940,7 +1938,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
             exe::tactics_set_selected_player(tactic, club, k as u32, p, humano19);
             *((f + 0x37) as *mut u8) = (*((f + 0x37) as *mut u8)).wrapping_add(1);
             if rd(0x14c + 4 * k) as usize == cap {
-                capitao(tactic, club, k as u32, humano19);
+                exe::tactics_set_captain_from_slot(tactic, club, (k as u32) as u32 as i8, humano19);
             }
         }
     }
@@ -2501,14 +2499,13 @@ pub(crate) unsafe extern "thiscall" fn best_rated(this: usize) -> i8 {
 pub(crate) unsafe extern "C" fn rate_player(person: usize, player: usize, club: usize) -> i16 {
     let player = MatchPlayer(player);
     let club = Club(club);
-    let encaixe: unsafe extern "C" fn(usize, usize) -> i8 = core::mem::transmute(FN_DATABASE_GET_CONTRACT_RATING_MODIFIER);
     let contract: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     let p = Staff(if !player.is_null() { player.staff().addr() } else { person });
     if p.is_null() {
         return -10000;
     }
     let sheet = p.player();
-    let enc = encaixe(p.addr(), club.addr()) as f64;
+    let enc = exe::database_get_contract_rating_modifier(p.addr(), club.addr()) as f64;
     let mut y = (sheet.world_reputation() as i32 - club.reputation() as i32) as f64 * read_f64(rdata::F64_0_002) + read_f64(rdata::F64_1_5);
     if !(read_f64(rdata::F64_NEG_4) <= y) {
         y = -4.0;

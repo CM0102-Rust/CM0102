@@ -3907,14 +3907,13 @@ pub(crate) unsafe extern "thiscall" fn resolve_board_ultimatum(this: usize, club
         return 0;
     }
     list.set_cursor(list.head());
-    let days: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
     let mut k = 0i32;
     while k < read_i16(read_usize(this + manager_manager_fields::ULTIMATUM_LIST)) as i32 {
         let item = exe::llist_get_next(read_usize(this + manager_manager_fields::ULTIMATUM_LIST));
         if item != 0 && read_usize(club.addr()) == read_usize(item) {
             exe::llist_remove(read_usize(this + manager_manager_fields::ULTIMATUM_LIST), item);
             let manager = club.manager();
-            if !manager.is_null() && days(G_CURRENT_DATE, manager.date_joined_club(), manager.date_joined_club_leap_year()) > 0x64 {
+            if !manager.is_null() && exe::date_days_since(G_CURRENT_DATE, (manager.date_joined_club()) as usize as u32, (manager.date_joined_club_leap_year()) as usize as u32) > 0x64 {
                 covered!("cpo_1 ultimatum met");
                 let mut reg = [0u8; 8];
                 reg[0] = 1;

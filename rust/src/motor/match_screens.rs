@@ -3730,8 +3730,7 @@ pub(crate) unsafe extern "C" fn build_day_fixtures_screen() {
                 text_of_cell(sm, table, 0, k as usize, 1, 0, 1, 1, colour_with_high_bits(partidas, G_GUI_COLOUR_PALE_GREY), 0);
                 k += 1;
             }
-            let round: unsafe extern "C" fn(i32, i32, usize, u32, u32) = core::mem::transmute(FN_COMP_UTIL_FORMAT_STAGE_ROUND_NAME);
-            round(w32 as i32, w30 as i32, BUF, 0x7d0, 0);
+            exe::comp_util_format_stage_round_name(w32 as i32, w30 as i32, BUF, 0x7d0, 0);
             let mut width = exe::font_text_width(3, BUF as *const u8) + 0x73;
             if width >= 0x2f1 {
                 width = 0x2f1;

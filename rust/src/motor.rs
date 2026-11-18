@@ -2728,8 +2728,47 @@ routines! {
     Prologue { address: 0x7c9690, bytes: &[0x56, 0x8b, 0xf1, 0xb9, 0x02, 0x00, 0x00, 0x00] } => pol_first_set_up_rules, compare_pol_first_set_up_rules;
     Prologue { address: 0x7cbf40, bytes: &[0x56, 0x8b, 0xf1, 0xb8, 0x02, 0x00, 0x00, 0x00] } => pol_second_set_up_rules, compare_pol_second_set_up_rules;
     Prologue { address: 0x900460, bytes: &[0x56, 0x8b, 0xf1, 0xb8, 0x02, 0x00, 0x00, 0x00] } => tur_second_b_set_up_rules, compare_tur_second_b_set_up_rules;
+    Prologue { address: 0x791500, bytes: &[0x6a, 0xff, 0x68, 0x19, 0xe6, 0x95, 0x00] } => construct_nor_prm, compare_construct_nor_prm;
+    Prologue { address: 0x7ce720, bytes: &[0x6a, 0xff, 0x68, 0x29, 0xfa, 0x95, 0x00] } => construct_por_prm, compare_construct_por_prm;
+    Prologue { address: 0x7d0950, bytes: &[0x6a, 0xff, 0x68, 0x79, 0xfa, 0x95, 0x00] } => construct_por_second, compare_construct_por_second;
+    Prologue { address: 0x78fd40, bytes: &[0x6a, 0xff, 0x68, 0x69, 0xe5, 0x95, 0x00] } => construct_nor_first, compare_construct_nor_first;
+    Prologue { address: 0x88e5e0, bytes: &[0x6a, 0xff, 0x68, 0xf9, 0x30, 0x96, 0x00] } => construct_swe_first, compare_construct_swe_first;
+    Prologue { address: 0x592eb0, bytes: &[0x6a, 0xff, 0x68, 0x09, 0x8f, 0x95, 0x00] } => construct_fin_first, compare_construct_fin_first;
+    Prologue { address: 0x792700, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0xb8, 0x02, 0x00, 0x00, 0x00] } => nor_prm_set_up_rules, compare_nor_prm_set_up_rules;
+    Prologue { address: 0x790b00, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0xb8, 0x02, 0x00, 0x00, 0x00] } => nor_first_set_up_rules, compare_nor_first_set_up_rules;
+    Prologue { address: 0x890550, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0xb2, 0x03] } => swe_prm_set_up_rules, compare_swe_prm_set_up_rules;
+    Prologue { address: 0x88f090, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0xb8, 0x02, 0x00, 0x00, 0x00] } => swe_first_set_up_rules, compare_swe_first_set_up_rules;
+    Prologue { address: 0x7cf930, bytes: &[0x56, 0x8b, 0xf1, 0xba, 0x02, 0x00, 0x00, 0x00] } => por_prm_set_up_rules, compare_por_prm_set_up_rules;
+    Prologue { address: 0x7d16a0, bytes: &[0x56, 0x8b, 0xf1, 0xba, 0x02, 0x00, 0x00, 0x00] } => por_second_set_up_rules, compare_por_second_set_up_rules;
+    Prologue { address: 0x88fb10, bytes: &[0x6a, 0xff, 0x68, 0x69, 0x31, 0x96, 0x00] } => construct_swe_prm, compare_construct_swe_prm;
+    Prologue { address: 0x595c90, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0xb8, 0x03, 0x00, 0x00, 0x00] } => fin_prm_set_up_rules, compare_fin_prm_set_up_rules;
+    Prologue { address: 0x593b80, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0xbb, 0x01, 0x00, 0x00, 0x00] } => fin_first_set_up_rules, compare_fin_first_set_up_rules;
+    Prologue { address: 0x7925e0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => nor_prm_create_table, compare_nor_prm_create_table;
+    Prologue { address: 0x890430, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => swe_prm_create_table, compare_swe_prm_create_table;
+    Prologue { address: 0x595b70, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => fin_prm_create_table, compare_fin_prm_create_table;
+    Prologue { address: 0x88ef90, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => swe_first_create_table, compare_swe_first_create_table;
+    Prologue { address: 0x593a70, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => fin_first_create_table, compare_fin_first_create_table;
+    Prologue { address: 0x7909a0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => nor_first_create_table, compare_nor_first_create_table;
+    Prologue { address: 0x7cf800, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => por_prm_create_table, compare_por_prm_create_table;
+    Prologue { address: 0x7d1520, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => por_second_create_table, compare_por_second_create_table;
+    Prologue { address: 0x7d1760, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => por_second_start_new_season, compare_por_second_start_new_season;
+    Prologue { address: 0x88f150, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => swe_first_start_new_season, compare_swe_first_start_new_season;
+    Prologue { address: 0x790b90, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => nor_first_start_new_season, compare_nor_first_start_new_season;
+    Prologue { address: 0x593c20, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => fin_first_start_new_season, compare_fin_first_start_new_season;
+    Prologue { address: 0x88f310, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => swe_first_advance_stage, compare_swe_first_advance_stage;
+    Prologue { address: 0x790d50, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => nor_first_advance_stage, compare_nor_first_advance_stage;
+    Prologue { address: 0x88f3e0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => swe_first_create_play_off_stage, compare_swe_first_create_play_off_stage;
+    Prologue { address: 0x790e20, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => nor_first_create_play_off_stage, compare_nor_first_create_play_off_stage;
+    Prologue { address: 0x593f90, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => fin_first_advance_stage, compare_fin_first_advance_stage;
+    Prologue { address: 0x593e10, bytes: &[0x8b, 0x49, 0x08, 0x53, 0x56] } => fin_first_set_club_progress, compare_fin_first_set_club_progress;
+    Prologue { address: 0x88feb0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => swe_prm_create_schedule, compare_swe_prm_create_schedule;
+    Prologue { address: 0x5954b0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => fin_prm_create_schedule, compare_fin_prm_create_schedule;
+    Prologue { address: 0x7ce9e0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => por_prm_create_schedule, compare_por_prm_create_schedule;
+    Prologue { address: 0x7d0c40, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => por_second_create_schedule, compare_por_second_create_schedule;
+    Prologue { address: 0x88e8e0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => swe_first_create_schedule, compare_swe_first_create_schedule;
+    Prologue { address: 0x5931c0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => fin_first_create_schedule, compare_fin_first_create_schedule;
 }
-const N: usize = 2570;
+const N: usize = 2609;
 include!(concat!(env!("OUT_DIR"), "/indices.rs")); // IDX_<NAME>: the position of each routine (build.rs)
 
 /// Size of the engine object (the game allocates it with new(0xf63b)): side 1's block (+0xf5f2, 0x36
@@ -3842,6 +3881,2181 @@ pub(crate) use self::zipdir::*;
 
 compare_value!(compare_staff_criterion, staff_criterion, IDX_STAFF_CRITERION, () -> u32);
 
+// ---------- batch 304: the constructors of the Norwegian Premier Division and of the Portuguese Premier and Second Divisions (nor_prm.cpp, por_prm.cpp, por_second.cpp) ----------
+
+/// The Norwegian Premier Division in the common division constructor: its vtable, discipline rule 21 (the Norwegian
+/// league one), its rules (`nor_prm_set_up_rules`, 0x792700) and table (`nor_prm_create_table`, 0x7925e0), source
+/// nor_prm.cpp (0xa6977c) and the box lines 0x45, 0x4c, 0x53, 0x5c, 0x63.
+pub(crate) const NORWEGIAN_PREMIER_DIVISION: LeagueDivision = LeagueDivision {
+    vtabela: 0x96ded4,
+    discipline: discipline_rule::NORWAY_LEAGUE, // mwe1: the Norwegian league discipline rule
+    rules: 0x792700,
+    table: 0x7925e0,
+    file: 0xa6977c,
+    rows: [0x45, 0x4c, 0x53, 0x5c, 0x63],
+    low: false,
+};
+
+/// The Portuguese Premier Division: discipline rule 23 (the Portuguese one), rules 0x7cf930, table 0x7cf800, source
+/// por_prm.cpp (0xa78724), the box lines 0x45, 0x4c, 0x53, 0x5c, 0x63.
+pub(crate) const PORTUGUESE_PREMIER_DIVISION: LeagueDivision = LeagueDivision {
+    vtabela: 0x96e6f0,
+    discipline: discipline_rule::PORTUGAL, // mwe1: the Portuguese discipline rule
+    rules: 0x7cf930,
+    table: 0x7cf800,
+    file: 0xa78724,
+    rows: [0x45, 0x4c, 0x53, 0x5c, 0x63],
+    low: false,
+};
+
+/// The Portuguese Second Division (the Liga de Honra): discipline rule 23, rules 0x7d16a0, table 0x7d1520, source
+/// por_second.cpp (0xa7875c), the box lines 0x43, 0x4a, 0x51, 0x5a, 0x61.
+pub(crate) const PORTUGUESE_SECOND_DIVISION: LeagueDivision = LeagueDivision {
+    vtabela: 0x96e7a4,
+    discipline: discipline_rule::PORTUGAL, // mwe1: the Liga de Honra discipline rule
+    rules: 0x7d16a0,
+    table: 0x7d1520,
+    file: 0xa7875c,
+    rows: [0x43, 0x4a, 0x51, 0x5a, 0x61],
+    low: false,
+};
+
+/// Builds the Norwegian Premier Division: discipline rule 21 (the Norwegian league one), the league only (no
+/// play-off stage); with no saved state, the rules, the table, the fixtures, the order, the stats and the predicted
+/// positions.
+///
+/// `NorPrm::NorPrm(year, record)`: the body of `construct_division_league` (checked instruction by instruction against
+/// the French and Spanish constructors: only the vtable 0x96ded4, the discipline byte +0x50 = 0x15, the two calls and
+/// the source and lines change): League::League (`exe::new_league`), the record (`league::COMPETITION`), the vtable,
+/// the year (`.set_year()`, word) and the discipline rule; the saved state (`exe::league_load_from_temp_file`, push 1)
+/// ends it. Otherwise stage index 0xff, current stage −1, no extra stages (`+0x2c` = 0, `+0xc` = 0), then
+/// `NorPrm::set_up_rules` and `NorPrm::create_table` (direct calls, thiscall, ret 0), `exe::league_create_fixtures`,
+/// `exe::league_sort_table`(0), the Comp_Stats (operator new of 0x5ce and `exe::new_comp_stats`) into `+8` and
+/// `exe::league_set_predicted_positions`; each step that fails shows the box of its line (nor_prm.cpp 0x45, 0x4c, 0x53,
+/// 0x5c, 0x63) and returns. Returns this.
+/// Original: `NorPrm::NorPrm` (0x791500, nor_prm.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn construct_nor_prm(this: usize, year: u32, record: usize) -> usize {
+    covered!("mwe_1 norwegian premier division");
+    construct_division_league(League(this), year, record, &NORWEGIAN_PREMIER_DIVISION)
+}
+
+/// Builds the Portuguese Premier Division: discipline rule 23 (the Portuguese one), the league only; with no saved
+/// state, the rules, the table, the fixtures, the order, the stats and the predicted positions.
+///
+/// `PorPrm::PorPrm(year, record)`: the same body as `construct_nor_prm` (vtable 0x96e6f0, discipline 0x17,
+/// `PorPrm::set_up_rules` and `PorPrm::create_table`, por_prm.cpp lines 0x45, 0x4c, 0x53, 0x5c, 0x63).
+/// Original: `PorPrm::PorPrm` (0x7ce720, por_prm.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn construct_por_prm(this: usize, year: u32, record: usize) -> usize {
+    covered!("mwe_1 portuguese premier division");
+    construct_division_league(League(this), year, record, &PORTUGUESE_PREMIER_DIVISION)
+}
+
+/// Builds the Portuguese Second Division (the Liga de Honra): discipline rule 23, the league only; with no saved
+/// state, the rules, the table, the fixtures, the order, the stats and the predicted positions.
+///
+/// `PorSecond::PorSecond(year, record)`: the same body as `construct_nor_prm` (vtable 0x96e7a4, discipline 0x17,
+/// `PorSecond::set_up_rules` and `PorSecond::create_table`, por_second.cpp lines 0x43, 0x4a, 0x51, 0x5a, 0x61).
+/// Original: `PorSecond::PorSecond` (0x7d0950, por_second.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn construct_por_second(this: usize, year: u32, record: usize) -> usize {
+    covered!("mwe_1 portuguese second division");
+    construct_division_league(League(this), year, record, &PORTUGUESE_SECOND_DIVISION)
+}
+
+/// Comparer for `construct_nor_prm`: only the original runs (it allocates the league), then the fields
+/// (`compare_division_league_ctor`).
+pub(crate) unsafe extern "thiscall" fn compare_construct_nor_prm(this: usize, year: u32, record: usize) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_NOR_PRM);
+    compare_division_league_ctor("construct_nor_prm", League(this), year, record, &NORWEGIAN_PREMIER_DIVISION, || o(this, year, record))
+}
+
+/// Comparer for `construct_por_prm`.
+pub(crate) unsafe extern "thiscall" fn compare_construct_por_prm(this: usize, year: u32, record: usize) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_POR_PRM);
+    compare_division_league_ctor("construct_por_prm", League(this), year, record, &PORTUGUESE_PREMIER_DIVISION, || o(this, year, record))
+}
+
+/// Comparer for `construct_por_second`.
+pub(crate) unsafe extern "thiscall" fn compare_construct_por_second(this: usize, year: u32, record: usize) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_POR_SECOND);
+    compare_division_league_ctor("construct_por_second", League(this), year, record, &PORTUGUESE_SECOND_DIVISION, || o(this, year, record))
+}
+
+// ---------- batch 304: the constructors of the Norwegian, Swedish and Finnish First Divisions (nor_first.cpp, swe_first.cpp, fin_first.cpp) ----------
+
+/// What changes from one constructor to another among the leagues with play-off stages after the league.
+pub(crate) struct LeagueWithStages {
+    /// The vtable, discipline rule, rules and table routines, source file and box lines (rules, table, fixtures,
+    /// order, statistics); `low` is not used.
+    pub(crate) division: LeagueDivision,
+    /// How many stages besides the league (`+0x2c`); the vector at `+0xc` is malloc of 4 × that.
+    pub(crate) stages: u32,
+    /// The last step: None = League::set_predicted_positions; Some((a, b)) = two direct calls (thiscall, ret 0) on
+    /// the league, in this order.
+    pub(crate) finish: Option<(usize, usize)>,
+}
+
+/// The body of the three constructors (thiscall(this, year, record), ret 8; SEH frame only for the operator new of
+/// the statistics).
+///
+/// League::League (`exe::new_league`), the record (`league::COMPETITION`), the vtable, the year (`.set_year()`,
+/// word) and the discipline rule (`.set_discipline_rule()`); the saved state (`exe::league_load_from_temp_file`,
+/// push 1 -> thiscall, ret 4) ends it. Otherwise the new league: stage index 0xff, current stage −1, `stages`
+/// extra stages (`.set_stage_count()`) and their vector (`exe::crt_malloc` of 4 × stages, not checked); the rules
+/// and the table (direct calls, thiscall, ret 0), `exe::league_create_fixtures`, `exe::league_sort_table`(0) and the
+/// Comp_Stats (operator new of 0x5ce, `exe::new_comp_stats`) into `+8`; each step that fails shows the box of its
+/// line and returns. Last, the predicted positions (`exe::league_set_predicted_positions`) or the two calls of
+/// `finish`. Returns this.
+pub(crate) unsafe fn construct_league_with_stages(this: League, year: u32, record: usize, p: &LeagueWithStages) -> usize {
+    let d = &p.division;
+    let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(d.rules);
+    let table: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(d.table);
+    exe::new_league(this);
+    write_usize(this.addr() + league::COMPETITION, record);
+    write_usize(this.addr(), d.vtabela);
+    this.set_year((year as u16) as i16);
+    this.set_discipline_rule(d.discipline);
+    if exe::league_load_from_temp_file(this, 1) != 0 {
+        return this.addr();
+    }
+    covered!("mwe_2 new league with stages");
+    this.set_stage_index(stage_index::MAIN);
+    this.set_current_stage(0xffff_ffff);
+    this.set_stage_count(p.stages as usize);
+    let v = exe::crt_malloc(p.stages.wrapping_mul(4));
+    this.set_stages(v);
+    if rules(this.addr()) == 0 {
+        show_error_at(d.file, d.rows[0]);
+        return this.addr();
+    }
+    if table(this.addr()) == 0 {
+        show_error_at(d.file, d.rows[1]);
+        return this.addr();
+    }
+    if exe::league_create_fixtures(this) == 0 {
+        show_error_at(d.file, d.rows[2]);
+        return this.addr();
+    }
+    if exe::league_sort_table(this, 0) == 0 {
+        show_error_at(d.file, d.rows[3]);
+        return this.addr();
+    }
+    let e = exe::crt_operator_new(0x5ce);
+    let s = if e != 0 { exe::new_comp_stats(e, this) } else { 0 };
+    this.set_comp_stats(s);
+    if s == 0 {
+        show_error_at(d.file, d.rows[4]);
+        return this.addr();
+    }
+    match p.finish {
+        None => exe::league_set_predicted_positions(this),
+        Some((a, b)) => {
+            let a: unsafe extern "thiscall" fn(usize) = core::mem::transmute(a);
+            let b: unsafe extern "thiscall" fn(usize) = core::mem::transmute(b);
+            a(this.addr());
+            b(this.addr());
+        }
+    }
+    this.addr()
+}
+
+/// The Norwegian First Division: discipline rule 21, one stage after the league (the promotion play-off against the
+/// Premier Division), nor_first.cpp (0xa69740) lines 0x49, 0x50, 0x57, 0x60, 0x67.
+pub(crate) const NORWEGIAN_FIRST_DIVISION: LeagueWithStages = LeagueWithStages {
+    division: LeagueDivision { vtabela: 0x96de20, discipline: discipline_rule::NORWAY_LEAGUE, rules: 0x790b00, table: 0x7909a0, file: 0xa69740, rows: [0x49, 0x50, 0x57, 0x60, 0x67], low: false },
+    stages: 1, // mwe2: the Norwegian play-off stage
+    finish: None,
+};
+
+/// The Swedish First Division (Superettan): discipline rule 28 (the Swedish league one), one stage after the league
+/// (the promotion play-off), swe_first.cpp (0xa8b53c) lines 0x4a, 0x51, 0x58, 0x5f, 0x66.
+pub(crate) const SWEDISH_FIRST_DIVISION: LeagueWithStages = LeagueWithStages {
+    division: LeagueDivision { vtabela: 0x9700e4, discipline: discipline_rule::SWEDEN_LEAGUE, rules: 0x88f090, table: 0x88ef90, file: 0xa8b53c, rows: [0x4a, 0x51, 0x58, 0x5f, 0x66], low: false },
+    stages: 1, // mwe2: the Swedish play-off stage
+    finish: None,
+};
+
+/// The Finnish First Division (Ykkönen): discipline rule 10 (the Finnish league one), four stages after the North
+/// group (the South group and the play-offs), fin_first.cpp (0x9c818c) lines 0x4a, 0x51, 0x58, 0x61, 0x68; it ends
+/// with FinFirst::create_south_group_stage (0x594cd0) and FinFirst::set_predicted_positions (0x594ff0).
+pub(crate) const FINNISH_FIRST_DIVISION: LeagueWithStages = LeagueWithStages {
+    division: LeagueDivision { vtabela: 0x96a400, discipline: discipline_rule::FINLAND_LEAGUE, rules: 0x593b80, table: 0x593a70, file: 0x9c818c, rows: [0x4a, 0x51, 0x58, 0x61, 0x68], low: false },
+    stages: 4,
+    finish: Some((0x594cd0, 0x594ff0)), // mwe2: the Finnish South group and predicted positions
+};
+
+/// Builds the Norwegian First Division: discipline rule 21 (the Norwegian league one) and one stage after the league
+/// (the promotion play-off); with no saved state, the rules, the table, the fixtures, the order, the stats and the
+/// predicted positions.
+///
+/// `NorFirst::NorFirst(year, record)`: `construct_league_with_stages` with vtable 0x96de20, discipline byte 0x15, one
+/// extra stage (malloc of 4), `NorFirst::set_up_rules` (0x790b00) and `NorFirst::create_table` (0x7909a0); the boxes of
+/// nor_first.cpp lines 0x49, 0x50, 0x57, 0x60, 0x67; League::set_predicted_positions at the end.
+/// Original: `NorFirst::NorFirst` (0x78fd40, nor_first.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn construct_nor_first(this: usize, year: u32, record: usize) -> usize {
+    construct_league_with_stages(League(this), year, record, &NORWEGIAN_FIRST_DIVISION)
+}
+
+/// Builds the Swedish First Division: discipline rule 28 (the Swedish league one) and one stage after the league (the
+/// promotion play-off); with no saved state, the rules, the 16-club table, the fixtures, the order, the stats and the
+/// predicted positions.
+///
+/// `SweFirst::SweFirst(year, record)`: `construct_league_with_stages` with vtable 0x9700e4, discipline byte 0x1c, one
+/// extra stage, `SweFirst::set_up_rules` (0x88f090) and `SweFirst::create_table` (0x88ef90); the boxes of swe_first.cpp
+/// lines 0x4a, 0x51, 0x58, 0x5f, 0x66; League::set_predicted_positions at the end.
+/// Original: `SweFirst::SweFirst` (0x88e5e0, swe_first.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn construct_swe_first(this: usize, year: u32, record: usize) -> usize {
+    construct_league_with_stages(League(this), year, record, &SWEDISH_FIRST_DIVISION)
+}
+
+/// Builds the Finnish First Division: discipline rule 10 (the Finnish league one) and four stages after the North
+/// group; with no saved state, the rules, the North group table, the fixtures, the order and the stats; then the South
+/// group stage and the predicted positions of both groups.
+///
+/// `FinFirst::FinFirst(year, record)`: `construct_league_with_stages` with vtable 0x96a400, discipline byte 0xa, four
+/// extra stages (malloc of 0x10), `FinFirst::set_up_rules` (0x593b80) and `FinFirst::create_table` (0x593a70); the
+/// boxes of fin_first.cpp lines 0x4a, 0x51, 0x58, 0x61, 0x68; at the end FinFirst::create_south_group_stage (0x594cd0)
+/// and FinFirst::set_predicted_positions (0x594ff0), direct calls (thiscall, ret 0), instead of
+/// League::set_predicted_positions.
+/// Original: `FinFirst::FinFirst` (0x592eb0, fin_first.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn construct_fin_first(this: usize, year: u32, record: usize) -> usize {
+    construct_league_with_stages(League(this), year, record, &FINNISH_FIRST_DIVISION)
+}
+
+/// The comparer of the three constructors: only the original runs (it allocates the league, the stage vector and the
+/// statistics); checks the return value, the vtable, the year, the record, the discipline and, for a new league, the
+/// stage count and its vector.
+pub(crate) unsafe fn compare_league_with_stages_ctor(name: &str, this: League, year: u32, record: usize, p: &LeagueWithStages, original: impl FnOnce() -> usize) -> usize {
+    let loaded = league_will_load_saved_state(record);
+    let r = original();
+    let d = &p.division;
+    let mut ok = r == this.addr() && read_usize(this.addr()) == d.vtabela && (this.year() as u16) == year as u16
+        && this.competition().addr() == record && this.discipline_rule() == d.discipline;
+    if this.comp_stats() != 0 && !loaded {
+        ok = ok && this.stage_count() == p.stages as usize && this.stages() != 0;
+    }
+    SCOREBOARD.record(ok, || format!("{}({:#x}) [year {} arg {}, record {:#x} arg {:#x}, discipline {}, stage index {}]: returned {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this.addr(), this.year(), year as u16, this.competition().addr(), record, this.discipline_rule(), this.stage_index() as i32, r, read_usize(this.addr()), this.stage_count(), this.stages(), this.comp_stats()));
+    r
+}
+
+/// Comparer for `construct_nor_first`.
+pub(crate) unsafe extern "thiscall" fn compare_construct_nor_first(this: usize, year: u32, record: usize) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_NOR_FIRST);
+    compare_league_with_stages_ctor("construct_nor_first", League(this), year, record, &NORWEGIAN_FIRST_DIVISION, || o(this, year, record))
+}
+
+/// Comparer for `construct_swe_first`.
+pub(crate) unsafe extern "thiscall" fn compare_construct_swe_first(this: usize, year: u32, record: usize) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_SWE_FIRST);
+    compare_league_with_stages_ctor("construct_swe_first", League(this), year, record, &SWEDISH_FIRST_DIVISION, || o(this, year, record))
+}
+
+/// Comparer for `construct_fin_first`.
+pub(crate) unsafe extern "thiscall" fn compare_construct_fin_first(this: usize, year: u32, record: usize) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_FIN_FIRST);
+    compare_league_with_stages_ctor("construct_fin_first", League(this), year, record, &FINNISH_FIRST_DIVISION, || o(this, year, record))
+}
+
+// ---------- batch 304: the league rules of the Norwegian Premier and First Divisions and of the Swedish Premier Division (nor_prm.cpp, nor_first.cpp, swe_prm.cpp) ----------
+
+/// The rule writes of the Norwegian Premier Division (Tippeligaen, 14 clubs), in the original's order.
+///
+/// Two legs (`league::LEGS`), 3 points for a win and 1 for a draw, league matches (category 2), no match rule flags
+/// and no round draw rules, club sides; tie-breaks goal difference, goals for and code 3; nobody goes up (no division
+/// above: −1), no promotion play-off, 1 club to the relegation play-off against the First Division (the 12th) and 2
+/// relegated directly; the First Division below; 3 substitutions, the squad flags 2 and 7 substitutes named.
+pub(crate) unsafe fn norwegian_premier_rules() -> Vec<(usize, u8, u32)> {
+    let mut v = vec![(league::LEGS, 2, 2), (league::WIN_POINTS, 1, 3), (league::DRAW_POINTS, 1, 1), (league::MATCH_CATEGORY, 1, 2), (league::MATCH_RULES, 2, 0), (league::ROUND_DRAW_RULES, 2, 0), (league::CLUB_SIDES, 1, 1)];
+    v.extend_from_slice(&[(league::TIEBREAKS, 1, 1), (league::TIEBREAKS + 1, 1, 2), (league::TIEBREAKS + 2, 1, 3)]);
+    v.extend_from_slice(&[(league::PROMOTED_COUNT, 1, 0), (league::PROMOTION_PLAYOFF_COUNT, 1, 0)]);
+    v.push((league::RELEGATION_PLAYOFF_COUNT, 1, 1)); // mwe3: the Norwegian Premier relegation play-off place
+    v.push((league::RELEGATED_COUNT, 1, 2)); // mwe3: the Norwegian Premier relegates 2
+    v.extend_from_slice(&[(league::UPPER_DIVISION_ID, 4, 0xffff_ffff), (league::SUBSTITUTIONS_ALLOWED, 1, 3), (league::SQUAD_FLAGS, 1, 2)]);
+    v.extend_from_slice(&[(league::LOWER_DIVISION_ID, 4, read_usize(KEY_CLUB_COMP_NORWEGIAN_FIRST_DIVISION) as u32), (league::SUBSTITUTES_NAMED, 1, 7)]);
+    v
+}
+
+/// The rule writes of the Norwegian First Division (Adeccoligaen, 16 clubs; 14 when the database has only 14), in the
+/// original's order.
+///
+/// Two legs, 3 points for a win and 1 for a draw, league matches, club sides; tie-breaks goal difference, goals for and
+/// code 3; 2 promoted directly and 1 to the promotion play-off (the 3rd against the Premier Division's 12th), no
+/// relegation play-off and 4 relegated (no division below: −1); the Premier Division above; 3 substitutions, the squad
+/// flags 2 and 7 substitutes named. It does not touch the match rule flags nor the round draw rules.
+pub(crate) unsafe fn norwegian_first_rules() -> Vec<(usize, u8, u32)> {
+    let mut v = vec![(league::LEGS, 2, 2), (league::WIN_POINTS, 1, 3), (league::DRAW_POINTS, 1, 1), (league::MATCH_CATEGORY, 1, 2), (league::CLUB_SIDES, 1, 1)];
+    v.extend_from_slice(&[(league::TIEBREAKS, 1, 1), (league::TIEBREAKS + 1, 1, 2), (league::TIEBREAKS + 2, 1, 3)]);
+    v.push((league::PROMOTED_COUNT, 1, 2)); // mwe3: the Norwegian First Division promotes 2
+    v.extend_from_slice(&[(league::PROMOTION_PLAYOFF_COUNT, 1, 1), (league::RELEGATION_PLAYOFF_COUNT, 1, 0), (league::RELEGATED_COUNT, 1, 4)]);
+    v.extend_from_slice(&[(league::SUBSTITUTIONS_ALLOWED, 1, 3), (league::UPPER_DIVISION_ID, 4, read_usize(KEY_CLUB_COMP_NORWEGIAN_PREMIER_DIVISION) as u32), (league::SQUAD_FLAGS, 1, 2)]);
+    v.extend_from_slice(&[(league::LOWER_DIVISION_ID, 4, 0xffff_ffff), (league::SUBSTITUTES_NAMED, 1, 7)]);
+    v
+}
+
+/// The rule writes of the Swedish Premier Division (Allsvenskan, 14 clubs), in the original's order.
+///
+/// Two legs, 3 points for a win and 1 for a draw, league matches, no match rule flags and no round draw rules, club
+/// sides; tie-breaks goal difference and goals for (the third code 0 ends the list); nobody goes up, no promotion
+/// play-off, 1 club to the relegation play-off (the 12th, against the Superettan's 3rd) and 2 relegated; the First
+/// Division below; the squad flags 2, 3 substitutions and 5 substitutes named.
+pub(crate) unsafe fn swedish_premier_rules() -> Vec<(usize, u8, u32)> {
+    let mut v = vec![(league::LEGS, 2, 2)];
+    v.push((league::WIN_POINTS, 1, 3)); // mwe3: the Allsvenskan gives 3 points for a win
+    v.extend_from_slice(&[(league::DRAW_POINTS, 1, 1), (league::MATCH_CATEGORY, 1, 2), (league::MATCH_RULES, 2, 0), (league::ROUND_DRAW_RULES, 2, 0), (league::CLUB_SIDES, 1, 1)]);
+    v.extend_from_slice(&[(league::TIEBREAKS, 1, 1), (league::TIEBREAKS + 1, 1, 2), (league::TIEBREAKS + 2, 1, 0)]);
+    v.extend_from_slice(&[(league::PROMOTED_COUNT, 1, 0), (league::PROMOTION_PLAYOFF_COUNT, 1, 0), (league::RELEGATION_PLAYOFF_COUNT, 1, 1), (league::RELEGATED_COUNT, 1, 2)]);
+    v.extend_from_slice(&[(league::UPPER_DIVISION_ID, 4, 0xffff_ffff), (league::SQUAD_FLAGS, 1, 2), (league::SUBSTITUTIONS_ALLOWED, 1, 3)]);
+    v.extend_from_slice(&[(league::LOWER_DIVISION_ID, 4, read_usize(KEY_CLUB_COMP_SWEDISH_FIRST_DIVISION) as u32), (league::SUBSTITUTES_NAMED, 1, 5)]);
+    v
+}
+
+/// Sets up the rules of the Norwegian Premier Division (14 clubs): two legs, 3 points for a win; nobody goes up, the
+/// 12th goes to the relegation play-off and the bottom 2 go down to the First Division; 7 substitutes and 3
+/// substitutions.
+///
+/// `NorPrm::set_up_rules()`: the writes of `norwegian_premier_rules` (legs, points, category, flags, tie-breaks 1, 2,
+/// 3, the bands 0 / 0 / 1 / 2, no division above, the First Division below, substitutions, squad flags 2 and
+/// substitutes) and the main-stage round table (virtual `comp_vtable::CREATE_SCHEDULE`: push 0; push &+0x3a; push
+/// &+0xa9; push −1; mov ecx -> thiscall, ret 0x10) into `league::ROUND_DATES`. Returns 1.
+/// Original: `NorPrm::set_up_rules` (0x792700, nor_prm.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn nor_prm_set_up_rules(this: usize) -> u32 {
+    covered!("mwe_3 norwegian premier rules");
+    eng_prm_apply_league_rules(League(this), &norwegian_premier_rules())
+}
+
+/// Sets up the rules of the Norwegian First Division (16 clubs): two legs, 3 points for a win; the top 2 go up, the
+/// 3rd plays the promotion play-off against the Premier Division's 12th and the bottom 4 go down; 7 substitutes and 3
+/// substitutions.
+///
+/// `NorFirst::set_up_rules()`: the writes of `norwegian_first_rules` (the bands 2 / 1 / 0 / 4, the Premier Division
+/// above, nothing below) and the main-stage round table (virtual `comp_vtable::CREATE_SCHEDULE`) into
+/// `league::ROUND_DATES`. Returns 1.
+/// Original: `NorFirst::set_up_rules` (0x790b00, nor_first.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn nor_first_set_up_rules(this: usize) -> u32 {
+    covered!("mwe_3 norwegian first division rules");
+    eng_prm_apply_league_rules(League(this), &norwegian_first_rules())
+}
+
+/// Sets up the rules of the Swedish Premier Division (Allsvenskan, 14 clubs): two legs, 3 points for a win, tie-breaks
+/// goal difference and goals for; nobody goes up, the 12th plays the relegation play-off and the bottom 2 go down to
+/// the Superettan; 5 substitutes and 3 substitutions.
+///
+/// `SwePrm::set_up_rules()`: the writes of `swedish_premier_rules` and the main-stage round table (virtual
+/// `comp_vtable::CREATE_SCHEDULE`) into `league::ROUND_DATES`. Returns 1.
+/// Original: `SwePrm::set_up_rules` (0x890550, swe_prm.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn swe_prm_set_up_rules(this: usize) -> u32 {
+    covered!("mwe_3 swedish premier rules");
+    eng_prm_apply_league_rules(League(this), &swedish_premier_rules())
+}
+
+/// Comparer for `nor_prm_set_up_rules`: the dry run of `eng_prm_compare_league_rules` (the original builds the round
+/// table; the copy writes the rules only).
+pub(crate) unsafe extern "thiscall" fn compare_nor_prm_set_up_rules(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_NOR_PRM_SET_UP_RULES);
+    eng_prm_compare_league_rules("nor_prm_set_up_rules", League(this), norwegian_premier_rules(), || o(this), || nor_prm_set_up_rules(this))
+}
+
+/// Comparer for `nor_first_set_up_rules`.
+pub(crate) unsafe extern "thiscall" fn compare_nor_first_set_up_rules(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_NOR_FIRST_SET_UP_RULES);
+    eng_prm_compare_league_rules("nor_first_set_up_rules", League(this), norwegian_first_rules(), || o(this), || nor_first_set_up_rules(this))
+}
+
+/// Comparer for `swe_prm_set_up_rules`.
+pub(crate) unsafe extern "thiscall" fn compare_swe_prm_set_up_rules(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SWE_PRM_SET_UP_RULES);
+    eng_prm_compare_league_rules("swe_prm_set_up_rules", League(this), swedish_premier_rules(), || o(this), || swe_prm_set_up_rules(this))
+}
+
+// ---------- batch 304: the league rules of the Swedish First Division and of the Portuguese Premier and Second Divisions (swe_first.cpp, por_prm.cpp, por_second.cpp) ----------
+
+/// The division below when the nation has its lower leagues playable: the nation of the league's competition
+/// (`competition::NATION`) with bit 4 of `.league_selected()` gives the id of global `below`, otherwise −1.
+pub(crate) unsafe fn lower_division_when_playable(this: usize, below: usize) -> u32 {
+    let this = League(this);
+    let nation = Nation(read_usize(this.competition().addr() + competition::NATION));
+    if nation.league_selected() & 4 != 0 { read_usize(below) as u32 } else { 0xffff_ffff }
+}
+
+/// The rule writes of the Swedish First Division (Superettan, 16 clubs), in the original's order.
+///
+/// Two legs, 3 points for a win and 1 for a draw, league matches, no match rule flags and no round draw rules, club
+/// sides; tie-breaks goal difference and goals for (the third code 0 ends the list); 2 promoted directly, 1 to the
+/// promotion play-off (the 3rd, against the Allsvenskan's 12th), no relegation play-off and 3 relegated; the
+/// Allsvenskan above and the Second Division below when the Swedish lower leagues are playable (bit 4), otherwise −1;
+/// 3 substitutions, the squad flags 2 and 5 substitutes named.
+pub(crate) unsafe fn swedish_first_rules(this: usize) -> Vec<(usize, u8, u32)> {
+    let mut v = vec![(league::LEGS, 2, 2), (league::WIN_POINTS, 1, 3), (league::DRAW_POINTS, 1, 1), (league::MATCH_CATEGORY, 1, 2), (league::MATCH_RULES, 2, 0), (league::ROUND_DRAW_RULES, 2, 0), (league::CLUB_SIDES, 1, 1)];
+    v.extend_from_slice(&[(league::TIEBREAKS, 1, 1), (league::TIEBREAKS + 1, 1, 2), (league::TIEBREAKS + 2, 1, 0)]);
+    v.extend_from_slice(&[(league::PROMOTED_COUNT, 1, 2), (league::PROMOTION_PLAYOFF_COUNT, 1, 1), (league::RELEGATION_PLAYOFF_COUNT, 1, 0)]);
+    v.push((league::RELEGATED_COUNT, 1, 3)); // mwe4: the Superettan relegates 3
+    v.extend_from_slice(&[(league::UPPER_DIVISION_ID, 4, read_usize(KEY_CLUB_COMP_SWEDISH_PREMIER_DIVISION) as u32), (league::LOWER_DIVISION_ID, 4, lower_division_when_playable(this, KEY_CLUB_COMP_SWEDISH_SECOND_DIVISION))]);
+    v.extend_from_slice(&[(league::SUBSTITUTIONS_ALLOWED, 1, 3), (league::SQUAD_FLAGS, 1, 2), (league::SUBSTITUTES_NAMED, 1, 5)]);
+    v
+}
+
+/// The rule writes of the Portuguese Premier Division (18 clubs), in the original's order.
+///
+/// Two legs, 3 points for a win and 1 for a draw, league matches, no match rule flags and no round draw rules, club
+/// sides; tie-breaks head-to-head (code 4), goal difference, goals for and code 3; nobody goes up, no play-offs, 3
+/// relegated; no division above, 3 substitutions, the squad flags 2, the Second Division below and 7 substitutes named.
+pub(crate) unsafe fn portuguese_premier_rules() -> Vec<(usize, u8, u32)> {
+    let mut v = vec![(league::LEGS, 2, 2), (league::WIN_POINTS, 1, 3), (league::DRAW_POINTS, 1, 1), (league::MATCH_CATEGORY, 1, 2), (league::MATCH_RULES, 2, 0), (league::ROUND_DRAW_RULES, 2, 0), (league::CLUB_SIDES, 1, 1)];
+    v.push((league::TIEBREAKS, 1, 4)); // mwe4: the Portuguese Premier breaks ties head to head first
+    v.extend_from_slice(&[(league::TIEBREAKS + 1, 1, 1), (league::TIEBREAKS + 2, 1, 2), (league::TIEBREAKS + 3, 1, 3)]);
+    v.extend_from_slice(&[(league::PROMOTED_COUNT, 1, 0), (league::PROMOTION_PLAYOFF_COUNT, 1, 0), (league::RELEGATION_PLAYOFF_COUNT, 1, 0), (league::RELEGATED_COUNT, 1, 3)]);
+    v.extend_from_slice(&[(league::UPPER_DIVISION_ID, 4, 0xffff_ffff), (league::SUBSTITUTIONS_ALLOWED, 1, 3), (league::SQUAD_FLAGS, 1, 2)]);
+    v.extend_from_slice(&[(league::LOWER_DIVISION_ID, 4, read_usize(KEY_CLUB_COMP_PORTUGUESE_SECOND_DIVISION) as u32), (league::SUBSTITUTES_NAMED, 1, 7)]);
+    v
+}
+
+/// The rule writes of the Portuguese Second Division (the Liga de Honra, 18 clubs), in the original's order.
+///
+/// Two legs, 3 points for a win, 34 rounds written beforehand in `league::ROUND_COUNT` (the round table then writes
+/// its own count there), 1 point for a draw, league matches, club sides; tie-breaks head-to-head, goal difference,
+/// goals for and code 3; 3 promoted, no play-offs, 3 relegated; the Premier Division above and the Second Division B
+/// below when the Portuguese lower leagues are playable (bit 4), otherwise −1; 3 substitutions, the squad flags 2 and 7
+/// substitutes named. It does not touch the match rule flags nor the round draw rules.
+pub(crate) unsafe fn portuguese_second_rules(this: usize) -> Vec<(usize, u8, u32)> {
+    let mut v = vec![(league::LEGS, 2, 2), (league::WIN_POINTS, 1, 3), (league::ROUND_COUNT, 2, 0x22), (league::DRAW_POINTS, 1, 1), (league::MATCH_CATEGORY, 1, 2), (league::CLUB_SIDES, 1, 1)];
+    v.extend_from_slice(&[(league::TIEBREAKS, 1, 4), (league::TIEBREAKS + 1, 1, 1), (league::TIEBREAKS + 2, 1, 2), (league::TIEBREAKS + 3, 1, 3)]);
+    v.push((league::PROMOTED_COUNT, 1, 3)); // mwe4: the Liga de Honra promotes 3
+    v.extend_from_slice(&[(league::PROMOTION_PLAYOFF_COUNT, 1, 0), (league::RELEGATION_PLAYOFF_COUNT, 1, 0), (league::RELEGATED_COUNT, 1, 3)]);
+    v.extend_from_slice(&[(league::UPPER_DIVISION_ID, 4, read_usize(KEY_CLUB_COMP_PORTUGUESE_PREMIER_DIVISION) as u32), (league::LOWER_DIVISION_ID, 4, lower_division_when_playable(this, KEY_CLUB_COMP_PORTUGUESE_SECOND_DIVISION_B))]);
+    v.extend_from_slice(&[(league::SUBSTITUTIONS_ALLOWED, 1, 3), (league::SQUAD_FLAGS, 1, 2), (league::SUBSTITUTES_NAMED, 1, 7)]);
+    v
+}
+
+/// Sets up the rules of the Swedish First Division (Superettan, 16 clubs): two legs, 3 points for a win, tie-breaks
+/// goal difference and goals for; the top 2 go up, the 3rd plays the promotion play-off against the Allsvenskan's 12th
+/// and the bottom 3 go down (to the Second Division when it is playable); 5 substitutes and 3 substitutions.
+///
+/// `SweFirst::set_up_rules()`: the writes of `swedish_first_rules` and the main-stage round table (virtual
+/// `comp_vtable::CREATE_SCHEDULE`: push 0; push &+0x3a; push &+0xa9; push −1; mov ecx -> thiscall, ret 0x10) into
+/// `league::ROUND_DATES`. Returns 1.
+/// Original: `SweFirst::set_up_rules` (0x88f090, swe_first.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn swe_first_set_up_rules(this: usize) -> u32 {
+    covered!("mwe_4 superettan rules");
+    eng_prm_apply_league_rules(League(this), &swedish_first_rules(this))
+}
+
+/// Sets up the rules of the Portuguese Premier Division (18 clubs): two legs, 3 points for a win, ties broken head to
+/// head first, then goal difference and goals for; nobody goes up and the bottom 3 go down to the Liga de Honra; 7
+/// substitutes and 3 substitutions.
+///
+/// `PorPrm::set_up_rules()`: the writes of `portuguese_premier_rules` and the main-stage round table (virtual
+/// `comp_vtable::CREATE_SCHEDULE`) into `league::ROUND_DATES`. Returns 1.
+/// Original: `PorPrm::set_up_rules` (0x7cf930, por_prm.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn por_prm_set_up_rules(this: usize) -> u32 {
+    covered!("mwe_4 portuguese premier rules");
+    eng_prm_apply_league_rules(League(this), &portuguese_premier_rules())
+}
+
+/// Sets up the rules of the Portuguese Second Division (the Liga de Honra, 18 clubs): two legs, 3 points for a win,
+/// ties broken head to head first; the top 3 go up and the bottom 3 go down (to the Second Division B when it is
+/// playable); 7 substitutes and 3 substitutions.
+///
+/// `PorSecond::set_up_rules()`: the writes of `portuguese_second_rules` (with 34 written into `league::ROUND_COUNT`
+/// before the round table) and the main-stage round table (virtual `comp_vtable::CREATE_SCHEDULE`) into
+/// `league::ROUND_DATES`. Returns 1.
+/// Original: `PorSecond::set_up_rules` (0x7d16a0, por_second.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn por_second_set_up_rules(this: usize) -> u32 {
+    covered!("mwe_4 liga de honra rules");
+    eng_prm_apply_league_rules(League(this), &portuguese_second_rules(this))
+}
+
+/// Comparer for `swe_first_set_up_rules`: the dry run of `eng_prm_compare_league_rules`.
+pub(crate) unsafe extern "thiscall" fn compare_swe_first_set_up_rules(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SWE_FIRST_SET_UP_RULES);
+    eng_prm_compare_league_rules("swe_first_set_up_rules", League(this), swedish_first_rules(this), || o(this), || swe_first_set_up_rules(this))
+}
+
+/// Comparer for `por_prm_set_up_rules`.
+pub(crate) unsafe extern "thiscall" fn compare_por_prm_set_up_rules(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_POR_PRM_SET_UP_RULES);
+    eng_prm_compare_league_rules("por_prm_set_up_rules", League(this), portuguese_premier_rules(), || o(this), || por_prm_set_up_rules(this))
+}
+
+/// Comparer for `por_second_set_up_rules`.
+pub(crate) unsafe extern "thiscall" fn compare_por_second_set_up_rules(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_POR_SECOND_SET_UP_RULES);
+    eng_prm_compare_league_rules("por_second_set_up_rules", League(this), portuguese_second_rules(this), || o(this), || por_second_set_up_rules(this))
+}
+
+// ---------- batch 304: the Allsvenskan constructor and the league rules of the two Finnish divisions (swe_prm.cpp, fin_prm.cpp, fin_first.cpp) ----------
+
+/// The six regional sections of the Swedish Second Division (Norrland, East and West Svealand, East, West and South
+/// Götaland), in the original's comparison order.
+pub(crate) const SWEDISH_SECOND_DIVISION_SECTIONS: [usize; 6] = [KEY_CLUB_COMP_SWEDISH_SECOND_DIVISION_NORTH, KEY_CLUB_COMP_SWEDISH_SECOND_DIVISION_EAST_SVEALAND,
+    KEY_CLUB_COMP_SWEDISH_SECOND_DIVISION_WEST_SVEALAND, KEY_CLUB_COMP_SWEDISH_SECOND_DIVISION_EAST_GOTALAND, KEY_CLUB_COMP_SWEDISH_SECOND_DIVISION_WEST_GOTALAND,
+    KEY_CLUB_COMP_SWEDISH_SECOND_DIVISION_SOUTH_GOTALAND];
+
+/// Where the Allsvenskan constructor files club `c`: Some((new division, new reserve division)) or None (untouched).
+///
+/// A club in one of the six Second Division sections keeps the section in `club::RESERVE_DIVISION` and goes into the
+/// Second Division (`KEY_CLUB_COMP_SWEDISH_SECOND_DIVISION`); a Swedish club (`club::NATION` with the id of
+/// `KEY_NATION_SWEDEN`) outside the Allsvenskan, the Superettan and the Second Division goes into the lower division
+/// (`KEY_CLUB_COMP_SWEDISH_LOWER_DIVISION`); a club without division, or without nation, is untouched.
+pub(crate) unsafe fn swedish_club_filing(c: usize) -> Option<(usize, Option<usize>)> {
+    let c = Club(c);
+    let comp = c.division().addr();
+    if comp == 0 {
+        return None;
+    }
+    let id = read_usize(comp);
+    if SWEDISH_SECOND_DIVISION_SECTIONS.iter().any(|&g| read_usize(g) == id) {
+        return Some((comp_record_of(KEY_CLUB_COMP_SWEDISH_SECOND_DIVISION), Some(comp))); // mwe5: a section club goes into the Second Division
+    }
+    let nation = c.nation().addr();
+    if nation == 0 || read_usize(nation) != read_usize(KEY_NATION_SWEDEN) {
+        return None;
+    }
+    if [KEY_CLUB_COMP_SWEDISH_PREMIER_DIVISION, KEY_CLUB_COMP_SWEDISH_FIRST_DIVISION, KEY_CLUB_COMP_SWEDISH_SECOND_DIVISION].iter().any(|&g| read_usize(g) == id) {
+        return None;
+    }
+    Some((comp_record_of(KEY_CLUB_COMP_SWEDISH_LOWER_DIVISION), None))
+}
+
+/// The number of club records the filing loop walks: `G_CLUB_COUNT` − 2 × `G_NATION_COUNT` (re-read each turn).
+pub(crate) unsafe fn swedish_filing_count() -> i32 {
+    (read_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_usize(G_NATION_COUNT) as i32).wrapping_mul(2))
+}
+
+/// Builds the Swedish Premier Division (Allsvenskan): discipline rule 28 (the Swedish league one), the league only; with
+/// no saved state, it first files every Second Division section club under the Second Division (the section kept as
+/// the reserve division) and every other Swedish club outside the top three divisions under the lower division; then
+/// the rules, the table, the fixtures, the order, the stats and the predicted positions.
+///
+/// `SwePrm::SwePrm(year, record)`: League::League (`exe::new_league`), the record (`league::COMPETITION`), the vtable
+/// 0x970198, the year (word) and the discipline byte 0x1c; the saved state (`exe::league_load_from_temp_file`, push 1)
+/// ends it. Otherwise, for each of the first `G_CLUB_COUNT` − 2 × `G_NATION_COUNT` club records (`club::SIZE` bytes
+/// from `G_CLUB_TABLE`, the count re-read each turn), the filing of `swedish_club_filing` (the new division as the
+/// competition record, `G_CLUB_COMP_TABLE` + id × 0x6b); then stage index 0xff, current stage −1, no extra stages,
+/// `SwePrm::set_up_rules` (0x890550) and `SwePrm::create_table` (0x890430) (direct, thiscall, ret 0),
+/// `exe::league_create_fixtures`, `exe::league_sort_table`(0), the Comp_Stats into `+8` and
+/// `exe::league_set_predicted_positions`; each failing step shows the box of swe_prm.cpp (0xa8b578) at lines 0x82,
+/// 0x89, 0x90, 0x98, 0x9f and returns. Returns this.
+/// Original: `SwePrm::SwePrm` (0x88fb10, swe_prm.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn construct_swe_prm(this: usize, year: u32, record: usize) -> usize {
+    let this = League(this);
+    exe::new_league(this);
+    write_usize(this.addr() + league::COMPETITION, record);
+    write_usize(this.addr(), 0x970198);
+    this.set_year((year as u16) as i16);
+    this.set_discipline_rule(discipline_rule::SWEDEN_LEAGUE);
+    if exe::league_load_from_temp_file(this, 1) != 0 {
+        return this.addr();
+    }
+    covered!("mwe_5 new allsvenskan");
+    let mut i = 0i32;
+    let mut c = read_usize(G_CLUB_TABLE);
+    while i < swedish_filing_count() {
+        if let Some((division, section)) = swedish_club_filing(c) {
+            if let Some(s) = section {
+                write_usize(c + club::RESERVE_DIVISION, s);
+            }
+            write_usize(c + club::DIVISION, division);
+        }
+        i += 1;
+        c += club::SIZE;
+    }
+    this.set_stage_index(stage_index::MAIN);
+    this.set_current_stage(0xffff_ffff);
+    this.set_stage_count(0);
+    this.set_stages(0);
+    let file = 0xa8b578;
+    if swe_prm_call(0x890550, this) == 0 {
+        show_error_at(file, 0x82);
+        return this.addr();
+    }
+    if swe_prm_call(0x890430, this) == 0 {
+        show_error_at(file, 0x89);
+        return this.addr();
+    }
+    if exe::league_create_fixtures(this) == 0 {
+        show_error_at(file, 0x90);
+        return this.addr();
+    }
+    if exe::league_sort_table(this, 0) == 0 {
+        show_error_at(file, 0x98);
+        return this.addr();
+    }
+    let e = exe::crt_operator_new(0x5ce);
+    let s = if e != 0 { exe::new_comp_stats(e, this) } else { 0 };
+    this.set_comp_stats(s);
+    if s == 0 {
+        show_error_at(file, 0x9f);
+        return this.addr();
+    }
+    exe::league_set_predicted_positions(this);
+    this.addr()
+}
+
+/// A direct thiscall with no arguments on the league (set_up_rules, create_table), returning eax.
+pub(crate) unsafe fn swe_prm_call(f: usize, this: League) -> u32 {
+    let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(f);
+    f(this.addr())
+}
+
+/// The rule writes of the Finnish Premier Division (Veikkausliiga, 12 clubs), in the original's order.
+///
+/// Three legs (33 rounds), 3 points for a win and 1 for a draw, league matches, no match rule flags and no round draw
+/// rules, club sides; tie-breaks goal difference, goals for and code 3; nobody goes up, no promotion play-off, 1 club
+/// to the relegation play-off (the 11th, against the First Division) and 1 relegated; `league::LEAGUE_FLAGS` = 3 (the
+/// champion status and promotion status 0); 7 substitutes named, 3 substitutions, no division above, the First
+/// Division below and the squad flags 2.
+pub(crate) unsafe fn finnish_premier_rules() -> Vec<(usize, u8, u32)> {
+    let mut v = vec![(league::LEGS, 2, 3)];
+    v.extend_from_slice(&[(league::WIN_POINTS, 1, 3), (league::DRAW_POINTS, 1, 1), (league::MATCH_CATEGORY, 1, 2), (league::MATCH_RULES, 2, 0), (league::ROUND_DRAW_RULES, 2, 0), (league::CLUB_SIDES, 1, 1)]);
+    v.extend_from_slice(&[(league::TIEBREAKS, 1, 1), (league::TIEBREAKS + 1, 1, 2), (league::TIEBREAKS + 2, 1, 3)]);
+    v.extend_from_slice(&[(league::PROMOTED_COUNT, 1, 0), (league::PROMOTION_PLAYOFF_COUNT, 1, 0), (league::RELEGATION_PLAYOFF_COUNT, 1, 1)]);
+    v.push((league::RELEGATED_COUNT, 1, 1)); // mwe5: the Veikkausliiga relegates 1
+    v.extend_from_slice(&[(league::LEAGUE_FLAGS, 2, 3), (league::SUBSTITUTES_NAMED, 1, 7), (league::SUBSTITUTIONS_ALLOWED, 1, 3), (league::UPPER_DIVISION_ID, 4, 0xffff_ffff)]);
+    v.extend_from_slice(&[(league::LOWER_DIVISION_ID, 4, read_usize(KEY_CLUB_COMP_FINNISH_FIRST_DIVISION) as u32), (league::SQUAD_FLAGS, 1, 2)]);
+    v
+}
+
+/// The rule writes of the Finnish First Division (Ykkönen, the North group of 10 in the league stage), in the
+/// original's order.
+///
+/// Three legs, 3 points for a win and 1 for a draw, league matches, club sides; tie-breaks goal difference, goals for
+/// and code 3; 2 promoted, no promotion play-off, 1 to the relegation play-off and 2 relegated (no division below:
+/// −1); 3 substitutions, the Premier Division above, the squad flags 2, `league::LEAGUE_FLAGS` = 8 (promotion status
+/// 6) and 7 substitutes named. It does not touch the match rule flags nor the round draw rules.
+pub(crate) unsafe fn finnish_first_rules() -> Vec<(usize, u8, u32)> {
+    let mut v = vec![(league::LEGS, 2, 3), (league::WIN_POINTS, 1, 3), (league::DRAW_POINTS, 1, 1), (league::MATCH_CATEGORY, 1, 2), (league::CLUB_SIDES, 1, 1)];
+    v.extend_from_slice(&[(league::TIEBREAKS, 1, 1), (league::TIEBREAKS + 1, 1, 2), (league::TIEBREAKS + 2, 1, 3)]);
+    v.push((league::PROMOTED_COUNT, 1, 2)); // mwe5: the Ykkonen promotes 2
+    v.extend_from_slice(&[(league::PROMOTION_PLAYOFF_COUNT, 1, 0), (league::RELEGATION_PLAYOFF_COUNT, 1, 1), (league::RELEGATED_COUNT, 1, 2)]);
+    v.extend_from_slice(&[(league::SUBSTITUTIONS_ALLOWED, 1, 3), (league::UPPER_DIVISION_ID, 4, read_usize(KEY_CLUB_COMP_FINNISH_PREMIER_DIVISION) as u32), (league::SQUAD_FLAGS, 1, 2)]);
+    v.extend_from_slice(&[(league::LOWER_DIVISION_ID, 4, 0xffff_ffff), (league::LEAGUE_FLAGS, 2, 8), (league::SUBSTITUTES_NAMED, 1, 7)]);
+    v
+}
+
+/// Sets up the rules of the Finnish Premier Division (Veikkausliiga, 12 clubs): three legs (33 rounds), 3 points for a
+/// win; nobody goes up, the 11th plays the relegation play-off and the 12th goes down to the Ykkönen; 7 substitutes and
+/// 3 substitutions.
+///
+/// `FinPrm::set_up_rules()`: the writes of `finnish_premier_rules` and the main-stage round table (virtual
+/// `comp_vtable::CREATE_SCHEDULE`: push 0; push &+0x3a; push &+0xa9; push −1; mov ecx -> thiscall, ret 0x10) into
+/// `league::ROUND_DATES`. Returns 1.
+/// Original: `FinPrm::set_up_rules` (0x595c90, fin_prm.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn fin_prm_set_up_rules(this: usize) -> u32 {
+    covered!("mwe_5 veikkausliiga rules");
+    eng_prm_apply_league_rules(League(this), &finnish_premier_rules())
+}
+
+/// Sets up the rules of the Finnish First Division (Ykkönen): three legs, 3 points for a win; 2 go up, 1 plays the
+/// relegation play-off and 2 go down; 7 substitutes and 3 substitutions.
+///
+/// `FinFirst::set_up_rules()`: the writes of `finnish_first_rules` and the main-stage round table (virtual
+/// `comp_vtable::CREATE_SCHEDULE`) into `league::ROUND_DATES`. Returns 1.
+/// Original: `FinFirst::set_up_rules` (0x593b80, fin_first.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn fin_first_set_up_rules(this: usize) -> u32 {
+    covered!("mwe_5 ykkonen rules");
+    eng_prm_apply_league_rules(League(this), &finnish_first_rules())
+}
+
+/// Comparer for `construct_swe_prm`: only the original runs (it allocates); the filing is planned beforehand and
+/// checked club by club afterwards, with the fields of `compare_division_league_ctor`.
+pub(crate) unsafe extern "thiscall" fn compare_construct_swe_prm(this: usize, year: u32, record: usize) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_SWE_PRM);
+    let loaded = league_will_load_saved_state(record);
+    let mut plan: Vec<(usize, usize, usize)> = Vec::new();
+    if !loaded {
+        let mut c = read_usize(G_CLUB_TABLE);
+        for _ in 0..swedish_filing_count().max(0) {
+            if let Some((d, s)) = swedish_club_filing(c) {
+                plan.push((c, d, s.unwrap_or(read_usize(c + club::RESERVE_DIVISION))));
+            }
+            c += club::SIZE;
+        }
+    }
+    let p = LeagueDivision { vtabela: 0x970198, discipline: discipline_rule::SWEDEN_LEAGUE, rules: 0x890550, table: 0x890430, file: 0xa8b578, rows: [0x82, 0x89, 0x90, 0x98, 0x9f], low: false };
+    let r = compare_division_league_ctor("construct_swe_prm", League(this), year, record, &p, || o(this, year, record));
+    let wrong: Vec<&(usize, usize, usize)> = plan.iter().filter(|&&(c, d, s)| read_usize(c + club::DIVISION) != d || read_usize(c + club::RESERVE_DIVISION) != s).collect();
+    SCOREBOARD.record(wrong.is_empty(), || format!("construct_swe_prm({:#x}) filing: {} clubs planned, wrong (club, division, reserve) = {:x?}", this, plan.len(), &wrong[..wrong.len().min(8)]));
+    r
+}
+
+/// Comparer for `fin_prm_set_up_rules`: the dry run of `eng_prm_compare_league_rules`.
+pub(crate) unsafe extern "thiscall" fn compare_fin_prm_set_up_rules(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_FIN_PRM_SET_UP_RULES);
+    eng_prm_compare_league_rules("fin_prm_set_up_rules", League(this), finnish_premier_rules(), || o(this), || fin_prm_set_up_rules(this))
+}
+
+/// Comparer for `fin_first_set_up_rules`.
+pub(crate) unsafe extern "thiscall" fn compare_fin_first_set_up_rules(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_FIN_FIRST_SET_UP_RULES);
+    eng_prm_compare_league_rules("fin_first_set_up_rules", League(this), finnish_first_rules(), || o(this), || fin_first_set_up_rules(this))
+}
+
+// ---------- batch 304: the tables of the Norwegian, Swedish and Finnish Premier Divisions (nor_prm.cpp, swe_prm.cpp, fin_prm.cpp) ----------
+
+/// Creates the Norwegian Premier Division table: 14 clubs, those of the division in database order; the prize fund
+/// by a share of 50,000 per place; no TV money.
+///
+/// `NorPrm::create_table()`: the body of `eng_prm_fill_league_table` (checked instruction by instruction):
+/// `.set_club_count()` = 14, the table (`exe::crt_malloc` of 14 × 0x3b; out of memory: the box of nor_prm.cpp
+/// (0xa6977c) line 0x1a7 and 0); the clubs whose division (`club::DIVISION`) has the id of
+/// `KEY_CLUB_COMP_NORWEGIAN_PREMIER_DIVISION`, in database order, each into the next row (`exe::league_init_table_row`:
+/// push 0; push 0; push club; push row -> thiscall, ret 0x10) until full; not full: 0. Full: the prize fund
+/// (`exe::league_calc_prize_fund`, push 50,000), `.set_prize_mode()` = 1 and 1.
+/// Original: `NorPrm::create_table` (0x7925e0, nor_prm.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn nor_prm_create_table(this: usize) -> u32 {
+    covered!("mwe_6 tippeligaen table");
+    eng_prm_fill_league_table(League(this), 0xe, 0xa6977c, 0x1a7, KEY_CLUB_COMP_NORWEGIAN_PREMIER_DIVISION, 0xc350, || ()) // mwe6: the Tippeligaen prize share
+}
+
+/// Creates the Swedish Premier Division table: 14 clubs, those of the division in database order; the prize fund by a
+/// share of 50,000 per place; no TV money.
+///
+/// `SwePrm::create_table()`: the same body (`eng_prm_fill_league_table`) with `KEY_CLUB_COMP_SWEDISH_PREMIER_DIVISION`,
+/// the box of swe_prm.cpp (0xa8b578) line 0x143 and the share 50,000.
+/// Original: `SwePrm::create_table` (0x890430, swe_prm.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn swe_prm_create_table(this: usize) -> u32 {
+    covered!("mwe_6 allsvenskan table");
+    eng_prm_fill_league_table(League(this), 0xe, 0xa8b578, 0x143, KEY_CLUB_COMP_SWEDISH_PREMIER_DIVISION, 0xc350, || ()) // mwe6: the Allsvenskan prize share
+}
+
+/// Creates the Finnish Premier Division table: 12 clubs, those of the division in database order; the prize fund by a
+/// share of 35,000 per place; no TV money.
+///
+/// `FinPrm::create_table()`: the same body (`eng_prm_fill_league_table`) with 12 rows,
+/// `KEY_CLUB_COMP_FINNISH_PREMIER_DIVISION`, the box of fin_prm.cpp (0x9c8254) line 0x157 and the share 35,000.
+/// Original: `FinPrm::create_table` (0x595b70, fin_prm.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn fin_prm_create_table(this: usize) -> u32 {
+    covered!("mwe_6 veikkausliiga table");
+    eng_prm_fill_league_table(League(this), 0xc, 0x9c8254, 0x157, KEY_CLUB_COMP_FINNISH_PREMIER_DIVISION, 0x88b8, || ()) // mwe6: the Veikkausliiga prize share
+}
+
+/// Comparer for `nor_prm_create_table`: only the original runs (it allocates the table), against the plan of
+/// `eng_prm_compare_league_table` (the division's clubs in database order, the count, the return value and the prize
+/// fund).
+pub(crate) unsafe extern "thiscall" fn compare_nor_prm_create_table(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_NOR_PRM_CREATE_TABLE);
+    eng_prm_compare_league_table("nor_prm_create_table", League(this), 0xe, KEY_CLUB_COMP_NORWEGIAN_PREMIER_DIVISION, 0xc350, || o(this))
+}
+
+/// Comparer for `swe_prm_create_table`.
+pub(crate) unsafe extern "thiscall" fn compare_swe_prm_create_table(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SWE_PRM_CREATE_TABLE);
+    eng_prm_compare_league_table("swe_prm_create_table", League(this), 0xe, KEY_CLUB_COMP_SWEDISH_PREMIER_DIVISION, 0xc350, || o(this))
+}
+
+/// Comparer for `fin_prm_create_table`.
+pub(crate) unsafe extern "thiscall" fn compare_fin_prm_create_table(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_FIN_PRM_CREATE_TABLE);
+    eng_prm_compare_league_table("fin_prm_create_table", League(this), 0xc, KEY_CLUB_COMP_FINNISH_PREMIER_DIVISION, 0x88b8, || o(this))
+}
+
+// ---------- batch 304: the tables of the Swedish, Finnish and Norwegian First Divisions (swe_first.cpp, fin_first.cpp, nor_first.cpp) ----------
+
+/// Allocates a league table of `bytes` bytes into `league::TABLE`; out of memory, the box of `file` at `row` and
+/// false.
+pub(crate) unsafe fn allocate_first_division_table(this: League, bytes: u32, file: usize, row: u32) -> bool {
+    let t = exe::crt_malloc(bytes);
+    this.set_table(t);
+    if t == 0 {
+        show_error_at(file, row);
+        return false;
+    }
+    true
+}
+
+/// Fills the table rows with the clubs that `belongs` accepts, in database order, until `.club_count()` rows; returns
+/// whether it filled.
+///
+/// The clubs of `G_CLUB_TABLE` (`club::SIZE` bytes, `G_CLUB_COUNT` of them, a signed word counter), each accepted one
+/// into the next row (`exe::league_init_table_row`: push 0; push 0; push club; push row -> thiscall, ret 0x10; the row
+/// is a byte), until the signed byte count equals `.club_count()`.
+pub(crate) unsafe fn fill_first_division_rows(this: League, belongs: impl Fn(usize) -> bool) -> bool {
+    let mut k: u8 = 0;
+    let mut i: i16 = 0;
+    let mut c = read_usize(G_CLUB_TABLE);
+    while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
+        if belongs(c) {
+            exe::league_init_table_row(this, k as u32, c, 0, 0);
+            k = k.wrapping_add(1);
+            if k as i8 as i16 == this.club_count() {
+                break;
+            }
+        }
+        i = i.wrapping_add(1);
+        c = c.wrapping_add(club::SIZE);
+    }
+    k as i8 as i16 == this.club_count()
+}
+
+/// True if the club's division (`club::DIVISION`) is the competition of id `g`.
+pub(crate) unsafe fn club_in_division(c: usize, g: usize) -> bool {
+    let c = Club(c);
+    let comp = c.division().addr();
+    comp != 0 && read_usize(comp) == read_usize(g)
+}
+
+/// True if the club is in the Finnish First Division and its reserve division (`club::RESERVE_DIVISION`, here the
+/// regional group) is the North group (`KEY_CLUB_COMP_FINNISH_FIRST_DIVISION_NORTH`); a club without either is out.
+pub(crate) unsafe fn club_in_finnish_north_group(c: usize) -> bool {
+    let c = Club(c);
+    let comp = c.division().addr();
+    let group = c.reserve_division().addr();
+    comp != 0 && group != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_FINNISH_FIRST_DIVISION) && read_usize(group) == read_usize(KEY_CLUB_COMP_FINNISH_FIRST_DIVISION_NORTH)
+}
+
+/// How many clubs of the Norwegian First Division the database has (a byte counter over all the clubs).
+pub(crate) unsafe fn norwegian_first_division_count() -> u8 {
+    let mut n: u8 = 0;
+    let mut i: i16 = 0;
+    let mut c = read_usize(G_CLUB_TABLE);
+    while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
+        if club_in_division(c, KEY_CLUB_COMP_NORWEGIAN_FIRST_DIVISION) {
+            n = n.wrapping_add(1);
+        }
+        i = i.wrapping_add(1);
+        c = c.wrapping_add(club::SIZE);
+    }
+    n
+}
+
+/// Creates the Swedish First Division (Superettan) table: 16 clubs, those of the division in database order; no prize
+/// fund nor TV money.
+///
+/// `SweFirst::create_table()`: `.set_club_count()` = 16, the table (`exe::crt_malloc` of 0x3b0; out of memory: the box
+/// of swe_first.cpp (0xa8b53c) line 0x144 and 0), the clubs of `KEY_CLUB_COMP_SWEDISH_FIRST_DIVISION` in database order
+/// (`fill_first_division_rows`); returns 1 if it filled, otherwise 0.
+/// Original: `SweFirst::create_table` (0x88ef90, swe_first.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn swe_first_create_table(this: usize) -> u32 {
+    let this = League(this);
+    this.set_club_count(0x10);
+    if !allocate_first_division_table(this, 0x3b0, 0xa8b53c, 0x144) {
+        return 0;
+    }
+    covered!("mwe_7 superettan table");
+    fill_first_division_rows(this, |c| club_in_division(c, KEY_CLUB_COMP_SWEDISH_FIRST_DIVISION)) as u32 // mwe7: the Superettan clubs
+}
+
+/// Creates the Finnish First Division table of the league stage: the North group, 10 clubs (those of the division
+/// whose regional group is the North one, in database order); no prize fund nor TV money.
+///
+/// `FinFirst::create_table()`: `.set_club_count()` = 10, the table (`exe::crt_malloc` of 0x24e; out of memory: the box
+/// of fin_first.cpp (0x9c818c) line 0x1ad and 0), the clubs of `club_in_finnish_north_group` in database order;
+/// returns 1 if it filled, otherwise 0. (The South group is a separate stage, FinFirst::create_south_group_stage.)
+/// Original: `FinFirst::create_table` (0x593a70, fin_first.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn fin_first_create_table(this: usize) -> u32 {
+    let this = League(this);
+    this.set_club_count(0xa);
+    if !allocate_first_division_table(this, 0x24e, 0x9c818c, 0x1ad) {
+        return 0;
+    }
+    covered!("mwe_7 ykkonen north table");
+    fill_first_division_rows(this, |c| club_in_finnish_north_group(c)) as u32 // mwe7: the North group clubs
+}
+
+/// Creates the Norwegian First Division table: 16 clubs; when the database has exactly 14 clubs in the division, 14
+/// clubs and only 2 relegated; those of the division in database order; no prize fund nor TV money.
+///
+/// `NorFirst::create_table()`: `.set_club_count()` = 16 and the table (`exe::crt_malloc` of 0x3b0, the size of 16
+/// rows in any case; out of memory: the box of nor_first.cpp (0xa69740) line 0x251 and 0); the division's clubs counted
+/// over the whole database (`norwegian_first_division_count`, a byte); with exactly 14: `.set_club_count()` = 14,
+/// `league::RELEGATED_COUNT` = 2 and `league::GAMES_PER_CLUB` = −1 (to be recomputed); then the clubs of
+/// `KEY_CLUB_COMP_NORWEGIAN_FIRST_DIVISION` in database order; returns 1 if it filled, otherwise 0.
+/// Original: `NorFirst::create_table` (0x7909a0, nor_first.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn nor_first_create_table(this: usize) -> u32 {
+    let this = League(this);
+    this.set_club_count(0x10);
+    if !allocate_first_division_table(this, 0x3b0, 0xa69740, 0x251) {
+        return 0;
+    }
+    if norwegian_first_division_count() == 0xe { // mwe7: the 14-club Norwegian First Division
+        covered!("mwe_7 norwegian first division of 14");
+        this.set_club_count(0xe);
+        this.set_relegated_count(2);
+        this.set_games_per_club(0xffffu16 as i16);
+    }
+    covered!("mwe_7 norwegian first division table");
+    fill_first_division_rows(this, |c| club_in_division(c, KEY_CLUB_COMP_NORWEGIAN_FIRST_DIVISION)) as u32
+}
+
+/// The comparer of the three tables: only the original runs (it allocates the table); checked against a plan made
+/// beforehand.
+///
+/// The plan: the accepted clubs in database order, up to `n`; afterwards the count `.club_count()` = `n`, the return
+/// value 1 if the plan filled (otherwise 0) and the rows with the planned clubs, in order.
+pub(crate) unsafe fn compare_first_division_table(name: &str, this: League, n: i16, belongs: impl Fn(usize) -> bool, original: impl FnOnce() -> u32) -> u32 {
+    let mut plan: Vec<usize> = Vec::new();
+    let mut c = read_usize(G_CLUB_TABLE);
+    for _ in 0..(read_usize(G_CLUB_COUNT) as i32).max(0) {
+        if (plan.len() as i16) < n && belongs(c) {
+            plan.push(c);
+        }
+        c += club::SIZE;
+    }
+    let r = original();
+    let t = this.table();
+    let mut found: Vec<usize> = Vec::new();
+    let mut same = r == (plan.len() as i16 == n) as u32 && this.club_count() == n && t != 0;
+    if same {
+        found = (0..plan.len()).map(|k| read_usize(t + k * league_table_row::SIZE)).collect();
+        same = found == plan;
+    }
+    SCOREBOARD.record(same, || format!("{}({:#x}) original={} n={} plan={:x?} table={:x?}", name, this.addr(), r, this.club_count(), plan, found));
+    r
+}
+
+/// Comparer for `swe_first_create_table`.
+pub(crate) unsafe extern "thiscall" fn compare_swe_first_create_table(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SWE_FIRST_CREATE_TABLE);
+    compare_first_division_table("swe_first_create_table", League(this), 0x10, |c| club_in_division(c, KEY_CLUB_COMP_SWEDISH_FIRST_DIVISION), || o(this))
+}
+
+/// Comparer for `fin_first_create_table`.
+pub(crate) unsafe extern "thiscall" fn compare_fin_first_create_table(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_FIN_FIRST_CREATE_TABLE);
+    compare_first_division_table("fin_first_create_table", League(this), 0xa, |c| club_in_finnish_north_group(c), || o(this))
+}
+
+/// Comparer for `nor_first_create_table`: the size by the count of the division's clubs (14 when exactly 14,
+/// otherwise 16), and with 14 also `league::RELEGATED_COUNT` = 2.
+pub(crate) unsafe extern "thiscall" fn compare_nor_first_create_table(this: usize) -> u32 {
+    let this = League(this);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_NOR_FIRST_CREATE_TABLE);
+    let fourteen = norwegian_first_division_count() == 0xe;
+    let r = compare_first_division_table("nor_first_create_table", this, if fourteen { 0xe } else { 0x10 }, |c| club_in_division(c, KEY_CLUB_COMP_NORWEGIAN_FIRST_DIVISION), || o(this.addr()));
+    if fourteen {
+        let ok = this.relegated_count() == 2;
+        SCOREBOARD.record(ok, || format!("nor_first_create_table({:#x}) 14 clubs, relegated {}", this.addr(), this.relegated_count()));
+    }
+    r
+}
+
+// ---------- batch 304: the Portuguese tables and the Liga de Honra turnover (por_prm.cpp, por_second.cpp) ----------
+
+/// Creates the Portuguese Premier Division table: 18 clubs, those of the division in database order; the prize fund by
+/// a share of 100,000 per place and 1,000,000 of TV money to every club.
+///
+/// `PorPrm::create_table()`: the body of `eng_prm_fill_league_table` (checked instruction by instruction):
+/// `.set_club_count()` = 18, the table (`exe::crt_malloc` of 0x426; out of memory: the box of por_prm.cpp (0xa78724)
+/// line 0x1a8 and 0); the clubs of `KEY_CLUB_COMP_PORTUGUESE_PREMIER_DIVISION` in database order
+/// (`exe::league_init_table_row`) until full; not full: 0. Full: the prize fund (`exe::league_calc_prize_fund`, push
+/// 100,000), `.set_prize_mode()` = 1, the TV money (`exe::league_pay_tv_rights`: push 0; push 1,000,000 -> thiscall,
+/// ret 8, to every club) and 1.
+/// Original: `PorPrm::create_table` (0x7cf800, por_prm.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn por_prm_create_table(this: usize) -> u32 {
+    covered!("mwe_8 portuguese premier table");
+    eng_prm_fill_league_table(League(this), 0x12, 0xa78724, 0x1a8, KEY_CLUB_COMP_PORTUGUESE_PREMIER_DIVISION, 0x186a0, || {
+        eng_prm_pay_tv_rights(this, 0xf4240, 0); // mwe8: the Portuguese Premier TV money
+    })
+}
+
+/// Creates the Liga de Honra table: 18 clubs, those of the division in database order; the B team of a Premier
+/// Division club cannot go up (status −4); the prize fund by a share of 50,000 per place; no TV money.
+///
+/// `PorSecond::create_table()`: the body of `spa_second_create_table` (checked instruction by instruction):
+/// `.set_club_count()` = 18, the table (`exe::crt_malloc` of 0x426; out of memory: the box of por_second.cpp
+/// (0xa7875c) line 0x16c and 0); in database order (`G_CLUB_TABLE`, a signed word counter up to `G_CLUB_COUNT`), the
+/// clubs of `KEY_CLUB_COMP_PORTUGUESE_SECOND_DIVISION` (`spa_lower_is_in_comp`), each into the next row
+/// (`exe::league_init_table_row`: push 0; push 0; push club; push row, a stack dword with the row byte (the routine
+/// reads the byte) -> thiscall, ret 0x10); a B team of a Premier Division club (`is_b_team_of_comp_club`:
+/// `exe::club_get_linked_b_team`(club, &flag, 1), cdecl, linked and flag 0, the linked club in
+/// `KEY_CLUB_COMP_PORTUGUESE_PREMIER_DIVISION`) gets `league_table_row::STATUS` = 0xfc
+/// (`table_status::PROMOTION_INELIGIBLE`); until full. Not full: 0. Full: the prize fund
+/// (`exe::league_calc_prize_fund`, push 50,000), `.set_prize_mode()` = 1 and 1.
+/// Original: `PorSecond::create_table` (0x7d1520, por_second.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn por_second_create_table(this: usize) -> u32 {
+    let this = League(this);
+    this.set_club_count(0x12);
+    let t = exe::crt_malloc(0x426);
+    this.set_table(t);
+    if t == 0 {
+        show_error_at(0xa7875c, 0x16c);
+        return 0;
+    }
+    let mut k: u8 = 0;
+    let mut i: i16 = 0;
+    let base = read_usize(G_CLUB_TABLE);
+    while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
+        let c = base + (i as u16 as usize) * club::SIZE;
+        if spa_lower_is_in_comp(Club(c), KEY_CLUB_COMP_PORTUGUESE_SECOND_DIVISION) {
+            exe::league_init_table_row(this, k as u32, c, 0, 0);
+            if is_b_team_of_comp_club(c, KEY_CLUB_COMP_PORTUGUESE_PREMIER_DIVISION) { // mwe8: a Premier Division B team
+                covered!("mwe_8 b team in the liga de honra");
+                write_u8(this.table() + (k as i8 as isize as usize).wrapping_mul(league_table_row::SIZE) + league_table_row::STATUS, 0xfc);
+            }
+            k = k.wrapping_add(1);
+            if k as i8 as i16 == this.club_count() {
+                break;
+            }
+        }
+        i = i.wrapping_add(1);
+    }
+    if k as i8 as i16 != this.club_count() {
+        return 0;
+    }
+    covered!("mwe_8 liga de honra table");
+    let f = exe::league_calc_prize_fund(this, 0xc350); // mwe8: the Liga de Honra prize share
+    this.set_prize_fund(f);
+    this.set_prize_mode(1);
+    1
+}
+
+/// The Liga de Honra turnover: archives the season in the statistics, clears the table, the round dates and the
+/// stages, moves to the next year and rebuilds the rules, the table, the fixtures and the order; then the predicted
+/// positions, the board expectations and the referee renewal.
+///
+/// `PorSecond::start_new_season()`: `league::SEASON_CLOSED` = 0 and the body of `rebuild_season` (checked instruction
+/// by instruction: `exe::league_free_table`(0), the round dates freed, `exe::comp_stats_archive_season_and_reset`(1),
+/// the stages 0..=current destroyed by their virtual 0 with 1, the year + 1, the current stage −1, the rules by virtual
+/// `comp_vtable::SET_UP_RULES`, `PorSecond::create_table` (0x7d1520), `exe::league_create_fixtures`,
+/// `exe::league_sort_table`(0), each with the box of por_second.cpp (0xa7875c) at 0x1e4, 0x1eb, 0x1f1, 0x1f8, and the
+/// predicted positions by virtual `comp_vtable::SET_PREDICTED_POSITIONS`); then `set_expectations_and_renew_officials`
+/// (League::set_club_season_expectations and OfficialsManager::renew_officials(record), whose eax is returned).
+/// After a box: 0.
+/// Original: `PorSecond::start_new_season` (0x7d1760, por_second.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn por_second_start_new_season(this: usize) -> u32 {
+    let this = League(this);
+    this.set_season_closed(0);
+    if !rebuild_season(this, 0x7d1520, 0xa7875c, [0x1e4, 0x1eb, 0x1f1, 0x1f8], 1) { // mwe8: the Liga de Honra next year
+        return 0;
+    }
+    covered!("mwe_8 liga de honra turnover");
+    set_expectations_and_renew_officials(this)
+}
+
+/// Comparer for `por_prm_create_table`: only the original runs (it allocates and pays), against the plan of
+/// `eng_prm_compare_league_table`.
+pub(crate) unsafe extern "thiscall" fn compare_por_prm_create_table(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_POR_PRM_CREATE_TABLE);
+    eng_prm_compare_league_table("por_prm_create_table", League(this), 0x12, KEY_CLUB_COMP_PORTUGUESE_PREMIER_DIVISION, 0x186a0, || o(this))
+}
+
+/// Comparer for `por_second_create_table`: only the original runs (it allocates); the plan (the division's clubs in
+/// database order, up to 18, with the B team mark) checked against the rows, the count and the return value, and the
+/// prize fund when full.
+pub(crate) unsafe extern "thiscall" fn compare_por_second_create_table(this: usize) -> u32 {
+    let this = League(this);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_POR_SECOND_CREATE_TABLE);
+    let base = read_usize(G_CLUB_TABLE);
+    let mut plan: Vec<(usize, bool)> = Vec::new();
+    for i in 0..(read_usize(G_CLUB_COUNT) as i32).max(0) as usize {
+        let c = base + i * club::SIZE;
+        if spa_lower_is_in_comp(Club(c), KEY_CLUB_COMP_PORTUGUESE_SECOND_DIVISION) {
+            plan.push((c, is_b_team_of_comp_club(c, KEY_CLUB_COMP_PORTUGUESE_PREMIER_DIVISION)));
+            if plan.len() == 0x12 {
+                break;
+            }
+        }
+    }
+    let r = o(this.addr());
+    let t = this.table();
+    let mut ok = r == (plan.len() == 0x12) as u32 && this.club_count() == 0x12 && t != 0;
+    if ok {
+        for (k, &(c, b)) in plan.iter().enumerate() {
+            let l = LeagueTableRow(t + k * league_table_row::SIZE);
+            ok = ok && read_usize(l.addr()) == c && (!b || l.status() == table_status::PROMOTION_INELIGIBLE);
+        }
+        if r == 1 {
+            ok = ok && this.prize_mode() == 1 && this.prize_fund() == exe::league_calc_prize_fund(this, 0xc350);
+        }
+    }
+    SCOREBOARD.record(ok, || format!("por_second_create_table({:#x}): returned {}, plan {:x?}", this.addr(), r, plan));
+    r
+}
+
+/// Comparer for `por_second_start_new_season`: only the original runs (it frees and allocates); the year must go up
+/// by one (`compare_state_league_new_season`).
+pub(crate) unsafe extern "thiscall" fn compare_por_second_start_new_season(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_POR_SECOND_START_NEW_SEASON);
+    compare_state_league_new_season("por_second_start_new_season", League(this), || o(this))
+}
+
+// ---------- batch 304: the season turnovers of the Swedish, Norwegian and Finnish First Divisions (swe_first.cpp, nor_first.cpp, fin_first.cpp) ----------
+
+/// The Superettan turnover: archives the season in the statistics, clears the table, the round dates and the stages,
+/// moves to the next year and rebuilds the rules, the 16-club table, the fixtures and the order; then the predicted
+/// positions, the board expectations and the referee renewal.
+///
+/// `SweFirst::start_new_season()`: `league::SEASON_CLOSED` = 0, the body of `rebuild_season` (checked instruction by
+/// instruction; the table is `SweFirst::create_table` 0x88ef90 and the boxes of swe_first.cpp (0xa8b53c) at 0x1aa,
+/// 0x1b1, 0x1b7, 0x1be) and `set_expectations_and_renew_officials`, whose eax is returned. After a box: 0.
+/// Original: `SweFirst::start_new_season` (0x88f150, swe_first.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn swe_first_start_new_season(this: usize) -> u32 {
+    let this = League(this);
+    this.set_season_closed(0);
+    if !rebuild_season(this, 0x88ef90, 0xa8b53c, [0x1aa, 0x1b1, 0x1b7, 0x1be], 1) { // mwe9: the Superettan next year
+        return 0;
+    }
+    covered!("mwe_9 superettan turnover");
+    set_expectations_and_renew_officials(this)
+}
+
+/// The Norwegian First Division turnover: the same as the Superettan's, with `NorFirst::create_table` (0x7909a0) and the
+/// boxes of nor_first.cpp (0xa69740) at 0x2c9, 0x2d0, 0x2d6, 0x2dd.
+/// Original: `NorFirst::start_new_season` (0x790b90, nor_first.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn nor_first_start_new_season(this: usize) -> u32 {
+    let this = League(this);
+    this.set_season_closed(0);
+    if !rebuild_season(this, 0x7909a0, 0xa69740, [0x2c9, 0x2d0, 0x2d6, 0x2dd], 1) { // mwe9: the Norwegian First Division next year
+        return 0;
+    }
+    covered!("mwe_9 norwegian first division turnover");
+    set_expectations_and_renew_officials(this)
+}
+
+/// The Ykkönen turnover: archives the season, clears the table, the round dates and the stages (and their vector, which
+/// is allocated again), moves to the next year and rebuilds the rules, the North group table, the fixtures and the
+/// order; then the board expectations, the referee renewal, the South group stage and the predicted positions.
+///
+/// `FinFirst::start_new_season()`: `league::SEASON_CLOSED` = 0, `exe::league_free_table`(0), the round dates freed
+/// and zeroed, `exe::comp_stats_archive_season_and_reset`(1) when there are statistics, the stages 0..=current (when
+/// current ≥ 0) destroyed by their virtual 0 with 1; the current stage −1, the stage vector freed (`exe::crt_free`),
+/// the year + 1 and a new vector of 4 × `.stage_count()` bytes (`exe::crt_malloc`; 0 when there are no stages). Then,
+/// each with the box of fin_first.cpp (0x9c818c) when it returns 0 (lines 0x21b, 0x222, 0x228, 0x22f, and 0 is
+/// returned): the rules (virtual `comp_vtable::SET_UP_RULES`), `FinFirst::create_table` (0x593a70),
+/// `exe::league_create_fixtures` and `exe::league_sort_table`(0). Then League::set_club_season_expectations,
+/// OfficialsManager::renew_officials(record) on `G_OFFICIALS_MANAGER`, FinFirst::create_south_group_stage (0x594cd0,
+/// thiscall, ret 0) and the predicted positions (virtual `comp_vtable::SET_PREDICTED_POSITIONS`), whose eax is
+/// returned.
+/// Original: `FinFirst::start_new_season` (0x593c20, fin_first.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn fin_first_start_new_season(this: usize) -> u32 {
+    let this = League(this);
+    this.set_season_closed(0);
+    exe::league_free_table(this, 0);
+    let l = this.round_dates();
+    if l != 0 {
+        exe::crt_free(l);
+        this.set_round_dates(0);
+    }
+    let stats = this.comp_stats();
+    if stats != 0 {
+        exe::comp_stats_archive_season_and_reset(stats, 1);
+    }
+    if (this.current_stage() as i32) >= 0 {
+        let mut i = 0i32;
+        loop {
+            let f = read_usize(this.stages() + 4 * i as usize);
+            if f != 0 {
+                let destroy: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(f)));
+                destroy(f, 1);
+            }
+            i += 1;
+            if i > this.current_stage() as i32 {
+                break;
+            }
+        }
+    }
+    write_i32(this.addr() + league::CURRENT_STAGE, -1);
+    exe::crt_free(this.stages());
+    this.set_year(this.year().wrapping_add(1)); // mwe9: the Ykkonen next year
+    let n = this.stage_count() as i32;
+    let v = if n > 0 { exe::crt_malloc((n as u32).wrapping_mul(4)) } else { 0 };
+    this.set_stages(v);
+    let file = 0x9c818c;
+    if bra_nat_first_call_virtual_no_args(this.addr(), comp_vtable::SET_UP_RULES) == 0 {
+        show_error_at(file, 0x21b);
+        return 0;
+    }
+    if exe::finfirst_create_table(this.addr()) == 0 {
+        show_error_at(file, 0x222);
+        return 0;
+    }
+    if exe::league_create_fixtures(this) == 0 {
+        show_error_at(file, 0x228);
+        return 0;
+    }
+    if exe::league_sort_table(this, 0) == 0 {
+        show_error_at(file, 0x22f);
+        return 0;
+    }
+    covered!("mwe_9 ykkonen turnover");
+    exe::league_set_club_season_expectations(this.addr());
+    exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), this.competition().addr());
+    exe::finfirst_create_south_group_stage(this.addr());
+    bra_nat_first_call_virtual_no_args(this.addr(), comp_vtable::SET_PREDICTED_POSITIONS)
+}
+
+/// Comparer for `swe_first_start_new_season`: only the original runs (it frees and allocates); the year must go up by
+/// one (`compare_state_league_new_season`).
+pub(crate) unsafe extern "thiscall" fn compare_swe_first_start_new_season(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SWE_FIRST_START_NEW_SEASON);
+    compare_state_league_new_season("swe_first_start_new_season", League(this), || o(this))
+}
+
+/// Comparer for `nor_first_start_new_season`.
+pub(crate) unsafe extern "thiscall" fn compare_nor_first_start_new_season(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_NOR_FIRST_START_NEW_SEASON);
+    compare_state_league_new_season("nor_first_start_new_season", League(this), || o(this))
+}
+
+/// Comparer for `fin_first_start_new_season`: the year + 1, and the stage vector allocated again when there are
+/// stages.
+pub(crate) unsafe extern "thiscall" fn compare_fin_first_start_new_season(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_FIN_FIRST_START_NEW_SEASON);
+    let r = compare_state_league_new_season("fin_first_start_new_season", League(this), || o(this));
+    let l = League(this);
+    let ok = (l.stages() != 0) == (l.stage_count() as i32 > 0);
+    SCOREBOARD.record(ok, || format!("fin_first_start_new_season({:#x}) stages {} vector {:#x}", this, l.stage_count(), l.stages()));
+    r
+}
+
+// ---------- batch 304: the stage advance of the Swedish and Norwegian First Divisions and the Superettan promotion play-off (swe_first.cpp, nor_first.cpp) ----------
+
+/// The Premier Division object of key `premier` (`G_COMP_OBJECT_TABLE` by its id) is complete: virtual
+/// `comp_vtable::CHECK_COMPLETE` with (0, 1) (push 1; push 0; mov ecx -> thiscall, ret 8; the byte in al).
+pub(crate) unsafe fn premier_division_complete(premier: usize) -> bool {
+    let p = comp_by_global(premier);
+    let complete: unsafe extern "thiscall" fn(usize, u32, u32) -> u8 = core::mem::transmute(read_usize(read_usize(p) + comp_vtable::CHECK_COMPLETE));
+    complete(p, 0, 1) != 0
+}
+
+/// Brings the table positions and statuses of the Premier Division of key `premier` up to date: virtual
+/// `league_vtable::UPDATE_POSITIONS_AND_STATUS` (mov ecx -> thiscall, ret 0).
+pub(crate) unsafe fn update_premier_division_status(premier: usize) {
+    let p = comp_by_global(premier);
+    let update: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(p) + league_vtable::UPDATE_POSITIONS_AND_STATUS));
+    update(p);
+}
+
+/// The stage advance of a First Division whose promotion play-off is against the Premier Division's play-off club.
+///
+/// At the last stage (`.current_stage()` ≥ `.stage_count()` − 1, signed), the error box of `file` at `row` and
+/// nothing else. Otherwise, only when the Premier Division (key `premier`) is complete
+/// (`premier_division_complete`): its positions and statuses are updated (`update_premier_division_status`), the
+/// current stage goes up by one and, on reaching 0, the play-off is built (`play_off`, a direct call, thiscall, ret
+/// 0). With the Premier Division still playing, nothing (the league asks again later).
+pub(crate) unsafe fn advance_first_division_stage(this: League, file: usize, row: u32, premier: usize, play_off: usize) {
+    if (this.current_stage() as i32) >= (this.stage_count() as i32).wrapping_sub(1) {
+        return show_error_at(file, row);
+    }
+    if !premier_division_complete(premier) { // mwe10: waits for the Premier Division
+        return;
+    }
+    update_premier_division_status(premier); // mwe10: the Premier Division statuses brought up to date
+    let stage = (this.current_stage() as i32).wrapping_add(1);
+    this.set_current_stage(stage as usize);
+    if stage == 0 {
+        covered!("mwe_10 first division play-off reached");
+        let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(play_off);
+        f(this.addr());
+    }
+}
+
+/// Moves the Superettan to the next stage once the Allsvenskan is complete: the Allsvenskan's statuses are updated and,
+/// on reaching stage 0, the promotion play-off is built; at the last stage, the error box (line 0x1da).
+///
+/// `SweFirst::advance_stage()`: `advance_first_division_stage` with swe_first.cpp (0xa8b53c), line 0x1da, the key
+/// `KEY_CLUB_COMP_SWEDISH_PREMIER_DIVISION` and `SweFirst::create_play_off_stage` (0x88f3e0).
+/// Original: `SweFirst::advance_stage` (0x88f310, swe_first.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn swe_first_advance_stage(this: usize) {
+    advance_first_division_stage(League(this), 0xa8b53c, 0x1da, KEY_CLUB_COMP_SWEDISH_PREMIER_DIVISION, 0x88f3e0);
+}
+
+/// Moves the Norwegian First Division to the next stage once the Tippeligaen is complete: the same as the Superettan's
+/// (nor_first.cpp line 0x2fa, `KEY_CLUB_COMP_NORWEGIAN_PREMIER_DIVISION`, `NorFirst::create_play_off_stage` 0x790e20).
+/// Original: `NorFirst::advance_stage` (0x790d50, nor_first.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn nor_first_advance_stage(this: usize) {
+    advance_first_division_stage(League(this), 0xa69740, 0x2fa, KEY_CLUB_COMP_NORWEGIAN_PREMIER_DIVISION, 0x790e20);
+}
+
+/// Builds the Cup_Stage of the play-off between the two clubs of `list` into the first stage slot and frees the list
+/// and the round table; returns the stage left in the slot.
+///
+/// The round table of stage 0 (virtual `comp_vtable::CREATE_SCHEDULE`: push 0; push &extra; push &rounds; push 0;
+/// mov ecx -> thiscall, ret 0x10); the stage (operator new `exe::crt_operator_new` of 0xb2; Cup_Stage::Cup_Stage
+/// `FN_CUP_STAGE_CUP_STAGE`, thiscall, ret 0x3c: the league, 2, the list, the rounds, the competition, the round
+/// table, the year, 0, 1, the extra, 0x14, 0, 0, 0, 0; 0 when out of memory) into the first slot of `.stages()`; the
+/// list and the round table freed (`exe::crt_free`).
+pub(crate) unsafe fn build_two_club_play_off(this: League, list: usize) -> usize {
+    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
+    let (mut rounds, mut extra) = (0i16, 0i16);
+    let t = table(this.addr(), 0, &mut rounds, &mut extra, 0);
+    let p = exe::crt_operator_new(0xb2);
+    // simplification: the original pushes the rounds, the extra and the year as dwords with garbage above the word;
+    // the constructor only reads the words.
+    let stage = if p != 0 {
+        #[allow(clippy::type_complexity)]
+        let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, u32) -> usize =
+            core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
+        construct(p, this.addr(), 2, list, rounds as u16 as u32, this.competition().addr(), t, this.year() as u16 as u32, 0, 1, extra as u16 as u32, 0x14, 0, 0, 0, 0)
+    } else {
+        0
+    };
+    write_usize(this.stages(), stage);
+    exe::crt_free(list);
+    exe::crt_free(t);
+    read_usize(this.stages())
+}
+
+/// The club of the first table row (in table order, a signed word count) of `league` whose status is `status`.
+pub(crate) unsafe fn first_row_club_with_status(league: League, status: u8) -> Option<usize> {
+    let t = league.table();
+    (0..(league.club_count() as i32).max(0) as usize).map(|i| t + i * league_table_row::SIZE).find(|&r| read_u8(r + league_table_row::STATUS) == status).map(|r| read_usize(r))
+}
+
+/// The club of the first row of the Premier Division of key `premier` (through League::get_table_row
+/// `exe::league_get_table_row`, thiscall, ret 4) whose status is `status`.
+pub(crate) unsafe fn premier_row_club_with_status(premier: usize, status: u8) -> Option<usize> {
+    let p = League(comp_by_global(premier));
+    for i in 0..(p.club_count() as i32).max(0) {
+        if read_u8(exe::league_get_table_row(p, i) + league_table_row::STATUS) == status {
+            return Some(read_usize(exe::league_get_table_row(p, i)));
+        }
+    }
+    None
+}
+
+/// Builds the Superettan promotion play-off (stage 0): the Superettan club with the promotion play-off status (the
+/// 3rd) against the Allsvenskan club with the relegation play-off status (the 12th), as a two-legged cup tie.
+///
+/// `SweFirst::create_play_off_stage()`: the list of 2 (`exe::crt_malloc` of 8; out of memory: the box of
+/// swe_first.cpp (0xa8b53c) line 0x206 and return); slot 0 = the club of the first Superettan row with status
+/// `table_status::PROMOTION_PLAYOFF`, slot 1 = the club of the first Allsvenskan row (`G_COMP_OBJECT_TABLE` by the id
+/// of `KEY_CLUB_COMP_SWEDISH_PREMIER_DIVISION`) with status `table_status::RELEGATION_PLAYOFF` (a slot without such a
+/// row keeps what malloc gave); the stage (`build_two_club_play_off`), then Cup::set_up_round (`exe::cup_set_up_round`
+/// with 0) on the first slot, called before the slot is checked (a defect of the original: with no stage it runs on
+/// a null object); with no stage, the box of line 0x22e; otherwise `.current_stage()` = 0.
+/// Original: `SweFirst::create_play_off_stage` (0x88f3e0, swe_first.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn swe_first_create_play_off_stage(this: usize) {
+    let this = League(this);
+    let list = exe::crt_malloc(8);
+    if list == 0 {
+        return show_error_at(0xa8b53c, 0x206);
+    }
+    if let Some(c) = first_row_club_with_status(this, table_status::PROMOTION_PLAYOFF) { // mwe10: the Superettan play-off club
+        write_usize(list, c);
+    }
+    if let Some(c) = premier_row_club_with_status(KEY_CLUB_COMP_SWEDISH_PREMIER_DIVISION, table_status::RELEGATION_PLAYOFF) {
+        write_usize(list + 4, c);
+    }
+    covered!("mwe_10 superettan play-off");
+    let stage = build_two_club_play_off(this, list);
+    exe::cup_set_up_round(stage, 0);
+    if read_usize(this.stages()) == 0 {
+        return show_error_at(0xa8b53c, 0x22e);
+    }
+    this.set_current_stage(0);
+}
+
+/// The comparer of the two stage advances: only the original runs (it updates the Premier Division and may build the
+/// play-off); the current stage must stay (at the last stage, or with the Premier Division still playing) or go up by
+/// one, and on reaching 0 the first stage slot must hold a stage.
+pub(crate) unsafe fn compare_first_division_advance(name: &str, this: League, original: impl FnOnce()) {
+    let before = this.current_stage() as i32;
+    let last = before >= (this.stage_count() as i32).wrapping_sub(1);
+    original();
+    let after = this.current_stage() as i32;
+    let ok = if last { after == before } else { (after == before || after == before + 1) && (after != 0 || before == 0 || read_usize(this.stages()) != 0) };
+    SCOREBOARD.record(ok, || format!("{}({:#x}) before={} after={} stages={}", name, this.addr(), before, after, this.stage_count()));
+}
+
+/// Comparer for `swe_first_advance_stage`.
+pub(crate) unsafe extern "thiscall" fn compare_swe_first_advance_stage(this: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SWE_FIRST_ADVANCE_STAGE);
+    compare_first_division_advance("swe_first_advance_stage", League(this), || o(this))
+}
+
+/// Comparer for `nor_first_advance_stage`.
+pub(crate) unsafe extern "thiscall" fn compare_nor_first_advance_stage(this: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_NOR_FIRST_ADVANCE_STAGE);
+    compare_first_division_advance("nor_first_advance_stage", League(this), || o(this))
+}
+
+/// Comparer for `swe_first_create_play_off_stage`: only the original runs (it allocates and draws); the plan (the two
+/// clubs, made beforehand) against the stage in the first slot: two clubs, the same as the plan (as a set), the
+/// competition and `.current_stage()` = 0.
+pub(crate) unsafe extern "thiscall" fn compare_swe_first_create_play_off_stage(this: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SWE_FIRST_CREATE_PLAY_OFF_STAGE);
+    let l = League(this);
+    let plan = [first_row_club_with_status(l, table_status::PROMOTION_PLAYOFF), premier_row_club_with_status(KEY_CLUB_COMP_SWEDISH_PREMIER_DIVISION, table_status::RELEGATION_PLAYOFF)];
+    o(this);
+    compare_two_club_play_off("swe_first_create_play_off_stage", l, plan);
+}
+
+/// Checks the two-club play-off stage of the first slot against the plan (as a set, the round draw may swap them).
+pub(crate) unsafe fn compare_two_club_play_off(name: &str, this: League, plan: [Option<usize>; 2]) {
+    let stage = Cup(read_usize(this.stages()));
+    if stage.is_null() {
+        SCOREBOARD.record(false, || format!("{}({:#x}) without stage", name, this.addr()));
+        return;
+    }
+    let list = stage.team_table();
+    let mut found = [read_usize(list), read_usize(list + 6)];
+    let mut want = [plan[0].unwrap_or(0), plan[1].unwrap_or(0)];
+    found.sort_unstable();
+    want.sort_unstable();
+    let ok = plan.iter().all(|c| c.is_some()) && found == want && stage.team_count() == 2 && read_usize(stage.addr() + 4) == this.competition().addr() && this.current_stage() == 0;
+    SCOREBOARD.record(ok, || format!("{}({:#x}) plan={:x?} stage={:#x} list={:x?} +0x3e={}", name, this.addr(), plan, stage.addr(), found, stage.team_count()));
+}
+
+// ---------- batch 304: the Norwegian promotion play-off and the Ykkönen stage advance and club progress (nor_first.cpp, fin_first.cpp) ----------
+
+/// The Norwegian promotion play-off (stage 0): the Norwegian First Division club with the promotion play-off status
+/// (the 3rd) against the Tippeligaen club with the relegation play-off status (the 12th), as a cup tie.
+///
+/// `NorFirst::create_play_off_stage()`: the list of 2 (`exe::crt_malloc` of 8; out of memory: the box of nor_first.cpp
+/// (0xa69740) line 0x326 and return). Slot 0 = the club of the LAST First Division row with status
+/// `table_status::PROMOTION_PLAYOFF` (the loop does not stop at the first; the count re-read each turn); none: the box
+/// of line 0x336 and return (the list is not freed). Slot 1 = the club of the last Tippeligaen row
+/// (`G_COMP_OBJECT_TABLE` by the id of `KEY_CLUB_COMP_NORWEGIAN_PREMIER_DIVISION`, League::get_table_row
+/// `exe::league_get_table_row`, called twice for the chosen row) with status `table_status::RELEGATION_PLAYOFF`; a
+/// Tippeligaen without clubs, or with no such row, ends it silently (the list is not freed). Then the stage
+/// (`build_two_club_play_off`: the round table of stage 0, the Cup_Stage of the 2 clubs into the first slot, the list
+/// and the round table freed); with no stage, the box of line 0x357; otherwise Cup::set_up_round
+/// (`exe::cup_set_up_round` with 0). Unlike the Superettan's, it does not write `.current_stage()` (the advance already
+/// set it to 0).
+/// Original: `NorFirst::create_play_off_stage` (0x790e20, nor_first.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn nor_first_create_play_off_stage(this: usize) {
+    let this = League(this);
+    let list = exe::crt_malloc(8);
+    if list == 0 {
+        return show_error_at(0xa69740, 0x326);
+    }
+    let Some(c) = last_row_club_with_status(this, table_status::PROMOTION_PLAYOFF) else { // mwe11: the Norwegian play-off club
+        return show_error_at(0xa69740, 0x336);
+    };
+    write_usize(list, c);
+    let Some(c) = last_premier_row_club_with_status(KEY_CLUB_COMP_NORWEGIAN_PREMIER_DIVISION, table_status::RELEGATION_PLAYOFF) else {
+        return;
+    };
+    write_usize(list + 4, c);
+    covered!("mwe_11 norwegian play-off");
+    let stage = build_norwegian_play_off(this, list);
+    if stage == 0 {
+        return show_error_at(0xa69740, 0x357);
+    }
+    exe::cup_set_up_round(stage, 0);
+}
+
+/// The club of the last table row (a signed word count, re-read each turn) of `league` whose status is `status`.
+pub(crate) unsafe fn last_row_club_with_status(league: League, status: u8) -> Option<usize> {
+    let mut found = None;
+    let mut i = 0i32;
+    while i < league.club_count() as i32 {
+        let r = league.table() + i as usize * league_table_row::SIZE;
+        if read_u8(r + league_table_row::STATUS) == status {
+            found = Some(read_usize(r));
+        }
+        i += 1;
+    }
+    found
+}
+
+/// The club of the last row of the Premier Division of key `premier` (League::get_table_row, twice for the chosen row)
+/// whose status is `status`; None without clubs or without such a row.
+pub(crate) unsafe fn last_premier_row_club_with_status(premier: usize, status: u8) -> Option<usize> {
+    let p = League(comp_by_global(premier));
+    let mut found = None;
+    let mut i = 0i32;
+    while i < p.club_count() as i32 {
+        if read_u8(exe::league_get_table_row(p, i) + league_table_row::STATUS) == status {
+            found = Some(read_usize(exe::league_get_table_row(p, i)));
+        }
+        i += 1;
+    }
+    found
+}
+
+/// The Cup_Stage of the two clubs of `list` into the first stage slot (the same steps as the Superettan's: the round
+/// table of stage 0 by virtual `comp_vtable::CREATE_SCHEDULE`, operator new of 0xb2, Cup_Stage::Cup_Stage(league, 2,
+/// list, rounds, competition, round table, year, 0, 1, extra, 0x14, 0, 0, 0, 0), the slot written, the list and the
+/// round table freed); returns the slot.
+pub(crate) unsafe fn build_norwegian_play_off(this: League, list: usize) -> usize {
+    let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
+    let (mut rounds, mut extra) = (0i16, 0i16);
+    let t = table(this.addr(), 0, &mut rounds, &mut extra, 0);
+    let p = exe::crt_operator_new(0xb2);
+    // simplification: the original pushes the rounds, the extra and the year as dwords with garbage above the word;
+    // the constructor only reads the words.
+    let stage = if p != 0 {
+        #[allow(clippy::type_complexity)]
+        let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, u32) -> usize =
+            core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
+        construct(p, this.addr(), 2, list, rounds as u16 as u32, this.competition().addr(), t, this.year() as u16 as u32, 0, 1, extra as u16 as u32, 0x14, 0, 0, 0, 0)
+    } else {
+        0
+    };
+    write_usize(this.stages(), stage);
+    exe::crt_free(list);
+    exe::crt_free(t);
+    read_usize(this.stages())
+}
+
+/// Moves the Ykkönen to its next stage: after the North group (and the South group stage 0) the play-off stages are
+/// built at stage 1; stage 2 waits for the Veikkausliiga to finish and then the Premier Division play-off is built at
+/// stage 3; at the last stage, the error box (line 0x2ce).
+///
+/// `FinFirst::advance_stage()`: at the last stage (`.current_stage()` ≥ `.stage_count()` − 1, signed), the box of
+/// fin_first.cpp (0x9c818c) line 0x2ce and nothing else. At stage 2, only when the Veikkausliiga
+/// (`KEY_CLUB_COMP_FINNISH_PREMIER_DIVISION`) is complete (virtual `comp_vtable::CHECK_COMPLETE` with (0, 1)), after
+/// its virtual `league_vtable::UPDATE_POSITIONS_AND_STATUS`; otherwise nothing. Then the current stage goes up by one: on
+/// reaching 1, FinFirst::create_play_off_stages (0x594080); on reaching 3, FinFirst::create_premier_play_off_stage
+/// (0x594610) (direct calls, thiscall, ret 0).
+/// Original: `FinFirst::advance_stage` (0x593f90, fin_first.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn fin_first_advance_stage(this: usize) {
+    let this = League(this);
+    let stage = this.current_stage() as i32;
+    if stage >= (this.stage_count() as i32).wrapping_sub(1) {
+        return show_error_at(0x9c818c, 0x2ce);
+    }
+    if stage == 2 {
+        let p = comp_by_global(KEY_CLUB_COMP_FINNISH_PREMIER_DIVISION);
+        let complete: unsafe extern "thiscall" fn(usize, u32, u32) -> u8 = core::mem::transmute(read_usize(read_usize(p) + comp_vtable::CHECK_COMPLETE));
+        if complete(p, 0, 1) == 0 {
+            return;
+        }
+        let update: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(p) + league_vtable::UPDATE_POSITIONS_AND_STATUS));
+        update(p); // mwe11: the Veikkausliiga statuses brought up to date
+    }
+    let stage = stage.wrapping_add(1);
+    this.set_current_stage(stage as usize);
+    let next: usize = match stage {
+        1 => 0x594080,
+        3 => 0x594610,
+        _ => return,
+    };
+    covered!("mwe_11 ykkonen next stage built");
+    let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(next);
+    f(this.addr());
+}
+
+/// The Ykkönen progress code for one value at one stage: at stage 3 (the Premier Division play-off, for a Veikkausliiga
+/// club) 1 → 11 and 2 → 12; at stage 2 (the play-offs, for an Ykkönen club) 1 → 15 and 3 → 17; otherwise the value.
+pub(crate) fn finnish_progress_code(stage: i8, v: u8) -> u8 {
+    match (stage, v) {
+        (3, 1) => 0xb,
+        (3, 2) => 0xc,
+        (2, 1) => 0xf, // mwe11: the play-off winner's code
+        (2, 3) => 0x11,
+        _ => v,
+    }
+}
+
+/// Writes a club's current, best and worst progress codes in its Comp_Stats entry, interleaving the two groups and
+/// mapping the play-off results to the codes after the league places.
+///
+/// `FinFirst::set_club_progress(club, stage, current, best, worst)`: the entry of the club in the league's Comp_Stats
+/// (`exe::comp_stats_find_club_entry`, thiscall, ret 4). Stage (a signed byte) below 1 (the groups): each value v
+/// becomes 2v − 1 (a byte; the North and South places interleave). Stage 1: as they come. Stage 3: for a club whose
+/// division (`club::DIVISION`, read without a null check) is the Veikkausliiga, the entry of the Veikkausliiga's
+/// Comp_Stats (`G_COMP_OBJECT_TABLE` by `KEY_CLUB_COMP_FINNISH_PREMIER_DIVISION`, its `league::COMP_STATS`) with 1 → 11
+/// and 2 → 12; any other club, as they come in the Ykkönen entry. Stage 2: for an Ykkönen club
+/// (`KEY_CLUB_COMP_FINNISH_FIRST_DIVISION`), 1 → 15 and 3 → 17; any other club, nothing is written. Other stages: as
+/// they come. The bytes go to `comp_stats_club::CURRENT_POSITION`, `::BEST_POSITION` and `::WORST_POSITION` (the entry
+/// is not checked for null).
+/// Original: `FinFirst::set_club_progress` (0x593e10, fin_first.cpp, thiscall, ret 0x14).
+pub(crate) unsafe extern "thiscall" fn fin_first_set_club_progress(this: usize, club: usize, stage: u32, current: u32, best: u32, worst: u32) {
+    let this = League(this);
+    let club = Club(club);
+    let mut e = exe::comp_stats_find_club_entry(this.comp_stats(), club);
+    let s = stage as u8 as i8;
+    let (mut c, mut b, mut w) = (current as u8, best as u8, worst as u8);
+    if s < 1 {
+        covered!("mwe_11 ykkonen group progress");
+        c = c.wrapping_shl(1).wrapping_sub(1); // mwe11: the group places interleaved
+        b = b.wrapping_shl(1).wrapping_sub(1);
+        w = w.wrapping_shl(1).wrapping_sub(1);
+    } else if s == 3 {
+        if read_usize(club.division().addr()) == read_usize(KEY_CLUB_COMP_FINNISH_PREMIER_DIVISION) {
+            e = exe::comp_stats_find_club_entry(read_usize(comp_by_global(KEY_CLUB_COMP_FINNISH_PREMIER_DIVISION) + league::COMP_STATS), club);
+            c = finnish_progress_code(3, c);
+            b = finnish_progress_code(3, b);
+            w = finnish_progress_code(3, w);
+        }
+    } else if s == 2 {
+        if read_usize(club.division().addr()) != read_usize(KEY_CLUB_COMP_FINNISH_FIRST_DIVISION) {
+            return;
+        }
+        c = finnish_progress_code(2, c);
+        b = finnish_progress_code(2, b);
+        w = finnish_progress_code(2, w);
+    }
+    write_u8(e + comp_stats_club::BEST_POSITION, b);
+    write_u8(e + comp_stats_club::CURRENT_POSITION, c);
+    write_u8(e + comp_stats_club::WORST_POSITION, w);
+}
+
+/// Comparer for `nor_first_create_play_off_stage`: only the original runs (it allocates and draws); the planned
+/// clubs (the last rows with each status) against the stage, when both exist.
+pub(crate) unsafe extern "thiscall" fn compare_nor_first_create_play_off_stage(this: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_NOR_FIRST_CREATE_PLAY_OFF_STAGE);
+    let l = League(this);
+    let plan = [last_row_club_with_status(l, table_status::PROMOTION_PLAYOFF), last_premier_row_club_with_status(KEY_CLUB_COMP_NORWEGIAN_PREMIER_DIVISION, table_status::RELEGATION_PLAYOFF)];
+    o(this);
+    if plan.iter().all(|c| c.is_some()) {
+        let stage = Cup(read_usize(l.stages()));
+        let ok = !stage.is_null() && stage.team_count() == 2 && {
+            let list = stage.team_table();
+            let mut found = [read_usize(list), read_usize(list + 6)];
+            let mut want = [plan[0].unwrap(), plan[1].unwrap()];
+            found.sort_unstable();
+            want.sort_unstable();
+            found == want
+        };
+        SCOREBOARD.record(ok, || format!("nor_first_create_play_off_stage({:#x}) plan={:x?} stage={:#x}", this, plan, stage.addr()));
+    }
+}
+
+/// Comparer for `fin_first_advance_stage`: only the original runs (it builds stages); the current stage stays (at the
+/// last stage, or at stage 2 with the Veikkausliiga still playing) or goes up by one.
+pub(crate) unsafe extern "thiscall" fn compare_fin_first_advance_stage(this: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_FIN_FIRST_ADVANCE_STAGE);
+    let l = League(this);
+    let before = l.current_stage() as i32;
+    let last = before >= (l.stage_count() as i32).wrapping_sub(1);
+    o(this);
+    let after = l.current_stage() as i32;
+    // A fase sobe 1 e, quando a nova e 1 ou 3, a rotina chama o construtor da fase seguinte (0x594080 / 0x594610),
+    // que avanca de novo: de 0 o original para em 2 (visto no jogo real da 304). Entao a invariante verdadeira e "a
+    // fase subiu ao menos 1", nao "subiu exatamente 1" (17/11/2026).
+    let ok = if last {
+        after == before
+    } else if before == 2 {
+        after == 2 || after >= 3
+    } else {
+        after >= before + 1 && after <= (l.stage_count() as i32).wrapping_sub(1)
+    };
+    SCOREBOARD.record(ok, || format!("fin_first_advance_stage({:#x}) before={} after={}", this, before, after));
+}
+
+/// Comparer for `fin_first_set_club_progress`: side by side on the 3 bytes of the entry the routine writes (the
+/// Veikkausliiga's at stage 3 for a Veikkausliiga club); only the original without an entry.
+pub(crate) unsafe extern "thiscall" fn compare_fin_first_set_club_progress(this: usize, club: usize, stage: u32, current: u32, best: u32, worst: u32) {
+    let this = League(this);
+    let club = Club(club);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(IDX_FIN_FIRST_SET_CLUB_PROGRESS);
+    let premier_club = club.division().addr() != 0 && read_usize(club.division().addr()) == read_usize(KEY_CLUB_COMP_FINNISH_PREMIER_DIVISION);
+    let stats = if stage as u8 as i8 == 3 && premier_club { read_usize(comp_by_global(KEY_CLUB_COMP_FINNISH_PREMIER_DIVISION) + league::COMP_STATS) } else { this.comp_stats() };
+    let e = if stats != 0 { exe::comp_stats_find_club_entry(stats, club) } else { 0 };
+    if e == 0 || club.division().addr() == 0 {
+        return o(this.addr(), club.addr(), stage, current, best, worst);
+    }
+    let (_, _, same, mo, mr) = crate::comparison::side_by_side_light(&[(e + comp_stats_club::CURRENT_POSITION, 3)], || o(this.addr(), club.addr(), stage, current, best, worst), || fin_first_set_club_progress(this.addr(), club.addr(), stage, current, best, worst));
+    SCOREBOARD.record(same, || format!("fin_first_set_club_progress({:#x}, {:#x}, stage {}, {} {} {}) original={:x?} rust={:x?}", this.addr(), club.addr(), stage as u8 as i8, current as u8, best as u8, worst as u8, mo, mr));
+}
+
+// ---------- batch 304: the schedules of the Allsvenskan, the Veikkausliiga and the Portuguese Premier Division (swe_prm.cpp, fin_prm.cpp, por_prm.cpp) ----------
+
+/// The Allsvenskan: the 26 rounds, from early April to early November, on Sundays (weekday 6; 0 = Monday), one midweek
+/// round on 2 June (weekday 1, Tuesday) and the last on a Saturday (31 October, weekday 5); no TV slots.
+pub(crate) const ALLSVENSKAN_ROUNDS: [EngFirstScheduleRound; 26] = [
+    (6, 3, 0, 6, 1, &[(-1, -1, -1)]), // 0: 6/abr
+    (13, 3, 0, 6, 1, &[(-1, -1, -1)]), // 1: 13/abr
+    (20, 3, 0, 6, 1, &[(-1, -1, -1)]), // 2: 20/abr
+    (27, 3, 0, 6, 1, &[(-1, -1, -1)]), // 3: 27/abr
+    (4, 4, 0, 6, 1, &[(-1, -1, -1)]), // 4: 4/mai
+    (11, 4, 0, 6, 1, &[(-1, -1, -1)]), // 5: 11/mai
+    (18, 4, 0, 6, 1, &[(-1, -1, -1)]), // 6: 18/mai
+    (2, 5, 0, 1, 2, &[(-1, -1, -1)]), // 7: 2/jun
+    (7, 5, 0, 6, 1, &[(-1, -1, -1)]), // 8: 7/jun
+    (15, 5, 0, 6, 1, &[(-1, -1, -1)]), // 9: 15/jun
+    (22, 5, 0, 6, 1, &[(-1, -1, -1)]), // 10: 22/jun
+    (29, 5, 0, 6, 1, &[(-1, -1, -1)]), // 11: 29/jun
+    (19, 6, 0, 6, 1, &[(-1, -1, -1)]), // 12: 19/jul (mwe12: the Allsvenskan July round)
+    (2, 7, 0, 6, 1, &[(-1, -1, -1)]), // 13: 2/ago
+    (9, 7, 0, 6, 1, &[(-1, -1, -1)]), // 14: 9/ago
+    (16, 7, 0, 6, 1, &[(-1, -1, -1)]), // 15: 16/ago
+    (23, 7, 0, 6, 1, &[(-1, -1, -1)]), // 16: 23/ago
+    (30, 7, 0, 6, 1, &[(-1, -1, -1)]), // 17: 30/ago
+    (13, 8, 0, 6, 1, &[(-1, -1, -1)]), // 18: 13/set
+    (20, 8, 0, 6, 1, &[(-1, -1, -1)]), // 19: 20/set
+    (27, 8, 0, 6, 1, &[(-1, -1, -1)]), // 20: 27/set
+    (4, 9, 0, 6, 1, &[(-1, -1, -1)]), // 21: 4/out
+    (18, 9, 0, 6, 1, &[(-1, -1, -1)]), // 22: 18/out
+    (25, 9, 0, 6, 1, &[(-1, -1, -1)]), // 23: 25/out
+    (31, 9, 0, 5, 1, &[(-1, -1, -1)]), // 24: 31/out
+    (8, 10, 0, 6, 1, &[(-1, -1, -1)]), // 25: 8/nov
+];
+
+/// The Veikkausliiga: the 33 rounds (three legs of 12 clubs), from late April to late October, on Sundays (weekday 6),
+/// Wednesdays (2) and Mondays (0) (the midweek ones with code 2); the first and the last on a Saturday (5); no TV slots.
+pub(crate) const VEIKKAUSLIIGA_ROUNDS: [EngFirstScheduleRound; 33] = [
+    (29, 3, 0, 5, 1, &[(-1, -1, -1)]), // 0: 29/abr
+    (3, 4, 0, 2, 2, &[(-1, -1, -1)]), // 1: 3/mai
+    (10, 4, 0, 2, 2, &[(-1, -1, -1)]), // 2: 10/mai
+    (15, 4, 0, 0, 2, &[(-1, -1, -1)]), // 3: 15/mai
+    (21, 4, 0, 6, 1, &[(-1, -1, -1)]), // 4: 21/mai
+    (24, 4, 0, 2, 2, &[(-1, -1, -1)]), // 5: 24/mai
+    (28, 4, 0, 6, 1, &[(-1, -1, -1)]), // 6: 28/mai
+    (31, 4, 0, 2, 2, &[(-1, -1, -1)]), // 7: 31/mai
+    (7, 5, 0, 2, 2, &[(-1, -1, -1)]), // 8: 7/jun
+    (14, 5, 0, 2, 2, &[(-1, -1, -1)]), // 9: 14/jun
+    (19, 5, 0, 0, 2, &[(-1, -1, -1)]), // 10: 19/jun
+    (26, 5, 0, 0, 2, &[(-1, -1, -1)]), // 11: 26/jun
+    (3, 6, 0, 0, 2, &[(-1, -1, -1)]), // 12: 3/jul
+    (9, 6, 0, 6, 1, &[(-1, -1, -1)]), // 13: 9/jul
+    (12, 6, 0, 2, 2, &[(-1, -1, -1)]), // 14: 12/jul
+    (16, 6, 0, 6, 1, &[(-1, -1, -1)]), // 15: 16/jul
+    (19, 6, 0, 2, 2, &[(-1, -1, -1)]), // 16: 19/jul
+    (26, 6, 0, 2, 2, &[(-1, -1, -1)]), // 17: 26/jul
+    (30, 6, 0, 6, 1, &[(-1, -1, -1)]), // 18: 30/jul
+    (2, 7, 0, 2, 2, &[(-1, -1, -1)]), // 19: 2/ago
+    (6, 7, 0, 6, 1, &[(-1, -1, -1)]), // 20: 6/ago
+    (13, 7, 0, 6, 1, &[(-1, -1, -1)]), // 21: 13/ago
+    (20, 7, 0, 6, 1, &[(-1, -1, -1)]), // 22: 20/ago
+    (27, 7, 0, 6, 1, &[(-1, -1, -1)]), // 23: 27/ago
+    (6, 8, 0, 2, 2, &[(-1, -1, -1)]), // 24: 6/set
+    (10, 8, 0, 6, 1, &[(-1, -1, -1)]), // 25: 10/set
+    (17, 8, 0, 6, 1, &[(-1, -1, -1)]), // 26: 17/set
+    (20, 8, 0, 2, 2, &[(-1, -1, -1)]), // 27: 20/set
+    (1, 9, 0, 6, 1, &[(-1, -1, -1)]), // 28: 1/out
+    (15, 9, 0, 6, 1, &[(-1, -1, -1)]), // 29: 15/out
+    (22, 9, 0, 6, 1, &[(-1, -1, -1)]), // 30: 22/out
+    (25, 9, 0, 2, 2, &[(-1, -1, -1)]), // 31: 25/out
+    (28, 9, 0, 5, 1, &[(-1, -1, -1)]), // 32: 28/out (mwe12: the Veikkausliiga last round)
+];
+
+/// The Portuguese Premier Division: the 34 rounds, from late August to mid-May of the next year, on Sundays (weekday 6)
+/// with three TV slots (one match each on Friday, Saturday and Monday: days 4, 5 and 0, slot 2), two Saturday rounds (4
+/// March and 22 April) with only the Friday and Saturday slots, the last round without slots.
+pub(crate) const PORTUGUESE_PREMIER_ROUNDS: [EngFirstScheduleRound; 34] = [
+    (22, 7, 0, 6, 1, &[(4, 2, 1), (5, 2, 1), (0, 2, 1), (-1, -1, -1)]), // 0: 22/ago
+    (29, 7, 0, 6, 1, &[(4, 2, 1), (5, 2, 1), (0, 2, 1), (-1, -1, -1)]), // 1: 29/ago
+    (12, 8, 0, 6, 1, &[(4, 2, 1), (5, 2, 1), (0, 2, 1), (-1, -1, -1)]), // 2: 12/set
+    (19, 8, 0, 6, 1, &[(4, 2, 1), (5, 2, 1), (0, 2, 1), (-1, -1, -1)]), // 3: 19/set
+    (26, 8, 0, 6, 1, &[(4, 2, 1), (5, 2, 1), (0, 2, 1), (-1, -1, -1)]), // 4: 26/set
+    (3, 9, 0, 6, 1, &[(4, 2, 1), (5, 2, 1), (0, 2, 1), (-1, -1, -1)]), // 5: 3/out
+    (17, 9, 0, 6, 1, &[(4, 2, 1), (5, 2, 1), (0, 2, 1), (-1, -1, -1)]), // 6: 17/out
+    (24, 9, 0, 6, 1, &[(4, 2, 1), (5, 2, 1), (0, 2, 1), (-1, -1, -1)]), // 7: 24/out
+    (31, 9, 0, 6, 1, &[(4, 2, 1), (5, 2, 1), (0, 2, 1), (-1, -1, -1)]), // 8: 31/out
+    (7, 10, 0, 6, 1, &[(4, 2, 1), (5, 2, 1), (0, 2, 1), (-1, -1, -1)]), // 9: 7/nov (mwe12: the Portuguese November round)
+    (21, 10, 0, 6, 1, &[(4, 2, 1), (5, 2, 1), (0, 2, 1), (-1, -1, -1)]), // 10: 21/nov
+    (28, 10, 0, 6, 1, &[(4, 2, 1), (5, 2, 1), (0, 2, 1), (-1, -1, -1)]), // 11: 28/nov
+    (5, 11, 0, 6, 1, &[(4, 2, 1), (5, 2, 1), (0, 2, 1), (-1, -1, -1)]), // 12: 5/dez
+    (12, 11, 0, 6, 1, &[(4, 2, 1), (5, 2, 1), (0, 2, 1), (-1, -1, -1)]), // 13: 12/dez
+    (19, 11, 0, 6, 1, &[(4, 2, 1), (5, 2, 1), (0, 2, 1), (-1, -1, -1)]), // 14: 19/dez
+    (2, 0, 1, 6, 1, &[(4, 2, 1), (5, 2, 1), (0, 2, 1), (-1, -1, -1)]), // 15: 2/jan (+1 ano)
+    (16, 0, 1, 6, 1, &[(4, 2, 1), (5, 2, 1), (0, 2, 1), (-1, -1, -1)]), // 16: 16/jan (+1 ano)
+    (23, 0, 1, 6, 1, &[(4, 2, 1), (5, 2, 1), (0, 2, 1), (-1, -1, -1)]), // 17: 23/jan (+1 ano)
+    (30, 0, 1, 6, 1, &[(4, 2, 1), (5, 2, 1), (0, 2, 1), (-1, -1, -1)]), // 18: 30/jan (+1 ano)
+    (6, 1, 1, 6, 1, &[(4, 2, 1), (5, 2, 1), (0, 2, 1), (-1, -1, -1)]), // 19: 6/fev (+1 ano)
+    (13, 1, 1, 6, 1, &[(4, 2, 1), (5, 2, 1), (0, 2, 1), (-1, -1, -1)]), // 20: 13/fev (+1 ano)
+    (20, 1, 1, 6, 1, &[(4, 2, 1), (5, 2, 1), (0, 2, 1), (-1, -1, -1)]), // 21: 20/fev (+1 ano)
+    (27, 1, 1, 6, 1, &[(4, 2, 1), (5, 2, 1), (0, 2, 1), (-1, -1, -1)]), // 22: 27/fev (+1 ano)
+    (4, 2, 1, 5, 1, &[(4, 2, 1), (5, 2, 1), (-1, -1, -1)]), // 23: 4/mar (+1 ano)
+    (12, 2, 1, 6, 1, &[(4, 2, 1), (5, 2, 1), (0, 2, 1), (-1, -1, -1)]), // 24: 12/mar (+1 ano)
+    (19, 2, 1, 6, 1, &[(4, 2, 1), (5, 2, 1), (0, 2, 1), (-1, -1, -1)]), // 25: 19/mar (+1 ano)
+    (26, 2, 1, 6, 1, &[(4, 2, 1), (5, 2, 1), (0, 2, 1), (-1, -1, -1)]), // 26: 26/mar (+1 ano)
+    (2, 3, 1, 6, 1, &[(4, 2, 1), (5, 2, 1), (0, 2, 1), (-1, -1, -1)]), // 27: 2/abr (+1 ano)
+    (9, 3, 1, 6, 1, &[(4, 2, 1), (5, 2, 1), (0, 2, 1), (-1, -1, -1)]), // 28: 9/abr (+1 ano)
+    (16, 3, 1, 6, 1, &[(4, 2, 1), (5, 2, 1), (0, 2, 1), (-1, -1, -1)]), // 29: 16/abr (+1 ano)
+    (22, 3, 1, 5, 1, &[(4, 2, 1), (5, 2, 1), (-1, -1, -1)]), // 30: 22/abr (+1 ano)
+    (30, 3, 1, 6, 1, &[(4, 2, 1), (5, 2, 1), (0, 2, 1), (-1, -1, -1)]), // 31: 30/abr (+1 ano)
+    (7, 4, 1, 6, 1, &[(4, 2, 1), (5, 2, 1), (0, 2, 1), (-1, -1, -1)]), // 32: 7/mai (+1 ano)
+    (14, 4, 1, 6, 1, &[(-1, -1, -1)]), // 33: 14/mai (+1 ano)
+];
+
+/// The Allsvenskan schedule: 26 rounds (14 clubs, two legs), from 6 April to 8 November, on Sundays, with one Tuesday round in June; no TV slots and no play-offs (main stage only).
+///
+/// `SwePrm::create_schedule(stage, &rounds, &extra, &league)`: at stage −1 (0xff), `*league` = 1 (when given), 26 rounds,
+/// extra 0 and the table (`exe::crt_malloc` of 0x69a = 26 × 0x41; out of memory: the box of swe_prm.cpp (0xa8b578) line 0xdb and 0),
+/// filled round by round from `ALLSVENSKAN_ROUNDS` (`eng_first_set_league_rounds`: League round date `exe::league_round_set_date`(t,
+/// i, day, month, years, weekday, code, year, 0) and the TV slots `exe::league_round_set_match_slot`(t, i, j, a, b,
+/// c, 0), the list closed by (−1, −1, −1); both cdecl); the year is the league's (`.year()`, the original pushes the
+/// word with garbage above it: the date only reads the word). Any other stage: 0 and nothing written. 
+/// Original: `SwePrm::create_schedule` (0x88feb0, swe_prm.cpp, thiscall, ret 0x10).
+pub(crate) unsafe extern "thiscall" fn swe_prm_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    if stage as u8 != 0xff {
+        return 0;
+    }
+    if !league.is_null() {
+        *league = 1;
+    }
+    *rounds = 0x1a;
+    *extra = 0;
+    let t = exe::crt_malloc(0x69a);
+    if t == 0 {
+        show_error_at(0xa8b578, 0xdb);
+        return 0;
+    }
+    covered!("mwe_12 allsvenskan schedule");
+    let year = (League(this).year() as u16) as u32;
+    eng_first_set_league_rounds(t, year, 0, &ALLSVENSKAN_ROUNDS); // mwe12: the Allsvenskan rounds
+    t
+}
+
+/// The Veikkausliiga schedule: 33 rounds (12 clubs, three legs), from 29 April to 28 October, on Sundays, Wednesdays and Mondays; no TV slots and no play-offs (main stage only).
+///
+/// `FinPrm::create_schedule(stage, &rounds, &extra, &league)`: at stage −1 (0xff), `*league` = 1 (when given), 33 rounds,
+/// extra 0 and the table (`exe::crt_malloc` of 0x861 = 33 × 0x41; out of memory: the box of fin_prm.cpp (0x9c8254) line 0xb3 and 0),
+/// filled round by round from `VEIKKAUSLIIGA_ROUNDS` (`eng_first_set_league_rounds`: League round date `exe::league_round_set_date`(t,
+/// i, day, month, years, weekday, code, year, 0) and the TV slots `exe::league_round_set_match_slot`(t, i, j, a, b,
+/// c, 0), the list closed by (−1, −1, −1); both cdecl); the year is the league's (`.year()`, the original pushes the
+/// word with garbage above it: the date only reads the word). Any other stage: 0 and nothing written. 
+/// Original: `FinPrm::create_schedule` (0x5954b0, fin_prm.cpp, thiscall, ret 0x10).
+pub(crate) unsafe extern "thiscall" fn fin_prm_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    if stage as u8 != 0xff {
+        return 0;
+    }
+    if !league.is_null() {
+        *league = 1;
+    }
+    *rounds = 0x21;
+    *extra = 0;
+    let t = exe::crt_malloc(0x861);
+    if t == 0 {
+        show_error_at(0x9c8254, 0xb3);
+        return 0;
+    }
+    covered!("mwe_12 veikkausliiga schedule");
+    let year = (League(this).year() as u16) as u32;
+    eng_first_set_league_rounds(t, year, 0, &VEIKKAUSLIIGA_ROUNDS); // mwe12: the Veikkausliiga rounds
+    t
+}
+
+/// The Portuguese Premier Division schedule: 34 rounds (18 clubs, two legs), from 22 August to 14 May of the next year, on Sundays, with three matches moved to Friday, Saturday and Monday in most rounds [inference: the televised matches]; no play-offs (main stage only).
+///
+/// `PorPrm::create_schedule(stage, &rounds, &extra, &league)`: at stage −1 (0xff), `*league` = 1 (when given), 34 rounds,
+/// extra 0 and the table (`exe::crt_malloc` of 0x8a2 = 34 × 0x41; out of memory: the box of por_prm.cpp (0xa78724) line 0xa0 and 0),
+/// filled round by round from `PORTUGUESE_PREMIER_ROUNDS` (`eng_first_set_league_rounds`: League round date `exe::league_round_set_date`(t,
+/// i, day, month, years, weekday, code, year, 0) and the TV slots `exe::league_round_set_match_slot`(t, i, j, a, b,
+/// c, 0), the list closed by (−1, −1, −1); both cdecl); the year is the league's (`.year()`, the original pushes the
+/// word with garbage above it: the date only reads the word). Any other stage: 0 and nothing written. 
+/// Original: `PorPrm::create_schedule` (0x7ce9e0, por_prm.cpp, thiscall, ret 0x10).
+pub(crate) unsafe extern "thiscall" fn por_prm_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    if stage as u8 != 0xff {
+        return 0;
+    }
+    if !league.is_null() {
+        *league = 1;
+    }
+    *rounds = 0x22;
+    *extra = 0;
+    let t = exe::crt_malloc(0x8a2);
+    if t == 0 {
+        show_error_at(0xa78724, 0xa0);
+        return 0;
+    }
+    covered!("mwe_12 portuguese premier schedule");
+    let year = (League(this).year() as u16) as u32;
+    eng_first_set_league_rounds(t, year, 0, &PORTUGUESE_PREMIER_ROUNDS); // mwe12: the Portuguese Premier rounds
+    t
+}
+
+/// Comparer for `swe_prm_create_schedule`: side by side (`compare_league_round_table`: the original with the caller's outputs, the copy
+/// with its own; the outputs and the written round bytes equal; the copy's table freed).
+pub(crate) unsafe extern "thiscall" fn compare_swe_prm_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_SWE_PRM_CREATE_SCHEDULE);
+    compare_league_round_table("swe_prm_create_schedule", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| swe_prm_create_schedule(this, stage, r, e, l))
+}
+
+/// Comparer for `fin_prm_create_schedule`: side by side (`compare_league_round_table`: the original with the caller's outputs, the copy
+/// with its own; the outputs and the written round bytes equal; the copy's table freed).
+pub(crate) unsafe extern "thiscall" fn compare_fin_prm_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FIN_PRM_CREATE_SCHEDULE);
+    compare_league_round_table("fin_prm_create_schedule", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| fin_prm_create_schedule(this, stage, r, e, l))
+}
+
+/// Comparer for `por_prm_create_schedule`: side by side (`compare_league_round_table`: the original with the caller's outputs, the copy
+/// with its own; the outputs and the written round bytes equal; the copy's table freed).
+pub(crate) unsafe extern "thiscall" fn compare_por_prm_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_POR_PRM_CREATE_SCHEDULE);
+    compare_league_round_table("por_prm_create_schedule", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| por_prm_create_schedule(this, stage, r, e, l))
+}
+
+// ---------- batch 304: the schedules of the Liga de Honra, the Superettan and the Ykkonen (por_second.cpp, swe_first.cpp, fin_first.cpp) ----------
+
+/// The Liga de Honra: the 34 rounds, the same dates as the Premier Division (Sundays, weekday 6), most with one match in
+/// the Sunday slot (day 6, slot 2) [inference: the televised match]; three Saturday rounds and the last three rounds
+/// without a slot.
+pub(crate) const LIGA_DE_HONRA_ROUNDS: [EngFirstScheduleRound; 34] = [
+    (22, 7, 0, 6, 1, &[(6, 2, 1), (-1, -1, -1)]), // 0: 22/ago
+    (29, 7, 0, 6, 1, &[(6, 2, 1), (-1, -1, -1)]), // 1: 29/ago
+    (12, 8, 0, 6, 1, &[(6, 2, 1), (-1, -1, -1)]), // 2: 12/set
+    (19, 8, 0, 6, 1, &[(6, 2, 1), (-1, -1, -1)]), // 3: 19/set
+    (26, 8, 0, 6, 1, &[(6, 2, 1), (-1, -1, -1)]), // 4: 26/set
+    (2, 9, 0, 5, 1, &[(-1, -1, -1)]), // 5: 2/out
+    (17, 9, 0, 6, 1, &[(6, 2, 1), (-1, -1, -1)]), // 6: 17/out
+    (24, 9, 0, 6, 1, &[(6, 2, 1), (-1, -1, -1)]), // 7: 24/out
+    (31, 9, 0, 6, 1, &[(6, 2, 1), (-1, -1, -1)]), // 8: 31/out
+    (7, 10, 0, 6, 1, &[(6, 2, 1), (-1, -1, -1)]), // 9: 7/nov (mwe13: the Liga de Honra November round)
+    (21, 10, 0, 6, 1, &[(6, 2, 1), (-1, -1, -1)]), // 10: 21/nov
+    (28, 10, 0, 6, 1, &[(6, 2, 1), (-1, -1, -1)]), // 11: 28/nov
+    (5, 11, 0, 6, 1, &[(6, 2, 1), (-1, -1, -1)]), // 12: 5/dez
+    (12, 11, 0, 6, 1, &[(6, 2, 1), (-1, -1, -1)]), // 13: 12/dez
+    (19, 11, 0, 6, 1, &[(6, 2, 1), (-1, -1, -1)]), // 14: 19/dez
+    (2, 0, 1, 6, 1, &[(6, 2, 1), (-1, -1, -1)]), // 15: 2/jan (+1 ano)
+    (16, 0, 1, 6, 1, &[(6, 2, 1), (-1, -1, -1)]), // 16: 16/jan (+1 ano)
+    (23, 0, 1, 6, 1, &[(6, 2, 1), (-1, -1, -1)]), // 17: 23/jan (+1 ano)
+    (30, 0, 1, 6, 1, &[(6, 2, 1), (-1, -1, -1)]), // 18: 30/jan (+1 ano)
+    (6, 1, 1, 6, 1, &[(6, 2, 1), (-1, -1, -1)]), // 19: 6/fev (+1 ano)
+    (13, 1, 1, 6, 1, &[(6, 2, 1), (-1, -1, -1)]), // 20: 13/fev (+1 ano)
+    (20, 1, 1, 6, 1, &[(6, 2, 1), (-1, -1, -1)]), // 21: 20/fev (+1 ano)
+    (27, 1, 1, 6, 1, &[(6, 2, 1), (-1, -1, -1)]), // 22: 27/fev (+1 ano)
+    (4, 2, 1, 5, 1, &[(-1, -1, -1)]), // 23: 4/mar (+1 ano)
+    (12, 2, 1, 6, 1, &[(6, 2, 1), (-1, -1, -1)]), // 24: 12/mar (+1 ano)
+    (19, 2, 1, 6, 1, &[(6, 2, 1), (-1, -1, -1)]), // 25: 19/mar (+1 ano)
+    (26, 2, 1, 6, 1, &[(6, 2, 1), (-1, -1, -1)]), // 26: 26/mar (+1 ano)
+    (2, 3, 1, 6, 1, &[(6, 2, 1), (-1, -1, -1)]), // 27: 2/abr (+1 ano)
+    (9, 3, 1, 6, 1, &[(6, 2, 1), (-1, -1, -1)]), // 28: 9/abr (+1 ano)
+    (16, 3, 1, 6, 1, &[(6, 2, 1), (-1, -1, -1)]), // 29: 16/abr (+1 ano)
+    (22, 3, 1, 5, 1, &[(-1, -1, -1)]), // 30: 22/abr (+1 ano)
+    (30, 3, 1, 6, 1, &[(-1, -1, -1)]), // 31: 30/abr (+1 ano)
+    (7, 4, 1, 6, 1, &[(-1, -1, -1)]), // 32: 7/mai (+1 ano)
+    (14, 4, 1, 6, 1, &[(-1, -1, -1)]), // 33: 14/mai (+1 ano)
+];
+
+/// The Superettan: the 30 rounds, the Allsvenskan dates (Sundays, weekday 6) with four Wednesday rounds (weekday 2,
+/// code 2) in August, September and October; no TV slots.
+pub(crate) const SUPERETTAN_ROUNDS: [EngFirstScheduleRound; 30] = [
+    (6, 3, 0, 6, 1, &[(-1, -1, -1)]), // 0: 6/abr
+    (13, 3, 0, 6, 1, &[(-1, -1, -1)]), // 1: 13/abr
+    (20, 3, 0, 6, 1, &[(-1, -1, -1)]), // 2: 20/abr
+    (27, 3, 0, 6, 1, &[(-1, -1, -1)]), // 3: 27/abr
+    (4, 4, 0, 6, 1, &[(-1, -1, -1)]), // 4: 4/mai
+    (11, 4, 0, 6, 1, &[(-1, -1, -1)]), // 5: 11/mai
+    (18, 4, 0, 6, 1, &[(-1, -1, -1)]), // 6: 18/mai
+    (2, 5, 0, 1, 2, &[(-1, -1, -1)]), // 7: 2/jun
+    (7, 5, 0, 6, 1, &[(-1, -1, -1)]), // 8: 7/jun
+    (15, 5, 0, 6, 1, &[(-1, -1, -1)]), // 9: 15/jun
+    (22, 5, 0, 6, 1, &[(-1, -1, -1)]), // 10: 22/jun
+    (29, 5, 0, 6, 1, &[(-1, -1, -1)]), // 11: 29/jun
+    (19, 6, 0, 6, 1, &[(-1, -1, -1)]), // 12: 19/jul (mwe13: the Superettan July round)
+    (2, 7, 0, 6, 1, &[(-1, -1, -1)]), // 13: 2/ago
+    (9, 7, 0, 6, 1, &[(-1, -1, -1)]), // 14: 9/ago
+    (16, 7, 0, 6, 1, &[(-1, -1, -1)]), // 15: 16/ago
+    (23, 7, 0, 6, 1, &[(-1, -1, -1)]), // 16: 23/ago
+    (26, 7, 0, 2, 2, &[(-1, -1, -1)]), // 17: 26/ago
+    (30, 7, 0, 6, 1, &[(-1, -1, -1)]), // 18: 30/ago
+    (13, 8, 0, 6, 1, &[(-1, -1, -1)]), // 19: 13/set
+    (16, 8, 0, 2, 2, &[(-1, -1, -1)]), // 20: 16/set
+    (20, 8, 0, 6, 1, &[(-1, -1, -1)]), // 21: 20/set
+    (27, 8, 0, 6, 1, &[(-1, -1, -1)]), // 22: 27/set
+    (30, 8, 0, 2, 2, &[(-1, -1, -1)]), // 23: 30/set
+    (4, 9, 0, 6, 1, &[(-1, -1, -1)]), // 24: 4/out
+    (18, 9, 0, 6, 1, &[(-1, -1, -1)]), // 25: 18/out
+    (21, 9, 0, 2, 2, &[(-1, -1, -1)]), // 26: 21/out
+    (25, 9, 0, 6, 1, &[(-1, -1, -1)]), // 27: 25/out
+    (31, 9, 0, 5, 1, &[(-1, -1, -1)]), // 28: 31/out
+    (8, 10, 0, 6, 1, &[(-1, -1, -1)]), // 29: 8/nov
+];
+
+/// The Ykkonen groups: the 27 rounds (three legs of 10 clubs), from 29 April to 6 October, on Sundays (weekday 6),
+/// with midweek rounds on Wednesdays, Thursdays or a Monday (weekdays 2, 3 and 0, code 2) and two Saturdays; no TV
+/// slots.
+pub(crate) const YKKONEN_ROUNDS: [EngFirstScheduleRound; 27] = [
+    (29, 3, 0, 6, 1, &[(-1, -1, -1)]), // 0: 29/abr
+    (6, 4, 0, 6, 1, &[(-1, -1, -1)]), // 1: 6/mai
+    (12, 4, 0, 5, 1, &[(-1, -1, -1)]), // 2: 12/mai
+    (20, 4, 0, 6, 1, &[(-1, -1, -1)]), // 3: 20/mai
+    (24, 4, 0, 3, 2, &[(-1, -1, -1)]), // 4: 24/mai
+    (27, 4, 0, 6, 1, &[(-1, -1, -1)]), // 5: 27/mai
+    (3, 5, 0, 6, 1, &[(-1, -1, -1)]), // 6: 3/jun
+    (6, 5, 0, 2, 2, &[(-1, -1, -1)]), // 7: 6/jun
+    (10, 5, 0, 6, 1, &[(-1, -1, -1)]), // 8: 10/jun
+    (13, 5, 0, 2, 2, &[(-1, -1, -1)]), // 9: 13/jun
+    (17, 5, 0, 6, 1, &[(-1, -1, -1)]), // 10: 17/jun (mwe13: the Ykkonen June round)
+    (8, 6, 0, 6, 1, &[(-1, -1, -1)]), // 11: 8/jul
+    (11, 6, 0, 2, 2, &[(-1, -1, -1)]), // 12: 11/jul
+    (15, 6, 0, 6, 1, &[(-1, -1, -1)]), // 13: 15/jul
+    (22, 6, 0, 6, 1, &[(-1, -1, -1)]), // 14: 22/jul
+    (29, 6, 0, 6, 1, &[(-1, -1, -1)]), // 15: 29/jul
+    (2, 7, 0, 3, 2, &[(-1, -1, -1)]), // 16: 2/ago
+    (6, 7, 0, 0, 2, &[(-1, -1, -1)]), // 17: 6/ago
+    (12, 7, 0, 6, 1, &[(-1, -1, -1)]), // 18: 12/ago
+    (19, 7, 0, 6, 1, &[(-1, -1, -1)]), // 19: 19/ago
+    (26, 7, 0, 6, 1, &[(-1, -1, -1)]), // 20: 26/ago
+    (2, 8, 0, 6, 1, &[(-1, -1, -1)]), // 21: 2/set
+    (9, 8, 0, 6, 1, &[(-1, -1, -1)]), // 22: 9/set
+    (16, 8, 0, 6, 1, &[(-1, -1, -1)]), // 23: 16/set
+    (23, 8, 0, 6, 1, &[(-1, -1, -1)]), // 24: 23/set
+    (29, 8, 0, 5, 1, &[(-1, -1, -1)]), // 25: 29/set
+    (6, 9, 0, 6, 1, &[(-1, -1, -1)]), // 26: 6/out
+];
+
+/// The Superettan promotion play-off round (stage 0): draw on 9 November, one tie (two clubs, two legs, 7 days apart)
+/// from 15 November (Sunday), code 0xa0, category 5, the two-leg tie rules 3, no prizes.
+pub(crate) const SUPERETTAN_PLAY_OFF: EngCcCupCupRound = cql10r((9, 0xa, 0, 0), (0xf, 0xa, 0, 6, 1, 0), 0xa0, (0, 0, 3), 5, (2, 1, 2, 0), (0, 2, 7), (0, 0, 0)); // mwe13: the Superettan play-off dates
+/// The Ykkonen play-off stage (stage 1), round 0: draw on 30 September, two ties (four clubs, two legs, 3 days apart)
+/// from 5 October, code 0x82, tie rules 0x200, category 5.
+pub(crate) const YKKONEN_PLAY_OFF_SEMI: EngCcCupCupRound = cql10r((0x1e, 9, 0, 0), (5, 0xa, 0, 6, 1, 0), 0x82, (0, 0x200, 3), 5, (4, 2, 4, 0), (0, 2, 3), (0, 0, 0));
+/// The Ykkonen play-off stage (stage 1), round 1: draw on 9 October (weekday 3), one tie (two legs, 3 days apart) from
+/// 12 October, code 0x96, no tie rules, category 5.
+pub(crate) const YKKONEN_PLAY_OFF_FINAL: EngCcCupCupRound = cql10r((9, 0xa, 0, 3), (0xc, 0xa, 0, 6, 1, 0), 0x96, (0, 0, 3), 5, (2, 1, 0, 0), (0, 2, 3), (0, 0, 0));
+/// The Ykkonen relegation play-off round (stage 2): draw on 30 September, two ties (four clubs, two legs, 7 days
+/// apart) from 5 October, code 0, tie rules 0x200, category 5.
+pub(crate) const YKKONEN_RELEGATION_PLAY_OFF: EngCcCupCupRound = cql10r((0x1e, 9, 0, 0), (5, 0xa, 0, 6, 1, 0), 0, (0, 0x200, 3), 5, (4, 2, 4, 0), (0, 2, 7), (0, 0, 0));
+/// The play-off against the Veikkausliiga (stage 3): draw on 16 October (weekday 3), one tie (two clubs, two legs, 4 days
+/// apart) from 19 October, code 0xa0, tie rules 0x200, category 5.
+pub(crate) const YKKONEN_PREMIER_PLAY_OFF: EngCcCupCupRound = cql10r((0x10, 0xa, 0, 3), (0x13, 0xa, 0, 6, 1, 0), 0xa0, (0, 0x200, 3), 5, (2, 1, 2, 0), (0, 2, 4), (0, 0, 0));
+
+/// The Liga de Honra schedule: 34 rounds (18 clubs, two legs), the Premier Division dates (22 August to 14 May), with
+/// one match of most rounds moved to the Sunday slot (day 6, slot 2) [inference: the televised match]; main stage
+/// only.
+///
+/// `PorSecond::create_schedule(stage, &rounds, &extra, &league)`: at stage −1 (0xff), `*league` = 1 (when given), 34 rounds,
+/// extra 0 and the table (`exe::crt_malloc` of 0x8a2 = 34 × 0x41; out of memory: the box of por_second.cpp (0xa7875c) line 0xa8 and 0),
+/// filled round by round from `LIGA_DE_HONRA_ROUNDS` (`eng_first_set_league_rounds`: League round date `exe::league_round_set_date`(t,
+/// i, day, month, years, weekday, code, year, 0) and the TV slots `exe::league_round_set_match_slot`(t, i, j, a, b,
+/// c, 0), the list closed by (−1, −1, −1); both cdecl); the year is the league's (`.year()`, the original pushes the
+/// word with garbage above it: the date only reads the word). Any other stage: 0 and nothing written. 
+/// Original: `PorSecond::create_schedule` (0x7d0c40, por_second.cpp, thiscall, ret 0x10).
+pub(crate) unsafe extern "thiscall" fn por_second_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    if stage as u8 != 0xff {
+        return 0;
+    }
+    if !league.is_null() {
+        *league = 1;
+    }
+    *rounds = 0x22;
+    *extra = 0;
+    let t = exe::crt_malloc(0x8a2);
+    if t == 0 {
+        show_error_at(0xa7875c, 0xa8);
+        return 0;
+    }
+    covered!("mwe_13 liga de honra schedule");
+    let year = (League(this).year() as u16) as u32;
+    eng_first_set_league_rounds(t, year, 0, &LIGA_DE_HONRA_ROUNDS); // mwe13: the Liga de Honra rounds
+    t
+}
+
+/// Writes cup round `i` of table `t` (the draw and match dates and the round fields, `eng_cc_cup_write_cup_round`) with
+/// the league's year sign-extended (the original's movsx of `.year()`).
+pub(crate) unsafe fn write_play_off_round(this: League, t: usize, i: u32, r: &EngCcCupCupRound) {
+    eng_cc_cup_write_cup_round(t, i, r, this.year() as i32 as u32);
+}
+
+/// The Superettan schedule: the league (stage −1) has 30 rounds (16 clubs, two legs), from 6 April to 8 November, the
+/// Allsvenskan dates plus four Wednesday rounds; the promotion play-off (stage 0) is one two-legged tie from 15 November
+/// (draw on 9 November).
+///
+/// `SweFirst::create_schedule(stage, &rounds, &extra, &league)`: stage −1 (0xff): `*league` = 1 (when given), 30 rounds,
+/// extra 0, the table (`exe::crt_malloc` of 0x79e; out of memory: the box of swe_first.cpp (0xa8b53c) line 0xa8 and 0)
+/// filled from `SUPERETTAN_ROUNDS` (`eng_first_set_league_rounds`). Stage 0: `*league` = 0 (when given), 1 round,
+/// extra 0, the cup round table (`exe::crt_malloc` of 0x68; out of memory: the box of line 0x116 and 0) with round 0 =
+/// `SUPERETTAN_PLAY_OFF` (Cup round draw date `exe::cup_set_round_draw_date` and match date
+/// `exe::cup_set_round_match_date`, cdecl, with the year sign-extended; then the round fields). Any other stage: 0.
+/// Original: `SweFirst::create_schedule` (0x88e8e0, swe_first.cpp, thiscall, ret 0x10).
+pub(crate) unsafe extern "thiscall" fn swe_first_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    let this = League(this);
+    match stage as u8 {
+        0xff => {
+            if !league.is_null() {
+                *league = 1;
+            }
+            *rounds = 0x1e;
+            *extra = 0;
+            let t = exe::crt_malloc(0x79e);
+            if t == 0 {
+                show_error_at(0xa8b53c, 0xa8);
+                return 0;
+            }
+            covered!("mwe_13 superettan schedule");
+            eng_first_set_league_rounds(t, (this.year() as u16) as u32, 0, &SUPERETTAN_ROUNDS);
+            t
+        }
+        0 => {
+            if !league.is_null() {
+                *league = 0;
+            }
+            *rounds = 1;
+            *extra = 0;
+            let t = exe::crt_malloc(0x68);
+            if t == 0 {
+                show_error_at(0xa8b53c, 0x116);
+                return 0;
+            }
+            covered!("mwe_13 superettan play-off round");
+            write_play_off_round(this, t, 0, &SUPERETTAN_PLAY_OFF);
+            t
+        }
+        _ => 0,
+    }
+}
+
+/// The Ykkonen schedule: the two groups (stages −1 and 0) have the same 27 rounds (three legs of 10 clubs), from 29 April
+/// to 6 October, with the stage code 0x41d for the North group and 0x41e for the South one; stage 1 is the promotion
+/// play-off (two-legged semi-finals of four clubs from 5 October and a two-legged final from 12 October); stage 2 the
+/// relegation play-off (two two-legged ties from 5 October); stage 3 the play-off against the Veikkausliiga (one
+/// two-legged tie from 19 October).
+///
+/// `FinFirst::create_schedule(stage, &rounds, &extra, &league)`: stage below 1 (a signed byte: −1 or 0): `*league` = 1
+/// (when given), 27 rounds, extra 0x41d (stage −1) or 0x41e (any other, i.e. 0), the table (`exe::crt_malloc` of
+/// 0x6db; out of memory: the box of fin_first.cpp (0x9c818c) line 0xb5 and 0) filled from `YKKONEN_ROUNDS`
+/// (`eng_first_set_league_rounds`). Stage 1: `*league` = 0, 2 rounds, extra 0x458, malloc 0xd0 (box line 0x11d), the
+/// rounds `YKKONEN_PLAY_OFF_SEMI` and `YKKONEN_PLAY_OFF_FINAL`. Stage 2: `*league` = 0, 1 round, extra 0x452, malloc
+/// 0x68 (box 0x158), `YKKONEN_RELEGATION_PLAY_OFF`. Stage 3: `*league` = 0, 1 round, extra 0, malloc 0x68 (box 0x180),
+/// `YKKONEN_PREMIER_PLAY_OFF`. The cup rounds by `write_play_off_round` (the dates with the year sign-extended).
+/// Any other stage: 0.
+/// Original: `FinFirst::create_schedule` (0x5931c0, fin_first.cpp, thiscall, ret 0x10).
+pub(crate) unsafe extern "thiscall" fn fin_first_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    let this = League(this);
+    let s = stage as u8 as i8;
+    if s < 1 {
+        if !league.is_null() {
+            *league = 1;
+        }
+        *rounds = 0x1b;
+        *extra = if s as u8 == 0xff { 0x41d } else { 0x41e }; // mwe13: the North and South group codes
+        let t = exe::crt_malloc(0x6db);
+        if t == 0 {
+            show_error_at(0x9c818c, 0xb5);
+            return 0;
+        }
+        covered!("mwe_13 ykkonen group schedule");
+        eng_first_set_league_rounds(t, (this.year() as u16) as u32, 0, &YKKONEN_ROUNDS);
+        return t;
+    }
+    let (n, code, bytes, row, table): (i16, i16, u32, u32, &[&EngCcCupCupRound]) = match s {
+        1 => (2, 0x458, 0xd0, 0x11d, &[&YKKONEN_PLAY_OFF_SEMI, &YKKONEN_PLAY_OFF_FINAL]),
+        2 => (1, 0x452, 0x68, 0x158, &[&YKKONEN_RELEGATION_PLAY_OFF]),
+        3 => (1, 0, 0x68, 0x180, &[&YKKONEN_PREMIER_PLAY_OFF]),
+        _ => return 0,
+    };
+    if !league.is_null() {
+        *league = 0;
+    }
+    *rounds = n;
+    *extra = code;
+    let t = exe::crt_malloc(bytes);
+    if t == 0 {
+        show_error_at(0x9c818c, row);
+        return 0;
+    }
+    covered!("mwe_13 ykkonen play-off rounds");
+    for (i, r) in table.iter().enumerate() {
+        write_play_off_round(this, t, i as u32, r);
+    }
+    t
+}
+
+/// Comparer for `por_second_create_schedule`: side by side (`compare_league_round_table`: the original with the caller's outputs, the copy
+/// with its own; the outputs and the written round bytes equal; the copy's table freed).
+pub(crate) unsafe extern "thiscall" fn compare_por_second_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_POR_SECOND_CREATE_SCHEDULE);
+    compare_league_round_table("por_second_create_schedule", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| por_second_create_schedule(this, stage, r, e, l))
+}
+
+/// Comparer for `swe_first_create_schedule`: side by side (`compare_league_round_table`: the original with the caller's outputs, the copy
+/// with its own; the outputs and the written round bytes equal; the copy's table freed).
+pub(crate) unsafe extern "thiscall" fn compare_swe_first_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_SWE_FIRST_CREATE_SCHEDULE);
+    compare_league_round_table("swe_first_create_schedule", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| swe_first_create_schedule(this, stage, r, e, l))
+}
+
+/// Comparer for `fin_first_create_schedule`: side by side as `compare_league_round_table`, but the league bytes are
+/// compared at both group stages (−1 and 0) and the cup round bytes at stages 1 to 3.
+pub(crate) unsafe extern "thiscall" fn compare_fin_first_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FIN_FIRST_CREATE_SCHEDULE);
+    let (mut r2, mut e2, mut l2) = (0i16, 0i16, 0i32);
+    let pl2 = if league.is_null() { core::ptr::null_mut() } else { &mut l2 as *mut i32 };
+    let (a, b, same, _, _) = crate::comparison::side_by_side(&[(0xb67a34usize, 4usize)], || o(this, stage, rounds, extra, league), || fin_first_create_schedule(this, stage, &mut r2, &mut e2, pl2));
+    let outs = (a == 0 && b == 0) || (*rounds == r2 && *extra == e2 && (league.is_null() || *league == l2));
+    let table = if a != 0 && b != 0 {
+        if (stage as u8 as i8) < 1 {
+            written_league_round_bytes(a, a, *rounds as usize) == written_league_round_bytes(b, a, *rounds as usize)
+        } else {
+            eng_cc_cup_written_round_bytes(a, *rounds) == eng_cc_cup_written_round_bytes(b, *rounds)
+        }
+    } else {
+        a == 0 && b == 0
+    };
+    if b != 0 {
+        exe::crt_free(b);
+    }
+    SCOREBOARD.record(same && outs && table, || format!("fin_first_create_schedule(stage {}): outs {} table {}", stage as u8 as i8, outs, table));
+    a
+}
+
 // ---------- batch 303: the Turkish and Russian cup entrants (tur_cup.cpp, rus_cup.cpp) ----------
 
 /// Writes entry `k` of a cup's 6-byte team list (`cup::TEAM_TABLE`): the club, status 0 (+5) and class `class` (+4).
@@ -4901,8 +7115,7 @@ pub(crate) unsafe extern "thiscall" fn gre_prm_start_new_season(this: usize) -> 
     this.set_season_closed(0);
     let chain: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + league_vtable::PROCESS_PROMOTION_RELEGATION_CHAIN));
     chain(this.addr(), 0);
-    let swap: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x5eb120usize);
-    swap(this.addr());
+    exe::gre_prm_swap_second_and_third_division_clubs(this.addr());
     covered!("mwd_22 greek first division turnover");
     if !rebuild_croatian_league(this, 0x5ead60, 0x9cdae4, [0x1dc, 0x1e3, 0x1e9, 0x1f0], false) {
         return 0;
@@ -4964,9 +7177,8 @@ pub(crate) unsafe extern "thiscall" fn gre_prm_swap_second_and_third_division_cl
         let mut i = 0i32;
         while i < League(second).club_count() as i32 {
             if read_u8(exe::league_get_table_row(second, i) + league_table_row::STATUS) == 3 {
-                let relegate: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(0x6831a0usize);
                 let club = read_usize(exe::league_get_table_row(second, i));
-                relegate(this, club, comp_record_of(KEY_CLUB_COMP_GREEK_LOWER_DIVISION), 1);
+                exe::league_relegate_club_to_division(this, club, comp_record_of(KEY_CLUB_COMP_GREEK_LOWER_DIVISION), 1);
             }
             i += 1;
         }
@@ -5038,8 +7250,7 @@ pub(crate) unsafe extern "thiscall" fn rus_prm_start_new_season(this: usize) -> 
     this.set_season_closed(0);
     let chain: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + league_vtable::PROCESS_PROMOTION_RELEGATION_CHAIN));
     chain(this.addr(), 1);
-    let exchange: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x7ebe20usize);
-    exchange(this.addr()); // mwd23: the First and second division exchange
+    exe::rus_prm_exchange_first_and_second_division_clubs(this.addr()); // mwd23: the First and second division exchange
     covered!("mwd_23 russian premier league turnover");
     if !rebuild_croatian_league(this, 0x7eb610, 0xa7acc8, [0x1b4, 0x1bb, 0x1c1, 0x1c8], true) {
         return 0;
@@ -5117,10 +7328,9 @@ pub(crate) unsafe extern "thiscall" fn rus_prm_exchange_first_and_second_divisio
         }
         k += 1;
     }
-    let relegate: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(0x6831a0usize);
     for (back, zone) in [(1i32, zones[0][1]), (2, zones[1][0]), (3, zones[2][1])] {
         let row = exe::league_get_table_row(first, League(first).club_count() as i32 - back);
-        relegate(this, read_usize(row), zone, 1);
+        exe::league_relegate_club_to_division(this, read_usize(row), zone, 1);
     }
     exe::crt_free(list);
 }
@@ -5364,7 +7574,6 @@ pub(crate) unsafe extern "thiscall" fn tur_first_promote_lower_clubs_to_third_ti
     for k in 0..10 {
         exe::league_move_club_to_division(this, read_usize(list + 4 * k), comp_record_of(KEY_CLUB_COMP_TURKISH_2_DIVISION_CATEGORY_B), 1);
     }
-    let relegate: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(0x6831a0usize);
     let b = League(comp_by_global(KEY_CLUB_COMP_TURKISH_2_DIVISION_CATEGORY_B));
     for g in -1i8..4 {
         let stage = League(if g == -1 { b.addr() } else { read_usize(b.stages() + 4 * g as usize) });
@@ -5372,7 +7581,7 @@ pub(crate) unsafe extern "thiscall" fn tur_first_promote_lower_clubs_to_third_ti
         while i < stage.club_count() as i32 {
             let row = stage.table() + i as usize * league_table_row::SIZE;
             if read_u8(row + league_table_row::STATUS) == 3 {
-                relegate(this, read_usize(row), comp_record_of(KEY_CLUB_COMP_TURKISH_LOWER_DIVISION), 1);
+                exe::league_relegate_club_to_division(this, read_usize(row), comp_record_of(KEY_CLUB_COMP_TURKISH_LOWER_DIVISION), 1);
                 write_usize(read_usize(stage.table() + i as usize * league_table_row::SIZE) + club::RESERVE_DIVISION, 0);
             }
             i += 1;
@@ -6019,10 +8228,8 @@ pub(crate) unsafe extern "thiscall" fn cro_a1_start_new_season(this: usize) -> u
     this.set_season_closed(0);
     let chain: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + league_vtable::PROCESS_PROMOTION_RELEGATION_CHAIN));
     chain(this.addr(), 1);
-    let swap: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x514ed0usize);
-    swap(this.addr()); // mwd5: third tier up, second tier down
-    let realign: unsafe extern "C" fn() = core::mem::transmute(0x515190usize);
-    realign();
+    exe::cro_a1_swap_second_and_third_tier_clubs(this.addr()); // mwd5: third tier up, second tier down
+    exe::cro_a1_realign_second_division_groups();
     covered!("mwd_5 croatian first division turnover");
     if !rebuild_croatian_league(this, 0x5147b0, 0x9b53c0, [0x1c0, 0x1c7, 0x1cd, 0x1d4], true) {
         return 0;
@@ -6118,9 +8325,8 @@ pub(crate) unsafe fn is_croatian_third_tier_club(club: usize) -> bool {
 /// division; push club; mov ecx, this -> thiscall, ret 0xc).
 pub(crate) unsafe fn relegate_croatian_row(this: usize, group: usize, i: i32) {
     if read_u8(exe::league_get_table_row(group, i) + league_table_row::STATUS) == 3 {
-        let relegate: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(0x6831a0usize);
         let club = read_usize(exe::league_get_table_row(group, i));
-        relegate(this, club, comp_record_of(KEY_CLUB_COMP_A_LOWER_DIVISION), 1); // mwd6: down to the lower division
+        exe::league_relegate_club_to_division(this, club, comp_record_of(KEY_CLUB_COMP_A_LOWER_DIVISION), 1); // mwd6: down to the lower division
     }
 }
 
@@ -6422,8 +8628,7 @@ pub(crate) unsafe fn construct_east_nation_cup(this: Cup, year: u32, record: usi
     }
     write_u8(this.addr() + cup::DISCIPLINE_INDEX, p.discipline); // mwd8: the discipline rule
     write_u8(this.addr() + cup::RUN_BY_STAGES, 0);
-    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize);
-    if load(this.addr(), 1) != 0 {
+    if exe::cup_load_from_disk(this.addr(), 1) != 0 {
         return this.addr();
     }
     covered!(branch);
@@ -7083,9 +9288,7 @@ pub(crate) struct NationCup {
 /// and the statistics out of memory show the error box of their line and end.
 pub(crate) unsafe fn construct_nation_cup(this: Cup, year: u32, record: usize, p: &NationCup) -> usize {
     let entrants: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(p.entrants);
-    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize);
-    let tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize);
-    let rank: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x5223a0usize);
+    let tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_MAP_FIXTURE_TREE);
     let failed = |r: i32| if p.zero_fails { r == 0 } else { r < 0 };
     exe::new_cup(this);
     this.set_year((year as u16) as i16);
@@ -7102,7 +9305,7 @@ pub(crate) unsafe fn construct_nation_cup(this: Cup, year: u32, record: usize, p
     }
     this.set_discipline_index(p.discipline);
     this.set_run_by_stages(0);
-    if load(this.addr(), 1) != 0 {
+    if exe::cup_load_from_disk(this.addr(), 1) != 0 {
         return this.addr();
     }
     covered!("mwc_16 new cup");
@@ -7125,7 +9328,7 @@ pub(crate) unsafe fn construct_nation_cup(this: Cup, year: u32, record: usize, p
         return this.addr();
     }
     if p.predicted {
-        rank(this.addr());
+        exe::cup_rank_teams(this.addr());
     }
     this.addr()
 }
@@ -9204,8 +11407,7 @@ pub(crate) unsafe extern "thiscall" fn sco_prm_start_new_season(this: usize) -> 
 /// The Premier table routine of the original (ScoPrm::create_table 0x7f2820, thiscall, ret 0), called directly as the
 /// turnover does.
 pub(crate) unsafe fn sco_prm_create_table_via_exe(this: usize) -> u32 {
-    let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x7f2820usize);
-    f(this)
+    exe::scoprm_create_table(this)
 }
 
 /// Comparer for `sco_prm_start_new_season`: only the original runs (it turns the whole Scottish league over); the year
@@ -9237,11 +11439,9 @@ pub(crate) unsafe extern "thiscall" fn sco_prm_update_for_date(this: usize, toda
     let league = League(this);
     if results != 0 && league.legs() == 3 && all_played_33(league) {
         covered!("mwb_15 scottish premier split day");
-        let split: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x7f2d90usize);
-        split(this);
+        exe::scoprm_create_split_stages(this);
     }
-    let update: unsafe extern "thiscall" fn(usize, usize, u32) -> u8 = core::mem::transmute(FN_LEAGUE_UPDATE_FOR_DATE);
-    update(this, today, results) as u32 // the callers read only al
+    exe::league_update_for_date(this, today, results) as u32 // the callers read only al
 }
 
 /// Comparer for `sco_prm_update_for_date`: only the original runs (the split builds stages and the day update plays
@@ -9334,7 +11534,7 @@ pub(crate) unsafe extern "thiscall" fn compare_sco_prm_create_split_stages(this:
 ///
 /// Otherwise: 40 teams (`cup::TEAM_COUNT`) and an empty team table (`exe::crt_calloc(0x28, 6)`; null: the box of line
 /// 0x4a and this); the prize fund of 1,000,000; the round table of stage −1 (virtual +0x3c) into `cup::ROUND_TABLE`; the
-/// fixture tree (Cup::map_fixture_tree 0x518790; 0 = the box of line 0x58); the statistics (operator new 0x5ce and
+/// fixture exe::cup_map_fixture_tree(Cup::map_fixture_tree 0x518790; 0 = the box of line 0x58); the statistics (operator new 0x5ce and
 /// Comp_Stats::Comp_Stats; null: the box of line 0x5f). Unlike the other Scottish cups, neither the entrants (they come
 /// when the season starts: `ScoLgeCup::update_for_date`) nor the predicted positions. Returns this.
 /// Original: `ScoLgeCup::ScoLgeCup` (0x7ef9e0, sco_lge_cup.cpp, thiscall, ret 8).
@@ -9356,8 +11556,7 @@ pub(crate) unsafe extern "thiscall" fn construct_sco_lge_cup(this: usize, year: 
     write_u8(this.addr() + cup::RUN_BY_STAGES, 0);
     write_u32(this.addr() + cup::SEASON_SET_UP, 0);
     write_u8(this.addr() + eng_cc_cup::EUROPEAN_ENTRANT_COUNT, 0);
-    let load_from_disk: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize);
-    if load_from_disk(this.addr(), 1) != 0 {
+    if exe::cup_load_from_disk(this.addr(), 1) != 0 {
         return this.addr();
     }
     covered!("mwb_16 new scottish league cup");
@@ -9372,8 +11571,7 @@ pub(crate) unsafe extern "thiscall" fn construct_sco_lge_cup(this: usize, year: 
     let rounds: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let table = rounds(this.addr(), 0xffff_ffff, this.addr() + cup::ROUND_COUNT, this.addr() + cup::STAGE_LABEL, 0);
     write_usize(this.addr() + cup::ROUND_TABLE, table);
-    let tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize);
-    if tree(this.addr()) == 0 {
+    if exe::cup_map_fixture_tree(this.addr()) == 0 {
         show_error_at(0xa7af38, 0x58);
         return this.addr();
     }
@@ -9470,7 +11668,7 @@ pub(crate) unsafe extern "thiscall" fn sco_lge_cup_update_for_date(this: usize, 
         write_u32(this + cup::SEASON_SET_UP, 1);
         // simplification: in the message boxes the original zeroes only al (the rest of eax comes from the box); the
         // caller reads the byte
-        let entrants: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x7f0400usize);
+        let entrants: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_SCOLGECUP_COLLECT_ENTRANTS);
         if entrants(this) < 0 {
             show_error_at(0xa7af38, 0x15e);
             return 0;
@@ -9597,8 +11795,7 @@ pub(crate) unsafe fn welsh_cup_group_table(this: League, n: i16, stride: usize, 
         write_usize(e, 0);
         k = k.wrapping_add(1);
     }
-    let news: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
-    news(this.addr());
+    exe::league_send_group_draw_news(this.addr());
     1
 }
 
@@ -9824,8 +12021,7 @@ pub(crate) unsafe fn welsh_cup_group_stage(this: League, g: u32, n: u32, stride:
         show_error_at(file, rows.1);
         return 0;
     }
-    let news: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
-    news(s);
+    exe::league_send_group_draw_news(s);
     this.set_current_stage(g as usize);
     1
 }
@@ -9989,8 +12185,7 @@ pub(crate) unsafe fn construct_british_cup(this: Cup, year: u32, record: usize, 
     }
     write_u8(t.addr() + cup::DISCIPLINE_INDEX, e.discipline);
     write_u8(t.addr() + cup::RUN_BY_STAGES, 0);
-    let load_from_disk: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize);
-    if load_from_disk(t.addr(), 1) != 0 {
+    if exe::cup_load_from_disk(t.addr(), 1) != 0 {
         return t.addr();
     }
     covered!(ramo);
@@ -10003,7 +12198,7 @@ pub(crate) unsafe fn construct_british_cup(this: Cup, year: u32, record: usize, 
     let rounds: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(t.addr()) + comp_vtable::CREATE_SCHEDULE));
     let table = rounds(t.addr(), 0xffff_ffff, t.addr() + cup::ROUND_COUNT, t.addr() + cup::STAGE_LABEL, 0);
     write_usize(t.addr() + cup::ROUND_TABLE, table);
-    let tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize);
+    let tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_MAP_FIXTURE_TREE);
     if tree(t.addr()) == 0 {
         show_error_at(e.file, e.rows[1]);
         return t.addr();
@@ -10015,8 +12210,7 @@ pub(crate) unsafe fn construct_british_cup(this: Cup, year: u32, record: usize, 
         show_error_at(e.file, e.rows[2]);
         return t.addr();
     }
-    let rank: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x5223a0usize);
-    rank(t.addr());
+    exe::cup_rank_teams(t.addr());
     t.addr()
 }
 
@@ -11049,8 +13243,7 @@ pub(crate) unsafe extern "thiscall" fn sco_first_set_club_progress(this: usize, 
     let league = League(this);
     if league.year() != 0x7cf {
         covered!("mwb_6 first division progress");
-        let common: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) = core::mem::transmute(0x48e380usize);
-        return common(this, club.addr(), stage, current, best, worst); // mwb6: the common progress codes
+        return exe::comp_set_club_progress(this, club.addr(), stage, current, best, worst); // mwb6: the common progress codes
     }
     covered!("mwb_6 first division progress 1999");
     let mut e = exe::comp_stats_find_club_entry(league.comp_stats(), club);
@@ -12537,8 +14730,7 @@ pub(crate) unsafe extern "thiscall" fn ire_super_cup_update_for_date(this: usize
     let l = this;
     if irish_super_cup_due(l, flag) { // mwa22: the Super Cup is set up once the seeding reaches its year
         covered!("mwa_22 irish super cup set up");
-        let table: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x63b0c0usize);
-        if table(this.addr()) == 0 {
+        if exe::iresupercup_create_table(this.addr()) == 0 {
             show_error_at(0x9ea0b8, 0x101);
         }
         if exe::league_create_fixtures(l) == 0 {
@@ -12832,8 +15024,7 @@ unsafe extern "thiscall" fn compare_ire_leinster_cup_create_round_table(this: us
 /// cdecl, a gap function of ire_pres_cup.cpp not yet ported: Dublin, Bray, Longford, Dundalk, Drogheda, Athlone or
 /// Kilkenny).
 pub(crate) unsafe fn ire_club_is_in_leinster(club: Club) -> bool {
-    let f: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x6399c0usize);
-    f(club.addr()) != 0
+    exe::ire_club_is_in_leinster(club.addr()) != 0
 }
 
 /// The body of `ire_leinster_cup_select_clubs`; returns (the routine's return, the entries it writes).
@@ -13431,7 +15622,7 @@ pub(crate) unsafe fn construct_irish_cup(this: Cup, year: u32, record: usize, k:
     }
     this.set_discipline_index(k.discipline);
     this.set_run_by_stages(0);
-    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize); // Cup::load_from_disk
+    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_CUP_LOAD_FROM_DISK); // Cup::load_from_disk
     if load(this.addr(), 1) != 0 {
         return this.addr();
     }
@@ -13446,7 +15637,7 @@ pub(crate) unsafe fn construct_irish_cup(this: Cup, year: u32, record: usize, k:
         this.set_prize_fund(p);
     }
     jap_emp_cup_create_rounds(this);
-    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize); // Cup::map_fixture_tree
+    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_MAP_FIXTURE_TREE); // Cup::map_fixture_tree
     if failed(map_fixture_tree(this.addr())) {
         show_error_at(k.file, k.rows[1]);
         return this.addr();
@@ -13456,7 +15647,7 @@ pub(crate) unsafe fn construct_irish_cup(this: Cup, year: u32, record: usize, k:
         return this.addr();
     }
     if k.rank {
-        let rank_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5223a0usize); // Cup::rank_teams
+        let rank_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_RANK_TEAMS); // Cup::rank_teams
         rank_teams(this.addr());
     }
     this.addr()
@@ -14324,8 +16515,7 @@ unsafe extern "thiscall" fn compare_nir_first_create_playoff_stage(this: usize) 
 /// The job name of a role and its gender (`database_get_job_name`, called through the exe at 0x53ad00: long, lower
 /// case).
 pub(crate) unsafe fn retirement_job_name(role: u8, gender: &mut i8) -> usize {
-    let f: unsafe extern "C" fn(u32, u32, u32, *mut i8) -> usize = core::mem::transmute(0x53ad00usize);
-    f(role as u32, 0, 0, gender)
+    exe::database_get_job_name(role as u32, 0, 0, gender)
 }
 
 /// Builds the title and body text of the news that a staff member announces his decision to retire.
@@ -16248,7 +18438,7 @@ impl Praise {
     /// original pushes a 7th argument, 1, that the callee does not read): the description over the position text,
     /// returning its gender byte (signed)
     unsafe fn describe(&mut self) -> i32 {
-        let f: unsafe extern "C" fn(i32, u32, u32, usize, i32, u32, u32) -> u8 = core::mem::transmute(0x5465a0usize);
+        let f: unsafe extern "C" fn(i32, u32, u32, usize, i32, u32, u32) -> u8 = core::mem::transmute(FN_WRITE_PLAYER_DESCRIPTION);
         let out = self.at(praise_frame::POSITION);
         f(self.player, self.position, self.strengths, out, 0xc8, self.pos_gender, 1) as i8 as i32
     }
@@ -16264,7 +18454,7 @@ impl Praise {
     }
     /// `database_get_job_name(job, 0, 0, &gender)` of the great player's job (0x53ad00, cdecl)
     unsafe fn legend_job_name(&mut self) -> usize {
-        let f: unsafe extern "C" fn(i32, u32, u32, *mut u8) -> usize = core::mem::transmute(0x53ad00usize);
+        let f: unsafe extern "C" fn(i32, u32, u32, *mut u8) -> usize = core::mem::transmute(FN_DATABASE_GET_JOB_NAME);
         f(self.legend_job, 0, 0, &mut self.job_gender)
     }
     fn jg(&self) -> i32 {
@@ -16385,8 +18575,7 @@ unsafe fn praise_read_slots(news: usize, base: usize) -> Praise {
     exe::date_date_54a110(record.as_mut_ptr() as usize);
     let mut k: u8 = 0x12;
     if has_match != 0 {
-        let f: unsafe extern "C" fn(usize, *mut u8, *mut u8) -> i32 = core::mem::transmute(0x7e4fa0usize);
-        f(news, &mut k, record.as_mut_ptr());
+        exe::read_match_record_from_news(news, &mut k, record.as_mut_ptr());
     }
     let mut next = || {
         let v = exe::newsitem_get_slot(news, k as u32);
@@ -16433,8 +18622,7 @@ unsafe fn praise_setup(p: &mut Praise) {
             p.home = true;
         }
     }
-    let f: unsafe extern "C" fn(u32, usize, i32, u32) -> u8 = core::mem::transmute(0x5461b0usize);
-    p.pos_gender = f(p.position, p.pos(), 0xc8, 1) as u32;
+    p.pos_gender = exe::write_position_name(p.position, p.pos(), 0xc8, 1) as u32;
     let staff_of = |i: i32| read_usize(G_STAFF_TABLE).wrapping_add((i as usize).wrapping_mul(staff::SIZE));
     if staff_of(p.manager) == staff_of(p.player) {
         Praise::format()(p.pos(), 0xa242e0); // "player-manager"
@@ -16449,8 +18637,7 @@ unsafe fn praise_outlet(p: &mut Praise) {
     let nation = p.nation();
     if nation != 0 && p.outlet_type != -1 && p.pundit != -1 && p.home {
         covered!("nma_4 praise pundit");
-        let g: unsafe extern "thiscall" fn(usize, u32, u32, usize, *mut u8) = core::mem::transmute(0x7dad20usize);
-        g(read_usize(G_PUNDIT_LIST), p.outlet_type as u32, p.pundit as u32, out, &mut p.outlet_gender);
+        exe::punditlist_get_pundit_name(read_usize(G_PUNDIT_LIST), p.outlet_type as u32, p.pundit as u32, out, &mut p.outlet_gender);
         return;
     }
     covered!("nma_4 praise outlet type");
@@ -16921,9 +19108,8 @@ unsafe fn praise_rival(p: &Praise) -> PraiseRival {
 unsafe fn praise_date_text(p: &Praise) -> usize {
     let mut date = [0u16; 4];
     exe::new_date(date.as_mut_ptr() as usize, p.m2 as u32, p.m3 as u32);
-    let g: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> i32 = core::mem::transmute(0x54bef0usize);
     let out = p.at(praise_frame::DATE_TEXT);
-    g(date.as_mut_ptr() as usize, out, 0x78, 0xff);
+    exe::date_get_long_date_string_no_year(date.as_mut_ptr() as usize, out, 0x78, 0xff);
     out
 }
 
@@ -17676,8 +19862,7 @@ unsafe fn praise_links(p: &mut Praise, out: usize) {
     let rec = p.record.as_ptr() as usize;
     if p.has_match != 0 {
         // Match_Stats::fixture_entry_matches(index, club a, club b, day, year) (thiscall, ret 0x14; the dwords pushed)
-        let g: unsafe extern "thiscall" fn(usize, i32, i32, i32, i32, i32) -> i32 = core::mem::transmute(0x729500usize);
-        if g(read_usize(G_MATCH_STATS), read_i32(rec + 0x1b), read_i32(rec + 0x11), read_i32(rec + 0x15), read_i32(rec), read_i32(rec + 2)) != 0 {
+        if exe::match_stats_fixture_entry_matches(read_usize(G_MATCH_STATS), read_i32(rec + 0x1b), read_i32(rec + 0x11), read_i32(rec + 0x15), read_i32(rec), read_i32(rec + 2)) != 0 {
             link(p.at(0x4c), 0x7d3, read_usize(rec + 0x1b));
         }
         let c = club_of(read_i32(rec + 0x15));
@@ -17832,8 +20017,7 @@ unsafe fn rumour_club_short_gender(id: i32) -> i32 {
 
 /// Appends the text buffer to the Text object (`Text::append_string`, 0x4ae770, thiscall, ret 4).
 unsafe fn rumour_append(out: usize, s: usize) {
-    let append: unsafe extern "thiscall" fn(usize, usize) -> i32 = core::mem::transmute(0x4ae770usize);
-    append(out, s);
+    exe::text_append_string(out, s);
 }
 
 /// The values the transfer rumour text reads from its news item, by the original's frame: `f` holds the words from
@@ -17959,8 +20143,7 @@ pub(crate) unsafe extern "thiscall" fn write_transfer_rumour_news_text(_this: us
     let fee_value = r.fee();
     let mut fee = [0u8; 0x32];
     let amount = exe::cash_get_display_amount(&fee_value, 6);
-    let format_money: unsafe extern "C" fn(usize, u32, i64, u32) -> i32 = core::mem::transmute(0x441c10usize);
-    format_money(fee.as_mut_ptr() as usize, 0x32, amount, 6);
+    exe::cash_format_money(fee.as_mut_ptr() as usize, 0x32, amount, 6);
     let (p, fp, d) = (player.as_ptr() as usize, fee.as_ptr() as usize, desc.as_ptr() as usize);
     let piece = match r.lead {
         0 => transfer_rumour_lead_kind0(&r, out, p, fp),
@@ -18596,8 +20779,7 @@ pub(crate) unsafe extern "thiscall" fn post_team_media_story(this: usize, club: 
     }
     log_story(this, person.addr(), club.addr(), 0xbdf, kind, reply);
     if answered && exe::human_manager_is_human_club(club, 0, 1, 0, 0) == 0 {
-        let respond: unsafe extern "thiscall" fn(usize, usize, u32, u32, usize) = core::mem::transmute(0x73e870usize);
-        respond(this, club.addr(), k as i8 as i16 as u16 as u32, reply, person.addr());
+        exe::media_apply_team_story_response(this, club.addr(), k as i8 as i16 as u16 as u32, reply, person.addr());
     }
 }
 
@@ -19421,8 +21603,7 @@ unsafe fn general_button(news: usize, manager: usize, label: usize, handler: *mu
             let mut date = [0u8; 8];
             exe::new_date(date.as_mut_ptr() as usize, day as u32, year as u32);
             let friendly = read_usize(G_FRIENDLY);
-            let get_tournament: unsafe extern "thiscall" fn(usize, u32, usize) -> usize = core::mem::transmute(FN_FRIENDLY_GET_TOURNAMENT);
-            let tournament = get_tournament(friendly, index as u32, date.as_mut_ptr() as usize);
+            let tournament = exe::friendly_get_tournament(friendly, index as u32, date.as_mut_ptr() as usize);
             if friendly_check_tournament_invitation(friendly, club.addr(), tournament, 0, 0) == 0 {
                 return 0;
             }
@@ -19640,11 +21821,9 @@ unsafe fn discipline_button(news: usize, manager: usize, label: usize, handler: 
     let (hearing_day, hearing_year) = (read_u16(s(15)), read_u16(s(16)));
     let ban_kind = read_u32(s(10));
     let pending = read_u32(s(12));
-    let read_name: unsafe extern "C" fn(usize, *mut u8, *mut u8) -> u32 = core::mem::transmute(FN_READ_STAFF_NAME_REF_FROM_NEWS);
-    let read_match: unsafe extern "C" fn(usize, *mut u8, *mut u8) -> u32 = core::mem::transmute(FN_READ_MATCH_RECORD_FROM_NEWS);
     let mut next = 0x11u8;
     let mut person = [0u8; 0x18];
-    read_name(news, &mut next, person.as_mut_ptr());
+    exe::read_staff_name_ref_from_news(news, &mut next, person.as_mut_ptr());
     let id = read_i32(person.as_ptr() as usize + 0xc);
     if id < 0 || id > read_i32(G_STAFF_COUNT) - 1 {
         return 0;
@@ -19652,7 +21831,7 @@ unsafe fn discipline_button(news: usize, manager: usize, label: usize, handler: 
     if read_u32(s(23)) != 0 {
         next = 0x18;
         let mut game = [0u8; 0x20];
-        read_match(news, &mut next, game.as_mut_ptr());
+        (exe::read_match_record_from_news(news, &mut next, game.as_mut_ptr()) as u32);
         let club_index = read_i32(game.as_ptr() as usize + 0x11);
         if club_index < 0 || club_index > read_i32(G_CLUB_COUNT) - 1 {
             return 0;
@@ -20059,11 +22238,11 @@ pub(crate) unsafe extern "thiscall" fn wc_oceania_league_advance_stage(this: usi
     covered!("cqz_9 oceania qualifying next stage");
     match stage {
         1 => {
-            let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x91f640usize);
+            let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_WCOCEANIALEAGUE_CREATE_FINAL_STAGE);
             f(this.addr());
         }
         2 => {
-            let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x91f800usize);
+            let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_WCOCEANIALEAGUE_CREATE_PLAYOFF_STAGE);
             f(this.addr());
         }
         _ => {}
@@ -20103,7 +22282,7 @@ fn euro_champ_edition(start: i16) -> i16 {
 ///
 /// Otherwise: the main stage (0xff), `current_stage` −1, 4 stages and the stage vector (`exe::crt_malloc(0x10)`: push;
 /// add esp -> cdecl, unchecked); the nation list (EuroChamp::set_up_team_list 0x57bd80, thiscall, ret 0; its return
-/// value is not read); the rules (EuroChamp::set_up_rules 0x57b630; 0: the error box of line 0x5f of euro_champ.cpp and
+/// value is not read); the exe::eurochamp_set_up_rules(EuroChamp::set_up_rules 0x57b630; 0: the error box of line 0x5f of euro_champ.cpp and
 /// returns this); the statistics (operator new `exe::crt_operator_new(0x5ce)` and Comp_Stats::Comp_Stats
 /// `exe::new_comp_stats(new, this)`: push this; mov ecx, new -> thiscall, ret 4) into `comp_stats`, null: the box of
 /// line 0x66 (and it goes on). Then, when the edition is less than a year after the game's year (signed words), the
@@ -20132,10 +22311,8 @@ pub(crate) unsafe extern "thiscall" fn construct_euro_champ(this: usize, year: u
     write_u32(this + league::CURRENT_STAGE, 0xffff_ffff);
     write_u32(this + league::STAGE_COUNT, 4);
     write_u32(this + league::STAGES, exe::crt_malloc(0x10) as u32);
-    let team_list: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x57bd80usize);
-    team_list(this);
-    let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x57b630usize);
-    if rules(this) == 0 {
+    exe::eurochamp_set_up_team_list(this);
+    if exe::eurochamp_set_up_rules(this) == 0 {
         show_error_at(0x9c4638, 0x5f);
         return this;
     }
@@ -20250,23 +22427,21 @@ pub(crate) unsafe extern "thiscall" fn compare_euro_champ_set_up_team_list(this:
 pub(crate) unsafe extern "thiscall" fn euro_champ_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let league = League(this);
     // the full eax is passed on (the exe:: wrapper reads only the byte)
-    let league_day: unsafe extern "thiscall" fn(usize, usize, u32) -> u8 = core::mem::transmute(FN_LEAGUE_UPDATE_FOR_DATE);
     if full == 0 {
-        return league_day(this, today, 0) as u32;
+        return exe::league_update_for_date(this, today, 0) as u32;
     }
     covered!("cqz_10 euro day");
     let seeding_day = read_u16(this + 0x13e) as i32 == read_i16(today) as i32;
     let seeding_year = (read_u16(this + 0x140) as i32).wrapping_add(league.year() as i32) == read_u16(today + 2) as i32;
     if seeding_day && seeding_year { // cqz10: the seeding day
-        let seed: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x57c710usize);
-        seed(this);
+        exe::eurochamp_seed_teams(this);
     }
     let (day, year) = oceania_nations_draw_date(league);
     if read_u16(today + 2) == year && read_u16(today) == day && league.table() == 0 {
-        let draw: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x57c1d0usize);
+        let draw: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_EUROCHAMP_RUN_GROUP_DRAW);
         draw(this);
     }
-    league_day(this, today, full) as u32
+    exe::league_update_for_date(this, today, full) as u32
 }
 
 // simplification: the seeding, the draw and the league day cannot run twice. Only the original; the plan on the draw day (the
@@ -20308,7 +22483,7 @@ fn world_cup_edition(start: i16) -> i16 {
 ///
 /// Otherwise: `league_flags` 0x28, the main stage, `current_stage` −1, 8 stages and the stage vector
 /// (`exe::crt_malloc(0x20)`, unchecked); the nation list (WorldCup::set_up_team_list 0x92da40, thiscall, ret 0; return
-/// value not read); the rules (WorldCup::set_up_rules 0x92d200; 0: the box of line 0x72 and returns this); the
+/// value not read); the exe::worldcup_set_up_rules(WorldCup::set_up_rules 0x92d200; 0: the box of line 0x72 and returns this); the
 /// statistics (operator new `exe::crt_operator_new(0x5ce)` and Comp_Stats::Comp_Stats `exe::new_comp_stats(new,
 /// this)`), null: the box of line 0x7a (and it goes on). Then, when the edition is the game's year (words), the entrant
 /// count = 32, else `league::ACTIVE` = 0; `league::TABLE` = null and `league::CLUB_COUNT` = 0. Returns this.
@@ -20343,10 +22518,8 @@ pub(crate) unsafe extern "thiscall" fn construct_world_cup(this: usize, year: u3
     write_u32(this + league::CURRENT_STAGE, 0xffff_ffff);
     write_u32(this + league::STAGE_COUNT, 8);
     write_u32(this + league::STAGES, exe::crt_malloc(0x20) as u32);
-    let team_list: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x92da40usize);
-    team_list(this);
-    let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x92d200usize);
-    if rules(this) == 0 {
+    exe::worldcup_set_up_team_list(this);
+    if exe::worldcup_set_up_rules(this) == 0 {
         show_error_at(0xad5888, 0x72);
         return this;
     }
@@ -20530,7 +22703,6 @@ pub(crate) unsafe extern "thiscall" fn wc_south_american_league_update_for_date(
     let this = League(this);
     let league = this;
     // the full eax is passed on (the exe:: wrapper reads only the byte)
-    let league_day: unsafe extern "thiscall" fn(usize, usize, u32) -> u8 = core::mem::transmute(FN_LEAGUE_UPDATE_FOR_DATE);
     covered!("cqz_12 south american day");
     let (before, draw_day) = qualifying_day_before_draw(league, today);
     // simplification: on the returns before the start and on the errors the original returns only al (0); the caller reads the byte
@@ -20550,9 +22722,8 @@ pub(crate) unsafe extern "thiscall" fn wc_south_american_league_update_for_date(
         league.set_active(1);
         let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::SET_PREDICTED_POSITIONS));
         predicted(this.addr());
-        let release: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x775070usize);
         let continent = read_usize(G_CONTINENT_TABLE).wrapping_add(read_usize(KEY_CONTINENT_SOUTH_AMERICA).wrapping_mul(0xc6));
-        release(read_usize(G_NATIONAL_TEAMS), continent, 0); // cqz12: the South American teams leave their continental competitions
+        exe::nationalteams_release_competitions_of_continent(read_usize(G_NATIONAL_TEAMS), continent, 0); // cqz12: the South American teams leave their continental competitions
         let mut k = 0i16;
         while k < this.club_count() {
             let club = Club(read_usize(this.table() + (k as isize * 0x3b) as usize));
@@ -20560,7 +22731,7 @@ pub(crate) unsafe extern "thiscall" fn wc_south_american_league_update_for_date(
             k = k.wrapping_add(1);
         }
     }
-    league_day(this.addr(), today, full) as u32
+    exe::league_update_for_date(this.addr(), today, full) as u32
 }
 
 // simplification: the fixtures, the national teams' competitions and the league day cannot run twice. Only the original; the plan
@@ -20591,7 +22762,6 @@ pub(crate) unsafe extern "thiscall" fn compare_wc_south_american_league_update_f
 /// Original: `WcAsiaLeague::update_for_date` (0x913140, wc_asia_league.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn wc_asia_league_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let league = League(this);
-    let league_day: unsafe extern "thiscall" fn(usize, usize, u32) -> u8 = core::mem::transmute(FN_LEAGUE_UPDATE_FOR_DATE);
     covered!("cqz_12 asian day");
     let (before, draw_day) = qualifying_day_before_draw(league, today);
     // simplification: on the returns before the draw and on the errors the original returns only al (0); the caller reads the byte
@@ -20600,11 +22770,9 @@ pub(crate) unsafe extern "thiscall" fn wc_asia_league_update_for_date(this: usiz
     }
     if draw_day && league.active() == 0 && full != 0 {
         covered!("cqz_12 asian draw");
-        let draw: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x912bd0usize);
-        let first_group: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x912ad0usize);
-        let group: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x913540usize);
+        let draw: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_WCASIALEAGUE_DRAW_FIRST_ROUND_GROUPS);
         draw(this);
-        if first_group(this) == 0 {
+        if exe::wcasialeague_init_first_group_table(this) == 0 {
             show_error_at(0xad4680, 0x40c);
             return 0;
         }
@@ -20617,7 +22785,7 @@ pub(crate) unsafe extern "thiscall" fn wc_asia_league_update_for_date(this: usiz
             return 0;
         }
         for k in 0..9 {
-            group(this, k);
+            exe::wcasialeague_create_first_round_group(this, k);
         }
         let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this) + comp_vtable::SET_PREDICTED_POSITIONS));
         predicted(this);
@@ -20625,7 +22793,7 @@ pub(crate) unsafe extern "thiscall" fn wc_asia_league_update_for_date(this: usiz
         write_u32(this + 0xf7, 0);
         league.set_active(1);
     }
-    league_day(this, today, full) as u32
+    exe::league_update_for_date(this, today, full) as u32
 }
 
 // simplification: the draw, the tables and the league day cannot run twice. Only the original; the plan on the draw day (the
@@ -20889,7 +23057,6 @@ pub(crate) unsafe extern "thiscall" fn compare_wc_europe_league_build_entry_pool
 pub(crate) unsafe extern "thiscall" fn wc_europe_league_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let this = League(this);
     let league = this;
-    let league_day: unsafe extern "thiscall" fn(usize, usize, u32) -> u8 = core::mem::transmute(FN_LEAGUE_UPDATE_FOR_DATE);
     covered!("cqz_13 european day");
     let (day, year) = oceania_nations_draw_date(league);
     let (today_day, today_year) = (read_u16(today), read_u16(today + 2));
@@ -20899,12 +23066,9 @@ pub(crate) unsafe extern "thiscall" fn wc_europe_league_update_for_date(this: us
     }
     if today_year == year && today_day == day && league.active() == 0 && full != 0 {
         covered!("cqz_13 european draw");
-        let draw: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x918ec0usize);
-        let own_group: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x9190d0usize);
-        let group: unsafe extern "thiscall" fn(usize, i32, usize, u32) -> u32 = core::mem::transmute(0x9196d0usize);
-        let runners_up: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x91a140usize);
+        let draw: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_WCEUROPELEAGUE_DRAW_GROUPS);
         draw(this.addr());
-        if own_group(this.addr()) == 0 {
+        if exe::wceuropeleague_init_own_group_table(this.addr()) == 0 {
             show_error_at(0xad4a6c, 0x5c7);
             return 0;
         }
@@ -20922,11 +23086,11 @@ pub(crate) unsafe extern "thiscall" fn wc_europe_league_update_for_date(this: us
             _ => 8,
         };
         for g in 0..groups - 1 {
-            group(this.addr(), g, 0, 6);
+            exe::wceuropeleague_create_group_stage(this.addr(), g, 0, 6);
         }
         exe::crt_free(read_usize(this.addr() + 0xf7));
         write_u32(this.addr() + 0xf7, 0);
-        runners_up(this.addr());
+        exe::wceuropeleague_create_runners_up_stage(this.addr());
         let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::SET_PREDICTED_POSITIONS));
         predicted(this.addr());
         exe::crt_free(read_usize(this.addr() + 0xee));
@@ -20934,10 +23098,9 @@ pub(crate) unsafe extern "thiscall" fn wc_europe_league_update_for_date(this: us
         write_u32(this.addr() + 0xf2, 0);
         league.set_active(1);
     } else if read_u16(G_CURRENT_DATE + 2) == read_u16(this.addr() + league::LAST_RESULT_DATE + 2) && read_u16(G_CURRENT_DATE) == (this.last_result_date() as u16) {
-        let fill: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x91a240usize);
-        fill(this.addr());
+        exe::wceuropeleague_fill_runners_up_table(this.addr());
     }
-    league_day(this.addr(), today, full) as u32
+    exe::league_update_for_date(this.addr(), today, full) as u32
 }
 
 // simplification: the draw, the stages, the runners-up table and the league day cannot run twice. Only the original; the plan on
@@ -21008,7 +23171,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_build_fate_news_text(this: usize,
         }
         covered!("cqz_14 copa america quarter finals");
         if full_sentence != 0 {
-            let sentence: unsafe extern "C" fn(u32, u32, usize, u32, u32, usize) = core::mem::transmute(0x4b4590usize);
+            let sentence: unsafe extern "C" fn(u32, u32, usize, u32, u32, usize) = core::mem::transmute(FN_COMP_UTIL_WRITE_GROUP_QUALIFY_NEWS);
             sentence(club_index, a3, comp, 6, full_sentence, text);
             return;
         }
@@ -21022,7 +23185,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_build_fate_news_text(this: usize,
     }
     covered!("cqz_14 copa america knockout fate");
     if full_sentence != 0 {
-        let sentence: unsafe extern "C" fn(u32, u32, u32, u32, u32, usize) = core::mem::transmute(0x4b0b80usize);
+        let sentence: unsafe extern "C" fn(u32, u32, u32, u32, u32, usize) = core::mem::transmute(FN_COMP_UTIL_WRITE_CUP_TIE_RESULT_NEWS);
         sentence(club_index, a4, a7, fate, a5, text);
         return;
     }
@@ -22398,11 +24561,10 @@ pub(crate) unsafe extern "C" fn compare_comp_util_get_stage_name(buf: usize, siz
 /// Lower-cases a C string in place, one character at a time (tolower `0x9465fc`, cdecl, the signed character), with a
 /// signed byte index as in the original.
 unsafe fn lower_case_in_place(p: usize) {
-    let tolower: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x9465fcusize);
     let mut k: i8 = 0;
     let mut c = read_u8(p) as i8;
     while c != 0 {
-        write_u8(p.wrapping_add(k as isize as usize), tolower(c as i32) as u8);
+        write_u8(p.wrapping_add(k as isize as usize), exe::at_9465fc(c as i32) as u8);
         k = k.wrapping_add(1);
         c = read_u8(p.wrapping_add(k as isize as usize)) as i8;
     }
@@ -23199,7 +25361,7 @@ pub(crate) unsafe extern "thiscall" fn construct_fifa_confed(this: usize, year: 
     if e == 0 {
         show_error_at(0x9c7474, 0x53);
     } else {
-        let set_up_rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x58bdb0usize);
+        let set_up_rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_FIFACONFED_SET_UP_RULES);
         set_up_rules(this);
     }
     this
@@ -23463,9 +25625,8 @@ struct NationsDayPlan {
 /// Then the league day with `full`, whose return value (al; the callers read the byte) it passes on.
 unsafe fn nations_tournament_day(this: League, today: usize, full: u32, plan: &NationsDayPlan) -> u32 {
     // the full eax is passed on (the exe:: wrapper reads only the byte)
-    let league_day: unsafe extern "thiscall" fn(usize, usize, u32) -> u8 = core::mem::transmute(FN_LEAGUE_UPDATE_FOR_DATE);
     if plan.light_day_first && full == 0 {
-        return league_day(this.addr(), today, 0) as u32;
+        return exe::league_update_for_date(this.addr(), today, 0) as u32;
     }
     let (day, year) = oceania_nations_draw_date(this);
     let (today_day, today_year) = (read_u16(today), read_u16(today + 2));
@@ -23512,7 +25673,7 @@ unsafe fn nations_tournament_day(this: League, today: usize, full: u32, plan: &N
         }
         this.set_active(1);
     }
-    league_day(this.addr(), today, full) as u32
+    exe::league_update_for_date(this.addr(), today, full) as u32
 }
 
 /// Shared comparer: the draw, the tables, the fixtures and the league day cannot run twice, so only the original runs;
@@ -25347,32 +27508,27 @@ unsafe extern "thiscall" fn compare_ita_cup_update_staff_records_for_status(this
 #[allow(clippy::too_many_arguments)]
 unsafe extern "thiscall" fn ita_cup_build_fate_news_text(this: usize, club_id: u32, outcome: u32, stage: u32, a4: u32, a5: u32, a6: u32, _a7: u32, a8: u32, news: u32, text: usize) {
     let (d, f) = (outcome as u8, stage as u8 as i8);
-    let cup_news: unsafe extern "C" fn(u32, u32, usize, i32, u32, usize) = core::mem::transmute(0x4b4590usize);
     let comp = read_usize(this + 4);
     if f < 7 {
         if d == 6 {
             if news != 0 {
-                return cup_news(club_id, a4, comp, 6, news, text);
+                return exe::comp_util_write_group_qualify_news(club_id, a4, comp, 6, news, text);
             }
             covered!("cqx_7 coppa italia through to first round");
             let club = read_usize(G_CLUB_TABLE).wrapping_add((club_id as usize).wrapping_mul(club::SIZE));
             let b = read_u8(club + 0x52) as i8 as i32;
             let sprintf: unsafe extern "C" fn(usize, usize, i32, i32, usize) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
             sprintf(0xde1f64, 0x9ea270, b, b, club + 0x38);
-            let set_string: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_TEXT_SET_STRING);
-            set_string(text, 0xde1f64);
-            let add_link: unsafe extern "thiscall" fn(usize, usize, u32, usize) = core::mem::transmute(FN_TEXT_ADD_LINK);
-            add_link(text, club + 0x38, 0x7d5, club); // cqx7: the club link
+            exe::text_set_string(text, (0xde1f64) as usize as *const u8);
+            exe::text_add_link(text, (club + 0x38) as usize as *const u8, 0x7d5, club); // cqx7: the club link
         } else if d == 0xfe {
-            cup_news(club_id, a4, comp, -2, news, text);
+            exe::comp_util_write_group_qualify_news(club_id, a4, comp, -2, news, text);
         }
     } else if f == 7 {
         if news != 0 {
-            let knockout_news: unsafe extern "C" fn(u32, u32, u32, u32, u32, usize) = core::mem::transmute(0x4b0b80usize);
-            knockout_news(club_id, a5, a8, outcome, a6, text);
+            exe::comp_util_write_cup_tie_result_news(club_id, a5, a8, outcome, a6, text);
         } else {
-            let knockout_text: unsafe extern "C" fn(u32, u32, u32, usize) = core::mem::transmute(0x4b4420usize);
-            knockout_text(club_id, a5, outcome, text);
+            exe::comp_util_write_cup_win_or_defeat_news(club_id, a5, outcome, text);
         }
     }
 }
@@ -25491,7 +27647,7 @@ unsafe extern "thiscall" fn asia_super_cup_start_new_season(this: usize) -> u32 
     }
     covered!("cqx_9 asian super cup turnover");
     cup_turnover_free_season(cup);
-    let entrants: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x410a50usize);
+    let entrants: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ASIASUPERCUP_SELECT_TEAMS);
     // simplification: in the boxes the original returns the box's eax; the caller does not read it
     if entrants(this) < 0 {
         show_error_at(0x987be0, 0x11f);
@@ -25630,8 +27786,7 @@ unsafe extern "thiscall" fn compare_asia_club_champ_update_staff_records_for_sta
 /// Original: `BraRegSp::points_for_result` (0x43c4a0, bra_reg_sp.cpp, thiscall, ret 8).
 unsafe extern "thiscall" fn bra_reg_sp_points_for_result(this: usize, club: usize, fixture: usize) -> u32 {
     covered!("cqx_10 paulista points");
-    let league_points: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(0x68aad0usize);
-    league_points(this, club, fixture) as u32 // cqx10: the League's points
+    exe::league_points_for_result(this, club, fixture) as u32 // cqx10: the League's points
 }
 
 /// Comparer for `bra_reg_sp_points_for_result`: side by side (the query only reads); the returned byte (the caller
@@ -26146,8 +28301,7 @@ unsafe extern "thiscall" fn construct_sub_league(this: usize, count: u32, club_i
         exe::league_init_table_row(l, i as u8 as u32, club, 0, 0);
         i = i.wrapping_add(1);
     }
-    let fill: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, i32, u32, u32) -> u32 = core::mem::transmute(0x88c9f0usize);
-    if fill(this.addr(), a3, a4, a5, a6, comp_id, a11, a12) == 0 {
+    if exe::subleague_add_results_between_members(this.addr(), a3, a4, a5, a6, comp_id, a11, a12) == 0 {
         show_error_at(0xa8b464, 0x63);
         return this.addr();
     }
@@ -26199,19 +28353,16 @@ unsafe extern "thiscall" fn compare_construct_sub_league(this: usize, count: u32
 /// The news text "{club} ... {competition}" of the European Cup fates: the text (`exe::langlib_sprintf`(0xde1f64,
 /// `format`, the club's byte +0x52 twice, `comp_byte` twice, the club's name +0x38, `comp_name`): 8 pushes; add esp,
 /// 0x20 -> cdecl) set in `text` (Text::set_string 0x4ae660(text, 0xde1f64), thiscall, ret 4) with the club link
-/// (Text::add_link 0x4ae8a0(text, club name, 0x7d5, club), thiscall, ret 0xc) and the competition link (add_link(text,
-/// `link_name`, 0x7d0, `link_data`)).
+/// (Text::add_link 0x4ae8a0(text, club name, 0x7d5, club), thiscall, ret 0xc) and the competition link (exe::text_add_link(text, (/// `link_name`) as usize as *const u8, 0x7d0, `link_data`)).
 unsafe fn european_cup_fate_text(text: usize, club_id: u32, format: usize, comp_byte: u8, comp_name: usize, link_data: usize) {
     let club = read_usize(G_CLUB_TABLE).wrapping_add((club_id as usize).wrapping_mul(club::SIZE));
     let b = read_u8(club + 0x52) as i8 as i32;
     let k = comp_byte as i8 as i32;
     let sprintf: unsafe extern "C" fn(usize, usize, i32, i32, i32, i32, usize, usize) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     sprintf(0xde1f64, format, b, b, k, k, club + 0x38, comp_name);
-    let set_string: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_TEXT_SET_STRING);
-    set_string(text, 0xde1f64);
-    let add_link: unsafe extern "thiscall" fn(usize, usize, u32, usize) = core::mem::transmute(FN_TEXT_ADD_LINK);
-    add_link(text, club + 0x38, 0x7d5, club); // cqx14: the club link
-    add_link(text, comp_name, 0x7d0, link_data);
+    exe::text_set_string(text, (0xde1f64) as usize as *const u8);
+    exe::text_add_link(text, (club + 0x38) as usize as *const u8, 0x7d5, club); // cqx14: the club link
+    exe::text_add_link(text, (comp_name) as usize as *const u8, 0x7d0, link_data);
 }
 
 /// Rule: the Champions League news of a club's fate: in the qualifying rounds (stage −1), a club going through to
@@ -26241,17 +28392,16 @@ unsafe extern "thiscall" fn european_cup_build_fate_news_text(this: usize, club_
     let comp = read_usize(this + 4);
     let uefa = read_usize(G_CLUB_COMP_TABLE).wrapping_add(read_usize(KEY_CLUB_COMP_UEFA_CUP).wrapping_mul(0x6b));
     let generic = |s: i32| {
-        let g: unsafe extern "thiscall" fn(usize, u32, u32, i32, u32, usize, u32, u32, u32, u32, usize) = core::mem::transmute(0x48c6d0usize);
+        let g: unsafe extern "thiscall" fn(usize, u32, u32, i32, u32, usize, u32, u32, u32, u32, usize) = core::mem::transmute(FN_COMP_BUILD_FATE_NEWS_TEXT);
         g(this, club_id, outcome, s, a4, fixture, a6, 0, a8, news, text);
     };
     let cup_news = || {
-        let g: unsafe extern "C" fn(u32, u32, usize, i32, u32, usize) = core::mem::transmute(0x4b4590usize);
+        let g: unsafe extern "C" fn(u32, u32, usize, i32, u32, usize) = core::mem::transmute(FN_COMP_UTIL_WRITE_GROUP_QUALIFY_NEWS);
         g(club_id, a4, comp, 6, news, text);
     };
     if f == -1 {
-        let base: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(FN_COMP_UTIL_GET_BASE_ROUND_ID);
         let w = read_u16(fixture + 0x30) as u32;
-        if base(w) as u16 == 0xfa || base(w) as u16 == 0x104 || news != 0 {
+        if exe::comp_util_get_base_round_id(w) as u16 == 0xfa || exe::comp_util_get_base_round_id(w) as u16 == 0x104 || news != 0 {
             return generic(-1);
         }
         covered!("cqx_14 champions league qualifying text");
@@ -26293,9 +28443,8 @@ unsafe extern "thiscall" fn compare_european_cup_build_fate_news_text(this: usiz
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, usize, u32, u32, u32, u32, usize)>(IDX_EUROPEAN_CUP_BUILD_FATE_NEWS_TEXT);
     let (d, f) = (outcome as u8, stage as u8 as i8);
     let text_only = text != 0 && if f == -1 {
-        let base: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(FN_COMP_UTIL_GET_BASE_ROUND_ID);
         let w = if fixture != 0 { read_u16(fixture + 0x30) as u32 } else { 0 };
-        fixture != 0 && news == 0 && base(w) as u16 != 0xfa && base(w) as u16 != 0x104
+        fixture != 0 && news == 0 && exe::comp_util_get_base_round_id(w) as u16 != 0xfa && exe::comp_util_get_base_round_id(w) as u16 != 0x104
     } else {
         f < 0xc && d == 0xfe
     };
@@ -26428,8 +28577,7 @@ unsafe fn try_add_player_body(this: usize, player: Staff, club: Club, positions:
         covered!("mke_1 already listed");
         return 1;
     }
-    let work_permit: unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u8 = core::mem::transmute(0x84b180usize);
-    if work_permit(this, player.addr(), club_of_staff_contract(player), club.addr()) == 0 {
+    if exe::shortlist_manager_passes_work_permit_check(this, player.addr(), club_of_staff_contract(player), club.addr()) == 0 {
         return 0;
     }
     if exe::transfer_manager_can_club_bid_for_player(tm, player, club, core::ptr::null_mut(), 0) == 0 {
@@ -26626,7 +28774,7 @@ unsafe fn try_add_player_body(this: usize, player: Staff, club: Club, positions:
         if !previous.is_null() {
             exe::shortlist_manager_update_staff_status(this, previous, club, 3, 0);
         }
-        let add_entry: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x8423f0usize); // add_shortlist_entry
+        let add_entry: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_SHORTLIST_MANAGER_ADD_SHORTLIST_ENTRY); // add_shortlist_entry
         add_entry(this, player.addr(), club.addr());
         covered!("mke_1 shortlisted");
         return 1;
@@ -26725,21 +28873,18 @@ unsafe fn contract_day_shortlist(p: Staff) {
 
 /// The contract expiry news (`post_contract_expiry_news` 0x4d6790, Rust; thiscall, ret 0x10) through its address.
 unsafe fn contract_day_expiry_news(this: usize, c: Contract, period: u32, bosman: u32, warn: u32) {
-    let f: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) = core::mem::transmute(0x4d6790usize);
-    f(this, c.addr(), period, bosman, warn)
+    exe::contract_manager_post_contract_expiry_news(this, c.addr(), period, bosman, warn)
 }
 
 /// The contract end news (`post_contract_end_news` 0x4da590, Rust; thiscall, ret 0xc) through its address.
 unsafe fn contract_day_end_news(this: usize, p: Staff, kind: u32, wide: u32) {
-    let f: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(0x4da590usize);
-    f(this, p.addr(), kind, wide)
+    exe::contract_manager_post_contract_end_news(this, p.addr(), kind, wide)
 }
 
 /// The free transfer queue (`queue_free_transfer` 0x8c16b0, Rust; thiscall, ret 0xc) with reason 1 and no
 /// compensation (−1), through its address.
 unsafe fn contract_day_queue(p: Staff) {
-    let f: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(0x8c16b0usize);
-    f(read_usize(G_TRANSFER_MANAGER), p.addr(), 1, u32::MAX);
+    exe::transfer_manager_queue_free_transfer(read_usize(G_TRANSFER_MANAGER), p.addr(), 1, u32::MAX);
 }
 
 /// Whether the expiry news speaks of a Bosman: the person is 24 or more at `date` (`exe::database_get_staff_age`) and
@@ -26789,7 +28934,7 @@ unsafe fn contract_day_refusal(this: usize, p: Staff, club: Club, c: Contract, m
         write_u8(r, read_u8(r) | 0x80);
     }
     covered!("mke_2 renewal refused");
-    let f: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x4d49a0usize); // post_offer_response_news
+    let f: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_CONTRACT_MANAGER_POST_OFFER_RESPONSE_NEWS); // post_offer_response_news
     f(this, l.addr(), 1);
 }
 
@@ -26917,7 +29062,7 @@ unsafe fn contract_day_loan_end(this: usize, date: usize, p: Staff) -> Contract 
                 contract_day_end_news(this, p, 6, 0);
             }
             covered!("mke_2 loan ended");
-            let f: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x4d07e0usize); // end_loan
+            let f: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_CONTRACT_MANAGER_END_LOAN); // end_loan
             f(this, p.addr());
         }
     }
@@ -27127,7 +29272,7 @@ unsafe fn contract_day_bosman(this: usize, date: usize, p: Staff, club: Club, c:
             c.set_transfer_status(c.transfer_status() & 0xf7);
             contract_day_shortlist(p);
             covered!("mke_2 leaves on a Bosman");
-            let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x4d6d70usize); // post_bosman_departure_news
+            let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_CONTRACT_MANAGER_POST_BOSMAN_DEPARTURE_NEWS); // post_bosman_departure_news
             f(this, c.addr(), 0);
             return ContractDayFlow::Next;
         }
@@ -27519,7 +29664,7 @@ pub(crate) unsafe extern "thiscall" fn contract_manager_daily_update(this: usize
         exe::crt_qsort(base, (n - k) as u32, 14, contract_day_globals::COMPARE_DECISIONS);
         write_i32(this + contract_manager_fields::DECISIONS_ADDED, 0);
     }
-    let f: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x4cd9c0usize); // process_due_decision_dates
+    let f: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_CONTRACT_MANAGER_PROCESS_DUE_DECISION_DATES); // process_due_decision_dates
     f(this, date, slice);
 }
 
@@ -27990,7 +30135,7 @@ unsafe fn move_to_club_body(this: usize, p: Staff, club: Club, offer: Offer, loc
     let mut squad_number: u8 = 0; // [esp+0x2c]
     let mut rating: i32 = 0; // [esp+0x18]
     if read_usize(G_NOTES) != 0 && !club.is_null() && !club.manager().is_null() {
-        let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x795660usize); // Notes::remove_note
+        let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_NOTES_REMOVE_NOTE); // Notes::remove_note
         f(read_usize(G_NOTES), club.manager().addr(), p.addr());
     }
     let old_job = p.job_for_club();
@@ -28097,20 +30242,20 @@ unsafe fn move_to_club_body(this: usize, p: Staff, club: Club, offer: Offer, loc
         exe::shortlist_manager_update_staff_status(sm, p, owner, 4, 2);
     }
     if exe::human_manager_is_human_club(club, 1, 1, 0, 0) != 0 && exe::scout_manager_is_player_shortlisted(read_usize(G_SCOUT_MANAGER), p, club.manager()) != 0 {
-        let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x7f7a20usize); // SCOUT_MANAGER::remove_from_shortlist
+        let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_SCOUT_MANAGER_REMOVE_FROM_SHORTLIST); // SCOUT_MANAGER::remove_from_shortlist
         f(read_usize(G_SCOUT_MANAGER), p.addr(), club.manager().addr());
     }
     let flags = read_usize(this + transfer_manager_fields::PERSON_FLAGS).wrapping_add((read_u32(p.addr()) as usize).wrapping_mul(8));
     write_u8(flags, read_u8(flags) & 0xef);
     let clear_bans = |p: Staff, from: Club, to: Club| {
-        let f: unsafe extern "thiscall" fn(usize, usize, usize, usize) = core::mem::transmute(0x556270usize); // clear_bans_invalid_for_club
+        let f: unsafe extern "thiscall" fn(usize, usize, usize, usize) = core::mem::transmute(FN_DISCIPLINE_CLEAR_BANS_INVALID_FOR_CLUB); // clear_bans_invalid_for_club
         f(read_usize(G_DISCIPLINE), p.addr(), from.addr(), to.addr());
     };
     if exe::contract_manager_get_loan_contract(cm, p) != 0 {
         if club != p.club_job() && exe::club_get_linked_b_team(club, core::ptr::null_mut(), 1) != p.club_job().addr() {
             // to another club: the loan ends
             covered!("mke_4 loan ended by the move");
-            let f: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x4d07e0usize); // end_loan
+            let f: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_CONTRACT_MANAGER_END_LOAN); // end_loan
             f(cm, p.addr());
             clear_bans(p, move_contract_club(p, false), club);
         } else {
@@ -28119,9 +30264,9 @@ unsafe fn move_to_club_body(this: usize, p: Staff, club: Club, offer: Offer, loc
             exe::playerstats_archive_player_stats(read_usize(G_PLAYER_STATS), p, fee, 0, 0, read_i32(owner.addr()), 0);
             archived = true;
             squad_number = exe::squad_manager_get_squad_number(read_usize(G_SQUAD_MANAGER), p, p.club_job()) as u8;
-            let drop: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x5567d0usize); // drop_held_bans
+            let drop: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_DISCIPLINE_DROP_HELD_BANS); // drop_held_bans
             drop(read_usize(G_DISCIPLINE), p.addr());
-            let remove: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x4d0bd0usize); // remove_loan_contract
+            let remove: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_CONTRACT_MANAGER_REMOVE_LOAN_CONTRACT); // remove_loan_contract
             remove(cm, p.addr());
             exe::database_remove_staff_from_club(p.club_job(), p, 0usize, 1, 0);
             write_usize(p.addr() + staff::CLUB_JOB, move_contract_club(p, false).addr());
@@ -28192,7 +30337,7 @@ unsafe fn move_to_club_body(this: usize, p: Staff, club: Club, offer: Offer, loc
         write_i32(oc.addr() + 0x63, -1);
     }
     // the vacated jobs
-    let fill: unsafe extern "stdcall" fn(usize, u32) = core::mem::transmute(0x8cb6d0usize); // fill_vacated_staff_job
+    let fill: unsafe extern "stdcall" fn(usize, u32) = core::mem::transmute(FN_TRANSFER_MANAGER_FILL_VACATED_STAFF_JOB); // fill_vacated_staff_job
     if old_job == 9 {
         if !old_club.is_null() {
             if exe::human_manager_is_human_club(old_club, 1, 1, 0, 0) != 0 {
@@ -28222,9 +30367,9 @@ unsafe fn move_to_club_body(this: usize, p: Staff, club: Club, offer: Offer, loc
     // the contract
     oc.set_transfer_status(4);
     exe::contract_manager_sign_contract(cm, oc, p.job_for_club() as u32);
-    let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x7f8ee0usize); // remove_scout_request
+    let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_SCOUT_MANAGER_REMOVE_SCOUT_REQUEST); // remove_scout_request
     f(read_usize(G_SCOUT_MANAGER), p.addr(), club.addr());
-    let f: unsafe extern "thiscall" fn(usize, usize, usize, usize) = core::mem::transmute(0x4ca1c0usize); // remove_talks_records
+    let f: unsafe extern "thiscall" fn(usize, usize, usize, usize) = core::mem::transmute(FN_CONTRACT_MANAGER_REMOVE_TALKS_RECORDS); // remove_talks_records
     f(cm, p.addr(), 0, 0);
     let fin = exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), club);
     exe::finance_pay_sign_on_fee(fin, oc.unknown());
@@ -28252,7 +30397,7 @@ unsafe fn move_to_club_body(this: usize, p: Staff, club: Club, offer: Offer, loc
     write_u8(flags + 7, p.int_apps());
     exe::awol_clear_awol(read_usize(G_AWOL), p);
     covered!("mke_4 moved");
-    let f: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32) = core::mem::transmute(0x758200usize); // process_transfer_squad_reactions
+    let f: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32) = core::mem::transmute(FN_MEDIA_PROCESS_TRANSFER_SQUAD_REACTIONS); // process_transfer_squad_reactions
     f(read_usize(G_MEDIA), p.addr(), club.addr(), old_club.addr(), happy as u32);
 }
 
@@ -28381,8 +30526,7 @@ unsafe fn news_text_format() -> unsafe extern "C" fn(usize, usize, ...) -> i32 {
 
 /// `Text::append_string` (0x4ae770; thiscall, ret 4): appends a string to a Text object.
 unsafe fn news_text_append(out: usize, s: usize) {
-    let f: unsafe extern "thiscall" fn(usize, usize) -> i32 = core::mem::transmute(0x4ae770usize);
-    f(out, s);
+    exe::text_append_string(out, s);
 }
 
 /// The person's name from the news item's name ids (`exe::database_format_name_from_ids`, 300 bytes, mode `mode`)
@@ -28431,12 +30575,12 @@ pub(crate) unsafe extern "thiscall" fn write_contract_talks_news_text(_this: usi
         let at = if index < read_i32(tm + 4) { arr.wrapping_add((index as usize).wrapping_mul(4)) } else { arr };
         let o = Offer(read_usize(at));
         if !o.is_null() && (o.serial() as u32) == serial {
-            let status: unsafe extern "thiscall" fn(usize, u32) -> u8 = core::mem::transmute(0x8e7f10usize); // TRANSFER_OFFER::get_player_talks_status
+            let status: unsafe extern "thiscall" fn(usize, u32) -> u8 = core::mem::transmute(FN_TRANSFER_OFFER_GET_PLAYER_TALKS_STATUS); // TRANSFER_OFFER::get_player_talks_status
             state = status(o.addr(), person);
             if state != 0 {
                 covered!("mke_5 talks state stored");
                 let hm = read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize as usize);
-                let set: unsafe extern "thiscall" fn(usize, usize, u32, u32, i32, usize) = core::mem::transmute(0x786d30usize); // News::set_item_slot
+                let set: unsafe extern "thiscall" fn(usize, usize, u32, u32, i32, usize) = core::mem::transmute(FN_NEWS_SET_ITEM_SLOT); // News::set_item_slot
                 set(read_usize(G_NEWS), hm, read_u32(news + 0xd6), 9, state as i8 as i32, 0);
             }
         }
@@ -30646,10 +32790,8 @@ pub(crate) unsafe extern "thiscall" fn get_transfer_budget(fin: usize, player: u
     if pending != 0 && exe::human_manager_is_human_club(club, 1, 1, 0, 0) != 0 {
         covered!("mka_1 pending deals");
         // ponytail: no exe:: wrapper for these two list builders yet
-        let future_list: unsafe extern "thiscall" fn(usize, usize, *mut usize) -> u8 = core::mem::transmute(0x8ccb80usize);
-        let offer_list: unsafe extern "thiscall" fn(usize, usize, *mut usize) -> u8 = core::mem::transmute(0x4ca300usize);
         let mut list: usize = 0;
-        let n = future_list(read_usize(G_TRANSFER_MANAGER), club.addr(), &mut list) as i8 as i32;
+        let n = exe::transfer_manager_get_club_future_transfer_list(read_usize(G_TRANSFER_MANAGER), club.addr(), &mut list) as i8 as i32;
         for i in 0..n.max(0) as usize {
             let row = list + i * FUTURE_SIZE;
             let person_id = read_i32(row + FUTURE_PERSON_ID);
@@ -30682,7 +32824,7 @@ pub(crate) unsafe extern "thiscall" fn get_transfer_budget(fin: usize, player: u
             exe::crt_free(list);
         }
         let mut offers: usize = 0;
-        let n = offer_list(read_usize(G_CONTRACT_MANAGER), club.addr(), &mut offers) as i8 as i32;
+        let n = exe::contract_manager_get_current_contract_offers(read_usize(G_CONTRACT_MANAGER), club.addr(), &mut offers) as i8 as i32;
         for i in 0..n.max(0) as usize {
             let row = offers + i * OFFER_SIZE;
             if read_u8(row + OFFER_STATE) == 4 {
@@ -33211,14 +35353,12 @@ pub(crate) unsafe extern "thiscall" fn compare_assess_club_squad(this: usize, en
 
 /// `Shortlist_Manager::is_compensation_deal` (0x84b6f0, Rust; thiscall, ret 0x10), called through its address.
 unsafe fn fill_slot_is_compensation_deal(this: usize, slot: usize, contract: usize, club: Club, fee: &mut i32) -> u32 {
-    let f: unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut i32) -> u32 = core::mem::transmute(0x84b6f0usize);
-    f(this, slot, contract, club.addr(), fee)
+    exe::shortlist_manager_is_compensation_deal(this, slot, contract, club.addr(), fee)
 }
 
 /// `Media::add_transfer_interest` (0x754740, Rust; thiscall, ret 0x14), called through its address.
 unsafe fn fill_slot_add_transfer_interest(player: Staff, club: Club, fee: i32, interest: f64) {
-    let f: unsafe extern "thiscall" fn(usize, usize, usize, i32, f64) = core::mem::transmute(0x754740usize);
-    f(read_usize(G_MEDIA), player.addr(), club.addr(), fee, interest)
+    exe::media_add_transfer_interest(read_usize(G_MEDIA), player.addr(), club.addr(), fee, interest)
 }
 
 /// A date (day i16 at +0, year u16 at +2) before another, compared as the original does: the year unsigned, the day
@@ -33419,8 +35559,7 @@ unsafe fn fill_slot_candidate(s: &mut FillSlotState, entry: usize) {
     if staff_state_byte_0b(p) & 0xf != 0 && read_usize(s.this) != 0 && fill_slot_pair_listed(s.this, p, club) {
         return;
     }
-    let work_permit: unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u8 = core::mem::transmute(0x84b180usize);
-    if work_permit(s.this, p.addr(), p.club_job().addr(), club.addr()) == 0 {
+    if exe::shortlist_manager_passes_work_permit_check(s.this, p.addr(), p.club_job().addr(), club.addr()) == 0 {
         return;
     }
     if exe::transfer_manager_player_needs_work_permit(tm, p, club, 1) != 0 {
@@ -33633,7 +35772,7 @@ unsafe fn fill_slot_candidate(s: &mut FillSlotState, entry: usize) {
         && exe::news_club_has_human_manager(read_usize(G_NEWS), club_of_staff_contract(p)) != 0
     {
         covered!("mkb_3 scout watching story");
-        let story: unsafe extern "C" fn(usize, usize) = core::mem::transmute(0x587220usize); // news_create_scout_watching_story
+        let story: unsafe extern "C" fn(usize, usize) = core::mem::transmute(FN_NEWS_CREATE_SCOUT_WATCHING_STORY); // news_create_scout_watching_story
         story(p.addr(), club.addr());
     }
 }
@@ -33908,7 +36047,7 @@ unsafe fn fill_shortlist_slot_body(this: usize, slot: usize, club: Club, exclude
     if !s.best.is_null() {
         let best = s.best;
         write_u32(slot + shortlist_slot::TARGET_STAFF_ID, read_u32(best.addr()));
-        let add_entry: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x8423f0usize); // add_shortlist_entry
+        let add_entry: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_SHORTLIST_MANAGER_ADD_SHORTLIST_ENTRY); // add_shortlist_entry
         add_entry(this, best.addr(), club.addr());
         covered!("mkb_3 target chosen");
         if read_u8(slot + shortlist_slot::FLAGS) & 1 != 0 || !is_player {
@@ -38597,18 +40736,18 @@ unsafe fn build_asian_super_cup(this: Cup, year: u32, record: usize) -> usize {
     this.set_substitutions_allowed(3);
     this.set_discipline_index(0x29);
     this.set_run_by_stages(0);
-    let load_from_disk: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize); // Cup::load_from_disk
+    let load_from_disk: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_CUP_LOAD_FROM_DISK); // Cup::load_from_disk
     if load_from_disk(this.addr(), 1) != 0 {
         return this.addr();
     }
     covered!("cqw_5 asian super cup new");
-    let select_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x410a50usize); // AsiaSuperCup::select_teams
+    let select_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ASIASUPERCUP_SELECT_TEAMS); // AsiaSuperCup::select_teams
     if select_teams(this.addr()) < 0 {
         show_error_at(0x987be0, 0x3e);
         return this.addr();
     }
     build_cup_round_table_by_vtable(this);
-    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize); // Cup::map_fixture_tree
+    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_MAP_FIXTURE_TREE); // Cup::map_fixture_tree
     if map_fixture_tree(this.addr()) < 0 {
         show_error_at(0x987be0, 0x4c);
         return this.addr();
@@ -38617,7 +40756,7 @@ unsafe fn build_asian_super_cup(this: Cup, year: u32, record: usize) -> usize {
         show_error_at(0x987be0, 0x53);
         return this.addr();
     }
-    let rank_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5223a0usize); // Cup::rank_teams
+    let rank_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_RANK_TEAMS); // Cup::rank_teams
     rank_teams(this.addr());
     this.addr()
 }
@@ -38670,18 +40809,18 @@ unsafe fn build_interamerican_cup(this: Cup, year: u32, record: usize) -> usize 
     this.set_substitutions_allowed(3);
     this.set_discipline_index(0xff);
     this.set_run_by_stages(0);
-    let load_from_disk: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize); // Cup::load_from_disk
+    let load_from_disk: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_CUP_LOAD_FROM_DISK); // Cup::load_from_disk
     if load_from_disk(this.addr(), 1) != 0 {
         return this.addr();
     }
     covered!("cqw_5 interamerican cup new");
-    let select_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x632480usize); // InterAmerCup::select_teams
+    let select_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_INTERAMERCUP_SELECT_TEAMS); // InterAmerCup::select_teams
     if select_teams(this.addr()) < 0 {
         show_error_at(0x9e9d94, 0x41);
         return this.addr();
     }
     build_cup_round_table_by_vtable(this);
-    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize); // Cup::map_fixture_tree
+    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_MAP_FIXTURE_TREE); // Cup::map_fixture_tree
     if map_fixture_tree(this.addr()) < 0 {
         show_error_at(0x9e9d94, 0x4f);
         return this.addr();
@@ -38690,7 +40829,7 @@ unsafe fn build_interamerican_cup(this: Cup, year: u32, record: usize) -> usize 
         show_error_at(0x9e9d94, 0x56);
         return this.addr();
     }
-    let rank_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5223a0usize); // Cup::rank_teams
+    let rank_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_RANK_TEAMS); // Cup::rank_teams
     rank_teams(this.addr());
     this.addr()
 }
@@ -38744,7 +40883,7 @@ unsafe fn build_mercosur_cup(this: League, year: u32, record: usize) -> usize {
     this.set_current_stage((0xffff_ffff) as usize);
     this.set_stage_count((0x4) as usize);
     this.set_stages((exe::crt_malloc(0x10) as u32) as usize);
-    let set_up_rules: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x4c1ed0usize); // ConMercCup::set_up_rules
+    let set_up_rules: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CONMERCCUP_SET_UP_RULES); // ConMercCup::set_up_rules
     if set_up_rules(this.addr()) == 0 {
         show_error_at(0x9a7d6c, 0x4d);
         return this.addr();
@@ -38803,18 +40942,18 @@ unsafe fn build_mls_all_star_game(this: Cup, year: u32, record: usize) -> usize 
     this.set_club_sides(1);
     this.set_discipline_index(0xff);
     this.set_run_by_stages(0);
-    let load_from_disk: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize); // Cup::load_from_disk
+    let load_from_disk: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_CUP_LOAD_FROM_DISK); // Cup::load_from_disk
     if load_from_disk(this.addr(), 1) != 0 {
         return this.addr();
     }
     covered!("cqw_5 mls all-star game new");
-    let set_up_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x90a540usize); // UsaMlsAllStars::set_up_teams
+    let set_up_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_USAMLSALLSTARS_SET_UP_TEAMS); // UsaMlsAllStars::set_up_teams
     if set_up_teams(this.addr()) < 0 {
         show_error_at(0xaa20a0, 0x44);
         return this.addr();
     }
     build_cup_round_table_by_vtable(this);
-    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize); // Cup::map_fixture_tree
+    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_MAP_FIXTURE_TREE); // Cup::map_fixture_tree
     if map_fixture_tree(this.addr()) < 0 {
         show_error_at(0xaa20a0, 0x52);
         return this.addr();
@@ -39251,7 +41390,7 @@ unsafe fn intercontinental_cup_common_fields(this: Cup) {
 unsafe fn finish_intercontinental_cup(this: Cup, file: usize) -> bool {
     let create_schedule: unsafe extern "thiscall" fn(usize, i32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     write_u32(this.addr() + cup::ROUND_TABLE, create_schedule(this.addr(), -1, this.addr() + cup::ROUND_COUNT, this.addr() + cup::STAGE_LABEL, 0) as u32);
-    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize); // Cup::map_fixture_tree
+    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_MAP_FIXTURE_TREE); // Cup::map_fixture_tree
     if map_fixture_tree(this.addr()) < 0 {
         show_error_at(file, 0x4f);
         return false;
@@ -39269,7 +41408,7 @@ unsafe fn finish_intercontinental_cup(this: Cup, file: usize) -> bool {
 /// Whether the saved state of the cup loads (Cup::load_from_disk 0x51fc00(this, 1): push 1; mov ecx -> thiscall, ret 4;
 /// nonzero).
 unsafe fn intercontinental_cup_loads(this: Cup) -> bool {
-    let load_from_disk: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize); // Cup::load_from_disk
+    let load_from_disk: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_CUP_LOAD_FROM_DISK); // Cup::load_from_disk
     load_from_disk(this.addr(), 1) != 0
 }
 
@@ -39338,7 +41477,7 @@ pub(crate) unsafe extern "thiscall" fn compare_construct_con_champ(this: usize, 
 #[allow(clippy::too_many_arguments)]
 unsafe fn build_two_club_cup(this: Cup, year: u32, record: usize, vtable: usize, b52: u8, substitutions: u8, select_teams: usize, file: usize) -> usize {
     let select_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(select_teams);
-    let rank_teams: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x5223a0usize); // Cup::rank_teams
+    let rank_teams: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_CUP_RANK_TEAMS); // Cup::rank_teams
     exe::new_cup(this);
     this.set_year(year as i16);
     write_u32(this.addr() + 4, record as u32);
@@ -39431,8 +41570,8 @@ struct AsianClubCupParts {
 /// and zeroed, the tie tree (Cup::map_fixture_tree 0x518790; 0: the box `rows[3]`) and the predicted positions
 /// (`predicted`). Each failing step returns this; all the routines are thiscall, ret 0. Returns this.
 unsafe fn build_asian_club_cup(this: Cup, year: i16, record: usize, c: &AsianClubCupParts) -> usize {
-    let load_from_disk: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize); // Cup::load_from_disk
-    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize); // Cup::map_fixture_tree
+    let load_from_disk: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_CUP_LOAD_FROM_DISK); // Cup::load_from_disk
+    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_MAP_FIXTURE_TREE); // Cup::map_fixture_tree
     let routine = |a: usize| -> unsafe extern "thiscall" fn(usize) -> u32 { core::mem::transmute(a) };
     exe::new_cup(this);
     write_u32(this.addr() + 4, record as u32);
@@ -40013,19 +42152,16 @@ unsafe fn construct_ita_super_body(this: usize, year: u32, record: usize) -> usi
     cup.set_substitutes_named(7);
     cup.set_discipline_index(0x11);
     cup.set_run_by_stages(0);
-    let load_from_disk: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize);
-    if load_from_disk(this, 1) != 0 {
+    if exe::cup_load_from_disk(this, 1) != 0 {
         return this;
     }
     covered!("cqv_5 italian super cup new");
-    let init_team_list: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x65fa60usize);
-    if init_team_list(this) < 0 {
+    if exe::itasuper_init_team_list(this) < 0 {
         show_error_at(0x9ea934, 0x43);
         return this;
     }
     ita_super_ctor_create_rounds(this);
-    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize);
-    if map_fixture_tree(this) < 0 {
+    if exe::cup_map_fixture_tree(this) < 0 {
         show_error_at(0x9ea934, 0x51);
         return this;
     }
@@ -40079,19 +42215,16 @@ unsafe fn construct_ita_c1_super_body(this: usize, year: u32, record: usize) -> 
     cup.set_substitutes_named(7);
     cup.set_discipline_index(0x11);
     cup.set_run_by_stages(0);
-    let load_from_disk: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize);
-    if load_from_disk(this, 1) != 0 {
+    if exe::cup_load_from_disk(this, 1) != 0 {
         return this;
     }
     covered!("cqv_5 serie c1 super cup new");
-    let init_team_list: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x63c9d0usize);
-    if init_team_list(this) < 0 {
+    if exe::itac1super_init_team_list(this) < 0 {
         show_error_at(0x9ea1c8, 0x43);
         return this;
     }
     ita_super_ctor_create_rounds(this);
-    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize);
-    if map_fixture_tree(this) < 0 {
+    if exe::cup_map_fixture_tree(this) < 0 {
         show_error_at(0x9ea1c8, 0x51);
         return this;
     }
@@ -40142,20 +42275,17 @@ unsafe fn construct_usa_open_cup_body(this: usize, year: u32, record: usize) -> 
     cup.set_club_sides(1);
     cup.set_discipline_index(0x1e);
     cup.set_run_by_stages(0);
-    let load_from_disk: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize);
-    if load_from_disk(this, 1) != 0 {
+    if exe::cup_load_from_disk(this, 1) != 0 {
         return this;
     }
     covered!("cqv_5 us open cup new");
-    let collect_entrants: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x90b530usize);
-    if collect_entrants(this) < 0 {
+    if exe::usaopencup_collect_entrants(this) < 0 {
         show_error_at(0xaa20e0, 0x43);
         return this;
     }
     cup.set_prize_fund(0xf4240);
     ita_super_ctor_create_rounds(this);
-    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize);
-    if map_fixture_tree(this) < 0 {
+    if exe::cup_map_fixture_tree(this) < 0 {
         show_error_at(0xaa20e0, 0x51);
         return this;
     }
@@ -40163,8 +42293,7 @@ unsafe fn construct_usa_open_cup_body(this: usize, year: u32, record: usize) -> 
         show_error_at(0xaa20e0, 0x58);
         return this;
     }
-    let rank_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5223a0usize);
-    rank_teams(this);
+    exe::cup_rank_teams(this);
     this
 }
 
@@ -40255,15 +42384,13 @@ unsafe fn construct_bra_cup_body(this: usize, year: u32, record: usize) -> usize
     cup.set_club_sides(1);
     cup.set_discipline_index(6);
     cup.set_run_by_stages(0);
-    let load_from_disk: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize);
-    if load_from_disk(this, 1) != 0 {
+    if exe::cup_load_from_disk(this, 1) != 0 {
         return this;
     }
     covered!("cqv_6 copa do brasil new");
-    let select_entrants: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x427f00usize); // return unused
+    let select_entrants: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_BRACUP_SELECT_ENTRANTS); // return unused
     select_entrants(this);
-    let build_team_table: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x427c20usize);
-    if build_team_table(this) == 0 {
+    if exe::bracup_build_team_table(this) == 0 {
         show_error_at(0x98a3bc, 0x4b);
         return this;
     }
@@ -40271,8 +42398,7 @@ unsafe fn construct_bra_cup_body(this: usize, year: u32, record: usize) -> usize
     cup.set_substitutions_allowed(3);
     cup.set_prize_fund(0x7a120);
     bra_cup_ctor_create_rounds(this);
-    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize);
-    if map_fixture_tree(this) == 0 {
+    if exe::cup_map_fixture_tree(this) == 0 {
         show_error_at(0x98a3bc, 0x59);
         return this;
     }
@@ -40280,8 +42406,7 @@ unsafe fn construct_bra_cup_body(this: usize, year: u32, record: usize) -> usize
         show_error_at(0x98a3bc, 0x60);
         return this;
     }
-    let rank_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5223a0usize);
-    rank_teams(this);
+    exe::cup_rank_teams(this);
     this
 }
 
@@ -40888,21 +43013,21 @@ unsafe fn ita_cup_constructor_body(this: usize, year: u32, owner: usize) -> usiz
     this.set_current_stage((0xffffffff) as usize);
     this.set_stage_count((0x8) as usize);
     league.set_stages(exe::crt_malloc(0x20));
-    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x63faf0usize);
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ITACUP_SELECT_ENTRANTS);
     f(this.addr());
     if !ita_cups_create_comp_stats(league) {
         show_error_at(0x9ea23c, 0x54);
         return this.addr();
     }
-    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x640210usize);
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ITACUP_SET_PREDICTED_POSITIONS);
     f(this.addr());
-    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x63f350usize);
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ITACUP_SET_UP_RULES);
     let r = f(this.addr());
     if r == 0 {
         show_error_at(0x9ea23c, 0x5e);
         return this.addr();
     }
-    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x63f250usize);
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ITACUP_CREATE_FIRST_GROUP_TABLE);
     let r = f(this.addr());
     if r == 0 {
         show_error_at(0x9ea23c, 0x65);
@@ -40916,7 +43041,7 @@ unsafe fn ita_cup_constructor_body(this: usize, year: u32, owner: usize) -> usiz
         show_error_at(0x9ea23c, 0x72);
         return this.addr();
     }
-    let f: unsafe extern "thiscall" fn(usize, u32) -> i32 = core::mem::transmute(0x63f640usize);
+    let f: unsafe extern "thiscall" fn(usize, u32) -> i32 = core::mem::transmute(FN_ITACUP_CREATE_GROUP_STAGE);
     for i in 0..7 {
         f(this.addr(), i);
     }
@@ -40977,21 +43102,21 @@ unsafe fn ita_c_cup_constructor_body(this: usize, year: u32, owner: usize) -> us
     this.set_current_stage((0xffffffff) as usize);
     this.set_stage_count((0x10) as usize);
     league.set_stages(exe::crt_malloc(0x40));
-    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x63dfe0usize);
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ITACCUP_SELECT_ENTRANTS);
     f(this.addr());
     if !ita_cups_create_comp_stats(league) {
         show_error_at(0x9ea204, 0x4f);
         return this.addr();
     }
-    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x63e580usize);
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ITACCUP_SET_PREDICTED_POSITIONS);
     f(this.addr());
-    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x63d6e0usize);
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ITACCUP_SET_UP_RULES);
     let r = f(this.addr());
     if r == 0 {
         show_error_at(0x9ea204, 0x59);
         return this.addr();
     }
-    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x63d5e0usize);
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ITACCUP_INIT_FIRST_GROUP);
     let r = f(this.addr());
     if r == 0 {
         show_error_at(0x9ea204, 0x60);
@@ -41005,7 +43130,7 @@ unsafe fn ita_c_cup_constructor_body(this: usize, year: u32, owner: usize) -> us
         show_error_at(0x9ea204, 0x6d);
         return this.addr();
     }
-    let f: unsafe extern "thiscall" fn(usize, u32) -> i32 = core::mem::transmute(0x63d9e0usize);
+    let f: unsafe extern "thiscall" fn(usize, u32) -> i32 = core::mem::transmute(FN_ITACCUP_CREATE_GROUP_STAGE);
     for i in 0..15 {
         f(this.addr(), i);
     }
@@ -41113,8 +43238,7 @@ unsafe fn eng_auto_cup_constructor_body(this: usize, year: u32, owner: usize) ->
     cup.set_discipline_index(discipline_rule::ENGLAND);
     cup.set_substitutes_named(0x5);
     cup.set_substitutions_allowed(0x3);
-    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize);
-    if load(this.addr(), 1) != 0 {
+    if exe::cup_load_from_disk(this.addr(), 1) != 0 {
         return this.addr();
     }
     covered!("cqv_9 league trophy new");
@@ -41122,13 +43246,13 @@ unsafe fn eng_auto_cup_constructor_body(this: usize, year: u32, owner: usize) ->
     cup.set_stages(if stages > 0 { exe::crt_malloc((stages << 2) as u32) } else { 0 });
     cup.set_importance_bias(0xf);
     cup.set_run_by_stages(0x0);
-    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x56b730usize);
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ENGAUTOCUP_SELECT_SECTION_CLUBS);
     let r = f(this.addr());
     if r == 0 {
         show_error_at(0x9c4180, 0x52);
         return this.addr();
     }
-    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x56b3c0usize);
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ENGAUTOCUP_COLLECT_ENTRANTS);
     let r = f(this.addr());
     if r == 0 {
         show_error_at(0x9c4180, 0x59);
@@ -41140,20 +43264,20 @@ unsafe fn eng_auto_cup_constructor_body(this: usize, year: u32, owner: usize) ->
         show_error_at(0x9c4180, 0x68);
         return this.addr();
     }
-    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x56bab0usize);
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ENGAUTOCUP_CREATE_SECTION_STAGE);
     f(this.addr());
     let l = read_usize(this.addr() + eng_auto_cup::SELECTED_CLUBS);
     if l != 0 {
         exe::crt_free(l);
         write_u32(this.addr() + eng_auto_cup::SELECTED_CLUBS, 0);
     }
-    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize);
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_MAP_FIXTURE_TREE);
     let r = f(this.addr());
     if r == 0 {
         show_error_at(0x9c4180, 0x78);
         return this.addr();
     }
-    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x56c010usize);
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ENGAUTOCUP_RANK_TEAMS);
     f(this.addr());
     this.addr()
 }
@@ -41215,27 +43339,26 @@ unsafe fn european_cup_constructor_body(this: usize, year: u32, owner: usize) ->
     cup.set_stages(exe::crt_malloc(0x34));
     cup.set_stage_label(0x0);
     cup.set_run_by_stages(0x0);
-    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize);
-    if load(this.addr(), 1) != 0 {
+    if exe::cup_load_from_disk(this.addr(), 1) != 0 {
         return this.addr();
     }
     covered!("cqv_9 champions league new");
     // the year's European seeding (UefaSeeding::update_season 0x9035a0: push 0; mov ecx, [G_UEFA_SEEDING] -> thiscall, ret 4)
     let s = read_usize(G_UEFA_SEEDING);
     if s != 0 {
-        let f: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x9035a0usize);
+        let f: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_UEFASEEDING_UPDATE_SEASON);
         f(s, 0);
     }
-    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x584fa0usize);
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_EUROPEANCUP_COLLECT_ENTRANTS);
     f(this.addr());
-    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x584990usize);
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_EUROPEANCUP_BUILD_QUALIFYING_ENTRY_TABLE);
     let r = f(this.addr());
     if r == 0 {
         show_error_at(0x9c4900, 0x74);
         return this.addr();
     }
     eng_auto_european_create_rounds(cup);
-    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize);
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_MAP_FIXTURE_TREE);
     let r = f(this.addr());
     if r == 0 {
         show_error_at(0x9c4900, 0x82);
@@ -41245,7 +43368,7 @@ unsafe fn european_cup_constructor_body(this: usize, year: u32, owner: usize) ->
         show_error_at(0x9c4900, 0x89);
         return this.addr();
     }
-    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x586900usize);
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_EUROPEANCUP_RANK_TEAMS);
     f(this.addr());
     this.addr()
 }
@@ -41296,13 +43419,9 @@ unsafe fn oceania_nations_draw_date(this: League) -> (u16, u16) {
 unsafe extern "thiscall" fn oceania_nations_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let this = League(this);
     let league = this;
-    let select_and_draw: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x799e30usize);
-    let first_group: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x7995a0usize);
-    let second_group: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x799a60usize);
     // the full eax is passed on (the exe:: wrapper reads only the byte)
-    let league_day: unsafe extern "thiscall" fn(usize, usize, u32) -> u8 = core::mem::transmute(FN_LEAGUE_UPDATE_FOR_DATE);
     if full == 0 {
-        return league_day(this.addr(), today, 0) as u32; // the callers read only al
+        return exe::league_update_for_date(this.addr(), today, 0) as u32; // the callers read only al
     }
     let (day, year) = oceania_nations_draw_date(league);
     let today_day = read_u16(today);
@@ -41313,10 +43432,10 @@ unsafe extern "thiscall" fn oceania_nations_update_for_date(this: usize, today: 
     }
     if today_year == year && today_day == day && league.active() == 0 {
         covered!("cqv_10 draw day");
-        select_and_draw(this.addr());
+        exe::oceanianations_select_and_draw_teams(this.addr());
         let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::SET_PREDICTED_POSITIONS));
         predicted(this.addr());
-        if first_group(this.addr()) == 0 {
+        if exe::oceanianations_create_group_table(this.addr()) == 0 {
             show_error_at(0xa6a0ec, 0x405);
             return 0;
         }
@@ -41328,13 +43447,13 @@ unsafe extern "thiscall" fn oceania_nations_update_for_date(this: usize, today: 
             show_error_at(0xa6a0ec, 0x412);
             return 0;
         }
-        second_group(this.addr(), 0);
+        exe::oceanianations_create_group_stage(this.addr(), 0);
         exe::crt_free(read_usize(this.addr() + 0xee));
         write_u32(this.addr() + 0xee, 0);
         write_i16(this.addr() + 0xf2, 0);
         this.set_active((1) as usize);
     }
-    league_day(this.addr(), today, full) as u32 // the callers read only al
+    exe::league_update_for_date(this.addr(), today, full) as u32 // the callers read only al
 }
 
 // simplification: the draw, the tables, the fixtures and the league day cannot run twice. Only the original; the plan on
@@ -41842,7 +43961,7 @@ unsafe fn conmebol_set_up_rules_again(this: League, file: usize, row: u32) -> u3
 unsafe extern "thiscall" fn conmebol_liber_start_new_season(this: usize) -> u32 {
     let this = League(this);
     let league = this;
-    let seed: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x4c61b0usize); // return unused
+    let seed: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CONMEBOLSEEDING_UPDATE_FOR_NEW_SEASON); // return unused
     conmebol_free_season(league);
     covered!("cqv_12 libertadores turnover");
     conmebol_next_year(league); // cqv12: the Libertadores of the next year
@@ -43552,7 +45671,7 @@ pub(crate) unsafe fn construct_eng_fa_cup_body(this: Cup, year: u32, record: usi
     this.set_discipline_index(discipline_rule::ENGLAND);
     this.set_run_by_stages(0);
     this.set_season_set_up(0);
-    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize); // Cup::load_from_disk
+    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_CUP_LOAD_FROM_DISK); // Cup::load_from_disk
     if load(this.addr(), 1) != 0 {
         return this.addr();
     }
@@ -43569,7 +45688,7 @@ pub(crate) unsafe fn construct_eng_fa_cup_body(this: Cup, year: u32, record: usi
     }
     this.set_prize_fund(0x1e8480);
     eng_fa_cup_create_rounds(this);
-    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize); // Cup::map_fixture_tree
+    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_MAP_FIXTURE_TREE); // Cup::map_fixture_tree
     let r = map_fixture_tree(this.addr());
     if r < 0 {
         show_error_at(0x9c42cc, 0x71);
@@ -43623,7 +45742,7 @@ pub(crate) unsafe fn construct_eng_cc_cup_body(this: Cup, year: u32, record: usi
     this.set_run_by_stages(0);
     this.set_season_set_up(0);
     write_u8(this.addr() + eng_cc_cup::EUROPEAN_ENTRANT_COUNT, 0);
-    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize); // Cup::load_from_disk
+    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_CUP_LOAD_FROM_DISK); // Cup::load_from_disk
     if load(this.addr(), 1) != 0 {
         return this.addr();
     }
@@ -43637,7 +45756,7 @@ pub(crate) unsafe fn construct_eng_cc_cup_body(this: Cup, year: u32, record: usi
     }
     this.set_prize_fund(0xf4240);
     eng_fa_cup_create_rounds(this);
-    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize); // Cup::map_fixture_tree
+    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_MAP_FIXTURE_TREE); // Cup::map_fixture_tree
     let r = map_fixture_tree(this.addr());
     if r < 0 {
         show_error_at(0x9c4224, 0x5e);
@@ -43691,12 +45810,12 @@ pub(crate) unsafe fn construct_eng_charity_body(this: Cup, year: u32, record: us
     this.set_substitutions_allowed(5);
     this.set_discipline_index(discipline_rule::ENGLAND);
     this.set_run_by_stages(0);
-    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize); // Cup::load_from_disk
+    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_CUP_LOAD_FROM_DISK); // Cup::load_from_disk
     if load(this.addr(), 1) != 0 {
         return this.addr();
     }
     covered!("cqu_5 charity shield new");
-    let select_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x56d780usize); // EngCharity::select_teams
+    let select_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ENGCHARITY_SELECT_TEAMS); // EngCharity::select_teams
     let r = select_teams(this.addr());
     if r < 0 {
         show_error_at(0x9c425c, 0x43);
@@ -43704,7 +45823,7 @@ pub(crate) unsafe fn construct_eng_charity_body(this: Cup, year: u32, record: us
     }
     this.set_prize_fund(0x493e0);
     eng_fa_cup_create_rounds(this);
-    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize); // Cup::map_fixture_tree
+    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_MAP_FIXTURE_TREE); // Cup::map_fixture_tree
     let r = map_fixture_tree(this.addr());
     if r < 0 {
         show_error_at(0x9c425c, 0x51);
@@ -43714,7 +45833,7 @@ pub(crate) unsafe fn construct_eng_charity_body(this: Cup, year: u32, record: us
         show_error_at(0x9c425c, 0x58);
         return this.addr();
     }
-    let rank_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5223a0usize); // Cup::rank_teams
+    let rank_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_RANK_TEAMS); // Cup::rank_teams
     rank_teams(this.addr());
     this.addr()
 }
@@ -43810,7 +45929,7 @@ pub(crate) unsafe fn construct_spa_cup_body(this: Cup, year: u32, record: usize)
     this.set_discipline_index(discipline_rule::SPAIN_CUP);
     this.set_run_by_stages(0);
     this.set_season_set_up(0);
-    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize); // Cup::load_from_disk
+    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_CUP_LOAD_FROM_DISK); // Cup::load_from_disk
     if load(this.addr(), 1) != 0 {
         return this.addr();
     }
@@ -43824,7 +45943,7 @@ pub(crate) unsafe fn construct_spa_cup_body(this: Cup, year: u32, record: usize)
     }
     this.set_prize_fund(0xf4240);
     spa_cup_create_rounds(this);
-    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize); // Cup::map_fixture_tree
+    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_MAP_FIXTURE_TREE); // Cup::map_fixture_tree
     let r = map_fixture_tree(this.addr());
     if r == 0 {
         show_error_at(0xa82810, 0x60);
@@ -43878,19 +45997,19 @@ pub(crate) unsafe fn construct_spa_super_body(this: Cup, year: u32, record: usiz
     this.set_substitutions_allowed(3);
     this.set_discipline_index(discipline_rule::SPAIN_LEAGUE);
     this.set_run_by_stages(0);
-    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize); // Cup::load_from_disk
+    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_CUP_LOAD_FROM_DISK); // Cup::load_from_disk
     if load(this.addr(), 1) != 0 {
         return this.addr();
     }
     covered!("cqu_6 spanish super cup new");
-    let select_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x858aa0usize); // SpaSuper::select_teams
+    let select_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_SPASUPER_SELECT_TEAMS); // SpaSuper::select_teams
     let r = select_teams(this.addr());
     if r < 0 {
         show_error_at(0xa82a58, 0x43);
         return this.addr();
     }
     spa_cup_create_rounds(this);
-    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize); // Cup::map_fixture_tree
+    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_MAP_FIXTURE_TREE); // Cup::map_fixture_tree
     let r = map_fixture_tree(this.addr());
     if r < 0 {
         show_error_at(0xa82a58, 0x51);
@@ -44193,12 +46312,12 @@ pub(crate) unsafe fn construct_fra_cup_body(this: Cup, year: u32, record: usize)
     this.set_substitutions_allowed(3);
     this.set_discipline_index(discipline_rule::FRANCE);
     this.set_run_by_stages(0);
-    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize); // Cup::load_from_disk
+    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_CUP_LOAD_FROM_DISK); // Cup::load_from_disk
     if load(this.addr(), 1) != 0 {
         return this.addr();
     }
     covered!("cqu_7 coupe de france new");
-    let collect_entrants: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5baa50usize); // FraCup::collect_entrants
+    let collect_entrants: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_FRACUP_COLLECT_ENTRANTS); // FraCup::collect_entrants
     let r = collect_entrants(this.addr());
     if r == 0 {
         show_error_at(0x9ccb28, 0x4c);
@@ -44206,7 +46325,7 @@ pub(crate) unsafe fn construct_fra_cup_body(this: Cup, year: u32, record: usize)
     }
     this.set_prize_fund(0xf4240);
     fra_cup_create_rounds(this);
-    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize); // Cup::map_fixture_tree
+    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_MAP_FIXTURE_TREE); // Cup::map_fixture_tree
     let r = map_fixture_tree(this.addr());
     if r == 0 {
         show_error_at(0x9ccb28, 0x5b);
@@ -44216,7 +46335,7 @@ pub(crate) unsafe fn construct_fra_cup_body(this: Cup, year: u32, record: usize)
         show_error_at(0x9ccb28, 0x62);
         return this.addr();
     }
-    let rank_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5223a0usize); // Cup::rank_teams
+    let rank_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_RANK_TEAMS); // Cup::rank_teams
     rank_teams(this.addr());
     this.addr()
 }
@@ -44264,12 +46383,12 @@ pub(crate) unsafe fn construct_fra_lge_cup_body(this: Cup, year: u32, record: us
     this.set_substitutions_allowed(3);
     this.set_discipline_index(discipline_rule::FRANCE);
     this.set_run_by_stages(0);
-    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize); // Cup::load_from_disk
+    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_CUP_LOAD_FROM_DISK); // Cup::load_from_disk
     if load(this.addr(), 1) != 0 {
         return this.addr();
     }
     covered!("cqu_7 french league cup new");
-    let collect_entrants: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5bd160usize); // FraLgeCup::collect_entrants
+    let collect_entrants: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_FRALGECUP_COLLECT_ENTRANTS); // FraLgeCup::collect_entrants
     let r = collect_entrants(this.addr());
     if r == 0 {
         show_error_at(0x9ccb98, 0x49);
@@ -44277,7 +46396,7 @@ pub(crate) unsafe fn construct_fra_lge_cup_body(this: Cup, year: u32, record: us
     }
     this.set_prize_fund(0x7a120);
     fra_cup_create_rounds(this);
-    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize); // Cup::map_fixture_tree
+    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_MAP_FIXTURE_TREE); // Cup::map_fixture_tree
     let r = map_fixture_tree(this.addr());
     if r == 0 {
         show_error_at(0x9ccb98, 0x57);
@@ -44287,7 +46406,7 @@ pub(crate) unsafe fn construct_fra_lge_cup_body(this: Cup, year: u32, record: us
         show_error_at(0x9ccb98, 0x5e);
         return this.addr();
     }
-    let rank_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5223a0usize); // Cup::rank_teams
+    let rank_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_RANK_TEAMS); // Cup::rank_teams
     rank_teams(this.addr());
     this.addr()
 }
@@ -44333,19 +46452,19 @@ pub(crate) unsafe fn construct_fra_super_body(this: Cup, year: u32, record: usiz
     this.set_club_sides(1);
     this.set_discipline_index(discipline_rule::FRANCE);
     this.set_run_by_stages(0);
-    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize); // Cup::load_from_disk
+    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_CUP_LOAD_FROM_DISK); // Cup::load_from_disk
     if load(this.addr(), 1) != 0 {
         return this.addr();
     }
     covered!("cqu_7 french super cup new");
-    let select_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5bf770usize); // FraSuper::select_teams
+    let select_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_FRASUPER_SELECT_TEAMS); // FraSuper::select_teams
     let r = select_teams(this.addr());
     if r < 0 {
         show_error_at(0x9ccc48, 0x3f);
         return this.addr();
     }
     fra_cup_create_rounds(this);
-    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize); // Cup::map_fixture_tree
+    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_MAP_FIXTURE_TREE); // Cup::map_fixture_tree
     let r = map_fixture_tree(this.addr());
     if r < 0 {
         show_error_at(0x9ccc48, 0x4d);
@@ -44448,12 +46567,12 @@ pub(crate) unsafe fn construct_jap_emp_cup_body(this: Cup, year: u32, record: us
     this.set_substitutions_allowed(3);
     this.set_discipline_index(discipline_rule::JAPAN_CUP);
     this.set_run_by_stages(0);
-    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize); // Cup::load_from_disk
+    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_CUP_LOAD_FROM_DISK); // Cup::load_from_disk
     if load(this.addr(), 1) != 0 {
         return this.addr();
     }
     covered!("cqu_8 emperors cup new");
-    let collect_entrants: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x6624f0usize); // JapEmpCup::collect_entrants
+    let collect_entrants: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_JAPEMPCUP_COLLECT_ENTRANTS); // JapEmpCup::collect_entrants
     let r = collect_entrants(this.addr());
     if r == 0 {
         show_error_at(0x9eab90, 0x47);
@@ -44461,7 +46580,7 @@ pub(crate) unsafe fn construct_jap_emp_cup_body(this: Cup, year: u32, record: us
     }
     this.set_prize_fund(0x6acfc0);
     jap_emp_cup_create_rounds(this);
-    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize); // Cup::map_fixture_tree
+    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_MAP_FIXTURE_TREE); // Cup::map_fixture_tree
     let r = map_fixture_tree(this.addr());
     if r == 0 {
         show_error_at(0x9eab90, 0x55);
@@ -44471,7 +46590,7 @@ pub(crate) unsafe fn construct_jap_emp_cup_body(this: Cup, year: u32, record: us
         show_error_at(0x9eab90, 0x5c);
         return this.addr();
     }
-    let rank_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5223a0usize); // Cup::rank_teams
+    let rank_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_RANK_TEAMS); // Cup::rank_teams
     rank_teams(this.addr());
     this.addr()
 }
@@ -44519,12 +46638,12 @@ pub(crate) unsafe fn construct_jap_j_cup_body(this: Cup, year: u32, record: usiz
     this.set_substitutions_allowed(3);
     this.set_discipline_index(discipline_rule::JAPAN_CUP);
     this.set_run_by_stages(0);
-    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize); // Cup::load_from_disk
+    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_CUP_LOAD_FROM_DISK); // Cup::load_from_disk
     if load(this.addr(), 1) != 0 {
         return this.addr();
     }
     covered!("cqu_8 j league cup new");
-    let collect_entrants: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x665a00usize); // JapJCup::collect_entrants
+    let collect_entrants: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_JAPJCUP_COLLECT_ENTRANTS); // JapJCup::collect_entrants
     let r = collect_entrants(this.addr());
     if r == 0 {
         show_error_at(0x9eaf14, 0x45);
@@ -44532,7 +46651,7 @@ pub(crate) unsafe fn construct_jap_j_cup_body(this: Cup, year: u32, record: usiz
     }
     this.set_prize_fund(0x1e8480);
     jap_emp_cup_create_rounds(this);
-    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize); // Cup::map_fixture_tree
+    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_MAP_FIXTURE_TREE); // Cup::map_fixture_tree
     let r = map_fixture_tree(this.addr());
     if r == 0 {
         show_error_at(0x9eaf14, 0x53);
@@ -44542,7 +46661,7 @@ pub(crate) unsafe fn construct_jap_j_cup_body(this: Cup, year: u32, record: usiz
         show_error_at(0x9eaf14, 0x5a);
         return this.addr();
     }
-    let rank_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5223a0usize); // Cup::rank_teams
+    let rank_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_RANK_TEAMS); // Cup::rank_teams
     rank_teams(this.addr());
     this.addr()
 }
@@ -44588,19 +46707,19 @@ pub(crate) unsafe fn construct_jap_super_body(this: Cup, year: u32, record: usiz
     this.set_club_sides(1);
     this.set_discipline_index(discipline_rule::JAPAN_CUP);
     this.set_run_by_stages(0);
-    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize); // Cup::load_from_disk
+    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_CUP_LOAD_FROM_DISK); // Cup::load_from_disk
     if load(this.addr(), 1) != 0 {
         return this.addr();
     }
     covered!("cqu_8 japanese super cup new");
-    let select_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x666160usize); // JapSuper::select_teams
+    let select_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_JAPSUPER_SELECT_TEAMS); // JapSuper::select_teams
     let r = select_teams(this.addr());
     if r < 0 {
         show_error_at(0x9eaf4c, 0x3f);
         return this.addr();
     }
     jap_emp_cup_create_rounds(this);
-    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize); // Cup::map_fixture_tree
+    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_MAP_FIXTURE_TREE); // Cup::map_fixture_tree
     let r = map_fixture_tree(this.addr());
     if r < 0 {
         show_error_at(0x9eaf4c, 0x4d);
@@ -44610,7 +46729,7 @@ pub(crate) unsafe fn construct_jap_super_body(this: Cup, year: u32, record: usiz
         show_error_at(0x9eaf4c, 0x54);
         return this.addr();
     }
-    let rank_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5223a0usize); // Cup::rank_teams
+    let rank_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_RANK_TEAMS); // Cup::rank_teams
     rank_teams(this.addr());
     this.addr()
 }
@@ -44710,26 +46829,22 @@ unsafe fn construct_uefa_cup_body(this: usize, year: u32, record: usize) -> usiz
     cup.set_substitutions_allowed(3);
     cup.set_discipline_index(1);
     cup.set_run_by_stages(0);
-    let load_from_disk: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize);
-    if load_from_disk(this, 1) != 0 {
+    if exe::cup_load_from_disk(this, 1) != 0 {
         return this;
     }
     covered!("cqu_9 uefa cup new");
     // the yearly European seeding (UefaSeeding::update_season 0x9035a0: push 0; mov ecx, [G_UEFA_SEEDING] -> thiscall, ret 4)
     let seeding = read_usize(G_UEFA_SEEDING);
     if seeding != 0 {
-        let update_season: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x9035a0usize);
-        update_season(seeding, 0);
+        exe::uefaseeding_update_season(seeding, 0);
     }
-    let build_entrants: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x902b90usize);
-    if build_entrants(this) == 0 {
+    if exe::uefacup_build_entrants(this) == 0 {
         show_error_at(0xaa19e0, 0x54);
         return this;
     }
     cup.set_prize_fund(0x2dc6c0);
     uefa_cup_ctor_create_rounds(this);
-    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize);
-    if map_fixture_tree(this) == 0 {
+    if exe::cup_map_fixture_tree(this) == 0 {
         show_error_at(0xaa19e0, 0x62);
         return this;
     }
@@ -44737,8 +46852,7 @@ unsafe fn construct_uefa_cup_body(this: usize, year: u32, record: usize) -> usiz
         show_error_at(0xaa19e0, 0x69);
         return this;
     }
-    let rank_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5223a0usize);
-    rank_teams(this);
+    exe::cup_rank_teams(this);
     this
 }
 
@@ -44787,19 +46901,16 @@ unsafe fn construct_eur_super_cup_body(this: usize, year: u32, record: usize) ->
     cup.set_substitutions_allowed(3);
     cup.set_discipline_index(1);
     cup.set_run_by_stages(0);
-    let load_from_disk: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize);
-    if load_from_disk(this, 1) != 0 {
+    if exe::cup_load_from_disk(this, 1) != 0 {
         return this;
     }
     covered!("cqu_9 european super cup new");
-    let select_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x57a500usize);
-    if select_teams(this) < 0 {
+    if exe::eursupercup_select_teams(this) < 0 {
         show_error_at(0x9c45f8, 0x3f);
         return this;
     }
     uefa_cup_ctor_create_rounds(this);
-    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize);
-    if map_fixture_tree(this) < 0 {
+    if exe::cup_map_fixture_tree(this) < 0 {
         show_error_at(0x9c45f8, 0x4d);
         return this;
     }
@@ -44807,8 +46918,7 @@ unsafe fn construct_eur_super_cup_body(this: usize, year: u32, record: usize) ->
         show_error_at(0x9c45f8, 0x54);
         return this;
     }
-    let rank_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5223a0usize);
-    rank_teams(this);
+    exe::cup_rank_teams(this);
     this
 }
 
@@ -44857,25 +46967,21 @@ unsafe fn construct_intertoto_cup_body(this: usize, year: u32, record: usize) ->
     write_u32(this + intertoto_cup::WINNERS_SENT_TO_UEFA, 0);
     cup.set_discipline_index(1);
     cup.set_run_by_stages(0);
-    let load_from_disk: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize);
-    if load_from_disk(this, 1) != 0 {
+    if exe::cup_load_from_disk(this, 1) != 0 {
         return this;
     }
     covered!("cqu_9 intertoto cup new");
     // the yearly European seeding (UefaSeeding::update_season 0x9035a0: push 0; mov ecx, [G_UEFA_SEEDING] -> thiscall, ret 4)
     let seeding = read_usize(G_UEFA_SEEDING);
     if seeding != 0 {
-        let update_season: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x9035a0usize);
-        update_season(seeding, 0);
+        exe::uefaseeding_update_season(seeding, 0);
     }
     uefa_cup_ctor_create_rounds(this);
-    let collect_entrants: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x6336c0usize);
-    if collect_entrants(this) == 0 {
+    if exe::intertotocup_collect_entrants(this) == 0 {
         show_error_at(0x9e9e14, 0x60);
         return this;
     }
-    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize);
-    if map_fixture_tree(this) == 0 {
+    if exe::cup_map_fixture_tree(this) == 0 {
         show_error_at(0x9e9e14, 0x67);
         return this;
     }
@@ -44883,8 +46989,7 @@ unsafe fn construct_intertoto_cup_body(this: usize, year: u32, record: usize) ->
         show_error_at(0x9e9e14, 0x6e);
         return this;
     }
-    let rank_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5223a0usize);
-    rank_teams(this);
+    exe::cup_rank_teams(this);
     this
 }
 
@@ -44942,15 +47047,13 @@ const ASIAN_CUP_WINNERS_WEST_ZONE_KEYS: [usize; 19] = [KEY_NATION_AFGHANISTAN, K
 /// The index of the club's nation in a list of nation ids (0x40cba0(club, list, n): 3 pushes; add esp, 0xc -> cdecl;
 /// returns the index byte or −1).
 unsafe fn asia_cup_winner_zone_index(club: usize, list: &[u32]) -> i8 {
-    let f: unsafe extern "C" fn(usize, *const u32, u32) -> u8 = core::mem::transmute(0x40cba0usize);
-    f(club, list.as_ptr(), list.len() as u32) as i8
+    exe::asia_cup_winner_find_club_nation_slot(club, list.as_ptr(), list.len() as u32) as i8
 }
 
 /// Does the club already play the Asian Club Championship (0x40e7b0(club): push; add esp, 4 -> cdecl): in that cup's
 /// team table or in that of its stage 0.
 unsafe fn asia_cup_winner_in_champions_league(club: usize) -> bool {
-    let f: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x40e7b0usize);
-    f(club) != 0
+    exe::asia_cup_winner_club_in_club_championship(club) != 0
 }
 
 /// The winner of the cup `cup_key` of the nation `nation_key` (when the nation's `nation::LEAGUE_SELECTED` byte is set,
@@ -45280,10 +47383,7 @@ unsafe fn wc_oceania_league_start_date(this: usize) -> (u16, u16) {
 /// Original: `WcOceaniaLeague::update_for_date` (0x91f3d0, wc_oceania_league.cpp, thiscall, ret 8).
 unsafe extern "thiscall" fn wc_oceania_league_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let this = League(this);
-    let release_continent: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x775070usize);
-    let create_second_group_stage: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x91f1a0usize);
     // the full eax is passed on, so the u8 wrapper `exe::league_update_for_date` is not used
-    let league_update_for_date: unsafe extern "thiscall" fn(usize, usize, u32) -> u8 = core::mem::transmute(FN_LEAGUE_UPDATE_FOR_DATE);
     let (day, year) = wc_oceania_league_start_date(this.addr());
     let today_day = read_u16(today);
     let today_year = read_u16(today + 2);
@@ -45295,7 +47395,7 @@ unsafe extern "thiscall" fn wc_oceania_league_update_for_date(this: usize, today
     if set_up_day && this.active() == 0 && full != 0 {
         covered!("cqu_12 qualifying set up");
         let national_teams = read_usize(G_NATIONAL_TEAMS);
-        release_continent(national_teams, read_usize(G_CONTINENT_TABLE).wrapping_add(read_usize(KEY_CONTINENT_OCEANIA).wrapping_mul(0xc6)), 0);
+        exe::nationalteams_release_competitions_of_continent(national_teams, read_usize(G_CONTINENT_TABLE).wrapping_add(read_usize(KEY_CONTINENT_OCEANIA).wrapping_mul(0xc6)), 0);
         let mut i = 0i16;
         while i < this.club_count() {
             let team = Club(read_usize(this.table() + i as usize * league_table_row::SIZE));
@@ -45318,10 +47418,10 @@ unsafe extern "thiscall" fn wc_oceania_league_update_for_date(this: usize, today
             show_error_at(0xad4afc, 0x3ab);
             return 0;
         }
-        create_second_group_stage(this.addr());
+        exe::wcoceanialeague_create_second_group_stage(this.addr());
         this.set_active((1) as usize);
     }
-    league_update_for_date(this.addr(), today, full) as u32 // the callers read only al
+    exe::league_update_for_date(this.addr(), today, full) as u32 // the callers read only al
 }
 
 // ponytail: the competition entries, the fixtures, the stage and the league day cannot run twice. Only the original;
@@ -45521,9 +47621,8 @@ unsafe fn intercontinental_club_in_continent(c: usize, continent: usize) -> bool
 /// when looking for place 0 (a defect: place 0 keeps whatever the allocated memory had); returns (club, false, true).
 #[allow(clippy::too_many_arguments)]
 unsafe fn intercontinental_cup_slot(this: usize, continent: usize, min_reputation: i16, comp: usize, place: u32, file: usize, line: u32) -> (usize, bool, bool) {
-    let league_loaded: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x6699d0usize);
     let record = read_usize(G_CONTINENT_TABLE).wrapping_add(read_usize(continent).wrapping_mul(0xc6));
-    if league_loaded(record) != 0 || read_i16(this + cup::YEAR) == 0x7d1 {
+    if exe::key_nation_continent_has_selected_nation(record) != 0 || read_i16(this + cup::YEAR) == 0x7d1 {
         return (exe::comp_util_get_latest_placed_club(comp_record_of_key(comp), place), true, false);
     }
     let mut list: Vec<usize> = Vec::new();
@@ -46052,8 +48151,7 @@ unsafe fn jap_j2_start_new_season_years(this: usize, years: i16) -> u32 {
         show_error_at(0x9eaedc, 0x196);
         return 0;
     }
-    let create_table: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x665030usize);
-    if create_table(this.addr()) == 0 {
+    if exe::japj2_create_table(this.addr()) == 0 {
         show_error_at(0x9eaedc, 0x19d);
         return 0;
     }
@@ -46069,8 +48167,7 @@ unsafe fn jap_j2_start_new_season_years(this: usize, years: i16) -> u32 {
     set_predicted_positions(this.addr());
     exe::league_set_club_season_expectations(this);
     // the full eax is returned, so the u8 wrapper `exe::officialsmanager_renew_officials` is not used
-    let renew_officials: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_OFFICIALSMANAGER_RENEW_OFFICIALS);
-    renew_officials(read_usize(G_OFFICIALS_MANAGER), this.competition().addr()) as u32 // cqv3: the J2 referee renewal
+    exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), this.competition().addr()) as u32 // cqv3: the J2 referee renewal
 }
 
 /// The turnover comparer: runs only the original (it frees the table and the round dates, allocates the new ones and
