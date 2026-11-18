@@ -130,6 +130,11 @@ pub(crate) mod exe {
         f(a0.addr())
     }
     #[inline(always)]
+    pub(crate) unsafe fn ausnsl_create_table(a0: impl Addr) -> u32 {
+        let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_AUSNSL_CREATE_TABLE);
+        f(a0.addr())
+    }
+    #[inline(always)]
     pub(crate) unsafe fn award_raise_winner_reputation(a0: impl Addr, a1: impl Addr, a2: u32, a3: u32, a4: u32) {
         let f: unsafe extern "C" fn(usize, usize, u32, u32, u32) = core::mem::transmute(FN_AWARD_RAISE_WINNER_REPUTATION);
         f(a0.addr(), a1.addr(), a2, a3, a4)
@@ -3145,6 +3150,11 @@ pub(crate) mod exe {
         f(a0.addr())
     }
     #[inline(always)]
+    pub(crate) unsafe fn itaserb_create_table(a0: impl Addr) -> u32 {
+        let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_ITASERB_CREATE_TABLE);
+        f(a0.addr())
+    }
+    #[inline(always)]
     pub(crate) unsafe fn itasuper_init_team_list(a0: impl Addr) -> i32 {
         let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ITASUPER_INIT_TEAM_LIST);
         f(a0.addr())
@@ -3218,6 +3228,11 @@ pub(crate) mod exe {
     pub(crate) unsafe fn key_nation_save_all_comps() -> i32 {
         let f: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_KEY_NATION_SAVE_ALL_COMPS);
         f()
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn korleague_create_table(a0: impl Addr) -> u32 {
+        let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_KORLEAGUE_CREATE_TABLE);
+        f(a0.addr())
     }
     #[inline(always)]
     pub(crate) unsafe fn langlib_apply_grammar_modifier(a0: impl Addr, a1: *const u8, a2: *const u8, a3: u32, a4: u32) -> usize {
