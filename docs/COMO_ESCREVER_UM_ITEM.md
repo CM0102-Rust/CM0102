@@ -55,6 +55,7 @@ Um item é um pacote de até 3 rotinas portadas, escrito antes da hora em `levas
 - **Mutações** pela carreira até 2002-06-01, com o motor de lances ligado (como o `mutacoes.py` da cadeia; use `--limite 3000`, porque a de 8 ligas passa de 900 s):
   - mude **quem joga, quem passa ou quem entra**, não só quando;
   - mutação de data muda **7 dias**: o jogo leva as rodadas ao dia da semana, e 1 ou 2 dias caem no mesmo lugar;
+  - **virada de temporada** (o `start_new_season` que só passa ano, endereços e linhas ao molde comum): o que ela monta só é usado quando a edição seguinte começa, quase sempre depois da data da carreira. "Ano + 2" e afins **não são acusados** na janela da cadeia (306ª: 20 de 28 escaparam ou ficaram para depois). Dê a ela a data que cobre a primeira rodada da edição seguinte (`levas/N/ATE`, ex. 2002-12-31) ou deixe a virada sem mutação própria e diga que o molde já é provado; não escreva a mutação "ano + 2" para a data padrão;
   - evite a mutação que trava ou derruba o jogo (só é acusada no limite e atrasa a cadeia);
   - mutação de caminho que não roda nas ligas do teste não serve;
   - a que escapa da carreira mas é pega pelo comparador da rotina conta como acusada; as outras precisam de explicação, ou o item sai.

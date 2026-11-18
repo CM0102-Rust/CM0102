@@ -55,6 +55,7 @@ An item is a package of up to 3 ported routines, written ahead of time in `levas
 - **Mutations** through the career up to 2002-06-01, with the bid engine on (like the chain's `mutacoes.py`; use `--limite 3000`, since the 8-league one takes over 900 s):
   - change **who plays, who goes through or who gets in**, not just when;
   - a date mutation moves **7 days**: the game snaps rounds to the weekday, and 1 or 2 days land in the same place;
+  - **season turnover** (a `start_new_season` that only passes year, addresses and rows to the shared template): what it builds is only used when the next edition starts, almost always after the career date. "Year + 2" and the like **are not caught** in the chain's window (306th batch: 20 of 28 escaped or were left for later). Give it the date that covers the next edition's first round (`levas/N/ATE`, e.g. 2002-12-31), or leave the turnover without its own mutation and say the template is already proven; do not write a "year + 2" mutation for the default date;
   - avoid mutations that hang or crash the game (they are only caught at the time limit and delay the chain);
   - a mutation on a path that doesn't run in the test leagues is no good;
   - one that escapes the career but is caught by the routine's comparer counts as caught; the others need an explanation, or the item goes out.

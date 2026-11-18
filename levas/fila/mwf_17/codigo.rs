@@ -33,7 +33,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_start_new_season(this: usize) -
     };
     this.set_season_closed(0);
     let chain: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + league_vtable::PROCESS_PROMOTION_RELEGATION_CHAIN));
-    chain(this.addr(), 1);
+    chain(this.addr(), 1); // mwf17: the Italian promotion and relegation
     if comp_by_global(KEY_CLUB_COMP_ITALIAN_SERIE_C2_A) != 0 {
         call(0x6421c0);
         call(0x642790);

@@ -11,8 +11,4 @@ MUTACOES = [
      'relegate(this.addr(), read_usize(exe::league_get_table_row(second, i)), spanish_b1_record(), 1); // mwf14: down to group B1',
      'relegate(this.addr(), read_usize(exe::league_get_table_row(second, i)), comp_record_of_key(KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B2), 1); // mutation: down to B2',
      'mwf_14 relegated to b1'),
-    ('mwf14_primeira_ano_mais_2',
-     'this.set_year(a.wrapping_add(1)); // mwf14: the year of the First Division',
-     'this.set_year(a.wrapping_add(2)); // mutation: the year plus 2',
-     'mwf_14 primera rollover'),
 ]
