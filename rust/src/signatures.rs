@@ -2,7 +2,7 @@
 //! mudar a tabela PROLOGOS do motor.rs. (início, tamanho até a próxima fronteira real, FNV-1a 64 no
 //! cm0102.exe original, FNV-1a 64 no cm0102-1080.exe). Ordenada pelo início (busca binária).
 
-pub const ASSINATURAS: [(usize, usize, u64, u64); 2687] = [
+pub const ASSINATURAS: [(usize, usize, u64, u64); 2690] = [
     (0x401000, 544, 0x07248056f27f191f, 0x07248056f27f191f),
     (0x4012e0, 1760, 0x86ea7ac579cbfed1, 0x86ea7ac579cbfed1),
     (0x4019c0, 240, 0x182cb3e580f9deb2, 0x182cb3e580f9deb2),
@@ -362,6 +362,7 @@ pub const ASSINATURAS: [(usize, usize, u64, u64); 2687] = [
     (0x4c6730, 352, 0x4832ae3f181c0963, 0x4832ae3f181c0963),
     (0x4c6890, 208, 0xb72a5e54fa50d2b6, 0xb72a5e54fa50d2b6),
     (0x4c6960, 16, 0x1ad32521c5cf5068, 0x1ad32521c5cf5068),
+    (0x4c6970, 512, 0xa055d9bedb15af05, 0xa055d9bedb15af05),
     (0x4c6b70, 1232, 0x0e7863d21e9d1ed8, 0x0e7863d21e9d1ed8),
     (0x4c7950, 80, 0xcb69f43cdd367f4d, 0xcb69f43cdd367f4d),
     (0x4c79a0, 288, 0xeab6771badec267f, 0xeab6771badec267f),
@@ -2283,6 +2284,7 @@ pub const ASSINATURAS: [(usize, usize, u64, u64); 2687] = [
     (0x85aae0, 752, 0x0dc856ebda23cf72, 0x0dc856ebda23cf72),
     (0x85add0, 240, 0xd74a5b0cb4e32130, 0xd74a5b0cb4e32130),
     (0x85b820, 544, 0xfbc46575af760fe5, 0xfbc46575af760fe5),
+    (0x85ba40, 1120, 0xf2c4db95fa7586cc, 0xf2c4db95fa7586cc),
     (0x85c260, 1440, 0x866e5f291033a69f, 0x866e5f291033a69f),
     (0x85c800, 928, 0x7e0767c1c8c79a3e, 0x7e0767c1c8c79a3e),
     (0x85cba0, 3328, 0x6bd4b42e2be27502, 0x6bd4b42e2be27502),
@@ -2570,6 +2572,7 @@ pub const ASSINATURAS: [(usize, usize, u64, u64); 2687] = [
     (0x904580, 2224, 0xfae08b4aab6be79d, 0xfae08b4aab6be79d),
     (0x904e30, 672, 0x0aad9ec6ad5cbf45, 0x0aad9ec6ad5cbf45),
     (0x9050d0, 352, 0x6fb7e092203f9862, 0x6fb7e092203f9862),
+    (0x905230, 736, 0x8aeffedd100ab40b, 0x8aeffedd100ab40b),
     (0x905510, 640, 0x2d4d38891d7e9174, 0x2d4d38891d7e9174),
     (0x905790, 288, 0xf07d1845f6aafaac, 0xf07d1845f6aafaac),
     (0x906f80, 656, 0xc3810af296671a3f, 0xc3810af296671a3f),
