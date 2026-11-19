@@ -745,6 +745,11 @@ pub(crate) mod exe {
         f(a0.addr(), a1.addr(), a2, a3, a4, a5, a6.addr(), a7)
     }
     #[inline(always)]
+    pub(crate) unsafe fn comp_send_promotion_relegation_override_news(a0: impl Addr, a1: impl Addr, a2: impl Addr, a3: impl Addr, a4: u32) {
+        let f: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32) = core::mem::transmute(FN_COMP_SEND_PROMOTION_RELEGATION_OVERRIDE_NEWS);
+        f(a0.addr(), a1.addr(), a2.addr(), a3.addr(), a4)
+    }
+    #[inline(always)]
     pub(crate) unsafe fn comp_send_tv_rights_news(a0: impl Addr, a1: impl Addr, a2: i32) {
         let f: unsafe extern "thiscall" fn(usize, usize, i32) = core::mem::transmute(FN_COMP_SEND_TV_RIGHTS_NEWS);
         f(a0.addr(), a1.addr(), a2)
@@ -2530,6 +2535,11 @@ pub(crate) mod exe {
         f(a0.addr())
     }
     #[inline(always)]
+    pub(crate) unsafe fn frafirst_exchange_cfa_national_clubs(a0: impl Addr) {
+        let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_FRAFIRST_EXCHANGE_CFA_NATIONAL_CLUBS);
+        f(a0.addr())
+    }
+    #[inline(always)]
     pub(crate) unsafe fn frafirst_set_up_rules(a0: impl Addr) -> u32 {
         let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_FRAFIRST_SET_UP_RULES);
         f(a0.addr())
@@ -3150,6 +3160,11 @@ pub(crate) mod exe {
         f(a0.addr())
     }
     #[inline(always)]
+    pub(crate) unsafe fn itasera_create_table(a0: impl Addr) -> u32 {
+        let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_ITASERA_CREATE_TABLE);
+        f(a0.addr())
+    }
+    #[inline(always)]
     pub(crate) unsafe fn itaserb_create_table(a0: impl Addr) -> u32 {
         let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_ITASERB_CREATE_TABLE);
         f(a0.addr())
@@ -3228,6 +3243,11 @@ pub(crate) mod exe {
     pub(crate) unsafe fn key_nation_save_all_comps() -> i32 {
         let f: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_KEY_NATION_SAVE_ALL_COMPS);
         f()
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn korleaguecup_create_knockout_stage(a0: impl Addr) {
+        let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_KORLEAGUECUP_CREATE_KNOCKOUT_STAGE);
+        f(a0.addr())
     }
     #[inline(always)]
     pub(crate) unsafe fn korleague_create_table(a0: impl Addr) -> u32 {
@@ -5772,6 +5792,11 @@ pub(crate) mod exe {
     #[inline(always)]
     pub(crate) unsafe fn spacup_collect_entrants(a0: impl Addr) -> i32 {
         let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_SPACUP_COLLECT_ENTRANTS);
+        f(a0.addr())
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn spafirst_create_table(a0: impl Addr) -> u32 {
+        let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_SPAFIRST_CREATE_TABLE);
         f(a0.addr())
     }
     #[inline(always)]
