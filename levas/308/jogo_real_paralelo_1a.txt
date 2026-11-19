@@ -1,0 +1,14 @@
+    pool nao paginado 2.33 -> 2.29 GB, paginado 5.60 -> 4.27 GB
+execucao 1: parou em 2002-212, 2469426414 sorteios, impressao 4dff012e25786694, partidas 19952/a3f3a16c9781cee7, banco ec5ef6f997a38cf0, 5757 s
+    date: 1000000000 comparacoes, 0 divergencias
+    engine: 10000000000 comparacoes, 256 divergencias
+    random: 1000000000 comparacoes, 0 divergencias
+game.cfg restaurado; auto_setup.cfg removido
+engine: DIVERGENCE top_up_club_squad(club 1bde42f9, staff 10311, player 8023, pass 0): original MemorySnapshot([(de1f5c, [29, 5c, 0, 0, c8, 7e, aa, 0]), (ad6c30, [44, 6b, 0, 0]), (1bde43d0, [d2, ef, 61, 1c, 40, f0, 61, 1c, ae, f0, 61, 1c, cc, a7, 55, 1c, 1c, f1, 61, 1c, 8a, f1, 61, 1c, f8, f1, 61, 1
+engine: DIVERGENCE top_up_club_squad(club 1be33e73, staff 10311, player 8023, pass 0): original MemorySnapshot([(de1f5c, [29, 5c, 0, 0, 98, b5, ab, 0]), (ad6c30, [31, 35, 0, 0]), (1be33f4a, [d2, ef, 61, 1c, 40, f0, 61, 1c, ae, f0, 61, 1c, 1c, f1, 61, 1c, 8a, f1, 61, 1c, f8, f1, 61, 1c, 66, f2, 61, 1
+engine: DIVERGENCE top_up_club_squad(club 1be5d76c, staff 10311, player 8023, pass 0): original MemorySnapshot([(de1f5c, [1e, 49, 0, 0, 60, ae, ab, 0]), (ad6c30, [f8, 55, 0, 0]), (1be5d843, [92, 41, 5a, 1c, d2, ef, 61, 1c, 40, f0, 61, 1c, ae, f0, 61, 1c, 1c, f1, 61, 1c, 8a, f1, 61, 1c, f8, f1, 61, 1
+engine: DIVERGENCE top_up_club_squad(club 1bdfcb9a, staff 10311, player 8023, pass 0): original MemorySnapshot([(de1f5c, [1e, 49, 0, 0, 50, ec, ac, 0]), (ad6c30, [4f, 49, 0, 0]), (1bdfcc71, [d2, ef, 61, 1c, 40, f0, 61, 1c, ae, f0, 61, 1c, 1c, f1, 61, 1c, 8a, f1, 61, 1c, f8, f1, 61, 1c, 66, f2, 61, 1
+engine: DIVERGENCE top_up_club_squad(club 1be467c2, staff 10286, player 7998, pass 0): original MemorySnapshot([(de1f5c, [8b, 6f, 0, 0, c, 43, ac, 0]), (ad6c30, [58, 31, 0, 0]), (1be46899, [14, e5, 61, 1c, 82, e5, 61, 1c, f0, e5, 61, 1c, 32, a, 56, 1c, 5e, e6, 61, 1c, cc, e6, 61, 1c, 3a, e7, 61, 1c,
+random: 1000000000 comparisons, 0 divergences
+engine: 10000000000 comparisons, 256 divergences
+date: 1000000000 comparisons, 0 divergences

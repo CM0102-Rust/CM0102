@@ -2835,6 +2835,11 @@ pub(crate) mod exe {
         f(a0.addr())
     }
     #[inline(always)]
+    pub(crate) unsafe fn halloffame_try_add_entry(a0: impl Addr, a1: u32, a2: impl Addr, a3: u32) -> u32 {
+        let f: unsafe extern "thiscall" fn(usize, u32, usize, u32) -> u32 = core::mem::transmute(FN_HALLOFFAME_TRY_ADD_ENTRY);
+        f(a0.addr(), a1, a2.addr(), a3)
+    }
+    #[inline(always)]
     pub(crate) unsafe fn handle_team_stats_input(a0: u32) -> i32 {
         let f: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(FN_HANDLE_TEAM_STATS_INPUT);
         f(a0)
@@ -7563,6 +7568,11 @@ pub(crate) mod exe {
     pub(crate) unsafe fn write_staff_name_ref_to_news(a0: impl Addr, a1: impl Addr, a2: *mut u8) {
         let f: unsafe extern "C" fn(usize, usize, *mut u8) = core::mem::transmute(FN_WRITE_STAFF_NAME_REF_TO_NEWS);
         f(a0.addr(), a1.addr(), a2)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn year_ratings_add_player_rating(a0: impl Addr, a1: impl Addr, a2: impl Addr, a3: impl Addr) {
+        let f: unsafe extern "thiscall" fn(usize, usize, usize, usize) = core::mem::transmute(FN_YEAR_RATINGS_ADD_PLAYER_RATING);
+        f(a0.addr(), a1.addr(), a2.addr(), a3.addr())
     }
     #[inline(always)]
     pub(crate) unsafe fn zadd_matching_files(a0: *const u8, a1: *const u8, a2: impl Addr, a3: u32, a4: u32) -> i32 {

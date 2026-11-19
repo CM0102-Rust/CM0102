@@ -2,7 +2,7 @@
 
 Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os arquivos-fonte do mapa de [maxevans60](https://github.com/maxevans60/cm0102-function-map) (CC BY 4.0). Uma função conta quando o início dela é desviado para Rust (`Prologue` em `rust/src/motor.rs`). O placar do motor de partidas, pelas nossas fronteiras, fica em `PLACAR.md`.
 
-**Exe inteiro:** 2667 de 6709 funções, 2181.0 de 5528.0 KB (**39.45%**) · 256 de 393 arquivos com rotinas em Rust
+**Exe inteiro:** 2688 de 6709 funções, 2190.5 de 5528.0 KB (**39.63%**) · 259 de 393 arquivos com rotinas em Rust
 
 | Arquivo | Funções | KB | Progresso |
 |---|---|---|---|
@@ -136,6 +136,7 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `swe_first.cpp` | 7/12 | 3.8/5.3 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **72.0%** |
 | `bel_fa_cup.cpp` | 3/6 | 2.3/3.2 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **71.5%** |
 | `conmebol_seeding.cpp` | 7/9 | 2.4/3.3 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **71.5%** |
+| `virtual_staff.cpp` | 6/12 | 4.5/6.4 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **70.9%** |
 | `training_manager.cpp` | 20/34 | 11.5/16.3 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **70.5%** |
 | `den_cup.cpp` | 3/7 | 2.3/3.3 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **70.3%** |
 | `russia_rules.cpp` | 2/4 | 0.4/0.5 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **69.7%** |
@@ -182,10 +183,10 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `player_stats.cpp` | 23/34 | 12.2/28.6 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **42.8%** |
 | `tur_first.cpp` | 6/10 | 2.5/5.9 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **41.6%** |
 | `media.cpp` | 38/69 | 83.6/202.1 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **41.3%** |
+| `month_ratings.cpp` | 4/8 | 0.8/1.9 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **41.0%** |
 | `manager_manager.cpp` | 51/98 | 51.8/129.4 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **40.0%** |
 | `rus_prm.cpp` | 5/13 | 2.3/5.9 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **39.5%** |
 | `nor_first.cpp` | 6/12 | 2.2/5.9 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **37.9%** |
-| `month_ratings.cpp` | 3/8 | 0.7/1.9 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **37.7%** |
 | `ire_first.cpp` | 6/12 | 2.3/6.1 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **37.7%** |
 | `italy_rules.cpp` | 3/9 | 0.9/2.4 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **37.4%** |
 | `wc_south_american_league.cpp` | 6/17 | 3.4/9.0 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **37.3%** |
@@ -207,9 +208,10 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `fifa_confed.cpp` | 4/20 | 2.2/8.5 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **26.2%** |
 | `germany_rules.cpp` | 2/7 | 0.4/1.7 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **25.2%** |
 | `nir_lge_cup.cpp` | 5/16 | 1.6/6.2 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **25.1%** |
+| `year_ratings.cpp` | 2/14 | 1.2/4.9 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **24.7%** |
 | `ire_lge_cup.cpp` | 6/17 | 1.6/6.5 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **24.5%** |
 | `human_manager.cpp` | 20/61 | 6.2/25.5 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **24.4%** |
-| `Setup.cpp` | 10/107 | 28.1/120.6 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **23.3%** |
+| `Setup.cpp` | 13/107 | 28.5/120.6 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **23.6%** |
 | `nor_prm.cpp` | 4/10 | 1.4/6.1 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **22.7%** |
 | `discipline.cpp` | 22/38 | 8.7/38.6 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **22.5%** |
 | `world_club_champ.cpp` | 3/18 | 2.0/8.9 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **22.0%** |
@@ -217,6 +219,8 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `wel_lge_cup.cpp` | 6/17 | 1.4/6.3 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **21.7%** |
 | `wel_prm_cup.cpp` | 5/16 | 1.4/6.3 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **21.5%** |
 | `kor_league_cup.cpp` | 5/17 | 1.3/6.3 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **21.4%** |
+| `hall_of_fame.cpp` | 3/20 | 1.8/8.3 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **21.2%** |
+| `record_utils.cpp` | 8/32 | 2.5/12.0 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **20.5%** |
 | `kor_super_cup.cpp` | 1/6 | 0.4/2.0 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **20.2%** |
 | `goldcup.cpp` | 12/57 | 6.4/32.6 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **19.6%** |
 | `france_rules.cpp` | 2/10 | 0.5/2.5 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **18.6%** |
@@ -234,10 +238,9 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `bel_second.cpp` | 3/18 | 1.0/7.7 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **13.2%** |
 | `nor_cup.cpp` | 1/6 | 0.4/3.3 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **12.9%** |
 | `por_cup.cpp` | 1/7 | 0.4/3.4 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **12.4%** |
+| `award_manager.cpp` | 4/22 | 0.9/7.0 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **12.2%** |
 | `month_award.cpp` | 2/10 | 0.4/3.2 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **12.1%** |
-| `record_utils.cpp` | 6/32 | 1.4/12.0 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **11.6%** |
 | `hol_first.cpp` | 3/18 | 1.0/8.4 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **11.4%** |
-| `award_manager.cpp` | 1/22 | 0.6/7.0 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.9%** |
 | `pol_second.cpp` | 2/12 | 0.5/5.8 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.8%** |
 | `main.cpp` | 4/16 | 0.3/3.0 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.7%** |
 | `player_search.cpp` | 14/61 | 6.0/70.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.5%** |
@@ -245,10 +248,10 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `belgium_rules.cpp` | 1/10 | 0.3/3.5 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.4%** |
 | `utils.cpp` | 1/23 | 0.5/5.7 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.0%** |
 | `wc_europe_league.cpp` | 3/30 | 1.7/23.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **7.1%** |
+| `transfer_offer.cpp` | 4/27 | 1.0/15.2 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **6.4%** |
 | `file_screens.cpp` | 1/10 | 0.7/11.3 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **6.2%** |
 | `simulated_stats.cpp` | 1/19 | 0.3/5.5 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **5.9%** |
 | `Fine.cpp` | 2/19 | 0.9/15.9 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **5.7%** |
-| `transfer_offer.cpp` | 3/27 | 0.8/15.2 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **4.9%** |
 | `fog_of_war.cpp` | 4/34 | 0.6/12.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **4.9%** |
 | `printouts.cpp` | 2/20 | 0.9/27.2 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **3.4%** |
 | `ita_ser_c2a.cpp` | 1/13 | 0.5/17.2 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **3.0%** |
@@ -263,4 +266,4 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `library_without_asserts` | 1/243 | 0.3/205.5 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **0.1%** |
 | `arg_second.cpp` | 1/18 | 0.0/13.8 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **0.1%** |
 
-Os outros 137 arquivos ainda não têm rotina em Rust.
+Os outros 134 arquivos ainda não têm rotina em Rust.
