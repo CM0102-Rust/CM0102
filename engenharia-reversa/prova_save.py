@@ -302,7 +302,7 @@ def gravar(a, modo, nome=None):
 
 
 MOTOR = os.path.join(mutacoes.RAIZ, 'rust', 'src', 'motor.rs')
-LACO = '\n    ];\n    for i in 0..N {\n'  # o laco da instalacao dos desvios (a ancora do integrar.py)
+LACO = '\n    let nomes = NAMES;\n    for i in 0..N {\n'  # o laco da instalacao dos desvios (as tabelas viraram funcoes)
 
 
 def rotinas_da_leva(n):
