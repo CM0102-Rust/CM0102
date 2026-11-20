@@ -2,7 +2,7 @@
 //! mudar a tabela PROLOGOS do motor.rs. (início, tamanho até a próxima fronteira real, FNV-1a 64 no
 //! cm0102.exe original, FNV-1a 64 no cm0102-1080.exe). Ordenada pelo início (busca binária).
 
-pub const ASSINATURAS: [(usize, usize, u64, u64); 2723] = [
+pub const ASSINATURAS: [(usize, usize, u64, u64); 2733] = [
     (0x401000, 544, 0x07248056f27f191f, 0x07248056f27f191f),
     (0x4012e0, 1760, 0x86ea7ac579cbfed1, 0x86ea7ac579cbfed1),
     (0x4019c0, 240, 0x182cb3e580f9deb2, 0x182cb3e580f9deb2),
@@ -847,6 +847,9 @@ pub const ASSINATURAS: [(usize, usize, u64, u64); 2723] = [
     (0x58e220, 32, 0xbcf8a79f77e09ec8, 0xbcf8a79f77e09ec8),
     (0x58e240, 64, 0xb7749770f6287f5f, 0xb7749770f6287f5f),
     (0x591f80, 720, 0xe105fcd4d00fbad9, 0xe105fcd4d00fbad9),
+    (0x592250, 496, 0x621058dcc4cdf966, 0x621058dcc4cdf966),
+    (0x592510, 1296, 0x4259bbeda6c1b460, 0x4259bbeda6c1b460),
+    (0x592a20, 736, 0x0569d8fb37a4786d, 0x0569d8fb37a4786d),
     (0x592d00, 432, 0x359f3a19b2340991, 0x359f3a19b2340991),
     (0x592eb0, 592, 0x287d21af2fa46175, 0x287d21af2fa46175),
     (0x5931c0, 2224, 0x485a7e0cb841fa9d, 0x485a7e0cb841fa9d),
@@ -1969,6 +1972,9 @@ pub const ASSINATURAS: [(usize, usize, u64, u64); 2723] = [
     (0x78ec60, 288, 0xad03b62f286fc11f, 0xad03b62f286fc11f),
     (0x78ed80, 176, 0x2acee0dac51ed04f, 0x2acee0dac51ed04f),
     (0x78ee30, 496, 0xd537130b42d105d5, 0xd537130b42d105d5),
+    (0x78f020, 496, 0x48865da11c5992f5, 0x48865da11c5992f5),
+    (0x78f2e0, 1456, 0x86bb0f8f781c2d7f, 0x86bb0f8f781c2d7f),
+    (0x78f890, 768, 0x7fafc96ad634de5e, 0x7fafc96ad634de5e),
     (0x78fb90, 432, 0xe5382ca508a864cb, 0xe5382ca508a864cb),
     (0x78fd40, 576, 0x4cf74fd781878d38, 0x4cf74fd781878d38),
     (0x7909a0, 352, 0x6738b1ae7b71a9ab, 0x6738b1ae7b71a9ab),
@@ -2117,6 +2123,9 @@ pub const ASSINATURAS: [(usize, usize, u64, u64); 2723] = [
     (0x7ccd10, 640, 0x01a80bbd1017637c, 0x01a80bbd1017637c),
     (0x7ccf90, 416, 0x07203466827c9830, 0x07203466827c9830),
     (0x7cd830, 336, 0xcb28f3863d2b6306, 0xcb28f3863d2b6306),
+    (0x7cd980, 496, 0x8ef332a96f3f621a, 0x8ef332a96f3f621a),
+    (0x7cdc40, 1504, 0x0bb004842c538737, 0x0bb004842c538737),
+    (0x7ce220, 800, 0x06370dee0fdc218c, 0x06370dee0fdc218c),
     (0x7ce540, 480, 0x53c8cfc5ea620672, 0x53c8cfc5ea620672),
     (0x7ce720, 560, 0xaf745ba7b2b054df, 0xaf745ba7b2b054df),
     (0x7ce9e0, 3616, 0x63659e538e1efd0e, 0x63659e538e1efd0e),
@@ -2129,6 +2138,7 @@ pub const ASSINATURAS: [(usize, usize, u64, u64); 2723] = [
     (0x7d1520, 384, 0xaea201f813eaf8e7, 0xaea201f813eaf8e7),
     (0x7d16a0, 192, 0x8a5bc93bab1c3477, 0x8a5bc93bab1c3477),
     (0x7d1760, 448, 0x859c1d64f591f0c6, 0x859c1d64f591f0c6),
+    (0x7d2e40, 480, 0xcb519312fcac0f11, 0xcb519312fcac0f11),
     (0x7d30f0, 368, 0x32adbc2b186926ab, 0x32adbc2b186926ab),
     (0x7d3260, 560, 0x01ec8e069744d958, 0x01ec8e069744d958),
     (0x7d3490, 416, 0x45a423af3d18b107, 0x45a423af3d18b107),

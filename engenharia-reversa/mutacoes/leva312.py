@@ -1,0 +1,9 @@
+# Mutações da 312a leva (itens mwe_18, mwe_19, mwe_20, mwe_21). Uso: python mutacoes.py mutacoes\leva312.py --carreira 2002-06-01
+MUTACOES = [
+    ('mwe18_primeira_rodada_depois', 'cql12r((0xf, 3, 0, 5), (0x1d, 3, 0, 5, 1, 0), 0x1e, (0, 3, 0), 4, (0x40, 0x20, 0x40, 0), (0, 1, 0), (0, 0xffffffff, 0)), // mwe18: the first round', 'cql12r((0xf, 3, 0, 5), (6, 4, 0, 5, 1, 0), 0x1e, (0, 3, 0), 4, (0x40, 0x20, 0x40, 0), (0, 1, 0), (0, 0xffffffff, 0)), // mutation: 6 May', 'mwe_18 finnish cup rounds'),
+    ('mwe18_quinto_antes', '                1 => p > 4,', '                1 => p > 3,', 'mwe_18 finnish cup entrants'),
+    ('mwe19_primeira_rodada_depois', 'cql12r((7, 3, 0, 2), (5, 4, 0, 2, 2, 0), 0xa, (0, 0x403, 0), 4, (0x80, 0x40, 0x80, 0), (0, 1, 0), (0, 0xffffffff, 0)), // mwe19: the first round', 'cql12r((7, 3, 0, 2), (0xc, 4, 0, 2, 2, 0), 0xa, (0, 0x403, 0), 4, (0x80, 0x40, 0x80, 0), (0, 1, 0), (0, 0xffffffff, 0)), // mutation: 12 May', 'mwe_19 norwegian cup rounds'),
+    ('mwe19_reservas_entram', 'exe::crt_strstr(club + club::SHORT_NAME, TWO) == 0 { // mwe19: the reserve sides left out', 'true { // mutation: the reserve sides in', 'mwe_19 norwegian cup entrants'),
+    ('mwe20_primeira_rodada_depois', 'cql12r((0xa, 8, 0, 4), (0x13, 8, 0, 6, 1, 0), 0x14, (0, 2, 3), 4, (0x80, 0x40, 0x80, 0), (1, 1, 3), (0, 0xffffffff, 0)), // mwe20: the first round', 'cql12r((0xa, 8, 0, 4), (0x1a, 8, 0, 6, 1, 0), 0x14, (0, 2, 3), 4, (0x80, 0x40, 0x80, 0), (1, 1, 3), (0, 0xffffffff, 0)), // mutation: 26 September', 'mwe_20 portuguese cup rounds'),
+    ('mwe20_menos_de_baixo', 'if wanted && 6 * k < 0x300 && portuguese_cup_takes(club, &mut parent) { // mwe20: up to 128 lower clubs', 'if wanted && 6 * k < 0x2d0 && portuguese_cup_takes(club, &mut parent) { // mutation: up to 120', 'mwe_20 portuguese cup entrants'),
+]
