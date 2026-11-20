@@ -3260,6 +3260,11 @@ pub(crate) mod exe {
         f()
     }
     #[inline(always)]
+    pub(crate) unsafe fn korleaguecup_create_group_b_stage(a0: impl Addr, a1: u32) -> i32 {
+        let f: unsafe extern "thiscall" fn(usize, u32) -> i32 = core::mem::transmute(FN_KORLEAGUECUP_CREATE_GROUP_B_STAGE);
+        f(a0.addr(), a1)
+    }
+    #[inline(always)]
     pub(crate) unsafe fn korleaguecup_create_knockout_stage(a0: impl Addr) {
         let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_KORLEAGUECUP_CREATE_KNOCKOUT_STAGE);
         f(a0.addr())

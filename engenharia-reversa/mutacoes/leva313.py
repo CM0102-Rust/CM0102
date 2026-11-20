@@ -1,0 +1,7 @@
+# Mutações da 313a leva (itens mwf_20, mwf_21, mwf_22, mwf_23). Uso: python mutacoes.py mutacoes\leva313.py --carreira 2002-06-01
+MUTACOES = [
+    ('mwf20_primeira_rodada_antes', 'cql12r((0x15, 9, 0, 0), (0x1e, 9, 0, 2, 2, 0), 0x1e, (0, 0x83, 0), 4, (0x20, 0x10, 0x20, 0), (0, 1, 3), (0, 0xffffffff, 0)), // mwf20: the first round', 'cql12r((0x15, 9, 0, 0), (0x17, 9, 0, 2, 2, 0), 0x1e, (0, 0x83, 0), 4, (0x20, 0x10, 0x20, 0), (0, 1, 3), (0, 0xffffffff, 0)), // mutation: 23 October', 'mwf_20 korean fa cup rounds'),
+    ('mwf20_semente_k_league', 'write_u8(this.team_table() + 6 * k as usize + 4, 0); // mwf20: the K League seed', 'write_u8(this.team_table() + 6 * k as usize + 4, 1); // mutation: seed 1', 'mwf_20 korean fa cup entrants'),
+    ('mwf21_jogo_depois', 'cql12r((1, 1, 0, 5), (0xa, 2, 0, 6, 1, 0), 0, (0, 0x83, 0), 6, (2, 1, 2, 0), (0, 1, 0), (0, 0, 0)), // mwf21: the Korean Super Cup match', 'cql12r((1, 1, 0, 5), (0x11, 2, 0, 6, 1, 0), 0, (0, 0x83, 0), 6, (2, 1, 2, 0), (0, 1, 0), (0, 0, 0)), // mutation: 17 March', 'mwf_21 korean super cup rounds'),
+    ('mwf21_sem_campeao_da_liga', 'select_league_and_cup_winners(this, KEY_CLUB_COMP_KOREAN_LEAGUE, KEY_CLUB_COMP_KOREAN_FA_CUP, KEY_CLUB_COMP_KOREAN_FA_CUP, KOR_SUPER_CUP_FILE, [0xc1, 0xef]) // mwf21: champion and cup winner', 'select_league_and_cup_winners(this, KEY_CLUB_COMP_KOREAN_LEAGUE_CUP, KEY_CLUB_COMP_KOREAN_FA_CUP, KEY_CLUB_COMP_KOREAN_FA_CUP, KOR_SUPER_CUP_FILE, [0xc1, 0xef]) // mutation: the League Cup winner', 'mwf_21 korean super cup clubs'),
+]

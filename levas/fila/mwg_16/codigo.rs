@@ -175,9 +175,10 @@ pub(crate) unsafe fn shortlist_scope_has_manager(this: usize, s: usize) -> bool 
 pub(crate) unsafe extern "thiscall" fn award_shortlist_announce(this: usize, date: usize, a: u32, b: u32) {
     use award_shortlist_fields as asl;
     exe::crt_qsort(read_usize(this + asl::ENTRIES), read_i16(this + asl::COUNT) as i32 as u32, asl::ENTRY_SIZE as u32, asl::FN_AWARD_SHORTLIST_COMPARE_BY_NAME);
-    let add: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x4147f0usize);
+    // AWARD_MANAGER::add_shortlist returns a 16-bit index (some paths write only ax)
+    let add: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(0x4147f0usize);
     let index = add(read_usize(G_AWARD_MANAGER), this);
-    write_u16(this + asl::MANAGER_INDEX, index as u16);
+    write_u16(this + asl::MANAGER_INDEX, index);
     let mut copy = [0u32; 2];
     exe::date_operator_3d(this + asl::DATE, copy.as_mut_ptr() as usize, date);
     let mut news = [0u32; 0x38];

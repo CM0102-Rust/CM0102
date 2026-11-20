@@ -1,0 +1,3 @@
+NAO PROVADO NO JOGO (leitor sma, 20/11/2026): compila com o motor atual (fa1c236de + a copia de trabalho, copia propria com sma_9 e sma_10, 46 avisos = os de sempre; a mutacao aplicada tambem compila, ancora 1 ocorrencia); prologo e corpo iguais no cm0102.exe e no cm0102-1080.exe; os argumentos de cada um dos ~45 formatos conferidos por script sobre a desmontagem (pushes e lea [esp+k] de cada bloco ate a 0x66f4e0).
+Comparador compare_text_writer (texto, vinculos e gerador); a mutacao (vinculo do clube) e acusada pela comparacao (aceito em 12/11/2026).
+Falta: comparacao ENG ate a data da primeira saida de tecnico com noticia (demissao, pedido de demissao ou aposentadoria; o corpo de seleção so com seleções carregadas) e Rust x2 com detector. Sem LIGAS.
