@@ -135,6 +135,11 @@ pub(crate) mod exe {
         f(a0.addr())
     }
     #[inline(always)]
+    pub(crate) unsafe fn award_manager_add_shortlist(a0: impl Addr, a1: impl Addr) -> u16 {
+        let f: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(FN_AWARD_MANAGER_ADD_SHORTLIST);
+        f(a0.addr(), a1.addr())
+    }
+    #[inline(always)]
     pub(crate) unsafe fn award_raise_winner_reputation(a0: impl Addr, a1: impl Addr, a2: u32, a3: u32, a4: u32) {
         let f: unsafe extern "C" fn(usize, usize, u32, u32, u32) = core::mem::transmute(FN_AWARD_RAISE_WINNER_REPUTATION);
         f(a0.addr(), a1.addr(), a2, a3, a4)
