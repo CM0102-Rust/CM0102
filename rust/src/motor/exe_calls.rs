@@ -210,6 +210,16 @@ pub(crate) mod exe {
         f(a0.addr(), a1.addr())
     }
     #[inline(always)]
+    pub(crate) unsafe fn belthird_create_group_b_stage(a0: impl Addr) {
+        let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_BELTHIRD_CREATE_GROUP_B_STAGE);
+        f(a0.addr())
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn belthird_fill_league_table(a0: impl Addr) -> u32 {
+        let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_BELTHIRD_FILL_LEAGUE_TABLE);
+        f(a0.addr())
+    }
+    #[inline(always)]
     pub(crate) unsafe fn bracup_build_team_table(a0: impl Addr) -> i32 {
         let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_BRACUP_BUILD_TEAM_TABLE);
         f(a0.addr())

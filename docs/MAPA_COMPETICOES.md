@@ -2,13 +2,13 @@
 
 Gerado por `python engenharia-reversa/competicoes.py` (o mapa de funções de maxevans60, CC BY 4.0, e a cobertura de uma carreira com as 8 ligas `ENG ESP ITA FRA BRA JPN AUS USA` até 2002-06-01, `levas/competicoes/`; as rotinas já em Rust não levam contador). "falta" = chamada ao menos uma vez nessa carreira e ainda não está em Rust (a lista para `candidatos.py --competicoes` fica em `docs/cobertura_competicoes.txt`).
 
-**Total:** 2695 funções, 1475.7 KB; em Rust 1265 (55.0% dos bytes); faltam 45 (74.2 KB).
+**Total:** 2695 funções, 1475.7 KB; em Rust 1289 (55.7% dos bytes); faltam 45 (74.2 KB).
 
 | Grupo | Funções | KB | Rust | Falta (KB) | Progresso |
 |---|---|---|---|---|---|
 | Base: Liga, Copa, comp, calendário, sorteios | 396 | 272.6 | 267 | 12 (45.1) | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **59.9%** |
-| Ligas nacionais (formato de cada divisão) | 1048 | 647.8 | 511 | 1 (3.8) | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **59.8%** |
-| Copas nacionais | 526 | 228.3 | 234 | 11 (4.9) | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **57.4%** |
+| Ligas nacionais (formato de cada divisão) | 1048 | 647.8 | 528 | 1 (3.8) | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **60.8%** |
+| Copas nacionais | 526 | 228.3 | 241 | 11 (4.9) | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **59.4%** |
 | Competições europeias | 221 | 98.2 | 114 | 0 (0.0) | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **64.3%** |
 | Continentais fora da Europa | 203 | 105.2 | 54 | 10 (9.6) | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **27.8%** |
 | Copa do Mundo e eliminatórias | 158 | 92.4 | 37 | 11 (10.7) | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **27.8%** |
@@ -150,6 +150,6 @@ Só os arquivos com alguma rotina que falta; ordem: grupo, depois o que falta.
 | `usa_rules.cpp` | rules | 2 | 1 | 0 (0.0) |
 | `wales_rules.cpp` | rules | 2 | 2 | 0 (0.0) |
 
-**Não rodam nesta carreira (15 arquivos):** competições de nações fora das 8 ligas, ou que só começam depois de 2002-06-01. Para elas é preciso outra carreira (outras ligas ou mais longa).
+**Não rodam nesta carreira (13 arquivos):** competições de nações fora das 8 ligas, ou que só começam depois de 2002-06-01. Para elas é preciso outra carreira (outras ligas ou mais longa).
 
-`arg_prm.cpp`, `bel_third.cpp`, `eng_conf.cpp`, `eng_fa_trophy.cpp`, `ger_regional.cpp`, `hol_cup.cpp`, `ita_ser_c2b.cpp`, `ita_ser_c2c.cpp`, `japan_rules.cpp`, `mini_cup.cpp`, `mini_league.cpp`, `por_second_b.cpp`, `spa_second_b.cpp`, `swe_cup.cpp`, `swe_second.cpp`
+`arg_prm.cpp`, `eng_conf.cpp`, `eng_fa_trophy.cpp`, `ger_regional.cpp`, `ita_ser_c2b.cpp`, `ita_ser_c2c.cpp`, `japan_rules.cpp`, `mini_cup.cpp`, `mini_league.cpp`, `por_second_b.cpp`, `spa_second_b.cpp`, `swe_cup.cpp`, `swe_second.cpp`
