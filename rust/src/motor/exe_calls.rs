@@ -7185,6 +7185,16 @@ pub(crate) mod exe {
         f(a0.addr(), a1.addr(), a2)
     }
     #[inline(always)]
+    pub(crate) unsafe fn tursecondb_create_group_stage(a0: impl Addr, a1: u32) {
+        let f: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_TURSECONDB_CREATE_GROUP_STAGE);
+        f(a0.addr(), a1)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn tursecondb_create_table(a0: impl Addr) -> u32 {
+        let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_TURSECONDB_CREATE_TABLE);
+        f(a0.addr())
+    }
+    #[inline(always)]
     pub(crate) unsafe fn uefacup_build_entrants(a0: impl Addr) -> i32 {
         let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_UEFACUP_BUILD_ENTRANTS);
         f(a0.addr())
