@@ -55,7 +55,7 @@ def cast_valor(v, t):
     """`v as t` for a setter: a bare literal gets the unsigned suffix of t's width (`0xffffu16 as i16`: a literal
     above i16::MAX typed as i16 does not compile, 10/11/2026); anything else `(v) as t`."""
     larg = {'i8': 'u8', 'i16': 'u16', 'i32': 'u32', 'i64': 'u64'}
-    if re.fullmatch(r'0x[0-9a-f]+|\d+', v.strip()) and t in larg:
+    if re.fullmatch(r'0x[0-9a-f_]+|[\d_]+', v.strip()) and t in larg:  # with `_` too (0xffff_ffff, 21/11/2026)
         return '%s%s as %s' % (v.strip(), larg[t], t)
     return '(%s) as %s' % (v, t)
 
