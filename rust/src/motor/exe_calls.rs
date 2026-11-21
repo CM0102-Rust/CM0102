@@ -3045,6 +3045,11 @@ pub(crate) mod exe {
         f(a0.addr(), a1)
     }
     #[inline(always)]
+    pub(crate) unsafe fn injury_get_type_name_gender(a0: impl Addr, a1: u32) -> u8 {
+        let f: unsafe extern "thiscall" fn(usize, u32) -> u8 = core::mem::transmute(FN_INJURY_GET_TYPE_NAME_GENDER);
+        f(a0.addr(), a1)
+    }
+    #[inline(always)]
     pub(crate) unsafe fn injury_player_in_close_season(a0: impl Addr) -> u32 {
         let f: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_INJURY_PLAYER_IN_CLOSE_SEASON);
         f(a0.addr())

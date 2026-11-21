@@ -1,6 +1,4 @@
 # ordem da fila (fila.py); um item por linha
-sma_9
-sma_10
 mwa_23
 mwa_25
 mwa_24
@@ -10,3 +8,16 @@ mwb_22
 mwb_23
 mwb_24
 mwb_25
+gra_11
+gra_12
+gra_13
+gra_14
+gra_1
+gra_15
+gra_16
+gra_24
+gra_18
+gra_17
+gra_21
+gra_23
+gra_22
