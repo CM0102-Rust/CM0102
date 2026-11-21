@@ -5,6 +5,9 @@ mutacao sma9_tempo_exato      0s ramo "sma_9 light training body" nao rodou na b
 mutacao sma10_vinculo_do_clube  216s ACUSADA: parou em 2002-151, 2397804667 sorteios, impressao e9db46f89de2faae, partidas 19451/c28a95c62b1add13, banco c514591b0a32aae8
 restaurado e recompilado
 pool nao paginado 2.35 GB, paginado 5.24 GB, RAM livre 6.1 GB, comprometida 56.1/79.1 GB
+nota depois da publicacao (21/11): as duas mutacoes do sma_9 puladas por lacuna (o ramo nao roda na carreira em modo Rust) foram confirmadas pela comparacao ENG ate 2002-01-01 na bancada 4, onde o ramo roda:
+mutacao sma9_tempo_exato   2411s comparando ate 2002-01-01: engine: DIVERGENCE injury_write_recovery_news_text(body 1): o texto do prazo difere
+nota: sma9_nome_com_artigo 3295s comparando ate 2002-01-01: 0 divergencias -- o ramo do nome com artigo nao rodou na janela; segue como lacuna medida
 === JOGO REAL
     pool nao paginado 2.26 -> 2.32 GB, paginado 5.32 -> 5.43 GB
 execucao 1: parou em 2002-000, 1367296045 sorteios, impressao e39bebee1a8c2765, partidas 10247/a690e542a0190f49, banco 1b7cf5b2217e3eca, 2921 s
