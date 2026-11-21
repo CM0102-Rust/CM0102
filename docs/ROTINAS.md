@@ -5075,3 +5075,13 @@ Mutações: `mutacoes/leva313.py` (4, pela carreira até 2002-06-01, confirmando
 | `construct_ruling_body()` | 0x7e7760 | thiscall, ret 4 | ruling_body.cpp: o construtor-base de todo órgão regulador: a vtable dele, uma lista nova e nenhuma entrada; de um jogo salvo, o estado gravado (falhando, a caixa da linha 0x36) |
 
 Mutações: `mutacoes/leva314.py` (6, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 6 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (7df68dda). Carreiras até 2002-06-01: Rust ×2 3da6a365, original 6b815f9c (registrada; não barra a leva desde 31/10/2026). Detector de lixo: igual.
+
+### Simulação, 315ª leva — as viradas da Copa Interamericana e do Campeonato de Clubes da Oceania e a sede alternada da Oceania (oficial em 21/11/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `inter_amer_cup_start_new_season()` | 0x632910 | thiscall, ret 0 | inter_amer_cup.cpp: a virada da Copa Interamericana: o molde das viradas de copa (tabelas liberadas, temporada arquivada, ano + 1, os clubes, a tabela de rodadas e a árvore com as caixas nas linhas 0x164, 0x16b e 0x172, e as posições previstas) |
+| `oceania_club_champ_start_new_season()` | 0x797d60 | thiscall, ret 0 | oceania_club_champ.cpp: o Campeonato de Clubes da Oceania é a cada 2 anos: na virada a tabela e as datas das rodadas liberadas, a temporada arquivada, as fases destruídas, o ano + 2, a fase atual −1, o sorteio por fazer, a sede alternada entre a Austrália e a Nova Zelândia e as regras de novo |
+| `alternate_oceania_club_champ_host()` | 0x5face0 | thiscall, ret 0 | host_country.cpp: a sede do Campeonato de Clubes da Oceania alterna a cada edição: em cada entrada dele na tabela de sedes, a Austrália vira a Nova Zelândia e qualquer outra sede vira a Austrália |
+
+Mutações: `mutacoes/leva315.py` (1, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 1 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (798998b1). Carreiras até 2002-06-01: Rust ×2 9f530e7a, original bd0bb86f (registrada; não barra a leva desde 31/10/2026). Detector de lixo: igual.

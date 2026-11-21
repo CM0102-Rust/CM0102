@@ -5077,3 +5077,13 @@ Mutations: `mutacoes/leva313.py` (4, by the career to 2002-06-01, confirming the
 | `construct_ruling_body()` | 0x7e7760 | thiscall, ret 4 | ruling_body.cpp: the base constructor of every ruling body: its vtable, a new list and no entries; from a saved game, its saved state (on failure, the box at line 0x36) |
 
 Mutations: `mutacoes/leva314.py` (6, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 6 caught.  Real game comparing to 2002-01-01: 0 divergences (7df68dda). Careers to 2002-06-01: Rust ×2 3da6a365, original 6b815f9c (recorded; does not block the batch since 31/10/2026). Garbage detector: equal.
+
+### Simulation, 315th batch — the turnovers of the Inter-American Cup and the Oceania Club Championship and the alternating Oceania host (official on 2026-11-21)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `inter_amer_cup_start_new_season()` | 0x632910 | thiscall, ret 0 | inter_amer_cup.cpp: the Inter-American Cup's turnover: the cup turnover template (tables freed, season archived, year + 1, the clubs, the round table and the tree with the boxes at lines 0x164, 0x16b and 0x172, and the predicted positions) |
+| `oceania_club_champ_start_new_season()` | 0x797d60 | thiscall, ret 0 | oceania_club_champ.cpp: the Oceania Club Championship is every 2 years: at the turnover the table and the round dates freed, the season archived, the stages destroyed, the year + 2, the current stage −1, the draw still to do, the host alternated between Australia and New Zealand and the rules again |
+| `alternate_oceania_club_champ_host()` | 0x5face0 | thiscall, ret 0 | host_country.cpp: the Oceania Club Championship host alternates every edition: in each of its entries in the host table, Australia becomes New Zealand and any other host becomes Australia |
+
+Mutations: `mutacoes/leva315.py` (1, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 1 caught.  Real game comparing to 2002-01-01: 0 divergences (798998b1). Careers to 2002-06-01: Rust ×2 9f530e7a, original bd0bb86f (recorded; does not block the batch since 31/10/2026). Garbage detector: equal.

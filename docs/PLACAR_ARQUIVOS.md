@@ -2,7 +2,7 @@
 
 Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os arquivos-fonte do mapa de [maxevans60](https://github.com/maxevans60/cm0102-function-map) (CC BY 4.0). Uma função conta quando o início dela é desviado para Rust (`Prologue` em `rust/src/motor.rs`). O placar do motor de partidas, pelas nossas fronteiras, fica em `PLACAR.md`.
 
-**Exe inteiro:** 2768 de 6709 funções, 2229.7 de 5528.0 KB (**40.33%**) · 266 de 393 arquivos com rotinas em Rust
+**Exe inteiro:** 2771 de 6709 funções, 2230.3 de 5528.0 KB (**40.35%**) · 266 de 393 arquivos com rotinas em Rust
 
 | Arquivo | Funções | KB | Progresso |
 |---|---|---|---|
@@ -76,6 +76,7 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `usa_open_cup.cpp` | 4/6 | 2.4/2.6 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **91.1%** |
 | `den_cup.cpp` | 4/7 | 3.0/3.3 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **91.0%** |
 | `fra_lge_cup.cpp` | 4/7 | 2.8/3.1 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **91.0%** |
+| `inter_amer_cup.cpp` | 4/6 | 2.3/2.6 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **90.9%** |
 | `staff_contracts.cpp` | 21/45 | 36.3/39.9 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **90.8%** |
 | `eng_cc_cup.cpp` | 5/8 | 3.8/4.2 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **90.7%** |
 | `ire_super_cup.cpp` | 6/8 | 2.1/2.4 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **90.7%** |
@@ -128,9 +129,9 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `eng_fa_cup.cpp` | 5/12 | 5.8/6.9 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **82.9%** |
 | `ita_c_cup.cpp` | 12/17 | 6.0/7.2 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **82.8%** |
 | `aus_nsl.cpp` | 10/16 | 4.7/5.7 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **82.6%** |
+| `host_country.cpp` | 8/12 | 5.9/7.1 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **82.4%** |
 | `conmebol_liber.cpp` | 11/16 | 4.8/5.9 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **81.9%** |
 | `korea_rules.cpp` | 1/3 | 0.3/0.3 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **81.8%** |
-| `host_country.cpp` | 7/12 | 5.8/7.1 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **81.5%** |
 | `turkey_rules.cpp` | 2/3 | 0.5/0.6 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **80.6%** |
 | `fix_man.cpp` | 31/37 | 17.9/22.4 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **79.9%** |
 | `northern_ireland_rules.cpp` | 3/4 | 0.5/0.6 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **79.5%** |
@@ -138,11 +139,10 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `eng_prm.cpp` | 5/11 | 6.5/8.3 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **78.9%** |
 | `asia_cup_winner.cpp` | 9/17 | 5.7/7.2 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **78.7%** |
 | `conmebol_merc.cpp` | 10/16 | 4.9/6.3 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **78.1%** |
+| `oceania_club_champ.cpp` | 11/16 | 4.8/6.2 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **77.9%** |
 | `bel_first.cpp` | 5/10 | 3.7/4.7 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **77.2%** |
 | `nir_first.cpp` | 7/12 | 4.5/5.9 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **77.1%** |
-| `oceania_club_champ.cpp` | 10/16 | 4.7/6.2 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **75.6%** |
 | `ger_first.cpp` | 6/12 | 7.3/9.8 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **74.8%** |
-| `inter_amer_cup.cpp` | 3/6 | 1.9/2.6 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **74.4%** |
 | `spa_first.cpp` | 8/15 | 8.7/11.7 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **74.2%** |
 | `scotland_rules.cpp` | 3/5 | 0.7/0.9 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **74.1%** |
 | `bra_nat_first.cpp` | 11/16 | 7.0/9.5 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **74.0%** |
