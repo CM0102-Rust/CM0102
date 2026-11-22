@@ -615,7 +615,7 @@ pub(crate) unsafe extern "thiscall" fn construct_ita_ser_a(this: usize, year: u3
 pub(crate) unsafe fn compare_italian_constructor(name: &str, this: League, year: u32, record: usize, p: &ItalianDivision, original: impl FnOnce() -> usize) -> usize {
     let loaded = league_will_load_saved_state(record);
     let r = original();
-    let mut ok = r == this.addr() && read_usize(this.addr()) == p.vtabela && (this.year() as u16) == year as u16
+    let mut ok = r == this.addr() && read_usize(this.addr()) == p.vtabela && built_year_ok(this.year() as u16, year as u16)
         && this.competition().addr() == record && this.discipline_rule() == discipline_rule::ITALY_LEAGUE;
     if this.stage_index() == stage_index::MAIN && this.comp_stats() != 0 && !loaded {
         ok = ok && this.stage_count() == p.stages as usize && (this.stages() != 0) == (p.stages != 0);

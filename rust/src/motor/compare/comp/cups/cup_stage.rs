@@ -22,7 +22,7 @@ pub(crate) unsafe extern "thiscall" fn compare_construct_cup_stage(this: usize, 
     // the tree (called at the end) rewrites parts of the round table and of the list (in the 06/11 comparison the two
     // differed from what the constructor writes): checks the fixed fields, the built table and the set of clubs in the list
     let _ = &template_before;
-    let ok = r == this.addr() && this.team_count() as u16 == n as u16 && this.round_count() as u16 == rounds as u16 && this.year() as u16 == year as u16
+    let ok = r == this.addr() && this.team_count() as u16 == n as u16 && this.round_count() as u16 == rounds as u16 && built_year_ok(this.year() as u16, year as u16)
         && t != 0 && l != 0 && {
             let mut a: Vec<usize> = (0..plan.len()).map(|i| read_usize(l + i * 6)).collect();
             let mut b: Vec<usize> = plan.iter().map(|x| x.0).collect();

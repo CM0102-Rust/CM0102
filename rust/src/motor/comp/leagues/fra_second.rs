@@ -136,7 +136,7 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_second(this: usize, year: u
 pub(crate) unsafe fn compare_division_league_ctor(name: &str, this: League, year: u32, record: usize, p: &LeagueDivision, original: impl FnOnce() -> usize) -> usize {
     let loaded = league_will_load_saved_state(record);
     let r = original();
-    let mut ok = r == this.addr() && read_usize(this.addr()) == p.vtabela && (this.year() as u16) == year as u16
+    let mut ok = r == this.addr() && read_usize(this.addr()) == p.vtabela && built_year_ok(this.year() as u16, year as u16)
         && this.competition().addr() == record && this.discipline_rule() == p.discipline;
     if this.stage_index() == stage_index::MAIN && this.comp_stats() != 0 && !loaded {
         ok = ok && this.stage_count() == 0 && this.stages() == 0;

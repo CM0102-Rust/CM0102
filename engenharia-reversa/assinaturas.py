@@ -72,6 +72,18 @@ def tabela():
     # original que o 1080 deixou de chamar (a chamada vai à entrada nova; 0x601a40) vale só no original. Uma não corta a
     # faixa da outra (nunca ficam desviadas juntas no mesmo exe): a da original vai até a próxima fronteira real.
     so1080 = {e for e, bs in pro.items() if orig(e, len(bs)) != bs and r1080(e, len(bs)) == bs}
+    # each prologue must end on an instruction boundary: the trampoline copies it whole, and a cut instruction crashes
+    # the original when the comparer calls it (0x87dd80 took 7 of the 8 bytes of `push -1; mov eax, fs:[0]`, 22/11/2026)
+    import capstone
+    md = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_32)
+    for e, bs in pro.items():
+        ler = r1080 if e in so1080 else orig
+        fim_ins = 0
+        for ins in md.disasm(ler(e, 32), e):
+            if fim_ins >= len(bs):
+                break
+            fim_ins += ins.size
+        assert fim_ins == len(bs), 'prologo de %#x: %d bytes, mas a instrucao termina em %d' % (e, len(bs), fim_ins)
     so_orig = {}
     for e in so1080:
         for site in chamadas_para(r1080, e):

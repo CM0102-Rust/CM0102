@@ -132,7 +132,7 @@ pub(crate) unsafe extern "thiscall" fn construct_eng_prm(this: usize, year: u32,
 pub(crate) unsafe fn compare_english_constructor(name: &str, this: League, year: u32, record: usize, p: &EnglishDivision, original: impl FnOnce() -> usize) -> usize {
     let loaded = league_will_load_saved_state(record);
     let r = original();
-    let mut ok = r == this.addr() && read_usize(this.addr()) == p.vtable && (this.year() as u16) == year as u16
+    let mut ok = r == this.addr() && read_usize(this.addr()) == p.vtable && built_year_ok(this.year() as u16, year as u16)
         && this.competition().addr() == record && this.discipline_rule() == discipline_rule::ENGLAND;
     if let Some((c, s)) = p.stadium {
         ok = ok && this.required_capacity() == c && this.required_seats() == s;

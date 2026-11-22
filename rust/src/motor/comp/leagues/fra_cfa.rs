@@ -433,7 +433,7 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_cfa(this: usize, year: u32)
 /// record and no table left (+0x3e = 0, +0xb1 = 0).
 pub(crate) unsafe fn compare_construct_group_league(name: &str, this: League, year: u32, p: &BackgroundLeague, original: impl FnOnce() -> usize) -> usize {
     let r = original();
-    let ok = r == this.addr() && read_usize(this.addr()) == p.vtabela && (this.year() as u16) == year as u16
+    let ok = r == this.addr() && read_usize(this.addr()) == p.vtabela && built_year_ok(this.year() as u16, year as u16)
         && this.discipline_rule() == discipline_rule::NONE && this.competition().addr() == comp_record_of_key(p.competition)
         && this.table() == 0;
     SCOREBOARD.record(ok, || format!("{}({:#x}): returned {:#x}, vtable {:#x}, +4 = {:#x}, +0xb1 = {:#x}", name, this.addr(), r, read_usize(this.addr()), this.competition().addr(), this.table()));

@@ -3037,7 +3037,7 @@ routines! {
     Prologue { address: 0x870700, bytes: &[0x6a, 0xff, 0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => staff_screens_build_profile_screen, compare_staff_screens_build_profile_screen;
     Prologue { address: 0x87cd90, bytes: &[0x6a, 0xff, 0x68, 0xf6, 0x2e, 0x96, 0x00] } => staff_screens_draw_contract_tab, compare_staff_screens_draw_contract_tab;
     Prologue { address: 0x87a510, bytes: &[0x6a, 0xff, 0x68, 0xd6, 0x2e, 0x96, 0x00] } => staff_screens_draw_profile_tab, compare_staff_screens_draw_profile_tab;
-    Prologue { address: 0x87dd80, bytes: &[0x6a, 0xff, 0x64, 0xa1, 0x00, 0x00, 0x00] } => staff_screens_draw_transfer_tab, compare_staff_screens_draw_transfer_tab;
+    Prologue { address: 0x87dd80, bytes: &[0x6a, 0xff, 0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => staff_screens_draw_transfer_tab, compare_staff_screens_draw_transfer_tab;
     Prologue { address: 0x8857b0, bytes: &[0x8a, 0x41, 0x44, 0xc3, 0x90] } => staff_screens_contract_morale, compare_staff_screens_contract_morale;
     Prologue { address: 0x8857c0, bytes: &[0x8a, 0x41, 0x3f, 0xc3, 0x90] } => staff_screens_contract_matches_left_out, compare_staff_screens_contract_matches_left_out;
     Prologue { address: 0x8857d0, bytes: &[0x8a, 0x41, 0x4f, 0xc0, 0xe8, 0x04] } => staff_screens_contract_squad_status, compare_staff_screens_contract_squad_status;
@@ -16234,8 +16234,8 @@ const SQUAD_LIST_SORT_CLUB: usize = 0xad9db0;
 /// The rest of the sort context (0xadab33 the name style byte, 0xadab34 the reserves flag, 0xadab38 the team sheet,
 /// 0xadab3c the club or its linked side, 0xadab44 the fixture, 0xadab4a an option byte).
 const SQUAD_LIST_SORT_CONTEXT: usize = 0xadab33;
-/// The current screen's parameter block, kept for the comparators (0xadadf0).
-const SQUAD_LIST_SORT_PARAMS: usize = 0xadadf0;
+/// The manager of the current screen slot (screen manager +0x7d6 of the slot), kept for the comparators (0xadadf0).
+const SQUAD_LIST_SORT_MANAGER: usize = 0xadadf0;
 /// A team sheet: two TEAM blocks of 0x625 bytes (the club whose id is at +0 first), each with 20 players of 73 bytes
 /// from +0x190 (the player id at +0).
 const TEAM_SHEET_BLOCK: usize = 0x625;
@@ -16474,7 +16474,8 @@ pub(crate) unsafe extern "C" fn build_filtered_sorted_squad_list(club: usize, re
     write_u8(0xad9db5, opt5 as u8);
     write_u32(0xadab44, fixture as u32);
     let slot = read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize;
-    write_usize(SQUAD_LIST_SORT_PARAMS, read_usize((G_SCREEN_MANAGER as isize + screen_manager::PARAM_BLOCK as isize + slot * 0x300) as usize));
+    // the slot's manager, [0xb74c26 + slot * 0x300] (0x484618): screen manager +0x7d6, not the parameter block
+    write_usize(SQUAD_LIST_SORT_MANAGER, read_usize((G_SCREEN_MANAGER as isize + MENUBAR_SLOT_MANAGER as isize + slot * 0x300) as usize));
     let arr = kept.as_mut_ptr() as usize;
     let cmp = squad_list_comparator(sort_flags, club.addr(), sort_variant);
     if cmp != 0 {
@@ -16499,7 +16500,7 @@ pub(crate) unsafe extern "C" fn build_filtered_sorted_squad_list(club: usize, re
 /// players topped up and a foreigner removed from a national squad by the first run are not undone (the second run
 /// finds them done).
 unsafe fn compare_squad_list(name: &str, list: usize, original: impl FnOnce() -> u32, rust: impl FnOnce() -> u32) -> u32 {
-    let reg = [(SQUAD_LIST_SORT_CLUB, 8usize), (SQUAD_LIST_SORT_CONTEXT, 0x18), (SQUAD_LIST_SORT_PARAMS, 4)];
+    let reg = [(SQUAD_LIST_SORT_CLUB, 8usize), (SQUAD_LIST_SORT_CONTEXT, 0x18), (SQUAD_LIST_SORT_MANAGER, 4)];
     let (a, b, same, _, _) = crate::comparison::side_by_side(&reg, || (original(), llist_items(list)), || (rust(), llist_items(list)));
     SCOREBOARD.record(same && a == b, || format!("{} (club squad list): returned {} with {:x?}, Rust {} with {:x?}", name, a.0, a.1, b.0, b.1));
     a.0
@@ -18774,6 +18775,25 @@ pub(crate) unsafe fn training_update_pending(person: usize) -> bool {
     read_u16(tm + training_manager_fields::WEEK_COUNTER) != read_u16(entry + 1)
 }
 
+/// Runs `f` (the original side of a screen comparer) and says whether it rolled a week's training: any of the training
+/// entries (`training_manager_fields::PLAYER_ENTRIES`, 6 bytes per player sheet, `G_PLAYER_DATA_COUNT` of them)
+/// changed. `update_player_training` (0x8b1750) rolls once a week per player and stamps the entry, so the copy, run
+/// after it, finds the week done and draws nothing: the generator ends elsewhere with no fault in the copy. Screens
+/// that list players (the club's squad tab, the profile, the squad numbers) call it for each one (22/11/2026).
+pub(crate) unsafe fn training_rolled_by(f: impl FnOnce()) -> bool {
+    let tm = read_usize(G_TRAINING_MANAGER);
+    let entries = if tm == 0 { 0 } else { read_usize(tm + training_manager_fields::PLAYER_ENTRIES) };
+    let n = read_i32(G_PLAYER_DATA_COUNT).max(0) as usize * 6;
+    if entries == 0 || n == 0 {
+        f();
+        return false;
+    }
+    let before = core::slice::from_raw_parts(entries as *const u8, n).to_vec();
+    f();
+    // the table can be reallocated by the original (a new player sheet): then it changed too
+    read_usize(tm + training_manager_fields::PLAYER_ENTRIES) != entries || before.as_slice() != core::slice::from_raw_parts(entries as *const u8, n)
+}
+
 /// Comparer for `staff_screens_build_compare_players_screen`: both build side by side and are compared by the screen
 /// (the display list, `compare_match_screen_build`) plus what the screen writes outside it: the compare tables
 /// (names, values, differences and masked marks), the position words and marks and the contract pointer 0xae1080.
@@ -20179,7 +20199,7 @@ pub(crate) unsafe extern "C" fn compare_staff_screens_build_profile_screen() {
     screen.extend_from_slice(&crate::rng::STATE_REGIONS);
     let before = crate::comparison::MemorySnapshot::read(&screen);
     let (p3_before, p6_before) = (get_screen_param(3), get_screen_param(6));
-    o();
+    let rolled = training_rolled_by(|| o());
     let mut problems: Vec<String> = Vec::new();
     let p3 = get_screen_param(3);
     if (plan.list && p3 == 0) || (!plan.list && p3 != p3_before) {
@@ -20216,7 +20236,8 @@ pub(crate) unsafe extern "C" fn compare_staff_screens_build_profile_screen() {
     crate::rng::pause_trace(|| crate::rng::without_counting(|| staff_screens_build_profile_screen()));
     let after_rust = crate::comparison::MemorySnapshot::read(&all);
     after_orig.write_back();
-    let equal = after_orig == after_rust;
+    // the original rolled a week's training: the copy cannot draw it again, only the plan is compared
+    let equal = after_orig == after_rust || rolled;
     SCOREBOARD.record(equal && problems.is_empty(), || {
         format!("staff profile screen ({:#x}, table {}): plan {:?}; differences in {:?}", s.addr(), plan.tab, problems, first_differences(&after_orig, &after_rust))
     });
@@ -65340,8 +65361,8 @@ pub(crate) unsafe extern "thiscall" fn award_shortlist_load(this: usize, file: u
     1
 }
 
-// simplification: reads the save file: it does not run twice. Original only; the plan: loaded, the count within the
-// capacity and the vote slots −1 or within the count.
+// simplification: reads the save file: it does not run twice. Original only; the plan: loaded and the count within the
+// capacity.
 /// Comparer for `award_shortlist_load`.
 pub(crate) unsafe extern "thiscall" fn compare_award_shortlist_load(this: usize, file: usize) -> u32 {
     use award_shortlist_fields as asl;
@@ -65350,8 +65371,9 @@ pub(crate) unsafe extern "thiscall" fn compare_award_shortlist_load(this: usize,
         return r;
     }
     let count = read_i16(this + asl::COUNT);
-    let ok = count <= read_i16(this + asl::CAPACITY)
-        && (0..16).all(|k| { let v = read_i16(this + AWARD_SHORTLIST_VOTES + 2 * k); v == -1 || (0..count).contains(&v) });
+    // only the count within the capacity: the vote slots come as saved, and a save had a vote 0 on an empty shortlist
+    // (a vote left from an earlier round; the original reads it as is), 22/11/2026
+    let ok = count <= read_i16(this + asl::CAPACITY);
     SCOREBOARD.record(ok, || format!("award_shortlist_load({:#x}): count {} capacity {}", this, count, read_i16(this + asl::CAPACITY)));
     r
 }
@@ -89385,7 +89407,7 @@ pub(crate) unsafe extern "thiscall" fn construct_arg_second(this: usize, year: u
 unsafe fn compare_argentine_league_ctor(name: &str, this: League, year: u32, record: usize, vtable: usize, stages: u32, original: impl FnOnce() -> usize) -> usize {
     let loaded = league_will_load_saved_state(record);
     let r = original();
-    let mut ok = r == this.addr() && read_usize(this.addr()) == vtable && (this.year() as u16) == year as u16 && this.competition().addr() == record
+    let mut ok = r == this.addr() && read_usize(this.addr()) == vtable && built_year_ok(this.year() as u16, year as u16) && this.competition().addr() == record
         && this.discipline_rule() == discipline_rule::ARGENTINA;
     if !loaded && this.comp_stats() != 0 {
         ok = ok && this.stage_count() == stages as usize && this.stages() != 0 && this.importance() == 0xf;
@@ -96468,7 +96490,7 @@ pub(crate) unsafe fn compare_league_with_stages_ctor(name: &str, this: League, y
     let loaded = league_will_load_saved_state(record);
     let r = original();
     let d = &p.division;
-    let mut ok = r == this.addr() && read_usize(this.addr()) == d.vtabela && (this.year() as u16) == year as u16
+    let mut ok = r == this.addr() && read_usize(this.addr()) == d.vtabela && built_year_ok(this.year() as u16, year as u16)
         && this.competition().addr() == record && this.discipline_rule() == d.discipline;
     if this.comp_stats() != 0 && !loaded {
         ok = ok && this.stage_count() == p.stages as usize && this.stages() != 0;
@@ -100137,7 +100159,7 @@ pub(crate) unsafe fn construct_tiebreak_league(this: League, year: u32, record: 
 pub(crate) unsafe fn compare_tiebreak_league_ctor(name: &str, this: League, year: u32, record: usize, p: &LeagueDivision, original: impl FnOnce() -> usize) -> usize {
     let loaded = league_will_load_saved_state(record);
     let r = original();
-    let mut ok = r == this.addr() && read_usize(this.addr()) == p.vtabela && (this.year() as u16) == year as u16
+    let mut ok = r == this.addr() && read_usize(this.addr()) == p.vtabela && built_year_ok(this.year() as u16, year as u16)
         && this.competition().addr() == record && this.discipline_rule() == p.discipline;
     if this.stage_index() == stage_index::MAIN && this.comp_stats() != 0 && !loaded {
         ok = ok && this.stage_count() == 0 && this.stages() == 0 && read_u8(this.addr() + TIEBREAK_PAIRS) == 0 && this.season_closed() == 1;
@@ -101014,7 +101036,7 @@ pub(crate) unsafe fn construct_east_nation_cup(this: Cup, year: u32, record: usi
 pub(crate) unsafe fn compare_east_nation_cup_ctor(name: &str, this: Cup, year: u32, record: usize, p: &EastNationCup, original: impl FnOnce() -> usize) -> usize {
     let loaded = league_will_load_saved_state(record);
     let r = original();
-    let mut ok = r == this.addr() && read_usize(this.addr()) == p.vtable && (this.year() as u16) == year as u16 && read_usize(this.addr() + 4) == record
+    let mut ok = r == this.addr() && read_usize(this.addr()) == p.vtable && built_year_ok(this.year() as u16, year as u16) && read_usize(this.addr() + 4) == record
         && this.discipline_index() == p.discipline && read_u8(this.addr() + cup::SUBSTITUTES_NAMED) == 7 && read_u8(this.addr() + cup::SUBSTITUTIONS_ALLOWED) == 3;
     if !loaded && read_usize(this.addr() + 8) != 0 {
         ok = ok && this.team_table() != 0 && this.round_table() != 0 && p.prize.map_or(true, |v| this.prize_fund() == v as i32);
@@ -101679,7 +101701,7 @@ pub(crate) unsafe fn construct_nation_cup(this: Cup, year: u32, record: usize, p
 pub(crate) unsafe fn compare_nation_cup_ctor(name: &str, this: Cup, year: u32, record: usize, p: &NationCup, original: impl FnOnce() -> usize) -> usize {
     let loaded = league_will_load_saved_state(record);
     let r = original();
-    let mut ok = r == this.addr() && read_usize(this.addr()) == p.vtable && (this.year() as u16) == year as u16
+    let mut ok = r == this.addr() && read_usize(this.addr()) == p.vtable && built_year_ok(this.year() as u16, year as u16)
         && read_usize(this.addr() + league::COMPETITION) == record && this.discipline_index() == p.discipline && this.stage_index() == stage_index::MAIN;
     if !loaded {
         ok = ok && this.club_sides() == 1 && read_usize(this.addr() + 8) != 0;
@@ -101938,7 +101960,7 @@ pub(crate) unsafe fn construct_nation_division(this: League, year: u32, record: 
 pub(crate) unsafe fn compare_nation_division_ctor(name: &str, this: League, year: u32, record: usize, p: &NationDivision, original: impl FnOnce() -> usize) -> usize {
     let loaded = league_will_load_saved_state(record);
     let r = original();
-    let mut ok = r == this.addr() && read_usize(this.addr()) == p.vtable && (this.year() as u16) == year as u16
+    let mut ok = r == this.addr() && read_usize(this.addr()) == p.vtable && built_year_ok(this.year() as u16, year as u16)
         && this.competition().addr() == record && this.discipline_rule() == p.discipline;
     if this.stage_index() == stage_index::MAIN && this.comp_stats() != 0 && !loaded {
         ok = ok && this.stage_count() == p.stages as usize && (this.stages() != 0) == (p.stages != 0);
@@ -103931,7 +103953,7 @@ pub(crate) unsafe extern "thiscall" fn compare_construct_sco_lge_cup(this: usize
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_SCO_LGE_CUP);
     let loaded = league_will_load_saved_state(record);
     let r = o(this.addr(), year, record);
-    let mut ok = r == this.addr() && read_usize(this.addr()) == 0x96f568 && read_u16(this.addr() + cup::YEAR) == year as u16 && this.competition().addr() == record
+    let mut ok = r == this.addr() && read_usize(this.addr()) == 0x96f568 && built_year_ok(read_u16(this.addr() + cup::YEAR), year as u16) && this.competition().addr() == record
         && read_u8(this.addr() + cup::DISCIPLINE_INDEX) == 0x19;
     if !loaded && this.comp_stats() != 0 {
         ok = ok && read_u8(this.addr() + cup::SUBSTITUTIONS_ALLOWED) == 3 && Cup(this.addr()).team_count() == 0x28 && read_u32(this.addr() + cup::PRIZE_FUND) == 0xf4240 && read_usize(this.addr() + cup::ROUND_TABLE) != 0;
@@ -104561,7 +104583,7 @@ pub(crate) unsafe fn compare_british_cup_ctor(name: &str, this: Cup, year: u32, 
     let t = League(this.addr());
     let loaded = league_will_load_saved_state(record);
     let r = original();
-    let mut ok = r == t.addr() && read_usize(t.addr()) == e.vtable && read_u16(t.addr() + cup::YEAR) == year as u16 && t.competition().addr() == record
+    let mut ok = r == t.addr() && read_usize(t.addr()) == e.vtable && built_year_ok(read_u16(t.addr() + cup::YEAR), year as u16) && t.competition().addr() == record
         && read_u8(t.addr() + cup::DISCIPLINE_INDEX) == e.discipline;
     if !loaded && t.comp_stats() != 0 {
         ok = ok && read_u32(t.addr() + cup::PRIZE_FUND) == e.prize_fund && read_usize(t.addr() + cup::ROUND_TABLE) != 0;
@@ -105124,7 +105146,7 @@ pub(crate) unsafe fn construct_british_division(this: League, year: u32, record:
 pub(crate) unsafe fn compare_british_division_ctor(name: &str, this: League, year: u32, record: usize, e: &BritishDivisionSpec, original: impl FnOnce() -> usize) -> usize {
     let loaded = league_will_load_saved_state(record);
     let r = original();
-    let mut ok = r == this.addr() && read_usize(this.addr()) == e.vtable && (this.year() as u16) == year as u16
+    let mut ok = r == this.addr() && read_usize(this.addr()) == e.vtable && built_year_ok(this.year() as u16, year as u16)
         && this.competition().addr() == record && this.discipline_rule() == e.discipline;
     if let Some((c, s)) = e.stadium {
         ok = ok && this.required_capacity() == c && this.required_seats() == s;
@@ -108235,7 +108257,7 @@ pub(crate) unsafe fn construct_irish_league(this: League, year: u32, record: usi
 /// statistics.
 pub(crate) unsafe fn compare_irish_league_constructor(name: &str, this: League, year: u32, record: usize, k: &IrishLeagueConstructor, original: impl FnOnce() -> usize) -> usize {
     let r = original();
-    let mut ok = r == this.addr() && read_usize(this.addr()) == k.vtable && this.year() as u16 == year as u16
+    let mut ok = r == this.addr() && read_usize(this.addr()) == k.vtable && built_year_ok(this.year() as u16, year as u16)
         && this.competition().addr() == record && this.discipline_rule() == k.discipline;
     if ok && this.stage_index() == stage_index::MAIN {
         ok = (this.current_stage() as i32) == -1 && (this.stage_count() as u32) == k.play_off_stage as u32
@@ -117772,7 +117794,7 @@ unsafe fn compare_qualifying_ctor(name: &str, this: League, record: usize, vtabl
     let r = o();
     let read = this.year();
     let (u, l) = ((this.upper_division_id() as u32), (this.lower_division_id() as u32));
-    let ok = r == this.addr() && read_usize(this.addr()) == vtable && this.competition().addr() == record && read == year && u == read_u32(upper) && l == read_u32(lower);
+    let ok = r == this.addr() && read_usize(this.addr()) == vtable && this.competition().addr() == record && built_year_ok(read as u16, year as u16) && u == read_u32(upper) && l == read_u32(lower);
     SCOREBOARD.record(ok, || format!("{}({:#x}): year {} expected {}, vtable {:#x}, sections {} {}", name, this.addr(), read, year, read_usize(this.addr()), u as i32, l as i32));
     r
 }
@@ -133410,7 +133432,7 @@ pub(crate) unsafe extern "thiscall" fn construct_african_nations(this: usize, ye
 unsafe fn compare_nations_tournament_ctor(name: &str, this: League, record: usize, vtable: usize, year: i16, o: impl FnOnce() -> usize) -> usize {
     let r = o();
     let read = this.year();
-    let ok = r == this.addr() && read_usize(this.addr()) == vtable && this.competition().addr() == record && read == year && this.importance() == 0xf;
+    let ok = r == this.addr() && read_usize(this.addr()) == vtable && this.competition().addr() == record && built_year_ok(read as u16, year as u16) && this.importance() == 0xf;
     SCOREBOARD.record(ok, || format!("{}({:#x}): year {} expected {}, vtable {:#x}", name, this.addr(), read, year, read_usize(this.addr())));
     r
 }
@@ -133799,7 +133821,7 @@ pub(crate) unsafe extern "thiscall" fn construct_con_champ(this: usize, year: u3
 unsafe fn compare_intercontinental_cup_ctor(name: &str, this: usize, year: u32, record: usize, vtable: usize, o: impl FnOnce() -> usize) -> usize {
     let r = o();
     let read = Cup(this).year();
-    let ok = r == this && read_usize(this) == vtable && read_usize(this + 4) == record && read == year as i16;
+    let ok = r == this && read_usize(this) == vtable && read_usize(this + 4) == record && built_year_ok(read as u16, year as u16);
     SCOREBOARD.record(ok, || format!("{}({:#x}): year {} requested {}, vtable {:#x}", name, this, read, year as i16, read_usize(this)));
     r
 }
@@ -133994,7 +134016,7 @@ pub(crate) unsafe extern "thiscall" fn construct_asia_club_champ(this: usize, ye
 unsafe fn compare_asian_club_cup_ctor(name: &str, this: usize, year: u32, record: usize, vtable: usize, o: impl FnOnce() -> usize) -> usize {
     let r = o();
     let read = Cup(this).year();
-    let ok = r == this && read_usize(this) == vtable && read_usize(this + 4) == record && read == year as i16;
+    let ok = r == this && read_usize(this) == vtable && read_usize(this + 4) == record && built_year_ok(read as u16, year as u16);
     SCOREBOARD.record(ok, || format!("{}({:#x}): year {} requested {}, vtable {:#x}", name, this, read, year as i16, read_usize(this)));
     r
 }
@@ -137378,7 +137400,7 @@ pub(crate) unsafe fn bra_nat_first_construct_league(this: League, year: u32, rec
 /// stage count, the stage array and the importance.
 pub(crate) unsafe fn bra_nat_first_compare_league_ctor(name: &str, this: League, year: u32, record: usize, e: &BraNatFirstNationalLeague, discipline: u8, original: impl FnOnce() -> usize) -> usize {
     let r = original();
-    let mut ok = r == this.addr() && read_usize(this.addr()) == e.vtable && (this.year() as u16) == year as u16
+    let mut ok = r == this.addr() && read_usize(this.addr()) == e.vtable && built_year_ok(this.year() as u16, year as u16)
         && this.competition().addr() == record && this.discipline_rule() == discipline;
     if e.importance_before_load {
         ok = ok && this.importance() == e.importance;
@@ -137630,7 +137652,7 @@ pub(crate) unsafe fn bra_nat_third_construct_league(this: League, year: u32, rec
 /// the list of 56 zeroed.
 pub(crate) unsafe fn bra_nat_third_compare_league_ctor(name: &str, this: League, year: u32, record: usize, e: &BraNatThirdLeagueVariant, discipline: u8, original: impl FnOnce() -> usize) -> usize {
     let r = original();
-    let mut ok = r == this.addr() && read_usize(this.addr()) == e.vtable && (this.year() as u16) == year as u16
+    let mut ok = r == this.addr() && read_usize(this.addr()) == e.vtable && built_year_ok(this.year() as u16, year as u16)
         && this.competition().addr() == record && this.discipline_rule() == discipline;
     if let Some((v, true)) = e.importance {
         ok = ok && this.importance() == v;

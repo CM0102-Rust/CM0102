@@ -83,7 +83,7 @@ pub(crate) unsafe fn bra_reg_goias_construct_state_league(this: League, year: u3
 pub(crate) unsafe fn bra_reg_goias_compare_state_league_ctor(name: &str, this: League, year: u32, record: usize, e: &BraRegGoiasStateChampionship, original: impl FnOnce() -> usize) -> usize {
     let loaded = league_will_load_saved_state(record);
     let r = original();
-    let mut ok = r == this.addr() && read_usize(this.addr()) == e.vtabela && (this.year() as u16) == year as u16
+    let mut ok = r == this.addr() && read_usize(this.addr()) == e.vtabela && built_year_ok(this.year() as u16, year as u16)
         && this.competition().addr() == record && this.discipline_rule() == discipline_rule::BRAZIL_REGIONAL;
     if this.stage_index() == stage_index::MAIN && this.comp_stats() != 0 && !loaded {
         ok = ok && this.stage_count() == e.stages as usize && this.stages() != 0 && this.importance() == 0xf;

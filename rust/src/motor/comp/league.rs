@@ -3772,6 +3772,14 @@ pub(crate) unsafe extern "thiscall" fn limit_club_division_tier(this: usize, val
 }
 
 
+/// A constructor comparer's year check: the year it left is the argument's, or any year while a saved game loads (the
+/// state read from the save carries the season the competition had reached: a 2002 Norwegian league built with 2001,
+/// a 2003 Gold Cup; false alarms in a hand-played session, 22/11/2026).
+pub(crate) fn built_year_ok(read: u16, expected: u16) -> bool {
+    read == expected || LOADING_SAVED_GAME.load(core::sync::atomic::Ordering::Relaxed)
+}
+
+
 /// Whether a league about to be constructed will load its state from a saved game: League::load_from_temp_file
 /// (0x687b10, called by every league constructor with 1) opens `<record name>_<record id>.tmp` in the game folder ('/'
 /// and '.' in the name become '_'), which exists only while a save is being loaded. The constructor comparers use it to
