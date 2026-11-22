@@ -1,0 +1,12 @@
+esperando a trava do laboratorio (outro teste pesado rodando)...
+    pool nao paginado 1.12 -> 1.18 GB, paginado 1.49 -> 1.72 GB
+execucao 1: parou em 2002-000, 1355007497 sorteios, impressao b99a226d86e45e6b, partidas 10281/c978fb1015a04279, banco 2a71ade16da43f23, 3539 s
+    date: 1000000000 comparacoes, 0 divergencias
+    engine: 10000000000 comparacoes, 0 divergencias
+    random: 1000000000 comparacoes, 0 divergencias
+game.cfg restaurado; auto_setup.cfg removido
+date: 100000000 comparisons, 0 divergences
+random: 1000000000 comparisons, 0 divergences
+engine: 10000000000 comparisons, 0 divergences
+date: 1000000000 comparisons, 0 divergences
+FIM
