@@ -539,7 +539,15 @@ unsafe fn our_exe() -> bool {
 /// The original box (or the jump of another DLL that detoured it before), through the trampoline.
 static mut ORIGINAL_BOX: usize = 0;
 
+#[link(name = "kernel32")]
+extern "system" {
+    fn GetLastError() -> u32;
+}
+
 unsafe extern "C" fn message_box(title: *const u8, text: *const u8, allow_exit: u32) -> u32 {
+    // Windows' last error, read first: after a failed fopen (the file list's "Cannot open file") it tells a missing file
+    // (2), a sharing violation (32, the file held by another program) and too many open files (4) apart (22/11/2026)
+    let last_error = GetLastError();
     // the game's ANSI text, one byte per character; line breaks and tabs become spaces (a single line in the log)
     let read = |p: *const u8| -> String {
         if p.is_null() {
@@ -548,7 +556,8 @@ unsafe extern "C" fn message_box(title: *const u8, text: *const u8, allow_exit: 
         let n = (0..1024).position(|k| *p.add(k) == 0).unwrap_or(1024);
         core::slice::from_raw_parts(p, n).iter().map(|&c| if matches!(c, b'\n' | b'\r' | b'\t') { ' ' } else { c as char }).collect()
     };
-    linha(&format!("msgbox {}-{:03} {} | {}", *(0xae2c92 as *const u16), *(0xae2c90 as *const u16), read(title), read(text)));
+    linha(&format!("msgbox {}-{:03} {} | {} [GetLastError {}]", *(0xae2c92 as *const u16), *(0xae2c90 as *const u16), read(title),
+        read(text), last_error));
     let original: unsafe extern "C" fn(*const u8, *const u8, u32) -> u32 = core::mem::transmute(ORIGINAL_BOX);
     original(title, text, allow_exit)
 }
