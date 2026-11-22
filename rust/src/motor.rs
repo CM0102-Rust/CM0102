@@ -19216,8 +19216,9 @@ unsafe fn profile_screen_contract_actions(st: &mut ProfileScreen, menu: &mut usi
         && s.player().addr() != 0
         && exe::player_regen_get_retirement_status(read_usize(G_PLAYER_REGEN), s) != 2
     {
-        let text = if exe::scout_manager_is_player_shortlisted(read_usize(G_SCOUT_MANAGER), s.addr(), (0) as u32 as usize) != 0 { 0xa85614 } else { 0xa855f8 }; // Remove From / Add To Shortlist
-        add(menu, text, 0xb, 0);
+        // "Remove From Shortlist" is code 0xa (0x87129f), "Add To Shortlist" 0xb (0x871381)
+        let (text, code) = if exe::scout_manager_is_player_shortlisted(read_usize(G_SCOUT_MANAGER), s.addr(), (0) as u32 as usize) != 0 { (0xa85614, 0xa) } else { (0xa855f8, 0xb) };
+        add(menu, text, code, 0);
     }
     let placement = exe::contract_manager_get_squad_placement(cm, s, st.viewer_club);
     if (1..=4).contains(&placement) {

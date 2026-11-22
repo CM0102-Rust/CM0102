@@ -172,8 +172,17 @@ mod preferencia {
         pub posicao: Option<(i32, i32)>,
     }
 
+    /// `janela.cfg` for the 1920x1080 exe (the working version, as always); each other exe has its own file,
+    /// `janela_<exe>.cfg`, so the 800x600 one does not inherit the 1080's maximized window: without a file it opens
+    /// at the frame's size, 1:1 and sharp (22/11/2026, Lucas).
     fn caminho() -> std::path::PathBuf {
-        std::env::current_exe().map(|p| p.with_file_name("janela.cfg")).unwrap_or_else(|_| "janela.cfg".into())
+        let exe = std::env::current_exe().unwrap_or_else(|_| "cm0102-1080.exe".into());
+        let nome = arquivo_da_janela(&exe.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default());
+        exe.with_file_name(nome)
+    }
+
+    pub fn arquivo_da_janela(exe: &str) -> String {
+        if exe.eq_ignore_ascii_case("cm0102-1080") { "janela.cfg".into() } else { format!("janela_{}.cfg", exe) }
     }
 
     pub fn interpretar(texto: &str) -> Option<Janela> {
@@ -399,6 +408,12 @@ mod testes {
         assert_eq!(rgb565_para_32(0x07e0), 0x00ff00);
         assert_eq!(rgb565_para_32(0x001f), 0x0000ff);
         assert_eq!(rgb565_para_32(0x8410), 0x848284); // meio-cinza: 16/31, 32/63, 16/31
+    }
+
+    #[test]
+    fn arquivo_da_janela_por_exe() {
+        assert_eq!(preferencia::arquivo_da_janela("cm0102-1080"), "janela.cfg");
+        assert_eq!(preferencia::arquivo_da_janela("cm0102-portatil"), "janela_cm0102-portatil.cfg");
     }
 
     #[test]
