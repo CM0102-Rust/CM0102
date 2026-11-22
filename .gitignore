@@ -41,3 +41,7 @@ prototipos/
 
 # logs crus das cadeias e das provas (o resultado fica em cadeia.txt / prova_*.txt)
 levas/**/*.log
+
+# the screens batch test (22/11/2026): the script and the mutations launcher for the hand-played session stay local
+levas/318/ROTEIRO_TESTE.md
+levas/318/JOGAR_MUTACOES.bat

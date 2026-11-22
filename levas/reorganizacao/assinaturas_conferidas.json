@@ -320,6 +320,24 @@
   ],
   "note": "declared sites differ from the true signature but are harmless (see evidence); the wrapper keeps the declared form"
  },
+ "FN_DISPLAY_ADD_ITEM": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> i16",
+  "confidence": "high",
+  "evidence": "0x55f990: every return path ends in `mov ax, word ptr [esi+0x12e9a0]; dec eax` (0x55facf, 0x55fb66, 0x55fb8b) or `or ax, 0xffff` (0x55f9b1): only ax is defined (the item index, -1 on overflow); the Rust port already returns i16",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize"
+  ],
+  "source": "conferir_assinaturas.py"
+ },
+ "FN_DISPLAY_PROCESS_COMMAND_PACKET": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize, u32, usize) -> u16",
+  "confidence": "high",
+  "evidence": "0x564080: the result is a short (-1, -2 for command 4, the item index for 6) built only in ax; the caller 0x7fdeb3 reads `cmp ax, 0xfffe`; the Rust port returns u16",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize, u32, usize) -> u32"
+  ],
+  "source": "conferir_assinaturas.py"
+ },
  "FN_FINANCE_ADD_PLAYERS_SOLD": {
   "signature": "unsafe extern \"thiscall\" fn(usize, i64)",
   "confidence": "high",
@@ -395,6 +413,15 @@
   "wrong_sites": [
    "unsafe extern \"C\" fn(usize) -> u32"
   ]
+ },
+ "FN_FORMATION_FIND_SLOT_BY_POSITION": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, u32) -> i8",
+  "confidence": "high",
+  "evidence": "0x5b2f10: eax is the loop index (0..10), but the not-found path is `or al, 0xff` (0x5b2f2b), defining only al; both callers (0x89e69d, 0x8a2201) read `cmp al, 0xff` then jle (signed byte)",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, u32) -> u32"
+  ],
+  "source": "conferir_assinaturas.py"
  },
  "FN_FORMATION_GET_POSITION_MASK": {
   "signature": "unsafe extern \"C\" fn(usize) -> u16",
@@ -552,6 +579,15 @@
   "evidence": "conferir_assinaturas.py: the original callers read only al after the call. ret=[8] ecx=1 edx=0 eax_w=['1'] chamadores=27 lidos={'al': 4} add_esp={None: 27} ecx_antes=21",
   "wrong_sites": [
    "unsafe extern \"thiscall\" fn(usize, usize, u32) -> u32"
+  ],
+  "source": "conferir_assinaturas.py"
+ },
+ "FN_MASK64_TO_BIT_INDEX": {
+  "signature": "unsafe extern \"C\" fn(u32, u32) -> u8",
+  "confidence": "high",
+  "evidence": "0x8adbb0: every return is `xor al, al` / `mov al, N; ret` (only al defined); the callers (0x89d241 and others) mask `and eax, 0x3f`, so only the low byte counts",
+  "wrong_sites": [
+   "unsafe extern \"C\" fn(u32, u32) -> u32"
   ],
   "source": "conferir_assinaturas.py"
  },
@@ -773,6 +809,15 @@
    "unsafe extern \"thiscall\" fn(usize, usize) -> u32"
   ]
  },
+ "FN_SCREENMANAGER_GET_WIDGET_DROP_TARGET": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, u32) -> i16",
+  "confidence": "high",
+  "evidence": "0x468bd0: the found path returns `mov ax, word ptr [ecx+eax*4+0xba9dc]` (0x468bfe, high word left from the address arithmetic), the -1 path `or eax, -1`; the 4 callers (0x46829d...) do `mov edi, eax; cmp di, -1` and pass edi to routines that read a word",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, u32) -> u32"
+  ],
+  "source": "conferir_assinaturas.py"
+ },
  "FN_SHARED_NOOP_RET0_5A8F60": {
   "signature": "unsafe extern \"C\" fn()",
   "confidence": "high",
@@ -790,12 +835,39 @@
   ],
   "note": "declared sites differ from the true signature but are harmless (see evidence); the wrapper keeps the declared form"
  },
+ "FN_SHORTLIST_MANAGER_REMOVE_FROM_LOAN_LIST": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize) -> u8",
+  "confidence": "high",
+  "evidence": "0x8442d0: returns `xor al, al` (0x8442e4) or `mov al, 1` (0x8442f2): only al; the 3 callers do not read it",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize) -> u32"
+  ],
+  "source": "conferir_assinaturas.py"
+ },
+ "FN_SHORTLIST_MANAGER_REMOVE_FROM_TRANSFER_LIST": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, usize) -> u8",
+  "confidence": "high",
+  "evidence": "0x844280: returns `xor al, al` (0x844294) or `mov al, 1` (0x8442a2): only al; the 2 callers do not read it",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, usize) -> u32"
+  ],
+  "source": "conferir_assinaturas.py"
+ },
  "FN_SHORTLIST_MANAGER_UPDATE_STAFF_STATUS": {
   "signature": "unsafe extern \"thiscall\" fn(usize, usize, usize, u32, u32) -> u8",
   "confidence": "high",
   "evidence": "conferir_assinaturas.py: every path writes only al before ret (upper bits undefined). ret=[16] ecx=1 edx=0 eax_w=['1'] chamadores=29 lidos={} add_esp={None: 29} ecx_antes=24",
   "wrong_sites": [
    "unsafe extern \"thiscall\" fn(usize, usize, usize, u32, u32) -> usize"
+  ],
+  "source": "conferir_assinaturas.py"
+ },
+ "FN_SOUNDPLAYER_PLAY_FILE": {
+  "signature": "unsafe extern \"thiscall\" fn(usize, u32, usize, u32) -> i8",
+  "confidence": "high",
+  "evidence": "0x84cbc0: returns `mov al, bl` (0x84cc67, the slot 0..9) or `or al, 0xff` (0x84cc70, -1): only al; the callers store `mov byte ptr [..], al` and SoundPlayer::set_slot_volume (0x84ccc0) reads the slot as a signed byte (`test al, al; jl`)",
+  "wrong_sites": [
+   "unsafe extern \"thiscall\" fn(usize, u32, usize, u32) -> u32"
   ],
   "source": "conferir_assinaturas.py"
  },

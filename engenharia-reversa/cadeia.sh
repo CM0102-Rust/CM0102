@@ -52,7 +52,9 @@ if [ -n "$COMPARAR_BANCADA" ] && { [ -z "$LIGAS" ] || [ "$LIGAS" = MUNDO ] || [ 
   rm -f "$PAR" "$PAR.parcial"
   ( ( cd "$BAN/engenharia-reversa"     && python -u simular.py --ate $ATE_REAL --motor sim --modo comparar --limite $LIM_REAL "${L[@]}"     && grep -aE "DIVERG|EXCECAO|EXCEPTION" ../jogo_testes/ddraw.log | head -5 | cut -c1-300     && grep -aE "comparacoes|comparisons" ../jogo_testes/ddraw.log | tail -3     && grep -a "sonda_lixo" ../jogo_testes/ddraw.log | tail -1 ) > "$PAR.parcial" 2>&1; mv "$PAR.parcial" "$PAR" ) &  # sempre: a falha fica escrita (sem impressao, o gen_docs barra) em vez de prender a espera
 fi
-(if python -u mutacoes.py mutacoes/leva$N.py $MODO "${M[@]}"; then
+TELAS=""; [ -f "$RAIZ/levas/$N/TELAS" ] && TELAS=1
+# leva das telas (21/11/2026, Lucas): a carreira automatica nao abre telas; sem mutacoes, a prova e ele jogando comparando
+(if { [ -n "$TELAS" ] && echo "=== MUTACOES: leva das telas, provada pelo Lucas jogando comparando"; } || python -u mutacoes.py mutacoes/leva$N.py $MODO "${M[@]}"; then
   if [ -n "$SAVE" ]; then
     python laboratorio.py | head -1
     echo "=== PROVA DO SAVE"

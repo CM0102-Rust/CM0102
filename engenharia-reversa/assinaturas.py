@@ -52,6 +52,17 @@ def chamadas_para(ler, alvo):
             if TXT0 + i + 5 + int.from_bytes(txt[i + 1:i + 5], 'little', signed=True) == alvo]
 
 
+SO_ORIGINAL = os.path.join(R, 'levas', 'so_original.txt')
+
+
+def so_original():
+    """The routines hooked only in the original exe (`EXE = {address: 'original'}` in the queue item; fila.py appends
+    them here when it materializes the batch): one hex address per line, `#` comments."""
+    if not os.path.exists(SO_ORIGINAL):
+        return set()
+    return {int(l.split('#')[0], 16) for l in open(SO_ORIGINAL, encoding='utf-8') if l.split('#')[0].strip()}
+
+
 def tabela():
     c = calcular()
     pro = prologos()
@@ -68,6 +79,9 @@ def tabela():
             antiga = site + 5 + int.from_bytes(b[1:], 'little', signed=True)
             if b[0] == 0xe8 and antiga in pro:
                 so_orig[antiga] = e
+    # the entries a queue item marked EXE = {address: 'original'} (the 1080 rewrites code inside them, not only an
+    # immediate): the 1080 slot gets the original's hash, so the DLL leaves them to the 1080's own code (21/11/2026)
+    so_orig.update({a: None for a in so_original()})
     # fronteiras reais do fronteiras.py mais as rotinas portadas que o mapa_funcoes.csv não lista (31 na 233ª)
     inicios = sorted(set(c['inicios']) | (set(pro) - so1080))
 
