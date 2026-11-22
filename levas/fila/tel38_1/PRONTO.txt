@@ -1,0 +1,14 @@
+tel38_1 (scrman.cpp, 11 rotinas): compilado sobre o HEAD 4ec4bcaa8 (cargo build --release, sem avisos no codigo do item), junto
+com tel26_1, tel01_1, tel29_1 (de que depende) e tel38_2..4; as mutacoes compilam (cargo check). Nao rodei o jogo.
+Iguais no cm0102-1080.exe (as rotinas inteiras).
+Prova: o jogo do Lucas com JOGAR_COMPARANDO.bat (TELAS, sem mutacoes na cadeia). add_screen_title/subtitle, add_text_item,
+add_button_item, add_area_button/text(_by_ref): praticamente toda tela ao ser montada (Inbox, elenco, perfil do jogador);
+get_area_scroll_row: listas com rolagem (elenco, busca de jogadores) a cada montagem; press_scrollbar_key: as setas do teclado
+numa lista com a barra aberta; count_all_records e count_flagged_screens: a barra de menu (Menubar), a cada tela.
+Comparadores: os auxiliares de item lado a lado na lista de exibicao (pacote de rede, contagens, a proxima vaga de item, a
+ordem dos itens livres e, para item de area, a area inteira) e no indice (short); os demais pelo valor ou lado a lado nos
+globais do mouse. Cuidado: chamados centenas de vezes por tela; o comparador de item copia ~0xd80 bytes por chamada.
+Nota: o screens_forwarder_regions do tel01_1 nao cobre a ordem dos itens livres nem a area do item (o add_item do tel01_1
+roda duas vezes no modo comparando e pode duplicar a entrada na ordem/area); aqui o scrman_item_regions acrescenta as duas.
+Mutacoes para provar o comparador: tel38_1_titulo_baixo (qualquer tela com titulo), tel38_1_botao_sem_destaque (botoes fora
+de area).

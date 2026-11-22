@@ -1,0 +1,15 @@
+NAO PROVADO NO JOGO (leitor tel24, rodada das telas, 21/11/2026): tel24_3 (contract_screens.cpp parte 3, 2 rotinas:
+handle_bonuses_action 0x4e39c0, handle_clauses_action 0x4e4160). Compilado sobre o HEAD 4ec4bcaa8 junto com tel26_1,
+tel01_1, tel29_1, tel17_2, tel24_1 e tel24_2, sem avisos no codigo do item; com as mutacoes aplicadas tambem compila.
+Depende de tel24_1 e tel24_2.
+Como chegar: tela da oferta de contrato de um jogador > aba Bonus (-, +, menu do valor, o ultimo botao, acrescentar ou
+tirar um bonus) e aba Clausulas (acrescentar ou tirar clausula, -, + e menu da multa rescisoria, o ultimo botao).
+Comparadores: as respostas que so mudam os termos do humano lado a lado pelos termos e pela resposta; - e + (mudam os
+itens e redesenham) e sem termos (caixa fatal) so a original.
+Mutacoes: tel24_3_release_fee_step (aba Clausulas, escolher uma multa no menu), tel24_3_bonus_reset (aba Bonus, ultimo
+botao sem pedido da pessoa).
+FICARAM DE FORA do grupo tel24 (para um item tel24_4): contract_screens_build_basic_terms_tab 0x4e06e0 (7068 B) e
+contract_screens_handle_basic_terms_action 0x4e2280 (3688 B). A aba Basico escolhe o texto da reacao da pessoa por
+situacao no elenco, idade, reputacao e valores em ponto flutuante (varios __ftol escondidos no pseudocodigo) e a resposta
+mexe no salario, na duracao e nas datas: nao coube portar byte a byte nesta rodada. Os dois continuam originais; a tela
+da oferta (tel24_2) os chama pelo endereco.

@@ -1,0 +1,26 @@
+tel26_5 - manager_stats_screen_build (0x6ae2a0, manager_screens.cpp, cdecl), a tela Manager Stats.
+
+Compilado: sim. git archive do HEAD (4ec4bcaa8) num scratchpad, o item aplicado como o fila.py faz (indice
+IDX_MANAGER_STATS_SCREEN_BUILD, leva 999, N 2773 -> 2774), cargo build --release sem erros e sem avisos no codigo do
+item. O jogo nao rodou.
+
+A rotina inteira num desvio so, em pedacos com nome: manager_stats_menu (topo, botao da estatistica e o menu das 16),
+manager_stats_nation_menu (o filtro de nacao, menu partido em duas partes acima de 16 nacoes), manager_stats_collect
+(a lista: registro de tecnico de quem treina clube ou selecao, realloc de 50 em 50, qsort pelo comparador 0x6b36f0
+original), manager_stats_row (uma linha) com manager_stats_stat_text (a coluna do valor) e manager_stats_money,
+manager_stats_back_next. A faixa 0x6ae2a0..0x6b05e0 e igual no cm0102.exe e no cm0102-1080.exe.
+
+Como chegar a tela: na barra de menus, o menu do tecnico ("Manager Options"): ... Player/Staff Search, Compare two
+chosen players, Manager Stats, Job Information (menubar_build 0x75db00 poe o item com o comando 0x42e; o
+tratador da barra chama o open 0x6ae1a0 com ele).
+
+O que a prova precisa (JOGAR_COMPARANDO.bat, o Lucas):
+- abrir a tela monta a lista (parametro 1 nulo): so a original roda (alocacao); o caminho Rust dessa montagem se
+  prova em modo Rust (contadores "tel26_5 ..." no ddraw.log).
+- a comparacao lado a lado acontece quando a tela e montada de novo com a lista ja feita: trocar de pagina (com
+  "All Nations" ha mais de 100 tecnicos, aparecem os botoes de pagina) ou voltar a tela. Trocar a estatistica ou a
+  nacao libera a lista (handle_action) e remonta so pela original.
+- vale olhar: estatisticas 1 (reputacao, "Unknown"), 5 e 6 (clube do maior/menor tempo), 10 (P/W), 13-16
+  (dinheiro), um filtro de nacao com e sem tecnicos, e a pagina do humano (parametro 7 na primeira abertura).
+- mutacoes (mutacoes.py): tel26_5_menu_id (ids do menu da estatistica) e tel26_5_name_link (link do nome), as
+  duas pegas pelo comparador numa troca de pagina; a carreira automatica nao abre a tela.

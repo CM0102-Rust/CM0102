@@ -1,0 +1,4 @@
+compilado em 21/11/2026 (leitor tel34, rodada das telas) sobre o HEAD 4ec4bcaa8 (git archive de rust/ e cm0102-base/) com tel26_1 e tel34_1..tel34_6 aplicados juntos (+ a linha (0x513a20, 3) em RELATIVAS do detours.rs), cargo build --release sem erro nem aviso no codigo dos itens; de novo com as 9 mutacoes aplicadas de uma vez (compila); ancoras unicas no motor inteiro e na fila; prologos conferidos (prologos.py na copia: 0 problemas). Sem jogo rodado.
+Depende de tel34_1 e tel26_1. Iguais no cm0102-1080.exe.
+Como chegar: uma noticia de suspensao de um jogador do clube do Lucas com o botao Appeal (Recorrer) na caixa de entrada; Appeal abre a confirmacao (No/Yes). Comparador: a montagem lado a lado; a abertura (abre tela) e o clique (manda o recurso) so a original.
+Mutacoes: tel34_3_day_text (suspensao em dias), tel34_3_games (suspensao de um jogo).

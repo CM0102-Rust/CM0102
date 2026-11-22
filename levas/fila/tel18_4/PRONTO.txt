@@ -1,0 +1,2 @@
+tel18_4 (lista de transferencias 0x8f8120/0x8f8170/0x8f8450, dispensa 0x8f8630/0x8f8670/0x8f8b00, periodo de teste 0x8f8be0/0x8f8c30/0x8f9080; 9 rotinas): compilado sobre o HEAD 4ec4bcaa8 junto com tel26_1..6, tel01_1, tel29_1, tel17_1..4 e tel18_1..6; as mutacoes conferem (ancora unica). Nao rodei o jogo. Prova: o jogo do Lucas com JOGAR_COMPARANDO.bat.
+Como chegar: perfil de jogador seu > Transfer List / Loan List; > Release; perfil de jogador sem clube > Offer Trial.

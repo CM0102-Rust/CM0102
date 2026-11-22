@@ -1,0 +1,9 @@
+tel35_6: menubar_handle_object_link (0x7643d0); Menubar.cpp.
+
+Compiled: HEAD (git archive of rust + cm0102-base, 21/11/2026) with tel26_1, tel26_4, tel26_5, tel26_6 and tel35_1..6 applied as fila.py does (%%In%% -> IDX_<NAME>, %%LEVA%% -> 999, the Prologue lines before `const N`): cargo build --release OK, no warning from the tel35 code. Not run in the game.
+Depends on tel26_1, tel35_2.
+
+How to reach it: click any linked word (a competition, a cup round, a club, a match result, an award, a person; Print).
+Proof: Rust mode only (the comparer runs only the original: the links open screens). The mutation (the reserves link opening the first team) is seen with JOGAR.bat.
+
+LEFT OUT: menubar_handle_command (0x7615d0, 11771 bytes, 3520 instructions): the menu bar's periodic work (auto save with its dialogs, the Continue / Waiting For Players / Latest Scores button states, the flashing date and match line) and about a hundred command ids. Not ported in this session (too large for the remaining budget): for a reader of its own, in named pieces (periodic, game menu, manager menu, competitions, options), hooked as one item. Pseudo-C in referencias/ferramentas/saida/0x7643d0_0x7615d0.c.

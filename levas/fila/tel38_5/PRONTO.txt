@@ -1,0 +1,15 @@
+tel38_5 (scrman.cpp, 8 rotinas): compilado sobre o HEAD 4ec4bcaa8 (cargo build --release, sem avisos no codigo do item), junto
+com tel26_1, tel01_1, tel29_1, tel38_1..4 (de que depende) e tel38_6..8; as mutacoes compilam (cargo check). Nao rodei o jogo.
+No 1080: set_widget_rect e diferente (o 1080 troca 0x800898..0x80089f por uma chamada que escala as coordenadas): EXE =
+{0x800890: original}, no 1080 fica a original. As outras sao iguais.
+Prova: o jogo do Lucas com JOGAR_COMPARANDO.bat (TELAS). set_widget_rect: partida ao vivo (barra de posse, zonas de acao,
+placares do dia: refresh_possession_bar/refresh_action_zones_values/refresh_latest_scores_rows); close_all_screens: o Continue
+no fim da partida e a tela de espera (match_screens_handle_continue_command/_waiting_screen); open_screen_for_each_record: o
+inicio do jogo (setup_run_front_end), as noticias (Inbox), os jogos do dia e a tela do clube do tecnico; play_sound,
+is_sound_playing, stop_sound: os sons da partida ao vivo (Match_Events, com o som ligado; sem som so o caminho "sem tocador");
+on_remote_sound_started/finished e os ramos de tecnico remoto so em jogo em rede.
+Comparadores: set_widget_rect, play_sound, stop_sound so a original conferindo o pacote/as marcas; close_all_screens e
+open_screen_for_each_record so a original com o plano; is_sound_playing pelo valor; os dois remotos lado a lado.
+Defeitos do original: close_all_screens com telas marcadas deixa o no atual no no que bloqueia, e sem bloqueio o passeio deixa
+o no atual em 0 e pula as funcoes de saida/abandono e o reset do Display [inferencia]; play_sound copia o nome sem conferir.
+Mutacoes: tel38_5_retangulo_como_estilo (partida ao vivo), tel38_5_som_ao_contrario (partida ao vivo com som).

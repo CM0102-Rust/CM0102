@@ -1,0 +1,6 @@
+NAO PROVADO NO JOGO (leitor tel30, rodada das telas, 21/11/2026): compila sobre o HEAD 4ec4bcaa8 (git archive de rust/ e cm0102-base/) com tel26_1, tel01_1 e tel29_1 e os onze itens tel30_1..tel30_11 aplicados juntos (cargo build --release sem erro nem aviso no codigo do tel30); de novo com as 22 mutacoes do tel30 aplicadas de uma vez (compila); ancoras unicas no motor com toda a fila de telas; prologos conferidos no cm0102.exe; rotinas inteiras iguais no cm0102-1080.exe; conferir_assinaturas.py --fila sem achado nas chamadas do tel30.
+Depende de tel29_1.
+Quando roda: os construtores dos recordes e as copias tambem na simulacao (Comp_Stats::Comp_Stats 0x49ee70, archive_season_and_reset 0x4a1c50, 0x4ab0c0, 0x4a7f50): a cadeia (carreiras e comparacao) os exercita mesmo numa leva de telas; tel30_10_rating_word deve ser pega pela comparacao da carreira.
+Comparadores: recordes e copias lado a lado sobre o objeto; a abertura so a original com o plano.
+Cuidado: se record_holder_construct (0x450d40), run_record_construct (0x448670) ou FixedFixture::FixedFixture (0x645800) alocarem memoria, o lado a lado do Comp_Season_Records divergiria pelos ponteiros (nao parecem alocar; a prova e a cadeia).
+Como chegar: qualquer tela de competicao.

@@ -1,0 +1,20 @@
+NAO PROVADO NO JOGO (leitor tel24b, rodada das telas, 21/11/2026): tel24_4 (contract_screens.cpp parte 4, 2 rotinas:
+build_basic_terms_tab 0x4e06e0, handle_basic_terms_action 0x4e2280). Fecha o contract_screens.cpp do grupo tel24.
+Compilado sobre o HEAD 4ec4bcaa8 junto com tel26_1, tel01_1, tel29_1, tel17_2, tel24_1, tel24_2 e tel24_3, sem avisos
+no codigo do item; com as mutacoes aplicadas tambem compila. Depende de tel24_1, tel24_2 e tel24_3.
+Ponto flutuante provado pela desmontagem: o limiar da reputacao (um _ftol, guardado como palavra), o interesse como
+float (param 0x1a x 0.001f), o teto (param 0x18) como double: x 1,5 contra o salario pedido e o param 0x16 (fcompp com
+st0 = teto x 1,5), o proprio teto (_ftol) e os 8 passos k x teto x 0,125 (_ftol); as contas sao exatas em f64.
+Como chegar: perfil da pessoa > Acao > Oferecer contrato > aba Basico. A fala da pessoa muda com a situacao (jogador
+do proprio clube, de outro clube, jovem, staff sem ficha de jogador) e com a janela (param 0x1d) aparece a data da
+transferencia. Botoes: - + = do salario, das luvas e do fim do contrato, os menus do salario e das luvas, o "-" do
+primeiro mes (mes a mes / fixo), tipo (tempo parcial), oferta publica, cargo e situacao no elenco.
+Comparadores: a montagem lado a lado pela lista de exibicao + os termos do humano e os editados + o
+G_CONTRACT_LOOKUP_RESULT; as respostas que so mudam os termos ou os parametros (ids 6, 7, 8, 0xb, 0x16, 0x19, 0x1a, 0x1c,
+0x1e, 0x30) lado a lado; os passos - e + (mexem nos widgets e redesenham), a situacao no elenco (o contrato desejado
+sorteia) e sem termos (caixa fatal) so a original.
+Mutacoes: tel24_4_wage_popup_step (abrir o menu do salario; o teto / 8 tem de passar de 100), tel24_4_fee_reset (o "="
+da linha das luvas).
+Defeitos do original (no rotinas.py): o +/- do salario e das luvas chama set_widget_id onde era set_widget_flags no
+widget vizinho; situacao fora de 1..6 sem ficha de staff deixa o texto anterior na tela; o cargo de quem nao e
+jogador entra em laco sem fim se ele nao puder nenhum cargo de 0 a 10.

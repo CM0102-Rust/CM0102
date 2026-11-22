@@ -1,0 +1,5 @@
+NAO PROVADO NO JOGO (leitor tel31, 21/11/2026): compila sobre o HEAD com tel31_1 (do qual depende: comp_stats_obj, COMP_STATS_CPP, ftol) e os demais; mutacoes compilam; ancoras unicas; prologos conferidos; iguais no 1080; conferir_assinaturas sem bug.
+Quando roda: format_record_text na tela de recordes da competicao (cada linha); write_record_to_news na simulacao (0x4a2450, a noticia de recorde batido).
+Comparadores: format_record_text pelo compare_text_writer (texto e ligacoes lado a lado; texto/registro nulo ou tipo fora de 1..22 vai para a original); write_record_to_news lado a lado sobre a noticia (0xdf bytes).
+Como chegar: qualquer competicao > Records; para o tipo 9 (o defeito do mando) um recorde de resultado da temporada.
+Mutacoes: tel31_2_result_venue (tela de recordes), tel31_2_news_rating_scale (noticia de recorde de media).

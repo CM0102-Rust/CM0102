@@ -1,0 +1,15 @@
+tel17_2 (transfer_screens.cpp parte 1: as janelas da proposta; 9 rotinas: open_bid_confirm_dialog 0x8ef1e0,
+build_bid_confirm_dialog 0x8ef240, handle_bid_confirm_action 0x8ef9f0, build_reject_bid_dialog 0x8efda0,
+handle_reject_bid_action 0x8f06f0, build_offer_must_accept_dialog 0x8f0bc0, open_cannot_sign_dialog 0x8f0e40,
+build_cannot_sign_dialog 0x8f0f90, handle_back_dialog_action 0x8f16c0): compilado sobre o HEAD 4ec4bcaa8 junto com
+tel26_1, tel01_1, tel29_1 e os outros tel17; as 2 mutacoes tambem compilam. Nao rodei o jogo.
+Tem os auxiliares ts_* usados por tel17_1, tel17_3 e tel17_4; depende de tel26_1 (tel26_*).
+Prova: o jogo do Lucas com JOGAR_COMPARANDO.bat.
+Como chegar: a tela da proposta > Offer/Cancel/Negotiate/Accept/Delay abre a confirmacao (Sim/Nao); Reject abre a
+recusa (motivos; Reject All Bids com mais de uma proposta aberta); com clausula de rescisao ou a diretoria obrigando,
+a janela de aceitacao obrigatoria; tentar contratar/emprestar/testar quem nao pode abre "Cannot sign/loan/trial".
+Comparadores: as montagens lado a lado pela lista (+ G_CONTRACT_LOOKUP_RESULT); so a original nos abridores, no Sim
+(executa a acao: retirar, recusar, aceitar, negociar, adiar, enviar), no Reject All Bids, na janela de nao pode
+contratar com motivo 0x21 (marca a oferta ligada) e sem o gerente da vaga (caixa de erro); Nao/Voltar/escolher motivo
+lado a lado.
+Mutacoes: tel17_2_texto_negociar (Negotiate > confirmacao), tel17_2_motivo_cinza (Reject > a lista de motivos).

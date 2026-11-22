@@ -1,0 +1,14 @@
+tel38_3 (gui_utils.cpp, Guio.cpp, 8 rotinas): compilado sobre o HEAD 4ec4bcaa8 junto com tel26_1, tel01_1, tel29_1 (de que
+depende) e os outros tel38; as mutacoes compilam. Nao rodei o jogo. Iguais no cm0102-1080.exe (o Guio::init, alterado no
+1080 em 0x5ee1f6..0x5ee20c, os limites 0x31f/0x257 da tela, ficou de fora).
+Prova: JOGAR_COMPARANDO.bat. gui_add_back_next_buttons: telas com Back/Next (perfil de jogador, de clube, telas da partida);
+gui_add_page_buttons: listas paginadas (Inbox/noticias, resultados de busca); get_fields: ao desenhar e na entrada de
+qualquer tela; highlight_on/off: passar o mouse sobre botoes; set_text_and_refresh: texto trocado na hora (campo de texto
+digitado, relogio do jogo ao vivo); free_images: ao fechar telas; convert_colours_pixel_format: chamado pelo Display
+(0x565c47..0x5672b9) na troca de formato de pixels [inferencia: pode nao rodar com a tela em 5-6-5].
+Comparadores: os construtores lado a lado na lista de exibicao (as proximas vagas de area e de item, as duas ordens, o pacote,
+o texto 0xde1f64) e no retorno; get_fields nas 19 saidas; convert nas tres cores; highlight, set_text e free_images so a
+original com o plano (marcas e destaque da area; o texto; os ponteiros nulos).
+Defeito do original: convert_colours_pixel_format separa todas as cores escolhidas nos mesmos tres locais antes de converter:
+com mais de uma escolhida, todas recebem a ultima.
+Mutacoes: tel38_3_botao_fonte_cinza (qualquer Back/Next), tel38_3_texto_sem_recuo (qualquer lista com area).

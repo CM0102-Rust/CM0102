@@ -1,0 +1,11 @@
+tel38_8 (plot.cpp, 6 rotinas): compilado sobre o HEAD 4ec4bcaa8 junto com tel26_1, tel01_1, tel29_1, tel38_1..4 (depende do
+tel01_1, tel26_1 e tel38_3) e tel38_5..7; as mutacoes compilam. Nao rodei o jogo. Iguais no cm0102-1080.exe. Nomes sem colidir
+com os plot_* privados do tel23_2 (construct_plot, destroy_plot, plot_append_series/point, plot_draw_*).
+Prova: JOGAR_COMPARANDO.bat, o grafico de progresso da liga (comp_league_progress_screen_draw: a tela da liga, o grafico da
+posicao de um clube ao longo da temporada; com dois clubes, duas series). Plot::Plot, add_series, add_point, draw_line_graph,
+draw_axes e ~Plot rodam todos ao abrir esse grafico.
+Comparadores: Plot::Plot e add_series so a original com o plano; ~Plot so a original; add_point lado a lado; draw_axes e
+draw_line_graph lado a lado na lista de exibicao (area, itens, ordem, pacote ate 0x4000 bytes, o proprio grafico).
+Defeitos do original: ~Plot libera todas as vagas de serie, inclusive as nunca escritas; add_point confere contra a capacidade
+e nao contra a contagem; faixa 0 divide por zero.
+Mutacoes: tel38_8_linha_grossa_abaixo, tel38_8_topo_preto (o grafico da liga).

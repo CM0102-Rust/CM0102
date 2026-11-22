@@ -1,0 +1,6 @@
+NAO PROVADO NO JOGO (leitor tel30, rodada das telas, 21/11/2026): compila sobre o HEAD 4ec4bcaa8 (git archive de rust/ e cm0102-base/) com tel26_1, tel01_1 e tel29_1 e os onze itens tel30_1..tel30_11 aplicados juntos (cargo build --release sem erro nem aviso no codigo do tel30); de novo com as 22 mutacoes do tel30 aplicadas de uma vez (compila); ancoras unicas no motor com toda a fila de telas; prologos conferidos no cm0102.exe; rotinas inteiras iguais no cm0102-1080.exe; conferir_assinaturas.py --fila sem achado nas chamadas do tel30.
+Depende de tel26_1 (tel26_error_box).
+Quando roda: accumulate_match_player_totals a cada partida (record_match_result 0x49f570); save/restore na virada de temporada e ao acrescentar time (0x4a1c50, 0x4aceb0): a cadeia os exercita; tel30_11_bench_rows deve ser pega pela comparacao da carreira.
+Ficaram para outra rodada (continuam na original): comp_stats_format_team_stat 0x4a39c0, Comp_Stats::format_player_stat 0x4a3ee0, comp_stats_get_record_title 0x4a5120 e Comp_Stats::get_record_text 0x4a5530.
+Comparadores: accumulate lado a lado sobre os totais; nomes lado a lado sobre o buffer; os dois valores pelos bits; is_record_type_shown pelo valor; save e restore so a original com o plano.
+Como chegar: tela de competicao > Player Stats / Team Stats (nomes e valores), Historia > recordes.

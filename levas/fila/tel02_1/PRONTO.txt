@@ -1,0 +1,13 @@
+tel02_1 (club_screens.cpp, 3 rotinas: next match tab 0x45ccf0, fixtures tab 0x45f380, find_club_badge_picture_path 0x460450):
+compilado sobre o HEAD 4ec4bcaa8 (cargo build --release, sem avisos no codigo do item), junto com tel02_2; as 3 mutacoes
+tambem compilam. Nao rodei o jogo.
+Prova: o jogo do Lucas com JOGAR_COMPARANDO.bat (TELAS, sem mutacoes na cadeia).
+Como chegar: a tela de um clube (o nome de qualquer clube, ou o proprio pelo menu do clube) > aba Next Match (com jogo
+marcado; seleções pela tela da seleção; Reserves para a vista de reservas) e aba Fixtures (<< / >> trocam a temporada; no
+clube do humano, Arrange abre o menu dos amistosos e Cancel a marca de cancelar). O escudo roda na aba Info > General Info
+de um clube espanhol (so acha arquivo se o escudo .BDG estiver em CM3_PICTURES).
+Comparadores: as duas abas lado a lado pela lista; Fixtures so a original na primeira abertura (param 0xd = 0: aloca a
+lista), lado a lado nas seguintes (com os 0xe bytes da lista); o escudo lado a lado na resposta e no caminho.
+Exe de 1080: os imediatos 0x46041c (0x257) e 0x460421 (0x31f) da Fixtures sao lidos do proprio exe.
+Mutacoes para provar o comparador: tel02_1_regra_limite (Next Match), tel02_1_dia_seguinte (Fixtures, a partir da segunda
+abertura), tel02_1_escudo (clube espanhol com escudo).

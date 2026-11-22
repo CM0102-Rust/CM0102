@@ -1,0 +1,5 @@
+NAO PROVADO NO JOGO (leitor tel25, rodada das telas, 21/11/2026): tel25_4 (training_screens.cpp parte 3, 1 rotina: 0x8b9940 training_screens_draw_schedule_editor, 3050 bytes, inteira). Compila sobre o HEAD 4ec4bcaa8 junto com tel26_1, tel22_1, tel25_1..3, sem avisos no codigo dos itens; ancoras 1 vez cada, mutacoes compilam.
+Depende de tel25_1 (TRAINING_SCHEDULE_SIZE), tel25_2 (TRAINING_TEXT_BUFFER), tel26_1 e tel22_1.
+O exe 1080 troca as bordas da area de tela cheia (push 0x257 em 0x8b9a73, push 0x31f em 0x8b9a7b): lidas do exe em execucao.
+Comparador: lado a lado pela lista de exibicao (compare_match_screen_build) + o programa em edicao (o nome pode ser apagado) + os verdes estaticos [0xde1f48..0xde1f4f].
+Como chegar: tela do clube > Treino > editar um programa; cada clique no editor remonta a tela (a segunda montagem ja compara). Posicao/Lado "Especifico" abre o popup dos bits.

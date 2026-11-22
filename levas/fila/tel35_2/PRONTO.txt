@@ -1,0 +1,8 @@
+tel35_2: history_screen_open (0x5f11c0), history_screen_draw (0x5f1360), history_screen_handle_event (0x5f1ba0), history_screen_free (0x5f1d60), history_written_screen_open (0x5f2b80), history_written_screen_draw (0x5f2c00), history_written_screen_handle_click (0x5f31c0), history_written_screen_close (0x5f33d0); History.cpp.
+
+Compiled: HEAD (git archive of rust + cm0102-base, 21/11/2026) with tel26_1, tel26_4, tel26_5, tel26_6 and tel35_1..6 applied as fila.py does (%%In%% -> IDX_<NAME>, %%LEVA%% -> 999, the Prologue lines before `const N`): cargo build --release OK, no warning from the tel35 code. Not run in the game.
+Depends on tel26_1, tel26_4, tel35_1. 1080: history_screen_draw reads its full-screen area (immediates at 0x5f14c8 and 0x5f14d0) from the running exe.
+
+How to reach it: the manager menu -> History (the written history list, tabs Nations / Competitions / Leagues / Clubs / Players); an entry opens the .his screen (also opened by the History buttons of the club and competition screens).
+Proof: Lucas with JOGAR_COMPARANDO.bat. The first build of each screen (it loads the .his file / searches the folder) runs only the original; the comparison runs from the second build on (scroll, switch a record in the chooser, come back). Messages 'History screen (history_screen_draw)' and 'Written history screen (history_written_screen_draw)'.
+Mutations: written list entries id 3; the .his Ok button id 2.

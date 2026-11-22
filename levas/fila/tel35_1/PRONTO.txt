@@ -1,0 +1,9 @@
+tel35_1: open_discipline_player_screen (0x5a8380), draw_discipline_player_screen (0x5a83e0), discipline_player_screen_input (0x5a8990); Fine.cpp.
+
+Compiled: HEAD (git archive of rust + cm0102-base, 21/11/2026) with tel26_1, tel26_4, tel26_5, tel26_6 and tel35_1..6 applied as fila.py does (%%In%% -> IDX_<NAME>, %%LEVA%% -> 999, the Prologue lines before `const N`): cargo build --release OK, no warning from the tel35 code. Not run in the game.
+Depends on tel26_1 and tel26_4 (manager_menu_bar); tel35_2..6 use its tel35_colour, TEL35_NETWORK_FLAG and tel35_text_draw_wrapped.
+
+How to reach it: a player of the human's club -> his profile -> Discipline (Discipline Player). Click -, +, a reason, then Cancel or Confirm.
+Proof: Lucas with JOGAR_COMPARANDO.bat, 0 divergences 'Discipline Player screen (draw_discipline_player_screen)'; the handler runs only the original in comparison (fine, redraw).
+Mutations (mutacoes.py): reason id 4; period text in column 4 (caught by the builder's comparer).
+Note: the builder reads the yellow reason from parameter 2 (a defect of the original, kept): after a redraw the highlight follows the low byte of the '-' widget index.

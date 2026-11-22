@@ -1,0 +1,14 @@
+tel02_2 (club_screens.cpp, 1 rotina: club_screen_draw_info_tab 0x460590, inteira ate o ret em 0x467190, 27 KB):
+compilado sobre o HEAD 4ec4bcaa8 (cargo build --release, sem avisos no codigo do item), junto com tel02_1; as 4 mutacoes
+tambem compilam. Nao rodei o jogo.
+Os "fragmentos" do mapa 0x462070, 0x464220, 0x464620, 0x464b20, 0x464d20 (lista tel02) e 0x465420 (lista tel03) sao
+pedacos desta rotina, nao rotinas: entram aqui, desviados pela entrada 0x460590 (pedacos com nome: general, stats,
+money, income, expenditure). O 0x465420 nao deve ser portado pelo tel03.
+Prova: o jogo do Lucas com JOGAR_COMPARANDO.bat (TELAS, sem mutacoes na cadeia).
+Como chegar: a tela de um clube > aba de informacoes; menu View: General Info e Stats (qualquer clube ou selecao);
+Finances, Income e Expenditure so no clube do proprio humano.
+Comparador: lado a lado pela lista, com a cor estatica e a guarda (0xadab32..33, 0xadab48).
+Mutacoes para provar o comparador: tel02_2_linha_comissao (General Info), tel02_2_salario_anual (Stats, salario por
+ano), tel02_2_lucro_invertido (Finances), tel02_2_colunas_temporada (Income).
+Duvida para o jogo: as cores de 16 bits vao estendidas com zero (o original empurra registradores com lixo na parte
+alta); se add_item/add_area_text guardarem o dword inteiro, o comparador acusa.

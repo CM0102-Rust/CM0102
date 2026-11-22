@@ -1,0 +1,9 @@
+tel29_1 (scrman.cpp, 13 rotinas): compilado sobre o HEAD 4ec4bcaa8 (cargo build --release, sem avisos no codigo do item), junto com tel29_2..4. Nao rodei o jogo.
+Prova: o jogo do Lucas com JOGAR_COMPARANDO.bat (TELAS, sem mutacoes na cadeia). Toda troca de tela passa por open_screen,
+get_screen_param, set_screen_param, set_background_picture/get_background_picture e redraw_screen; os botoes Voltar/Avancar por
+is_back_unavailable/get_current_screen_flag/current_screen_has_exit_fn; count_active_records ao continuar o dia; set_default_screen
+na abertura do jogo (front end); free_all_screens ao sair/criar/carregar um jogo; set_screen_param_for_each_record em avisos a
+todos os tecnicos (ex. o fim de um jogo ao vivo). Comparadores: os leitores e set_default_screen/set_background_picture lado a
+lado; open_screen, free_all_screens, set_screen_param(_for_each_record) e redraw_screen so a original com o plano.
+Mutacoes para provar o comparador: tel29_1_voltar_raiz (abrir o Inbox e outra tela de instancia unica), tel29_1_ativos.
+Cuidado: get_screen_param/set_screen_param sao chamadas centenas de vezes por tela (o comparador custa pouco: valor ou plano).

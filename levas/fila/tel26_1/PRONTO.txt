@@ -1,0 +1,5 @@
+NAO PROVADO NO JOGO (leitor tel26, rodada das telas, 21/11/2026): compila sobre o HEAD 4ec4bcaa8 (git archive de rust/ e cm0102-base/) junto com tel26_2..tel26_6, sem avisos no codigo dos itens; as ancoras das mutacoes aparecem 1 vez cada (motor + os seis itens). Prologos conferidos no cm0102.exe.
+Os itens tel26_2, tel26_3 e tel26_4 usam os auxiliares deste (display_list, display_item, tel26_error_box, tel26_add_item...): este entra primeiro, e se sair, saem os tres.
+EXE = {0x55f990: 'original'}: no cm0102-1080.exe o prologo do Display::add_item e um salto para uma rotina propria do 1080; la a entrada fica com o exe. As bordas da tela (0x31f/0x257, trocadas pelo 1080) sao lidas do exe em execucao (clear_screen_once e draw_screen).
+Comparadores: add_item, push_area_order, clear_guio_snapshot e clear_screen_once (ja escurecida) lado a lado; alloc/free do deposito, draw_screen e poll_input so a original (desenho, alocacao, entrada).
+Como chegar: qualquer tela (todas montam a lista de exibicao pelo add_item); a prova e o Lucas jogando com JOGAR_COMPARANDO.bat (comparando) e em modo Rust (draw_screen e poll_input so rodam a copia em modo Rust).

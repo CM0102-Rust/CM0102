@@ -1,0 +1,4 @@
+tel09_1 (21/11/2026, leitor tel09): compilado sobre o HEAD 4ec4bcaa8 (git archive de rust/ e cm0102-base/) junto com tel26_1, tel08_1, tel09_2 e tel09_3 (cargo build --release ok, sem avisos no codigo do item); ancoras das mutacoes aparecem 1 vez cada (HEAD + fila inteira). Prologos conferidos no cm0102.exe; as rotinas nao mudam no cm0102-1080.exe. NAO RODADO (rodada das telas).
+Sem dependencia de outro item (usa so Contract, board_record, transfer_status, compare_value!).
+Comparador: compare_value! (o valor lado a lado). As seis rotinas so rodam enquanto a aba Transferencia (0x87dd80, tel08_3, ainda no original) e desenhada; quando a 0x87dd80 for Rust ela pode chamar estas.
+Como chegar: perfil de um jogador de outro clube (clicar no nome) > aba Transfer. Prova: o Lucas com JOGAR_COMPARANDO.bat; mutacoes tel09_1_moral_bosman e tel09_1_confianca_2 para provar o comparador.

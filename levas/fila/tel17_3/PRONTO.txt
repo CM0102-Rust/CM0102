@@ -1,0 +1,11 @@
+tel17_3 (transfer_screens.cpp parte 1: os botoes das noticias de transferencia e a janela de adiamento; 8 rotinas:
+news_respond_bid_action 0x8f1730, news_respond_counter_offer_action 0x8f1830, news_offer_contract_action 0x8f1950,
+news_respond_delay_request_action 0x8f1a60, news_renegotiate_bid_action 0x8f1b40, news_respond_loan_bid_action
+0x8f1c30, build_delay_request_dialog 0x8f2010, handle_delay_request_action 0x8f22c0): compilado sobre o HEAD 4ec4bcaa8
+junto com os outros tel17; a mutacao tambem compila. Nao rodei o jogo. Depende de tel17_2 e tel26_1.
+Prova: o jogo do Lucas com JOGAR_COMPARANDO.bat.
+Como chegar: as noticias de transferencia na caixa de entrada: Respond (proposta recebida, contraproposta, pedido de
+adiamento, proposta de emprestimo), Offer Contract (proposta aceita), Re-Negotiate.
+Comparadores: os botoes so a original (abrem telas); a janela de adiamento lado a lado (+ global do contrato); a
+resposta dela: Voltar lado a lado, Aceitar e Recusar so a original.
+Mutacao: tel17_3_recusar_adiamento (noticia de pedido de adiamento > Respond).

@@ -1,0 +1,7 @@
+tel28_3 (news_screens.cpp parte 1, 2 rotinas: 0x788010 abrir a caixa de entrada, 0x7881e0 montar (pedacos news_screen_pick_default, news_screen_list_rows, news_screen_lower)). O resto do arquivo (entrada, saida, mandar mensagem) e do tel36. Leitor tel28, rodada das telas, 21/11/2026. Nao rodei o jogo.
+Depende de tel28_1 (tel28_lang, tel28_crt, tel28_text_item) e de tel26_1.
+Compilado em 21/11/2026 junto com tel26_1 e tel28_1..3 sobre o HEAD 4ec4bcaa8 (sem erro, sem aviso no codigo do item; com as mutacoes tambem).
+1080: o cm0102-1080.exe troca tres imediatos da montagem (a fonte da data na lista, 1 para 2, em 0x788a33 e 0x788a86; a largura do texto, 0x302 para 0x44c, em 0x78900f): a copia le os tres do exe em execucao. O abridor e igual nos dois.
+Comparadores: abrir so a original, parametros contra o plano quando a tela do registro e a atual; montar lado a lado pela lista de exibicao so quando ela so le (lista ja aberta, noticia escolhida ja lida, sem atualizar e sem zerar); senao so a original (marca a noticia lida, aloca ou libera a lista, para na atualizacao sem urgencia).
+Como chegar: a caixa de entrada (Noticias) do tecnico; trocar de aba (Todas, Mensagens, Competicoes...), escrever no filtro, clicar numa noticia ja lida (a montagem compara quando a escolhida ja esta lida), Proxima Nao Lida. Em frances o titulo vira Infos de / Infos d'.
+Mutacoes (JOGAR_COMPARANDO.bat): tel28_3_open_headline_width (abrir uma noticia ja lida), tel28_3_next_unread_id (com noticias nao lidas na caixa).

@@ -1,0 +1,2 @@
+tel18_6 (confirmacoes de teste/emprestimo 0x8fb530/0x8fb5e0/0x8fb6a0/0x8fb9e0 e fim de emprestimo 0x8fbcc0/0x8fbdf0/0x8fc0e0; 7 rotinas): compilado sobre o HEAD 4ec4bcaa8 junto com tel26_1..6, tel01_1, tel29_1, tel17_1..4 e tel18_1..6; as mutacoes conferem (ancora unica). Nao rodei o jogo. Prova: o jogo do Lucas com JOGAR_COMPARANDO.bat.
+Como chegar: Offer Trial > Offer; Make Loan Offer > Offer; perfil de jogador seu emprestado > Recall From Loan, ou emprestado ao seu clube > Terminate Loan.

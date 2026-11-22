@@ -1,0 +1,15 @@
+NAO PROVADO NO JOGO (leitor tel24, rodada das telas, 21/11/2026): tel24_2 (contract_screens.cpp parte 2, 3 rotinas:
+build_offer_contract_screen 0x4deac0 com a aba das clausulas embutida, handle_offer_contract_screen 0x4e01e0,
+build_bonuses_tab 0x4e30f0). Compilado sobre o HEAD 4ec4bcaa8 junto com tel26_1, tel01_1, tel29_1, tel17_2, tel24_1 e
+tel24_3, sem avisos no codigo do item; com as mutacoes aplicadas tambem compila. Depende de tel24_1.
+Como chegar: a tela da oferta de contrato (ver tel24_1); abas Basico/Bonus/Clausulas para jogadores; o botao do elenco
+(canto superior esquerdo, nas cores do clube) aparece ao renovar com um jogador do proprio clube; o botao Regras com as
+regras da FIFA em vigor e o parametro 0x1d (periodo protegido ou proposta).
+Comparadores: a montagem lado a lado pela lista + os termos do humano e os editados (0x50 cada) +
+G_CONTRACT_LOOKUP_RESULT + o elenco do clube dele (o menu do elenco ordena o elenco no proprio registro do clube); so a
+original na primeira montagem (cria os termos editados) e sem a pessoa. A aba dos bonus lado a lado pela lista e pelos
+termos (corta os bonus do humano). As respostas: aba (0xc) e jogador do elenco (3) lado a lado; o resto so a original.
+Mutacoes: tel24_2_bonus_popup_id (aba Bonus com um bonus definido), tel24_2_clause_offered_id (aba Clausulas com uma
+clausula oferecida), tel24_2_squad_player (escolher outro jogador no menu do elenco).
+Defeitos do original: o jogador do elenco descarta os termos editados sem libera-los; Cancelar numa proposta mudada apaga
+a proposta e abre a tela de proposta mudada com o ponteiro ja apagado.

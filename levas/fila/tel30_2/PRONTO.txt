@@ -1,0 +1,4 @@
+NAO PROVADO NO JOGO (leitor tel30, rodada das telas, 21/11/2026): compila sobre o HEAD 4ec4bcaa8 (git archive de rust/ e cm0102-base/) com tel26_1, tel01_1 e tel29_1 e os onze itens tel30_1..tel30_11 aplicados juntos (cargo build --release sem erro nem aviso no codigo do tel30); de novo com as 22 mutacoes do tel30 aplicadas de uma vez (compila); ancoras unicas no motor com toda a fila de telas; prologos conferidos no cm0102.exe; rotinas inteiras iguais no cm0102-1080.exe; conferir_assinaturas.py --fila sem achado nas chamadas do tel30.
+Depende de tel30_1 (as buscas, a foto sorteada, background_compare) e, por ele, de tel29_1.
+Comparadores: lado a lado sobre o gerador e o caminho da foto da tela, com o retorno.
+Como chegar: tela de clube, de nacao, de competicao, de premio, de estadio, perfil de pessoa; a de secao pela tela de pedidos a diretoria (sala da diretoria) e pela do pedido de relatorio (treino). Com as fotos desligadas so o caminho ":".

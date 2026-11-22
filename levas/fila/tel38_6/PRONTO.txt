@@ -1,0 +1,8 @@
+tel38_6 (scrman.cpp, 6 rotinas): compilado sobre o HEAD 4ec4bcaa8 junto com tel26_1, tel01_1, tel29_1, tel38_1..5 (depende
+do tel38_4 e do tel38_5) e tel38_7..8; as mutacoes compilam. Nao rodei o jogo. Iguais no cm0102-1080.exe.
+Prova: JOGAR_COMPARANDO.bat. begin_print_job/add_print_line/print_job/end_print_job/add_print_page_break: imprimir um
+relatorio (printouts_print_comp_report: o botao de imprimir de uma competicao); print_screen: o Print da barra de menu
+(menubar_handle_object_link). Cuidado: imprime de verdade (ou abre a caixa da impressora do Windows).
+Comparadores: so a original, conferindo o pacote no buffer (comando e valor).
+Defeito do original: add_print_line copia o texto sem conferir o espaco do buffer.
+Mutacoes: tel38_6_coluna_a_mais, tel38_6_linha_vazia (as duas no relatorio impresso).

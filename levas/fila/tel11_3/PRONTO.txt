@@ -1,0 +1,9 @@
+NAO PROVADO NO JOGO (leitor tel11, rodada das telas, 21/11/2026): compila sobre o HEAD 4ec4bcaa8 junto com tel11_1 e tel11_2 (de que depende) e tel11_4, sem avisos no codigo; mutacoes compilam, ancoras 1 vez cada.
+Rotinas (6): setup_build_enter_name_screen 0x820f50, setup_handle_enter_name_input 0x821520, setup_build_select_nationality_screen 0x821900, setup_handle_select_nationality_input 0x822040, setup_build_select_team_screen 0x822260, select_team_screen_handle_input 0x8228f0.
+Carreira automatica: nenhuma roda (o tecnico da carreira nasce em create_game_from_setup_file).
+Comparadores: as tres montagens lado a lado pela lista de exibicao (Select Team aloca e libera o vetor de clubes dentro); as respostas lado a lado nos botoes que so mexem nos parametros e no tecnico (a senha 0x1a com a redigitacao; filtro e nacao 0x1c/0x1d/0x1e com a nacao do tecnico; a nacao do seletor 0x1f), so a original no resto (Cancel, Next, caixas, menu).
+Como chegar no jogo: Manager Status -> Add Manager: Enter Name (nomes, senha opcional, Next; deixar um nome em branco ou senhas diferentes para ver as caixas) -> Select Nationality (Filter: All/Major) -> Next -> Select Team (seletor Nation com mais de uma liga; um clube abre a caixa de assumir, tel11_4).
+Mutacoes (sessao do Lucas): Next ligado em Select Team; o centro da lista de nacionalidades uma linha abaixo.
+Defeitos do original mantidos: rotinas.py (linha escolhida guardada na local do filtro; 250 nacoes num vetor que invade os registros salvos).
+Nomes novos no motor: FN_NATION_MENU_SPLIT_*, FN_CRT_TOUPPER, SETUP_NATIONALITY_COMPARE, SETUP_CLUB_COMPARE, G_SCREEN_MANAGER_SLOT_RECORD_COUNTS, G_TEXT_BUFFER_CHAR_2, COMPETITION_ABBREVIATION, CONTINENT_SHORT_NAME, SETUP_MAJOR_NATIONS, setup_texts_differ, setup_confirm_box.
+Falta: a sessao do Lucas comparando (o tecnico novo do comeco ao fim).

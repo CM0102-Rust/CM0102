@@ -1,0 +1,5 @@
+NAO PROVADO NO JOGO (leitor tel05, rodada das telas, 21/11/2026): compila sobre o HEAD 4ec4bcaa8 junto com tel26_1, tel01_1..3, tel05_1 e tel05_2 (ver tel05_1/PRONTO.txt). Rotina inteira igual no cm0102-1080.exe.
+Depende do tel05_1 e do tel05_2 (e por eles do tel26_1, tel01_1 e tel01_2): entra depois deles.
+Comparador: lista de exibicao + [0xae1080] + tabelas de atributos + a copia do elenco (param 0x11); sem a copia (primeira montagem) a original aloca: so a original roda, e a copia se prova no modo Rust.
+Como chegar: noticia do pedido de numeros do elenco (modo 1, grade dos 50 numeros) ou do elenco europeu (modo 2, In/Out); antes de uma partida com numeros fixos (so os escalados); visoes e ordens como no tel05_2.
+Mutacoes: tel05_3_numero_livre (grade dos numeros), tel05_3_submit (qualquer modo).

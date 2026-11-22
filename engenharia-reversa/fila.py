@@ -78,10 +78,13 @@ def do_lote(ordem_):
     """Os itens da próxima leva: o primeiro da ordem e os seguintes do mesmo tipo (MOTOR, SAVE), até ITENS_POR_LEVA."""
     def tipo(nome):
         rot = runpy.run_path(os.path.join(FILA, nome, 'rotinas.py'))
-        return bool(rot.get('MOTOR')), bool(rot.get('SAVE')), rot.get('LIGAS', ''), rot.get('ATE', '')
+        if rot.get('TELAS'):  # the screens batch is one type whatever MOTOR/SAVE the items carry (21/11/2026)
+            return False, False, '', '', True
+        return bool(rot.get('MOTOR')), bool(rot.get('SAVE')), rot.get('LIGAS', ''), rot.get('ATE', ''), bool(rot.get('TELAS'))
     lote = [ordem_[0]]
     for nome in ordem_[1:]:
-        if len(lote) == ITENS_POR_LEVA:
+        # 21/11/2026 (Lucas): as telas entram todas numa leva só, provada por ele jogando comparando
+        if len(lote) == ITENS_POR_LEVA and not tipo(lote[0])[4]:
             break
         if tipo(nome) == tipo(lote[0]):
             lote.append(nome)
@@ -125,6 +128,8 @@ def materializar(nomes, n, base, antes):
         open(os.path.join(destino, 'SAVE'), 'w', encoding='utf-8').write('leva do bloco do save\n')
     if any(runpy.run_path(os.path.join(FILA, x, 'rotinas.py')).get('CARGA') for x in nomes):  # a prova também pela carga
         open(os.path.join(destino, 'CARGA'), 'w', encoding='utf-8').write('leva de carregar: a prova do save carrega o save de ferias\n')
+    if runpy.run_path(os.path.join(FILA, nomes[0], 'rotinas.py')).get('TELAS'):
+        open(os.path.join(destino, 'TELAS'), 'w', encoding='utf-8').write('leva das telas: sem mutacoes na cadeia; a prova e o Lucas jogando comparando\n')
     ligas = runpy.run_path(os.path.join(FILA, nomes[0], 'rotinas.py')).get('LIGAS')
     if ligas:  # leva de competições: a cadeia compara e muta com essas ligas até 2002-06-01 (ver cadeia.sh)
         open(os.path.join(destino, 'LIGAS'), 'w', encoding='utf-8').write(ligas + '\n')

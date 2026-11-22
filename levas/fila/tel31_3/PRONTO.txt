@@ -1,0 +1,5 @@
+NAO PROVADO NO JOGO (leitor tel31, 21/11/2026): compila sobre o HEAD com tel26_1..tel26_4 (usa tel26_text_area, tel26_add_area, tel26_area_button, tel26_item_id, tel26_slot_manager, job_colour, JOB_TEXT e o manager_menu_bar do tel26_4) e tel31_1/2; mutacoes compilam; ancoras unicas; prologos conferidos; iguais no 1080; conferir_assinaturas sem bug (0x8442d0 declarado sem retorno).
+Comparadores: os dois montadores lado a lado sobre a lista de exibicao (compare_by_display_list_with); a ordem do elenco por compare_order; abridores e tratadores so a original (abrem telas, escrevem contrato, noticia e listas, sorteiam).
+Como chegar: pedido de transferencia: noticia "X pediu para ser posto na lista" > Respond (botao da noticia, 0x4dca40); oferta a comissao: Staff > pessoa de outro clube > Offer Contract > Offer; rescindir: Staff > pessoa do clube > Terminate Contract; a ordem do elenco: listas do elenco por jogos.
+Os tratadores so rodam a copia no modo Rust (o Lucas jogando com a DLL sem comparar).
+Mutacoes: tel31_3_terminate_no_id (tela de rescisao), tel31_3_squad_stat (ordem do elenco).

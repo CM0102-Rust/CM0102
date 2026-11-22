@@ -1,0 +1,8 @@
+tel29_2 (Area.cpp, 8 rotinas): compilado sobre o HEAD 4ec4bcaa8 junto com tel29_1/3/4. Nao rodei o jogo.
+Prova: o jogo do Lucas comparando. add_widget em toda tela montada; setup_scrollbar/draw_scrollbar/set_scroll_row/get_shown_row
+em qualquer lista com barra de rolagem (elenco, caixa de entrada, busca de jogadores); get_popup_position/move_to nos menus
+suspensos (a barra de menus no alto, o menu de acoes do perfil do jogador); release ao trocar de tela. draw_scrollbar e release so
+pela original na comparacao (desenham/liberam): o ramo "tel29_2 scroll bar drawn" no ddraw.log em modo Rust.
+1080: os imediatos 600 (0x40384d, 0x403924, 0x4039b7) e 0x31f/0x257 (0x403b02, 0x403bde) sao lidos do proprio exe (o
+fila.py checar diz "alterada no cm0102-1080.exe": e esperado, o codigo le esses enderecos); o 400 nao e reescrito no 1080.
+Mutacoes para provar o comparador: tel29_2_cursor_minimo (lista longa com poucas linhas), tel29_2_ordem_estavel.

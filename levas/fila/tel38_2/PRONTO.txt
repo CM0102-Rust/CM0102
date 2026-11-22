@@ -1,0 +1,10 @@
+tel38_2 (scrman.cpp, 10 rotinas): compilado sobre o HEAD 4ec4bcaa8 junto com tel29_1 (de que depende) e os outros tel38;
+as mutacoes compilam. Nao rodei o jogo. Iguais no cm0102-1080.exe.
+Prova: JOGAR_COMPARANDO.bat. is_manager_away, is_manager_done, set_manager_done, count_idle_channels, find_manager_channel,
+is_player_done: o Continue do dia (Menubar) e as telas de tecnicos; get_channel_manager_keys: telas que listam os tecnicos
+humanos (chamadas em 0x725d0e, 0x727ff6, 0x7612de); swap_manager_keys e switch_to_manager: so com mais de um tecnico humano
+no mesmo canal; end_network_session: ao sair para o menu ou criar/carregar jogo (sem sessao de rede volta logo; o ramo com
+sessao so em jogo em rede). Os ramos de jogador remoto nao rodam no jogo local.
+Comparadores: os leitores pelo valor; get_channel_manager_keys lado a lado nas saidas; set_manager_done nos 16 canais;
+swap/switch no canal atual; end_network_session so a original com o plano (sessao nula).
+Mutacoes: tel38_2_sem_registro_presente, tel38_2_pronto_vira_atual (esta so com dois tecnicos humanos).

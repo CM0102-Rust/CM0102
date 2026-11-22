@@ -1,0 +1,5 @@
+NAO PROVADO NO JOGO (leitor tel05, rodada das telas, 21/11/2026): compila sobre o HEAD 4ec4bcaa8 junto com tel26_1, tel01_1..3, tel05_1 e tel05_3 (ver tel05_1/PRONTO.txt).
+Depende do tel26_1 (tel26_add_*, tel26_area_*, tel26_slot_manager), do tel01_1 (screens_current_display) e do tel01_2 (club_screens_club, club_screens_staff); o tel05_3 usa os auxiliares deste (squad_list_*, part_exchange_*): este entra antes do tel05_3.
+Comparador: lista de exibicao + [0xae1080] + tabelas de atributos 0x98de84..0x98ded8 + a lista dos oferecidos da proposta.
+Como chegar: fazer uma proposta por um jogador de outro clube > Add Player (Add Player To ... Transfer Bid); visoes View (Traditional com Sort By, Contract, Selection, Stats/More Stats com Competitions, Attributes com os grupos, Other), Filter; um clube vendedor do computador que nao quer ninguem (aviso 'not interested') ou salarios altos demais.
+Mutacoes: tel05_2_link_do_nome (qualquer visao com jogadores), tel05_2_dado_do_inf (visoes nao tradicionais).

@@ -1,0 +1,4 @@
+tel29_4 (new_transfer_rule_screens.cpp, 1 rotina): compilado sobre o HEAD 4ec4bcaa8 junto com tel29_1..3. Nao rodei o jogo.
+Prova: o jogo do Lucas comparando: a noticia das regras novas de transferencia (Bosman/janela; nma_8 da o botao "Details")
+-> clicar em Details abre a tela do regulamento. Comparador so a original, conferindo a tela nova e a pagina 1.
+Mutacao para provar o comparador: tel29_4_pagina.

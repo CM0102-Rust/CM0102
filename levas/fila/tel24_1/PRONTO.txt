@@ -1,0 +1,23 @@
+NAO PROVADO NO JOGO (leitor tel24, rodada das telas, 21/11/2026): tel24_1 (contract_screens.cpp parte 1, 9 rotinas:
+offer_contract_to_staff 0x4dd0f0, build_set_role_screen 0x4dd6c0, handle_set_role_screen 0x4ddf20,
+open_offer_contract_screen 0x4de1f0, open_offer_contract_screen_for_transfer 0x4de5d0, add_disabled_menu_item 0x4e0180,
+close_offer_contract_screen 0x4e06a0, open_staff_offer_contract_screen 0x4e4730, build_staff_offer_contract_screen
+0x4e4820). Compilado sobre o HEAD 4ec4bcaa8 (git archive de rust/ e cm0102-base/) com tel26_1, tel01_1, tel29_1, tel17_2,
+tel24_2 e tel24_3, sem avisos no codigo dos itens; de novo com as 8 mutacoes dos tres itens aplicadas (compila); ancoras
+unicas no motor + fila. Prologos conferidos no cm0102.exe; nenhum byte de 0x4dd0f0..0x4e4e94 muda no cm0102-1080.exe.
+Depende de tel26_1, tel01_1 (screens_current_display, compare_screens_forwarder), tel29_1 (STR_EMPTY) e tel17_2 (ts_*).
+tel24_2 e tel24_3 usam CS_CPP, cs_human_club, cs_contract_type e CS_FN_* deste: este entra primeiro.
+Como chegar: perfil de um jogador ou tecnico sem contrato com o clube do Lucas (ou um do proprio clube, para renovar) >
+Acao > Oferecer contrato (offer_contract_to_staff); com mais de um cargo possivel (ou papel ainda nao combinado) abre a
+tela "Set Role At Club" (papeis 1 a 6 do jogador, cargos); Definir abre a tela da oferta; o botao Oferecer da tela da
+oferta abre a janela Sim/Nao (build_staff_offer_contract_screen); sair da tela da oferta passa pelo close; numa proposta
+de transferencia aceita, "Negociar contrato" abre a tela pela open_offer_contract_screen_for_transfer; o item desativado
+aparece no menu da multa rescisoria (aba Clausulas) abaixo do minimo.
+Comparadores: a tela do papel e a janela da oferta lado a lado pela lista (+ G_CONTRACT_LOOKUP_RESULT na janela); papel
+(3), cargo (0x2f) e Voltar (1) lado a lado pelos parametros; add_disabled_menu_item lado a lado como os repassadores do
+tel01_1; so a original em offer_contract_to_staff, nos abridores, no Definir (registra a conversa), no close (libera a
+oferta editada) e na janela sem oferta editada (caixa de erro).
+Mutacoes (para provar os comparadores numa sessao do JOGAR_COMPARANDO.bat): tel24_1_role_button_id (tela do papel),
+tel24_1_job_param (clicar num cargo), tel24_1_offer_text (Oferecer > janela).
+Defeitos do original: a janela da oferta liga o nome do clube da pessoa (0x7d5) ao clube do proprio humano; uma
+indenizacao negativa juntaria o texto do dinheiro sem formata-lo (buffer nao iniciado; a copia comeca vazio) [inferencia].

@@ -1,0 +1,8 @@
+tel35_4: media_response_screen_open (0x741f50), media_response_screen_draw (0x7423c0), media_response_screen_handle_event (0x742de0); media.cpp.
+
+Compiled: HEAD (git archive of rust + cm0102-base, 21/11/2026) with tel26_1, tel26_4, tel26_5, tel26_6 and tel35_1..6 applied as fila.py does (%%In%% -> IDX_<NAME>, %%LEVA%% -> 999, the Prologue lines before `const N`): cargo build --release OK, no warning from the tel35 code. Not run in the game.
+Depends on tel26_1, tel26_4, tel35_1.
+
+How to reach it: a media story news item in the inbox (player story, team story, sent off, wants first-team football, rival signing) -> Respond.
+Proof: Lucas with JOGAR_COMPARANDO.bat, 'Media response screen (media_response_screen_draw)'. The question area takes seven column weights from a two-byte array (the last one an uninitialised stack byte in the original): the comparer tolerates a difference confined to one area's weight bytes (+0xbad..+0xbe9 of an Area) and reports any other.
+Mutations: response data k + 1; responses area weight 18.

@@ -1,0 +1,4 @@
+NAO PROVADO NO JOGO (leitor tel25, rodada das telas, 21/11/2026): tel25_3 (printouts.cpp parte 1, 3 rotinas: 0x7da070 printouts_pad_string, 0x7da130 printouts_compare_by_date, 0x7d7c80 printouts_print_comp_report). Compila sobre o HEAD 4ec4bcaa8 junto com tel26_1, tel22_1, tel25_1/2/4, sem avisos no codigo dos itens; ancoras 1 vez cada, mutacoes compilam.
+Depende de tel26_1 (tel26_error_box) e tel22_1 (comp_lang_format).
+Comparadores: pad_string lado a lado sobre o texto e o retorno (a caixa de erro so a original); compare_by_date lado a lado pelo compare_order!; print_comp_report so a original (escreve arquivo e pode imprimir), o periodo [0xb74360]/[0xb74358] conferido contra o plano depois.
+Como chegar: tela de uma competicao > Imprimir (popup do tel22_4: tabelas e estatisticas, para arquivo ou impressora). pad_string e compare_by_date rodam pelas impressoes do clube (tela do clube > Imprimir; 0x7d4460 e 0x7d60c0 ainda originais, chamam pelo endereco).

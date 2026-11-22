@@ -1,0 +1,4 @@
+compilado em 21/11/2026 (leitor tel34, rodada das telas) sobre o HEAD 4ec4bcaa8 (git archive de rust/ e cm0102-base/) com tel26_1 e tel34_1..tel34_6 aplicados juntos (+ a linha (0x513a20, 3) em RELATIVAS do detours.rs), cargo build --release sem erro nem aviso no codigo dos itens; de novo com as 9 mutacoes aplicadas de uma vez (compila); ancoras unicas no motor inteiro e na fila; prologos conferidos (prologos.py na copia: 0 problemas). Sem jogo rodado.
+Depende de tel34_1 e tel26_1. Iguais no cm0102-1080.exe.
+Como chegar: a noticia que pergunta se o clube entra na Copa da Inglaterra (FA Cup) na quinta fase, botao Respond; e rara (o campo eng_fa_cup +0xb2 e a pergunta feita uma vez): talvez nao apareca numa carreira de 2001. Comparador: a montagem lado a lado; a abertura e a resposta so a original.
+Mutacao: tel34_4_no_id.

@@ -1,0 +1,2 @@
+tel18_2 (tela de transferencias: 0x8f4fa0, 0x8f5080, 0x8f5f40, 0x8f6690; 4 rotinas): compilado sobre o HEAD 4ec4bcaa8 junto com tel26_1..6, tel01_1, tel29_1, tel17_1..4 e tel18_1..6; as mutacoes conferem (ancora unica). Nao rodei o jogo. Prova: o jogo do Lucas com JOGAR_COMPARANDO.bat.
+Como chegar: menu Transfers > Transfers (mes/ano, setas, nacao, paginas). O build so compara lado a lado depois que a lista existe (trocar de pagina ou de mes com a tela aberta).

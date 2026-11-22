@@ -1,0 +1,10 @@
+tel38_4 (scrman.cpp, 9 rotinas): compilado sobre o HEAD 4ec4bcaa8 junto com tel29_1 (de que depende) e os outros tel38; as
+mutacoes compilam. Nao rodei o jogo. Iguais no cm0102-1080.exe; set_widget_rect (0x800890) ficou de fora: o 1080 a altera
+(0x800898..0x80089f, logo no comeco).
+Prova: JOGAR_COMPARANDO.bat. set_widget_*: telas que mudam widgets depois de montadas (taticas, jogo ao vivo, campos de texto,
+botoes habilitados/desabilitados). No jogo local so roda o ramo local (process_command_packet no Display local); os ramos
+remoto e de eco so em rede.
+Comparadores: so a original, com o plano do pacote no buffer (comando 8, widget, subcomando, valor).
+Defeitos do original: set_widget_text copia o texto para o buffer de rede sem conferir o espaco (as outras escritas conferem);
+set_widget_font nao pula o widget -1 (as outras pulam).
+Mutacoes: tel38_4_marcas_como_estilo, tel38_4_tamanho_sem_terminador.

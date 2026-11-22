@@ -1,0 +1,4 @@
+compilado em 21/11/2026 (leitor tel34, rodada das telas) sobre o HEAD 4ec4bcaa8 (git archive de rust/ e cm0102-base/) com tel26_1 e tel34_1..tel34_6 aplicados juntos (+ a linha (0x513a20, 3) em RELATIVAS do detours.rs), cargo build --release sem erro nem aviso no codigo dos itens; de novo com as 9 mutacoes aplicadas de uma vez (compila); ancoras unicas no motor inteiro e na fila; prologos conferidos (prologos.py na copia: 0 problemas). Sem jogo rodado.
+Depende de tel34_1 e tel26_1. Iguais no cm0102-1080.exe. A tela de confianca da diretoria (tel26_4) chama 0x58acd0 pelo endereco.
+Como chegar: tela do clube do Lucas > Board Confidence (confianca da diretoria) > FA Request; escolher um dos dois pedidos (a tela e redesenhada), Confirm ou Cancel. Comparador: a montagem lado a lado; a abertura e o clique (redesenho pela rede, o pedido a federacao) so a original.
+Mutacao: tel34_5_highlight (depois de escolher um pedido).

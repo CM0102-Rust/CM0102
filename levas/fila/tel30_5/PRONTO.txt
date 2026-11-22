@@ -1,0 +1,4 @@
+NAO PROVADO NO JOGO (leitor tel30, rodada das telas, 21/11/2026): compila sobre o HEAD 4ec4bcaa8 (git archive de rust/ e cm0102-base/) com tel26_1, tel01_1 e tel29_1 e os onze itens tel30_1..tel30_11 aplicados juntos (cargo build --release sem erro nem aviso no codigo do tel30); de novo com as 22 mutacoes do tel30 aplicadas de uma vez (compila); ancoras unicas no motor com toda a fila de telas; prologos conferidos no cm0102.exe; rotinas inteiras iguais no cm0102-1080.exe; conferir_assinaturas.py --fila sem achado nas chamadas do tel30.
+tel30_6 e tel30_7 usam player_sort_by_name, player_sort_pair, player_sort_compare e as constantes PLAYER_SORT_*: este entra primeiro.
+Comparadores: o retorno de cada comparador lado a lado (puros; o qsort chama muitas vezes por ordenacao).
+Como chegar: tela do clube > Squad; clicar nos cabecalhos das colunas (selecao, numero, situacao, nome, posicoes, clube, situacao no elenco, camisa, multa, inscricao europeia, forma).

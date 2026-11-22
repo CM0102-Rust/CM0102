@@ -1,0 +1,18 @@
+NAO COMPILADO AINDA (leitor tel22, rodada das telas, 21/11/2026): tel22_3 (comp_screens.cpp, 6 rotinas): as abas Fixtures
+(0x493ee0), Schedule (0x4947a0), Seedings (0x494c60), Average Points (0x495050), Team Stats (0x4956e0) e Player Stats
+(0x495bc0) da tela da competicao, todas cdecl(comp, top, bottom), chamadas pela montagem 0x48fcd0 (tel22_1). O leitor tel22
+compila os itens juntos sobre o HEAD; nao rodei o jogo. Prologos conferidos no cm0102.exe; rotinas inteiras iguais no
+cm0102-1080.exe.
+Depende de tel22_1 (comp_lang_format, comp_crt_format, comp_screens_error_box, comp_text_item) e tel26_1
+(tel26_add_area/add_item/add_button/area_button/area_text/text_area, JOB_TEXT, job_colour, JOB_COLOUR_31AA/3192).
+Auxiliar novo partilhado: comp_tabs_restore_scroll (o fim de toda aba de lista: rolagem e indice da area).
+Comparadores: lado a lado na lista de exibicao (compare_match_screen_build); so a original quando a aba aloca a lista na
+primeira montagem (parametros 0x17 Fixtures, 0x1a Schedule, 0x24 Team Stats, 0x1f Player Stats) e na caixa de erro.
+Average Points roda a atualizacao das medias (slot 0x34) nas duas: recalcula os mesmos valores.
+Como chegar: tela de uma competicao (clicar no nome da competicao) > abas Fixtures, Schedule, Seedings (copas com cabecas
+de chave), Average Points (so as ligas com rebaixamento por media, ex. Argentina), Team Stats e Player Stats (menus View e
+Filter). A primeira montagem de cada aba so roda a original; trocar de aba e voltar (ou mudar a data, a estatistica, o
+filtro) compara.
+Mutacoes (para o comparador numa sessao do JOGAR_COMPARANDO.bat): tel22_3_fixtures_round_id (aba Fixtures com uma rodada
+de copa conhecida), tel22_3_seedings_second_half (aba Seedings).
+Compilado em 21/11/2026 (leitor tel22): sobre o HEAD 4ec4bcaa8 (git archive de rust/ e cm0102-base/) com tel26_1, tel01_1, tel29_1 e tel22_1..tel22_5 aplicados juntos, cargo build --release sem erro e sem aviso no codigo dos itens; de novo com as 10 mutacoes de tel22 aplicadas de uma vez (compila); ancoras unicas; rotinas inteiras iguais no cm0102-1080.exe; conferir_assinaturas.py --fila sem achado nas funcoes chamadas pelos itens tel22.

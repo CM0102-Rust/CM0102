@@ -1,0 +1,8 @@
+tel29_3 (award_shortlist.cpp, 5 rotinas; Date::operator= 0x417c10 ja e Rust em date.rs, fora): compilado sobre o HEAD 4ec4bcaa8
+junto com tel29_1/2/4. Nao rodei o jogo.
+Prova: pick_winners roda na carreira (o premio de fim de temporada com lista, maio/junho na Premier): comparador lado a lado com
+o gerador restaurado (without_counting); a cadeia de telas nao muta, mas a carreira Rust x2 ate 2002-06-01 passa por ela. load e
+save: carregar/gravar um jogo com uma lista em aberto (prova_save.py pega o save). cast_vote e get_vote_status: a tela de
+votacao do tecnico humano (a noticia de indicados ao premio, botao de votar).
+Mutacoes para provar o comparador: tel29_3_voto_duplo_computador (pega tambem pela carreira, na votacao de maio/junho),
+tel29_3_voto_duplo_humano.

@@ -1,0 +1,23 @@
+tel26_6: menubar_build (0x75db00, Menubar.cpp, cdecl(char mode, int context), 14176 bytes), one hook, split in named
+pieces (game, team, manager, competitions, nations & find, game options, match and status menus).
+
+Compiled: HEAD (git archive of rust + cm0102-base, 21/11/2026) with the item applied as fila.py does (%%I0%% ->
+IDX_MENUBAR_BUILD, %%LEVA%% -> 999, the Prologue line before `const N`), `cargo build --release` OK, no warning from
+the item's code. Not run in the game.
+
+1080: the two bytes cm0102-1080.exe changes (0x75dc11 the background's height 0x257 -> 0x437; 0x75e16c the team menu
+header font 1 -> 2) are read from the exe in the code (`0x75dc11 as *const i32`, `0x75e16c as *const u8`).
+
+How to reach it in the game: every screen draws the bar.
+- mode 2 (team menu, the usual one): any screen after loading a game (e.g. the squad screen); open the menus
+  (manager's name, Competitions, Nations & Clubs, Find, Game Options) - they are all built on every bar build.
+- mode 1 (game menu): the start screens before a game is loaded (version, Add Manager, Restart, Exit).
+- mode 3 (match menu): pause a live match (minute, Paused, both tactics, Commentary Speed).
+- the status item: "You Have News" with unread news (bottom of the bar).
+
+What the proof needs: Lucas playing with JOGAR_COMPARANDO.bat, 0 divergences "menubar_build: ..." across the three
+modes (team menu with a club job; ideally also a national job for the national submenu, on holiday for the holiday
+items, and a paused match). Network-only paths (Chat, the Continue countdown, Waiting For Players, players waiting
+status) are not reachable in a single-player game; in a network game the comparer runs only the original.
+Mutations (mutacoes.py) for a session: Web Sites id (team menu) and FIFA Rankings link (World Cup / International
+competitions submenu).

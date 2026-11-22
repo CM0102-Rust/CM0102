@@ -1,0 +1,2 @@
+tel18_3 (status de transferencia do jogador: 0x8f66d0, 0x8f6770, 0x8f6a10, 0x8f7640; 4 rotinas): compilado sobre o HEAD 4ec4bcaa8 junto com tel26_1..6, tel01_1, tel29_1, tel17_1..4 e tel18_1..6; as mutacoes conferem (ancora unica). Nao rodei o jogo. Prova: o jogo do Lucas com JOGAR_COMPARANDO.bat.
+Como chegar: perfil de um jogador do seu clube > Transfer Status (preco pedido, Auto, status no elenco, listas, Set); ou o botao Respond de uma noticia de pedido de transferencia.

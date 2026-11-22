@@ -1,0 +1,62 @@
+# The tactics screen object (tactics_screens.cpp, 6; reader tel15, 21/11/2026): the row values, the player of a row,
+# the position search, swapping rows, the marking getters and the substitutions. All thiscall: ret 8 the
+# (row, opponent) getters, queue_substitution and apply_substitution, ret 0xc find_slot_at_position and swap_slots.
+# The byte getters return al (get_slot_condition returns eax, only al cleared on its zero paths).
+# Conventions checked in the disassembly (every push against esp and the ret of each routine); the same bytes in the
+# cm0102-1080.exe (0x8a2ca0..0x8ac600 identical).
+# Needs tel26_1 (tel26_error_box, display_method, JOB_TEXT and the job colours), tel14_1 (tactics_screen::*,
+# TACTICS_SCREENS_CPP, the destructor constants) and tel14_2 (TACTICS_PRESET_NAMES, TACTICS_COLOUR_3154); the
+# tel15 items use the helpers of tel15_1 (tactics_screen_state, tactics_screen_calls, tactics_screen_fns,
+# tactics_save_undo, compare_tactics_method...): tel15_1 goes first.
+TELAS = True
+
+ROTINAS = [('get_slot_condition', 0x8aafd0, [0x8b, 0x54, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00]),
+           ('get_slot_match_rating', 0x8ab150, [0x81, 0xec, 0x00, 0x02, 0x00, 0x00]),
+           ('get_slot_goals', 0x8ab260, [0x81, 0xec, 0x00, 0x02, 0x00, 0x00]),
+           ('is_slot_man_of_the_match', 0x8ab360, [0x8a, 0x54, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00]),
+           ('get_slot_player', 0x8ab480, [0x8b, 0x54, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00]),
+           ('find_slot_at_position', 0x8ab670, [0x81, 0xec, 0x00, 0x02, 0x00, 0x00]),
+           ('swap_slots', 0x8ab7e0, [0x8b, 0x54, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00]),
+           ('get_slot_marking_target_row', 0x8aba70, [0x8b, 0x54, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00]),
+           ('get_slot_marked_player', 0x8abb50, [0x81, 0xec, 0x08, 0x02, 0x00, 0x00]),
+           ('get_slot_marker', 0x8abd00, [0x81, 0xec, 0x04, 0x02, 0x00, 0x00]),
+           ('queue_substitution', 0x8ac100, [0x81, 0xec, 0x00, 0x02, 0x00, 0x00]),
+           ('apply_substitution', 0x8ac3d0, [0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00])]
+DOCS = ('o objeto da tela de tática: valores de linha, o jogador da linha, trocas, marcação e substituições',
+        "the tactics screen object: row values, the row's player, swaps, marking and substitutions",
+        [('get_slot_condition', 'Tactics_Screen::get_slot_condition', '0x8aafd0', 'tactics_screens.cpp', 'thiscall',
+          'a condição (%) do jogador da linha: na partida, a energia x 0,01; fora, -1 lesionado ou a condição da lesão; caixa da linha 0x1cf0',
+          "the row's player's condition (%): in a match, the stamina x 0.01; outside, -1 while injured or the injury condition; box of line 0x1cf0"),
+         ('get_slot_match_rating', 'Tactics_Screen::get_slot_match_rating', '0x8ab150', 'tactics_screens.cpp', 'thiscall',
+          'a nota do jogador da linha na partida ao vivo (0 para reserva não usado); caixa da linha 0x1d38',
+          "the row's player's rating in the live match (0 for an unused substitute); box of line 0x1d38"),
+         ('get_slot_goals', 'Tactics_Screen::get_slot_goals', '0x8ab260', 'tactics_screens.cpp', 'thiscall',
+          'os gols do jogador da linha na partida ao vivo; caixa da linha 0x1d6f',
+          "the goals of the row's player in the live match; box of line 0x1d6f"),
+         ('is_slot_man_of_the_match', 'Tactics_Screen::is_slot_man_of_the_match', '0x8ab360', 'tactics_screens.cpp', 'thiscall',
+          'se o jogador da linha é o melhor em campo que o motor marca; caixa da linha 0x1da3',
+          "whether the row's player is the man of the match the engine marks; box of line 0x1da3"),
+         ('get_slot_player', 'Tactics_Screen::get_slot_player', '0x8ab480', 'tactics_screens.cpp', 'thiscall',
+          'a pessoa da linha: do registro (conferida pelos nomes e nascimento), do jogador da partida, da escalação prevista do adversário ou o escolhido na tabela de táticas; caixa da linha 0x1dde',
+          "the row's staff: the record's (checked by the names and birth date), the match player's, the opponent's predicted line-up or the one selected in the Tactics table; box of line 0x1dde"),
+         ('find_slot_at_position', 'Tactics_Screen::find_slot_at_position', '0x8ab670', 'tactics_screens.cpp', 'thiscall',
+          'a linha que joga numa posição (a própria fora da partida), marcando pendente a de quem saiu lesionado; -1 sem; caixa da linha 0x1e2b',
+          'the row playing a position (the position itself outside a match), flagging pending one who left injured; -1 if none; box of line 0x1e2b'),
+         ('swap_slots', 'Tactics_Screen::swap_slots', '0x8ab7e0', 'tactics_screens.cpp', 'thiscall',
+          'troca duas linhas: reserva e titular viram substituição na fila; dois em campo trocam os lugares da formação (com desfazer); caixa da linha 0x1e79',
+          'swaps two rows: a substitute and a player on the pitch queue a substitution; two on the pitch swap formation slots (with undo); box of line 0x1e79'),
+         ('get_slot_marking_target_row', 'Tactics_Screen::get_slot_marking_target_row', '0x8aba70', 'tactics_screens.cpp', 'thiscall',
+          'a linha adversária que a linha marca na partida ao vivo (pelo motor); caixa da linha 0x1ee5',
+          'the opposing row the row marks in the live match (by the engine); box of line 0x1ee5'),
+         ('get_slot_marked_player', 'Tactics_Screen::get_slot_marked_player', '0x8abb50', 'tactics_screens.cpp', 'thiscall',
+          'o adversário que o jogador da linha marca individualmente: o alvo gravado (bit 8) ou o que a partida designa (bit 0x10); caixa da linha 0x1f11',
+          "the opponent the row's player man-marks: the set target (bit 8) or the one the match assigns (bit 0x10); box of line 0x1f11"),
+         ('get_slot_marker', 'Tactics_Screen::get_slot_marker', '0x8abd00', 'tactics_screens.cpp', 'thiscall',
+          'o adversário que marca o jogador da linha; caixa da linha 0x1f56',
+          "the opponent who marks the row's player; box of line 0x1f56"),
+         ('queue_substitution', 'Tactics_Screen::queue_substitution', '0x8ac100', 'tactics_screens.cpp', 'thiscall',
+          'põe uma substituição na fila da tela (refazendo a de quem acabou de entrar), com o minuto (limitado ao fim do período) e a posição; caixa da linha 0x1fde',
+          'queues a substitution on the screen (redoing the one of a player just brought on), with the minute (capped at the period end) and the position; box of line 0x1fde'),
+         ('apply_substitution', 'Tactics_Screen::apply_substitution', '0x8ac3d0', 'tactics_screens.cpp', 'thiscall',
+          'faz a substituição na partida ao vivo: entra o reserva na casa de entrada, sai o outro, uma substituição a menos e a narração (0x20d7 se lesionado, 0x1f5b); caixa da linha 0x2055',
+          'makes the substitution in the live match: the substitute placed at the entry cell, the other leaves, one substitution fewer and the commentary (0x20d7 when injured, 0x1f5b); box of line 0x2055')])

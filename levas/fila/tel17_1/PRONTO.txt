@@ -1,0 +1,16 @@
+tel17_1 (transfer_screens.cpp parte 1: a tela da proposta de transferencia; 4 rotinas: open_bid_screen_for_offer 0x8e9550,
+build_bid_screen 0x8e9760 (11,4 KB, em pedacos com nome), handle_bid_screen_action 0x8ec420 (11 KB),
+refresh_bid_total_and_buttons 0x8eef60): compilado sobre o HEAD 4ec4bcaa8 (cargo build --release, sem avisos no codigo
+do item) junto com tel26_1, tel01_1, tel29_1 e os outros tel17; as 2 mutacoes tambem compilam. Nao rodei o jogo.
+Depende de tel17_2 (os auxiliares ts_*) e de tel26_1 (tel26_*): integrar juntos.
+Prova: o jogo do Lucas com JOGAR_COMPARANDO.bat (TELAS, sem mutacoes na cadeia).
+Como chegar: o perfil de um jogador de outro clube > Transfer > Make Offer (o clube do humano comprando: linhas do
+orcamento, barra Voltar/Oferecer) ou uma noticia de proposta recebida por um jogador do humano > Respond (barra
+Voltar/Recusar/Adiar/Negociar ou Aceitar; o menu das outras propostas no canto). Na tela: - + = da taxa, os menus de
+valores, parcelas, porcentagem, as clausulas (ligar, jogos, - +), publica, Exchange, Remove, Reset.
+Comparadores: a montagem lado a lado pela lista + a proposta do humano (0x41 bytes) + o global do contrato; so a
+original quando a proposta ainda vai ser criada (primeira abertura: operator new). A resposta lado a lado nas edicoes
+(passos, liga/desliga, menus, publica, prazo, Remove: proposta + parametros + widgets), so a original no resto (Voltar,
+as acoes, Exchange, Reset, Negotiated Bid, jogador de troca, outra proposta, barra de menus). O refresh lado a lado.
+Mutacoes para provar os comparadores: tel17_1_passo_parcelas (Monthly Installments + ou -), tel17_1_orcamento (taxa
+dentro/fora do orcamento comprando).

@@ -1,0 +1,4 @@
+tel06_3 (21/11/2026, reader tel06): 0x482a40 add_club_screen_action_button. Compiled with tel06_1/2. Not run.
+NEEDS (0x482a40, 3) in RELATIVAS of rust/src/detours.rs (the prologue ends in call rel32 0x838de0); my compile copy had it. Without that line leave this item out (as sma_9 left 0x6306e0).
+Depends on: tel26_1. How to reach it: any club screen heading (Take Control at manager creation, Scout Club, Invite/Uninvite Club with an open friendly/dates request/tournament, Apply for Job at a club without a manager).
+Mutation: tel06_3_sempre_convidar (screen of a club already invited to the human's tournament).

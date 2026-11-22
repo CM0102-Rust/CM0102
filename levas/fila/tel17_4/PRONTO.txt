@@ -1,0 +1,13 @@
+tel17_4 (transfer_screens.cpp parte 1: a tela de oferta mudada, a janela de remover jogador de troca e o botao de
+confirmar transferencia; 7 rotinas: open_offer_changed_screen 0x8f2470, build_offer_changed_screen 0x8f24c0,
+handle_offer_changed_action 0x8f2800, open_remove_exchange_player_dialog 0x8f2870,
+build_remove_exchange_player_dialog 0x8f28c0, handle_remove_exchange_player_action 0x8f2b90,
+news_confirm_transfer_action 0x8f2d20): compilado sobre o HEAD 4ec4bcaa8 junto com os outros tel17; a mutacao tambem
+compila. Nao rodei o jogo. Depende de tel17_2 e tel26_1.
+Prova: o jogo do Lucas com JOGAR_COMPARANDO.bat.
+Como chegar: Respond numa noticia de proposta que o clube ja mudou, recusou, retirou ou aceitou (tela de oferta
+mudada, Done); a janela de remover jogador de troca (aberta pelo motor quando um jogador de troca deixa de valer,
+0x8f2870); Confirm numa noticia de transferencia acertada.
+Comparadores: as montagens lado a lado (a de oferta mudada + global do contrato); abridores e o botao Confirm so a
+original; Done e Nao lado a lado; Sim da troca so a original (muda a proposta).
+Mutacao: tel17_4_nao_troca (janela de remover jogador de troca).

@@ -1,0 +1,65 @@
+# O gerente de telas (scrman.cpp; leitor tel29, rodada das telas, 21/11/2026): abrir uma tela, a tela padrão, as
+# marcas, a figura e os parâmetros da tela atual, liberar o histórico e o pacote de redesenho.
+# Convenções conferidas na desmontagem (0x7fe600..0x7ff4fa, 0x802d00..0x802f74): todas thiscall, ecx = o gerente
+# (0xb74450); open_screen ret 0x14 (build, input, flag, leave, exit; devolve 1 ou 0); set_default_screen ret 0x1c;
+# is_back_unavailable ret 4; set_background_picture ret 4; get_screen_param ret 4; set_screen_param ret 0xc;
+# set_screen_param_for_each_record ret 0x10; redraw_screen ret 8; as outras ret 0. Os caminhos de erro (caixa fatal sem
+# tela atual, índice fora de 0..59, sem build/input) chamam a original.
+# Comparadores: os leitores lado a lado no valor devolvido; set_default_screen e set_background_picture lado a lado
+# na memória; open_screen, free_all_screens, set_screen_param(_for_each_record) e redraw_screen só na original (alocam,
+# liberam, desenham ou mandam pela rede), conferindo o plano.
+TELAS = True
+ROTINAS = [('screen_manager_open_screen', 0x7fe600, [0x81, 0xec, 0x08, 0x02, 0x00, 0x00]),
+           ('screen_manager_set_default_screen', 0x7feb20, [0x8b, 0x44, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08]),
+           ('screen_manager_count_active_records', 0x7feb70, [0x0f, 0xbf, 0x91, 0x2a, 0x38, 0x00, 0x00]),
+           ('screen_manager_is_back_unavailable', 0x7fec60, [0x0f, 0xbf, 0x81, 0x2a, 0x38, 0x00, 0x00]),
+           ('screen_manager_get_current_screen_flag', 0x7fed30, [0x0f, 0xbf, 0x81, 0x2a, 0x38, 0x00, 0x00]),
+           ('screen_manager_current_screen_has_exit_fn', 0x7fedd0, [0x0f, 0xbf, 0x81, 0x2a, 0x38, 0x00, 0x00]),
+           ('screen_manager_get_background_picture', 0x7fee80, [0x0f, 0xbf, 0x81, 0x2a, 0x38, 0x00, 0x00]),
+           ('screen_manager_set_background_picture', 0x7feeb0, [0x0f, 0xbf, 0x81, 0x2a, 0x38, 0x00, 0x00]),
+           ('screen_manager_free_all_screens', 0x7fef10, [0x56, 0x8b, 0xf1, 0x57, 0x0f, 0xbf, 0x86, 0x2a, 0x38, 0x00, 0x00]),
+           ('screen_manager_get_screen_param', 0x7ff010, [0x0f, 0xbf, 0x81, 0x2a, 0x38, 0x00, 0x00]),
+           ('screen_manager_set_screen_param_for_each_record', 0x7ff130, [0x51, 0x53, 0x8b, 0x5c, 0x24, 0x0c]),
+           ('screen_manager_set_screen_param', 0x7ff270, [0x81, 0xec, 0x00, 0x02, 0x00, 0x00]),
+           ('screen_manager_redraw_screen', 0x802d00, [0x81, 0xec, 0x04, 0x02, 0x00, 0x00])]
+DOCS = ('o gerente de telas: abrir uma tela, a tela padrão, as marcas, a figura e os parâmetros da tela atual, liberar o histórico e o pacote de redesenho',
+        "the screen manager: opening a screen, the default screen, the current screen's flags, picture and parameters, freeing the history and the redraw packet",
+        [('screen_manager_open_screen', 'ScreenManager::open_screen', '0x7fe600', 'scrman.cpp', 'thiscall, ret 0x14',
+          'abre uma tela para o gerente atual: um nó novo no histórico depois do atual (os da frente liberados, no máximo 100 guardados); um registro sem chave e sem tela usa a tela padrão e os valores dela; uma tela de instância única já aberta volta a ser a atual e não abre outra (0); roda antes a função de saída da tela atual',
+          "opens a screen for the current manager: a new history node after the current one (the forward ones freed, at most 100 kept); a record with no key and no screen uses the default screen and its values; a single-instance screen already open becomes current again and nothing opens (0); runs the current screen's leave function first"),
+         ('screen_manager_set_default_screen', 'ScreenManager::set_default_screen', '0x7feb20', 'scrman.cpp', 'thiscall, ret 0x1c',
+          'guarda a tela padrão: as funções de montar, responder, sair e fechar, a marca e os valores iniciais dos parâmetros',
+          'stores the default screen: its build, input, leave and exit functions, its flag and its initial parameter values'),
+         ('screen_manager_count_active_records', 'ScreenManager::count_active_records', '0x7feb70', 'scrman.cpp', 'thiscall',
+          'conta os registros do canal atual sem a marca de ausente e sem a de pronto',
+          'counts the records of the current channel with neither the away nor the done flag'),
+         ('screen_manager_is_back_unavailable', 'ScreenManager::is_back_unavailable', '0x7fec60', 'scrman.cpp', 'thiscall, ret 4',
+          'o Voltar não tem para onde ir: a tela atual sem anterior, ou marcada como raiz quando não se pede para ignorar isso',
+          'Back has nowhere to go: the current screen has no previous one, or it is a flagged root unless told to ignore that'),
+         ('screen_manager_get_current_screen_flag', 'ScreenManager::get_current_screen_flag', '0x7fed30', 'scrman.cpp', 'thiscall',
+          'a marca de instância única da tela atual',
+          "the current screen's single-instance flag"),
+         ('screen_manager_current_screen_has_exit_fn', 'ScreenManager::current_screen_has_exit_fn', '0x7fedd0', 'scrman.cpp', 'thiscall',
+          'se a tela atual tem função de fechar',
+          'whether the current screen has an exit function'),
+         ('screen_manager_get_background_picture', 'ScreenManager::get_background_picture', '0x7fee80', 'scrman.cpp', 'thiscall',
+          'o caminho da figura de fundo da tela atual, ou o texto vazio sem tela',
+          "the current screen's background picture path, or the empty string with no screen"),
+         ('screen_manager_set_background_picture', 'ScreenManager::set_background_picture', '0x7feeb0', 'scrman.cpp', 'thiscall, ret 4',
+          'troca a figura de fundo da tela atual (uma cópia do caminho, ou vazia com caminho nulo)',
+          "sets the current screen's background picture (a copy of the path, or empty for a null path)"),
+         ('screen_manager_free_all_screens', 'ScreenManager::free_all_screens', '0x7fef10', 'scrman.cpp', 'thiscall',
+          'libera o histórico de telas inteiro do registro atual, com as cópias dos parâmetros, e zera os ponteiros e contagens',
+          "frees the current record's whole screen history, with its parameter copies, and clears the pointers and counts"),
+         ('screen_manager_get_screen_param', 'ScreenManager::get_screen_param', '0x7ff010', 'scrman.cpp', 'thiscall, ret 4',
+          'o valor de um dos 60 parâmetros da tela atual',
+          "the value of one of the current screen's 60 parameters"),
+         ('screen_manager_set_screen_param_for_each_record', 'ScreenManager::set_screen_param_for_each_record', '0x7ff130', 'scrman.cpp', 'thiscall, ret 0x10',
+          'grava um parâmetro na tela atual de cada registro de cada canal com a chave pedida (ou de todos); defeito: com três ou mais registros num canal, a troca final não desfaz a rotação e eles voltam em outra ordem',
+          'sets a parameter on the current screen of every record of every channel with the given key (or all); defect: with three or more records in a channel, the final swap does not undo the rotation and they come back in another order'),
+         ('screen_manager_set_screen_param', 'ScreenManager::set_screen_param', '0x7ff270', 'scrman.cpp', 'thiscall, ret 0xc',
+          'grava um parâmetro da tela atual: libera a cópia antiga; com cópia, guarda uma cópia do texto, senão o próprio valor',
+          'sets a parameter of the current screen: frees the old copy; with copy, stores a copy of the string, otherwise the value itself'),
+         ('screen_manager_redraw_screen', 'ScreenManager::redraw_screen', '0x802d00', 'scrman.cpp', 'thiscall, ret 8',
+          'pede o redesenho da tela: o comando 9 no buffer de rede, aplicado à tela local ou mandado ao jogador remoto, do canal atual ou de todos',
+          'asks for the screen to be redrawn: command 9 in the network buffer, applied to the local display or sent to the remote player, for the current channel or all')])

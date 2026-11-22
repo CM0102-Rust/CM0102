@@ -1,0 +1,4 @@
+NAO PROVADO NO JOGO (leitor tel30, rodada das telas, 21/11/2026): compila sobre o HEAD 4ec4bcaa8 (git archive de rust/ e cm0102-base/) com tel26_1, tel01_1 e tel29_1 e os onze itens tel30_1..tel30_11 aplicados juntos (cargo build --release sem erro nem aviso no codigo do tel30); de novo com as 22 mutacoes do tel30 aplicadas de uma vez (compila); ancoras unicas no motor com toda a fila de telas; prologos conferidos no cm0102.exe; rotinas inteiras iguais no cm0102-1080.exe; conferir_assinaturas.py --fila sem achado nas chamadas do tel30.
+Depende de tel30_5 e tel30_6.
+Comparadores: o retorno lado a lado.
+Como chegar: tela do clube > Squad, cabecalhos de contrato, periodo protegido, valor, jogos, gols, gols sofridos, assistencias, nota media; a lista da comissao por cargo (0x460590); listas de atributos (0x456900, 0x475520, 0x47c180); a lista de datas (0x470fe0).

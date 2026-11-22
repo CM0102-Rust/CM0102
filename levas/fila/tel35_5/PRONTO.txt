@@ -1,0 +1,8 @@
+tel35_5: menubar_init_human_manager_records (0x75da50), HUMAN_MANAGER_RECORD::HUMAN_MANAGER_RECORD (0x75da80), menubar_destroy_human_manager_records (0x75dae0), menubar_add_separator (0x761260), menubar_add_change_player_menu (0x7612c0), menubar_list_continents (0x765010), menubar_list_league_nations (0x7651e0), manager_chat_screen_build (0x7654d0), manager_chat_screen_input (0x7657c0), compare_continents_by_name (0x765b90); Menubar.cpp.
+
+Compiled: HEAD (git archive of rust + cm0102-base, 21/11/2026) with tel26_1, tel26_4, tel26_5, tel26_6 and tel35_1..6 applied as fila.py does (%%In%% -> IDX_<NAME>, %%LEVA%% -> 999, the Prologue lines before `const N`): cargo build --release OK, no warning from the tel35 code. Not run in the game.
+Depends on tel26_1, tel26_6 (MENUBAR_RECORDS, MENUBAR_RECORD_SIZE), tel35_1, tel35_2.
+
+How to reach it: every screen builds the menu bar (menubar_build calls the separator, the change player menu and the two lists by address): open Competitions and Nations & Clubs; Change Player needs two humans; the manager chat exists only in a network game (only the original then). The start-up and exit routines run at program start and exit when the hooks are already installed (otherwise they simply never run hooked).
+Proof: Lucas with JOGAR_COMPARANDO.bat: menubar_add_separator, menubar_list_continents, menubar_list_league_nations, menubar_add_change_player_menu (two humans), compare_continents_by_name, HUMAN_MANAGER_RECORD.
+Mutations: separator flags 0x1000011; the chosen continent not ticked.

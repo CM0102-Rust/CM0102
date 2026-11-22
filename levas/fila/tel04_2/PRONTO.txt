@@ -1,0 +1,3 @@
+tel04_2 (21/11/2026, leitor tel04): NAO PROVADO NO JOGO. Compila sobre o HEAD 4ec4bcaa8 junto com tel26_1, tel04_1 e tel04_3 (sem avisos no codigo); ancoras 1 vez cada; prologos conferidos (iguais no 1080); a area da tela inteira do 0x472a00 le do exe em execucao (0x472adc/0x472ad7, trocados pelo 1080).
+Depende do tel26_1 e do tel04_1 (entra depois dos dois). Inclui o "fragmento" 0x472070 da lista (e o fim do 0x471a90).
+Prova: JOGAR_COMPARANDO.bat. Arrange Tour (filtro Available Only / All Nations, escolher, Next, Cancel); a escolha do clube da excursao; Arrange Tournament > Configure (todas as escolhas, o nome, Ok, Cancel). Mutacoes tel04_2_regra_do_continente (build das nacoes, clube de nivel abaixo de 5 com All Nations) e tel04_2_desempate (input do Configure).

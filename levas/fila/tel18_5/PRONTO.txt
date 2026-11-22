@@ -1,0 +1,2 @@
+tel18_5 (proposta de emprestimo: 0x8f93b0, 0x8f9690, 0x8f9a20, 0x8fac30; 4 rotinas): compilado sobre o HEAD 4ec4bcaa8 junto com tel26_1..6, tel01_1, tel29_1, tel17_1..4 e tel18_1..6; as mutacoes conferem (ancora unica). Nao rodei o jogo. Prova: o jogo do Lucas com JOGAR_COMPARANDO.bat.
+Como chegar: perfil de jogador de outro clube > Transfer > Make Loan Offer; ou Respond numa noticia de proposta de emprestimo negociada.

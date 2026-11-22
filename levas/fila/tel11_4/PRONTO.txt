@@ -1,0 +1,9 @@
+NAO PROVADO NO JOGO (leitor tel11, rodada das telas, 21/11/2026): compila sobre o HEAD 4ec4bcaa8 junto com tel11_1, tel11_2 e tel11_3 (de que depende), sem avisos no codigo; a mutacao compila, ancora 1 vez.
+Rotinas (7): open_take_control_confirm 0x822a60, take_control_confirm_build 0x822aa0, take_control_confirm_handle_input 0x822c50, enter_password_box_build 0x822ec0, enter_password_box_handle_input 0x8230b0, resume_control_confirm_build 0x823420, resume_control_confirm_handle_input 0x823660.
+Carreira automatica: nenhuma roda.
+Comparadores: as tres montagens lado a lado pela lista de exibicao; abrir a caixa e as tres respostas so na original (nomeiam o tecnico, retomam o controle, abrem caixas).
+Como chegar no jogo: Select Team -> clicar um clube (caixa de assumir; Sim nomeia). Senha e retomar: Manager Status -> clicar um tecnico de ferias ou sem jogar (com senha abre Enter Password; a senha-mestra "sportsinteractive" tambem vale).
+Mutacao (sessao do Lucas): ids de Nao/Sim trocados na caixa de assumir.
+Nenhum defeito novo do original.
+Nomes novos no motor: FN_HUMAN_MANAGER_SET_COMPUTER_CONTROLLED, FN_SCREENMANAGER_ADD_MANAGER_RECORD, FN_MATCH_DAY_IS_CLUB_PLAYING, FN_FOG_OF_WAR_ADD_MANAGER_MAP, G_SCREEN_MANAGER_PLAYER_JOINED/LEFT_CALLBACK, SETUP_MASTER_PASSWORD, CLUB_HUMAN_MANAGER, setup_box_buttons, setup_box_header, setup_box_question, setup_resume_manager, setup_already_resumed.
+Falta: a sessao do Lucas comparando.

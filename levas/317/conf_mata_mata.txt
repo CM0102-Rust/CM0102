@@ -1,0 +1,1 @@
+mutacao mwa23_mata_mata_de_uma_rodada 7639s engine: 10000000000 comparisons, 0 divergences

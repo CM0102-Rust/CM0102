@@ -1,0 +1,2 @@
+Compilado (cargo build --release, 0 erros, sem avisos novos) sobre o HEAD 4ec4bcaa8 + tel26_1, tel14_1, tel14_2 e tel15_1..tel15_4 juntos. Não rodado no jogo (rodada das telas: prova pelo Lucas com JOGAR_COMPARANDO.bat). Ordem: tel26_1, tel14_1, tel14_2, depois tel15_1 (auxiliares) e tel15_2..4. Mesmos bytes no cm0102-1080.exe.
+Como chegar: a tela do clube > Tática (a lista de 20 linhas usa os textos em toda montagem; numa partida ao vivo, a coluna de condição/situação e os cartões).

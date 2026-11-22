@@ -1,0 +1,11 @@
+tel38_7 (Guio.cpp, 2 rotinas): compilado sobre o HEAD 4ec4bcaa8 junto com tel26_1, tel01_1, tel29_1, tel38_1..4 (depende do
+tel26_1, tel29_1 e tel38_3) e tel38_5..8; as mutacoes compilam. Nao rodei o jogo.
+No 1080: Guio::init difere so nos limites da tela (0x5ee1f6 0x31f->0x77f, 0x5ee20b 0x257->0x437): a copia le os dois imediatos
+do exe em execucao (exe_immediate), a entrada vale nos dois exes. Guio::draw e igual.
+Prova: JOGAR_COMPARANDO.bat; as duas rodam em toda tela (init a cada item montado, draw a cada widget desenhado). As linhas
+impares escurecidas: qualquer lista com area (elenco, Inbox); a seta de area suspensa: um botao de menu suspenso; as marcas
+0x4000/0x20000/0x40000 e a figura (flag 0x400): telas com figuras/icones.
+Comparadores: Guio::init lado a lado no widget e na area (copia 0x18c + 0xbf1 por item); Guio::draw so a original, conferindo
+a marca de linha impar e o texto (0x100 bytes por desenho).
+Defeitos do original: texto copiado sem limite; area de 0 colunas divide por zero.
+Mutacoes: tel38_7_linhas_pares, tel38_7_escurece_sempre (qualquer lista com area).
