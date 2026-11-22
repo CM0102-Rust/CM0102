@@ -379,7 +379,8 @@ unsafe fn hook_with(name: &str, p: &Prologue, target: impl FnOnce(usize) -> usiz
 /// Prologues that end in a relative instruction (`call rel32` or `jcc rel8`), with its position
 /// in the bytes: the trampoline redoes the instruction with the absolute target. `engenharia-reversa/prologos.py`
 /// reads this table and accepts the relative instruction only at that position.
-pub const RELATIVAS: &[(usize, usize)] = &[(0x714d00, 4), (0x6f55c0, 4), (0x482a40, 3), (0x513a20, 3)];
+pub const RELATIVAS: &[(usize, usize)] = &[(0x714d00, 4), (0x6f55c0, 4), (0x482a40, 3), (0x513a20, 3), (0x77a870, 3), (0x567b00, 4),
+    (0x497910, 3), (0x727fa0, 2)];
 
 /// Copies the prologue to the trampoline, redoing the relative instruction from RELATIVAS. Returns the size
 /// written (the `jmp` back comes after).

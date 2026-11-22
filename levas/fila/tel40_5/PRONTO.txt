@@ -1,0 +1,4 @@
+NAO PROVADO NO JOGO (leitor tel40, rodada 2 das telas, 22/11/2026): compila sobre o HEAD af16155e7 junto com tel40_1 (de que depende: SCRMAN_JOIN_HOOK, SCRMAN_LEAVE_HOOK, scrman_records_regions; tel40_1 entra antes) e com as mutacoes aplicadas. Igual no cm0102-1080.exe.
+Sem rede: roda em toda carga de jogo salvo (Carregar Jogo ou -load). Prova: o Lucas carregando a carreira com o JOGAR_COMPARANDO.bat (lado a lado).
+Convivencia com simulation.rs: com CM_FERIAS o desvio do simulation entra antes e o do motor e recusado ("detour ... refused"); a original roda dentro do involucro, como hoje. A prova do save (que usa CM_FERIAS) nao exercita a copia.
+Mutacoes: tel40_5_sem_chave (qualquer carga com tecnico sem senha), tel40_5_sem_registro_proprio (save com dois tecnicos humanos sem senha).

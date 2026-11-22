@@ -1,0 +1,4 @@
+NAO PROVADO NO JOGO (leitor tel40, rodada 2 das telas, 22/11/2026): compila sobre o HEAD af16155e7 junto com tel40_1/3/5 (e com as mutacoes aplicadas). Iguais no cm0102-1080.exe.
+PRECISA de RELATIVAS (rust/src/detours.rs): (0x77a870, 3) -- o prologo do TcpIp::~TcpIp termina num call rel32; compilado com essa entrada. Sem ela, tirar a rotina 0x77a870 do item.
+Sem rede: NetworkBuffer::NetworkBuffer (buffers globais antes do WinMain e o do gerente de telas) e ~NetworkBuffer (atexit): so a original, plano conferido (posicao 0, capacidade, memoria; ponteiro zerado). O resto so em rede: prova = partida em rede em modo Rust.
+Mutacoes: tel40_2_despedida_curta, tel40_2_conexao_presa (so numa partida em rede, modo Rust).

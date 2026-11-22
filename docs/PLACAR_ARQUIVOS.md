@@ -2,7 +2,7 @@
 
 Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os arquivos-fonte do mapa de [maxevans60](https://github.com/maxevans60/cm0102-function-map) (CC BY 4.0). Uma função conta quando o início dela é desviado para Rust (`Prologue` em `rust/src/motor.rs`). O placar do motor de partidas, pelas nossas fronteiras, fica em `PLACAR.md`.
 
-**Exe inteiro:** 3643 de 6709 funções, 3444.9 de 5528.0 KB (**62.32%**) · 291 de 393 arquivos com rotinas em Rust
+**Exe inteiro:** 3678 de 6709 funções, 3477.1 de 5528.0 KB (**62.90%**) · 291 de 393 arquivos com rotinas em Rust
 
 | Arquivo | Funções | KB | Progresso |
 |---|---|---|---|
@@ -33,6 +33,7 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `find_screens.cpp` | 19/20 | 18.4/18.4 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **99.9%** |
 | `index.cpp` | 9/11 | 162.8/163.1 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **99.8%** |
 | `contract_screens.cpp` | 42/44 | 220.7/221.1 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **99.8%** |
+| `Setup.cpp` | 106/107 | 120.3/120.6 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **99.8%** |
 | `Menubar.cpp` | 13/14 | 32.3/32.4 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **99.8%** |
 | `training_screens.cpp` | 19/21 | 24.2/24.2 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **99.7%** |
 | `fra_lower.cpp` | 4/5 | 3.3/3.3 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **99.1%** |
@@ -178,7 +179,6 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `cro_a2a.cpp` | 5/10 | 3.2/4.3 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **73.7%** |
 | `comp_screens.cpp` | 85/106 | 91.6/124.2 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **73.7%** |
 | `comp_text.cpp` | 1/8 | 3.8/5.2 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **73.1%** |
-| `Setup.cpp` | 71/107 | 88.1/120.6 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **73.1%** |
 | `league.cpp` | 51/61 | 26.1/35.8 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **73.1%** |
 | `swe_first.cpp` | 7/12 | 3.8/5.3 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **72.0%** |
 | `virtual_staff.cpp` | 6/12 | 4.5/6.4 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **70.9%** |

@@ -1,0 +1,4 @@
+NAO PROVADO (so compilado; item de simulacao, sem LIGAS).
+tel39_5: player_age_record_assign (0x4a1fb0), attendance_record_assign (0x4ab5b0), Date::operator== (0x4a7f20).
+Compilado em 22/11/2026 (leitor tel39): sobre o HEAD af16155e7 (git archive de rust/ e cm0102-base/) com tel39_1..tel39_8 aplicados juntos (e (0x497910, 3) e (0x727fa0, 2) no RELATIVAS): cargo build --release sem erro e sem aviso no codigo dos itens; de novo com as 17 mutacoes aplicadas (compila); ancoras unicas (motor + fila); prologos conferidos no cm0102.exe em fronteira de instrucao; rotinas inteiras iguais no cm0102-1080.exe.
+Falta: comparacao ENG ate 2002-06-01 (o recorde de idade roda no fim da temporada); Rust x2 com detector. A 0x4ab5b0 talvez so rode nas telas de historico: a tel39_5_publico pode escapar.

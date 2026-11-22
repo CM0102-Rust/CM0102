@@ -1,0 +1,4 @@
+NAO PROVADO (so compilado; item de simulacao, sem LIGAS).
+tel39_7: Text::Text (0x4ae590), Text::~Text (0x4ae630), Text::clear (0x4afa40). Depende do tel39_6.
+Compilado em 22/11/2026 (leitor tel39): sobre o HEAD af16155e7 (git archive de rust/ e cm0102-base/) com tel39_1..tel39_8 aplicados juntos (e (0x497910, 3) e (0x727fa0, 2) no RELATIVAS): cargo build --release sem erro e sem aviso no codigo dos itens; de novo com as 17 mutacoes aplicadas (compila); ancoras unicas (motor + fila); prologos conferidos no cm0102.exe em fronteira de instrucao; rotinas inteiras iguais no cm0102-1080.exe.
+Falta: comparacao ENG ate 2001-08-01; Rust x2 com detector. tel39_7_sem_texto acusada pelo comparador do construtor; destruidor e esvaziar sem mutacao segura (o esvaziar e conferido depois da original).

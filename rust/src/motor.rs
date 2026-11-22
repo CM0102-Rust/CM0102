@@ -3805,8 +3805,43 @@ routines! {
     Prologue { address: 0x7c7240, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x51, 0x18] } => plot_append_point, compare_plot_append_point;
     Prologue { address: 0x7c7340, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x83, 0xec, 0x1c] } => plot_draw_line_graph, compare_plot_draw_line_graph;
     Prologue { address: 0x7c7580, bytes: &[0x8b, 0x44, 0x24, 0x14, 0x83, 0xec, 0x18] } => plot_draw_axes, compare_plot_draw_axes;
+    Prologue { address: 0x830620, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_world_cup_qualifying_comps, compare_create_world_cup_qualifying_comps;
+    Prologue { address: 0x830ac0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_other_int_comps, compare_create_other_int_comps;
+    Prologue { address: 0x830fe0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_world_club_comps, compare_create_world_club_comps;
+    Prologue { address: 0x8312e0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_european_club_comps, compare_create_european_club_comps;
+    Prologue { address: 0x831650, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_north_american_club_comps, compare_create_north_american_club_comps;
+    Prologue { address: 0x8318f0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_south_american_club_comps, compare_create_south_american_club_comps;
+    Prologue { address: 0x831ba0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_asian_club_comps, compare_create_asian_club_comps;
+    Prologue { address: 0x831eb0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_oceania_club_comps, compare_create_oceania_club_comps;
+    Prologue { address: 0x832100, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_argentine_comps, compare_create_argentine_comps;
+    Prologue { address: 0x832380, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_australian_comps, compare_create_australian_comps;
+    Prologue { address: 0x8325d0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_belgian_comps, compare_create_belgian_comps;
+    Prologue { address: 0x832980, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_brazilian_comps, compare_create_brazilian_comps;
+    Prologue { address: 0x8330b0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_croatian_comps, compare_create_croatian_comps;
+    Prologue { address: 0x833400, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_danish_comps, compare_create_danish_comps;
+    Prologue { address: 0x833750, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_english_comps, compare_create_english_comps;
+    Prologue { address: 0x833cf0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_finnish_comps, compare_create_finnish_comps;
+    Prologue { address: 0x833ff0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_french_comps, compare_create_french_comps;
+    Prologue { address: 0x8343f0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_german_comps, compare_create_german_comps;
+    Prologue { address: 0x8347c0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_greek_comps, compare_create_greek_comps;
+    Prologue { address: 0x834b10, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_dutch_comps, compare_create_dutch_comps;
+    Prologue { address: 0x834e60, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_irish_comps, compare_create_irish_comps;
+    Prologue { address: 0x835320, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_italian_comps, compare_create_italian_comps;
+    Prologue { address: 0x835900, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_japanese_comps, compare_create_japanese_comps;
+    Prologue { address: 0x835c90, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_northern_irish_comps, compare_create_northern_irish_comps;
+    Prologue { address: 0x836050, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_norwegian_comps, compare_create_norwegian_comps;
+    Prologue { address: 0x836350, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_polish_comps, compare_create_polish_comps;
+    Prologue { address: 0x8366e0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_portuguese_comps, compare_create_portuguese_comps;
+    Prologue { address: 0x836ac0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_russian_comps, compare_create_russian_comps;
+    Prologue { address: 0x836dc0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_scottish_comps, compare_create_scottish_comps;
+    Prologue { address: 0x837200, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_south_korean_comps, compare_create_south_korean_comps;
+    Prologue { address: 0x837560, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_spanish_comps, compare_create_spanish_comps;
+    Prologue { address: 0x8379f0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_swedish_comps, compare_create_swedish_comps;
+    Prologue { address: 0x837d70, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_turkish_comps, compare_create_turkish_comps;
+    Prologue { address: 0x8380c0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_united_states_comps, compare_create_united_states_comps;
+    Prologue { address: 0x8383b0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_welsh_comps, compare_create_welsh_comps;
 }
-const N: usize = 3647;
+const N: usize = 3682;
 include!(concat!(env!("OUT_DIR"), "/indices.rs")); // IDX_<NAME>: the position of each routine (build.rs)
 
 /// Size of the engine object (the game allocates it with new(0xf63b)): side 1's block (+0xf5f2, 0x36
@@ -4918,6 +4953,1882 @@ pub(crate) use self::zipdir::*;
 // ---------- 161st batch: watch list, position code and staff criterion ----------
 
 compare_value!(compare_staff_criterion, staff_criterion, IDX_STAFF_CRITERION, () -> u32);
+
+// ---------- batch 319: the key nation competitions, part 1: the international ones, Argentina, Australia, Belgium and Brazil (Setup.cpp) ----------
+
+// (uses setup_warning and save_error_box of setup.rs and the key nation entry names of tel13_1)
+// The 35 create_*_comps routines (one per G_LEAGUE_TABLE row; key_nation_create_all_comps calls the row's
+// KEY_NATION_RECORD_SETUP_FUNC for an international row or a nation with a selected league) are one mould with
+// different data: KeyNationComps holds a routine's data and key_nation_create_comps is the mould. Checked routine by
+// routine against the original by emulating it (every write to the entry, every allocation and constructor call with
+// its arguments, with and without the extra division and the continent's selected nation).
+
+/// The year a key nation entry value takes: the game year (`G_CURRENT_DATE_YEAR`) or the game start date's
+/// (`G_GAME_START_DATE_YEAR`) plus an offset, the start date moved 4 weeks on (`Date::add_weeks`, Brazil: in a
+/// constructor's dword the year and the date's next word), or a fixed year.
+#[derive(Clone, Copy)]
+enum EntryYear {
+    Current(u16),
+    Start(u16),
+    StartPlus4Weeks,
+    Fixed(u16),
+}
+
+/// What the original tests before a run of extra-division competitions: the count it wrote is the larger one, or the
+/// nation's bit again.
+#[derive(Clone, Copy)]
+enum ExtraGuard {
+    CountIsLarger,
+    Flag,
+}
+
+/// How many competitions an entry gets.
+#[derive(Clone, Copy)]
+enum EntryCount {
+    Fixed(u32),
+    /// Only when a nation of the entry's continent (`KEY_NATION_RECORD_CONTINENT`) has a selected league
+    /// (`key_nation_continent_has_selected_nation`); otherwise the count and the array are 0.
+    Continental(u32),
+    /// (without, with) the nation's extra division (`nation::LEAGUE_SELECTED` bit 2); the list's extra competitions are
+    /// only created when the guard holds.
+    ExtraDivision(u32, u32, ExtraGuard),
+}
+
+/// A pointer field of the entry: not written, null, or the competition record of a key.
+#[derive(Clone, Copy)]
+enum EntryLink {
+    Untouched,
+    Null,
+    Comp(usize),
+}
+
+/// One competition object: (operator new size, constructor thiscall(this, year dword, competition record) ret 8, the
+/// competition key, the constructor's year, extra division only).
+type EntryComp = (u32, usize, usize, EntryYear, bool);
+
+/// A season bound as the Date::Date arguments the entry keeps: (day, month from 0, year, weekday).
+type SeasonBound = (u16, u8, EntryYear, u16);
+
+/// What one `create_*_comps` routine writes on its key nation entry.
+struct KeyNationComps {
+    /// the Setup.cpp rows of the null entry box and of the allocation box, and the allocation box's text
+    rows: (u32, u32, usize),
+    /// the season start (`KEY_NATION_RECORD_START_DAY`, `key_nation_record::START_MONTH`, `.._START_YEAR`,
+    /// `.._START_WEEKDAY`; key_nation_create_all_comps turns them into `key_nation_record::START_DATE`)
+    start: SeasonBound,
+    /// the season end (`KEY_NATION_RECORD_END_DAY`.. -> `key_nation_record::END_DATE`)
+    end: SeasonBound,
+    count: EntryCount,
+    /// the calloc arguments when they are not (count × 4, 1)
+    calloc: Option<(u32, u32)>,
+    comps: &'static [EntryComp],
+    /// Date::Date(day, month, 2001, −1), whose day goes to `key_nation_record::SEASON_END_DAY`
+    end_day: (u32, u32),
+    /// `KEY_NATION_RECORD_SEASON_YEAR`
+    season_year: EntryYear,
+    /// `key_nation_record::SEASON_SPANS_YEAR`
+    spans: u8,
+    /// `key_nation_record::LEAGUE_COMP`
+    league: EntryLink,
+    /// `KEY_NATION_RECORD_CUP_COMP`
+    cup: EntryLink,
+    /// the routine first moves the start date 4 weeks on (Brazil)
+    weeks: bool,
+}
+
+/// The competition record of a key: `G_CLUB_COMP_TABLE` + [key] × 0x6b.
+unsafe fn key_comp_record(key: usize) -> usize {
+    read_usize(G_CLUB_COMP_TABLE).wrapping_add((read_u32(key) as usize).wrapping_mul(0x6b))
+}
+
+/// The value of an `EntryYear` as the dword a constructor gets (the original's high word is stack leftover, here 0,
+/// except for the 4 weeks date, read as a dword from its year on); the 16-bit fields take its low word.
+unsafe fn entry_year(year: EntryYear, weeks: &[u8; 8]) -> u32 {
+    match year {
+        EntryYear::Current(d) => read_u16(G_CURRENT_DATE_YEAR).wrapping_add(d) as u32,
+        EntryYear::Start(d) => read_u16(G_GAME_START_DATE_YEAR).wrapping_add(d) as u32,
+        EntryYear::StartPlus4Weeks => read_u32(weeks.as_ptr() as usize + cm_date::YEAR),
+        EntryYear::Fixed(y) => y as u32,
+    }
+}
+
+/// The value an `EntryLink` writes, or None when it writes nothing.
+unsafe fn entry_link(link: EntryLink) -> Option<usize> {
+    match link {
+        EntryLink::Untouched => None,
+        EntryLink::Null => Some(0),
+        EntryLink::Comp(key) => Some(key_comp_record(key)),
+    }
+}
+
+/// Whether the entry's nation has its extra division (bit 2 of `nation::LEAGUE_SELECTED`).
+unsafe fn key_nation_extra_division(entry: usize) -> bool {
+    Nation(read_usize(entry + KEY_NATION_RECORD_NATION)).league_selected() & 4 != 0
+}
+
+/// The competition count an entry gets, or None (a continental entry without a selected nation).
+unsafe fn key_nation_comp_count(entry: usize, spec: &KeyNationComps) -> Option<u32> {
+    match spec.count {
+        EntryCount::Fixed(n) => Some(n),
+        EntryCount::Continental(n) => {
+            (exe::key_nation_continent_has_selected_nation(read_usize(entry + KEY_NATION_RECORD_CONTINENT)) != 0).then_some(n)
+        }
+        EntryCount::ExtraDivision(small, large, _) => Some(if key_nation_extra_division(entry) { large } else { small }),
+    }
+}
+
+/// Whether a run of extra-division competitions is created (tested once before the run, as the original).
+unsafe fn key_nation_extra_guard(entry: usize, spec: &KeyNationComps) -> bool {
+    match spec.count {
+        EntryCount::ExtraDivision(_, large, ExtraGuard::CountIsLarger) => read_u32(entry + KEY_NATION_RECORD_COMP_COUNT) == large,
+        EntryCount::ExtraDivision(_, _, ExtraGuard::Flag) => key_nation_extra_division(entry),
+        _ => true,
+    }
+}
+
+/// The 4 weeks date of an entry that uses it (`Date::add_weeks`(G_GAME_START_DATE, 4)), zeroes otherwise.
+unsafe fn key_nation_weeks(spec: &KeyNationComps) -> [u8; 8] {
+    let mut weeks = [0u8; 8];
+    if spec.weeks {
+        exe::date_add_weeks(G_GAME_START_DATE, &mut weeks, 4);
+    }
+    weeks
+}
+
+/// The day of Date::Date(day, month, 2001, −1) (the season end of every entry is a 2001 date).
+unsafe fn key_nation_end_day(spec: &KeyNationComps) -> u16 {
+    let mut d = [0u16; 4];
+    exe::date_date_549f70(&mut d, spec.end_day.0, spec.end_day.1, 0x7d1, 0xffff_ffff);
+    d[0]
+}
+
+/// The mould of the `create_*_comps` routines: fills the key nation entry `entry` from `spec`; returns 1, or 0 with a
+/// null entry (the Setup.cpp "Error" box) or when the array cannot be allocated (the "Memory Allocation Error" box).
+///
+/// The season bounds are written; the count (`key_nation_comp_count`) goes to `KEY_NATION_RECORD_COMP_COUNT` and the
+/// array (calloc) to `KEY_NATION_RECORD_COMPS` (a continental entry without a selected nation gets 0 in both and no
+/// competition); each competition of the list (the extra ones only when `key_nation_extra_guard`) is `operator new`
+/// and its constructor (year, the key's competition record), a failed `new` leaving the slot null, in consecutive
+/// slots. Then `key_nation_record::SEASON_END_DAY`, `KEY_NATION_RECORD_SEASON_YEAR`,
+/// `key_nation_record::SEASON_SPANS_YEAR` and the links. The original's SEH frame (which deletes an object whose
+/// constructor throws) has no counterpart: the constructors do not throw.
+unsafe fn key_nation_create_comps(entry: usize, spec: &KeyNationComps) -> u32 {
+    if entry == 0 {
+        setup_warning(spec.rows.0);
+        return 0;
+    }
+    let weeks = key_nation_weeks(spec);
+    let year = |y: EntryYear| entry_year(y, &weeks);
+    let (start, end) = (spec.start, spec.end);
+    write_u16(entry + KEY_NATION_RECORD_START_DAY, start.0);
+    write_u8(entry + key_nation_record::START_MONTH, start.1);
+    write_u16(entry + KEY_NATION_RECORD_START_YEAR, year(start.2) as u16);
+    write_u16(entry + KEY_NATION_RECORD_START_WEEKDAY, start.3);
+    write_u16(entry + KEY_NATION_RECORD_END_DAY, end.0);
+    write_u8(entry + KEY_NATION_RECORD_END_MONTH, end.1);
+    write_u16(entry + KEY_NATION_RECORD_END_YEAR, year(end.2) as u16);
+    write_u16(entry + KEY_NATION_RECORD_END_WEEKDAY, end.3);
+    match key_nation_comp_count(entry, spec) {
+        None => {
+            write_u32(entry + KEY_NATION_RECORD_COMP_COUNT, 0);
+            write_usize(entry + KEY_NATION_RECORD_COMPS, 0);
+        }
+        Some(count) => {
+            write_u32(entry + KEY_NATION_RECORD_COMP_COUNT, count);
+            let (size, number) = spec.calloc.unwrap_or((read_u32(entry + KEY_NATION_RECORD_COMP_COUNT).wrapping_mul(4), 1));
+            let comps = exe::crt_calloc(size, number);
+            write_usize(entry + KEY_NATION_RECORD_COMPS, comps);
+            if comps == 0 {
+                save_error_box(spec.rows.1, spec.rows.2, 0x9a8108, 0x9a7ff8); // "Memory Allocation Error"
+                return 0;
+            }
+            let (mut slot, mut guard) = (0usize, None::<bool>);
+            for &(size, constructor, key, comp_year, extra) in spec.comps {
+                if extra {
+                    if !*guard.get_or_insert_with(|| key_nation_extra_guard(entry, spec)) {
+                        continue;
+                    }
+                } else {
+                    guard = None;
+                }
+                let p = exe::crt_operator_new(size);
+                let object = if p == 0 {
+                    0
+                } else {
+                    let construct: unsafe extern "thiscall" fn(usize, u32, usize) -> usize = core::mem::transmute(constructor);
+                    construct(p, year(comp_year), key_comp_record(key))
+                };
+                write_usize(read_usize(entry + KEY_NATION_RECORD_COMPS) + slot * 4, object);
+                slot += 1;
+            }
+        }
+    }
+    let e = KeyNationRecord(entry);
+    e.set_season_end_day(key_nation_end_day(spec));
+    write_u16(entry + KEY_NATION_RECORD_SEASON_YEAR, year(spec.season_year) as u16);
+    e.set_season_spans_year(spec.spans);
+    if let Some(v) = entry_link(spec.league) {
+        e.set_league_comp(v);
+    }
+    if let Some(v) = entry_link(spec.cup) {
+        write_usize(entry + KEY_NATION_RECORD_CUP_COMP, v);
+    }
+    1
+}
+
+/// The plan of a `create_*_comps` routine checked on the entry after the original ran (`result` its result; nothing to
+/// check with a null entry or a failed allocation): the season bounds, the count, each slot's competition (a non-null
+/// object's `league::COMPETITION` is the key's record; the extra ones by the same guard), the season end day, the
+/// season year, the spans flag and the links.
+unsafe fn key_nation_check_comps(name: &str, entry: usize, result: u32, spec: &KeyNationComps) {
+    if entry == 0 || result == 0 {
+        return;
+    }
+    let weeks = key_nation_weeks(spec);
+    let year = |y: EntryYear| entry_year(y, &weeks) as u16 as u32;
+    let mut wrong: Vec<String> = Vec::new();
+    let mut check = |what: &str, got: u32, plan: u32| {
+        if got != plan {
+            wrong.push(format!("{} {:#x} (plan {:#x})", what, got, plan));
+        }
+    };
+    let (start, end) = (spec.start, spec.end);
+    check("start day", read_u16(entry + KEY_NATION_RECORD_START_DAY) as u32, start.0 as u32);
+    check("start month", read_u8(entry + key_nation_record::START_MONTH) as u32, start.1 as u32);
+    check("start year", read_u16(entry + KEY_NATION_RECORD_START_YEAR) as u32, year(start.2));
+    check("start weekday", read_u16(entry + KEY_NATION_RECORD_START_WEEKDAY) as u32, start.3 as u32);
+    check("end day", read_u16(entry + KEY_NATION_RECORD_END_DAY) as u32, end.0 as u32);
+    check("end month", read_u8(entry + KEY_NATION_RECORD_END_MONTH) as u32, end.1 as u32);
+    check("end year", read_u16(entry + KEY_NATION_RECORD_END_YEAR) as u32, year(end.2));
+    check("end weekday", read_u16(entry + KEY_NATION_RECORD_END_WEEKDAY) as u32, end.3 as u32);
+    let count = key_nation_comp_count(entry, spec);
+    check("count", read_u32(entry + KEY_NATION_RECORD_COMP_COUNT), count.unwrap_or(0));
+    let comps = read_usize(entry + KEY_NATION_RECORD_COMPS);
+    if count.is_none() {
+        check("array", comps as u32, 0);
+    } else if comps != 0 {
+        let (mut slot, mut guard) = (0usize, None::<bool>);
+        for &(_, _, key, _, extra) in spec.comps {
+            if extra {
+                if !*guard.get_or_insert_with(|| key_nation_extra_guard(entry, spec)) {
+                    continue;
+                }
+            } else {
+                guard = None;
+            }
+            let object = League(read_usize(comps + slot * 4));
+            if !object.is_null() {
+                check("competition of a slot", object.competition().addr() as u32, key_comp_record(key) as u32);
+            }
+            slot += 1;
+        }
+    }
+    check("season end day", KeyNationRecord(entry).season_end_day() as u32, key_nation_end_day(spec) as u32);
+    check("season year", read_u16(entry + KEY_NATION_RECORD_SEASON_YEAR) as u32, year(spec.season_year));
+    check("spans year", KeyNationRecord(entry).season_spans_year() as u32, spec.spans as u32);
+    if let Some(v) = entry_link(spec.league) {
+        check("league comp", KeyNationRecord(entry).league_comp() as u32, v as u32);
+    }
+    if let Some(v) = entry_link(spec.cup) {
+        check("cup comp", read_usize(entry + KEY_NATION_RECORD_CUP_COMP) as u32, v as u32);
+    }
+    SCOREBOARD.record(wrong.is_empty(), || format!("{}(entry {:#x}): {}", name, entry, wrong.join(", ")));
+}
+
+/// Creates the World Cup and its qualifying sections on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the
+/// Setup.cpp "Error" box 0x2ede and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go
+/// from 1 July of the game year (weekday 5) to 1 July of the game year (weekday 5). 7 competitions
+/// (`KEY_NATION_RECORD_COMP_COUNT`, the array in `KEY_NATION_RECORD_COMPS`): FIFA World Cup, World Cup African
+/// Qualifying Section, World Cup Asian Qualifying Section, World Cup CONCACAF Qualifying Section, World Cup European
+/// Qualifying Section, World Cup Oceania Qualifying Section, World Cup South American Qualifying Sect; every
+/// constructor gets the game year. A failed allocation: the "Memory Allocation Error" box (Setup.cpp 0x2efb,
+/// "create_world_cup_comps() : unable to allocate memory") and 0. `key_nation_record::SEASON_END_DAY` = the day of
+/// Date::Date(25, 6, 2001, -1) (25 July 2001), `KEY_NATION_RECORD_SEASON_YEAR` = 1996,
+/// `key_nation_record::SEASON_SPANS_YEAR` = 2; `key_nation_record::LEAGUE_COMP` = null; returns 1. /// Original:
+/// `create_world_cup_qualifying_comps` (0x830620, Setup.cpp, cdecl).
+pub(crate) unsafe extern "C" fn create_world_cup_qualifying_comps(entry: usize) -> u32 {
+    covered!("tel13_2 world cup qualifying");
+    key_nation_create_comps(entry, &WORLD_CUP_QUALIFYING_COMPS)
+}
+
+/// The entry of `create_world_cup_qualifying_comps`.
+const WORLD_CUP_QUALIFYING_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x2ede, 0x2efb, 0xa81d04), // "create_world_cup_comps() : unable to allocate memory"
+    start: (1, 6, EntryYear::Current(0), 0x5),
+    end: (1, 6, EntryYear::Current(0), 0x5),
+    count: EntryCount::Fixed(7),
+    calloc: None,
+    comps: &[
+        (0x192, 0x92bf50, KEY_CLUB_COMP_FIFA_WORLD_CUP, EntryYear::Current(0), false), // WorldCup::WorldCup
+        (0xbb, 0x90f210, KEY_CLUB_COMP_WORLD_CUP_AFRICAN_QUALIFYING_SECTION, EntryYear::Current(0), false), // WcAfricanCup::WcAfricanCup
+        (0xfb, 0x911bf0, KEY_CLUB_COMP_WORLD_CUP_ASIAN_QUALIFYING_SECTION, EntryYear::Current(0), false), // WcAsiaLeague::WcAsiaLeague
+        (0xbd, 0x9149f0, KEY_CLUB_COMP_WORLD_CUP_CONCACAF_QUALIFYING_SECTION, EntryYear::Current(0), false), // WcConcacafCup::WcConcacafCup
+        (0x102, 0x918200, KEY_CLUB_COMP_WORLD_CUP_EUROPEAN_QUALIFYING_SECTION, EntryYear::Current(0), false), // WcEuropeLeague::WcEuropeLeague
+        (0xf7, 0x91df90, KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION, EntryYear::Current(0), false), // WcOceaniaLeague::WcOceaniaLeague
+        (0xf0, 0x9202b0, KEY_CLUB_COMP_WORLD_CUP_SOUTH_AMERICAN_QUALIFYING_SECT, EntryYear::Current(0), false), // WcSouthAmericanLeague::WcSouthAmericanLeague
+    ],
+    end_day: (25, 6),
+    season_year: EntryYear::Fixed(0x7cc),
+    spans: 2,
+    league: EntryLink::Null,
+    cup: EntryLink::Untouched,
+    weeks: false,
+};
+
+/// Creates the other international tournaments on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the
+/// Setup.cpp "Error" box 0x2f22 and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go
+/// from 1 July of the game year (weekday 5) to 1 July of the game year (weekday 5). 8 competitions
+/// (`KEY_NATION_RECORD_COMP_COUNT`, the array in `KEY_NATION_RECORD_COMPS`): Football Tournament Of The Olympic Games,
+/// European Football Championship, European Championship Qualifying, African Cup Of Nations, Copa America, Oceania
+/// Nations Cup, Asian Cup, Confederations Cup; every constructor gets the game year. A failed allocation: the "Memory
+/// Allocation Error" box (Setup.cpp 0x2f3e, "create_other_int_comps() : unable to allocate memory") and 0.
+/// `key_nation_record::SEASON_END_DAY` = the day of Date::Date(15, 7, 2001, -1) (15 August 2001),
+/// `KEY_NATION_RECORD_SEASON_YEAR` = 2001, `key_nation_record::SEASON_SPANS_YEAR` = 2; `key_nation_record::LEAGUE_COMP`
+/// = null; returns 1. /// Original: `create_other_int_comps` (0x830ac0, Setup.cpp, cdecl).
+pub(crate) unsafe extern "C" fn create_other_int_comps(entry: usize) -> u32 {
+    covered!("tel13_2 other int");
+    key_nation_create_comps(entry, &OTHER_INT_COMPS)
+}
+
+/// The entry of `create_other_int_comps`.
+const OTHER_INT_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x2f22, 0x2f3e, 0xa81d3c), // "create_other_int_comps() : unable to allocate memory"
+    start: (1, 6, EntryYear::Current(0), 0x5),
+    end: (1, 6, EntryYear::Current(0), 0x5),
+    count: EntryCount::Fixed(8),
+    calloc: None,
+    comps: &[
+        (0xf6, 0x79f530, KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES, EntryYear::Current(0), false), // Olympics::Olympics
+        (0x142, 0x57a890, KEY_CLUB_COMP_EUROPEAN_FOOTBALL_CHAMPIONSHIP, EntryYear::Current(0), false), // EuroChamp::EuroChamp
+        (0x102, 0x57ce10, KEY_CLUB_COMP_EUROPEAN_CHAMPIONSHIP_QUALIFYING, EntryYear::Current(0), false), // EuroChampQual::EuroChampQual
+        (0xf4, 0x401000, KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS, EntryYear::Current(0), false), // AfricanNations::AfricanNations
+        (0xf6, 0x5e0660, KEY_CLUB_COMP_COPA_AMERICA, EntryYear::Current(0), false), // GoldCup::GoldCup
+        (0xf4, 0x7988b0, KEY_CLUB_COMP_OCEANIA_NATIONS_CUP, EntryYear::Current(0), false), // OceaniaNations::OceaniaNations
+        (0xf4, 0x40e860, KEY_CLUB_COMP_ASIAN_CUP, EntryYear::Current(0), false), // AsiaNations::AsiaNations
+        (0xf6, 0x58b310, KEY_CLUB_COMP_CONFEDERATIONS_CUP, EntryYear::Current(0), false), // FifaConfed::FifaConfed
+    ],
+    end_day: (15, 7),
+    season_year: EntryYear::Fixed(0x7d1),
+    spans: 2,
+    league: EntryLink::Null,
+    cup: EntryLink::Untouched,
+    weeks: false,
+};
+
+/// Creates the world club tournaments on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the Setup.cpp
+/// "Error" box 0x2f69 and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go from 1 July
+/// of the game year (weekday 5) to 1 July of the game year (weekday 5). 3 competitions (`KEY_NATION_RECORD_COMP_COUNT`,
+/// the array in `KEY_NATION_RECORD_COMPS`): FIFA Club World Championship, World Club Cup, Inter American Cup; every
+/// constructor gets the game year. A failed allocation: the "Memory Allocation Error" box (Setup.cpp 0x2f88,
+/// "create_world_club_comps() : unable to allocate memory") and 0. `key_nation_record::SEASON_END_DAY` = the day of
+/// Date::Date(20, 5, 2001, -1) (20 June 2001), `KEY_NATION_RECORD_SEASON_YEAR` = 2001,
+/// `key_nation_record::SEASON_SPANS_YEAR` = 1; `key_nation_record::LEAGUE_COMP` = null; returns 1. /// Original:
+/// `create_world_club_comps` (0x830fe0, Setup.cpp, cdecl).
+pub(crate) unsafe extern "C" fn create_world_club_comps(entry: usize) -> u32 {
+    covered!("tel13_2 world club");
+    key_nation_create_comps(entry, &WORLD_CLUB_COMPS)
+}
+
+/// The entry of `create_world_club_comps`.
+const WORLD_CLUB_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x2f69, 0x2f88, 0xa81d74), // "create_world_club_comps() : unable to allocate memory"
+    start: (1, 6, EntryYear::Current(0), 0x5),
+    end: (1, 6, EntryYear::Current(0), 0x5),
+    count: EntryCount::Fixed(3),
+    calloc: None,
+    comps: &[
+        (0xf6, 0x929140, KEY_CLUB_COMP_FIFA_CLUB_WORLD_CHAMPIONSHIP, EntryYear::Current(0), false), // WorldClubChamp::WorldClubChamp
+        (0xb2, 0x92b4b0, KEY_CLUB_COMP_WORLD_CLUB_CUP, EntryYear::Current(0), false), // WorldClubCup::WorldClubCup
+        (0xb2, 0x632080, KEY_CLUB_COMP_INTER_AMERICAN_CUP, EntryYear::Current(0), false), // InterAmerCup::InterAmerCup
+    ],
+    end_day: (20, 5),
+    season_year: EntryYear::Fixed(0x7d1),
+    spans: 1,
+    league: EntryLink::Null,
+    cup: EntryLink::Untouched,
+    weeks: false,
+};
+
+/// Creates the European club cups on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the Setup.cpp "Error"
+/// box 0x2fac and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go from 23 June of the
+/// game year (weekday -1) to 20 May of the game year (weekday 5). 4 competitions (`KEY_NATION_RECORD_COMP_COUNT`, the
+/// array in `KEY_NATION_RECORD_COMPS`): UEFA European Champions League, UEFA Cup, Inter Toto Cup, European Super Cup
+/// only when a nation of the entry's continent has a selected league (`key_nation_continent_has_selected_nation` of
+/// `KEY_NATION_RECORD_CONTINENT`); otherwise the count and the array stay 0; every constructor gets the game year. A
+/// failed allocation: the "Memory Allocation Error" box (Setup.cpp 0x2fcd, "create_european_club_comps() : unable to
+/// allocate memory") and 0. `key_nation_record::SEASON_END_DAY` = the day of Date::Date(21, 5, 2001, -1) (21 June
+/// 2001), `KEY_NATION_RECORD_SEASON_YEAR` = 2001, `key_nation_record::SEASON_SPANS_YEAR` = 1;
+/// `key_nation_record::LEAGUE_COMP` = null; returns 1. /// Original: `create_european_club_comps` (0x8312e0, Setup.cpp,
+/// cdecl).
+pub(crate) unsafe extern "C" fn create_european_club_comps(entry: usize) -> u32 {
+    covered!("tel13_2 european club");
+    key_nation_create_comps(entry, &EUROPEAN_CLUB_COMPS)
+}
+
+/// The entry of `create_european_club_comps`.
+const EUROPEAN_CLUB_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x2fac, 0x2fcd, 0xa81dac), // "create_european_club_comps() : unable to allocate memory"
+    start: (23, 5, EntryYear::Current(0), 0xffff),
+    end: (20, 4, EntryYear::Current(0), 0x5),
+    count: EntryCount::Continental(4),
+    calloc: None,
+    comps: &[
+        (0xb2, 0x5837c0, KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE, EntryYear::Current(0), false), // EuropeanCup::EuropeanCup
+        (0xb3, 0x9022e0, KEY_CLUB_COMP_UEFA_CUP, EntryYear::Current(0), false), // UefaCup::UefaCup
+        (0xb6, 0x632fb0, KEY_CLUB_COMP_INTER_TOTO_CUP, EntryYear::Current(0), false), // IntertotoCup::IntertotoCup
+        (0xb2, 0x57a100, KEY_CLUB_COMP_EUROPEAN_SUPER_CUP, EntryYear::Current(0), false), // EurSuperCup::EurSuperCup
+    ],
+    end_day: (21, 5),
+    season_year: EntryYear::Fixed(0x7d1),
+    spans: 1,
+    league: EntryLink::Null,
+    cup: EntryLink::Untouched,
+    weeks: false,
+};
+
+/// Creates the CONCACAF club cups on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the Setup.cpp "Error"
+/// box 0x2ff9 and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go from 1 July of the
+/// game year (weekday 5) to 1 July of the game year (weekday 5). 2 competitions (`KEY_NATION_RECORD_COMP_COUNT`, the
+/// array in `KEY_NATION_RECORD_COMPS`): CONCACAF Champions Cup, CONCACAF Merconorte Cup only when a nation of the
+/// entry's continent has a selected league (`key_nation_continent_has_selected_nation` of
+/// `KEY_NATION_RECORD_CONTINENT`); otherwise the count and the array stay 0; every constructor gets the start date
+/// year. A failed allocation: the "Memory Allocation Error" box (Setup.cpp 0x301d, "create_north_american_club_comps()
+/// : unable to allocate memory") and 0. `key_nation_record::SEASON_END_DAY` = the day of Date::Date(21, 1, 2001, -1)
+/// (21 February 2001), `KEY_NATION_RECORD_SEASON_YEAR` = 2001, `key_nation_record::SEASON_SPANS_YEAR` = 1;
+/// `key_nation_record::LEAGUE_COMP` = null; returns 1. /// Original: `create_north_american_club_comps` (0x831650,
+/// Setup.cpp, cdecl).
+pub(crate) unsafe extern "C" fn create_north_american_club_comps(entry: usize) -> u32 {
+    covered!("tel13_2 north american club");
+    key_nation_create_comps(entry, &NORTH_AMERICAN_CLUB_COMPS)
+}
+
+/// The entry of `create_north_american_club_comps`.
+const NORTH_AMERICAN_CLUB_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x2ff9, 0x301d, 0xa81de8), // "create_north_american_club_comps() : unable to allocate memory"
+    start: (1, 6, EntryYear::Current(0), 0x5),
+    end: (1, 6, EntryYear::Current(0), 0x5),
+    count: EntryCount::Continental(2),
+    calloc: None,
+    comps: &[
+        (0xb2, 0x4c0c40, KEY_CLUB_COMP_CONCACAF_CHAMPIONS_CUP, EntryYear::Start(0), false), // ConChamp::ConChamp
+        (0xf6, 0x4c16f0, KEY_CLUB_COMP_CONCACAF_MERCONORTE_CUP, EntryYear::Start(0), false), // ConMercCup::ConMercCup
+    ],
+    end_day: (21, 1),
+    season_year: EntryYear::Fixed(0x7d1),
+    spans: 1,
+    league: EntryLink::Null,
+    cup: EntryLink::Untouched,
+    weeks: false,
+};
+
+/// Creates the South American club cups on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the Setup.cpp
+/// "Error" box 0x3045 and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go from 1 July
+/// of the game year (weekday 5) to 1 July of the game year (weekday 5). 2 competitions (`KEY_NATION_RECORD_COMP_COUNT`,
+/// the array in `KEY_NATION_RECORD_COMPS` (allocated as calloc(4, 2))): South American Copa Libertadores, South
+/// American Copa Mercosur only when a nation of the entry's continent has a selected league
+/// (`key_nation_continent_has_selected_nation` of `KEY_NATION_RECORD_CONTINENT`); otherwise the count and the array
+/// stay 0; every constructor gets the game year. A failed allocation: the "Memory Allocation Error" box (Setup.cpp
+/// 0x3065, "create_south_american_club_comps() : unable to allocate memory") and 0. `key_nation_record::SEASON_END_DAY`
+/// = the day of Date::Date(10, 0, 2001, -1) (10 January 2001), `KEY_NATION_RECORD_SEASON_YEAR` = 2001,
+/// `key_nation_record::SEASON_SPANS_YEAR` = 1; `key_nation_record::LEAGUE_COMP` = null; returns 1. /// Original:
+/// `create_south_american_club_comps` (0x8318f0, Setup.cpp, cdecl).
+pub(crate) unsafe extern "C" fn create_south_american_club_comps(entry: usize) -> u32 {
+    covered!("tel13_2 south american club");
+    key_nation_create_comps(entry, &SOUTH_AMERICAN_CLUB_COMPS)
+}
+
+/// The entry of `create_south_american_club_comps`.
+const SOUTH_AMERICAN_CLUB_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x3045, 0x3065, 0xa81e28), // "create_south_american_club_comps() : unable to allocate memory"
+    start: (1, 6, EntryYear::Current(0), 0x5),
+    end: (1, 6, EntryYear::Current(0), 0x5),
+    count: EntryCount::Continental(2),
+    calloc: Some((4, 2)),
+    comps: &[
+        (0xf6, 0x4c2f50, KEY_CLUB_COMP_SOUTH_AMERICAN_COPA_LIBERTADORES, EntryYear::Current(0), false), // ConmebolLiber::ConmebolLiber
+        (0xf6, 0x4c46c0, KEY_CLUB_COMP_SOUTH_AMERICAN_COPA_MERCOSUR, EntryYear::Current(0), false), // ConmebolMerc::ConmebolMerc
+    ],
+    end_day: (10, 0),
+    season_year: EntryYear::Fixed(0x7d1),
+    spans: 1,
+    league: EntryLink::Null,
+    cup: EntryLink::Untouched,
+    weeks: false,
+};
+
+/// Creates the Asian club cups on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the Setup.cpp "Error" box
+/// 0x308d and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go from 1 July of the game
+/// year (weekday 5) to 1 July of the game year (weekday 5). 3 competitions (`KEY_NATION_RECORD_COMP_COUNT`, the array
+/// in `KEY_NATION_RECORD_COMPS`): Asian Champions Cup, Asian Cup Winners Cup, Asian Super Cup only when a nation of the
+/// entry's continent has a selected league (`key_nation_continent_has_selected_nation` of
+/// `KEY_NATION_RECORD_CONTINENT`); otherwise the count and the array stay 0; every constructor gets the game year. A
+/// failed allocation: the "Memory Allocation Error" box (Setup.cpp 0x30ad, "create_asian_club_comps() : unable to
+/// allocate memory") and 0. `key_nation_record::SEASON_END_DAY` = the day of Date::Date(28, 7, 2001, -1) (28 August
+/// 2001), `KEY_NATION_RECORD_SEASON_YEAR` = 2001, `key_nation_record::SEASON_SPANS_YEAR` = 1;
+/// `key_nation_record::LEAGUE_COMP` = null; returns 1. /// Original: `create_asian_club_comps` (0x831ba0, Setup.cpp,
+/// cdecl).
+pub(crate) unsafe extern "C" fn create_asian_club_comps(entry: usize) -> u32 {
+    covered!("tel13_2 asian club");
+    key_nation_create_comps(entry, &ASIAN_CLUB_COMPS)
+}
+
+/// The entry of `create_asian_club_comps`.
+const ASIAN_CLUB_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x308d, 0x30ad, 0xa81e68), // "create_asian_club_comps() : unable to allocate memory"
+    start: (1, 6, EntryYear::Current(0), 0x5),
+    end: (1, 6, EntryYear::Current(0), 0x5),
+    count: EntryCount::Continental(3),
+    calloc: None,
+    comps: &[
+        (0xba, 0x40aae0, KEY_CLUB_COMP_ASIAN_CHAMPIONS_CUP, EntryYear::Current(0), false), // AsiaClubChamp::AsiaClubChamp
+        (0xba, 0x40cbe0, KEY_CLUB_COMP_ASIAN_CUP_WINNERS_CUP, EntryYear::Current(0), false), // AsiaCupWinner::AsiaCupWinner
+        (0xb2, 0x410650, KEY_CLUB_COMP_ASIAN_SUPER_CUP, EntryYear::Current(0), false), // AsiaSuperCup::AsiaSuperCup
+    ],
+    end_day: (28, 7),
+    season_year: EntryYear::Fixed(0x7d1),
+    spans: 1,
+    league: EntryLink::Null,
+    cup: EntryLink::Untouched,
+    weeks: false,
+};
+
+/// Creates the Oceania club championship on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the Setup.cpp
+/// "Error" box 0x30d6 and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go from 1 July
+/// of the game year (weekday 5) to 1 July of the game year (weekday 5). 1 competitions (`KEY_NATION_RECORD_COMP_COUNT`,
+/// the array in `KEY_NATION_RECORD_COMPS`): Oceania Club Championship only when a nation of the entry's continent has a
+/// selected league (`key_nation_continent_has_selected_nation` of `KEY_NATION_RECORD_CONTINENT`); otherwise the count
+/// and the array stay 0; every constructor gets the game year. A failed allocation: the "Memory Allocation Error" box
+/// (Setup.cpp 0x30f6, "create_asian_club_comps() : unable to allocate memory") and 0.
+/// `key_nation_record::SEASON_END_DAY` = the day of Date::Date(21, 6, 2001, -1) (21 July 2001),
+/// `KEY_NATION_RECORD_SEASON_YEAR` = 2001, `key_nation_record::SEASON_SPANS_YEAR` = 1; `key_nation_record::LEAGUE_COMP`
+/// = null; returns 1. The original's allocation message names another routine (create_asian_club_comps()). ///
+/// Original: `create_oceania_club_comps` (0x831eb0, Setup.cpp, cdecl).
+pub(crate) unsafe extern "C" fn create_oceania_club_comps(entry: usize) -> u32 {
+    covered!("tel13_2 oceania club");
+    key_nation_create_comps(entry, &OCEANIA_CLUB_COMPS)
+}
+
+/// The entry of `create_oceania_club_comps`.
+const OCEANIA_CLUB_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x30d6, 0x30f6, 0xa81e68), // "create_asian_club_comps() : unable to allocate memory"
+    start: (1, 6, EntryYear::Current(0), 0x5),
+    end: (1, 6, EntryYear::Current(0), 0x5),
+    count: EntryCount::Continental(1),
+    calloc: None,
+    comps: &[
+        (0xf6, 0x796fd0, KEY_CLUB_COMP_OCEANIA_CLUB_CHAMPIONSHIP, EntryYear::Current(0), false), // OceaniaClubChamp::OceaniaClubChamp
+    ],
+    end_day: (21, 6),
+    season_year: EntryYear::Fixed(0x7d1),
+    spans: 1,
+    league: EntryLink::Null,
+    cup: EntryLink::Untouched,
+    weeks: false,
+};
+
+/// Creates Argentina's competitions on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the Setup.cpp
+/// "Error" box 0x311f and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go from 23
+/// August of the game year (weekday 5) to 19 July of the next year (weekday 6). 2 competitions
+/// (`KEY_NATION_RECORD_COMP_COUNT`, the array in `KEY_NATION_RECORD_COMPS`): Argentine Premier Division, Argentine
+/// Second Division; every constructor gets the game year. A failed allocation: the "Memory Allocation Error" box
+/// (Setup.cpp 0x313c, "create_argentine_comps() : unable to allocate memory") and 0.
+/// `key_nation_record::SEASON_END_DAY` = the day of Date::Date(1, 7, 2001, -1) (1 August 2001),
+/// `KEY_NATION_RECORD_SEASON_YEAR` = the game year, `key_nation_record::SEASON_SPANS_YEAR` = 1;
+/// `key_nation_record::LEAGUE_COMP` = null; returns 1. /// Original: `create_argentine_comps` (0x832100, Setup.cpp,
+/// cdecl).
+pub(crate) unsafe extern "C" fn create_argentine_comps(entry: usize) -> u32 {
+    covered!("tel13_2 argentine");
+    key_nation_create_comps(entry, &ARGENTINE_COMPS)
+}
+
+/// The entry of `create_argentine_comps`.
+const ARGENTINE_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x311f, 0x313c, 0xa81ea0), // "create_argentine_comps() : unable to allocate memory"
+    start: (23, 7, EntryYear::Current(0), 0x5),
+    end: (19, 6, EntryYear::Current(1), 0x6),
+    count: EntryCount::Fixed(2),
+    calloc: None,
+    comps: &[
+        (0xee, 0x404250, KEY_CLUB_COMP_ARGENTINE_PREMIER_DIVISION, EntryYear::Current(0), false), // ArgPrm::ArgPrm
+        (0xf2, 0x406bf0, KEY_CLUB_COMP_ARGENTINE_SECOND_DIVISION, EntryYear::Current(0), false), // ArgSecond::ArgSecond
+    ],
+    end_day: (1, 7),
+    season_year: EntryYear::Current(0),
+    spans: 1,
+    league: EntryLink::Null,
+    cup: EntryLink::Untouched,
+    weeks: false,
+};
+
+/// Creates Australia's competitions on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the Setup.cpp
+/// "Error" box 0x3160 and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go from 2
+/// October of the game year (weekday 5) to 10 June of the next year (weekday 5). 1 competitions
+/// (`KEY_NATION_RECORD_COMP_COUNT`, the array in `KEY_NATION_RECORD_COMPS`): Australian National Soccer League; every
+/// constructor gets the game year. A failed allocation: the "Memory Allocation Error" box (Setup.cpp 0x317d,
+/// "create_australian_comps() : unable to allocate memory") and 0. `key_nation_record::SEASON_END_DAY` = the day of
+/// Date::Date(20, 6, 2001, -1) (20 July 2001), `KEY_NATION_RECORD_SEASON_YEAR` = the game year,
+/// `key_nation_record::SEASON_SPANS_YEAR` = 1; `key_nation_record::LEAGUE_COMP` = null; returns 1. /// Original:
+/// `create_australian_comps` (0x832380, Setup.cpp, cdecl).
+pub(crate) unsafe extern "C" fn create_australian_comps(entry: usize) -> u32 {
+    covered!("tel13_2 australian");
+    key_nation_create_comps(entry, &AUSTRALIAN_COMPS)
+}
+
+/// The entry of `create_australian_comps`.
+const AUSTRALIAN_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x3160, 0x317d, 0xa81ed8), // "create_australian_comps() : unable to allocate memory"
+    start: (2, 9, EntryYear::Current(0), 0x5),
+    end: (10, 5, EntryYear::Current(1), 0x5),
+    count: EntryCount::Fixed(1),
+    calloc: None,
+    comps: &[
+        (0xee, 0x410e90, KEY_CLUB_COMP_AUSTRALIAN_NATIONAL_SOCCER_LEAGUE, EntryYear::Current(0), false), // AusNsl::AusNsl
+    ],
+    end_day: (20, 6),
+    season_year: EntryYear::Current(0),
+    spans: 1,
+    league: EntryLink::Null,
+    cup: EntryLink::Untouched,
+    weeks: false,
+};
+
+/// Creates Belgium's competitions on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the Setup.cpp "Error"
+/// box 0x31a1 and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go from 3 August of
+/// the game year (weekday 5) to 1 June of the next year (weekday 6). 5 competitions (`KEY_NATION_RECORD_COMP_COUNT`,
+/// the array in `KEY_NATION_RECORD_COMPS`): Belgian First Division, Belgian Second Division, Belgian Third Division,
+/// Belgian Cup, Belgian Super Cup; every constructor gets the game year. A failed allocation: the "Memory Allocation
+/// Error" box (Setup.cpp 0x31be, "create_belgian_comps() : unable to allocate memory") and 0.
+/// `key_nation_record::SEASON_END_DAY` = the day of Date::Date(20, 5, 2001, -1) (20 June 2001),
+/// `KEY_NATION_RECORD_SEASON_YEAR` = the game year, `key_nation_record::SEASON_SPANS_YEAR` = 1;
+/// `key_nation_record::LEAGUE_COMP` = the Belgian Super Cup record; returns 1. /// Original: `create_belgian_comps`
+/// (0x8325d0, Setup.cpp, cdecl).
+pub(crate) unsafe extern "C" fn create_belgian_comps(entry: usize) -> u32 {
+    covered!("tel13_2 belgian");
+    key_nation_create_comps(entry, &BELGIAN_COMPS)
+}
+
+/// The entry of `create_belgian_comps`.
+const BELGIAN_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x31a1, 0x31be, 0xa81f10), // "create_belgian_comps() : unable to allocate memory"
+    start: (3, 7, EntryYear::Current(0), 0x5),
+    end: (1, 5, EntryYear::Current(1), 0x6),
+    count: EntryCount::Fixed(5),
+    calloc: None,
+    comps: &[
+        (0xee, 0x41dd40, KEY_CLUB_COMP_BELGIAN_FIRST_DIVISION, EntryYear::Current(0), false), // BelFirst::BelFirst
+        (0xf9, 0x41f030, KEY_CLUB_COMP_BELGIAN_SECOND_DIVISION, EntryYear::Current(0), false), // BelSecond::BelSecond
+        (0x104, 0x4216f0, KEY_CLUB_COMP_BELGIAN_THIRD_DIVISION, EntryYear::Current(0), false), // BelThird::BelThird
+        (0xb2, 0x41d050, KEY_CLUB_COMP_BELGIAN_CUP, EntryYear::Current(0), false), // BelFaCup::BelFaCup
+        (0xb2, 0x420ef0, KEY_CLUB_COMP_BELGIAN_SUPER_CUP, EntryYear::Current(0), false), // BelSuper::BelSuper
+    ],
+    end_day: (20, 5),
+    season_year: EntryYear::Current(0),
+    spans: 1,
+    league: EntryLink::Comp(KEY_CLUB_COMP_BELGIAN_SUPER_CUP),
+    cup: EntryLink::Untouched,
+    weeks: false,
+};
+
+/// Creates Brazil's competitions on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the Setup.cpp "Error"
+/// box 0x31e6 and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go from 18 January of
+/// the year 4 weeks after the start date (weekday 6) to 14 December of the year 4 weeks after the start date (weekday
+/// 6) (Brazil reads its year from the start date moved 4 weeks on, `Date::add_weeks`; its constructors get the dword
+/// from that year on: the year and the next word). 17 competitions (`KEY_NATION_RECORD_COMP_COUNT`, the array in
+/// `KEY_NATION_RECORD_COMPS`): Brazilian National First Division, Brazilian National Second Division, Brazilian
+/// National Third Division, Brazilian Bahia State Championship, Brazilian Central State Championship, Brazilian Gaucho
+/// State Championship, Brazilian Goias State Championship, Brazilian Minas Gerais State Championshi, Brazilian North
+/// State Championship, Brazilian Northeast State Championship, Brazilian Parana State Championship, Brazilian
+/// Pernambuco State Championship, Brazilian Rio De Janeiro State Champions, Brazilian Santa Catarina State Champions,
+/// Brazilian Sao Paulo State Champ, Brazilian Cup, Brazilian Champions Cup; every constructor gets the year 4 weeks
+/// after the start date. A failed allocation: the "Memory Allocation Error" box (Setup.cpp 0x3205,
+/// "create_norwegian_comps() : unable to allocate memory") and 0. `key_nation_record::SEASON_END_DAY` = the day of
+/// Date::Date(12, 0, 2001, -1) (12 January 2001), `KEY_NATION_RECORD_SEASON_YEAR` = the year 4 weeks after the start
+/// date, `key_nation_record::SEASON_SPANS_YEAR` = 1; `key_nation_record::LEAGUE_COMP` = null; returns 1. The original's
+/// allocation message names another routine (create_norwegian_comps()). /// Original: `create_brazilian_comps`
+/// (0x832980, Setup.cpp, cdecl).
+pub(crate) unsafe extern "C" fn create_brazilian_comps(entry: usize) -> u32 {
+    covered!("tel13_2 brazilian");
+    key_nation_create_comps(entry, &BRAZILIAN_COMPS)
+}
+
+/// The entry of `create_brazilian_comps`.
+const BRAZILIAN_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x31e6, 0x3205, 0xa81f44), // "create_norwegian_comps() : unable to allocate memory"
+    start: (18, 0, EntryYear::StartPlus4Weeks, 0x6),
+    end: (14, 11, EntryYear::StartPlus4Weeks, 0x6),
+    count: EntryCount::Fixed(17),
+    calloc: None,
+    comps: &[
+        (0xee, 0x429850, KEY_CLUB_COMP_BRAZILIAN_NATIONAL_FIRST_DIVISION, EntryYear::StartPlus4Weeks, false), // BraNatFirst::BraNatFirst
+        (0xee, 0x42be40, KEY_CLUB_COMP_BRAZILIAN_NATIONAL_SECOND_DIVISION, EntryYear::StartPlus4Weeks, false), // BraNatSecond::BraNatSecond
+        (0xf2, 0x42d2c0, KEY_CLUB_COMP_BRAZILIAN_NATIONAL_THIRD_DIVISION, EntryYear::StartPlus4Weeks, false), // BraNatThird::BraNatThird
+        (0xee, 0x42f2d0, KEY_CLUB_COMP_BRAZILIAN_BAHIA_STATE_CHAMPIONSHIP, EntryYear::StartPlus4Weeks, false), // BraRegBahia::BraRegBahia
+        (0xee, 0x4304b0, KEY_CLUB_COMP_BRAZILIAN_CENTRAL_STATE_CHAMPIONSHIP, EntryYear::StartPlus4Weeks, false), // BraRegCentral::BraRegCentral
+        (0xee, 0x4317c0, KEY_CLUB_COMP_BRAZILIAN_GAUCHO_STATE_CHAMPIONSHIP, EntryYear::StartPlus4Weeks, false), // BraRegGaucho::BraRegGaucho
+        (0xee, 0x432b50, KEY_CLUB_COMP_BRAZILIAN_GOIAS_STATE_CHAMPIONSHIP, EntryYear::StartPlus4Weeks, false), // BraRegGoias::BraRegGoias
+        (0xee, 0x433d50, KEY_CLUB_COMP_BRAZILIAN_MINAS_GERAIS_STATE_CHAMPIONSHI, EntryYear::StartPlus4Weeks, false), // BraRegMinasGerais::BraRegMinasGerais
+        (0xee, 0x435340, KEY_CLUB_COMP_BRAZILIAN_NORTH_STATE_CHAMPIONSHIP, EntryYear::StartPlus4Weeks, false), // BraRegNorth::BraRegNorth
+        (0xee, 0x4363f0, KEY_CLUB_COMP_BRAZILIAN_NORTHEAST_STATE_CHAMPIONSHIP, EntryYear::StartPlus4Weeks, false), // BraRegNortheast::BraRegNortheast
+        (0xee, 0x437400, KEY_CLUB_COMP_BRAZILIAN_PARANA_STATE_CHAMPIONSHIP, EntryYear::StartPlus4Weeks, false), // BraRegParana::BraRegParana
+        (0xee, 0x4388f0, KEY_CLUB_COMP_BRAZILIAN_PERNAMBUCO_STATE_CHAMPIONSHIP, EntryYear::StartPlus4Weeks, false), // BraRegPern::BraRegPern
+        (0xee, 0x439a40, KEY_CLUB_COMP_BRAZILIAN_RIO_DE_JANEIRO_STATE_CHAMPIONS, EntryYear::StartPlus4Weeks, false), // BraRegRio::BraRegRio
+        (0xee, 0x43b130, KEY_CLUB_COMP_BRAZILIAN_SANTA_CATARINA_STATE_CHAMPIONS, EntryYear::StartPlus4Weeks, false), // BraRegSanta::BraRegSanta
+        (0xee, 0x43c280, KEY_CLUB_COMP_BRAZILIAN_SAO_PAULO_STATE_CHAMP, EntryYear::StartPlus4Weeks, false), // BraRegSp::BraRegSp
+        (0xb2, 0x427430, KEY_CLUB_COMP_BRAZILIAN_CUP, EntryYear::StartPlus4Weeks, false), // BraCup::BraCup
+        (0xee, 0x4259a0, KEY_CLUB_COMP_BRAZILIAN_CHAMPIONS_CUP, EntryYear::StartPlus4Weeks, false), // BraChampCup::BraChampCup
+    ],
+    end_day: (12, 0),
+    season_year: EntryYear::StartPlus4Weeks,
+    spans: 1,
+    league: EntryLink::Null,
+    cup: EntryLink::Untouched,
+    weeks: true,
+};
+
+/// Comparer of `create_world_cup_qualifying_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_world_cup_qualifying_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_WORLD_CUP_QUALIFYING_COMPS)(entry);
+    key_nation_check_comps("create_world_cup_qualifying_comps", entry, r, &WORLD_CUP_QUALIFYING_COMPS);
+    r
+}
+
+/// Comparer of `create_other_int_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_other_int_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_OTHER_INT_COMPS)(entry);
+    key_nation_check_comps("create_other_int_comps", entry, r, &OTHER_INT_COMPS);
+    r
+}
+
+/// Comparer of `create_world_club_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_world_club_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_WORLD_CLUB_COMPS)(entry);
+    key_nation_check_comps("create_world_club_comps", entry, r, &WORLD_CLUB_COMPS);
+    r
+}
+
+/// Comparer of `create_european_club_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_european_club_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_EUROPEAN_CLUB_COMPS)(entry);
+    key_nation_check_comps("create_european_club_comps", entry, r, &EUROPEAN_CLUB_COMPS);
+    r
+}
+
+/// Comparer of `create_north_american_club_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_north_american_club_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_NORTH_AMERICAN_CLUB_COMPS)(entry);
+    key_nation_check_comps("create_north_american_club_comps", entry, r, &NORTH_AMERICAN_CLUB_COMPS);
+    r
+}
+
+/// Comparer of `create_south_american_club_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_south_american_club_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_SOUTH_AMERICAN_CLUB_COMPS)(entry);
+    key_nation_check_comps("create_south_american_club_comps", entry, r, &SOUTH_AMERICAN_CLUB_COMPS);
+    r
+}
+
+/// Comparer of `create_asian_club_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_asian_club_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_ASIAN_CLUB_COMPS)(entry);
+    key_nation_check_comps("create_asian_club_comps", entry, r, &ASIAN_CLUB_COMPS);
+    r
+}
+
+/// Comparer of `create_oceania_club_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_oceania_club_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_OCEANIA_CLUB_COMPS)(entry);
+    key_nation_check_comps("create_oceania_club_comps", entry, r, &OCEANIA_CLUB_COMPS);
+    r
+}
+
+/// Comparer of `create_argentine_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_argentine_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_ARGENTINE_COMPS)(entry);
+    key_nation_check_comps("create_argentine_comps", entry, r, &ARGENTINE_COMPS);
+    r
+}
+
+/// Comparer of `create_australian_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_australian_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_AUSTRALIAN_COMPS)(entry);
+    key_nation_check_comps("create_australian_comps", entry, r, &AUSTRALIAN_COMPS);
+    r
+}
+
+/// Comparer of `create_belgian_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_belgian_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_BELGIAN_COMPS)(entry);
+    key_nation_check_comps("create_belgian_comps", entry, r, &BELGIAN_COMPS);
+    r
+}
+
+/// Comparer of `create_brazilian_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_brazilian_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_BRAZILIAN_COMPS)(entry);
+    key_nation_check_comps("create_brazilian_comps", entry, r, &BRAZILIAN_COMPS);
+    r
+}
+
+// ---------- batch 319: the key nation competitions, part 2: Croatia to Northern Ireland (Setup.cpp) ----------
+
+// (uses the mould of tel13_2: KeyNationComps, key_nation_create_comps, key_nation_check_comps)
+
+/// Creates Croatia's competitions on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the Setup.cpp "Error"
+/// box 0x3239 and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go from 24 July of the
+/// game year (weekday 5) to 14 May of the next year (weekday 5). 4 competitions (`KEY_NATION_RECORD_COMP_COUNT`, the
+/// array in `KEY_NATION_RECORD_COMPS`): Croatian First Division, Croatian Second Division North, Croatian Second
+/// Division South, Croatian Cup; every constructor gets the game year. A failed allocation: the "Memory Allocation
+/// Error" box (Setup.cpp 0x3256, "create_croatian_comps() : unable to allocate memory") and 0.
+/// `key_nation_record::SEASON_END_DAY` = the day of Date::Date(20, 5, 2001, -1) (20 June 2001),
+/// `KEY_NATION_RECORD_SEASON_YEAR` = the game year, `key_nation_record::SEASON_SPANS_YEAR` = 1;
+/// `key_nation_record::LEAGUE_COMP` = null; returns 1. /// Original: `create_croatian_comps` (0x8330b0, Setup.cpp,
+/// cdecl).
+pub(crate) unsafe extern "C" fn create_croatian_comps(entry: usize) -> u32 {
+    covered!("tel13_3 croatian");
+    key_nation_create_comps(entry, &CROATIAN_COMPS)
+}
+
+/// The entry of `create_croatian_comps`.
+const CROATIAN_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x3239, 0x3256, 0xa81f7c), // "create_croatian_comps() : unable to allocate memory"
+    start: (24, 6, EntryYear::Current(0), 0x5),
+    end: (14, 4, EntryYear::Current(1), 0x5),
+    count: EntryCount::Fixed(4),
+    calloc: None,
+    comps: &[
+        (0xef, 0x513e10, KEY_CLUB_COMP_CROATIAN_FIRST_DIVISION_9CF8A4, EntryYear::Current(0), false), // CroA1::CroA1
+        (0xef, 0x515310, KEY_CLUB_COMP_CROATIAN_SECOND_DIVISION_NORTH, EntryYear::Current(0), false), // CroA2a::CroA2a
+        (0xef, 0x516430, KEY_CLUB_COMP_CROATIAN_SECOND_DIVISION_SOUTH, EntryYear::Current(0), false), // CroA2b::CroA2b
+        (0xb2, 0x517480, KEY_CLUB_COMP_CROATIAN_CUP, EntryYear::Current(0), false), // CroCup::CroCup
+    ],
+    end_day: (20, 5),
+    season_year: EntryYear::Current(0),
+    spans: 1,
+    league: EntryLink::Null,
+    cup: EntryLink::Untouched,
+    weeks: false,
+};
+
+/// Creates Denmark's competitions on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the Setup.cpp "Error"
+/// box 0x327e and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go from 27 July of the
+/// game year (weekday 6) to 14 June of the next year (weekday 6). 4 competitions (`KEY_NATION_RECORD_COMP_COUNT`, the
+/// array in `KEY_NATION_RECORD_COMPS`): Danish Premier Division, Danish First Division, Danish Second Division, Danish
+/// Cup; every constructor gets the game year. A failed allocation: the "Memory Allocation Error" box (Setup.cpp 0x329a,
+/// "create_danish_comps() : unable to allocate memory") and 0. `key_nation_record::SEASON_END_DAY` = the day of
+/// Date::Date(20, 5, 2001, -1) (20 June 2001), `KEY_NATION_RECORD_SEASON_YEAR` = the game year,
+/// `key_nation_record::SEASON_SPANS_YEAR` = 1; `key_nation_record::LEAGUE_COMP` = null; returns 1. /// Original:
+/// `create_danish_comps` (0x833400, Setup.cpp, cdecl).
+pub(crate) unsafe extern "C" fn create_danish_comps(entry: usize) -> u32 {
+    covered!("tel13_3 danish");
+    key_nation_create_comps(entry, &DANISH_COMPS)
+}
+
+/// The entry of `create_danish_comps`.
+const DANISH_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x327e, 0x329a, 0xa81fb0), // "create_danish_comps() : unable to allocate memory"
+    start: (27, 6, EntryYear::Current(0), 0x6),
+    end: (14, 5, EntryYear::Current(1), 0x6),
+    count: EntryCount::Fixed(4),
+    calloc: None,
+    comps: &[
+        (0xee, 0x5525e0, KEY_CLUB_COMP_DANISH_PREMIER_DIVISION, EntryYear::Current(0), false), // DenPrm::DenPrm
+        (0xee, 0x5516f0, KEY_CLUB_COMP_DANISH_FIRST_DIVISION, EntryYear::Current(0), false), // DenFirst::DenFirst
+        (0xee, 0x553e80, KEY_CLUB_COMP_DANISH_SECOND_DIVISION, EntryYear::Current(0), false), // DenSecond::DenSecond
+        (0xb2, 0x5509b0, KEY_CLUB_COMP_DANISH_CUP, EntryYear::Current(0), false), // DenCup::DenCup
+    ],
+    end_day: (20, 5),
+    season_year: EntryYear::Current(0),
+    spans: 1,
+    league: EntryLink::Null,
+    cup: EntryLink::Untouched,
+    weeks: false,
+};
+
+/// Creates England's competitions on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the Setup.cpp "Error"
+/// box 0x32c1 and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go from 10 August of
+/// the game year (weekday 5) to 24 May of the next year (weekday 5). 8 competitions (`KEY_NATION_RECORD_COMP_COUNT`,
+/// the array in `KEY_NATION_RECORD_COMPS`): English Premier Division, English First Division, English Second Division,
+/// English Third Division, English FA Cup, English League Cup, English Autoglass Trophy, English Charity Shield; with
+/// the nation's extra division (`nation::LEAGUE_SELECTED` bit 2) 10, adding English Conference, English FA Trophy
+/// (created when the count is 10); every constructor gets the game year. A failed allocation: the "Memory Allocation
+/// Error" box (Setup.cpp 0x32e0, "create_english_comps() : unable to allocate memory") and 0.
+/// `key_nation_record::SEASON_END_DAY` = the day of Date::Date(20, 5, 2001, -1) (20 June 2001),
+/// `KEY_NATION_RECORD_SEASON_YEAR` = the game year, `key_nation_record::SEASON_SPANS_YEAR` = 1;
+/// `key_nation_record::LEAGUE_COMP` = the English Charity Shield record; returns 1. /// Original:
+/// `create_english_comps` (0x833750, Setup.cpp, cdecl).
+pub(crate) unsafe extern "C" fn create_english_comps(entry: usize) -> u32 {
+    covered!("tel13_3 english");
+    key_nation_create_comps(entry, &ENGLISH_COMPS)
+}
+
+/// The entry of `create_english_comps`.
+const ENGLISH_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x32c1, 0x32e0, 0xa81fe4), // "create_english_comps() : unable to allocate memory"
+    start: (10, 7, EntryYear::Current(0), 0x5),
+    end: (24, 4, EntryYear::Current(1), 0x5),
+    count: EntryCount::ExtraDivision(8, 10, ExtraGuard::CountIsLarger),
+    calloc: None,
+    comps: &[
+        (0xee, 0x573380, KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION, EntryYear::Current(0), false), // EngPrm::EngPrm
+        (0xee, 0x571680, KEY_CLUB_COMP_ENGLISH_FIRST_DIVISION, EntryYear::Current(0), false), // EngFirst::EngFirst
+        (0xee, 0x5754a0, KEY_CLUB_COMP_ENGLISH_SECOND_DIVISION, EntryYear::Current(0), false), // EngSecond::EngSecond
+        (0xee, 0x576dd0, KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION, EntryYear::Current(0), false), // EngThird::EngThird
+        (0xee, 0x56db60, KEY_CLUB_COMP_ENGLISH_CONFERENCE, EntryYear::Current(0), true), // EngConf::EngConf
+        (0xb5, 0x56f040, KEY_CLUB_COMP_ENGLISH_FA_CUP, EntryYear::Current(0), false), // EngFaCup::EngFaCup
+        (0xb3, 0x56c2a0, KEY_CLUB_COMP_ENGLISH_LEAGUE_CUP, EntryYear::Current(0), false), // EngCcCup::EngCcCup
+        (0xba, 0x56aa30, KEY_CLUB_COMP_ENGLISH_AUTOGLASS_TROPHY, EntryYear::Current(0), false), // EngAutoCup::EngAutoCup
+        (0xb2, 0x56d380, KEY_CLUB_COMP_ENGLISH_CHARITY_SHIELD, EntryYear::Current(0), false), // EngCharity::EngCharity
+        (0xb2, 0x570c00, KEY_CLUB_COMP_ENGLISH_FA_TROPHY, EntryYear::Current(0), true), // EngFaTrophy::EngFaTrophy
+    ],
+    end_day: (20, 5),
+    season_year: EntryYear::Current(0),
+    spans: 1,
+    league: EntryLink::Comp(KEY_CLUB_COMP_ENGLISH_CHARITY_SHIELD),
+    cup: EntryLink::Untouched,
+    weeks: false,
+};
+
+/// Creates Finland's competitions on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the Setup.cpp "Error"
+/// box 0x3311 and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go from 29 April of
+/// the start date year (weekday 5) to 12 November of the next year (weekday 6). 3 competitions
+/// (`KEY_NATION_RECORD_COMP_COUNT`, the array in `KEY_NATION_RECORD_COMPS`): Finnish Premier Division, Finnish First
+/// Division, Finnish Cup; every constructor gets the start date year. A failed allocation: the "Memory Allocation
+/// Error" box (Setup.cpp 0x332d, "create_finnish_comps() : unable to allocate memory") and 0.
+/// `key_nation_record::SEASON_END_DAY` = the day of Date::Date(27, 11, 2001, -1) (27 December 2001),
+/// `KEY_NATION_RECORD_SEASON_YEAR` = the start date year, `key_nation_record::SEASON_SPANS_YEAR` = 0;
+/// `key_nation_record::LEAGUE_COMP` = null; returns 1. /// Original: `create_finnish_comps` (0x833cf0, Setup.cpp,
+/// cdecl).
+pub(crate) unsafe extern "C" fn create_finnish_comps(entry: usize) -> u32 {
+    covered!("tel13_3 finnish");
+    key_nation_create_comps(entry, &FINNISH_COMPS)
+}
+
+/// The entry of `create_finnish_comps`.
+const FINNISH_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x3311, 0x332d, 0xa82018), // "create_finnish_comps() : unable to allocate memory"
+    start: (29, 3, EntryYear::Start(0), 0x5),
+    end: (12, 10, EntryYear::Current(1), 0x6),
+    count: EntryCount::Fixed(3),
+    calloc: None,
+    comps: &[
+        (0xee, 0x595170, KEY_CLUB_COMP_FINNISH_PREMIER_DIVISION, EntryYear::Start(0), false), // FinPrm::FinPrm
+        (0xfe, 0x592eb0, KEY_CLUB_COMP_FINNISH_FIRST_DIVISION, EntryYear::Start(0), false), // FinFirst::FinFirst
+        (0xb2, 0x592250, KEY_CLUB_COMP_FINNISH_CUP, EntryYear::Start(0), false), // FinCup::FinCup
+    ],
+    end_day: (27, 11),
+    season_year: EntryYear::Start(0),
+    spans: 0,
+    league: EntryLink::Null,
+    cup: EntryLink::Untouched,
+    weeks: false,
+};
+
+/// Creates France's competitions on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the Setup.cpp "Error"
+/// box 0x3352 and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go from 9 August of
+/// the game year (weekday 5) to 24 May of the next year (weekday 5). 6 competitions (`KEY_NATION_RECORD_COMP_COUNT`,
+/// the array in `KEY_NATION_RECORD_COMPS`): French First Division, French Second Division, French National, French Cup,
+/// French League Cup, French Champions Trophy; every constructor gets the game year. A failed allocation: the "Memory
+/// Allocation Error" box (Setup.cpp 0x336e, "create_french_comps() : unable to allocate memory") and 0.
+/// `key_nation_record::SEASON_END_DAY` = the day of Date::Date(20, 5, 2001, -1) (20 June 2001),
+/// `KEY_NATION_RECORD_SEASON_YEAR` = the game year, `key_nation_record::SEASON_SPANS_YEAR` = 1;
+/// `key_nation_record::LEAGUE_COMP` = the French Champions Trophy record; returns 1. /// Original:
+/// `create_french_comps` (0x833ff0, Setup.cpp, cdecl).
+pub(crate) unsafe extern "C" fn create_french_comps(entry: usize) -> u32 {
+    covered!("tel13_3 french");
+    key_nation_create_comps(entry, &FRENCH_COMPS)
+}
+
+/// The entry of `create_french_comps`.
+const FRENCH_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x3352, 0x336e, 0xa8204c), // "create_french_comps() : unable to allocate memory"
+    start: (9, 7, EntryYear::Current(0), 0x5),
+    end: (24, 4, EntryYear::Current(1), 0x5),
+    count: EntryCount::Fixed(6),
+    calloc: None,
+    comps: &[
+        (0xf6, 0x5bb160, KEY_CLUB_COMP_FRENCH_FIRST_DIVISION, EntryYear::Current(0), false), // FraFirst::FraFirst
+        (0xee, 0x5be330, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION, EntryYear::Current(0), false), // FraSecond::FraSecond
+        (0xee, 0x5bfb40, KEY_CLUB_COMP_FRENCH_NATIONAL, EntryYear::Current(0), false), // FraThird::FraThird
+        (0xb2, 0x5ba130, KEY_CLUB_COMP_FRENCH_CUP, EntryYear::Current(0), false), // FraCup::FraCup
+        (0xb2, 0x5bc980, KEY_CLUB_COMP_FRENCH_LEAGUE_CUP, EntryYear::Current(0), false), // FraLgeCup::FraLgeCup
+        (0xb2, 0x5bf320, KEY_CLUB_COMP_FRENCH_CHAMPIONS_TROPHY, EntryYear::Current(0), false), // FraSuper::FraSuper
+    ],
+    end_day: (20, 5),
+    season_year: EntryYear::Current(0),
+    spans: 1,
+    league: EntryLink::Comp(KEY_CLUB_COMP_FRENCH_CHAMPIONS_TROPHY),
+    cup: EntryLink::Untouched,
+    weeks: false,
+};
+
+/// Creates Germany's competitions on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the Setup.cpp "Error"
+/// box 0x3397 and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go from 10 August of
+/// the game year (weekday 5) to 14 June of the next year (weekday 5). 4 competitions (`KEY_NATION_RECORD_COMP_COUNT`,
+/// the array in `KEY_NATION_RECORD_COMPS`): German First Division, German Second Division, German Cup, German League
+/// Cup; with the nation's extra division (`nation::LEAGUE_SELECTED` bit 2) 5, adding German Regional (created when the
+/// count is 5); every constructor gets the game year. A failed allocation: the "Memory Allocation Error" box (Setup.cpp
+/// 0x33b6, "create_german_comps() : unable to allocate memory") and 0. `key_nation_record::SEASON_END_DAY` = the day of
+/// Date::Date(20, 5, 2001, -1) (20 June 2001), `KEY_NATION_RECORD_SEASON_YEAR` = the game year,
+/// `key_nation_record::SEASON_SPANS_YEAR` = 1; `key_nation_record::LEAGUE_COMP` = null; returns 1. /// Original:
+/// `create_german_comps` (0x8343f0, Setup.cpp, cdecl).
+pub(crate) unsafe extern "C" fn create_german_comps(entry: usize) -> u32 {
+    covered!("tel13_3 german");
+    key_nation_create_comps(entry, &GERMAN_COMPS)
+}
+
+/// The entry of `create_german_comps`.
+const GERMAN_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x3397, 0x33b6, 0xa82080), // "create_german_comps() : unable to allocate memory"
+    start: (10, 7, EntryYear::Current(0), 0x5),
+    end: (14, 5, EntryYear::Current(1), 0x5),
+    count: EntryCount::ExtraDivision(4, 5, ExtraGuard::CountIsLarger),
+    calloc: None,
+    comps: &[
+        (0xee, 0x5d99b0, KEY_CLUB_COMP_GERMAN_FIRST_DIVISION, EntryYear::Current(0), false), // GerFirst::GerFirst
+        (0xee, 0x5de2e0, KEY_CLUB_COMP_GERMAN_SECOND_DIVISION, EntryYear::Current(0), false), // GerSecond::GerSecond
+        (0xee, 0x5dcbd0, KEY_CLUB_COMP_GERMAN_REGIONAL, EntryYear::Current(0), true), // GerRegional::GerRegional
+        (0xb2, 0x5d8c20, KEY_CLUB_COMP_GERMAN_CUP, EntryYear::Current(0), false), // GerCup::GerCup
+        (0xb2, 0x5dc0e0, KEY_CLUB_COMP_GERMAN_LEAGUE_CUP, EntryYear::Current(0), false), // GerLgeCup::GerLgeCup
+    ],
+    end_day: (20, 5),
+    season_year: EntryYear::Current(0),
+    spans: 1,
+    league: EntryLink::Null,
+    cup: EntryLink::Untouched,
+    weeks: false,
+};
+
+/// Creates Greece's competitions on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the Setup.cpp "Error"
+/// box 0x33e1 and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go from 15 August of
+/// the game year (weekday 5) to 21 May of the next year (weekday 5). 4 competitions (`KEY_NATION_RECORD_COMP_COUNT`,
+/// the array in `KEY_NATION_RECORD_COMPS`): Greek Premier Division, Greek Second Division, Greek Cup, Greek Super Cup;
+/// every constructor gets the game year. A failed allocation: the "Memory Allocation Error" box (Setup.cpp 0x33fd,
+/// "create_german_comps() : unable to allocate memory") and 0. `key_nation_record::SEASON_END_DAY` = the day of
+/// Date::Date(20, 5, 2001, -1) (20 June 2001), `KEY_NATION_RECORD_SEASON_YEAR` = the game year,
+/// `key_nation_record::SEASON_SPANS_YEAR` = 1; `key_nation_record::LEAGUE_COMP` = null; returns 1. The original's
+/// allocation message names another routine (create_german_comps()). /// Original: `create_greek_comps` (0x8347c0,
+/// Setup.cpp, cdecl).
+pub(crate) unsafe extern "C" fn create_greek_comps(entry: usize) -> u32 {
+    covered!("tel13_3 greek");
+    key_nation_create_comps(entry, &GREEK_COMPS)
+}
+
+/// The entry of `create_greek_comps`.
+const GREEK_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x33e1, 0x33fd, 0xa82080), // "create_german_comps() : unable to allocate memory"
+    start: (15, 7, EntryYear::Current(0), 0x5),
+    end: (21, 4, EntryYear::Current(1), 0x5),
+    count: EntryCount::Fixed(4),
+    calloc: None,
+    comps: &[
+        (0xee, 0x5ea410, KEY_CLUB_COMP_GREEK_PREMIER_DIVISION, EntryYear::Current(0), false), // GrePrm::GrePrm
+        (0xee, 0x5eb2b0, KEY_CLUB_COMP_GREEK_SECOND_DIVISION, EntryYear::Current(0), false), // GreSecond::GreSecond
+        (0xf6, 0x5e88a0, KEY_CLUB_COMP_GREEK_CUP, EntryYear::Current(0), false), // GreCup::GreCup
+        (0xb2, 0x5ec040, KEY_CLUB_COMP_GREEK_SUPER_CUP, EntryYear::Current(0), false), // GreSuper::GreSuper
+    ],
+    end_day: (20, 5),
+    season_year: EntryYear::Current(0),
+    spans: 1,
+    league: EntryLink::Null,
+    cup: EntryLink::Untouched,
+    weeks: false,
+};
+
+/// Creates Holland's competitions on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the Setup.cpp "Error"
+/// box 0x3423 and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go from 16 August of
+/// the game year (weekday 5) to 7 June of the next year (weekday 5). 4 competitions (`KEY_NATION_RECORD_COMP_COUNT`,
+/// the array in `KEY_NATION_RECORD_COMPS`): Dutch KPN Telecompetition, Dutch Toto Division, Dutch Amstel Cup, Dutch
+/// Super Cup; every constructor gets the game year. A failed allocation: the "Memory Allocation Error" box (Setup.cpp
+/// 0x343f, "create_dutch_comps() : unable to allocate memory") and 0. `key_nation_record::SEASON_END_DAY` = the day of
+/// Date::Date(20, 5, 2001, -1) (20 June 2001), `KEY_NATION_RECORD_SEASON_YEAR` = the game year,
+/// `key_nation_record::SEASON_SPANS_YEAR` = 1; `key_nation_record::LEAGUE_COMP` = null; returns 1. /// Original:
+/// `create_dutch_comps` (0x834b10, Setup.cpp, cdecl).
+pub(crate) unsafe extern "C" fn create_dutch_comps(entry: usize) -> u32 {
+    covered!("tel13_3 dutch");
+    key_nation_create_comps(entry, &DUTCH_COMPS)
+}
+
+/// The entry of `create_dutch_comps`.
+const DUTCH_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x3423, 0x343f, 0xa820b4), // "create_dutch_comps() : unable to allocate memory"
+    start: (16, 7, EntryYear::Current(0), 0x5),
+    end: (7, 5, EntryYear::Current(1), 0x5),
+    count: EntryCount::Fixed(4),
+    calloc: None,
+    comps: &[
+        (0xee, 0x5f7610, KEY_CLUB_COMP_DUTCH_KPN_TELECOMPETITION, EntryYear::Current(0), false), // HolPrm::HolPrm
+        (0xf2, 0x5f5490, KEY_CLUB_COMP_DUTCH_TOTO_DIVISION, EntryYear::Current(0), false), // HolFirst::HolFirst
+        (0xf6, 0x5f3450, KEY_CLUB_COMP_DUTCH_AMSTEL_CUP, EntryYear::Current(0), false), // HolCup::HolCup
+        (0xb2, 0x5f8820, KEY_CLUB_COMP_DUTCH_SUPER_CUP, EntryYear::Current(0), false), // HolSuper::HolSuper
+    ],
+    end_day: (20, 5),
+    season_year: EntryYear::Current(0),
+    spans: 1,
+    league: EntryLink::Null,
+    cup: EntryLink::Untouched,
+    weeks: false,
+};
+
+/// Creates the Republic of Ireland on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the Setup.cpp "Error"
+/// box 0x3466 and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go from 1 August of
+/// the game year (weekday 6) to 23 April of the next year (weekday 6). 8 competitions (`KEY_NATION_RECORD_COMP_COUNT`,
+/// the array in `KEY_NATION_RECORD_COMPS`): Irish Premier Division, Irish First Division, Irish Senior Challenge Cup,
+/// Irish League Cup, Irish Super Cup, Irish Presidents Cup, Irish Munster Senior Cup, Irish Leinster Senior Cup; every
+/// constructor gets the game year. A failed allocation: the "Memory Allocation Error" box (Setup.cpp 0x3482,
+/// "create_irish_comps() : unable to allocate memory") and 0. `key_nation_record::SEASON_END_DAY` = the day of
+/// Date::Date(20, 5, 2001, -1) (20 June 2001), `KEY_NATION_RECORD_SEASON_YEAR` = the game year,
+/// `key_nation_record::SEASON_SPANS_YEAR` = 1; `key_nation_record::LEAGUE_COMP` = the Irish Super Cup record;
+/// `KEY_NATION_RECORD_CUP_COMP` = the Irish Senior Challenge Cup record; returns 1. /// Original: `create_irish_comps`
+/// (0x834e60, Setup.cpp, cdecl).
+pub(crate) unsafe extern "C" fn create_irish_comps(entry: usize) -> u32 {
+    covered!("tel13_3 irish");
+    key_nation_create_comps(entry, &IRISH_COMPS)
+}
+
+/// The entry of `create_irish_comps`.
+const IRISH_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x3466, 0x3482, 0xa820e8), // "create_irish_comps() : unable to allocate memory"
+    start: (1, 7, EntryYear::Current(0), 0x6),
+    end: (23, 3, EntryYear::Current(1), 0x6),
+    count: EntryCount::Fixed(8),
+    calloc: None,
+    comps: &[
+        (0x120, 0x639bb0, KEY_CLUB_COMP_IRISH_PREMIER_DIVISION, EntryYear::Current(0), false), // IrePrm::IrePrm
+        (0xee, 0x634c40, KEY_CLUB_COMP_IRISH_FIRST_DIVISION, EntryYear::Current(0), false), // IreFirst::IreFirst
+        (0xb2, 0x6340a0, KEY_CLUB_COMP_IRISH_SENIOR_CHALLENGE_CUP, EntryYear::Current(0), false), // IreChalCup::IreChalCup
+        (0xf6, 0x636dd0, KEY_CLUB_COMP_IRISH_LEAGUE_CUP, EntryYear::Current(0), false), // IreLgeCup::IreLgeCup
+        (0xee, 0x63acd0, KEY_CLUB_COMP_IRISH_SUPER_CUP, EntryYear::Current(0), false), // IreSuperCup::IreSuperCup
+        (0xb2, 0x639280, KEY_CLUB_COMP_IRISH_PRESIDENTS_CUP, EntryYear::Current(0), false), // IrePresCup::IrePresCup
+        (0xb2, 0x6387a0, KEY_CLUB_COMP_IRISH_MUNSTER_SENIOR_CUP, EntryYear::Current(0), false), // IreMunsterCup::IreMunsterCup
+        (0xb2, 0x6364a0, KEY_CLUB_COMP_IRISH_LEINSTER_SENIOR_CUP, EntryYear::Current(0), false), // IreLeinsterCup::IreLeinsterCup
+    ],
+    end_day: (20, 5),
+    season_year: EntryYear::Current(0),
+    spans: 1,
+    league: EntryLink::Comp(KEY_CLUB_COMP_IRISH_SUPER_CUP),
+    cup: EntryLink::Comp(KEY_CLUB_COMP_IRISH_SENIOR_CHALLENGE_CUP),
+    weeks: false,
+};
+
+/// Creates Italy's competitions on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the Setup.cpp "Error"
+/// box 0x34af and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go from 6 September of
+/// the game year (weekday 6) to 8 June of the next year (weekday 6). 8 competitions (`KEY_NATION_RECORD_COMP_COUNT`,
+/// the array in `KEY_NATION_RECORD_COMPS`): Italian Serie A, Italian Serie B, Italian Serie C1 A, Italian Serie C1 B,
+/// Italian Cup, Italian Serie C Cup, Italian Super Cup, Italian C1 Super Cup; with the nation's extra division
+/// (`nation::LEAGUE_SELECTED` bit 2) 11, adding Italian Serie C2 A, Italian Serie C2 B, Italian Serie C2 C (created
+/// when the nation has it); every constructor gets the game year. A failed allocation: the "Memory Allocation Error"
+/// box (Setup.cpp 0x34ce, "create_italian_comps() : unable to allocate memory") and 0.
+/// `key_nation_record::SEASON_END_DAY` = the day of Date::Date(20, 5, 2001, -1) (20 June 2001),
+/// `KEY_NATION_RECORD_SEASON_YEAR` = the game year, `key_nation_record::SEASON_SPANS_YEAR` = 1;
+/// `key_nation_record::LEAGUE_COMP` = the Italian Super Cup record; returns 1. /// Original: `create_italian_comps`
+/// (0x835320, Setup.cpp, cdecl).
+pub(crate) unsafe extern "C" fn create_italian_comps(entry: usize) -> u32 {
+    covered!("tel13_3 italian");
+    key_nation_create_comps(entry, &ITALIAN_COMPS)
+}
+
+/// The entry of `create_italian_comps`.
+const ITALIAN_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x34af, 0x34ce, 0xa8211c), // "create_italian_comps() : unable to allocate memory"
+    start: (6, 8, EntryYear::Current(0), 0x6),
+    end: (8, 5, EntryYear::Current(1), 0x6),
+    count: EntryCount::ExtraDivision(8, 11, ExtraGuard::Flag),
+    calloc: None,
+    comps: &[
+        (0xef, 0x6406d0, KEY_CLUB_COMP_ITALIAN_SERIE_A, EntryYear::Current(0), false), // ItaSerA::ItaSerA
+        (0xef, 0x645810, KEY_CLUB_COMP_ITALIAN_SERIE_B, EntryYear::Current(0), false), // ItaSerB::ItaSerB
+        (0xee, 0x64aa70, KEY_CLUB_COMP_ITALIAN_SERIE_C1_A, EntryYear::Current(0), false), // ItaSerC1a::ItaSerC1a
+        (0xee, 0x64ec20, KEY_CLUB_COMP_ITALIAN_SERIE_C1_B, EntryYear::Current(0), false), // ItaSerC1b::ItaSerC1b
+        (0xee, 0x652e90, KEY_CLUB_COMP_ITALIAN_SERIE_C2_A, EntryYear::Current(0), true), // ItaSerC2a::ItaSerC2a
+        (0xee, 0x657350, KEY_CLUB_COMP_ITALIAN_SERIE_C2_B, EntryYear::Current(0), true), // ItaSerC2b::ItaSerC2b
+        (0xee, 0x65b4e0, KEY_CLUB_COMP_ITALIAN_SERIE_C2_C, EntryYear::Current(0), true), // ItaSerC2c::ItaSerC2c
+        (0xf6, 0x63e900, KEY_CLUB_COMP_ITALIAN_CUP, EntryYear::Current(0), false), // ItaCup::ItaCup
+        (0xf6, 0x63cc40, KEY_CLUB_COMP_ITALIAN_SERIE_C_CUP, EntryYear::Current(0), false), // ItaCCup::ItaCCup
+        (0xb2, 0x65f670, KEY_CLUB_COMP_ITALIAN_SUPER_CUP, EntryYear::Current(0), false), // ItaSuper::ItaSuper
+        (0xb2, 0x63c5e0, KEY_CLUB_COMP_ITALIAN_C1_SUPER_CUP, EntryYear::Current(0), false), // ItaC1Super::ItaC1Super
+    ],
+    end_day: (20, 5),
+    season_year: EntryYear::Current(0),
+    spans: 1,
+    league: EntryLink::Comp(KEY_CLUB_COMP_ITALIAN_SUPER_CUP),
+    cup: EntryLink::Untouched,
+    weeks: false,
+};
+
+/// Creates Japan's competitions on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the Setup.cpp "Error"
+/// box 0x3502 and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go from 14 March of
+/// the start date year (weekday 5) to 28 November of the start date year (weekday 5). 5 competitions
+/// (`KEY_NATION_RECORD_COMP_COUNT`, the array in `KEY_NATION_RECORD_COMPS`): Japanese J League 1, Japanese J League 2,
+/// Japanese Emperor's Cup, Japanese Yamazaki Nabisco Cup, Japanese Xerox Super Cup; every constructor gets the start
+/// date year. A failed allocation: the "Memory Allocation Error" box (Setup.cpp 0x351e, "create_japanese_comps() :
+/// unable to allocate memory") and 0. `key_nation_record::SEASON_END_DAY` = the day of Date::Date(25, 0, 2001, -1) (25
+/// January 2001), `KEY_NATION_RECORD_SEASON_YEAR` = the start date year, `key_nation_record::SEASON_SPANS_YEAR` = 1;
+/// `key_nation_record::LEAGUE_COMP` = null; returns 1. /// Original: `create_japanese_comps` (0x835900, Setup.cpp,
+/// cdecl).
+pub(crate) unsafe extern "C" fn create_japanese_comps(entry: usize) -> u32 {
+    covered!("tel13_3 japanese");
+    key_nation_create_comps(entry, &JAPANESE_COMPS)
+}
+
+/// The entry of `create_japanese_comps`.
+const JAPANESE_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x3502, 0x351e, 0xa82150), // "create_japanese_comps() : unable to allocate memory"
+    start: (14, 2, EntryYear::Start(0), 0x5),
+    end: (28, 10, EntryYear::Start(0), 0x5),
+    count: EntryCount::Fixed(5),
+    calloc: None,
+    comps: &[
+        (0xee, 0x662b30, KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1, EntryYear::Start(0), false), // JapJ1::JapJ1
+        (0xee, 0x6644c0, KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2, EntryYear::Start(0), false), // JapJ2::JapJ2
+        (0xb2, 0x661d30, KEY_CLUB_COMP_JAPANESE_EMPEROR_S_CUP, EntryYear::Start(0), false), // JapEmpCup::JapEmpCup
+        (0xb2, 0x665380, KEY_CLUB_COMP_JAPANESE_YAMAZAKI_NABISCO_CUP, EntryYear::Start(0), false), // JapJCup::JapJCup
+        (0xb2, 0x665d70, KEY_CLUB_COMP_JAPANESE_XEROX_SUPER_CUP, EntryYear::Start(0), false), // JapSuper::JapSuper
+    ],
+    end_day: (25, 0),
+    season_year: EntryYear::Start(0),
+    spans: 1,
+    league: EntryLink::Null,
+    cup: EntryLink::Untouched,
+    weeks: false,
+};
+
+/// Creates Northern Ireland's competitions on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the Setup.cpp
+/// "Error" box 0x3546 and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go from 12
+/// August of the game year (weekday 5) to 5 May of the next year (weekday 5). 5 competitions
+/// (`KEY_NATION_RECORD_COMP_COUNT`, the array in `KEY_NATION_RECORD_COMPS`): Northern Ireland Premier Division,
+/// Northern Ireland First Division, Northern Irish Cup, Northern Irish League Cup, Northern Irish Charity Shield; every
+/// constructor gets the game year. A failed allocation: the "Memory Allocation Error" box (Setup.cpp 0x3562,
+/// "create_northern_irish_comps() : unable to allocate memory") and 0. `key_nation_record::SEASON_END_DAY` = the day of
+/// Date::Date(20, 5, 2001, -1) (20 June 2001), `KEY_NATION_RECORD_SEASON_YEAR` = the game year,
+/// `key_nation_record::SEASON_SPANS_YEAR` = 1; `key_nation_record::LEAGUE_COMP` = the Northern Irish Charity Shield
+/// record; `KEY_NATION_RECORD_CUP_COMP` = the Northern Irish Cup record; returns 1. /// Original:
+/// `create_northern_irish_comps` (0x835c90, Setup.cpp, cdecl).
+pub(crate) unsafe extern "C" fn create_northern_irish_comps(entry: usize) -> u32 {
+    covered!("tel13_3 northern irish");
+    key_nation_create_comps(entry, &NORTHERN_IRISH_COMPS)
+}
+
+/// The entry of `create_northern_irish_comps`.
+const NORTHERN_IRISH_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x3546, 0x3562, 0xa82184), // "create_northern_irish_comps() : unable to allocate memory"
+    start: (12, 7, EntryYear::Current(0), 0x5),
+    end: (5, 4, EntryYear::Current(1), 0x5),
+    count: EntryCount::Fixed(5),
+    calloc: None,
+    comps: &[
+        (0xee, 0x78e070, KEY_CLUB_COMP_NORTHERN_IRELAND_PREMIER_DIVISION, EntryYear::Current(0), false), // NirPrm::NirPrm
+        (0xee, 0x78b010, KEY_CLUB_COMP_NORTHERN_IRELAND_FIRST_DIVISION, EntryYear::Current(0), false), // NirFirst::NirFirst
+        (0xb2, 0x78a5b0, KEY_CLUB_COMP_NORTHERN_IRISH_CUP, EntryYear::Current(0), false), // NirCup::NirCup
+        (0xf6, 0x78c780, KEY_CLUB_COMP_NORTHERN_IRISH_LEAGUE_CUP, EntryYear::Current(0), false), // NirLgeCup::NirLgeCup
+        (0xb2, 0x789df0, KEY_CLUB_COMP_NORTHERN_IRISH_CHARITY_SHIELD, EntryYear::Current(0), false), // NirCharity::NirCharity
+    ],
+    end_day: (20, 5),
+    season_year: EntryYear::Current(0),
+    spans: 1,
+    league: EntryLink::Comp(KEY_CLUB_COMP_NORTHERN_IRISH_CHARITY_SHIELD),
+    cup: EntryLink::Comp(KEY_CLUB_COMP_NORTHERN_IRISH_CUP),
+    weeks: false,
+};
+
+/// Comparer of `create_croatian_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_croatian_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_CROATIAN_COMPS)(entry);
+    key_nation_check_comps("create_croatian_comps", entry, r, &CROATIAN_COMPS);
+    r
+}
+
+/// Comparer of `create_danish_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_danish_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_DANISH_COMPS)(entry);
+    key_nation_check_comps("create_danish_comps", entry, r, &DANISH_COMPS);
+    r
+}
+
+/// Comparer of `create_english_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_english_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_ENGLISH_COMPS)(entry);
+    key_nation_check_comps("create_english_comps", entry, r, &ENGLISH_COMPS);
+    r
+}
+
+/// Comparer of `create_finnish_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_finnish_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_FINNISH_COMPS)(entry);
+    key_nation_check_comps("create_finnish_comps", entry, r, &FINNISH_COMPS);
+    r
+}
+
+/// Comparer of `create_french_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_french_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_FRENCH_COMPS)(entry);
+    key_nation_check_comps("create_french_comps", entry, r, &FRENCH_COMPS);
+    r
+}
+
+/// Comparer of `create_german_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_german_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_GERMAN_COMPS)(entry);
+    key_nation_check_comps("create_german_comps", entry, r, &GERMAN_COMPS);
+    r
+}
+
+/// Comparer of `create_greek_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_greek_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_GREEK_COMPS)(entry);
+    key_nation_check_comps("create_greek_comps", entry, r, &GREEK_COMPS);
+    r
+}
+
+/// Comparer of `create_dutch_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_dutch_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_DUTCH_COMPS)(entry);
+    key_nation_check_comps("create_dutch_comps", entry, r, &DUTCH_COMPS);
+    r
+}
+
+/// Comparer of `create_irish_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_irish_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_IRISH_COMPS)(entry);
+    key_nation_check_comps("create_irish_comps", entry, r, &IRISH_COMPS);
+    r
+}
+
+/// Comparer of `create_italian_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_italian_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_ITALIAN_COMPS)(entry);
+    key_nation_check_comps("create_italian_comps", entry, r, &ITALIAN_COMPS);
+    r
+}
+
+/// Comparer of `create_japanese_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_japanese_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_JAPANESE_COMPS)(entry);
+    key_nation_check_comps("create_japanese_comps", entry, r, &JAPANESE_COMPS);
+    r
+}
+
+/// Comparer of `create_northern_irish_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_northern_irish_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_NORTHERN_IRISH_COMPS)(entry);
+    key_nation_check_comps("create_northern_irish_comps", entry, r, &NORTHERN_IRISH_COMPS);
+    r
+}
+
+// ---------- batch 319: the key nation competitions, part 3: Norway to Wales (Setup.cpp) ----------
+
+// (uses the mould of tel13_2: KeyNationComps, key_nation_create_comps, key_nation_check_comps)
+
+/// Creates Norway's competitions on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the Setup.cpp "Error"
+/// box 0x358c and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go from 12 April of
+/// the start date year (weekday 6) to 31 October of the next year (weekday 6). 3 competitions
+/// (`KEY_NATION_RECORD_COMP_COUNT`, the array in `KEY_NATION_RECORD_COMPS`): Norwegian Premier Division, Norwegian
+/// First Division, Norwegian Cup; every constructor gets the start date year. A failed allocation: the "Memory
+/// Allocation Error" box (Setup.cpp 0x35a8, "create_norwegian_comps() : unable to allocate memory") and 0.
+/// `key_nation_record::SEASON_END_DAY` = the day of Date::Date(27, 10, 2001, -1) (27 November 2001),
+/// `KEY_NATION_RECORD_SEASON_YEAR` = the start date year, `key_nation_record::SEASON_SPANS_YEAR` = 1;
+/// `key_nation_record::LEAGUE_COMP` = null; returns 1. /// Original: `create_norwegian_comps` (0x836050, Setup.cpp,
+/// cdecl).
+pub(crate) unsafe extern "C" fn create_norwegian_comps(entry: usize) -> u32 {
+    covered!("tel13_4 norwegian");
+    key_nation_create_comps(entry, &NORWEGIAN_COMPS)
+}
+
+/// The entry of `create_norwegian_comps`.
+const NORWEGIAN_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x358c, 0x35a8, 0xa81f44), // "create_norwegian_comps() : unable to allocate memory"
+    start: (12, 3, EntryYear::Start(0), 0x6),
+    end: (31, 9, EntryYear::Current(1), 0x6),
+    count: EntryCount::Fixed(3),
+    calloc: None,
+    comps: &[
+        (0xee, 0x791500, KEY_CLUB_COMP_NORWEGIAN_PREMIER_DIVISION, EntryYear::Start(0), false), // NorPrm::NorPrm
+        (0xee, 0x78fd40, KEY_CLUB_COMP_NORWEGIAN_FIRST_DIVISION, EntryYear::Start(0), false), // NorFirst::NorFirst
+        (0xb2, 0x78f020, KEY_CLUB_COMP_NORWEGIAN_CUP, EntryYear::Start(0), false), // NorCup::NorCup
+    ],
+    end_day: (27, 10),
+    season_year: EntryYear::Start(0),
+    spans: 1,
+    league: EntryLink::Null,
+    cup: EntryLink::Untouched,
+    weeks: false,
+};
+
+/// Creates Poland's competitions on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the Setup.cpp "Error"
+/// box 0x35cf and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go from 17 July of the
+/// game year (weekday 5) to 27 May of the next year (weekday 5). 5 competitions (`KEY_NATION_RECORD_COMP_COUNT`, the
+/// array in `KEY_NATION_RECORD_COMPS`): Polish First Division, Polish Second Division, Polish FA Cup, Polish League
+/// Cup, Polish Super Cup; every constructor gets the game year. A failed allocation: the "Memory Allocation Error" box
+/// (Setup.cpp 0x35eb, "create_polish_comps() : unable to allocate memory") and 0. `key_nation_record::SEASON_END_DAY` =
+/// the day of Date::Date(20, 5, 2001, -1) (20 June 2001), `KEY_NATION_RECORD_SEASON_YEAR` = the game year,
+/// `key_nation_record::SEASON_SPANS_YEAR` = 1; `key_nation_record::LEAGUE_COMP` is not written; returns 1. ///
+/// Original: `create_polish_comps` (0x836350, Setup.cpp, cdecl).
+pub(crate) unsafe extern "C" fn create_polish_comps(entry: usize) -> u32 {
+    covered!("tel13_4 polish");
+    key_nation_create_comps(entry, &POLISH_COMPS)
+}
+
+/// The entry of `create_polish_comps`.
+const POLISH_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x35cf, 0x35eb, 0xa821c0), // "create_polish_comps() : unable to allocate memory"
+    start: (17, 6, EntryYear::Current(0), 0x5),
+    end: (27, 4, EntryYear::Current(1), 0x5),
+    count: EntryCount::Fixed(5),
+    calloc: None,
+    comps: &[
+        (0xf2, 0x7c8a80, KEY_CLUB_COMP_POLISH_FIRST_DIVISION, EntryYear::Current(0), false), // PolFirst::PolFirst
+        (0xee, 0x7cb1d0, KEY_CLUB_COMP_POLISH_SECOND_DIVISION, EntryYear::Current(0), false), // PolSecond::PolSecond
+        (0xb2, 0x7c7d80, KEY_CLUB_COMP_POLISH_FA_CUP, EntryYear::Current(0), false), // PolCup::PolCup
+        (0xb2, 0x7ca4e0, KEY_CLUB_COMP_POLISH_LEAGUE_CUP, EntryYear::Current(0), false), // PolLgeCup::PolLgeCup
+        (0xb2, 0x7cc920, KEY_CLUB_COMP_POLISH_SUPER_CUP, EntryYear::Current(0), false), // PolSuper::PolSuper
+    ],
+    end_day: (20, 5),
+    season_year: EntryYear::Current(0),
+    spans: 1,
+    league: EntryLink::Untouched,
+    cup: EntryLink::Untouched,
+    weeks: false,
+};
+
+/// Creates Portugal's competitions on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the Setup.cpp "Error"
+/// box 0x3612 and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go from 25 August of
+/// the game year (weekday 6) to 8 June of the next year (weekday 6). 4 competitions (`KEY_NATION_RECORD_COMP_COUNT`,
+/// the array in `KEY_NATION_RECORD_COMPS`): Portuguese Premier Division, Portuguese Second Division, Portuguese Cup,
+/// Portuguese Super Cup; with the nation's extra division (`nation::LEAGUE_SELECTED` bit 2) 5, adding Portuguese Second
+/// Division B (created when the nation has it); every constructor gets the game year. A failed allocation: the "Memory
+/// Allocation Error" box (Setup.cpp 0x3631, "create_portuguese_comps() : unable to allocate memory") and 0.
+/// `key_nation_record::SEASON_END_DAY` = the day of Date::Date(20, 5, 2001, -1) (20 June 2001),
+/// `KEY_NATION_RECORD_SEASON_YEAR` = the game year, `key_nation_record::SEASON_SPANS_YEAR` = 1;
+/// `key_nation_record::LEAGUE_COMP` = the Portuguese Super Cup record; returns 1. /// Original:
+/// `create_portuguese_comps` (0x8366e0, Setup.cpp, cdecl).
+pub(crate) unsafe extern "C" fn create_portuguese_comps(entry: usize) -> u32 {
+    covered!("tel13_4 portuguese");
+    key_nation_create_comps(entry, &PORTUGUESE_COMPS)
+}
+
+/// The entry of `create_portuguese_comps`.
+const PORTUGUESE_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x3612, 0x3631, 0xa821f4), // "create_portuguese_comps() : unable to allocate memory"
+    start: (25, 7, EntryYear::Current(0), 0x6),
+    end: (8, 5, EntryYear::Current(1), 0x6),
+    count: EntryCount::ExtraDivision(4, 5, ExtraGuard::Flag),
+    calloc: None,
+    comps: &[
+        (0xee, 0x7ce720, KEY_CLUB_COMP_PORTUGUESE_PREMIER_DIVISION, EntryYear::Current(0), false), // PorPrm::PorPrm
+        (0xee, 0x7d0950, KEY_CLUB_COMP_PORTUGUESE_SECOND_DIVISION, EntryYear::Current(0), false), // PorSecond::PorSecond
+        (0xee, 0x7d1920, KEY_CLUB_COMP_PORTUGUESE_SECOND_DIVISION_B, EntryYear::Current(0), true), // PorSecondB::PorSecondB
+        (0xb2, 0x7cd980, KEY_CLUB_COMP_PORTUGUESE_CUP, EntryYear::Current(0), false), // PorCup::PorCup
+        (0xb2, 0x7d2e40, KEY_CLUB_COMP_PORTUGUESE_SUPER_CUP, EntryYear::Current(0), false), // PorSuper::PorSuper
+    ],
+    end_day: (20, 5),
+    season_year: EntryYear::Current(0),
+    spans: 1,
+    league: EntryLink::Comp(KEY_CLUB_COMP_PORTUGUESE_SUPER_CUP),
+    cup: EntryLink::Untouched,
+    weeks: false,
+};
+
+/// Creates Russia's competitions on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the Setup.cpp "Error"
+/// box 0x365a and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go from 25 March of
+/// the start date year (weekday 5) to 12 November of the start date year (weekday 6). 3 competitions
+/// (`KEY_NATION_RECORD_COMP_COUNT`, the array in `KEY_NATION_RECORD_COMPS`): Russian Premier Division, Russian First
+/// Division, Russian Cup; the constructors get the game year (the start date year: Russian Premier Division, Russian
+/// First Division). A failed allocation: the "Memory Allocation Error" box (Setup.cpp 0x3679, "create_russian_comps() :
+/// unable to allocate memory") and 0. `key_nation_record::SEASON_END_DAY` = the day of Date::Date(27, 11, 2001, -1) (27
+/// December 2001), `KEY_NATION_RECORD_SEASON_YEAR` = the start date year, `key_nation_record::SEASON_SPANS_YEAR` = 1;
+/// `key_nation_record::LEAGUE_COMP` = null; returns 1. /// Original: `create_russian_comps` (0x836ac0, Setup.cpp,
+/// cdecl).
+pub(crate) unsafe extern "C" fn create_russian_comps(entry: usize) -> u32 {
+    covered!("tel13_4 russian");
+    key_nation_create_comps(entry, &RUSSIAN_COMPS)
+}
+
+/// The entry of `create_russian_comps`.
+const RUSSIAN_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x365a, 0x3679, 0xa8222c), // "create_russian_comps() : unable to allocate memory"
+    start: (25, 2, EntryYear::Start(0), 0x5),
+    end: (12, 10, EntryYear::Start(0), 0x6),
+    count: EntryCount::Fixed(3),
+    calloc: None,
+    comps: &[
+        (0xef, 0x7eaa80, KEY_CLUB_COMP_RUSSIAN_PREMIER_DIVISION, EntryYear::Start(0), false), // RusPrm::RusPrm
+        (0xee, 0x7e9f30, KEY_CLUB_COMP_RUSSIAN_FIRST_DIVISION, EntryYear::Start(0), false), // RusFirst::RusFirst
+        (0xb2, 0x7e9210, KEY_CLUB_COMP_RUSSIAN_CUP, EntryYear::Current(0), false), // RusCup::RusCup
+    ],
+    end_day: (27, 11),
+    season_year: EntryYear::Start(0),
+    spans: 1,
+    league: EntryLink::Null,
+    cup: EntryLink::Untouched,
+    weeks: false,
+};
+
+/// Creates Scotland's competitions on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the Setup.cpp "Error"
+/// box 0x36a1 and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go from 2 August of
+/// the game year (weekday 5) to 24 May of the next year (weekday 5). 7 competitions (`KEY_NATION_RECORD_COMP_COUNT`,
+/// the array in `KEY_NATION_RECORD_COMPS`): Scottish Premier Division, Scottish First Division, Scottish Second
+/// Division, Scottish Third Division, Scottish Cup, Scottish League Cup, Scottish League Challenge Cup; every
+/// constructor gets the game year. A failed allocation: the "Memory Allocation Error" box (Setup.cpp 0x36bd,
+/// "create_scottish_comps() : unable to allocate memory") and 0. `key_nation_record::SEASON_END_DAY` = the day of
+/// Date::Date(20, 5, 2001, -1) (20 June 2001), `KEY_NATION_RECORD_SEASON_YEAR` = 2001,
+/// `key_nation_record::SEASON_SPANS_YEAR` = 1; `key_nation_record::LEAGUE_COMP` = null; returns 1. /// Original:
+/// `create_scottish_comps` (0x836dc0, Setup.cpp, cdecl).
+pub(crate) unsafe extern "C" fn create_scottish_comps(entry: usize) -> u32 {
+    covered!("tel13_4 scottish");
+    key_nation_create_comps(entry, &SCOTTISH_COMPS)
+}
+
+/// The entry of `create_scottish_comps`.
+const SCOTTISH_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x36a1, 0x36bd, 0xa82260), // "create_scottish_comps() : unable to allocate memory"
+    start: (2, 7, EntryYear::Current(0), 0x5),
+    end: (24, 4, EntryYear::Current(1), 0x5),
+    count: EntryCount::Fixed(7),
+    calloc: None,
+    comps: &[
+        (0xee, 0x7f0b80, KEY_CLUB_COMP_SCOTTISH_PREMIER_DIVISION, EntryYear::Current(0), false), // ScoPrm::ScoPrm
+        (0xee, 0x7edfc0, KEY_CLUB_COMP_SCOTTISH_FIRST_DIVISION, EntryYear::Current(0), false), // ScoFirst::ScoFirst
+        (0xee, 0x7f3250, KEY_CLUB_COMP_SCOTTISH_SECOND_DIVISION, EntryYear::Current(0), false), // ScoSecond::ScoSecond
+        (0xee, 0x7f41f0, KEY_CLUB_COMP_SCOTTISH_THIRD_DIVISION, EntryYear::Current(0), false), // ScoThird::ScoThird
+        (0xb2, 0x7ed310, KEY_CLUB_COMP_SCOTTISH_CUP, EntryYear::Current(0), false), // ScoFaCup::ScoFaCup
+        (0xb3, 0x7ef9e0, KEY_CLUB_COMP_SCOTTISH_LEAGUE_CUP, EntryYear::Current(0), false), // ScoLgeCup::ScoLgeCup
+        (0xb2, 0x7ec980, KEY_CLUB_COMP_SCOTTISH_LEAGUE_CHALLENGE_CUP, EntryYear::Current(0), false), // ScoChalCup::ScoChalCup
+    ],
+    end_day: (20, 5),
+    season_year: EntryYear::Fixed(0x7d1),
+    spans: 1,
+    league: EntryLink::Null,
+    cup: EntryLink::Untouched,
+    weeks: false,
+};
+
+/// Creates South Korea's competitions on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the Setup.cpp
+/// "Error" box 0x36e9 and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go from 25
+/// March of the start date year (weekday 6) to 25 November of the start date year (weekday 5). 4 competitions
+/// (`KEY_NATION_RECORD_COMP_COUNT`, the array in `KEY_NATION_RECORD_COMPS`): Korean League, Korean FA Cup, Korean
+/// League Cup, Korean Super Cup; every constructor gets the start date year. A failed allocation: the "Memory
+/// Allocation Error" box (Setup.cpp 0x3705, "create_spanish_comps() : unable to allocate memory") and 0.
+/// `key_nation_record::SEASON_END_DAY` = the day of Date::Date(20, 0, 2001, -1) (20 January 2001),
+/// `KEY_NATION_RECORD_SEASON_YEAR` = the start date year, `key_nation_record::SEASON_SPANS_YEAR` = 1;
+/// `key_nation_record::LEAGUE_COMP` = the Korean Super Cup record; returns 1. The original's allocation message names
+/// another routine (create_spanish_comps()). /// Original: `create_south_korean_comps` (0x837200, Setup.cpp, cdecl).
+pub(crate) unsafe extern "C" fn create_south_korean_comps(entry: usize) -> u32 {
+    covered!("tel13_4 south korean");
+    key_nation_create_comps(entry, &SOUTH_KOREAN_COMPS)
+}
+
+/// The entry of `create_south_korean_comps`.
+const SOUTH_KOREAN_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x36e9, 0x3705, 0xa82294), // "create_spanish_comps() : unable to allocate memory"
+    start: (25, 2, EntryYear::Start(0), 0x6),
+    end: (25, 10, EntryYear::Start(0), 0x5),
+    count: EntryCount::Fixed(4),
+    calloc: None,
+    comps: &[
+        (0xee, 0x66ae70, KEY_CLUB_COMP_KOREAN_LEAGUE, EntryYear::Start(0), false), // KorLeague::KorLeague
+        (0xb2, 0x66a460, KEY_CLUB_COMP_KOREAN_FA_CUP, EntryYear::Start(0), false), // KorFaCup::KorFaCup
+        (0xf6, 0x66bf00, KEY_CLUB_COMP_KOREAN_LEAGUE_CUP, EntryYear::Start(0), false), // KorLeagueCup::KorLeagueCup
+        (0xb2, 0x66d820, KEY_CLUB_COMP_KOREAN_SUPER_CUP, EntryYear::Start(0), false), // KorSuperCup::KorSuperCup
+    ],
+    end_day: (20, 0),
+    season_year: EntryYear::Start(0),
+    spans: 1,
+    league: EntryLink::Comp(KEY_CLUB_COMP_KOREAN_SUPER_CUP),
+    cup: EntryLink::Untouched,
+    weeks: false,
+};
+
+/// Creates Spain's competitions on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the Setup.cpp "Error"
+/// box 0x372e and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go from 1 September of
+/// the game year (weekday 6) to 14 June of the next year (weekday 5). 4 competitions (`KEY_NATION_RECORD_COMP_COUNT`,
+/// the array in `KEY_NATION_RECORD_COMPS`): Spanish First Division, Spanish Second Division, Spanish Cup, Spanish Super
+/// Cup; with the nation's extra division (`nation::LEAGUE_SELECTED` bit 2) 5, adding Spanish Second Division B (created
+/// when the count is 5); every constructor gets the game year. A failed allocation: the "Memory Allocation Error" box
+/// (Setup.cpp 0x374d, "create_spanish_comps() : unable to allocate memory") and 0. `key_nation_record::SEASON_END_DAY`
+/// = the day of Date::Date(20, 5, 2001, -1) (20 June 2001), `KEY_NATION_RECORD_SEASON_YEAR` = the game year,
+/// `key_nation_record::SEASON_SPANS_YEAR` = 1; `key_nation_record::LEAGUE_COMP` = the Spanish Super Cup record; returns
+/// 1. /// Original: `create_spanish_comps` (0x837560, Setup.cpp, cdecl).
+pub(crate) unsafe extern "C" fn create_spanish_comps(entry: usize) -> u32 {
+    covered!("tel13_4 spanish");
+    key_nation_create_comps(entry, &SPANISH_COMPS)
+}
+
+/// The entry of `create_spanish_comps`.
+const SPANISH_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x372e, 0x374d, 0xa82294), // "create_spanish_comps() : unable to allocate memory"
+    start: (1, 8, EntryYear::Current(0), 0x6),
+    end: (14, 5, EntryYear::Current(1), 0x5),
+    count: EntryCount::ExtraDivision(4, 5, ExtraGuard::CountIsLarger),
+    calloc: None,
+    comps: &[
+        (0xf2, 0x84e130, KEY_CLUB_COMP_SPANISH_FIRST_DIVISION, EntryYear::Current(0), false), // SpaFirst::SpaFirst
+        (0xee, 0x8539a0, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION, EntryYear::Current(0), false), // SpaSecond::SpaSecond
+        (0xee, 0x855f40, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B, EntryYear::Current(0), true), // SpaSecondB::SpaSecondB
+        (0xb2, 0x84cf50, KEY_CLUB_COMP_SPANISH_CUP, EntryYear::Current(0), false), // SpaCup::SpaCup
+        (0xb2, 0x8586b0, KEY_CLUB_COMP_SPANISH_SUPER_CUP, EntryYear::Current(0), false), // SpaSuper::SpaSuper
+    ],
+    end_day: (20, 5),
+    season_year: EntryYear::Current(0),
+    spans: 1,
+    league: EntryLink::Comp(KEY_CLUB_COMP_SPANISH_SUPER_CUP),
+    cup: EntryLink::Untouched,
+    weeks: false,
+};
+
+/// Creates Sweden's competitions on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the Setup.cpp "Error"
+/// box 0x377d and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go from 6 April of the
+/// start date year (weekday 6) to 26 October of the start date year (weekday 6). 3 competitions
+/// (`KEY_NATION_RECORD_COMP_COUNT`, the array in `KEY_NATION_RECORD_COMPS`): Swedish Premier Division, Swedish First
+/// Division, Swedish Cup; with the nation's extra division (`nation::LEAGUE_SELECTED` bit 2) 4, adding Swedish Second
+/// Division (created when the count is 4); the constructors get the game year (the start date year: Swedish Premier
+/// Division, Swedish First Division, Swedish Second Division). A failed allocation: the "Memory Allocation Error" box
+/// (Setup.cpp 0x379f, "create_swedish_comps() : unable to allocate memory") and 0. `key_nation_record::SEASON_END_DAY`
+/// = the day of Date::Date(27, 11, 2001, -1) (27 December 2001), `KEY_NATION_RECORD_SEASON_YEAR` = the start date year,
+/// `key_nation_record::SEASON_SPANS_YEAR` = 1; `key_nation_record::LEAGUE_COMP` = null; returns 1. /// Original:
+/// `create_swedish_comps` (0x8379f0, Setup.cpp, cdecl).
+pub(crate) unsafe extern "C" fn create_swedish_comps(entry: usize) -> u32 {
+    covered!("tel13_4 swedish");
+    key_nation_create_comps(entry, &SWEDISH_COMPS)
+}
+
+/// The entry of `create_swedish_comps`.
+const SWEDISH_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x377d, 0x379f, 0xa822c8), // "create_swedish_comps() : unable to allocate memory"
+    start: (6, 3, EntryYear::Start(0), 0x6),
+    end: (26, 9, EntryYear::Start(0), 0x6),
+    count: EntryCount::ExtraDivision(3, 4, ExtraGuard::CountIsLarger),
+    calloc: None,
+    comps: &[
+        (0xee, 0x88fb10, KEY_CLUB_COMP_SWEDISH_PREMIER_DIVISION, EntryYear::Start(0), false), // SwePrm::SwePrm
+        (0xee, 0x88e5e0, KEY_CLUB_COMP_SWEDISH_FIRST_DIVISION, EntryYear::Start(0), false), // SweFirst::SweFirst
+        (0x11e, 0x8916f0, KEY_CLUB_COMP_SWEDISH_SECOND_DIVISION, EntryYear::Start(0), true), // SweSecond::SweSecond
+        (0xb8, 0x88cbb0, KEY_CLUB_COMP_SWEDISH_CUP, EntryYear::Current(0), false), // SweCup::SweCup
+    ],
+    end_day: (27, 11),
+    season_year: EntryYear::Start(0),
+    spans: 1,
+    league: EntryLink::Null,
+    cup: EntryLink::Untouched,
+    weeks: false,
+};
+
+/// Creates Turkey's competitions on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the Setup.cpp "Error"
+/// box 0x37c9 and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go from 8 August of
+/// the game year (weekday 6) to 21 May of the next year (weekday 6). 4 competitions (`KEY_NATION_RECORD_COMP_COUNT`,
+/// the array in `KEY_NATION_RECORD_COMPS`): Turkish Premier Division, Turkish 2 Division Category A, Turkish 2 Division
+/// Category B, Turkish FA Cup; every constructor gets the game year. A failed allocation: the "Memory Allocation Error"
+/// box (Setup.cpp 0x37e5, "create_spanish_comps() : unable to allocate memory") and 0.
+/// `key_nation_record::SEASON_END_DAY` = the day of Date::Date(20, 5, 2001, -1) (20 June 2001),
+/// `KEY_NATION_RECORD_SEASON_YEAR` = the game year, `key_nation_record::SEASON_SPANS_YEAR` = 1;
+/// `key_nation_record::LEAGUE_COMP` = null; returns 1. The original's allocation message names another routine
+/// (create_spanish_comps()). /// Original: `create_turkish_comps` (0x837d70, Setup.cpp, cdecl).
+pub(crate) unsafe extern "C" fn create_turkish_comps(entry: usize) -> u32 {
+    covered!("tel13_4 turkish");
+    key_nation_create_comps(entry, &TURKISH_COMPS)
+}
+
+/// The entry of `create_turkish_comps`.
+const TURKISH_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x37c9, 0x37e5, 0xa82294), // "create_spanish_comps() : unable to allocate memory"
+    start: (8, 7, EntryYear::Current(0), 0x6),
+    end: (21, 4, EntryYear::Current(1), 0x6),
+    count: EntryCount::Fixed(4),
+    calloc: None,
+    comps: &[
+        (0xee, 0x8fcf60, KEY_CLUB_COMP_TURKISH_PREMIER_DIVISION, EntryYear::Current(0), false), // TurFirst::TurFirst
+        (0xee, 0x8fe6f0, KEY_CLUB_COMP_TURKISH_2_DIVISION_CATEGORY_A, EntryYear::Current(0), false), // TurSecond::TurSecond
+        (0xee, 0x8ff4c0, KEY_CLUB_COMP_TURKISH_2_DIVISION_CATEGORY_B, EntryYear::Current(0), false), // TurSecondB::TurSecondB
+        (0xb2, 0x8fc3b0, KEY_CLUB_COMP_TURKISH_FA_CUP, EntryYear::Current(0), false), // TurCup::TurCup
+    ],
+    end_day: (20, 5),
+    season_year: EntryYear::Current(0),
+    spans: 1,
+    league: EntryLink::Null,
+    cup: EntryLink::Untouched,
+    weeks: false,
+};
+
+/// Creates the United States on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the Setup.cpp "Error" box
+/// 0x380b and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go from 22 March of the
+/// start date year (weekday 5) to 6 January of the year after the start date (weekday 2). 3 competitions
+/// (`KEY_NATION_RECORD_COMP_COUNT`, the array in `KEY_NATION_RECORD_COMPS`): American Major League, US Open Cup,
+/// American MLS All Stars; every constructor gets the start date year. A failed allocation: the "Memory Allocation
+/// Error" box (Setup.cpp 0x3827, "create_united_states_comps() : unable to allocate memory") and 0.
+/// `key_nation_record::SEASON_END_DAY` = the day of Date::Date(20, 1, 2001, -1) (20 February 2001),
+/// `KEY_NATION_RECORD_SEASON_YEAR` = the start date year, `key_nation_record::SEASON_SPANS_YEAR` = 1;
+/// `key_nation_record::LEAGUE_COMP` = null; returns 1. /// Original: `create_united_states_comps` (0x8380c0, Setup.cpp,
+/// cdecl).
+pub(crate) unsafe extern "C" fn create_united_states_comps(entry: usize) -> u32 {
+    covered!("tel13_4 united states");
+    key_nation_create_comps(entry, &UNITED_STATES_COMPS)
+}
+
+/// The entry of `create_united_states_comps`.
+const UNITED_STATES_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x380b, 0x3827, 0xa822fc), // "create_united_states_comps() : unable to allocate memory"
+    start: (22, 2, EntryYear::Start(0), 0x5),
+    end: (6, 0, EntryYear::Start(1), 0x2),
+    count: EntryCount::Fixed(3),
+    calloc: None,
+    comps: &[
+        (0xee, 0x906f80, KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE, EntryYear::Start(0), false), // UsaMls::UsaMls
+        (0xb2, 0x90aeb0, KEY_CLUB_COMP_US_OPEN_CUP, EntryYear::Start(0), false), // UsaOpenCup::UsaOpenCup
+        (0xb2, 0x90a150, KEY_CLUB_COMP_AMERICAN_MLS_ALL_STARS, EntryYear::Start(0), false), // UsaMlsAllStars::UsaMlsAllStars
+    ],
+    end_day: (20, 1),
+    season_year: EntryYear::Start(0),
+    spans: 1,
+    league: EntryLink::Null,
+    cup: EntryLink::Untouched,
+    weeks: false,
+};
+
+/// Creates Wales's competitions on the key nation entry `entry` (a `G_LEAGUE_TABLE` row; null: the Setup.cpp "Error"
+/// box 0x384c and 0). The season bounds (Date::Date arguments: day, month from 0, year, weekday) go from 19 August of
+/// the game year (weekday 5) to 6 May of the next year (weekday 5). 4 competitions (`KEY_NATION_RECORD_COMP_COUNT`, the
+/// array in `KEY_NATION_RECORD_COMPS`): Welsh Premier Division, Welsh Cup, Welsh League Cup, Welsh Premier Cup; every
+/// constructor gets the game year. A failed allocation: the "Memory Allocation Error" box (Setup.cpp 0x3868,
+/// "create_spanish_comps() : unable to allocate memory") and 0. `key_nation_record::SEASON_END_DAY` = the day of
+/// Date::Date(20, 5, 2001, -1) (20 June 2001), `KEY_NATION_RECORD_SEASON_YEAR` = the game year,
+/// `key_nation_record::SEASON_SPANS_YEAR` = 1; `key_nation_record::LEAGUE_COMP` is not written; returns 1. The
+/// original's allocation message names another routine (create_spanish_comps()). /// Original: `create_welsh_comps`
+/// (0x8383b0, Setup.cpp, cdecl).
+pub(crate) unsafe extern "C" fn create_welsh_comps(entry: usize) -> u32 {
+    covered!("tel13_4 welsh");
+    key_nation_create_comps(entry, &WELSH_COMPS)
+}
+
+/// The entry of `create_welsh_comps`.
+const WELSH_COMPS: KeyNationComps = KeyNationComps {
+    rows: (0x384c, 0x3868, 0xa82294), // "create_spanish_comps() : unable to allocate memory"
+    start: (19, 7, EntryYear::Current(0), 0x5),
+    end: (6, 4, EntryYear::Current(1), 0x5),
+    count: EntryCount::Fixed(4),
+    calloc: None,
+    comps: &[
+        (0xee, 0x924e30, KEY_CLUB_COMP_WELSH_PREMIER_DIVISION, EntryYear::Current(0), false), // WelFirst::WelFirst
+        (0xb2, 0x924420, KEY_CLUB_COMP_WELSH_CUP, EntryYear::Current(0), false), // WelCup::WelCup
+        (0xf6, 0x925e90, KEY_CLUB_COMP_WELSH_LEAGUE_CUP, EntryYear::Current(0), false), // WelLgeCup::WelLgeCup
+        (0xf6, 0x9277f0, KEY_CLUB_COMP_WELSH_PREMIER_CUP, EntryYear::Current(0), false), // WelPrmCup::WelPrmCup
+    ],
+    end_day: (20, 5),
+    season_year: EntryYear::Current(0),
+    spans: 1,
+    league: EntryLink::Untouched,
+    cup: EntryLink::Untouched,
+    weeks: false,
+};
+
+/// Comparer of `create_norwegian_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_norwegian_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_NORWEGIAN_COMPS)(entry);
+    key_nation_check_comps("create_norwegian_comps", entry, r, &NORWEGIAN_COMPS);
+    r
+}
+
+/// Comparer of `create_polish_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_polish_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_POLISH_COMPS)(entry);
+    key_nation_check_comps("create_polish_comps", entry, r, &POLISH_COMPS);
+    r
+}
+
+/// Comparer of `create_portuguese_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_portuguese_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_PORTUGUESE_COMPS)(entry);
+    key_nation_check_comps("create_portuguese_comps", entry, r, &PORTUGUESE_COMPS);
+    r
+}
+
+/// Comparer of `create_russian_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_russian_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_RUSSIAN_COMPS)(entry);
+    key_nation_check_comps("create_russian_comps", entry, r, &RUSSIAN_COMPS);
+    r
+}
+
+/// Comparer of `create_scottish_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_scottish_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_SCOTTISH_COMPS)(entry);
+    key_nation_check_comps("create_scottish_comps", entry, r, &SCOTTISH_COMPS);
+    r
+}
+
+/// Comparer of `create_south_korean_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_south_korean_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_SOUTH_KOREAN_COMPS)(entry);
+    key_nation_check_comps("create_south_korean_comps", entry, r, &SOUTH_KOREAN_COMPS);
+    r
+}
+
+/// Comparer of `create_spanish_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_spanish_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_SPANISH_COMPS)(entry);
+    key_nation_check_comps("create_spanish_comps", entry, r, &SPANISH_COMPS);
+    r
+}
+
+/// Comparer of `create_swedish_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_swedish_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_SWEDISH_COMPS)(entry);
+    key_nation_check_comps("create_swedish_comps", entry, r, &SWEDISH_COMPS);
+    r
+}
+
+/// Comparer of `create_turkish_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_turkish_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_TURKISH_COMPS)(entry);
+    key_nation_check_comps("create_turkish_comps", entry, r, &TURKISH_COMPS);
+    r
+}
+
+/// Comparer of `create_united_states_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_united_states_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_UNITED_STATES_COMPS)(entry);
+    key_nation_check_comps("create_united_states_comps", entry, r, &UNITED_STATES_COMPS);
+    r
+}
+
+/// Comparer of `create_welsh_comps`: only the original runs (it allocates the competitions: it cannot run twice); then the entry is
+/// checked against the plan (`key_nation_check_comps`).
+pub(crate) unsafe extern "C" fn compare_create_welsh_comps(entry: usize) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CREATE_WELSH_COMPS)(entry);
+    key_nation_check_comps("create_welsh_comps", entry, r, &WELSH_COMPS);
+    r
+}
 
 // ---------- batch 318: the club screens (1): dates, the screen manager's forwarders and a player's availability (club_screens.cpp) ----------
 
@@ -6670,8 +8581,8 @@ unsafe fn club_screen_squad_tab_header(t: &mut SquadTab, w: &mut SquadWeights) -
 unsafe fn squad_value_text(player: usize) {
     let player = Staff(player);
     let club_job = player.club_job().addr();
-    if club_job != 0 && read_i32(player.addr() + 0x52) != 0 {
-        club_screens_format_cash(read_i32(player.addr() + 0x52), 0xde1f64, 0x7d0, 5);
+    if club_job != 0 && (player.value() as i32) != 0 {
+        club_screens_format_cash(player.value() as i32, 0xde1f64, 0x7d0, 5);
     } else {
         squad_text(0xde1f64, 0x98e614); // "Free"
     }
@@ -6968,7 +8879,7 @@ unsafe fn club_screen_squad_tab_sort_cell(t: &mut SquadTab, area: u32, player: u
         cell(t, 0xc, 2);
     } else if sort & 0x2000 != 0 {
         if exe::nationalteams_is_national_or_all_star_team(read_usize(G_NATIONAL_TEAMS), club) == 0 {
-            let nation = read_usize(player.addr() + 0x1a);
+            let nation = player.nation().addr();
             if nation != 0 {
                 let team = exe::database_get_national_team(nation);
                 t.button(area, c, row, 1, 0, 0xc, 2, cbdec, nation + 0x53, 0x7d5, team);
@@ -6983,10 +8894,10 @@ unsafe fn club_screen_squad_tab_sort_cell(t: &mut SquadTab, area: u32, player: u
         squad_number_text(0x98806c, read_i8(player.addr() + 0x18) as i32);
         cell(t, 0xc, 2);
     } else if sort & 0x8000 != 0 {
-        squad_number_text(0x98806c, read_u8(player.addr() + 0x22) as i32);
+        squad_number_text(0x98806c, player.int_apps() as i32);
         cell(t, 0xc, 2);
     } else if sort & 0x10000 != 0 {
-        squad_number_text(0x98806c, read_u8(player.addr() + 0x23) as i32);
+        squad_number_text(0x98806c, player.int_goals() as i32);
         cell(t, 0xc, 2);
     } else if sort & 0x20000 != 0 {
         if contract_club != 0 || contract != 0 {
@@ -7133,16 +9044,16 @@ unsafe fn club_screen_squad_tab_view_cells(t: &mut SquadTab, area: u32, player: 
             k += 1;
         }
     } else if view & 0x20 != 0 {
-        let nation = read_usize(player.addr() + 0x1a);
+        let nation = player.nation().addr();
         if nation != 0 {
             let team = exe::database_get_national_team(nation);
             t.button(area, col + 3, row, 1, 0, 0xc, 2, cbde8, nation + 0x53, 0x7d5, team);
         }
         squad_number_text(0x98806c, read_i8(player.addr() + 0x18) as i32);
         cell(t, 4, 0xc, 2, cbde8, 0xde1f64);
-        squad_number_text(0x98806c, read_u8(player.addr() + 0x22) as i32);
+        squad_number_text(0x98806c, player.int_apps() as i32);
         cell(t, 5, 0xc, 2, cbde8, 0xde1f64);
-        squad_number_text(0x98806c, read_u8(player.addr() + 0x23) as i32);
+        squad_number_text(0x98806c, player.int_goals() as i32);
         cell(t, 6, 0xc, 2, cbde8, 0xde1f64);
         form(t, 7);
         squad_morale(player.addr());
@@ -7396,7 +9307,7 @@ pub(crate) unsafe extern "C" fn club_screen_draw_next_match_tab(top: i32, bottom
         // the title: the opponent and the venue
         let y = top + 0x19;
         exe::new_date(at(0x4c), fixture.day() as u32, fixture.year() as u32);
-        match exe::comp_util_get_fixture_venue_side(club, fixture.addr()) {
+        match exe::comp_util_get_fixture_venue_side(club, fixture) {
             1 => { lang(BUF, 0x98f734, gender(opponent), gender(opponent), opponent + club::SHORT_NAME); } // "(Home)"
             2 => { lang(BUF, 0x98f71c, gender(opponent), gender(opponent), opponent + club::SHORT_NAME); } // "(Away)"
             _ => next_match_copy_text(BUF, opponent + club::SHORT_NAME),
@@ -7529,7 +9440,7 @@ pub(crate) unsafe extern "C" fn club_screen_draw_next_match_tab(top: i32, bottom
             if draw {
                 lang(BUF, 0x98f584); // "  Match Rules"
                 label(BUF);
-                exe::transfer_manager_get_selection_limit(read_usize(G_TRANSFER_MANAGER), fixture.addr(), (at(0x6c)) as usize as *mut u8);
+                exe::transfer_manager_get_selection_limit(read_usize(G_TRANSFER_MANAGER), fixture, (at(0x6c)) as usize as *mut u8);
             }
             let first_rule = row();
             if read_u8(at(0x6c)) == 2 {
@@ -7672,7 +9583,7 @@ pub(crate) unsafe extern "C" fn club_screen_draw_next_match_tab(top: i32, bottom
                 lang(BUF, if match_day() { 0x98f148 } else { 0x98f134 });
                 label(BUF);
                 if after_match(exe::date_add_weeks(G_CURRENT_DATE, (at(0x150)) as usize as *mut [u8; 8], 2)) {
-                    exe::weather_get_match_weather(read_usize(G_WEATHER), at(0x84), fixture.addr());
+                    exe::weather_get_match_weather(read_usize(G_WEATHER), at(0x84), fixture);
                     exe::weather_format_description(read_usize(G_WEATHER), BUF, at(0x84));
                 } else {
                     lang(BUF, 0x98f110, NEXT_MATCH_EMPTY_TEXT); // "Unknown<%s - COMMENT - conditions>"
@@ -7686,8 +9597,8 @@ pub(crate) unsafe extern "C" fn club_screen_draw_next_match_tab(top: i32, bottom
                     lang(BUF, 0x98f0fc); // "  Pitch Condition"
                     label(BUF);
                     if after_match(exe::date_add_weeks(G_CURRENT_DATE, (at(0x138)) as usize as *mut [u8; 8], 6)) {
-                        exe::weather_get_match_weather(read_usize(G_WEATHER), at(0x84), fixture.addr());
-                        write_u8(at(0xc8), exe::weather_get_pitch_condition(read_usize(G_WEATHER), at(0x84), fixture.addr()));
+                        exe::weather_get_match_weather(read_usize(G_WEATHER), at(0x84), fixture);
+                        write_u8(at(0xc8), exe::weather_get_pitch_condition(read_usize(G_WEATHER), at(0x84), fixture));
                         pitch_text(read_usize(G_WEATHER), BUF, read_u32(at(0xc8)));
                     } else {
                         lang(BUF, 0x98f110, NEXT_MATCH_EMPTY_TEXT);
@@ -7725,7 +9636,7 @@ pub(crate) unsafe extern "C" fn club_screen_draw_next_match_tab(top: i32, bottom
                             if p.is_null() || read_u8(at(0xfc) + k) != 0 {
                                 continue;
                             }
-                            if exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), p.addr()) != 0 || exe::transfer_manager_player_needs_work_permit(read_usize(G_TRANSFER_MANAGER), p.addr(), team, 0) != 0 {
+                            if exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), p) != 0 || exe::transfer_manager_player_needs_work_permit(read_usize(G_TRANSFER_MANAGER), p, team, 0) != 0 {
                                 continue;
                             }
                             let squad = p.playing_squad();
@@ -7736,28 +9647,28 @@ pub(crate) unsafe extern "C" fn club_screen_draw_next_match_tab(top: i32, bottom
                             exe::database_format_name_from_strings(p.first_name(), p.second_name(), p.common_name(), at(0x158), 0x78, 1, (read_usize(p.addr())) as usize as i32);
                             let mut duty = 0usize;
                             let today = || exe::date_days_since(at(0x4c), read_u32(G_CURRENT_DATE), read_u32(G_CURRENT_DATE_LEAP));
-                            let injury = || exe::injury_get_player_injury(read_usize(G_INJURY), p.addr());
+                            let injury = || exe::injury_get_player_injury(read_usize(G_INJURY), p);
                             let news = match case {
                                 0 => team != p.national_job().addr() && {
-                                    duty = exe::nationalteams_get_international_duty_club(read_usize(G_NATIONAL_TEAMS), p.addr(), at(0x4c), team, (0) as usize as u32, (0) as usize as u32) as usize;
+                                    duty = exe::nationalteams_get_international_duty_club(read_usize(G_NATIONAL_TEAMS), p, at(0x4c), team, (0) as usize as u32, (0) as usize as u32) as usize;
                                     duty != 0
                                 },
-                                1 => exe::transfer_manager_get_ineligibility_code(read_usize(G_TRANSFER_MANAGER), p.addr(), fixture.addr()) != 0,
+                                1 => exe::transfer_manager_get_ineligibility_code(read_usize(G_TRANSFER_MANAGER), p, fixture) != 0,
                                 2 => {
                                     let comp = fixture.competition().addr();
-                                    comp != 0 && exe::discipline_is_player_banned(read_usize(G_DISCIPLINE), p.addr(), comp, same_group, (fixture.addr()) as usize as u32) != 0
+                                    comp != 0 && exe::discipline_is_player_banned(read_usize(G_DISCIPLINE), p, comp, same_group, (fixture.addr()) as usize as u32) != 0
                                 }
-                                3 => injury() != 0 && exe::injury_get_player_injury_status(read_usize(G_INJURY), p.addr()) == 2
+                                3 => injury() != 0 && exe::injury_get_player_injury_status(read_usize(G_INJURY), p) == 2
                                     && read_i16(injury() + injury_entry::TRAINING_RETURN_DAYS) as i32 > today(),
                                 4 => injury() != 0 && read_i16(injury() + injury_entry::TRAINING_DAYS_LEFT) as i32 <= today()
                                     && read_i16(injury() + injury_entry::DAYS_LEFT) as i32 > today() + 3,
                                 _ => exe::database_is_national_team(team) == 0
                                     && exe::date_days_since(G_CURRENT_DATE, p.date_joined_club() as u32, p.date_joined_club_leap_year() as u32) < 100
-                                    && exe::player_stats_get_apps_for_club(read_usize(G_PLAYER_STATS), p.addr(), team) == 0
+                                    && exe::player_stats_get_apps_for_club(read_usize(G_PLAYER_STATS), p, team) == 0
                                     && exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), fixture.competition().addr()) == 0
                                     && unplayed as u16 == 1
                                     && {
-                                        let c = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p.addr(), team);
+                                        let c = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, team);
                                         c != 0 && matches!(read_u8(c + contract::SQUAD_STATUS) & 0xf0, 0x10 | 0x20 | 0x30)
                                     },
                             };
@@ -7788,7 +9699,7 @@ pub(crate) unsafe extern "C" fn club_screen_draw_next_match_tab(top: i32, bottom
                                 }
                                 text_clear(at(0x20));
                                 (exe::text_set_string(at(0x20), (BUF) as usize as *const u8) as i32);
-                                exe::text_add_link(at(0x20), (at(0x158)) as usize as *const u8, 0x7d7, p.addr());
+                                exe::text_add_link(at(0x20), (at(0x158)) as usize as *const u8, 0x7d7, p);
                                 if case == 0 {
                                     exe::text_add_link(at(0x20), (duty + club::SHORT_NAME) as usize as *const u8, 0x7d5, duty);
                                 }
@@ -9763,7 +11674,7 @@ pub(crate) unsafe extern "C" fn club_history_screen_build() {
     lang(HISTORY_TEXT, 0x990ac8, gender, gender, club.addr() + club::SHORT_NAME); // "{}<%s - club name>{} History"
     exe::screenmanager_add_screen_title(G_SCREEN_MANAGER, back, fore, HISTORY_TEXT);
     exe::menubar_build(4, 0);
-    exe::add_club_screen_action_button(club.addr(), back, fore);
+    exe::add_club_screen_action_button(club, back, fore);
 
     let titles: [usize; 9] = [0x98ed18, 0x990abc, 0x990ab4, 0x990aa8, 0x990a9c, 0x990a94, 0x990a88, 0x990a80, 0x98e880];
     for (k, &title) in titles.iter().enumerate() {
@@ -9798,7 +11709,7 @@ pub(crate) unsafe extern "C" fn club_history_screen_build() {
             add_area(current_human_display(), 0x6e, top as usize, 0x30c, bottom as usize, 1, 0, 1, 0, 2, 0, usize::MAX);
         }
     }
-    exe::build_club_squad_navigation_menu(club.addr(), back, fore, 1, 0xc, 0, 0, 0);
+    exe::build_club_squad_navigation_menu(club, back, fore, 1, 0xc, 0, 0, 0);
     let next = (exe::screenmanager_is_forward_unavailable(G_SCREEN_MANAGER) == 0) as u32;
     let back_possible = (exe::screenmanager_is_back_unavailable(G_SCREEN_MANAGER, 0) == 0) as u32;
     exe::gui_add_back_next_buttons(back_possible, next);
@@ -10298,7 +12209,7 @@ unsafe fn history_competitions_honours(club: usize, top: i32, bottom: i32, rows:
         }
     }
     let mut rows_of: usize = 0;
-    let count = exe::comp_util_collect_club_honours(club.addr(), partner, &mut rows_of);
+    let count = exe::comp_util_collect_club_honours(club, partner, &mut rows_of);
     let area = add_area(current_human_display(), 0x6e, top as usize, 0x30c, bottom as usize, 3, weights.as_ptr() as usize + 2, rows as usize, 0, 1, 0, usize::MAX);
     let pale = colour_word(G_GUI_COLOUR_PALE_GREY);
     let yellow = colour_word(G_GUI_COLOUR_YELLOW);
@@ -11074,7 +12985,7 @@ pub(crate) unsafe extern "C" fn club_screen_fixtures_tab_input(widget: u32) -> i
         }
         0x14 => {
             let f = Fixture(club_tabs_value(w));
-            let by_stage = (read_u8(f.addr() + 0x43) != 0xff) as u32;
+            let by_stage = ((f.home_goals() as u8) != 0xff) as u32;
             exe::comp_screens_open_comp_fixtures(f.competition().addr(), f.day() as u32, f.year() as u32, by_stage);
             -4
         }
@@ -12750,14 +14661,14 @@ unsafe fn friendly_dates_next(club: usize, chosen: usize, count: i8, kind: u8, t
         let national = exe::database_is_national_team(club);
         let nation = club.nation();
         if national != 0 {
-            exe::open_choose_friendly_teams_screen(1, nation.continent(), nation.addr(), 2);
+            exe::open_choose_friendly_teams_screen(1, nation.continent(), nation, 2);
         } else {
-            exe::open_choose_friendly_teams_screen(4, nation.continent(), nation.addr(), 1);
+            exe::open_choose_friendly_teams_screen(4, nation.continent(), nation, 1);
         }
         return -4;
     }
     if kind == 0xb {
-        if exe::friendly_add_friendly_dates_request(read_usize(G_FRIENDLY), club.addr(), tour, count as u8 as u32, chosen) != 0 {
+        if exe::friendly_add_friendly_dates_request(read_usize(G_FRIENDLY), club, tour, count as u8 as u32, chosen) != 0 {
             return -10;
         }
         club_pages_error_box(0x323f);
@@ -13633,9 +15544,9 @@ pub(crate) unsafe extern "C" fn tournament_invitations_screen_handle_event(widge
             let national = exe::database_is_national_team(club);
             let n = club.nation();
             if national != 0 {
-                exe::open_choose_friendly_teams_screen(1, n.continent(), n.addr(), 2);
+                exe::open_choose_friendly_teams_screen(1, n.continent(), n, 2);
             } else {
-                exe::open_choose_friendly_teams_screen(3, n.continent(), n.addr(), 1);
+                exe::open_choose_friendly_teams_screen(3, n.continent(), n, 1);
             }
             -4
         }
@@ -14288,7 +16199,7 @@ pub(crate) unsafe extern "C" fn squad_numbers_screen_handle_event(widget: u32) -
                     }
                     let slot = exe::tactics_find_selection_slot(read_usize(G_TACTICS), club, p, flag) as i8;
                     // the fixture's substitutes: byte +0x4d & 0xf
-                    if slot >= 0 && (slot as i32) < (read_u8(fixture.addr() + 0x4d) & 0xf) as i32 + 0xb && squad_numbers_number(p, club.addr()) >= 0 {
+                    if slot >= 0 && (slot as i32) < ((fixture.squad_rules() as u8) & 0xf) as i32 + 0xb && squad_numbers_number(p, club.addr()) >= 0 {
                         exe::squad_manager_allocate_squad_number(read_usize(G_SQUAD_MANAGER), club, p);
                     }
                 }
@@ -14475,7 +16386,7 @@ pub(crate) unsafe extern "C" fn squad_numbers_screen_handle_event(widget: u32) -
                 let side = if away { fixture::AWAY_SIDE_MARK } else { fixture::HOME_SIDE_MARK };
                 let flag = (read_u8(fixture.addr() + side) == 0) as i32;
                 let mut k = 0i8;
-                while (k as i32) < (read_u8(fixture.addr() + 0x4d) & 0xf) as i32 + 0xb {
+                while (k as i32) < ((fixture.squad_rules() as u8) & 0xf) as i32 + 0xb {
                     // simplification: the slot is a byte in a stack slot whose upper bytes are param 0xb's (a char)
                     let p = exe::tactics_get_selected_player(read_usize(G_TACTICS), club, k as u8 as u32, flag);
                     if p != 0 && read_usize(p + staff::PLAYER) != 0 && squad_numbers_number(p, club.addr()) == 0 {
@@ -16445,7 +18356,7 @@ pub(crate) unsafe extern "C" fn build_filtered_sorted_squad_list(club: usize, re
     covered!("tel06_1 squad list");
     let linked = exe::club_get_linked_b_team(club, core::ptr::null_mut(), 1);
     exe::llist_clear(list);
-    exe::virtual_staff_fill_viewed_club_squad(read_usize(G_VIRTUAL_STAFF), club.addr());
+    exe::virtual_staff_fill_viewed_club_squad(read_usize(G_VIRTUAL_STAFF), club);
     let squad = if players != 0 { players } else { club.addr() + club::SQUAD };
     let mut kept = [0usize; 50];
     let mut count = 0usize;
@@ -16709,7 +18620,7 @@ unsafe fn status_code(p: usize, club: usize, fixture: usize, interested: usize) 
         return 0x17;
     }
     if !fixture.is_null() {
-        if exe::discipline_is_one_booking_from_ban(read_usize(G_DISCIPLINE), p.addr(), fixture.competition().addr()) != 0 {
+        if exe::discipline_is_one_booking_from_ban(read_usize(G_DISCIPLINE), p, fixture.competition().addr()) != 0 {
             return 0xa;
         }
     }
@@ -17689,7 +19600,7 @@ pub(crate) unsafe extern "C" fn add_club_screen_action_button(club: usize, colou
         return 1;
     }
     let scouts = read_usize(G_SCOUT_MANAGER);
-    if exe::scout_manager_current_search_has_no_club(scouts) != 0 && exe::scout_manager_is_club_in_session_searches(scouts, club.addr()) == 0 && exe::database_is_national_team(club) == 0 {
+    if exe::scout_manager_current_search_has_no_club(scouts) != 0 && exe::scout_manager_is_club_in_session_searches(scouts, club) == 0 && exe::database_is_national_team(club) == 0 {
         club_action_button(colour, colour_text, 0x991588, 0x6a, 0); // "Scout Club"
         return 1;
     }
@@ -18069,7 +19980,7 @@ unsafe fn compare_screen_heading(text: *mut usize, p1: usize, p2: usize, mode: i
     let (mut name1, mut name2) = ([0u8; 0xc8], [0u8; 0xc8]);
     let (n1, n2) = (name1.as_mut_ptr() as usize, name2.as_mut_ptr() as usize);
 
-    exe::background_set_staff_picture(p1.addr(), 0, 0);
+    exe::background_set_staff_picture(p1, 0, 0);
     exe::database_format_staff_name(p1, n1, 0xc8, 1);
     if !p2.is_null() {
         exe::database_format_staff_name(p2, n2, 0xc8, 1);
@@ -18229,11 +20140,11 @@ unsafe fn compare_screen_positions(p1: usize, p2: usize) {
         write_u8(COMPARE_MASKED + k, 0);
         if read_u8(G_ATTRIBUTE_MASKING_ENABLED) != 0 {
             if !p1.is_null() && !p2.is_null() {
-                let v2 = exe::staff_get_player_attribute_for_viewer(viewer, p2.addr(), attr);
-                let v1 = exe::staff_get_player_attribute_for_viewer(viewer, p1.addr(), attr);
+                let v2 = exe::staff_get_player_attribute_for_viewer(viewer, p2, attr);
+                let v1 = exe::staff_get_player_attribute_for_viewer(viewer, p1, attr);
                 write_u8(COMPARE_TABLE_DIFF + 0x64 + k, v1.wrapping_sub(v2));
-                write_u8(COMPARE_TABLE_SECOND + 0x64 + k, exe::staff_get_player_attribute_for_viewer(viewer, p2.addr(), attr));
-                let v1 = exe::staff_get_player_attribute_for_viewer(viewer, p1.addr(), attr);
+                write_u8(COMPARE_TABLE_SECOND + 0x64 + k, exe::staff_get_player_attribute_for_viewer(viewer, p2, attr));
+                let v1 = exe::staff_get_player_attribute_for_viewer(viewer, p1, attr);
                 write_u8(COMPARE_TABLE_FIRST + 0x64 + k, v1);
                 write_u8(COMPARE_MASKED + k, ((v1 as i8) < 0) as u8);
                 if read_i8(COMPARE_TABLE_SECOND + 0x64 + k) < 0 {
@@ -18509,7 +20420,7 @@ unsafe fn compare_screen_statistics(y: i32) {
         compare_screen_player_stats(c1.addr(), &mut s1);
         compare_screen_player_stats(c2.addr(), &mut s2);
         if mode == 2 {
-            if exe::scout_manager_find_club_search_entry(read_usize(G_SCOUT_MANAGER), first.addr()) != 0 || first.player().addr() == 0 {
+            if exe::scout_manager_find_club_search_entry(read_usize(G_SCOUT_MANAGER), first) != 0 || first.player().addr() == 0 {
                 break 'table;
             }
         } else if mode != 0 {
@@ -18531,11 +20442,11 @@ unsafe fn compare_screen_statistics(y: i32) {
             (exe::database_get_player_attribute_name(attr, COMPARE_TABLE_SECOND + k, 0x64, 0) as usize);
             (exe::database_get_player_attribute_name(attr, COMPARE_TABLE_DIFF + k, 0x64, 0) as usize);
             if read_u8(G_ATTRIBUTE_MASKING_ENABLED) != 0 {
-                let v2 = exe::staff_get_player_attribute_for_viewer(viewer, c2.addr(), attr);
-                let v1 = exe::staff_get_player_attribute_for_viewer(viewer, c1.addr(), attr);
+                let v2 = exe::staff_get_player_attribute_for_viewer(viewer, c2, attr);
+                let v1 = exe::staff_get_player_attribute_for_viewer(viewer, c1, attr);
                 write_u8(COMPARE_TABLE_DIFF + 0x64 + k, v1.wrapping_sub(v2));
-                write_u8(COMPARE_TABLE_SECOND + 0x64 + k, exe::staff_get_player_attribute_for_viewer(viewer, c2.addr(), attr));
-                let v1 = exe::staff_get_player_attribute_for_viewer(viewer, c1.addr(), attr);
+                write_u8(COMPARE_TABLE_SECOND + 0x64 + k, exe::staff_get_player_attribute_for_viewer(viewer, c2, attr));
+                let v1 = exe::staff_get_player_attribute_for_viewer(viewer, c1, attr);
                 write_u8(COMPARE_TABLE_FIRST + 0x64 + k, v1);
                 write_u8(COMPARE_MASKED + k, ((v1 as i8) < 0) as u8);
                 if read_i8(COMPARE_TABLE_SECOND + 0x64 + k) < 0 {
@@ -18647,7 +20558,7 @@ unsafe fn compare_screen_statistics(y: i32) {
                             }
                         }
                         0xfd => {
-                            morale = exe::contract_manager_write_morale_comparison_text(read_usize(G_CONTRACT_MANAGER), c1.addr(), c2.addr(), feet1.as_mut_ptr() as usize, 0xc8);
+                            morale = exe::contract_manager_write_morale_comparison_text(read_usize(G_CONTRACT_MANAGER), c1, c2, feet1.as_mut_ptr() as usize, 0xc8);
                         }
                         _ => {}
                     }
@@ -19045,7 +20956,7 @@ unsafe fn profile_screen_setup(st: &mut ProfileScreen) {
         set_screen_param(6, st.history);
         set_screen_param(7, st.history_index as usize);
     }
-    exe::background_set_staff_picture(s.addr(), 0, 0);
+    exe::background_set_staff_picture(s, 0, 0);
     st.viewer = read_usize(G_SCREEN_RECORDS_MANAGER + read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize as usize * 0x300);
     if st.viewer != 0 {
         st.viewer_club = read_usize(st.viewer + staff::CLUB_JOB);
@@ -19217,7 +21128,7 @@ unsafe fn profile_screen_contract_actions(st: &mut ProfileScreen, menu: &mut usi
         && exe::player_regen_get_retirement_status(read_usize(G_PLAYER_REGEN), s) != 2
     {
         // "Remove From Shortlist" is code 0xa (0x87129f), "Add To Shortlist" 0xb (0x871381)
-        let (text, code) = if exe::scout_manager_is_player_shortlisted(read_usize(G_SCOUT_MANAGER), s.addr(), (0) as u32 as usize) != 0 { (0xa85614, 0xa) } else { (0xa855f8, 0xb) };
+        let (text, code) = if exe::scout_manager_is_player_shortlisted(read_usize(G_SCOUT_MANAGER), s, (0) as u32 as usize) != 0 { (0xa85614, 0xa) } else { (0xa855f8, 0xb) };
         add(menu, text, code, 0);
     }
     let placement = exe::contract_manager_get_squad_placement(cm, s, st.viewer_club);
@@ -19384,7 +21295,7 @@ unsafe fn profile_screen_national_actions(st: &mut ProfileScreen, menu: &mut usi
     let s = Staff(st.staff);
     let viewer = st.viewer;
     let nts = read_usize(G_NATIONAL_TEAMS);
-    if exe::national_teams_player_is_eligible(nts, s.addr(), viewer) == 0 {
+    if exe::national_teams_player_is_eligible(nts, s, viewer) == 0 {
         return;
     }
     covered!("tel07_3 profile national team actions");
@@ -19418,19 +21329,19 @@ unsafe fn profile_screen_national_actions(st: &mut ProfileScreen, menu: &mut usi
         }
     };
     if exe::club_is_national_team(team) == 0 {
-        if exe::national_teams_player_in_squad(nts, s.addr(), nation, 0) != 0 {
+        if exe::national_teams_player_in_squad(nts, s, nation, 0) != 0 {
             add(menu, 0xa85474, 0x1c, 0); // Remove From Squad
             if exe::database_club_has_reserve_squad(team) != 0 && controls_all() {
                 add(menu, 0xa8543c, 0x1b, 1); // Move To 'B' Squad
             }
             youth(menu, &mut add, (0xa85400, 0xa853c4)); // Move To Under 23 / 21
-        } else if exe::national_teams_player_in_squad(nts, s.addr(), nation, 1) != 0 {
+        } else if exe::national_teams_player_in_squad(nts, s, nation, 1) != 0 {
             add(menu, 0xa85390, 0x1b, 0); // Move To Squad
             if controls_all() {
                 add(menu, 0xa85354, 0x1c, 1); // Remove From 'B' Squad
             }
             youth(menu, &mut add, (0xa85400, 0xa853c4));
-        } else if exe::national_teams_player_in_squad(nts, s.addr(), nation, 2) != 0 {
+        } else if exe::national_teams_player_in_squad(nts, s, nation, 2) != 0 {
             add(menu, 0xa85390, 0x1b, 0); // Move To Squad
             if !controls_all() {
                 return;
@@ -19449,7 +21360,7 @@ unsafe fn profile_screen_national_actions(st: &mut ProfileScreen, menu: &mut usi
             youth(menu, &mut add, (0xa85220, 0xa851e0)); // Call Up To Under 23 / 21
         }
     } else {
-        let squad = exe::national_teams_player_in_squad(nts, s.addr(), nation, 2) != 0;
+        let squad = exe::national_teams_player_in_squad(nts, s, nation, 2) != 0;
         let u23 = under23();
         if squad {
             add(menu, if u23 { 0xa85314 } else { 0xa852d4 }, 0x1c, 2);
@@ -19537,7 +21448,7 @@ unsafe fn profile_screen_staff_actions(st: &mut ProfileScreen, menu: &mut usize,
     let vclub = viewer.club_job().addr();
     if vclub != 0 && own == vclub && read_u8(profile_state(s.addr()) + staff_state::EXTRA_FLAGS) & 1 != 0 {
         let injury = exe::injury_get_player_injury(read_usize(G_INJURY), s);
-        if (injury != 0 && exe::injury_get_type_category(read_usize(G_INJURY), read_i8(injury)) == 0xc) || exe::injury_get_recurring_injury_type(read_usize(G_INJURY), s.addr()) == 0xff {
+        if (injury != 0 && exe::injury_get_type_category(read_usize(G_INJURY), read_i8(injury)) == 0xc) || exe::injury_get_recurring_injury_type(read_usize(G_INJURY), s) == 0xff {
             covered!("tel07_3 profile clears the rehabilitation flag");
             let e = profile_state(s.addr()) + staff_state::EXTRA_FLAGS;
             write_u8(e, read_u8(e) & 0xfe);
@@ -19548,7 +21459,7 @@ unsafe fn profile_screen_staff_actions(st: &mut ProfileScreen, menu: &mut usize,
     }
     if (s.is_null() || read_i32(s.addr()) < read_i32(G_STAFF_COUNT)) && read_usize(G_NOTES) != 0 {
         profile_separator(*menu);
-        let text = if exe::notes_find_note(read_usize(G_NOTES), viewer.addr(), s.addr()) != 0 { 0xa85170 } else { 0xa85184 }; // Edit / Create Manager Note
+        let text = if exe::notes_find_note(read_usize(G_NOTES), viewer, s) != 0 { 0xa85170 } else { 0xa85184 }; // Edit / Create Manager Note
         add(menu, text, 0x2c);
     }
 }
@@ -19785,7 +21696,7 @@ unsafe fn profile_screen_identity(st: &mut ProfileScreen) {
         let mut row: i32 = 0;
         // the right edge is the push at 0x8750e1 in the running exe (0x30c; 0x421 in the 1920x1080 exe)
         draw(text, a, 0x6e, read_i32(0x8750e2) as usize, &mut row, 3, colour_word(G_GUI_COLOUR_YELLOW), 3, 0);
-        let report = exe::scout_manager_find_club_search_entry(read_usize(G_SCOUT_MANAGER), s.addr());
+        let report = exe::scout_manager_find_club_search_entry(read_usize(G_SCOUT_MANAGER), s);
         let n = read_i32(G_STAFF_COUNT);
         let id = read_i32(s.addr());
         let job = s.job_for_club();
@@ -19856,7 +21767,7 @@ unsafe fn profile_screen_statistics(st: &mut ProfileScreen, align: usize) {
         let index = read_i32(entry + 2);
         let club = Club(if index > -1 { club_at(index as isize).addr() } else { 0 });
         if index > -1 && !club.is_null() {
-            exe::key_nation_format_club_season(read_u16(entry) as u32, club.addr(), np, 0x7d0);
+            exe::key_nation_format_club_season(read_u16(entry) as u32, club, np, 0x7d0);
             format(PROFILE_BUF, 0xa6a1d0, np, club.addr() + club::SHORT_NAME); // "  %s %s"
             profile_cell_button(table, 0, row, 1, 0, 1, 2, colour_word(0xaebdde), PROFILE_BUF, 0x7d5, club.addr());
         } else {
@@ -19964,8 +21875,8 @@ unsafe fn profile_screen_injuries_tab(st: &mut ProfileScreen) {
     if status != 0 {
         let (mut name, mut period) = ([0u8; 0x100], [0u8; 0x100]);
         let (np, pp) = (name.as_mut_ptr() as usize, period.as_mut_ptr() as usize);
-        exe::injury_describe_player_injury(inj, s.addr(), np, 0xc8, 1);
-        exe::injury_format_days_out(inj, s.addr(), pp, 0xc8, 1, 1);
+        exe::injury_describe_player_injury(inj, s, np, 0xc8, 1);
+        exe::injury_format_days_out(inj, s, pp, 0xc8, 1, 1);
         let injury = exe::injury_get_player_injury(inj, s);
         if injury == 0 {
             covered!("tel07_3 profile injury status without an injury");
@@ -19981,7 +21892,7 @@ unsafe fn profile_screen_injuries_tab(st: &mut ProfileScreen) {
             _ => drop(lang(PROFILE_BUF, 0xa84d38, pp, np)), // "  Out for <period> with <injury>"
         }
     } else {
-        let p = exe::injury_find_match_injury(inj, s.addr());
+        let p = exe::injury_find_match_injury(inj, s);
         if p != 0 {
             let mut name = [0u8; 0x100];
             let np = name.as_mut_ptr() as usize;
@@ -20041,7 +21952,7 @@ unsafe fn profile_screen_injuries_tab(st: &mut ProfileScreen) {
     lang(PROFILE_BUF, 0xa84bfc); // "  Training"
     profile_cell(area, 0, row as usize, 2, 0, 1, 2, pale, PROFILE_BUF);
     let awol = read_usize(G_AWOL);
-    let missed = awol != 0 && exe::awol_has_missed_training(awol, s.addr()) != 0;
+    let missed = awol != 0 && exe::awol_has_missed_training(awol, s) != 0;
     match (status, missed) {
         (0, true) => drop(lang(PROFILE_BUF, 0xa84bb4, 0xad9c64usize)), // "  Full (absent from training recently)"
         (1, true) => drop(lang(PROFILE_BUF, 0xa84b8c)),                // "  Light (absent from training recently)"
@@ -20057,7 +21968,7 @@ unsafe fn profile_screen_injuries_tab(st: &mut ProfileScreen) {
     let mut ban = [0u8; 0x100];
     let bp = ban.as_mut_ptr() as usize;
     for k in 0..4u32 {
-        if exe::discipline_get_slot_text(read_usize(G_DISCIPLINE), s.addr(), k, bp, 0xc8) != 0 {
+        if exe::discipline_get_slot_text(read_usize(G_DISCIPLINE), s, k, bp, 0xc8) != 0 {
             if row > first {
                 profile_cell(area, 0, row as usize, 2, 0, 1, 2, pale, 0);
             }
@@ -20151,7 +22062,7 @@ pub(crate) unsafe extern "C" fn staff_screens_build_profile_screen() {
         }
     }
     // simplification: the original pushes the view byte in a dword whose high bytes are stack garbage; here zero-extended
-    exe::staff_screens_add_squad_and_history_menu(s.addr(), st.view as u32, st.bg, st.fg, 1, 0x1e);
+    exe::staff_screens_add_squad_and_history_menu(s, st.view as u32, st.bg, st.fg, 1, 0x1e);
     let next = (exe::screenmanager_is_forward_unavailable(SCREEN_MANAGER) == 0) as u32;
     let back = (exe::screenmanager_is_back_unavailable(SCREEN_MANAGER, 0) == 0) as u32;
     exe::gui_add_back_next_buttons(back, next);
@@ -20483,7 +22394,7 @@ pub(crate) unsafe extern "C" fn staff_screens_draw_contract_tab(top: i32, bottom
     lang(JOB_TEXT, 0x98f9dcusize); // "  Wages"
     label(row, JOB_TEXT);
     if !contract.is_null() {
-        exe::staff_contract_format_wage_text(contract.addr(), b, 1, 2);
+        exe::staff_contract_format_wage_text(contract, b, 1, 2);
         format(JOB_TEXT, 0x987ff0usize, b); // "  %s"
     } else {
         lang(JOB_TEXT, 0x98e8c8usize); // "  -"
@@ -20529,7 +22440,7 @@ pub(crate) unsafe extern "C" fn staff_screens_draw_contract_tab(top: i32, bottom
     lang(JOB_TEXT, 0xa8665cusize); // "  Expires"
     label(row, JOB_TEXT);
     if !contract.is_null() {
-        exe::staff_contract_format_end_date_text(contract.addr(), b);
+        exe::staff_contract_format_end_date_text(contract, b);
         format(JOB_TEXT, 0x987ff0usize, b); // "  %s"
     } else {
         staff_tab_strcpy(JOB_TEXT, 0x98e8c8); // "  -"
@@ -20607,7 +22518,7 @@ pub(crate) unsafe extern "C" fn staff_screens_draw_contract_tab(top: i32, bottom
                 if row > first {
                     label(row, 0);
                 }
-                exe::staff_contract_format_bonus_text(contract.addr(), i, b, 100, 2);
+                exe::staff_contract_format_bonus_text(contract, i, b, 100, 2);
                 format(JOB_TEXT, 0x987ff0usize, b); // "  %s"
                 value(row, JOB_TEXT);
                 row += 1;
@@ -20634,7 +22545,7 @@ pub(crate) unsafe extern "C" fn staff_screens_draw_contract_tab(top: i32, bottom
                 if row > first {
                     label(row, 0);
                 }
-                exe::staff_contract_format_release_clause_name(contract.addr(), i, b, 100, 2);
+                exe::staff_contract_format_release_clause_name(contract, i, b, 100, 2);
                 format(JOB_TEXT, 0xa86538usize, b, money.as_ptr() as usize); // "  %s (%s)"
                 staff_tab_cell(area, 1, row, 2, 0, 1, 2, if kind == 2 { G_GUI_COLOUR_RED } else { VALUE }, JOB_TEXT);
                 row += 1;
@@ -20666,9 +22577,9 @@ pub(crate) unsafe extern "C" fn staff_screens_draw_contract_tab(top: i32, bottom
     lang(JOB_TEXT, 0xa863c0usize); // "  Notes"
     label(row, JOB_TEXT);
     let manager = tel26_slot_manager().addr();
-    if manager != 0 && (exe::notes_find_note(read_usize(G_NOTES), manager, p.addr()) as usize) != 0 {
+    if manager != 0 && (exe::notes_find_note(read_usize(G_NOTES), manager, p) as usize) != 0 {
         let mut note = [0u8; 0x200];
-        exe::notes_format_note_text(read_usize(G_NOTES), manager, p.addr(), note.as_mut_ptr() as usize);
+        exe::notes_format_note_text(read_usize(G_NOTES), manager, p, note.as_mut_ptr() as usize);
         // strncpy(500) then the 500th byte cleared: at most 499 characters
         let mut copy = [0u8; 500];
         if let Some(n) = note.iter().take(500).position(|&c| c == 0) {
@@ -20820,7 +22731,7 @@ unsafe fn profile_tab_player_attributes(top: i32, bottom: i32, p: Staff, manager
         let r = profile_row(i as usize - 1);
         exe::database_get_player_attribute_name(i, r, 100, 0);
         let v = if read_u8(G_ATTRIBUTE_MASKING_ENABLED) != 0 {
-            exe::staff_get_player_attribute_for_viewer(manager, p.addr(), i)
+            exe::staff_get_player_attribute_for_viewer(manager, p, i)
         } else {
             exe::staff_compute_player_attribute(p, p.player(), i)
         };
@@ -21302,7 +23213,7 @@ pub(crate) unsafe extern "C" fn staff_screens_draw_profile_tab(top: i32, bottom:
     let has_player = !p.player().is_null();
     let has_non_player = !p.non_player().is_null();
     if mode == 2 {
-        let entry = exe::scout_manager_find_club_search_entry(read_usize(G_SCOUT_MANAGER), p.addr());
+        let entry = exe::scout_manager_find_club_search_entry(read_usize(G_SCOUT_MANAGER), p);
         if entry != 0 {
             profile_tab_match_history(top, bottom, p, entry, t, &w_header, &w_matches);
         } else if has_player {
@@ -21793,7 +23704,7 @@ unsafe fn transfer_tab_future(st: &mut TransferTab) {
             }
         }
     }
-    if exe::nationalteams_player_dislikes_national_team(read_usize(G_NATIONAL_TEAMS), p.addr()) != 0 && !p.player().is_null() {
+    if exe::nationalteams_player_dislikes_national_team(read_usize(G_NATIONAL_TEAMS), p) != 0 && !p.player().is_null() {
         st.say(0xa8aa7c); // "  Retired from international football"
     }
     let regen = read_usize(G_PLAYER_REGEN);
@@ -21906,7 +23817,7 @@ unsafe fn transfer_tab_mood_interest(st: &mut TransferTab) -> bool {
         if club.is_null() {
             return false;
         }
-        if exe::dispute_is_in_dispute(dispute, p.addr(), 0) != 0 && exe::dispute_get_dispute_club_id(read_usize(G_DISPUTE), p.addr()) == read_i32(club.addr()) {
+        if exe::dispute_is_in_dispute(dispute, p, 0) != 0 && exe::dispute_get_dispute_club_id(read_usize(G_DISPUTE), p) == read_i32(club.addr()) {
             st.say(0xa8a920); // "  Is attempting to leave the club under the 'Sporting Just Cause' clause"
         }
     }
@@ -23435,7 +25346,7 @@ unsafe fn transfer_tab_mood_outlook(st: &mut TransferTab) {
     {
         st.say(0xa86e78); // "  Hoping to gain first team experience from going on loan"
     }
-    if exe::staff_is_transfer_listed_or_requested(p, club) == 0 && exe::dispute_is_in_dispute(read_usize(G_DISPUTE), p.addr(), 0) == 0 {
+    if exe::staff_is_transfer_listed_or_requested(p, club) == 0 && exe::dispute_is_in_dispute(read_usize(G_DISPUTE), p, 0) == 0 {
         let s = transfer_tab_outlook_stay(st);
         st.say(s);
     } else if st.row == st.first {
@@ -23597,7 +25508,7 @@ unsafe fn transfer_tab_outlook_moving(st: &mut TransferTab) {
     let experience = 0xa86e78; // "  Hoping to gain first team experience from going on loan"
     let not_sure = 0xa86c88; // "  Not sure what he will gain by going on loan"
     let too_good = 0xa86c3c; // "  Feels a player of his ability shouldn't be listed for loan"
-    if exe::dispute_is_in_dispute(read_usize(G_DISPUTE), p.addr(), 0) == 0 && c.grievances() == 0 && c.morale() as i32 >= -0x32 - p.loyalty() as i32 {
+    if exe::dispute_is_in_dispute(read_usize(G_DISPUTE), p, 0) == 0 && c.grievances() == 0 && c.morale() as i32 >= -0x32 - p.loyalty() as i32 {
         covered!("tel08_3 transfer tab outlook moving");
         let pl = p.player();
         let (s, comment) = if exe::staff_is_loan_listed(p, 0usize) != 0 {
@@ -23649,7 +25560,7 @@ unsafe fn transfer_tab_outlook_moving(st: &mut TransferTab) {
         st.line();
         return;
     }
-    if exe::dispute_is_in_dispute(read_usize(G_DISPUTE), p.addr(), 0) != 0 || c.grievances() != 0 {
+    if exe::dispute_is_in_dispute(read_usize(G_DISPUTE), p, 0) != 0 || c.grievances() != 0 {
         return;
     }
     let s = if c.morale() < -75 && p.temperament() < 0xf && p.professionalism() < 10 && p.ambition() > 5 && !st.future_now() {
@@ -24451,7 +26362,7 @@ unsafe fn profile_input_notice(name: usize, buf: usize, subtitle: usize, text: u
 /// `TRANSFER_MANAGER` 0x8ce990 (thiscall, ret 0x10): whether the person can be approached by `club`; the reason code
 /// goes to `out` (0 = he can, the reason is then the offer kind of 0x8f0e40).
 unsafe fn profile_input_approach(p: Staff, club: u32, out: &mut u32) -> u32 {
-    exe::transfer_manager_can_club_bid_for_player(read_usize(G_TRANSFER_MANAGER), p.addr(), (club) as u32 as usize, (out) as *mut u32 as *mut u16, 0)
+    exe::transfer_manager_can_club_bid_for_player(read_usize(G_TRANSFER_MANAGER), p, (club) as u32 as usize, (out) as *mut u32 as *mut u16, 0)
 }
 
 /// A cdecl action of the profile on the person with up to three more dword arguments.
@@ -24512,7 +26423,7 @@ pub(crate) unsafe extern "C" fn staff_screens_profile_input(item: u32) -> i32 {
             if answer == 2 {
                 covered!("tel09_3 profile input award vote");
                 let shortlist = get_screen_param(0xd);
-                exe::award_shortlist_cast_vote(read_usize(shortlist + 0x1f), manager.addr(), p.addr());
+                exe::award_shortlist_cast_vote(read_usize(shortlist + 0x1f), manager, p);
                 set_screen_param(0xd, 0);
                 return -10;
             }
@@ -24584,7 +26495,7 @@ pub(crate) unsafe extern "C" fn staff_screens_profile_input(item: u32) -> i32 {
         3 => {
             let mut club_out: usize = 0;
             let club = manager.club_job().addr() as u32;
-            if exe::contract_manager_toggle_squad_placement(read_usize(G_CONTRACT_MANAGER), p.addr(), (club) as u32 as usize, (&mut club_out) as *mut usize as usize) != 0 {
+            if exe::contract_manager_toggle_squad_placement(read_usize(G_CONTRACT_MANAGER), p, (club) as u32 as usize, (&mut club_out) as *mut usize as usize) != 0 {
                 return -11;
             }
             covered!("tel09_3 profile input no squad space");
@@ -24845,8 +26756,8 @@ pub(crate) unsafe extern "C" fn staff_screens_profile_input(item: u32) -> i32 {
             }
             set_screen_param(0, p.addr());
             let hm = read_usize(G_HUMAN_MANAGER);
-            if exe::human_manager_has_nickname(hm, p.addr(), 0) != 0 {
-                staff_tab_strcpy(copy, exe::human_manager_get_nickname(hm, p.addr(), 0));
+            if exe::human_manager_has_nickname(hm, p, 0) != 0 {
+                staff_tab_strcpy(copy, exe::human_manager_get_nickname(hm, p, 0));
             } else {
                 staff_tab_strcpy(copy, p.common_name());
             }
@@ -24858,7 +26769,7 @@ pub(crate) unsafe extern "C" fn staff_screens_profile_input(item: u32) -> i32 {
             let club = manager.club_job().addr();
             exe::database_format_staff_name(p, nm, 200, 1);
             exe::database_get_club_kit_colours(club, 1, &mut c1, &mut c2);
-            let answer = exe::scout_manager_get_scout_request_status(read_usize(G_SCOUT_MANAGER), p.addr(), 0) as i8;
+            let answer = exe::scout_manager_get_scout_request_status(read_usize(G_SCOUT_MANAGER), p, 0) as i8;
             let notice = |text: usize, subtitle: usize| {
                 let text = lang(JOB_TEXT, text, 0u32, c1, c2, 0x42u32) as u32 as usize;
                 profile_input_notice(nm, sub, subtitle, text, c1, c2, 0x42);
@@ -24875,7 +26786,7 @@ pub(crate) unsafe extern "C" fn staff_screens_profile_input(item: u32) -> i32 {
                 4 => notice(0xa8b16c, 0xa8b1c8), // "Your club does not have the resources ..." / "Cannot have player scouted"
                 _ => {}
             }
-            exe::scout_manager_add_to_shortlist(read_usize(G_SCOUT_MANAGER), p.addr(), 0);
+            exe::scout_manager_add_to_shortlist(read_usize(G_SCOUT_MANAGER), p, 0);
             return -4;
         }
         _ => {}
@@ -26084,9 +27995,9 @@ pub(crate) unsafe extern "C" fn setup_build_select_start_season_screen() {
         let item = base + count * 0xd4;
         let year = read_u16(e + key_nation_record::START_DATE_YEAR) as i32;
         if read_u32(e + key_nation_record::SPLIT_SEASON_FLAG) != 0 {
-            format(item + 4, 0xa8049c, n.addr() + 0x38, year % 100, (year + 1) % 10); // "%s %02d/%02d"
+            format(item + 4, 0xa8049c, n.addr() + nation::SHORT_NAME, year % 100, (year + 1) % 10); // "%s %02d/%02d"
         } else {
-            format(item + 4, 0xa80494, n.addr() + 0x38, year); // "%s %d"
+            format(item + 4, 0xa80494, n.addr() + nation::SHORT_NAME, year); // "%s %d"
         }
         write_u32(item + 0xcc, 0xf);
         write_usize(item + 0xd0, n.addr());
@@ -26695,7 +28606,7 @@ pub(crate) unsafe extern "C" fn setup_build_manager_status_screen() {
                 let watching = exe::screenmanager_find_manager_channel(sm, s) != 0xffff;
                 text(SETUP_TEXT, if watching { 0xa805bc } else { 0xa805d4 }); // "On Holiday (Watching)" / "On Holiday"
                 label(sm, list, 2, row, 1, 0, 1, 3, grey, SETUP_TEXT);
-                if read_u8(exe::human_manager_get_password(hm(), s.addr())) != 0 {
+                if read_u8(exe::human_manager_get_password(hm(), s)) != 0 {
                     may_finish = false;
                 }
                 if exe::screenmanager_find_manager_channel(sm, s) == 0xffff {
@@ -26706,7 +28617,7 @@ pub(crate) unsafe extern "C" fn setup_build_manager_status_screen() {
                     link(row, 0x7d5, club);
                 }
             } else if exe::human_manager_is_computer_controlled(hm(), s) != 0 {
-                let locked = read_u8(exe::human_manager_get_password(hm(), s.addr())) != 0;
+                let locked = read_u8(exe::human_manager_get_password(hm(), s)) != 0;
                 text(SETUP_TEXT, if locked { 0xa805a4 } else { 0xa80598 }); // "Not Playing (locked)" / "Not Playing"
                 label(sm, list, 2, row, 1, 0, 1, 3, grey, SETUP_TEXT);
                 link(row, 0x18, s.addr());
@@ -32515,7 +34426,7 @@ pub(crate) unsafe extern "thiscall" fn tactics_screen_constructor(ts: usize, clu
             exe::drop_llist(list);
             return ts;
         }
-        if exe::match_stats_find_record_fixture(read_usize(G_MATCH_STATS), (read_i32(ts + s::RECORD_INDEX)) as i32 as usize, fixture.addr()) == 0 {
+        if exe::match_stats_find_record_fixture(read_usize(G_MATCH_STATS), (read_i32(ts + s::RECORD_INDEX)) as i32 as usize, fixture) == 0 {
             tel26_error_box(TACTICS_SCREENS_CPP, 0x12de);
             exe::drop_llist(list);
             return ts;
@@ -32896,7 +34807,7 @@ pub(crate) unsafe extern "thiscall" fn predict_opponent_lineup(ts: usize) -> u32
         }
         let mut date = [0u8; 8];
         exe::new_date(date.as_mut_ptr() as usize, fixture.day() as u32, fixture.year() as u32);
-        if exe::nationalteams_get_international_duty_club(read_usize(G_NATIONAL_TEAMS), p.addr(), date.as_mut_ptr() as usize, opponent.addr(), 0, 0) == 0 {
+        if exe::nationalteams_get_international_duty_club(read_usize(G_NATIONAL_TEAMS), p, date.as_mut_ptr() as usize, opponent, 0, 0) == 0 {
             candidates[count as usize] = p.addr();
             count += 1;
         }
@@ -32912,7 +34823,7 @@ pub(crate) unsafe extern "thiscall" fn predict_opponent_lineup(ts: usize) -> u32
         }
     }
     let flags: u32 = if exe::database_is_national_team(opponent) != 0 { 0x2014 } else { 0x2042 };
-    exe::match_man_assign_players_to_positions(candidates.as_ptr() as usize, count as u32, positions.as_mut_ptr() as usize, 0xb, (read_u8(ts + tactics_screen::BENCH_SIZE) & 0xf) as u32, ts + s::OPPONENT_LINEUP, flags, opponent.addr(), 0, 0, 0, 0, 0, 0, 0);
+    exe::match_man_assign_players_to_positions(candidates.as_ptr() as usize, count as u32, positions.as_mut_ptr() as usize, 0xb, (read_u8(ts + tactics_screen::BENCH_SIZE) & 0xf) as u32, ts + s::OPPONENT_LINEUP, flags, opponent, 0, 0, 0, 0, 0, 0, 0);
     1
 }
 
@@ -35824,29 +37735,29 @@ unsafe fn ts_copy_offer(dst: usize, src: usize) {
     for k in [0usize, 4, 8, 0xc] {
         write_u32(dst.addr() + k, read_u32(src.addr() + k));
     }
-    write_u8(dst.addr() + 0x10, read_u8(src.addr() + 0x10));
-    write_u8(dst.addr() + 0x11, read_u8(src.addr() + 0x11));
+    dst.set_terms_state(src.terms_state());
+    dst.set_job_type(src.job_type());
     let mut tmp = [0u32; 2];
     exe::date_operator_3d(dst.addr() + offer::DUE_DATE, tmp.as_mut_ptr() as usize, src.addr() + offer::DUE_DATE);
-    write_u8(dst.addr() + 0x1a, read_u8(src.addr() + 0x1a));
-    write_u32(dst.addr() + 0x1b, read_u32(src.addr() + 0x1b));
-    write_u8(dst.addr() + 0x1f, read_u8(src.addr() + 0x1f));
+    dst.set_due_slice(src.due_slice());
+    dst.set_fee(((src.fee() as u32)) as usize);
+    dst.set_offer_type(src.offer_type());
     for k in [0x20usize, 0x24, 0x28] {
         write_u32(dst.addr() + k, read_u32(src.addr() + k));
     }
     for k in [0x2cusize, 0x2d, 0x2e, 0x2f] {
         write_u8(dst.addr() + k, read_u8(src.addr() + k));
     }
-    let b = read_u8(dst.addr() + 0x30);
-    write_u8(dst.addr() + 0x30, ((((read_u8(src.addr() + 0x30) << 4) as i8) >> 4) as u8 ^ b) & 0xf ^ b);
-    let d = read_u32(dst.addr() + 0x31);
-    write_u32(dst.addr() + 0x31, (read_u32(src.addr() + 0x31) ^ d) & 0xf ^ d);
-    write_u32(dst.addr() + 0x35, read_u32(src.addr() + 0x35));
-    write_u8(dst.addr() + 0x39, read_u8(src.addr() + 0x39));
-    write_u32(dst.addr() + 0x3a, read_u32(src.addr() + 0x3a));
-    write_u8(dst.addr() + 0x3e, read_u8(src.addr() + 0x3e));
-    write_u8(dst.addr() + 0x3f, read_u8(src.addr() + 0x3f));
-    write_u8(dst.addr() + 0x40, read_u8(src.addr() + 0x40));
+    let b = dst.completion_timing();
+    dst.set_completion_timing(((((src.completion_timing() << 4) as i8) >> 4) as u8 ^ b) & 0xf ^ b);
+    let d = dst.offer_kind() as u32;
+    dst.set_offer_kind((((src.offer_kind() as u32) ^ d) & 0xf ^ d) as usize);
+    dst.set_appearance_fee(((src.appearance_fee() as u32)) as usize);
+    dst.set_appearance_games(src.appearance_games());
+    dst.set_international_fee(((src.international_fee() as u32)) as usize);
+    dst.set_international_games(src.international_games());
+    dst.set_sell_on_percent(src.sell_on_percent());
+    dst.set_instalments(src.instalments());
 }
 
 /// After `ts_copy_offer`: the first dword cleared and, with an exchange list, a new LLIST copied from `src_list`.
@@ -35980,7 +37891,7 @@ pub(crate) unsafe extern "C" fn transfer_screens_build_bid_screen() {
     exe::database_get_club_kit_colours(human, 1, &mut kit_a, &mut kit_b);
     format(TS_TEXT, 0x991944, human.addr() + club::SHORT_NAME); // "%s"
     (exe::text_set_string(t, (TS_TEXT) as usize as *const u8) as i32);
-    exe::text_add_link(t, (human.addr() + club::SHORT_NAME) as usize as *const u8, 0x7d5, human.addr());
+    exe::text_add_link(t, (human.addr() + club::SHORT_NAME) as usize as *const u8, 0x7d5, human);
     let header = tel26_add_area(current_human_display(), [100, 0xa, 0x316, 0x46, 1, 0, 1, 0, 0x30, kit_b, u32::MAX]);
     let mut row: i32 = 0;
     draw(t, header, 100, 0x316, &mut row, 7, kit_a, 1, 0);
@@ -39681,7 +41592,7 @@ pub(crate) unsafe extern "C" fn transfer_screens_build_transfer_status_screen() 
             exe::text_add_link(t, (m) as usize as *const u8, 1, 0);
         }
         (exe::text_set_string(t, (TS_TEXT) as usize as *const u8) as i32);
-        exe::text_add_link(t, (n) as usize as *const u8, 0x7d7, player.addr());
+        exe::text_add_link(t, (n) as usize as *const u8, 0x7d7, player);
         row = 0;
         draw(t, area, 0x6e, 0x30c, &mut row, 3, pale, 0, 0);
         row += 2;
@@ -41272,7 +43183,7 @@ pub(crate) unsafe extern "C" fn transfer_screens_handle_end_loan_dialog(item: u3
     let player = Staff(get_screen_param(0));
     let contract_club = Club(ts_contract_club_any(player.addr()));
     let own = Club(read_usize(tel26_slot_manager().addr() + staff::CLUB_JOB));
-    exe::contract_manager_schedule_loan_end(read_usize(G_CONTRACT_MANAGER), player.addr(), own.addr());
+    exe::contract_manager_schedule_loan_end(read_usize(G_CONTRACT_MANAGER), player, own);
     let (mut a, mut b) = (0u32, 0u32);
     exe::database_get_club_kit_colours(own, 1, &mut a, &mut b);
     let (mut name, mut heading) = ([0u8; 0x190], [0u8; 0x258]);
@@ -46379,7 +48290,7 @@ unsafe fn comp_screen_results_tab(comp: usize, top: i32, bottom: i32) {
             let stage_byte = read_u8(fx + COMP_SCREEN_FIXTURE_STAGE_BYTE) as i8 as i32;
             let stage_index = read_i16(fx + COMP_SCREEN_FIXTURE_STAGE_INDEX) as i32;
             let yellow = job_colour(G_GUI_COLOUR_YELLOW);
-            if exe::comp_are_round_fixtures_known(comp.addr(), stage_byte, stage_index) != 0 {
+            if exe::comp_are_round_fixtures_known(comp, stage_byte, stage_index) != 0 {
                 let value = (stage_byte + 1) * 1000 + stage_index;
                 comp_add_item([2, 0x73, 0, x2 as u32, 0, 0, row as u32, 1, 0, 0, 1, 3, yellow, JOB_TEXT as u32, 0, 0xe, value as u32, area]);
             } else {
@@ -46624,7 +48535,7 @@ pub(crate) unsafe extern "C" fn comp_screens_draw_comp_screen() {
         1 => {
             let mut s = get_screen_param(2) as i32;
             if s == -2 {
-                s = read_u8(exe::comp_get_current_stage(comp.addr()) + league::STAGE_INDEX) as i8 as i32;
+                s = read_u8(exe::comp_get_current_stage(comp) + league::STAGE_INDEX) as i8 as i32;
                 set_screen_param(2, s as isize as usize);
             }
             let stage = exe::comp_get_stage(comp, s);
@@ -46645,7 +48556,7 @@ pub(crate) unsafe extern "C" fn comp_screens_draw_comp_screen() {
         10 => tab_routine(0x79a530, comp.competition().addr()),
         _ => {}
     }
-    exe::comp_screens_add_related_comps_menu(comp.addr(), colour_40, colour_44, 1, 0x18);
+    exe::comp_screens_add_related_comps_menu(comp, colour_40, colour_44, 1, 0x18);
     tel26_back_next();
 }
 
@@ -48092,7 +50003,7 @@ pub(crate) unsafe extern "C" fn comp_screens_draw_team_stats_tab(comp: usize, to
             tel26_area_button([area, 1, row as u32, 1, 0, 9, 3, if human { yellow } else { pale }, JOB_TEXT as u32, 0x7d5, club.addr() as u32]);
             if read_u8(comp + 0x42) == 2 && club.nation().addr() != 0 {
                 let team = exe::database_get_national_team(club.nation().addr());
-                tel26_area_button([area, 2, row as u32, 1, 0, 1, 2, yellow, (club.nation().addr() + 0x38) as u32, 0x7d5, team as u32]);
+                tel26_area_button([area, 2, row as u32, 1, 0, 1, 2, yellow, (club.nation().addr() + nation::SHORT_NAME) as u32, 0x7d5, team as u32]);
             }
             exe::comp_stats_format_team_stat(read_usize(comp + 8), e, stat as u32, JOB_TEXT, 0x7d0, 1);
             tel26_area_text([area, 3, row as u32, 0x30, job_colour(JOB_COLOUR_3192), 0xc, 1, pale, JOB_TEXT as u32]);
@@ -48196,7 +50107,7 @@ pub(crate) unsafe extern "C" fn comp_screens_draw_player_stats_tab(comp: usize, 
                 let nation = staff.nation().addr();
                 if nation != 0 {
                     let team = exe::database_get_national_team(nation);
-                    tel26_area_button([area, 2, row as u32, 1, 0, 1, 2, yellow, (staff.nation().addr() + 0x38) as u32, 0x7d5, team as u32]);
+                    tel26_area_button([area, 2, row as u32, 1, 0, 1, 2, yellow, (staff.nation().addr() + nation::SHORT_NAME) as u32, 0x7d5, team as u32]);
                 }
             } else {
                 let club = staff.club_job().addr();
@@ -54994,7 +56905,7 @@ unsafe fn training_squad_row(session: usize, area: u32, row: u32, entry: usize, 
     let number = read_i8(entry + 4);
     let name = if number > 1 { training_schedule(session, number) + TRAINING_SCHEDULE_NAME } else { 0 };
     tel26_area_text([area, 0, row, 0x30, job_colour(G_GUI_COLOUR_DARK_BLUE), 0xc, 1, job_colour(G_GUI_COLOUR_PALE_GREY), name as u32]);
-    let status = exe::get_player_status_code(person.addr(), club, (0) as u32 as usize);
+    let status = exe::get_player_status_code(person, club, (0) as u32 as usize);
     training_status_cell(area, row, person.addr(), club, status);
     exe::database_format_staff_name(person, TRAINING_TEXT_BUFFER, 0x7d0, 3);
     let ink = if status == 6 { job_colour(G_GUI_COLOUR_GREY) } else { job_colour(G_GUI_COLOUR_PALE_GREY) };
@@ -55026,7 +56937,7 @@ unsafe fn training_squad_row(session: usize, area: u32, row: u32, entry: usize, 
         while read_u8(table + k as usize) != 0xff {
             let attribute = read_u8(table + k as usize) as u32;
             format(TRAINING_TEXT_BUFFER, 0x98806c, exe::staff_get_player_attribute(person, attribute) as i32); // "%d"
-            let delta = exe::training_manager_get_training_attribute_change(read_usize(G_TRAINING_MANAGER), person.addr(), read_u8(table + k as usize) as u32);
+            let delta = exe::training_manager_get_training_attribute_change(read_usize(G_TRAINING_MANAGER), person, read_u8(table + k as usize) as u32);
             let ink = if delta > 0 { colours.up } else if delta < 0 { colours.down } else { colours.same };
             tel26_area_text([area, k as u32 + 3, row, 1, 0, 0xc, 2, ink, text]);
             k = k.wrapping_add(1);
@@ -58406,9 +60317,9 @@ pub(crate) unsafe extern "C" fn job_information_screen_build() {
             continue;
         }
         let mut header = false;
-        if (exe::nation_menu_split_part_count((split.as_mut_ptr()) as *mut u8 as usize) as i8) > 1 && exe::nation_menu_split_in_second_part((split.as_mut_ptr()) as *mut u8 as usize, n.addr()) != group {
+        if (exe::nation_menu_split_part_count((split.as_mut_ptr()) as *mut u8 as usize) as i8) > 1 && exe::nation_menu_split_in_second_part((split.as_mut_ptr()) as *mut u8 as usize, n) != group {
             header = true;
-            group = exe::nation_menu_split_in_second_part((split.as_mut_ptr()) as *mut u8 as usize, n.addr());
+            group = exe::nation_menu_split_in_second_part((split.as_mut_ptr()) as *mut u8 as usize, n);
             exe::nation_menu_split_format_header((split.as_mut_ptr()) as *mut u8 as usize, JOB_TEXT, 0x7d0, group as u32);
             let item = tel26_add_item(d, [2, 0, 0, 0, 0, 0, 0, 0x10, job_colour(JOB_COLOUR_31AA), job_colour(JOB_COLOUR_BDEC), 1, 1,
                 job_colour(JOB_COLOUR_BDEA), JOB_TEXT as u32, 0, 0, 0, menu]);
@@ -58417,7 +60328,7 @@ pub(crate) unsafe extern "C" fn job_information_screen_build() {
         if !header && (exe::nation_menu_split_part_count((split.as_mut_ptr()) as *mut u8 as usize) as i8) == 1 {
             part_area = menu;
         }
-        format(JOB_TEXT, 0x98ed14, n.addr() + 0x38);
+        format(JOB_TEXT, 0x98ed14, n.addr() + nation::SHORT_NAME);
         let id = read_u32(n.addr());
         job_nation_line(d, id == nation, id, part_area);
     }
@@ -59130,7 +61041,6 @@ unsafe fn manager_stats_nation_menu(nation: i32, cols: &mut [u8; 8]) {
     let list: DisplayListFn = core::mem::transmute(FN_DISPLAY_ADD_AREA);
     // key_nation.cpp: key_nation_sorted_order (cdecl), NATION_MENU_SPLIT ctor / part_count / format_header /
     // in_second_part (thiscall; ret 0xc, 0, 0xc, 4), checked against the disassembly
-    let part_count: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_NATION_MENU_SPLIT_PART_COUNT);
     let in_second_part: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_NATION_MENU_SPLIT_IN_SECOND_PART);
     const BUF: usize = 0xde1f64;
     let sm = SCREEN_MANAGER;
@@ -59155,7 +61065,7 @@ unsafe fn manager_stats_nation_menu(nation: i32, cols: &mut [u8; 8]) {
             continue;
         }
         let mut new_part = false;
-        if part_count(sp) as i8 > 1 && in_second_part(sp, e.addr()) != cols[4] {
+        if exe::nation_menu_split_part_count(sp) as i8 > 1 && in_second_part(sp, e.addr()) != cols[4] {
             covered!("tel26_5 manager stats nation menu part");
             cols[4] = in_second_part(sp, e.addr());
             exe::nation_menu_split_format_header(sp, BUF, 0x7d0, u32::from_le_bytes([cols[4], cols[5], cols[6], cols[7]]));
@@ -59163,7 +61073,7 @@ unsafe fn manager_stats_nation_menu(nation: i32, cols: &mut [u8; 8]) {
             part_area = list(current_human_display(), 0, 0, 0, 0, 0, 0, 0, 0, 0x30, colour_word(MANAGER_STATS_MENU_COLOUR), item);
             new_part = true;
         }
-        if !new_part && part_count(sp) == 1 {
+        if !new_part && exe::nation_menu_split_part_count(sp) == 1 {
             part_area = area;
         }
         format(BUF, 0x98ed14, e.addr() + nation::SHORT_NAME);
@@ -60133,8 +62043,6 @@ unsafe fn menubar_competitions_menu(area: usize, row: i32) {
     let add_menu_item: MenubarThis4 = core::mem::transmute(FN_SCREENMANAGER_ADD_MENU_ITEM);
     let add_menu_area: MenubarThis1 = core::mem::transmute(FN_SCREENMANAGER_ADD_MENU_AREA);
     let separator: MenubarThis1 = core::mem::transmute(FN_MENUBAR_ADD_SEPARATOR);
-    let part_count: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_NATION_MENU_SPLIT_PART_COUNT);
-    let in_second_part: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_NATION_MENU_SPLIT_IN_SECOND_PART);
     let find_nation_awards: MenubarThis1 = core::mem::transmute(FN_AWARD_MANAGER_FIND_NATION_AWARDS);
     menubar_text(0x98ed18);
     let heading = menubar_heading(0x82, row, 0x1021, 0xc, 1, colour_word(G_GUI_COLOUR_PALE_GREY), MENUBAR_TEXT, 0, area);
@@ -60184,13 +62092,13 @@ unsafe fn menubar_competitions_menu(area: usize, row: i32) {
                 if read_u8(nation + 0x11c) == 0 {
                     continue;
                 }
-                if part_count(s) as i8 > 1 && in_second_part(s, nation) != last {
+                if exe::nation_menu_split_part_count(s) as i8 > 1 && exe::nation_menu_split_in_second_part(s, nation) != last {
                     covered!("tel26_6 competitions menu split header");
-                    last = in_second_part(s, nation);
+                    last = exe::nation_menu_split_in_second_part(s, nation);
                     core::mem::transmute::<usize, MenubarThis3>(0x66a360)(s, MENUBAR_TEXT, 0x7d0, last as usize);
                     let header = add_menu_item(SCREEN_MANAGER, comps, MENUBAR_TEXT, 0, 0) as usize;
                     part = add_menu_area(SCREEN_MANAGER, header) as usize;
-                } else if part_count(s) == 1 {
+                } else if exe::nation_menu_split_part_count(s) == 1 {
                     part = comps;
                 }
                 add_menu_item(SCREEN_MANAGER, part, nation + 4, 0, 0) as usize
@@ -61293,8 +63201,7 @@ pub(crate) unsafe extern "C" fn compare_award_screens_open_nominations_from_news
 /// `AWARD_SHORTLIST::get_vote_status` (0x418140, thiscall, ret 4): the entry the manager voted for, −1 when he may
 /// vote, −2 when he may not (ax).
 unsafe fn award_vote_status(shortlist: usize, manager: usize) -> i16 {
-    let f: unsafe extern "thiscall" fn(usize, usize) -> i16 = core::mem::transmute(FN_AWARD_SHORTLIST_GET_VOTE_STATUS);
-    f(shortlist, manager)
+    exe::award_shortlist_get_vote_status(shortlist, manager) as i16
 }
 
 /// Rule: opens an award's nominations; the current manager may vote when he has not voted yet.
@@ -64126,7 +66033,7 @@ pub(crate) unsafe extern "C" fn news_screens_build_news_screen() {
     let k = (tab as i8 as i32 * 3 + 9) as u32;
     let mut sel = get_screen_param(k) as u32;
     if refresh != 0 {
-        if exe::news_has_urgent_items(read_usize(G_NEWS), manager.addr(), 1) == 0 && exe::screenmanager_is_manager_done(G_SCREEN_MANAGER, manager.addr() as u32) == 0 {
+        if exe::news_has_urgent_items(read_usize(G_NEWS), manager, 1) == 0 && exe::screenmanager_is_manager_done(G_SCREEN_MANAGER, manager.addr() as u32) == 0 {
             covered!("tel28_3 inbox refresh with nothing urgent");
             exe::background_set_picture(0usize);
             exe::drop_text(text_b.as_mut_ptr());
@@ -64146,7 +66053,7 @@ pub(crate) unsafe extern "C" fn news_screens_build_news_screen() {
         set_screen_param(4, 0);
     }
     if list == 0 {
-        list = exe::news_get_inbox_items(read_usize(G_NEWS), manager.addr(), &mut count, tab as u32);
+        list = exe::news_get_inbox_items(read_usize(G_NEWS), manager, &mut count, tab as u32);
         set_screen_param(2, list);
         set_screen_param(3, count as isize as usize);
     }
@@ -71136,7 +73043,7 @@ pub(crate) unsafe extern "C" fn contract_screens_handle_staff_offer_contract_scr
         let mut local = StaffOfferLocal([0; 0x44]);
         let o = Offer(local.0.as_mut_ptr() as usize);
         let mut date = [read_u32(G_CURRENT_DATE), read_u32(G_CURRENT_DATE + 4)];
-        exe::transfer_offer_transfer_offer_8e56a0(o.addr(), person.addr(), manager.club_job().addr() as u32, 0, -1, 1);
+        exe::transfer_offer_transfer_offer_8e56a0(o, person, manager.club_job().addr() as u32, 0, -1, 1);
         o.set_job_type(job);
         let mut kind = o.completion_timing();
         if exe::database_is_player_job(person.job_for_club() as i8) != 0 && contract_club_of(person.addr()) != 0 {
@@ -73581,7 +75488,7 @@ pub(crate) unsafe extern "C" fn discipline_appeal_dialog_build() {
     let days = get_screen_param(6) as u16 as i16;
     let staff = staff_at(person as i32 as isize);
     let club = if staff.club_job().addr() != 0 { staff.club_job().addr() } else { read_usize(G_CLUB_TABLE) };
-    (exe::background_set_staff_picture(staff.addr(), 0, 0) as u32);
+    (exe::background_set_staff_picture(staff, 0, 0) as u32);
     exe::menubar_build(4, 0);
     let (mut fore, mut back) = (0u32, 0u32);
     exe::database_get_club_kit_colours(club, 1, &mut fore, &mut back);
@@ -73643,7 +75550,7 @@ pub(crate) unsafe extern "C" fn discipline_appeal_dialog_handle_click(raw: u32) 
             let submit: SubmitBanAppeal = core::mem::transmute(FN_MANAGER_MANAGER_SUBMIT_BAN_APPEAL);
             submit(read_usize(0xb67a44), person.addr(), human, p10 | p11 << 8 | p12 << 16 | p13 << 24, p11 | p12 << 8 | p13 << 16, p12 | p13 << 8, p13,
                 p19, p5, p6, (raw & 0xffff_ff00) | p14, p20);
-            exe::news_set_item_slot(read_usize(0xb7431c), manager.addr(), news_id, 0, 1, 0);
+            exe::news_set_item_slot(read_usize(0xb7431c), manager, news_id, 0, 1, 0);
             -9
         }
         _ => {
@@ -73909,7 +75816,7 @@ pub(crate) unsafe extern "C" fn fa_meeting_screen_handle_event(raw: u32) -> i32 
         5 => {
             if chosen != 0 {
                 covered!("tel34_5 fa meeting confirm");
-                exe::manager_manager_handle_fa_request(read_usize(0xb67a44), club.addr(), chosen as u32);
+                exe::manager_manager_handle_fa_request(read_usize(0xb67a44), club, chosen as u32);
             }
             -9
         }
@@ -74627,7 +76534,7 @@ pub(crate) unsafe extern "C" fn draw_discipline_player_screen() {
     covered!("tel35_1 draw discipline");
     let period = get_screen_param(1) as u8 as i8 as i32;
     let reason = get_screen_param(2) as u8;
-    exe::background_set_staff_picture(person.addr(), 0, 0);
+    exe::background_set_staff_picture(person, 0, 0);
     let (mut fore, mut back) = (0u32, 0u32);
     exe::database_get_club_kit_colours(club, 1, &mut fore, &mut back);
     let mut name = [0u8; 500];
@@ -75729,7 +77636,7 @@ pub(crate) unsafe extern "C" fn compare_manager_stats_rows(a: *const usize, b: *
                 d = manager_stats_days(G_CURRENT_DATE, pb + 0x3e);
             }
             if pa.club_job().addr() != 0 {
-                d = d.wrapping_sub(manager_stats_days(G_CURRENT_DATE, pa.addr() + 0x3e));
+                d = d.wrapping_sub(manager_stats_days(G_CURRENT_DATE, pa.addr() + staff::DATE_JOINED_CLUB));
             }
             d
         }
@@ -78333,7 +80240,7 @@ pub(crate) unsafe extern "C" fn open_treatment_confirm_screen(person: usize, lea
     let kind = if leave as u8 != 0 {
         TREATMENT_LEAVE
     } else {
-        let t = (exe::injury_get_recurring_injury_type(read_usize(G_INJURY), person.addr()) as i8 as i32).wrapping_sub(0xb) as u32;
+        let t = (exe::injury_get_recurring_injury_type(read_usize(G_INJURY), person) as i8 as i32).wrapping_sub(0xb) as u32;
         match TREATMENT_CASE.get(t as usize) {
             Some(0) => TREATMENT_PHYSIO,
             Some(1) => TREATMENT_SURGERY,
@@ -78442,7 +80349,7 @@ pub(crate) unsafe extern "C" fn ultimatum_news_issue_ultimatum_action(person: us
     if person.is_null() || person.club_job().addr() == 0 {
         return;
     }
-    if exe::news_find_item_by_id(read_usize(G_NEWS), person.addr(), news_id, item_at) == 0 {
+    if exe::news_find_item_by_id(read_usize(G_NEWS), person, news_id, item_at) == 0 {
         covered!("tel36_2 ultimatum news item not found");
         return tel26_error_box(0xaa1b90, 0x45);
     }
@@ -78494,9 +80401,9 @@ pub(crate) unsafe extern "C" fn ultimatum_screen_handle_event(raw: u32) -> i32 {
         covered!("tel36_2 issue the ultimatum");
         let club = person.club_job().addr();
         if club != 0 {
-            exe::manager_manager_handle_manager_ultimatum(read_usize(G_MANAGER_MANAGER), person.addr(), club, kind as u32);
+            exe::manager_manager_handle_manager_ultimatum(read_usize(G_MANAGER_MANAGER), person, club, kind as u32);
         }
-        exe::news_set_item_slot(read_usize(G_NEWS), person.addr(), (news_id) as u32 as usize, 5, 1, 0);
+        exe::news_set_item_slot(read_usize(G_NEWS), person, (news_id) as u32 as usize, 5, 1, 0);
     })
 }
 
@@ -79102,7 +81009,7 @@ pub(crate) unsafe extern "C" fn news_screens_send_message_input(raw: u32) -> i32
                     let id = (read_u32(G_STAFF_COUNT)).wrapping_sub(k).wrapping_sub(1);
                     let manager = Staff(read_usize(G_STAFF_TABLE).wrapping_add(id.wrapping_mul(staff::SIZE as u32) as usize));
                     if manager.classification() == 1 && manager.addr() != human {
-                        exe::news_deliver_to_manager(read_usize(G_NEWS), at, manager.addr(), 0);
+                        exe::news_deliver_to_manager(read_usize(G_NEWS), at, manager, 0);
                     }
                 }
             }
@@ -79271,7 +81178,7 @@ pub(crate) unsafe extern "C" fn notes_draw_staff_note_screen() {
     } else {
         read_usize(G_CLUB_TABLE).wrapping_add(read_u32(TRANSFER_RULES_DEFAULT_CLUB_KEY).wrapping_mul(club::SIZE as u32) as usize)
     };
-    exe::background_set_staff_picture(person.addr(), 0, 0);
+    exe::background_set_staff_picture(person, 0, 0);
     let (mut fore, mut back) = (0u32, 0u32);
     exe::database_get_club_kit_colours(club, 1, &mut fore, &mut back);
     let mut name = [0u8; 0x1f4];
@@ -79316,7 +81223,7 @@ pub(crate) unsafe extern "C" fn notes_draw_staff_note_screen() {
     row += 2;
     for k in 0..5u8 {
         exe::notes_get_reason_label(read_usize(G_NOTES), JOB_TEXT, 0x7d0, k as u32, 2);
-        if exe::notes_is_reason_valid_for_staff(read_usize(G_NOTES), human, person.addr(), k as u32) == 0 {
+        if exe::notes_is_reason_valid_for_staff(read_usize(G_NOTES), human, person, k as u32) == 0 {
             tel26_area_button([third, 1, row as u32, 1, 0, 1, 3, job_colour(JOB_COLOUR_317E), JOB_TEXT as u32, 0, 0]);
         } else {
             let colour = if reason != k as u32 { pale } else { job_colour(JOB_COLOUR_BDEC) };
@@ -79663,7 +81570,7 @@ pub(crate) unsafe extern "C" fn staff_screens_handle_compare_action(raw: u32) ->
     let slot = read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize;
     let human = read_usize((G_SCREEN_RECORDS_MANAGER as isize + slot * 0x300) as usize);
     let shortlist_vote = |human: usize| {
-        exe::award_shortlist_cast_vote(read_usize(get_screen_param(0xd) + 0x1f), human, person.addr());
+        exe::award_shortlist_cast_vote(read_usize(get_screen_param(0xd) + 0x1f), human, person);
     };
     if read_u32(TEL35_NETWORK_FLAG) != 0 {
         let mut command = read_u32(STAFF_PENDING_COMMAND);
@@ -79703,8 +81610,8 @@ pub(crate) unsafe extern "C" fn staff_screens_handle_compare_action(raw: u32) ->
             covered!("tel36_9 person history");
             let second = if read_usize(person.addr() + 8) != 0 { read_usize(person.addr() + 8) } else { 0x989ad8 };
             let first = if read_usize(person.addr() + 4) != 0 { read_usize(person.addr() + 4) } else { 0x989ad8 };
-            let born = person.addr() + 0x10;
-            let year = read_u16(person.addr() + 0x12) as u32;
+            let born = person.addr() + staff::DATE_OF_BIRTH;
+            let year = person.date_of_birth_year() as u32;
             let month = exe::date_get_month(born) as i8 as i32 + 1;
             let day = exe::date_get_day_of_month(born) as i16 as i32;
             format(JOB_TEXT, 0x9ced08, first, second, day, month, year);
@@ -79734,7 +81641,7 @@ pub(crate) unsafe extern "C" fn staff_screens_handle_compare_action(raw: u32) ->
         3 => {
             let club = read_usize(human + staff::CLUB_JOB);
             let mut full = 0usize;
-            if exe::contract_manager_toggle_squad_placement(read_usize(G_CONTRACT_MANAGER), person.addr(), club, (&mut full) as *mut usize as usize) != 0 {
+            if exe::contract_manager_toggle_squad_placement(read_usize(G_CONTRACT_MANAGER), person, club, (&mut full) as *mut usize as usize) != 0 {
                 return -11;
             }
             covered!("tel36_9 no space in the squad");
@@ -79796,7 +81703,7 @@ pub(crate) unsafe extern "C" fn staff_screens_handle_compare_action(raw: u32) ->
         0x24 => staff_action1(0x5a8380, person.addr()),
         6 => {
             let mut club = 0usize;
-            if exe::transfer_manager_get_agreed_contract_club(read_usize(G_TRANSFER_MANAGER), person.addr(), (&mut club) as *mut usize as usize) != 0 {
+            if exe::transfer_manager_get_agreed_contract_club(read_usize(G_TRANSFER_MANAGER), person, (&mut club) as *mut usize as usize) != 0 {
                 covered!("tel36_9 contract already agreed");
                 exe::database_format_staff_name(person, n, 0xc8, 1);
                 let gender = read_u8(club + club::SHORT_GENDER_NAME) as i8 as i32;
@@ -79880,10 +81787,10 @@ pub(crate) unsafe extern "C" fn staff_screens_handle_compare_action(raw: u32) ->
             if exe::screenmanager_open_screen(G_SCREEN_MANAGER, 0x88bc70usize, 0x88bee0usize, 1, 0usize, 0) != 0 {
                 set_screen_param(0, person.addr());
                 let manager = read_usize(G_HUMAN_MANAGER);
-                let source = if exe::human_manager_has_nickname(manager, person.addr(), 0) != 0 {
-                    exe::human_manager_get_nickname(manager, person.addr(), 0)
+                let source = if exe::human_manager_has_nickname(manager, person, 0) != 0 {
+                    exe::human_manager_get_nickname(manager, person, 0)
                 } else {
-                    read_usize(person.addr() + 0xc)
+                    person.common_name()
                 };
                 tel26_copy_text(buffer as *mut u8, source as *const u8);
                 set_screen_param(1, buffer);
@@ -79894,7 +81801,7 @@ pub(crate) unsafe extern "C" fn staff_screens_handle_compare_action(raw: u32) ->
             let club = read_usize(human + staff::CLUB_JOB);
             exe::database_format_staff_name(person, n, 0xc8, 1);
             exe::database_get_club_kit_colours(club, 1, &mut colours.0, &mut colours.1);
-            match exe::scout_manager_get_scout_request_status(read_usize(G_SCOUT_MANAGER), person.addr(), 0) as i8 {
+            match exe::scout_manager_get_scout_request_status(read_usize(G_SCOUT_MANAGER), person, 0) as i8 {
                 s @ (0 | 1) => {
                     if exe::screenmanager_open_screen(G_SCREEN_MANAGER, 0x88c100usize, 0x88c360usize, 1, 0usize, 0) != 0 {
                         set_screen_param(0, read_u32(person.addr()) as usize);

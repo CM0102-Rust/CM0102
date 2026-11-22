@@ -1,0 +1,5 @@
+NAO PROVADO NO JOGO (leitor tel42, rodada 2 das telas, 22/11/2026): compila sobre o HEAD af16155e7 com os quatro itens tel42_1..4 juntos (cada um autossuficiente: sem ordem entre eles), sem aviso no codigo novo; com as 8 mutacoes aplicadas tambem compila; cada ancora aparece 1 vez.
+Item de tela: get_league_history 0x443380, get_cup_history 0x443520, get_league_comp_ids 0x443770, get_cup_comp_ids 0x443a20 (thiscall ret 4), club_history_get_current_league_record 0x444190 (cdecl, 5 args), compare_int_ids 0x444500 (cdecl).
+Como chegar: qualquer clube -> Club -> History (abas de liga e de copa: as quatro listas); o cabecalho da tela do clube (o registro da liga atual; clube brasileiro de fevereiro a junho mostra a estadual).
+Comparadores: lado a lado (as listas pelo conteudo, a da copia destruida; o registro, a marca de fim e a fase; compare_order!).
+Mutacoes (sessao do Lucas): tel42_3_temporada_acabada (Club -> History depois do fim da liga: um registro a mais) e tel42_3_posicao (o cabecalho da tela do clube).

@@ -1,0 +1,5 @@
+NAO PROVADO NO JOGO (leitor tel40, rodada 2 das telas, 22/11/2026): compila sobre o HEAD af16155e7 junto com tel40_1/2/5 (e com as mutacoes aplicadas). Iguais no cm0102-1080.exe.
+PRECISA de RELATIVAS: (0x567b00, 4) -- prologo de 6 bytes termina num je rel8; compilado com essa entrada. Sem ela, tirar 0x567b00 do item.
+As duas rodam so em rede (cliente mandando clique; servidor reconstruindo o item, comando 6). guio_copy_text_to_caller lado a lado; send_widget_click so a original com plano.
+O auxiliar chama Guio::get_fields pelo endereco (0x5ee4a0 ja e Rust: guio_get_fields; o nome local e click_guio_fields).
+Mutacoes: tel40_3_texto_nao_volta (comparador, em rede), tel40_3_comando_errado (modo Rust, em rede).

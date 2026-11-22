@@ -1,0 +1,4 @@
+NAO PROVADO (so compilado; item de simulacao, sem LIGAS).
+tel39_4: match_team_pair_destructor (0x453bc0), rating_record_construct (0x453c50), squad_view_settings_construct (0x487810).
+Compilado em 22/11/2026 (leitor tel39): sobre o HEAD af16155e7 (git archive de rust/ e cm0102-base/) com tel39_1..tel39_8 aplicados juntos (e (0x497910, 3) e (0x727fa0, 2) no RELATIVAS): cargo build --release sem erro e sem aviso no codigo dos itens; de novo com as 17 mutacoes aplicadas (compila); ancoras unicas (motor + fila); prologos conferidos no cm0102.exe em fronteira de instrucao; rotinas inteiras iguais no cm0102-1080.exe.
+Falta: comparacao ENG ate 2001-09-01 (o HUMAN_RECORD nasce no inicio; o destruidor no fim de cada dia de jogos; o registro com data nas estatisticas). Mutacoes acusadas pelos comparadores; o destruidor nao tem mutacao (os destruidores dos elementos sao um ret).

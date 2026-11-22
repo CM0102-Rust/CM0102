@@ -1,0 +1,6 @@
+NAO PROVADO NO JOGO (leitor tel42, rodada 2 das telas, 22/11/2026): compila sobre o HEAD af16155e7 com os quatro itens tel42_1..4 juntos (cada um autossuficiente: sem ordem entre eles), sem aviso no codigo novo; com as 8 mutacoes aplicadas tambem compila; cada ancora aparece 1 vez.
+Item SAVE + CARGA: Club_History::Club_History 0x442ab0 (thiscall ret 4), ~Club_History 0x442e20 (thiscall), Club_History::load 0x443cd0 (thiscall ret 4).
+Prova: prova_save.py --leva N (o .qst de uma carreira nova: o construtor roda no create_game) e a carga do FeriasTesteSave (free_game_data destroi, load_game_data constroi e carrega); a carreira Rust x2 ate 2002-06-01 passa pelo construtor na criacao.
+Exe 1080/portatil: a busca do CD remendada em 0x442b0c (jne -> nop nop) e 0x442b4f (test -> xor); a copia le esses bytes. A assinatura difere entre os exes por isso: conferir que o 1080 fica com a versao remendada registrada.
+Comparadores: so a original (nao rodam duas vezes).
+Mutacoes: tel42_1_sem_temporada (registros novos em 0: o .qst muda); tel42_1_carga_perdida (load devolve 0: o historico carregado e trocado por um novo; acusada se a impressao da carga cobrir os registros).

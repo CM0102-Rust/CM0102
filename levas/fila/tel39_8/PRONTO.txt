@@ -1,0 +1,4 @@
+NAO PROVADO (so compilado; item de simulacao, sem LIGAS).
+tel39_8: PunditList::PunditList (0x7da190), PunditList::~PunditList (0x7da690), apply_obscene_gesture_ban (0x7daf50). Depende do tel36_13 (publicado).
+Compilado em 22/11/2026 (leitor tel39): sobre o HEAD af16155e7 (git archive de rust/ e cm0102-base/) com tel39_1..tel39_8 aplicados juntos (e (0x497910, 3) e (0x727fa0, 2) no RELATIVAS): cargo build --release sem erro e sem aviso no codigo dos itens; de novo com as 17 mutacoes aplicadas (compila); ancoras unicas (motor + fila); prologos conferidos no cm0102.exe em fronteira de instrucao; rotinas inteiras iguais no cm0102-1080.exe.
+Falta: comparacao ENG desde o inicio (o construtor roda ao criar o jogo). O destruidor so roda quando ja havia lista e a punicao so com gesto obsceno de quem tem o bit 0x40 do +0xb do estado: podem nao rodar ate 2002-06-01; a tel39_8_tres_semanas pode escapar.

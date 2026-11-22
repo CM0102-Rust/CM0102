@@ -1,0 +1,5 @@
+NAO PROVADO NO JOGO (leitor tel40, rodada 2 das telas, 22/11/2026): compila sobre o HEAD af16155e7 junto com tel40_2, tel40_3 e tel40_5, sem avisos no codigo do item; compila tambem com todas as mutacoes aplicadas; ancoras das mutacoes 1 vez cada. Prologos em fronteira de instrucao. Iguais no cm0102-1080.exe (bytes da rotina inteira).
+Depende so do que ja esta no motor.rs (leva 318).
+Sem rede (comparar lado a lado, JOGAR_COMPARANDO.bat): add_manager_record e scrman_add_player_record ao carregar um save com tecnico humano (Carregar Jogo ou -load) e ao criar tecnico novo; send_area_scroll_row ao rolar qualquer lista; send_network_status_message em toda barra de progresso (criar jogo, salvar, carregar); send_clear_click e set_pending_click_widget nas telas que os usam (dialogos com clique pendente).
+So em rede (so a original, plano conferido): get_local_addresses, start_network_session, scrman_remove_player_records e os ramos remotos.
+Mutacoes: tel40_1_registro_na_frente (carregar save com tecnico), tel40_1_linha_mais_um (rolar lista), tel40_1_comando_de_estado (barra de progresso).
