@@ -16496,13 +16496,26 @@ pub(crate) unsafe extern "C" fn build_filtered_sorted_squad_list(club: usize, re
     1
 }
 
+/// The people of a squad list, in order. Each node holds a 4-byte block that `llist_add_tail` copied onto the heap,
+/// so the node data is that block's address (another one in each run) and the person is the dword inside it.
+unsafe fn squad_list_people(list: usize) -> Vec<usize> {
+    llist_items(list).into_iter().map(|block| if block == 0 { 0 } else { read_usize(block) }).collect()
+}
+
 /// A squad list routine side by side: the sort context, the return and the list built (its items). The virtual
 /// players topped up and a foreigner removed from a national squad by the first run are not undone (the second run
 /// finds them done).
 unsafe fn compare_squad_list(name: &str, list: usize, original: impl FnOnce() -> u32, rust: impl FnOnce() -> u32) -> u32 {
     let reg = [(SQUAD_LIST_SORT_CLUB, 8usize), (SQUAD_LIST_SORT_CONTEXT, 0x18), (SQUAD_LIST_SORT_MANAGER, 4)];
-    let (a, b, same, _, _) = crate::comparison::side_by_side(&reg, || (original(), llist_items(list)), || (rust(), llist_items(list)));
-    SCOREBOARD.record(same && a == b, || format!("{} (club squad list): returned {} with {:x?}, Rust {} with {:x?}", name, a.0, a.1, b.0, b.1));
+    // the sort's comparators read the players' status, which can roll the day's fitness or the week's training in the
+    // original's run (`training_rolled_by`): the copy then sorts other values; not compared
+    let mut rolled = false;
+    let (a, b, same, _, _) = crate::comparison::side_by_side(&reg, || {
+        let mut r = (0, Vec::new());
+        rolled = training_rolled_by(|| r = (original(), squad_list_people(list)));
+        r
+    }, || (rust(), squad_list_people(list)));
+    SCOREBOARD.record((same && a == b) || rolled, || format!("{} (club squad list): returned {} with {:x?}, Rust {} with {:x?}", name, a.0, a.1, b.0, b.1));
     a.0
 }
 
@@ -18775,23 +18788,27 @@ pub(crate) unsafe fn training_update_pending(person: usize) -> bool {
     read_u16(tm + training_manager_fields::WEEK_COUNTER) != read_u16(entry + 1)
 }
 
-/// Runs `f` (the original side of a screen comparer) and says whether it rolled a week's training: any of the training
-/// entries (`training_manager_fields::PLAYER_ENTRIES`, 6 bytes per player sheet, `G_PLAYER_DATA_COUNT` of them)
-/// changed. `update_player_training` (0x8b1750) rolls once a week per player and stamps the entry, so the copy, run
-/// after it, finds the week done and draws nothing: the generator ends elsewhere with no fault in the copy. Screens
-/// that list players (the club's squad tab, the profile, the squad numbers) call it for each one (22/11/2026).
+/// Runs `f` (the original side of a screen comparer) and says whether it made one of the game's lazy rolls, those that
+/// draw once and keep the result, so the copy, run after it, finds them done and draws nothing: the generator ends
+/// elsewhere with no fault in the copy. Two tables are watched: the week's training (`update_player_training`
+/// 0x8b1750; `training_manager_fields::PLAYER_ENTRIES`, 6 bytes per player sheet, `G_PLAYER_DATA_COUNT`) and the day's
+/// fitness (`Injury::update_player_fitness` 0x62c680, reached from a player's status code; the physical records at
+/// [`G_INJURY`], 31 bytes per person, `G_STAFF_COUNT`). Screens that list players (the club's squad tab, the profile,
+/// the squad numbers) call them for each one (22/11/2026).
 pub(crate) unsafe fn training_rolled_by(f: impl FnOnce()) -> bool {
-    let tm = read_usize(G_TRAINING_MANAGER);
-    let entries = if tm == 0 { 0 } else { read_usize(tm + training_manager_fields::PLAYER_ENTRIES) };
-    let n = read_i32(G_PLAYER_DATA_COUNT).max(0) as usize * 6;
-    if entries == 0 || n == 0 {
-        f();
-        return false;
-    }
-    let before = core::slice::from_raw_parts(entries as *const u8, n).to_vec();
+    let tables = || {
+        let tm = read_usize(G_TRAINING_MANAGER);
+        let training = if tm == 0 { 0 } else { read_usize(tm + training_manager_fields::PLAYER_ENTRIES) };
+        let injury = read_usize(G_INJURY);
+        let fitness = if injury == 0 { 0 } else { read_usize(injury) };
+        [(training, read_i32(G_PLAYER_DATA_COUNT).max(0) as usize * 6), (fitness, read_i32(G_STAFF_COUNT).max(0) as usize * 31)]
+    };
+    let before_tables = tables();
+    let copies: Vec<Vec<u8>> = before_tables.iter().map(|&(p, n)| if p == 0 || n == 0 { Vec::new() } else { core::slice::from_raw_parts(p as *const u8, n).to_vec() }).collect();
     f();
-    // the table can be reallocated by the original (a new player sheet): then it changed too
-    read_usize(tm + training_manager_fields::PLAYER_ENTRIES) != entries || before.as_slice() != core::slice::from_raw_parts(entries as *const u8, n)
+    // a table reallocated by the original (a new player sheet or person) changed too
+    tables() != before_tables
+        || before_tables.iter().zip(copies.iter()).any(|(&(p, n), c)| p != 0 && n != 0 && c.as_slice() != core::slice::from_raw_parts(p as *const u8, n))
 }
 
 /// Comparer for `staff_screens_build_compare_players_screen`: both build side by side and are compared by the screen
@@ -20197,9 +20214,30 @@ pub(crate) unsafe extern "C" fn compare_staff_screens_build_profile_screen() {
     screen.push((PROFILE_SCREEN_RESET, 4));
     screen.push((G_CONTRACT_LOOKUP_RESULT, 4));
     screen.extend_from_slice(&crate::rng::STATE_REGIONS);
+    // the background picture's name (parameter block +0x1fc, `ScreenManager::get_background_picture` 0x7fee9d) goes
+    // back too: the copy picks a picture only while none is set, and the original's would stop it drawing (22/11/2026)
+    {
+        let slot = read_i16(SCREEN_MANAGER + screen_manager::CURRENT_SLOT) as isize;
+        let block = core::ptr::read_unaligned((SCREEN_MANAGER as isize + (screen_manager::PARAM_BLOCK as isize) + slot * 0x300) as *const usize);
+        if block != 0 {
+            screen.push((block + 0x1fc, 4));
+        }
+        // the human's menu bar record: the builder's `menubar_build(4, 0)` updates it, and the copy's must start from
+        // the same record (without the refresh time, read from the clock), as `compare_menubar_build` does
+        let manager = read_usize(menubar_slot(MENUBAR_SLOT_MANAGER));
+        if manager != 0 {
+            let k = read_i32(manager).wrapping_sub(read_i32(G_STAFF_COUNT)).wrapping_add(0x10);
+            if (0..0x10).contains(&k) {
+                let rec = MENUBAR_RECORDS + k as usize * MENUBAR_RECORD_SIZE;
+                screen.push((rec, menubar_record::REFRESH_TIME));
+                screen.push((rec + menubar_record::HEADER_WIDGET, MENUBAR_RECORD_SIZE - menubar_record::HEADER_WIDGET));
+            }
+        }
+    }
     let before = crate::comparison::MemorySnapshot::read(&screen);
     let (p3_before, p6_before) = (get_screen_param(3), get_screen_param(6));
-    let rolled = training_rolled_by(|| o());
+    let mut draws_original = Vec::new();
+    let rolled = training_rolled_by(|| draws_original = crate::rng::trace(|| o()).1);
     let mut problems: Vec<String> = Vec::new();
     let p3 = get_screen_param(3);
     if (plan.list && p3 == 0) || (!plan.list && p3 != p3_before) {
@@ -20233,13 +20271,13 @@ pub(crate) unsafe extern "C" fn compare_staff_screens_build_profile_screen() {
     }
     let after_orig = crate::comparison::MemorySnapshot::read(&all);
     before.write_back();
-    crate::rng::pause_trace(|| crate::rng::without_counting(|| staff_screens_build_profile_screen()));
+    let draws_rust = crate::rng::trace(|| crate::rng::without_counting(|| staff_screens_build_profile_screen())).1;
     let after_rust = crate::comparison::MemorySnapshot::read(&all);
     after_orig.write_back();
     // the original rolled a week's training: the copy cannot draw it again, only the plan is compared
     let equal = after_orig == after_rust || rolled;
     SCOREBOARD.record(equal && problems.is_empty(), || {
-        format!("staff profile screen ({:#x}, table {}): plan {:?}; differences in {:?}", s.addr(), plan.tab, problems, first_differences(&after_orig, &after_rust))
+        format!("staff profile screen ({:#x}, table {}): plan {:?}; draws (n, answer) original {:?} rust {:?}; differences in {:?}", s.addr(), plan.tab, problems, draws_original, draws_rust, first_differences(&after_orig, &after_rust))
     });
 }
 
@@ -37171,7 +37209,7 @@ pub(crate) unsafe extern "C" fn compare_transfer_screens_open_bid_confirm_dialog
 /// - 0x23 (delay): "Delay decision over transfer bid ..." with the contract club; 2 (cancel), 0x1c (negotiate): the
 ///   player alone; 0x1d (accept): a loan, "Accept <buyer> loan offer for <player>", else "Accept transfer bid for
 ///   <player>"; 0x1b (reject): "Reject <buyer> loan offer for <player>". Any other action leaves the text as it was.
-/// Then the text area (as many lines as fit), the menu bar (4, 0) and the bar No (id 3) / Yes (id 2).
+/// Then the text area (as many lines as fit), the menu bar (4, 0) and the bar No (id 2) / Yes (id 3).
 /// Original: `transfer_screens_build_bid_confirm_dialog` (0x8ef240, transfer_screens.cpp, cdecl).
 pub(crate) unsafe extern "C" fn transfer_screens_build_bid_confirm_dialog() {
     let lang: TsLang = core::mem::transmute(FN_LANGLIB_SPRINTF);
@@ -37242,8 +37280,9 @@ pub(crate) unsafe extern "C" fn transfer_screens_build_bid_confirm_dialog() {
     exe::menubar_build(4, 0);
     let weights: [u8; 2] = [3, 1];
     let bar = ts_button_bar(2, weights.as_ptr());
-    ts_bar_button(bar, 0, TS_NO, 3);
-    ts_bar_button(bar, 1, TS_YES, 2);
+    // No is 2 and Yes is 3 (0x8ef90c, 0x8ef94b)
+    ts_bar_button(bar, 0, TS_NO, 2);
+    ts_bar_button(bar, 1, TS_YES, 3);
 }
 
 /// Comparer of `transfer_screens_build_bid_confirm_dialog`: side by side over the display list and the contract

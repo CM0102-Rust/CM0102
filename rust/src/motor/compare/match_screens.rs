@@ -281,13 +281,7 @@ pub(crate) unsafe fn compare_by_display_list_with(name: &str, extra: &[(usize, u
     // a week's training rolled by the original cannot roll again in the copy (`training_rolled_by`): not compared
     let mut rolled = false;
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || rolled = training_rolled_by(original), || crate::rng::without_counting(rust));
-    SCOREBOARD.record(igual || rolled, || {
-        let dif: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter_map(|((a, x), (_, y))| {
-            let k = x.iter().zip(y.iter()).position(|(p, q)| p != q)?;
-            Some(format!("{:#x}+{:#x}", a, k))
-        }).collect();
-        format!("{}: differences em {:?}", name, dif)
-    });
+    SCOREBOARD.record(igual || rolled, || format!("{}: differences em {:?}", name, first_differences(&mo, &mr)));
 }
 
 /// Comparer for `draw_action_zones_panel`.
