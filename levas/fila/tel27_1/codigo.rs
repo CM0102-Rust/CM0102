@@ -446,7 +446,7 @@ pub(crate) unsafe extern "thiscall" fn screen_manager_add_menu_item(sm: usize, a
 /// Comparer for `screen_manager_add_menu_item`.
 pub(crate) unsafe extern "thiscall" fn compare_screen_manager_add_menu_item(sm: usize, area: u32, text: u32, id: u32, data: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32>(%%I3%%);
-    compare_screens_forwarder("screen_manager_add_menu_item", sm, || o(sm, area, text, id, data),
+    compare_screens_item("screen_manager_add_menu_item", sm, area, || o(sm, area, text, id, data),
         || screen_manager_add_menu_item(sm, area, text, id, data))
 }
 

@@ -1,0 +1,5 @@
+NAO PROVADO NO JOGO (leitor tel36, rodada das telas, 21/11/2026): compila sobre o HEAD 4ec4bcaa8 (git archive de rust/ e cm0102-base/) junto com tel26_1..tel26_4, tel35_1 e os outros 13 itens tel36, sem erros nem avisos no codigo dos itens; as 26 mutacoes do tel36 compilam (aplicadas juntas) e cada ancora aparece 1 vez (motor + fila inteira). Prologos conferidos no cm0102.exe; os corpos sao iguais no cm0102-1080.exe.
+Depende de tel36_1, tel26_1, tel26_4.
+Carreira automatica: nao medido; a abertura da tela de noticias (0x788010, fora do grupo) roda 55 vezes na carreira do mundo (docs/cobertura_mundo.txt), entao get_date / news_input / news_exit podem rodar na carreira automatica; mandar mensagem nao roda.
+Como chegar: tela de noticias (abas de filtro, botoes de acao, urgentes); mandar mensagem: jogo com mais de um tecnico humano > menu 'Send Message' ou responder a mensagem de outro tecnico.
+Comparadores: get_date lado a lado; a montagem do 'Send Message' pela lista de exibicao; o resto so a original.

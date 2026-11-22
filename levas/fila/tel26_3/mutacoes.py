@@ -5,5 +5,5 @@
 # - the club column with the nation's button id.
 MUTACOES = [
     ('tel26_3_secure_threshold', '} else if s < 0x2134 {', '} else if s < 0x1f00 {'),
-    ('tel26_3_club_link', 'JOB_TEXT as u32, 0x7d5, club as u32]', 'JOB_TEXT as u32, 0x7d6, club as u32]'),
+    ('tel26_3_club_link', 'job_colour(JOB_COLOUR_BDE8), JOB_TEXT as u32, 0x7d5, club as u32]', 'job_colour(JOB_COLOUR_BDE8), JOB_TEXT as u32, 0x7d6, club as u32]'),
 ]

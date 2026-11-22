@@ -21,7 +21,10 @@
 #   heading prints stack garbage after "~" (here empty). Stack garbage in the high halves of the colours and of the
 #   attribute dword: zero here.
 # Comparer: side by side by the display list (compare_match_screen_build) plus the compare tables, the position words
-#   and marks and 0xae1080. Both sides call update_player_training (training_manager) for the first player.
+#   and marks and 0xae1080. Both sides call update_player_training (training_manager) for the first player: with the
+#   week already stamped in his training entry it is a no-op (0x8b1bce..0x8b1bea), so the copy's call does nothing;
+#   when his training is due (training_update_pending, defined here and used by tel08_2 and tel25_5) only the original
+#   runs, so the week's training (utils_random) rolls once.
 # How to reach it: choose two players to compare (the profile's Action menu > "Compare with..." / the scouting), then
 #   the compare screen; the position table needs the first one to be a player of the database.
 TELAS = True

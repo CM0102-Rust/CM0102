@@ -8,7 +8,7 @@ numa lista com a barra aberta; count_all_records e count_flagged_screens: a barr
 Comparadores: os auxiliares de item lado a lado na lista de exibicao (pacote de rede, contagens, a proxima vaga de item, a
 ordem dos itens livres e, para item de area, a area inteira) e no indice (short); os demais pelo valor ou lado a lado nos
 globais do mouse. Cuidado: chamados centenas de vezes por tela; o comparador de item copia ~0xd80 bytes por chamada.
-Nota: o screens_forwarder_regions do tel01_1 nao cobre a ordem dos itens livres nem a area do item (o add_item do tel01_1
-roda duas vezes no modo comparando e pode duplicar a entrada na ordem/area); aqui o scrman_item_regions acrescenta as duas.
+Nota: o scrman_item_regions (as regioes do tel01_1 mais a ordem dos itens livres e a area do item) mudou para o tel01_1
+em 22/11/2026, que o usa tambem nos comparadores de add_item e add_ticked_popup_item; aqui so e chamado.
 Mutacoes para provar o comparador: tel38_1_titulo_baixo (qualquer tela com titulo), tel38_1_botao_sem_destaque (botoes fora
 de area).

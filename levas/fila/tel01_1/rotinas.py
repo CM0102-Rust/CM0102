@@ -9,7 +9,9 @@
 # Fora: MenuItem::MenuItem (0x4568f0, 4 bytes: nao cabe o desvio de 5 bytes).
 # Comparadores: as datas e a disponibilidade pelo valor; os repassadores lado a lado no que escrevem (o pacote de rede
 # a partir de [0xae290c], as contagens de areas e itens do Display atual, a proxima vaga de area e de item, as marcas
-# de estouro) e o retorno; set_area_scroll_row lado a lado na area.
+# de estouro) e o retorno; add_item e add_ticked_popup_item tambem na ordem dos itens livres e na area do item
+# (scrman_item_regions, 22/11/2026: sem isso a copia acrescentava o item de novo); set_area_scroll_row lado a lado
+# na area. Usa display_list e display_area_at do tel26_1 (entra antes).
 TELAS = True
 ROTINAS = [('date_operator_greater', 0x456740, [0x66, 0x8b, 0x41, 0x02, 0x66, 0x8b, 0x54, 0x24, 0x06]),
            ('date_operator_less', 0x456770, [0x66, 0x8b, 0x41, 0x02, 0x66, 0x8b, 0x54, 0x24, 0x06]),

@@ -1,0 +1,6 @@
+NAO PROVADO NO JOGO (leitor tel36, rodada das telas, 21/11/2026): compila sobre o HEAD 4ec4bcaa8 (git archive de rust/ e cm0102-base/) junto com tel26_1..tel26_4, tel35_1 e os outros 13 itens tel36, sem erros nem avisos no codigo dos itens; as 26 mutacoes do tel36 compilam (aplicadas juntas) e cada ancora aparece 1 vez (motor + fila inteira). Prologos conferidos no cm0102.exe; os corpos sao iguais no cm0102-1080.exe.
+Depende de nada alem do motor.
+Carreira automatica: nao roda (so no jogo em rede).
+Como chegar: jogo em rede (hospedar / entrar), duas instancias.
+Comparadores: so a original (Winsock e soquetes); a prova e o modo Rust num jogo em rede.
+Defeito do original: um 'BYE' de servidor fora da lista aumenta a contagem de servidores (entrada vazia ou velha); mantido.

@@ -1,0 +1,5 @@
+NAO PROVADO NO JOGO (leitor tel36, rodada das telas, 21/11/2026): compila sobre o HEAD 4ec4bcaa8 (git archive de rust/ e cm0102-base/) junto com tel26_1..tel26_4, tel35_1 e os outros 13 itens tel36, sem erros nem avisos no codigo dos itens; as 26 mutacoes do tel36 compilam (aplicadas juntas) e cada ancora aparece 1 vez (motor + fila inteira). Prologos conferidos no cm0102.exe; os corpos sao iguais no cm0102-1080.exe.
+Depende de tel36_1, tel26_1.
+Carreira automatica: nao roda.
+Como chegar: tela de uma competicao > aba dos arbitros (abrir duas vezes: a primeira cria a lista e roda so a original).
+Comparador: pela lista de exibicao quando a lista ja existe (parametro 0x2e); criando a lista, so a original.

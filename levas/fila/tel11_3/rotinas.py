@@ -18,6 +18,11 @@
 # - Select Nationality: the chosen row lives in the filter's local, so with no nation chosen the centring uses the
 #   filter value (0 or 1) as the row;
 # - Select Nationality: the list holds 250 nations on a stack array whose last 4 entries overlap the saved registers.
+# - 1920x1080 exe: it rewrites the column layout of both lists (Select Nationality at 0x821d1d and 0x821f60;
+#   Select Team at 0x82259d, a jump to its own table at 0x601ef7, and 0x8225b2/0x82283c): their entries are for
+#   the original exe only (EXE). assinaturas.py does not read EXE and the prologues are the same, so the DLL still
+#   detours them in the 1080 exe: each copy checks the first patched byte and calls the exe's routine there.
+EXE = {0x821900: 'original', 0x822260: 'original'}
 MOTOR = True
 TELAS = True
 ROTINAS = [('setup_build_enter_name_screen', 0x820f50, [0x83, 0xec, 0x0c, 0x53, 0x56]),

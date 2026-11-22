@@ -1,0 +1,21 @@
+=== MUTACOES: leva das telas, provada pelo Lucas jogando comparando
+pool nao paginado 2.68 GB, paginado 7.00 GB, RAM livre 12.0 GB, comprometida 44.8/79.1 GB
+=== JOGO REAL
+    pool nao paginado 2.69 -> 2.66 GB, paginado 7.00 -> 7.10 GB
+execucao 1: o jogo saiu sem chegar na data (codigo 4294967295); veja jogo\ddraw.log (1924 s)
+game.cfg restaurado; auto_setup.cfg removido
+pool nao paginado 2.66 GB, paginado 7.10 GB, RAM livre 11.8 GB, comprometida 45.0/79.1 GB
+=== CARREIRA
+    pool nao paginado 2.67 -> 2.70 GB, paginado 7.10 -> 7.11 GB
+execucao 1: parou em 2002-151, 2345988007 sorteios, impressao 6edd502b4ce639b9, partidas 19472/5ef3bee7c77549a0, banco c3d311beafd0028b, 190 s
+    pool nao paginado 2.70 -> 2.71 GB, paginado 7.11 -> 7.12 GB
+execucao 2: parou em 2002-151, 2345988007 sorteios, impressao 6edd502b4ce639b9, partidas 19472/5ef3bee7c77549a0, banco c3d311beafd0028b, 206 s
+detector: parou em 2002-151, 2345988007 sorteios, impressao 6edd502b4ce639b9, partidas 19472/5ef3bee7c77549a0, banco c3d311beafd0028b, 270 s
+detector de lixo: igual
+game.cfg restaurado; auto_setup.cfg removido
+determinismo: OK, todas as execucoes iguais
+    pool nao paginado 2.71 -> 2.72 GB, paginado 7.13 -> 7.14 GB
+execucao 1: parou em 2002-151, 2360285658 sorteios, impressao f15be8e973dc743d, partidas 19296/48a36bed95163d30, banco dbbb00e2097934c0, 180 s
+game.cfg restaurado; auto_setup.cfg removido
+pool nao paginado 2.72 GB, paginado 7.14 GB, RAM livre 11.5 GB, comprometida 46.2/79.1 GB
+=== FIM

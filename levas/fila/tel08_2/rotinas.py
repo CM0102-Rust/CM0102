@@ -15,7 +15,8 @@
 # Kept from the original: stack garbage in the high halves of the colour words and of the byte counts (zero here);
 #   the On Loan row's empty item is added even when neither the loan nor the free transfer line follows.
 # Comparer: side by side by the display list (compare_match_screen_build) plus the attribute table 0xddf570 (36 rows)
-#   and G_CONTRACT_LOOKUP_RESULT. Both sides call update_player_training for a player (as tel07_2).
+#   and G_CONTRACT_LOOKUP_RESULT. Both sides call update_player_training for a player (as tel07_2); when his training
+#   is due (training_update_pending of tel07_2) only the original runs. Needs tel07_2.
 # How to reach it: a person's profile (click a name) > Profile tab: a player (attributes, foot, form, morale,
 #   condition, on loan / free transfer), a coach (non-player attributes and the formation/style table), a chairman
 #   (the chairman table; needs the state bit 0x40), and the scouting view (parameter 4 = 2) of a scouted player (the

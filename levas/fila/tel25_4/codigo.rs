@@ -6,8 +6,8 @@ const SCHEDULE_EDITOR_GREEN: usize = 0xde1f4c;
 const SCHEDULE_EDITOR_GREEN_MADE: usize = 0xde1f49;
 /// The immediates the 1920x1080 exe patches in the schedule editor: the right (push 0x31f at 0x8b9a7b) and bottom (push
 /// 0x257 at 0x8b9a73) edges of its full-screen area, read from the running exe.
-const SCHEDULE_EDITOR_RIGHT_EDGE: usize = 0x8b9a7c;
-const SCHEDULE_EDITOR_BOTTOM_EDGE: usize = 0x8b9a74;
+const SCHEDULE_EDITOR_RIGHT_EDGE: *const u32 = 0x8b9a7c as *const u32;
+const SCHEDULE_EDITOR_BOTTOM_EDGE: *const u32 = 0x8b9a74 as *const u32;
 /// A schedule's target flags (word +0x16): the position bits (0x207f; 0x2000 alone means no specific position named)
 /// and the side bits (0x4a80; 0x4000 the same for the side) [inference: from the editor's two blocks].
 const SCHEDULE_TARGETS: usize = 0x16;
@@ -96,7 +96,7 @@ pub(crate) unsafe extern "C" fn training_screens_draw_schedule_editor() {
         write_u8(schedule + 9, 0);
     }
     exe::background_set_picture(0usize);
-    tel26_add_area(current_human_display(), [0, 0, read_u32(SCHEDULE_EDITOR_RIGHT_EDGE), read_u32(SCHEDULE_EDITOR_BOTTOM_EDGE), 1, 0, 1, 0, 2, 0, u32::MAX]);
+    tel26_add_area(current_human_display(), [0, 0, SCHEDULE_EDITOR_RIGHT_EDGE.read_unaligned(), SCHEDULE_EDITOR_BOTTOM_EDGE.read_unaligned(), 1, 0, 1, 0, 2, 0, u32::MAX]);
     let frame = exe::graphics_rgb_to_pixel(0, 0x38, 0, 0);
     tel26_add_area(current_human_display(), [0xa0, 0x7d, 0x2d9, 0x1da, 1, 0, 1, 0, 0x30, frame, u32::MAX]);
     let title = session + 0xfa + read_i8(session + 0x7d9) as isize as usize * TRAINING_SCHEDULE_SIZE + 9;

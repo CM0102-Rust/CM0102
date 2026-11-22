@@ -852,11 +852,48 @@ pub(crate) unsafe extern "C" fn staff_screens_build_compare_players_screen() {
     exe::drop_text(t);
 }
 
+/// Whether `TRAINING_MANAGER::update_player_training(person, 0)` (0x8b1750) would train `person` now. It returns
+/// without writing anything but the contract lookup global when the person's id is past `G_STAFF_COUNT`, or when his
+/// training entry (`PLAYER_ENTRIES` + sheet id * 6) already holds the current `WEEK_COUNTER` at +1 (0x8b1bce..0x8b1bea)
+/// and its bit 0x20 at +5 ("at a human club") needs no setting: set, or clear with no contract club whose manager is
+/// one of the 16 last staff records (0x8b188d..0x8b1948). Otherwise it rolls the week's training (`utils_random`
+/// 0x90cfc0, injuries, the position training items) and stamps the week, so a second call is a no-op but a call
+/// after the comparers restore the entry trains again. A null person or one without a player sheet: false (the
+/// screens do not call it for them).
+pub(crate) unsafe fn training_update_pending(person: usize) -> bool {
+    let tm = read_usize(G_TRAINING_MANAGER);
+    if person == 0 || tm == 0 || read_i32(person) >= read_i32(G_STAFF_COUNT) {
+        return false;
+    }
+    let sheet = read_usize(person + staff::PLAYER);
+    if sheet == 0 {
+        return false;
+    }
+    let entry = read_usize(tm + training_manager_fields::PLAYER_ENTRIES) + read_i32(sheet) as usize * 6;
+    if read_u8(entry + 5) & 0x20 == 0 {
+        let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
+        if c != 0 {
+            let manager = read_usize(club_at(read_i32(c + 4) as isize).addr() + club::MANAGER);
+            if manager != 0 && read_i32(manager) >= read_i32(G_STAFF_COUNT) - 0x10 {
+                return true;
+            }
+        }
+    }
+    read_u16(tm + training_manager_fields::WEEK_COUNTER) != read_u16(entry + 1)
+}
+
 /// Comparer for `staff_screens_build_compare_players_screen`: both build side by side and are compared by the screen
 /// (the display list, `compare_match_screen_build`) plus what the screen writes outside it: the compare tables
 /// (names, values, differences and masked marks), the position words and marks and the contract pointer 0xae1080.
+/// When the first player's training is due (`training_update_pending`) only the original runs: the week's training
+/// rolls once and the copy would start from another state.
 pub(crate) unsafe extern "C" fn compare_staff_screens_build_compare_players_screen() {
     let o = original_fn::<unsafe extern "C" fn()>(%%I0%%);
+    let c1 = compare_screen_player(1);
+    if training_update_pending(if c1 != 0 { c1 } else { get_screen_param(0) }) {
+        // simplification: the training roll runs once, in the original
+        return o();
+    }
     let tables = 0x27 * COMPARE_ROW;
     let extra = [
         (COMPARE_MASKED, tables),

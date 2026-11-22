@@ -224,7 +224,10 @@ pub(crate) unsafe extern "C" fn setup_build_setup_game_screen() {
     let back = (exe::screenmanager_is_back_unavailable(SCREEN_MANAGER, 0) == 0) as u32;
     exe::gui_add_back_next_buttons(back, 0);
     if exe::screenmanager_get_screen_param(SCREEN_MANAGER, 0) != 0 {
-        area(current_human_display(), 0, 0, 0x31f, 0x257, 1, 0, 1, 0, 2, 0, usize::MAX);
+        // the right and bottom edges are the pushes at 0x81bd16 and 0x81bd11 in the running exe (0x31f and 0x257;
+        // 0x77f and 0x437 in the 1920x1080 exe)
+        let (x2, y2) = (core::ptr::read_unaligned(0x81bd17 as *const i32), core::ptr::read_unaligned(0x81bd12 as *const i32));
+        area(current_human_display(), 0, 0, x2 as usize, y2 as usize, 1, 0, 1, 0, 2, 0, usize::MAX);
     }
     destruct_match_tabs(&mut items);
 }
@@ -741,7 +744,9 @@ pub(crate) unsafe extern "C" fn setup_build_select_leagues_screen() {
     } else {
         label(sm, all, 1, 0, 0x30, grey, 0x2c, 1, pale, SETUP_TEXT);
     }
-    let list = area(current_human_display(), 0x6e, 0xaa, 0x30c, 0x217, 7, list_columns.as_mut_ptr() as usize, 0x10, 0, 2, 0, usize::MAX);
+    // the rows are the push at 0x81d6dc in the running exe (0x10; 0x15 in the 1920x1080 exe)
+    let rows = core::ptr::read_unaligned(0x81d6dd as *const i8) as usize;
+    let list = area(current_human_display(), 0x6e, 0xaa, 0x30c, 0x217, 7, list_columns.as_mut_ptr() as usize, rows, 0, 2, 0, usize::MAX);
     let order = order_of(0);
     write_u32(G_SELECTED_NATION_COUNT, 0);
     for k in 0..0x23 {

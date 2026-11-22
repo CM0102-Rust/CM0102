@@ -1,0 +1,5 @@
+NAO PROVADO NO JOGO (leitor tel36, rodada das telas, 21/11/2026): compila sobre o HEAD 4ec4bcaa8 (git archive de rust/ e cm0102-base/) junto com tel26_1..tel26_4, tel35_1 e os outros 13 itens tel36, sem erros nem avisos no codigo dos itens; as 26 mutacoes do tel36 compilam (aplicadas juntas) e cada ancora aparece 1 vez (motor + fila inteira). Prologos conferidos no cm0102.exe; os corpos sao iguais no cm0102-1080.exe.
+Depende de tel36_1 (TEL36_CLUB_COMP_SIZE).
+Carreira automatica: as quatro estaticas rodam a cada partida e saida do programa (antes do WinMain), tambem na carreira automatica; fix_division_club_count so roda ao criar jogo com a Grecia carregada (nao na carreira ENG; uma vez na do mundo, ATE 2002-08-01).
+Como chegar: abrir o jogo (estaticas); criar um jogo novo com a Grecia (fix_division_club_count).
+Comparadores: fix_division_club_count lado a lado na tabela de clubes e no buffer de texto; as estaticas so a original (atexit).

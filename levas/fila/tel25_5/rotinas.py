@@ -4,7 +4,9 @@
 # training_passes_filter). Uses the helpers of tel25_1 (TRAINING_SCHEDULE_SIZE, TRAINING_SQUAD_VIEW), tel25_2
 # (TRAINING_TEXT_BUFFER), tel26_1 (tel26_add_item, tel26_add_area, tel26_add_button, tel26_area_button,
 # tel26_area_text, tel26_copy_text, display_area_at, job_colour, JOB_COLOUR_*) and tel22_1 (comp_lang_format,
-# comp_crt_format, comp_text_item, CompFormatFn): those go first.
+# comp_crt_format, comp_text_item, CompFormatFn) and tel07_2 (training_update_pending): those go first. The comparer
+# runs only the original when a listed player's training is due (update_player_training would roll the week; the
+# regions restore his entry, so the copy would roll it again).
 # Conventions checked in the disassembly:
 # - 0x8b5a10 cdecl, SEH, 0x1768 bytes of locals (chkstk): a local LLIST (0x68d020 / 0x68d040, unused) and 25 tabs of
 #   0xd4 bytes (0x9463af stdcall vector constructor with 0x4568f0 / 0x5a53c0; 0x9462bb at the end).

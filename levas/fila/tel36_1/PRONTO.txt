@@ -1,0 +1,6 @@
+NAO PROVADO NO JOGO (leitor tel36, rodada das telas, 21/11/2026): compila sobre o HEAD 4ec4bcaa8 (git archive de rust/ e cm0102-base/) junto com tel26_1..tel26_4, tel35_1 e os outros 13 itens tel36, sem erros nem avisos no codigo dos itens; as 26 mutacoes do tel36 compilam (aplicadas juntas) e cada ancora aparece 1 vez (motor + fila inteira). Prologos conferidos no cm0102.exe; os corpos sao iguais no cm0102-1080.exe.
+Define os auxiliares dos itens tel36 (tel36_staff_param, tel36_club_param, tel36_langlib, tel36_confirm_build, tel36_confirm_answer, TEL36_CLUB_COMP_SIZE): entra antes de tel36_2..tel36_14; se sair, saem todos.
+Depende de tel26_1, tel26_4 e tel35_1.
+Carreira automatica: nao roda.
+Como chegar: perfil de um jogador do seu clube (lesionado) > Acao > tratamento (fisioterapia / cirurgia / curandeiro) ou licenca; a tela 'Please Confirm'.
+Comparadores: a montagem lado a lado pela lista de exibicao; abrir e responder so a original.

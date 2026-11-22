@@ -176,7 +176,7 @@ pub(crate) unsafe extern "C" fn comp_history_draw_players_tab(object: usize, top
 }
 
 /// `history_screen_open` (0x5f11c0, cdecl): the written history screen of a competition by its English name.
-unsafe fn history_written_screen_open(name: usize) {
+unsafe fn history_screen_open_by_name(name: usize) {
     let f: unsafe extern "C" fn(usize) = core::mem::transmute(0x5f11c0usize);
     f(name)
 }
@@ -259,7 +259,7 @@ pub(crate) unsafe extern "C" fn comp_history_screen_handle_event(widget: u32) ->
             -4
         }
         0xa => {
-            history_written_screen_open(comp_get_english_name(read_usize(object + league::COMPETITION)));
+            history_screen_open_by_name(comp_get_english_name(read_usize(object + league::COMPETITION)));
             -4
         }
         2 if exe::screenmanager_get_widget_action_data(G_SCREEN_MANAGER, widget) != get_screen_param(1) => {

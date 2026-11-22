@@ -200,6 +200,11 @@ pub(crate) unsafe extern "C" fn setup_handle_enter_name_input(item: u32) -> i32 
 /// 2 cleared); the list scrolls to param 0 and its index goes to param 1; the back and next buttons.
 /// Original: `setup_build_select_nationality_screen` (0x821900, Setup.cpp, cdecl).
 pub(crate) unsafe extern "C" fn setup_build_select_nationality_screen() {
+    // the 1920x1080 exe rewrites this list's layout (at 0x821d1d, `mov [esp+..], al` there): in it the
+    // exe's own routine runs (EXE in rotinas.py; the signature table still detours it)
+    if (0x821d1d as *const u8).read() != 0x88 {
+        return original_fn::<unsafe extern "C" fn()>(%%I2%%)();
+    }
     covered!("tel11_3 build select nationality");
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
@@ -355,6 +360,11 @@ pub(crate) unsafe extern "C" fn setup_handle_select_nationality_input(item: u32)
 /// param 2; the back button.
 /// Original: `setup_build_select_team_screen` (0x822260, Setup.cpp, cdecl).
 pub(crate) unsafe extern "C" fn setup_build_select_team_screen() {
+    // the 1920x1080 exe rewrites this list's layout (its own column table, 0x82259d, `mov [esp+..], al` there): in it the
+    // exe's own routine runs (EXE in rotinas.py; the signature table still detours it)
+    if (0x82259d as *const u8).read() != 0x88 {
+        return original_fn::<unsafe extern "C" fn()>(%%I4%%)();
+    }
     covered!("tel11_3 build select team");
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);

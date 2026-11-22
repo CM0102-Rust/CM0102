@@ -14,9 +14,9 @@ const NEWS_SLOT_REPLY_LOCK: usize = 0xb74c36;
 const NEWS_CONFIG_REPLY_STYLE: u32 = 0x20000;
 /// The immediates the 1080 exe changes in the news build: the font of the list's date cell (1 → 2, the push at
 /// 0x788a32 and 0x788a85) and the width of the open item's body (0x302 → 0x44c, the push at 0x78900e).
-const NEWS_DATE_FONT_TODAY: usize = 0x788a33;
-const NEWS_DATE_FONT_OTHER: usize = 0x788a86;
-const NEWS_BODY_X2: usize = 0x78900f;
+const NEWS_DATE_FONT_TODAY: *const u8 = 0x788a33 as *const u8;
+const NEWS_DATE_FONT_OTHER: *const u8 = 0x788a86 as *const u8;
+const NEWS_BODY_X2: *const u32 = 0x78900f as *const u32;
 /// A news item's size in the inbox vector (0xdf bytes, `news_item`).
 const NEWS_ITEM_SIZE: usize = 0xdf;
 
@@ -225,12 +225,12 @@ unsafe fn news_screen_list_rows(list: usize, count: i32, manager: usize, filter:
                 let d = news_item_date(item, &mut shown_date);
                 let weekday: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(0x54b550usize);
                 weekday(d, JOB_TEXT, 0x7d0, slice);
-                read_u8(NEWS_DATE_FONT_TODAY)
+                NEWS_DATE_FONT_TODAY.read()
             } else {
                 let d = news_item_date(item, &mut shown_date);
                 let short: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(0x54a650usize);
                 short(d, JOB_TEXT, 0x7d0, 0xff);
-                read_u8(NEWS_DATE_FONT_OTHER)
+                NEWS_DATE_FONT_OTHER.read()
             };
             tel26_area_text([area, 0, *row as u32, 0x30, job_colour(JOB_COLOUR_BE04), 0xc, font as u32, job_colour(JOB_COLOUR_3184), JOB_TEXT as u32]);
             // the original keeps the colour word in the first id's slot: the dword carries its upper half
@@ -444,7 +444,7 @@ unsafe fn news_screen_lower(top: i32, bottom: i32, manager: usize, filter: usize
     row = 0;
     if shown != 0 {
         news_write_text(shown, manager, text_a, 1, 0);
-        news_text_draw(text_a, body, 0x78, read_u32(NEWS_BODY_X2), &mut row, 3, job_colour(JOB_COLOUR_3184), 0);
+        news_text_draw(text_a, body, 0x78, NEWS_BODY_X2.read_unaligned(), &mut row, 3, job_colour(JOB_COLOUR_3184), 0);
     }
     let mut reply = 0u32;
     if shown != 0 {

@@ -9,8 +9,8 @@ const TRAINING_COACH_GREEN_MADE: usize = 0xde1f48;
 const TRAINING_COACH_ENTRY: usize = 9;
 /// The immediates the 1920x1080 exe patches in the coaches panel: the right (push 0x31f at 0x8baa5f) and bottom (push
 /// 0x257 at 0x8baa57) edges of its full-screen area, read from the running exe.
-const TRAINING_COACHES_RIGHT_EDGE: usize = 0x8baa60;
-const TRAINING_COACHES_BOTTOM_EDGE: usize = 0x8baa58;
+const TRAINING_COACHES_RIGHT_EDGE: *const u32 = 0x8baa60 as *const u32;
+const TRAINING_COACHES_BOTTOM_EDGE: *const u32 = 0x8baa58 as *const u32;
 
 /// The action id of widget `w` asked of the current human's Display (`exe::display_get_widget_id`; 0, and widget −1,
 /// become the injected command id `G_CURRENT_COMMAND_ID`).
@@ -265,7 +265,7 @@ pub(crate) unsafe extern "C" fn training_screens_draw_coaches_panel() {
         }
     }
     exe::background_set_picture(0usize);
-    tel26_add_area(current_human_display(), [0, 0, read_u32(TRAINING_COACHES_RIGHT_EDGE), read_u32(TRAINING_COACHES_BOTTOM_EDGE), 1, 0, 1, 0, 2, 0, u32::MAX]);
+    tel26_add_area(current_human_display(), [0, 0, TRAINING_COACHES_RIGHT_EDGE.read_unaligned(), TRAINING_COACHES_BOTTOM_EDGE.read_unaligned(), 1, 0, 1, 0, 2, 0, u32::MAX]);
     let frame = exe::graphics_rgb_to_pixel(0, 0x38, 0, 0);
     tel26_add_area(current_human_display(), [0x78, 0x8c, 0x301, 0x1cb, 1, 0, 1, 0, 0x30, frame, u32::MAX]);
     comp_lang_format()(TRAINING_TEXT_BUFFER, 0xa8d104);

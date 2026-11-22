@@ -24,7 +24,8 @@
 # ("create_spanish_comps()") name another routine; create_polish_comps and create_welsh_comps leave LEAGUE_COMP as it
 # was; the world cup entry's season year is a fixed 1996 (0x7cc).
 MOTOR = True
-TELAS = True
+# 21/11/2026: simulacao (cria as competicoes de cada nacao no create_game), nao tela: leva de competicoes com as 8 ligas
+LIGAS = 'ENG ESP ITA FRA BRA JPN AUS USA'
 ROTINAS = [('create_world_cup_qualifying_comps', 0x830620, [0x64, 0xa1, 0x00, 0x00, 0x00, 0x00]),
            ('create_other_int_comps', 0x830ac0, [0x64, 0xa1, 0x00, 0x00, 0x00, 0x00]),
            ('create_world_club_comps', 0x830fe0, [0x64, 0xa1, 0x00, 0x00, 0x00, 0x00]),

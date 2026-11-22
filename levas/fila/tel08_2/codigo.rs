@@ -631,9 +631,14 @@ pub(crate) unsafe extern "C" fn staff_screens_draw_profile_tab(top: i32, bottom:
 /// Comparer for `staff_screens_draw_profile_tab`: both draw side by side and are compared by the display list
 /// (`compare_match_screen_build`) plus the attribute table the tab fills (0xddf570, 36 rows) and the contract lookup
 /// result. Both sides bring the player's training up to date (`update_player_training`, as the compare players
-/// screen does).
+/// screen does); when it is due (`training_update_pending`, tel07_2) only the original runs, so the week's training
+/// rolls once.
 pub(crate) unsafe extern "C" fn compare_staff_screens_draw_profile_tab(top: i32, bottom: i32) {
     let o = original_fn::<unsafe extern "C" fn(i32, i32)>(%%I0%%);
+    if training_update_pending(get_screen_param(0)) {
+        // simplification: the training roll runs once, in the original
+        return o(top, bottom);
+    }
     let extra = [(PROFILE_TABLE, PROFILE_PLAYER_ROWS * PROFILE_ROW), (G_CONTRACT_LOOKUP_RESULT, 4)];
     compare_match_screen_build("staff profile profile tab", &extra, || o(top, bottom), || staff_screens_draw_profile_tab(top, bottom));
 }

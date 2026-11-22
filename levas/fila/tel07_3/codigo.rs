@@ -246,15 +246,18 @@ unsafe fn profile_screen_setup(st: &mut ProfileScreen) {
 }
 
 /// The title box of the profile: a red-bordered box (0x64, 0xa)-(0x316, 0x46) in the background colour, the Text
-/// drawn in font 7, or 6 when the title is at least 0x2b2 wide in font 7, in the kit's foreground colour.
-unsafe fn profile_screen_title_box(st: &mut ProfileScreen) {
+/// drawn in font 7, or 6 when the title is at least 0x2b2 wide in font 7, in the kit's foreground colour. The font 7
+/// text's right edge `font7_x2` is the immediate of that push in the running exe (0x316, 0x440 in the 1920x1080 exe,
+/// which patches only the font 7 draw: 0x870cce in the club heading, 0x870f57 in the national view); font 6 keeps 0x316.
+unsafe fn profile_screen_title_box(st: &mut ProfileScreen, font7_x2: i32) {
     let draw: ProfileDrawFn = core::mem::transmute(0x4aeaf0usize);
     let bg = st.bg as usize;
     profile_area(0x64, 0xa, 0x316, 0x46, 1, 0, 1, 0, 0x30, bg, usize::MAX);
     let font = if exe::font_text_width(7, PROFILE_BUF as *const u8) < 0x2b2 { 7 } else { 6 };
     let mut row: i32 = 0;
     let a = profile_area(0x64, 0x19, 0x316, 0x37, 1, 0, 1, 0, 1, bg, usize::MAX);
-    draw(st.text.as_mut_ptr() as usize, a, 0x64, 0x316, &mut row, font, st.fg as usize, 3, 0);
+    let x2 = if font == 7 { font7_x2 as usize } else { 0x316 };
+    draw(st.text.as_mut_ptr() as usize, a, 0x64, x2, &mut row, font, st.fg as usize, 3, 0);
 }
 
 /// The heading of the profile, by the view (param 2): view 1 with a club, the club's kit and "<n>. <name> (<club>)"
@@ -289,7 +292,7 @@ unsafe fn profile_screen_heading(st: &mut ProfileScreen) -> bool {
         }
         exe::text_set_string(text, PROFILE_BUF as *const u8);
         exe::text_add_link(text, (club + club::SHORT_NAME) as *const u8, 0x7d5, club);
-        profile_screen_title_box(st);
+        profile_screen_title_box(st, core::ptr::read_unaligned(0x870cce as *const i32));
     } else if nation_team != 0 && read_u8(s + staff::JOB_FOR_NATION) == 5 && read_u8(s + staff::JOB_FOR_CLUB) != 5 {
         covered!("tel07_3 profile heading of a national manager");
         exe::database_get_club_kit_colours(nation_team, 1, &mut st.fg, &mut st.bg);
@@ -297,7 +300,7 @@ unsafe fn profile_screen_heading(st: &mut ProfileScreen) -> bool {
         lang(PROFILE_BUF, 0xa85654, g, g, name, nation_team + club::SHORT_NAME);
         exe::text_set_string(text, PROFILE_BUF as *const u8);
         exe::text_add_link(text, (nation_team + club::SHORT_NAME) as *const u8, 0x7d5, nation_team);
-        profile_screen_title_box(st);
+        profile_screen_title_box(st, core::ptr::read_unaligned(0x870cce as *const i32));
     } else if st.view == 2 && nation_team != 0 {
         covered!("tel07_3 profile heading of the national view");
         exe::database_get_club_kit_colours(nation_team, 1, &mut st.fg, &mut st.bg);
@@ -313,7 +316,7 @@ unsafe fn profile_screen_heading(st: &mut ProfileScreen) -> bool {
             exe::text_set_string(text, PROFILE_BUF as *const u8);
             exe::text_add_link(text, n as *const u8, 0x7d5, nation_team);
         }
-        profile_screen_title_box(st);
+        profile_screen_title_box(st, core::ptr::read_unaligned(0x870f57 as *const i32));
     } else {
         let nation = read_usize(s + staff::NATION);
         if nation == 0 {
@@ -957,7 +960,8 @@ unsafe fn profile_screen_identity(st: &mut ProfileScreen) {
         let y = st.y as usize;
         let a = profile_area(0x6e, y, 0x30c, y.wrapping_add(0x1e), 1, 0, 1, 0, 2, 0, usize::MAX);
         let mut row: i32 = 0;
-        draw(text, a, 0x6e, 0x30c, &mut row, 3, colour_word(G_GUI_COLOUR_YELLOW), 3, 0);
+        // the right edge is the push at 0x8750e1 in the running exe (0x30c; 0x421 in the 1920x1080 exe)
+        draw(text, a, 0x6e, core::ptr::read_unaligned(0x8750e2 as *const i32) as usize, &mut row, 3, colour_word(G_GUI_COLOUR_YELLOW), 3, 0);
         let report = scout_report(read_usize(G_SCOUT_MANAGER), s);
         let n = read_i32(G_STAFF_COUNT);
         let id = read_i32(s);

@@ -1,0 +1,6 @@
+NAO PROVADO NO JOGO (leitor tel36, rodada das telas, 21/11/2026): compila sobre o HEAD 4ec4bcaa8 (git archive de rust/ e cm0102-base/) junto com tel26_1..tel26_4, tel35_1 e os outros 13 itens tel36, sem erros nem avisos no codigo dos itens; as 26 mutacoes do tel36 compilam (aplicadas juntas) e cada ancora aparece 1 vez (motor + fila inteira). Prologos conferidos no cm0102.exe; os corpos sao iguais no cm0102-1080.exe.
+Depende de nada alem do motor. parse_quoted_token e parse_media_type_name conferidas contra a original por emulacao (unicorn).
+Carreira automatica: SIM: as estaticas a cada partida/saida; a leitura dos comentaristas (read_pundit_line, parse_media_type_name, parse_quoted_token) roda ao criar ou carregar o jogo (0x7da190 chamada por 0x535848, 0x829f95, 0x82cceb), uma vez por linha do arquivo: a comparacao da carreira ja a ve.
+Como chegar: criar ou carregar um jogo.
+Comparadores: read_pundit_line roda so a original (le o arquivo) e confere o registro que ela pos (a cauda da lista que cresceu, o numero de serie) contra o parse da copia na linha lida; os dois auxiliares lado a lado; as estaticas so a original.
+Defeito do original: os bytes 0x66..0xc9 do registro do comentarista nunca sao escritos (lixo da pilha vai para a lista); a copia escreve 0 e o comparador os pula.

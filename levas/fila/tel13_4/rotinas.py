@@ -17,7 +17,8 @@
 # leagues chosen.
 # DEFECTS of the original kept: see tel13_2 (the copied allocation messages, the untouched LEAGUE_COMP of Poland and Wales).
 MOTOR = True
-TELAS = True
+# 21/11/2026: simulacao (cria as competicoes de cada nacao no create_game), nao tela: leva de competicoes com as 8 ligas
+LIGAS = 'ENG ESP ITA FRA BRA JPN AUS USA'
 ROTINAS = [('create_norwegian_comps', 0x836050, [0x64, 0xa1, 0x00, 0x00, 0x00, 0x00]),
            ('create_polish_comps', 0x836350, [0x64, 0xa1, 0x00, 0x00, 0x00, 0x00]),
            ('create_portuguese_comps', 0x8366e0, [0x64, 0xa1, 0x00, 0x00, 0x00, 0x00]),

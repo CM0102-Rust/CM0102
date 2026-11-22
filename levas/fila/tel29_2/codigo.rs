@@ -47,7 +47,8 @@ pub(crate) mod area_scroll {
 /// popup tests (`cmp reg, imm` at 0x40384b, 0x403922, 0x4039b5) and the 0x31f / 0x257 right and bottom edges of
 /// Area::move_to (0x403b00 and 0x403bdc). The 400 middle of the popup tests is not rewritten.
 pub(crate) unsafe fn popup_screen_height(k: usize) -> i32 {
-    read_i32([0x40384d, 0x403924, 0x4039b7][k])
+    let imm = match k { 0 => 0x40384d as *const i32, 1 => 0x403924 as *const i32, _ => 0x4039b7 as *const i32 };
+    imm.read_unaligned()
 }
 
 /// A widget of the area's widget table (`area_fields::ITEMS`, 0x18c bytes each).
@@ -310,7 +311,7 @@ pub(crate) unsafe extern "thiscall" fn compare_area_get_popup_position(area: usi
 pub(crate) unsafe extern "thiscall" fn area_move_to(area: usize, x: i32, y: i32) {
     let dx = x.wrapping_sub(read_i32(area));
     let dy = y.wrapping_sub(read_i32(area + 4));
-    if x < 0 || read_i32(area + 8).wrapping_add(dx) > read_i32(0x403b02) || y < 0 || read_i32(area + 0xc).wrapping_add(dy) > read_i32(0x403bde) {
+    if x < 0 || read_i32(area + 8).wrapping_add(dx) > (0x403b02 as *const i32).read_unaligned() || y < 0 || read_i32(area + 0xc).wrapping_add(dy) > (0x403bde as *const i32).read_unaligned() {
         return original_fn::<unsafe extern "thiscall" fn(usize, i32, i32)>(%%I6%%)(area, x, y);
     }
     if dx == 0 && dy == 0 {
@@ -328,7 +329,7 @@ pub(crate) unsafe extern "thiscall" fn compare_area_move_to(area: usize, x: i32,
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i32)>(%%I6%%);
     let dx = x.wrapping_sub(read_i32(area));
     let dy = y.wrapping_sub(read_i32(area + 4));
-    if x < 0 || read_i32(area + 8).wrapping_add(dx) > read_i32(0x403b02) || y < 0 || read_i32(area + 0xc).wrapping_add(dy) > read_i32(0x403bde) {
+    if x < 0 || read_i32(area + 8).wrapping_add(dx) > (0x403b02 as *const i32).read_unaligned() || y < 0 || read_i32(area + 0xc).wrapping_add(dy) > (0x403bde as *const i32).read_unaligned() {
         return o(area, x, y);
     }
     let (_, _, equal, mo, mr) = crate::comparison::side_by_side_light(&[(area, 16)], || o(area, x, y), || area_move_to(area, x, y));

@@ -210,8 +210,8 @@ unsafe fn create_game_find_cd() {
     let kind: unsafe extern "system" fn(usize) -> u32 = core::mem::transmute(read_usize(0x967100));
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-    let any_drive = read_u8(0x8281ae) == 0x90;
-    let always_found = read_u8(0x8281f0) != 0x85;
+    let any_drive = (0x8281ae as *const u8).read() == 0x90;
+    let always_found = (0x8281f0 as *const u8).read() != 0x85;
     loop {
         // simplification: the buffer starts zeroed (as check_game_cd)
         let mut list = [0u8; 0x100];

@@ -1,7 +1,7 @@
 # A base da interface (1): os auxiliares da lista de exibição do gerente de telas (scrman.cpp; leitor tel38, rodada das
 # telas, 21/11/2026): o título e o subtítulo da tela, os itens de texto e de botão, os itens de área, a linha de
 # rolagem de uma área, as teclas da barra de rolagem e as contagens de registros e de telas marcadas.
-# Usa os auxiliares do tel01_1 (screens_current_display, screens_forwarder_regions, DisplayAddItemFn), do tel29_1
+# Usa os auxiliares do tel01_1 (screens_current_display, screens_forwarder_regions, scrman_item_regions, DisplayAddItemFn), do tel29_1
 # (screen_record, screen_history) e o display_list/display_area_at do tel26_1.
 # Convencoes conferidas na desmontagem (0x803320..0x8033db, 0x803d50..0x8041bd), todas thiscall, ecx = o gerente
 # (0xb74450): add_screen_title ret 0xc (cor, cor do texto, texto); add_screen_subtitle ret 8 (texto, um argumento nao

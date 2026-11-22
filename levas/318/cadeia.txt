@@ -1,0 +1,20 @@
+=== MUTACOES: leva das telas, provada pelo Lucas jogando comparando
+=== JOGO REAL
+(refeito na bancada 4 depois de corrigir os comparadores da barra de menu e do Setup Game, o relogio da simulacao nas execucoes a seco e o campo da pessoa no recorde de nota; a primeira cadeia em cadeia_primeira.txt)
+execucao 1: parou em 2002-000, 1356076461 sorteios, impressao 5828e9657937b85c, partidas 10273/cc068992a8ec84dd, banco 78f558e79aea966e, 2735 s
+    date: 1000000000 comparacoes, 0 divergencias
+    engine: 10000000000 comparacoes, 0 divergencias
+    random: 1000000000 comparacoes, 0 divergencias
+game.cfg restaurado; auto_setup.cfg removido
+random: 1000000000 comparisons, 0 divergences
+engine: 10000000000 comparisons, 0 divergences
+date: 1000000000 comparisons, 0 divergences
+=== CARREIRA
+execucao 1: parou em 2002-151, 2345988007 sorteios, impressao 6edd502b4ce639b9, partidas 19472/5ef3bee7c77549a0, banco c3d311beafd0028b, 207 s
+execucao 2: parou em 2002-151, 2345988007 sorteios, impressao 6edd502b4ce639b9, partidas 19472/5ef3bee7c77549a0, banco c3d311beafd0028b, 209 s
+detector: parou em 2002-151, 2345988007 sorteios, impressao 6edd502b4ce639b9, partidas 19472/5ef3bee7c77549a0, banco c3d311beafd0028b, 275 s
+detector de lixo: igual
+game.cfg restaurado; auto_setup.cfg removido
+determinismo: OK, todas as execucoes iguais
+execucao 1: parou em 2002-151, 2360285658 sorteios, impressao f15be8e973dc743d, partidas 19296/48a36bed95163d30, banco dbbb00e2097934c0, 180 s
+=== FIM

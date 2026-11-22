@@ -303,6 +303,18 @@ const CLOCK_CALLERS: [u32; 13] = [
     0x75db00, 0x7615d0, 0x81b890,
 ];
 static CLOCKS: [AtomicU64; 14] = [const { AtomicU64::new(0) }; 14];
+static CLOCK_ON: core::sync::atomic::AtomicBool = core::sync::atomic::AtomicBool::new(false);
+
+/// The simulation clock of the game routine `routine` (one of `CLOCK_CALLERS`) without advancing it, or None outside
+/// the simulation. For the comparers' dry runs: a query from the DLL advances the clock of the last caller (0x81b890)
+/// and shifts every wait timed by it (the 318th's real game stalled in August 2001 as the waits grew).
+pub(crate) fn clock_peek(routine: u32) -> Option<i32> {
+    if !CLOCK_ON.load(Ordering::Relaxed) {
+        return None;
+    }
+    let i = CLOCK_CALLERS.iter().position(|&f| f == routine)?;
+    Some(CLOCKS[i].load(Ordering::Relaxed) as i32)
+}
 
 /// CRT clock() { 0x947299 } in the simulation: one clock per calling routine, which advances 1 ms on
 /// each of its queries. A single clock (or the real one) makes the waits of match day (match_day.cpp,
@@ -537,7 +549,9 @@ pub unsafe fn install() {
             }
         }
         crate::detours::hook("time (fixed clock of the simulation)", &PROLOGUE_TIME, fixed_time as *const () as usize);
-        crate::detours::hook("clock (the simulation clock)", &PROLOGUE_CLOCK, fixed_clock as *const () as usize);
+        if crate::detours::hook("clock (the simulation clock)", &PROLOGUE_CLOCK, fixed_clock as *const () as usize).is_some() {
+            CLOCK_ON.store(true, Ordering::Relaxed);
+        }
         crate::detours::hook("free disk (fixed in the simulation)", &PROLOGUE_DISK, fixed_disk as *const () as usize);
         crate::iat_hooks::replace_import("KERNEL32.dll", "GetLogicalDriveStringsA", fixed_drives as *const () as usize);
         crate::detours::hook("total RAM (fixed in the simulation)", &PROLOGUE_RAM_TOTAL, fixed_memory as *const () as usize);

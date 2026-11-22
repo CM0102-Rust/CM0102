@@ -1,0 +1,5 @@
+NAO PROVADO NO JOGO (leitor tel36, rodada das telas, 21/11/2026): compila sobre o HEAD 4ec4bcaa8 (git archive de rust/ e cm0102-base/) junto com tel26_1..tel26_4, tel35_1 e os outros 13 itens tel36, sem erros nem avisos no codigo dos itens; as 26 mutacoes do tel36 compilam (aplicadas juntas) e cada ancora aparece 1 vez (motor + fila inteira). Prologos conferidos no cm0102.exe; os corpos sao iguais no cm0102-1080.exe.
+Depende de tel36_1, tel26_1, tel26_4. O abridor 0x77b700 fica com o exe.
+Carreira automatica: nao roda.
+Como chegar: a noticia das novas regras de transferencia > 'Information' (ou o link das regras nas telas de transferencia); trocar as abas.
+Comparadores: a montagem pela lista de exibicao; a aba lado a lado nos parametros.

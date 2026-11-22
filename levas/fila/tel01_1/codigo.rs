@@ -89,10 +89,40 @@ unsafe fn screens_forwarder_regions(sm: usize) -> Vec<(usize, usize)> {
     r
 }
 
+/// The screen-list writes of a `ScreenManager` item helper: what `screens_forwarder_regions` covers, plus the
+/// free item draw order (`display_list::ITEM_ORDER_COUNT` and its next slot) and, for an item that goes into an area
+/// (`area` as i16 ≠ −1), that whole area (`Area::add_item` appends the index to its list).
+unsafe fn scrman_item_regions(sm: usize, area: u32) -> Vec<(usize, usize)> {
+    let mut r = screens_forwarder_regions(sm);
+    let display = screens_current_display(sm);
+    if display != 0 {
+        r.push((display + display_list::ITEM_ORDER_COUNT, 2));
+        let n = read_i16(display + display_list::ITEM_ORDER_COUNT);
+        if (0..0x4b0).contains(&n) {
+            r.push((display + display_list::ITEM_ORDER + n as usize * 2, 2));
+        }
+        let a = area as i16;
+        if (0..0xf9).contains(&a) {
+            r.push((display_area_at(display, a), display_list::AREA_SIZE));
+        }
+    }
+    r
+}
+
 /// Comparer of a forwarder: side by side over `screens_forwarder_regions` and the return value.
 unsafe fn compare_screens_forwarder(name: &str, sm: usize, original: impl FnOnce() -> u32, rust: impl FnOnce() -> u32) -> u32 {
-    let regions = screens_forwarder_regions(sm);
-    let (ro, rr, equal, mo, mr) = crate::comparison::side_by_side(&regions, original, rust);
+    compare_screens_over(name, &screens_forwarder_regions(sm), original, rust)
+}
+
+/// Comparer of an item forwarder: side by side over `scrman_item_regions` (the item's area or the free item order
+/// too, so the item the original appended is not appended again by the copy) and the return value.
+unsafe fn compare_screens_item(name: &str, sm: usize, area: u32, original: impl FnOnce() -> u32, rust: impl FnOnce() -> u32) -> u32 {
+    compare_screens_over(name, &scrman_item_regions(sm, area), original, rust)
+}
+
+/// Side by side over `regions` and the return value.
+unsafe fn compare_screens_over(name: &str, regions: &[(usize, usize)], original: impl FnOnce() -> u32, rust: impl FnOnce() -> u32) -> u32 {
+    let (ro, rr, equal, mo, mr) = crate::comparison::side_by_side(regions, original, rust);
     SCOREBOARD.record(equal && ro == rr, || format!("{}: return {:#x} x {:#x}, differences in {:?}", name, ro, rr, first_differences(&mo, &mr)));
     ro
 }
@@ -158,7 +188,7 @@ pub(crate) unsafe extern "thiscall" fn screenmanager_add_ticked_popup_item(sm: u
 /// Comparer for `screenmanager_add_ticked_popup_item`.
 pub(crate) unsafe extern "thiscall" fn compare_screenmanager_add_ticked_popup_item(sm: usize, area: u32, text: u32, id: u32, data: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32>(%%I5%%);
-    compare_screens_forwarder("screenmanager_add_ticked_popup_item", sm, || o(sm, area, text, id, data),
+    compare_screens_item("screenmanager_add_ticked_popup_item", sm, area, || o(sm, area, text, id, data),
         || screenmanager_add_ticked_popup_item(sm, area, text, id, data))
 }
 
@@ -175,7 +205,7 @@ pub(crate) unsafe extern "thiscall" fn screenmanager_add_item(sm: usize, a0: u32
 /// Comparer for `screenmanager_add_item`.
 pub(crate) unsafe extern "thiscall" fn compare_screenmanager_add_item(sm: usize, a0: u32, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32, a6: u32, a7: u32, a8: u32, a9: u32, a10: u32, a11: u32, a12: u32, a13: u32, a14: u32, a15: u32, a16: u32, a17: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32) -> u32>(%%I6%%);
-    compare_screens_forwarder("screenmanager_add_item", sm,
+    compare_screens_item("screenmanager_add_item", sm, a17,
         || o(sm, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17),
         || screenmanager_add_item(sm, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17))
 }

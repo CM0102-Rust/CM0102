@@ -598,6 +598,7 @@ pub(crate) unsafe extern "C" fn training_screens_draw() {
 /// the attribute groups (sorted in place), and what `update_player_training` touches for each listed player (his
 /// person and player sheet, the training entries and the position training count, the contract lookup scratch).
 /// The session's squad list itself is not restored: it is cleared and rebuilt (freed and new nodes) on each run.
+/// When any listed player's training is due (`training_update_pending`, tel07_2) only the original runs.
 pub(crate) unsafe extern "C" fn compare_training_screens_draw() {
     let o = original_fn::<unsafe extern "C" fn()>(%%I0%%);
     let session = get_screen_param(0);
@@ -620,6 +621,11 @@ pub(crate) unsafe extern "C" fn compare_training_screens_draw() {
     }
     for k in 0..50 {
         let person = read_usize(session + k * 5);
+        if training_update_pending(person) {
+            // simplification: a player's week of training rolls once, in the original (restoring the entries would
+            // roll it again in the copy, and its injuries and position items lie outside these regions)
+            return o();
+        }
         if person != 0 {
             extra.push((person, staff::SIZE));
             let sheet = read_usize(person + staff::PLAYER);

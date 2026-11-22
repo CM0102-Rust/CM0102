@@ -1,25 +1,5 @@
 // ---------- batch %%LEVA%%: the screen manager's display list helpers: the screen title and subtitle, the text and button items, the area items, an area's scroll row, the scrollbar keys and the record and flag counts (scrman.cpp) ----------
 
-/// The screen-list writes of a `ScreenManager` item helper: what `screens_forwarder_regions` (tel01_1) covers, plus the
-/// free item draw order (`display_list::ITEM_ORDER_COUNT` and its next slot) and, for an item that goes into an area
-/// (`area` as i16 ≠ −1), that whole area (`Area::add_item` appends the index to its list).
-unsafe fn scrman_item_regions(sm: usize, area: u32) -> Vec<(usize, usize)> {
-    let mut r = screens_forwarder_regions(sm);
-    let display = screens_current_display(sm);
-    if display != 0 {
-        r.push((display + display_list::ITEM_ORDER_COUNT, 2));
-        let n = read_i16(display + display_list::ITEM_ORDER_COUNT);
-        if (0..0x4b0).contains(&n) {
-            r.push((display + display_list::ITEM_ORDER + n as usize * 2, 2));
-        }
-        let a = area as i16;
-        if (0..0xf9).contains(&a) {
-            r.push((display_area_at(display, a), display_list::AREA_SIZE));
-        }
-    }
-    r
-}
-
 /// Comparer of an item helper: side by side over `scrman_item_regions` and the item index (the low word: `Display::add_item`
 /// returns a short).
 unsafe fn compare_scrman_item(name: &str, sm: usize, area: u32, original: impl FnOnce() -> u16, rust: impl FnOnce() -> u16) -> u16 {

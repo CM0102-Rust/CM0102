@@ -123,6 +123,13 @@ def materializar(nomes, n, base, antes):
     repetidas = [(m[0], junto.count(m[1])) for m in mutacoes if junto.count(m[1]) != 1]
     assert not repetidas, ('trecho de mutação que não aparece uma vez só', repetidas)
     open(os.path.join(destino, 'codigo.rs'), 'w', encoding='utf-8').write('\n'.join(codigos))
+    # EXE = {address: 'original'}: the routine is hooked only in the original exe; assinaturas.py reads the list
+    so_orig = ['%#x  # %s, %s' % (a, x, n) for x in nomes
+               for a, v in runpy.run_path(os.path.join(FILA, x, 'rotinas.py')).get('EXE', {}).items() if v == 'original'
+               for n in [next((r[0] for r in runpy.run_path(os.path.join(FILA, x, 'rotinas.py'))['ROTINAS'] if r[1] == a), '?')]]
+    if so_orig:
+        with open(os.path.join(R, 'levas', 'so_original.txt'), 'a', encoding='utf-8') as f:
+            f.write('\n'.join(so_orig) + '\n')
     save = any(runpy.run_path(os.path.join(FILA, x, 'rotinas.py')).get('SAVE') for x in nomes)
     if save:  # a marca da cadeia: prova do save em vez da carreira (ver cadeia.sh)
         open(os.path.join(destino, 'SAVE'), 'w', encoding='utf-8').write('leva do bloco do save\n')

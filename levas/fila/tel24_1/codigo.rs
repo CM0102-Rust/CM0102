@@ -679,7 +679,7 @@ pub(crate) unsafe extern "thiscall" fn contract_screens_add_disabled_menu_item(s
 /// Comparer of `contract_screens_add_disabled_menu_item`: side by side over what a forwarder writes and the return.
 pub(crate) unsafe extern "thiscall" fn compare_contract_screens_add_disabled_menu_item(sm: usize, area: u32, text: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(%%I5%%);
-    compare_screens_forwarder("contract_screens_add_disabled_menu_item", sm, || o(sm, area, text), || contract_screens_add_disabled_menu_item(sm, area, text))
+    compare_screens_item("contract_screens_add_disabled_menu_item", sm, area, || o(sm, area, text), || contract_screens_add_disabled_menu_item(sm, area, text))
 }
 
 /// Leaves the offer contract screen: the edited offer kept in param 2 (when there is one) is destroyed (its no-op
