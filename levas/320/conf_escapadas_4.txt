@@ -1,0 +1,9 @@
+Traceback (most recent call last):
+  File "D:\Sistemas\CM0102\copias\bancada4\engenharia-reversa\mutacoes.py", line 339, in <module>
+    main()
+    ~~~~^^
+  File "D:\Sistemas\CM0102\copias\bancada4\engenharia-reversa\mutacoes.py", line 248, in main
+    exec(open(sys.argv[1], encoding='utf-8').read(), lista)
+         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '../levas/320/escapadas_mut_4.py'
+FIM

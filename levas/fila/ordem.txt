@@ -1,16 +1,5 @@
 # ordem da fila (fila.py); um item por linha
 # rodada 2 das telas (22/11/2026): simulacao, save, telas
-tel39_3
-tel39_4
-tel39_5
-tel39_6
-tel39_7
-tel39_8
-tel41_1
-tel41_2
-tel41_3
-tel41_4
-tel42_2
 tel41_5
 tel41_6
 tel42_1

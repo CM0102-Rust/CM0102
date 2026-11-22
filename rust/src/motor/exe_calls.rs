@@ -1035,6 +1035,11 @@ pub(crate) mod exe {
         f(a0.addr(), a1)
     }
     #[inline(always)]
+    pub(crate) unsafe fn new_comp_season_records(a0: impl Addr) -> usize {
+        let f: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_COMP_SEASON_RECORDS_COMP_SEASON_RECORDS);
+        f(a0.addr())
+    }
+    #[inline(always)]
     pub(crate) unsafe fn comp_send_prize_money_news(a0: impl Addr, a1: impl Addr, a2: i32, a3: i32, a4: i32, a5: u32, a6: impl Addr, a7: i32) {
         let f: unsafe extern "thiscall" fn(usize, usize, i32, i32, i32, u32, usize, i32) = core::mem::transmute(FN_COMP_SEND_PRIZE_MONEY_NEWS);
         f(a0.addr(), a1.addr(), a2, a3, a4, a5, a6.addr(), a7)
@@ -1077,6 +1082,11 @@ pub(crate) mod exe {
     #[inline(always)]
     pub(crate) unsafe fn comp_stats_find_club_entry(a0: impl Addr, a1: impl Addr) -> usize {
         let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
+        f(a0.addr(), a1.addr())
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn comp_stats_find_player_entry(a0: impl Addr, a1: impl Addr) -> usize {
+        let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_PLAYER_ENTRY);
         f(a0.addr(), a1.addr())
     }
     #[inline(always)]
