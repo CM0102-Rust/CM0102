@@ -185,16 +185,16 @@ pub(crate) struct SourceClubList {
 }
 
 impl SourceClubList {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         SourceClubList { clubs: [0; 20], n: 0 }
     }
 
     /// Adds the club if it fits (the count is a signed word, < 20).
-    fn cabe(&self) -> bool {
+    pub(crate) fn cabe(&self) -> bool {
         self.n < 0x14
     }
 
-    fn por(&mut self, c: usize) {
+    pub(crate) fn por(&mut self, c: usize) {
         self.clubs[self.n as usize] = c;
         self.n += 1;
     }
@@ -203,7 +203,7 @@ impl SourceClubList {
     ///
     /// Uses `comp_util_sort_and_shuffle_top_clubs` comp_util_sort_and_shuffle_top_clubs (push how many; push the count; push list; add esp -> cdecl;
     /// draws at random).
-    unsafe fn ordenar(&mut self, quantos: u32) {
+    pub(crate) unsafe fn ordenar(&mut self, quantos: u32) {
         let f: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(FN_COMP_UTIL_SORT_AND_SHUFFLE_TOP_CLUBS);
         f(self.clubs.as_mut_ptr() as usize, self.n as u16 as u32, quantos);
     }
@@ -211,7 +211,7 @@ impl SourceClubList {
     /// The first club of the list and the first one after it from another nation (+0x53), as in the original.
     ///
     /// It walks the `n` slots; an empty slot does not count as the first.
-    unsafe fn two_from_different_nations(&self) -> (usize, usize) {
+    pub(crate) unsafe fn two_from_different_nations(&self) -> (usize, usize) {
         let (mut a, mut b) = (0usize, 0usize);
         for &c in self.clubs.iter().take(self.n.max(0) as usize) {
             if a == 0 {
@@ -662,3 +662,169 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_set_up_rules(this: usi
     apply_cup_rules(League(this), &OCEANIA_RULES, day, 3)
 }
 
+/// Rule: the Oceania Club Championship is every 2 years: when it ends, the table and stages are undone, the season goes
+/// to the statistics history, the year goes up 2, the host alternates between Australia and New Zealand and the rules
+/// are set up again.
+///
+/// `OceaniaClubChamp::start_new_season()` (virtual +8): `.set_season_closed(0)`, the table freed
+/// (`exe::league_free_table` League::free_table: push 0; mov ecx, this -> thiscall, ret 4), the round dates
+/// `.round_dates()` freed (`exe::crt_free`) and zeroed, the season archived in the statistics
+/// (`exe::comp_stats_archive_season_and_reset`: push 1; mov ecx, `.comp_stats()` -> thiscall, ret 4), the stages
+/// 0..=`.current_stage()` (signed, read again on each pass) of `.stages()` destroyed (virtual 0 with 1: the destructor
+/// that frees), the year `.year()` up 2, `.set_current_stage()` = −1, `.set_active(0)`, the host alternated
+/// (`alternate_oceania_club_champ_host` on [`G_HOST_COUNTRY`], thiscall, ret 0) and the rules again (virtual
+/// `comp_vtable::SET_UP_RULES`, thiscall, ret 0, without a box), whose eax it returns.
+/// Original: `OceaniaClubChamp::start_new_season` (0x797d60, oceania_club_champ.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn oceania_club_champ_start_new_season(this: usize) -> u32 {
+    let this = League(this);
+    this.set_season_closed(0);
+    exe::league_free_table(this, 0);
+    if this.round_dates() != 0 {
+        exe::crt_free(this.round_dates());
+        this.set_round_dates(0);
+    }
+    if this.comp_stats() != 0 {
+        exe::comp_stats_archive_season_and_reset(this.comp_stats(), 1);
+    }
+    let mut i = 0i32;
+    while (this.current_stage() as i32) >= 0 && i <= this.current_stage() as i32 {
+        let f = read_usize(this.stages() + i as usize * 4);
+        if f != 0 {
+            let destroy: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(f)));
+            destroy(f, 1);
+        }
+        i += 1;
+    }
+    covered!("mwg_11 oceania club championship rollover");
+    this.set_year(this.year().wrapping_add(2)); // mwg11: the Oceania championship every 2 years
+    this.set_current_stage(usize::MAX);
+    this.set_active(0);
+    let alternate: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_HOSTCOUNTRY_ALTERNATE_OCEANIA_CLUB_CHAMP_HOST);
+    alternate(read_usize(G_HOST_COUNTRY));
+    let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::SET_UP_RULES));
+    rules(this.addr())
+}
+
+/// Comparer for `oceania_club_champ_start_new_season`.
+pub(crate) unsafe extern "thiscall" fn compare_oceania_club_champ_start_new_season(this: usize) -> u32 {
+    let this = League(this);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_OCEANIA_CLUB_CHAMP_START_NEW_SEASON);
+    let year = this.year();
+    let r = o(this.addr());
+    let ok = this.year() == year.wrapping_add(2) && this.season_closed() == 0;
+    SCOREBOARD.record(ok, || format!("oceania_club_champ_start_new_season({:#x}): year {} -> {}, +0x4c {}", this.addr(), year, this.year(), this.season_closed()));
+    r
+}
+
+/// Rule: the Oceania Club Championship records: in the groups (stage below 1) the qualified club gets the record of
+/// round 0x82 and the club going out the failed record (weight 0x19 both); in the final (stage 1) the winner and
+/// runner-up get the final records.
+///
+/// `OceaniaClubChamp::update_staff_records_for_status(club, outcome, stage, _, fixture, final)` (the virtual +0x44);
+/// returns 0. Stage (signed byte) below 1: outcome 6, the qualification (`european_cup_add_qualified_record`: 0, 0x82,
+/// 0x19); 0xfe, the failure (`european_cup_add_failed_to_qualify_record`: 0x41c, 0x19). Stage 1: outcome 1 the winner
+/// (Staff_Records 0x86a800), 2 the runner-up (0x86b0b0). Anything else: nothing.
+/// Original: `OceaniaClubChamp::update_staff_records_for_status` (0x797a90, oceania_club_champ.cpp, thiscall, ret 0x18).
+pub(crate) unsafe extern "thiscall" fn oceania_club_champ_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, _a4: u32, game: usize, final_: u32) -> u32 {
+    let (d, f) = (outcome as u8, stage as u8 as i8);
+    let comp = read_usize(this + 4);
+    if f < 1 {
+        if d == 6 {
+            covered!("cqx_11 oceania group qualified");
+            european_cup_add_qualified_record(club, comp, 0, 0x82, 0x19);
+        } else if d == 0xfe {
+            european_cup_add_failed_to_qualify_record(club, comp, 0x41c, 0x19);
+        }
+    } else if f == 1 {
+        match d {
+            1 => cup_record_final_result(0x86a800, club, Fixture(game), final_),
+            2 => cup_record_final_result(0x86b0b0, club, Fixture(game), final_),
+            _ => {}
+        }
+    }
+    0
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_oceania_club_champ_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, a4: u32, game: usize, final_: u32) -> u32 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_OCEANIA_CLUB_CHAMP_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, club, outcome, stage, a4, game, final_);
+    SCOREBOARD.record(r == 0, || format!("oceania_club_champ_update_staff_records_for_status({:#x}, {}, {}) returned {}", club, outcome as u8, stage as u8, r));
+    r
+}
+
+/// The predicted positions of the Oceania Club Championship and its group draw: without statistics
+/// (`league::COMP_STATS`), the box for line 0x3a0; otherwise the 8 chosen clubs (+0xee, +0xf2 clubs) sorted by
+/// reputation (`predicted_by_reputation_sort`), the positions 1, 2, 3, 3, 5, 5, 7, 7 and the list shuffled
+/// (`exe::comp_util_shuffle_pointer_array`(list, n): push n (word); push list; add esp, 8 -> cdecl: 3n drawn swaps).
+/// That shuffle is what makes the groups: the first 4 go to group A, the others to B.
+/// Original: `OceaniaClubChamp::set_predicted_positions` (0x798640, oceania_club_champ.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn oceania_club_champ_set_predicted_positions(this: usize) {
+    let this = League(this);
+    if this.comp_stats() == 0 {
+        return show_error_at(0xa6a068, 0x3a0);
+    }
+    let list = read_usize(this.addr() + 0xee);
+    predicted_by_reputation_sort(list, read_usize(this.addr() + 0xf2) as u32); // cqv13: the 8 by reputation
+    predicted_by_reputation_write(this.addr(), read_usize(this.addr() + 0xee), &OCEANIA_CLUB_CHAMP_POSITIONS);
+    covered!("cqv_13 oceania group draw");
+    let n = read_i16(this.addr() + 0xf2) as u16 as u32;
+    exe::comp_util_shuffle_pointer_array(read_usize(this.addr() + 0xee), n); // cqv13: the 8 shuffled
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_oceania_club_champ_set_predicted_positions(this: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_OCEANIA_CLUB_CHAMP_SET_PREDICTED_POSITIONS);
+    let list = read_usize(this + 0xee);
+    let n = read_i16(this + 0xf2);
+    if list == 0 || !(0..=64).contains(&n) {
+        return o(this);
+    }
+    let mut before: Vec<usize> = (0..n as usize).map(|k| read_usize(list + k * 4)).collect();
+    o(this);
+    let mut after: Vec<usize> = (0..n as usize).map(|k| read_usize(read_usize(this + 0xee) + k * 4)).collect();
+    predicted_by_reputation_check("oceania_club_champ_set_predicted_positions", this, &before, &OCEANIA_CLUB_CHAMP_POSITIONS);
+    before.sort_unstable();
+    after.sort_unstable();
+    SCOREBOARD.record(before == after, || format!("oceania_club_champ_set_predicted_positions({:#x}): the shuffled list is not the same", this));
+}
+
+/// The positions in the order of the array sorted by reputation (`exe::comp_stats_set_club_final_position`: push
+/// position; push club; mov ecx, stats (`league::COMP_STATS`) -> thiscall, ret 8).
+pub(crate) unsafe fn predicted_by_reputation_write(this: usize, v: usize, positions: &[u32]) {
+    let this = League(this);
+    for (k, &p) in positions.iter().enumerate() {
+        exe::comp_stats_set_club_final_position(this.comp_stats(), read_usize(v + k * 4), p);
+    }
+}
+
+/// `exe::crt_qsort`(v, n, 4, 0x4b07d0) (4 pushes; add esp -> cdecl): the reputation (`club::REPUTATION`) descending,
+/// nulls at the end.
+pub(crate) unsafe fn predicted_by_reputation_sort(v: usize, n: u32) {
+    exe::crt_qsort(v, n, 4, 0x4b07d0);
+}
+
+/// The plan of the predicted positions: the clubs `clubs` (taken before the original), each with the position written
+/// (`comp_stats_club::FINAL_POSITION` of its entry, `exe::comp_stats_find_club_entry`) after it; by reputation
+/// (`club::REPUTATION`) descending the positions make `positions` (reputation ties may swap with each other: the qsort
+/// is not stable). Only with as many clubs as positions and none null.
+pub(crate) unsafe fn predicted_by_reputation_check(name: &str, this: usize, clubs: &[usize], positions: &[u32]) {
+    let this = League(this);
+    let stats = this.comp_stats();
+    if stats == 0 || clubs.len() != positions.len() || clubs.iter().any(|&c| c == 0) {
+        return;
+    }
+    let mut v: Vec<(i16, u8)> = clubs
+        .iter()
+        .map(|&c| {
+            let e = exe::comp_stats_find_club_entry(stats, c);
+            (Club(c).reputation(), if e != 0 { read_u8(e + comp_stats_club::FINAL_POSITION) } else { 0 })
+        })
+        .collect();
+    v.sort_by(|a, b| b.0.cmp(&a.0).then(a.1.cmp(&b.1)));
+    let read: Vec<u32> = v.iter().map(|x| x.1 as u32).collect();
+    SCOREBOARD.record(read == positions, || format!("{}({:#x}): positions by reputation {:?}", name, this.addr(), read));
+}
+
+/// HostCountry::alternate_oceania_club_champ_host (thiscall, ret 0), called by the Oceania turnover on the host table.
+pub(crate) const FN_HOSTCOUNTRY_ALTERNATE_OCEANIA_CLUB_CHAMP_HOST: usize = 0x5face0;
+
+/// The predicted positions of the 8 Oceania Club Championship entrants, by reputation.
+pub(crate) const OCEANIA_CLUB_CHAMP_POSITIONS: [u32; 8] = [1, 2, 3, 3, 5, 5, 7, 7];

@@ -1800,19 +1800,6 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
     }
 }
 
-/// strcpy: copies a null-terminated string from origem to destino.
-pub(crate) unsafe fn copy_c_string(target: usize, source: usize) {
-    let mut k = 0;
-    loop {
-        let c = read_u8(source + k);
-        write_u8(target + k, c);
-        if c == 0 {
-            break;
-        }
-        k += 1;
-    }
-}
-
 /// `database_format_name_from_strings(first, surname, common, text, size, style)`: writes the person's name into `text`
 /// by style (byte) from the three strings (null or empty ones count as missing).
 ///
@@ -1966,23 +1953,6 @@ pub(crate) unsafe extern "C" fn database_get_language_name(language: u32) -> usi
 /// True if the text's first byte is 0.
 pub(crate) unsafe fn is_empty_text(t: usize) -> bool {
     read_u8(t) == 0
-}
-
-/// strcat: appends a null-terminated string to destino.
-pub(crate) unsafe fn append_c_string(target: usize, source: usize) {
-    let mut d = target;
-    while read_u8(d) != 0 {
-        d += 1;
-    }
-    let mut k = 0;
-    loop {
-        let c = read_u8(source + k);
-        write_u8(d + k, c);
-        if c == 0 {
-            break;
-        }
-        k += 1;
-    }
 }
 
 /// `club_get_national_team_name(club, variant, text, size, style, quotes)`: the national team club name in `text` by
@@ -8280,3 +8250,54 @@ pub(crate) unsafe extern "C" fn database_global_9b5984() -> u32 {
     read_u32(G_DATABASE_NAMES_LANGUAGE)
 }
 
+/// Appends the C string at `src` to the C string at `dst`.
+pub(crate) unsafe fn append_c_string(dst: usize, src: usize) {
+    copy_c_string(dst + c_string_len(dst), src);
+}
+
+/// Like `compare_com_comentarios`, also comparing the `extra` regions (besides the RNG state).
+pub(crate) unsafe fn compare_with_commentary_at(extra: &[(usize, usize)], original: impl FnOnce(), rust: impl FnOnce(AddEventCall)) -> (bool, usize) {
+    use std::sync::atomic::Ordering::Relaxed;
+    // inside another comparison that is recording (a ported routine calls another that narrates, or a
+    // tape recording is open): only the original runs, and its comments go into the outer recording
+    if RECORDING_6D6F70.load(Relaxed) || is_recording() {
+        original();
+        return (true, 0);
+    }
+    TAPE_6D6F70.lock().unwrap_or_else(|e| e.into_inner()).clear();
+    let tape_lock = core::cell::RefCell::new(Vec::new());
+    let sequencia = core::cell::Cell::new(true);
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
+    reg.extend_from_slice(extra);
+    let (_, _, igual, _, _) = crate::comparison::side_by_side(
+        &reg,
+        || {
+            RECORDING_6D6F70.store(true, Relaxed);
+            original();
+            RECORDING_6D6F70.store(false, Relaxed);
+            *tape_lock.borrow_mut() = core::mem::take(&mut *TAPE_6D6F70.lock().unwrap_or_else(|e| e.into_inner()));
+        },
+        || {
+            let gravadas = tape_lock.borrow();
+            let mut prox = gravadas.iter();
+            crate::rng::without_counting(|| {
+                rust(&mut |t, a| match prox.next() {
+                    Some((gt, ga, depois)) if *gt == t && same_arguments(ga, &a) => depois.write_back(),
+                    _ => sequencia.set(false),
+                })
+            });
+            if prox.next().is_some() {
+                sequencia.set(false);
+            }
+        },
+    );
+    let n = tape_lock.borrow().len();
+    (igual && sequencia.get(), n)
+}
+
+pub(crate) fn same_arguments(a: &[u32; 7], b: &[u32; 7]) -> bool {
+    (0..7).all(|i| a[i] & MASK_6D6F70[i] == b[i] & MASK_6D6F70[i])
+}
+
+/// 0x6d6f70 reads the 1st argument as a word and the 3rd to 6th as bytes: the rest is stack garbage.
+pub(crate) const MASK_6D6F70: [u32; 7] = [0xffff, u32::MAX, 0xff, 0xff, 0xff, 0xff, u32::MAX];

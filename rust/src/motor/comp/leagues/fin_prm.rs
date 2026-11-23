@@ -2835,3 +2835,544 @@ pub(crate) unsafe extern "thiscall" fn get_wealth_band(this: usize) -> u8 {
     0
 }
 
+/// The Finnish turnover, led by the Veikkausliiga: the promotion and relegation chain (with 0), the two unnamed Finnish
+/// steps 0x595f00 and 0x596050 [inference: the First Division groups refreshed and regrouped], the Veikkausliiga rebuilt
+/// for the next year (rules, the 12-club table, fixtures, order), then the Ykkönen turnover, the predicted positions,
+/// the board expectations and the referee renewal.
+///
+/// `FinPrm::start_new_season()`: `top_division_turnover` with, before, virtual
+/// `league_vtable::PROCESS_PROMOTION_RELEGATION_CHAIN`(0) and the direct calls 0x595f00 and 0x596050 (thiscall, ret 0);
+/// the table `FinPrm::create_table` (0x595b70) and the boxes of fin_prm.cpp (0x9c8254) at 0x1c7, 0x1ce, 0x1d4, 0x1db;
+/// after, the Ykkönen's start_new_season (`KEY_CLUB_COMP_FINNISH_FIRST_DIVISION`, called without a null check).
+/// Original: `FinPrm::start_new_season` (0x595d40, fin_prm.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn fin_prm_start_new_season(this: usize) -> u32 {
+    let this = League(this);
+    top_division_turnover(this, || {
+        covered!("mwe_14 finnish turnover");
+        promotion_relegation_chain(this, 0); // mwe14: the Finnish chain
+        call_on_league(0x595f00, this);
+        call_on_league(0x596050, this);
+    }, 0x595b70, 0x9c8254, [0x1c7, 0x1ce, 0x1d4, 0x1db], || {
+        bra_nat_first_call_virtual_no_args(comp_by_global(KEY_CLUB_COMP_FINNISH_FIRST_DIVISION), comp_vtable::START_NEW_SEASON); // mwe14: the Ykkonen turnover
+    })
+}
+
+/// Comparer for `fin_prm_start_new_season`: only the original runs (it frees, allocates and moves clubs); the year must
+/// go up by one (`compare_state_league_new_season`).
+pub(crate) unsafe extern "thiscall" fn compare_fin_prm_start_new_season(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_FIN_PRM_START_NEW_SEASON);
+    compare_state_league_new_season("fin_prm_start_new_season", League(this), || o(this))
+}
+
+/// Sets up the rules of the Finnish Premier Division (Veikkausliiga, 12 clubs): three legs (33 rounds), 3 points for a
+/// win; nobody goes up, the 11th plays the relegation play-off and the 12th goes down to the Ykkönen; 7 substitutes and
+/// 3 substitutions.
+///
+/// `FinPrm::set_up_rules()`: the writes of `finnish_premier_rules` and the main-stage round table (virtual
+/// `comp_vtable::CREATE_SCHEDULE`: push 0; push &+0x3a; push &+0xa9; push −1; mov ecx -> thiscall, ret 0x10) into
+/// `league::ROUND_DATES`. Returns 1.
+/// Original: `FinPrm::set_up_rules` (0x595c90, fin_prm.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn fin_prm_set_up_rules(this: usize) -> u32 {
+    covered!("mwe_5 veikkausliiga rules");
+    eng_prm_apply_league_rules(League(this), &finnish_premier_rules())
+}
+
+/// Comparer for `fin_prm_set_up_rules`: the dry run of `eng_prm_compare_league_rules`.
+pub(crate) unsafe extern "thiscall" fn compare_fin_prm_set_up_rules(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_FIN_PRM_SET_UP_RULES);
+    eng_prm_compare_league_rules("fin_prm_set_up_rules", League(this), finnish_premier_rules(), || o(this), || fin_prm_set_up_rules(this))
+}
+
+/// Creates the Finnish Premier Division table: 12 clubs, those of the division in database order; the prize fund by a
+/// share of 35,000 per place; no TV money.
+///
+/// `FinPrm::create_table()`: the same body (`eng_prm_fill_league_table`) with 12 rows,
+/// `KEY_CLUB_COMP_FINNISH_PREMIER_DIVISION`, the box of fin_prm.cpp (0x9c8254) line 0x157 and the share 35,000.
+/// Original: `FinPrm::create_table` (0x595b70, fin_prm.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn fin_prm_create_table(this: usize) -> u32 {
+    covered!("mwe_6 veikkausliiga table");
+    eng_prm_fill_league_table(League(this), 0xc, 0x9c8254, 0x157, KEY_CLUB_COMP_FINNISH_PREMIER_DIVISION, 0x88b8, || ()) // mwe6: the Veikkausliiga prize share
+}
+
+/// Comparer for `fin_prm_create_table`.
+pub(crate) unsafe extern "thiscall" fn compare_fin_prm_create_table(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_FIN_PRM_CREATE_TABLE);
+    eng_prm_compare_league_table("fin_prm_create_table", League(this), 0xc, KEY_CLUB_COMP_FINNISH_PREMIER_DIVISION, 0x88b8, || o(this))
+}
+
+/// The Veikkausliiga schedule: 33 rounds (12 clubs, three legs), from 29 April to 28 October, on Sundays, Wednesdays and Mondays; no TV slots and no play-offs (main stage only).
+///
+/// `FinPrm::create_schedule(stage, &rounds, &extra, &league)`: at stage −1 (0xff), `*league` = 1 (when given), 33 rounds,
+/// extra 0 and the table (`exe::crt_malloc` of 0x861 = 33 × 0x41; out of memory: the box of fin_prm.cpp (0x9c8254) line 0xb3 and 0),
+/// filled round by round from `VEIKKAUSLIIGA_ROUNDS` (`eng_first_set_league_rounds`: League round date `exe::league_round_set_date`(t,
+/// i, day, month, years, weekday, code, year, 0) and the TV slots `exe::league_round_set_match_slot`(t, i, j, a, b,
+/// c, 0), the list closed by (−1, −1, −1); both cdecl); the year is the league's (`.year()`, the original pushes the
+/// word with garbage above it: the date only reads the word). Any other stage: 0 and nothing written. 
+/// Original: `FinPrm::create_schedule` (0x5954b0, fin_prm.cpp, thiscall, ret 0x10).
+pub(crate) unsafe extern "thiscall" fn fin_prm_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    if stage as u8 != 0xff {
+        return 0;
+    }
+    if !league.is_null() {
+        *league = 1;
+    }
+    *rounds = 0x21;
+    *extra = 0;
+    let t = exe::crt_malloc(0x861);
+    if t == 0 {
+        show_error_at(0x9c8254, 0xb3);
+        return 0;
+    }
+    covered!("mwe_12 veikkausliiga schedule");
+    let year = (League(this).year() as u16) as u32;
+    eng_first_set_league_rounds(t, year, 0, &VEIKKAUSLIIGA_ROUNDS); // mwe12: the Veikkausliiga rounds
+    t
+}
+
+/// Comparer for `fin_prm_create_schedule`: side by side (`compare_league_round_table`: the original with the caller's outputs, the copy
+/// with its own; the outputs and the written round bytes equal; the copy's table freed).
+pub(crate) unsafe extern "thiscall" fn compare_fin_prm_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FIN_PRM_CREATE_SCHEDULE);
+    compare_league_round_table("fin_prm_create_schedule", stage, rounds, extra, league, || o(this, stage, rounds, extra, league), |r, e, l| fin_prm_create_schedule(this, stage, r, e, l))
+}
+
+/// The club's transfer budget: how much it can spend now, as an i64 (the bank balance minus the reserves the board
+/// keeps, with floors and caps by reputation, nation and the human manager's knowledge of the player).
+///
+/// Called by the computer's bids (`TRANSFER_OFFER::build_bid` 0x8e5d60 and its neighbours), the shortlists (budget per
+/// open slot), the board (`manager_manager.cpp`, funds requests, the veto), the finance events and the screens: 37 call
+/// sites, every day of the window for every computer club that bids. In this order:
+/// 1. The start is the balance (`.balance()`); with `add_listed` the value (`.value()`) of each of the 50 squad places
+///    (`.squad(k)`) whose person is transfer listed (`exe::staff_is_transfer_listed`) is added.
+/// 2. `adjusted` (when given) = 0.
+/// 3. With `pending` and a human club (`exe::human_manager_is_human_club` with 1, 1): the club's future transfers
+///    (TRANSFER_MANAGER::get_club_future_transfer_list 0x8ccb80, rows of `budget_list_rows`): a purchase adds its fee
+///    to the money committed (except the `player` himself); a sale in stage 3 to 6 takes its fee off the committed
+///    money (once per person) and the wage of the person's contract at the club (`exe::contract_manager_get_contract_for_club`)
+///    off the wages. Defect of the original: after a repeated person it reads the contract of the row after the first
+///    match, not of this row. Then the open contract offers (CONTRACT_MANAGER::get_current_contract_offers 0x4ca300,
+///    except the closed ones, state 4): each offer adds its wage and its fee; a person already contracted to the club
+///    (main contract `exe::contract_manager_get_contract`, kept in `G_CONTRACT_LOOKUP_RESULT`) takes his current wage
+///    off. Both lists are freed (`exe::crt_free`).
+/// 4. A club without a league (`.division()`, or one without its competition object in `G_COMP_OBJECT_TABLE`) returns
+///    the start.
+/// 5. The board's multiplier m: the chairman's (`.chairman()`) `.business()` + 6, minus (`.ambition()` − 15) when the
+///    ambition is above 15; 16 without a chairman or his sheet; +5 for a German club (`KEY_NATION_GERMANY`).
+/// 6. The reserve: m × (weekly wage bill `.wage_bill()` + the wages of step 3 − ⅔ × `.instalment_balance()`) comes off.
+/// 7. The ground (`.stadium()`, `.capacity()` × m): owned (`.own_stadium()`), by reputation (`.reputation()`) above
+///    5750, 4250 or (professional club, `.professional_status()` 1) 1250, 1.25, 1.15 or 1.05 × that comes off, else
+///    1 ×; rented, 2 ×; no ground, 2500 × m.
+/// 8. Training (`.training()` t): 200·t, 500·(t − 2) from 6 or 2000·(t − 12) from 16, × m × 0.25, comes off.
+/// 9. Reputation r: r × m comes off; attendance (`.attendance()`) × r × m × 0.0005 (0.001 from 4000) comes in.
+/// 10. With a nation: the league's reputation (`.division()` `.reputation()`) squared × 5000 (England, Italy, Spain),
+///     2500 (Germany, France) or 750 comes in; r² × m × 0.001 (own ground) or 0.0005 comes in.
+/// 11. In a continental competition (`.continental_comp_id()` ≠ −1) and professional: 300·r × 1 (England, Germany,
+///     Italy, France, Scotland, Spain), 0.65 (Holland, Sweden, Belgium, Portugal, Turkey), 0.35 (Denmark, Norway) or
+///     0.5 (others); 0 without a nation.
+/// 12. The committed money S = max(fees, 0) + max(0, net season spending (`.season_players_bought()` −
+///     `.season_players_sold()`, low dword) − 8 million) comes off. If still positive: below 10% of the balance it
+///     becomes that 10% (at most 2.5 million); otherwise the soft cap Z = r² × 0.5 (× q² when the manager's
+///     (`.manager()`) `.current_reputation()` / r = q is below 1, q at least 0.5), at least the balance − 10 million
+///     (− 15 million in Germany or without a nation) and, at a PLC (`.plc()`), without a nation or in Sweden, Norway,
+///     the USA, Portugal, Denmark, Finland, Scotland, Turkey or Germany, at most 40 (35) million − S; at least 50000;
+///     above Z only 10% of the excess is kept.
+/// 13. The funds the board granted (`G_MANAGER_MANAGER` row, `.extra_funds_granted()`) come in.
+/// 14. Above reputation 5000, at least (200·r − 1 million) × league reputation / 17 (then at least 50000); below 3500,
+///     at most 500·r (professional) or 250·r; never negative.
+/// 15. By nation: Sweden, Norway, Denmark, Wales, the USA, Finland, both Irelands and Argentina halve it and keep 10%
+///     above 2.5 million; Belgium and Portugal keep 25% above 15 million; Brazil 25% above 2.5 million; Germany,
+///     France, Scotland and Holland 25% above 17.5 million.
+/// 16. With `player`, `fog`, attribute masking (`G_ATTRIBUTE_MASKING_ENABLED`), the fog of war (`G_FOG_OF_WAR`) and a
+///     human club (with 0, 1): the manager's knowledge of the player (`exe::fog_of_war_get_manager_map`,
+///     `exe::fog_of_war_map_get_knowledge_level`) sets V: level 3 leaves the budget as it is; 2: r² × 0.04; 1: r² ×
+///     0.01 (league standard below 9 and r below 4250) or 0.02; 0: r² × 0.005 or 0.01. V × the manager's reputation
+///     ratio (0.1 to 1), × the league standard × 0.05 (0.25 to 1); with the balance negative, the player's
+///     (`.player()`) `.current_reputation()` / r (0.15 to 0.85) × 0.65 (defect of the original: the ratio replaces V,
+///     so V is 0 and the budget ends at an eighth when that is at most 125000, else 0); for a non-player V × 0.65. Above
+///     V the budget becomes V + an eighth of the excess, at most 1.75 V when that passes 125000, and `adjusted` = 1.
+/// Original: `Finance::get_transfer_budget` (0x598800, fin_prm.cpp, thiscall, ret 0x14).
+pub(crate) unsafe extern "thiscall" fn get_transfer_budget(fin: usize, player: usize, add_listed: u32, adjusted: *mut u32, fog: u32, pending: u32) -> i64 {
+    use budget_list_rows::*;
+    let fin = Finance(fin);
+    let club = club_at(fin.club_id() as isize);
+    let mut budget = fin.balance();
+    let mut fees: i32 = 0;
+    let mut wages: i32 = 0;
+    if add_listed != 0 {
+        for k in 0..50 {
+            let s = club.squad(k);
+            if s != 0 && read_i32(s) < read_i32(G_STAFF_COUNT) && exe::staff_is_transfer_listed(s, 0usize) != 0 {
+                covered!("mka_1 listed squad value");
+                budget = budget.wrapping_add(Staff(s).value() as i32 as i64);
+            }
+        }
+    }
+    if !adjusted.is_null() {
+        *adjusted = 0;
+    }
+    if pending != 0 && exe::human_manager_is_human_club(club, 1, 1, 0, 0) != 0 {
+        covered!("mka_1 pending deals");
+        // ponytail: no exe:: wrapper for these two list builders yet
+        let mut list: usize = 0;
+        let n = exe::transfer_manager_get_club_future_transfer_list(read_usize(G_TRANSFER_MANAGER), club, &mut list) as i8 as i32;
+        for i in 0..n.max(0) as usize {
+            let row = list + i * FUTURE_SIZE;
+            let person_id = read_i32(row + FUTURE_PERSON_ID);
+            if read_u32(row + FUTURE_OUTGOING) == 0 {
+                if player == 0 || person_id != read_i32(player) {
+                    fees = fees.wrapping_add(read_i32(row + FUTURE_FEE));
+                }
+                continue;
+            }
+            if !(3..=6).contains(&read_u8(row + FUTURE_STAGE)) {
+                continue;
+            }
+            let mut j = 0usize;
+            let mut repeated = false;
+            while j < i && !repeated {
+                repeated = read_i32(list + j * FUTURE_SIZE + FUTURE_PERSON_ID) == person_id;
+                j += 1;
+            }
+            if !repeated {
+                fees = fees.wrapping_sub(read_i32(row + FUTURE_FEE));
+            }
+            // as in the original: the person of row j (this row, or the one after the first repeat)
+            let who = staff_at(read_i32(list + j * FUTURE_SIZE + FUTURE_PERSON_ID) as isize);
+            let c = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), who, club);
+            if c != 0 {
+                wages = wages.wrapping_sub(Contract(c).wage());
+            }
+        }
+        if list != 0 {
+            exe::crt_free(list);
+        }
+        let mut offers: usize = 0;
+        let n = exe::contract_manager_get_current_contract_offers(read_usize(G_CONTRACT_MANAGER), club, &mut offers) as i8 as i32;
+        for i in 0..n.max(0) as usize {
+            let row = offers + i * OFFER_SIZE;
+            if read_u8(row + OFFER_STATE) == 4 {
+                continue;
+            }
+            let who = staff_at(read_i32(row + OFFER_PERSON_ID) as isize);
+            let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), who);
+            write_usize(G_CONTRACT_LOOKUP_RESULT, c);
+            let at = if c != 0 { club_at(Contract(c).club() as isize).addr() } else { 0 };
+            if at == club.addr() {
+                let c2 = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), who, club);
+                if c2 != 0 {
+                    wages = wages.wrapping_sub(Contract(c2).wage());
+                }
+            }
+            wages = wages.wrapping_add(read_i32(row + OFFER_WAGE));
+            fees = fees.wrapping_add(read_i32(row + OFFER_FEE));
+        }
+        if offers != 0 {
+            exe::crt_free(offers);
+        }
+    }
+    let division = club.division();
+    if division.is_null() || read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((read_i32(division.addr()) as usize).wrapping_mul(4))) == 0 {
+        return budget;
+    }
+    let chairman = club.chairman();
+    let mut m: i8 = if !chairman.is_null() && !chairman.non_player().is_null() {
+        let mut v = (chairman.non_player().business() as i8).wrapping_add(6);
+        let ambition = chairman.ambition();
+        if ambition > 15 {
+            v = v.wrapping_add(15i8.wrapping_sub(ambition));
+        }
+        v
+    } else {
+        16
+    };
+    let nation = club.nation();
+    let is = |g: usize| !nation.is_null() && read_i32(nation.addr()) == read_i32(g);
+    if is(KEY_NATION_GERMANY) {
+        m = m.wrapping_add(5);
+    }
+    covered!("mka_1 board reserve");
+    let m = m as i32;
+    let mf = m as f64;
+    let wage_base = fin.wage_bill().wrapping_add(wages) as f64;
+    budget = budget.wrapping_sub(ftol_i64((wage_base - fin.instalment_balance() as f64 * read_f64(rdata::F64_0_6666666667)) * mf));
+    let rep = club.reputation();
+    let r = rep as i32;
+    let stadium = club.stadium();
+    if !stadium.is_null() {
+        let seats = stadium.capacity().wrapping_mul(m);
+        if club.own_stadium() != 0 {
+            if rep > 0x1676 {
+                budget = budget.wrapping_add(ftol_i64(seats as f64 * read_f64(rdata::F64_NEG_1_25)));
+            } else if rep > 0x109a {
+                budget = budget.wrapping_add(ftol_i64(seats as f64 * read_f64(rdata::F64_NEG_1_15))); // -1.15
+            } else if rep > 0x4e2 && club.professional_status() == 1 {
+                budget = budget.wrapping_add(ftol_i64(seats as f64 * read_f64(rdata::F64_NEG_1_05))); // -1.05
+            } else {
+                budget = budget.wrapping_sub(seats as i64);
+            }
+        } else {
+            budget = budget.wrapping_sub(seats.wrapping_mul(2) as i64);
+        }
+    } else {
+        budget = budget.wrapping_sub(m.wrapping_mul(2500) as i64);
+    }
+    let t = club.training() as i32;
+    let training = if t < 6 {
+        t.wrapping_mul(m).wrapping_mul(200)
+    } else if t < 16 {
+        (t - 2).wrapping_mul(m).wrapping_mul(500)
+    } else {
+        (t - 12).wrapping_mul(m).wrapping_mul(2000)
+    };
+    budget = budget.wrapping_sub(ftol(training as f64 * read_f64(rdata::F64_0_25)) as i64);
+    budget = budget.wrapping_sub(r.wrapping_mul(m) as i64);
+    let crowd = club.attendance().wrapping_mul(r) as f64 * mf;
+    budget = budget.wrapping_add(ftol_i64(crowd * if rep < 0xfa0 { read_f64(rdata::F64_0_0005) } else { read_f64(rdata::F64_0_001) })); // 0.0005
+    if !nation.is_null() {
+        let dr = division.reputation() as i32;
+        let k = if is(KEY_NATION_ENGLAND) || is(KEY_NATION_ITALY) || is(KEY_NATION_SPAIN) {
+            5000
+        } else if is(KEY_NATION_GERMANY) || is(KEY_NATION_FRANCE) {
+            2500
+        } else {
+            750
+        };
+        budget = budget.wrapping_add(dr.wrapping_mul(dr).wrapping_mul(k) as i64);
+    }
+    let r2 = r.wrapping_mul(r) as f64;
+    budget = budget.wrapping_add(ftol_i64(r2 * mf * if club.own_stadium() != 0 { read_f64(rdata::F64_0_001) } else { read_f64(rdata::F64_0_0005) }));
+    if club.continental_comp_id() != 0xffff_ffff && club.professional_status() == 1 {
+        let base = r.wrapping_mul(300);
+        let add = if nation.is_null() {
+            0
+        } else if [KEY_NATION_ENGLAND, KEY_NATION_GERMANY, KEY_NATION_ITALY, KEY_NATION_FRANCE, KEY_NATION_SCOTLAND, KEY_NATION_SPAIN].iter().any(|&g| is(g)) {
+            base
+        } else if [KEY_NATION_HOLLAND, KEY_NATION_SWEDEN, KEY_NATION_BELGIUM, KEY_NATION_PORTUGAL, KEY_NATION_TURKEY].iter().any(|&g| is(g)) {
+            ftol(base as f64 * read_f64(rdata::F64_0_65))
+        } else if is(KEY_NATION_DENMARK) || is(KEY_NATION_NORWAY) {
+            ftol(base as f64 * read_f64(rdata::F64_0_35))
+        } else {
+            ftol(base as f64 * read_f64(rdata::F64_0_5))
+        };
+        budget = budget.wrapping_add(add as i64);
+    }
+    // the committed money: the fees of step 3 and the season's net spending above 8 million (low dword, as the original)
+    let net = fin.season_players_bought().wrapping_sub(fin.season_players_sold());
+    let over = (if net > 0 { net as i32 } else { 0 }) as i64 - 8_000_000;
+    let over = if over >= 0 { over as i32 } else { 0 };
+    let committed = (fees.max(0) as i64).wrapping_add(over as i64);
+    budget = budget.wrapping_sub(committed as i32 as i64);
+    if budget > 0 {
+        let balance = fin.balance();
+        let tenth = balance as f64 * read_f64(rdata::F64_0_1);
+        if (budget as f64) < tenth {
+            covered!("mka_1 tenth of the balance");
+            let top = read_f64(rdata::F64_2500000); // 2.5 million
+            budget = ftol_i64(if tenth < top { tenth } else { top });
+        } else {
+            let mut cap = ftol(r2 * read_f64(rdata::F64_0_5));
+            let manager = club.manager();
+            if !manager.is_null() && rep != 0 && !manager.non_player().is_null() {
+                let mut q = manager.non_player().current_reputation() as f64 / r as f64;
+                if q < read_f64(rdata::F64_1) {
+                    if q < read_f64(rdata::F64_0_5) {
+                        q = read_f32(rdata::F32_0_5) as f64;
+                    }
+                    cap = ftol(cap as f64 * q * q);
+                }
+            }
+            let small = club.plc() != 0 || nation.is_null()
+                || [KEY_NATION_SWEDEN, KEY_NATION_NORWAY, KEY_NATION_UNITED_STATES, KEY_NATION_PORTUGAL, KEY_NATION_DENMARK, KEY_NATION_FINLAND, KEY_NATION_SCOTLAND, KEY_NATION_TURKEY, KEY_NATION_GERMANY].iter().any(|&g| is(g));
+            let (floor, top) = if !nation.is_null() && !is(KEY_NATION_GERMANY) { (10_000_000, 40_000_000) } else { (15_000_000, 35_000_000) };
+            if (cap as i64) < balance.wrapping_sub(floor) {
+                cap = (balance as i32).wrapping_sub(floor as i32);
+            }
+            if small && cap as i64 > (top as i64).wrapping_sub(committed) {
+                cap = (top as i32).wrapping_sub(committed as i32);
+            }
+            if cap < 50000 {
+                cap = 50000;
+            }
+            if budget > cap as i64 {
+                covered!("mka_1 soft cap");
+                budget = ftol_i64(budget.wrapping_sub(cap as i64) as f64 * read_f64(rdata::F64_0_1) + cap as f64);
+            }
+        }
+    }
+    let mm = read_usize(G_MANAGER_MANAGER);
+    if mm != 0 && !club.is_null() {
+        budget = budget.wrapping_add(BoardRecord(board_row_of(mm, club)).extra_funds_granted() as i32 as i64);
+    }
+    if rep > 5000 {
+        let least = ftol_i64((r as f64 * read_f64(rdata::F64_200) - read_f64(rdata::F64_1000000)) * division.reputation() as f64 * read_f64(rdata::F64_0_05882352941)); // 1/17
+        if budget < least {
+            budget = if least < 50000 { 50000 } else { least };
+        }
+    }
+    if rep < 0xdac {
+        let most = r.wrapping_mul(if club.professional_status() == 1 { 500 } else { 250 }) as i64;
+        if budget > most {
+            budget = most;
+        }
+    }
+    if budget < 0 {
+        budget = 0;
+    }
+    let keep = |b: i64, above: i64, part: f64, base: usize| -> i64 {
+        if b > above { ftol_i64(b.wrapping_sub(above) as f64 * part + read_f64(base)) } else { b }
+    };
+    if [KEY_NATION_SWEDEN, KEY_NATION_NORWAY, KEY_NATION_DENMARK, KEY_NATION_WALES, KEY_NATION_UNITED_STATES, KEY_NATION_FINLAND, KEY_NATION_REPUBLIC_OF_IRELAND, KEY_NATION_NORTHERN_IRELAND, KEY_NATION_ARGENTINA].iter().any(|&g| is(g)) {
+        covered!("mka_1 small market");
+        budget = keep(budget / 2, 2_500_000, read_f64(rdata::F64_0_1), 0x96a650);
+    } else if is(KEY_NATION_BELGIUM) || is(KEY_NATION_PORTUGAL) {
+        budget = keep(budget, 15_000_000, read_f64(rdata::F64_0_25), 0x96a630);
+    } else if is(KEY_NATION_BRAZIL) {
+        budget = keep(budget, 2_500_000, read_f64(rdata::F64_0_25), 0x96a650);
+    } else if is(KEY_NATION_GERMANY) || is(KEY_NATION_FRANCE) || is(KEY_NATION_SCOTLAND) || is(KEY_NATION_HOLLAND) {
+        budget = keep(budget, 17_500_000, read_f64(rdata::F64_0_25), 0x96a638);
+    }
+    if player == 0 || fog == 0 || read_u8(G_ATTRIBUTE_MASKING_ENABLED) == 0 || read_usize(G_FOG_OF_WAR) == 0
+        || exe::human_manager_is_human_club(club, 0, 1, 0, 0) == 0 {
+        return budget;
+    }
+    let map = exe::fog_of_war_get_manager_map(read_usize(G_FOG_OF_WAR), club.manager());
+    if map == 0 {
+        return budget;
+    }
+    covered!("mka_1 human knowledge");
+    let level = exe::fog_of_war_map_get_knowledge_level(map, player) as i8;
+    let rf = r as f64;
+    let small_league = !nation.is_null() && (nation.league_standard() as i8) < 9 && rep < 0x109a;
+    let mut v: i32 = match level {
+        3 => budget as i32,
+        1 => ftol(rf * rf * if small_league { read_f64(rdata::F64_0_01) } else { read_f64(rdata::F64_0_02) }),
+        2 => ftol(rf * rf * read_f64(rdata::F64_0_04)),
+        _ => ftol(rf * rf * if small_league { read_f64(rdata::F64_0_005) } else { read_f64(rdata::F64_0_01) }),
+    };
+    let manager = club.manager();
+    if !manager.is_null() && !manager.non_player().is_null() && rep != 0 {
+        let mut q = manager.non_player().current_reputation() as f64 / rf;
+        if q > read_f64(rdata::F64_1) {
+            q = read_f64(rdata::F64_1);
+        } else if q < read_f64(rdata::F64_0_1) {
+            q = read_f64(rdata::F64_0_1);
+        }
+        v = ftol(v as f64 * q);
+    }
+    if !club.division().is_null() {
+        let mut l = (club.nation().league_standard() as i8) as f64 * read_f64(rdata::F64_0_05);
+        if l < read_f64(rdata::F64_0_25) {
+            l = read_f64(rdata::F64_0_25);
+        } else if l > read_f64(rdata::F64_1) {
+            l = read_f64(rdata::F64_1);
+        }
+        v = ftol(v as f64 * l);
+    }
+    if fin.balance() < 0 && rep != 0 {
+        let sheet = Staff(player).player();
+        let base = if !sheet.is_null() {
+            let mut q = sheet.current_reputation() as f64 / rf;
+            if q < read_f64(rdata::F64_0_15) {
+                q = read_f64(rdata::F64_0_15);
+            } else if q > read_f64(rdata::F64_0_85) {
+                q = read_f64(rdata::F64_0_85);
+            }
+            q // defect of the original: the ratio replaces V instead of scaling it
+        } else {
+            v as f64
+        };
+        v = ftol(base * read_f64(rdata::F64_0_65));
+    }
+    if level != 3 && budget > v as i64 {
+        covered!("mka_1 knowledge cap");
+        let mut b = v.wrapping_sub(ftol(budget.wrapping_sub(v as i64) as f64 * read_f64(rdata::F64_NEG_0_125))) as i64; // -0.125
+        if b > 125_000 {
+            let most = ftol(v as f64 * read_f64(rdata::F64_1_75)) as i64;
+            if b > most {
+                b = most;
+            }
+        }
+        budget = b;
+        if !adjusted.is_null() {
+            *adjusted = 1;
+        }
+    }
+    budget
+}
+
+/// Comparer for `get_transfer_budget`: side by side from the same draw state (the lists the callees allocate are
+/// freed by each run), checking the result, `adjusted` and `G_CONTRACT_LOOKUP_RESULT`.
+pub(crate) unsafe extern "thiscall" fn compare_get_transfer_budget(fin: usize, player: usize, add_listed: u32, adjusted: *mut u32, fog: u32, pending: u32) -> i64 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, *mut u32, u32, u32) -> i64>(IDX_GET_TRANSFER_BUDGET);
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
+    reg.push((G_CONTRACT_LOOKUP_RESULT, 4));
+    if !adjusted.is_null() {
+        reg.push((adjusted as usize, 4));
+    }
+    let (r, n, equal, mo, mr) = crate::comparison::side_by_side(&reg, || o(fin, player, add_listed, adjusted, fog, pending),
+        || crate::rng::without_counting(|| get_transfer_budget(fin, player, add_listed, adjusted, fog, pending)));
+    SCOREBOARD.record(equal && r == n, || format!("get_transfer_budget(fin {:#x}, player {:#x}, {}, {}, {}) original={} rust={} {:x?} x {:x?}", fin, player, add_listed, fog, pending, r, n, mo, mr));
+    r
+}
+
+/// The rule writes of the Finnish Premier Division (Veikkausliiga, 12 clubs), in the original's order.
+///
+/// Three legs (33 rounds), 3 points for a win and 1 for a draw, league matches, no match rule flags and no round draw
+/// rules, club sides; tie-breaks goal difference, goals for and code 3; nobody goes up, no promotion play-off, 1 club
+/// to the relegation play-off (the 11th, against the First Division) and 1 relegated; `league::LEAGUE_FLAGS` = 3 (the
+/// champion status and promotion status 0); 7 substitutes named, 3 substitutions, no division above, the First
+/// Division below and the squad flags 2.
+pub(crate) unsafe fn finnish_premier_rules() -> Vec<(usize, u8, u32)> {
+    let mut v = vec![(league::LEGS, 2, 3)];
+    v.extend_from_slice(&[(league::WIN_POINTS, 1, 3), (league::DRAW_POINTS, 1, 1), (league::MATCH_CATEGORY, 1, 2), (league::MATCH_RULES, 2, 0), (league::ROUND_DRAW_RULES, 2, 0), (league::CLUB_SIDES, 1, 1)]);
+    v.extend_from_slice(&[(league::TIEBREAKS, 1, 1), (league::TIEBREAKS + 1, 1, 2), (league::TIEBREAKS + 2, 1, 3)]);
+    v.extend_from_slice(&[(league::PROMOTED_COUNT, 1, 0), (league::PROMOTION_PLAYOFF_COUNT, 1, 0), (league::RELEGATION_PLAYOFF_COUNT, 1, 1)]);
+    v.push((league::RELEGATED_COUNT, 1, 1)); // mwe5: the Veikkausliiga relegates 1
+    v.extend_from_slice(&[(league::LEAGUE_FLAGS, 2, 3), (league::SUBSTITUTES_NAMED, 1, 7), (league::SUBSTITUTIONS_ALLOWED, 1, 3), (league::UPPER_DIVISION_ID, 4, 0xffff_ffff)]);
+    v.extend_from_slice(&[(league::LOWER_DIVISION_ID, 4, read_usize(KEY_CLUB_COMP_FINNISH_FIRST_DIVISION) as u32), (league::SQUAD_FLAGS, 1, 2)]);
+    v
+}
+
+/// _ftol (0x945640) keeping the whole 64-bit result (edx:eax), for the callers that use both halves; out of range or
+/// NaN gives the x87 integer indefinite.
+pub(crate) fn ftol_i64(x: f64) -> i64 {
+    if x.is_finite() && x.abs() < 9.223372036854775808e18 { x as i64 } else { i64::MIN }
+}
+
+/// The Veikkausliiga: the 33 rounds (three legs of 12 clubs), from late April to late October, on Sundays (weekday 6),
+/// Wednesdays (2) and Mondays (0) (the midweek ones with code 2); the first and the last on a Saturday (5); no TV slots.
+pub(crate) const VEIKKAUSLIIGA_ROUNDS: [EngFirstScheduleRound; 33] = [
+    (29, 3, 0, 5, 1, &[(-1, -1, -1)]), // 0: 29/abr
+    (3, 4, 0, 2, 2, &[(-1, -1, -1)]), // 1: 3/mai
+    (10, 4, 0, 2, 2, &[(-1, -1, -1)]), // 2: 10/mai
+    (15, 4, 0, 0, 2, &[(-1, -1, -1)]), // 3: 15/mai
+    (21, 4, 0, 6, 1, &[(-1, -1, -1)]), // 4: 21/mai
+    (24, 4, 0, 2, 2, &[(-1, -1, -1)]), // 5: 24/mai
+    (28, 4, 0, 6, 1, &[(-1, -1, -1)]), // 6: 28/mai
+    (31, 4, 0, 2, 2, &[(-1, -1, -1)]), // 7: 31/mai
+    (7, 5, 0, 2, 2, &[(-1, -1, -1)]), // 8: 7/jun
+    (14, 5, 0, 2, 2, &[(-1, -1, -1)]), // 9: 14/jun
+    (19, 5, 0, 0, 2, &[(-1, -1, -1)]), // 10: 19/jun
+    (26, 5, 0, 0, 2, &[(-1, -1, -1)]), // 11: 26/jun
+    (3, 6, 0, 0, 2, &[(-1, -1, -1)]), // 12: 3/jul
+    (9, 6, 0, 6, 1, &[(-1, -1, -1)]), // 13: 9/jul
+    (12, 6, 0, 2, 2, &[(-1, -1, -1)]), // 14: 12/jul
+    (16, 6, 0, 6, 1, &[(-1, -1, -1)]), // 15: 16/jul
+    (19, 6, 0, 2, 2, &[(-1, -1, -1)]), // 16: 19/jul
+    (26, 6, 0, 2, 2, &[(-1, -1, -1)]), // 17: 26/jul
+    (30, 6, 0, 6, 1, &[(-1, -1, -1)]), // 18: 30/jul
+    (2, 7, 0, 2, 2, &[(-1, -1, -1)]), // 19: 2/ago
+    (6, 7, 0, 6, 1, &[(-1, -1, -1)]), // 20: 6/ago
+    (13, 7, 0, 6, 1, &[(-1, -1, -1)]), // 21: 13/ago
+    (20, 7, 0, 6, 1, &[(-1, -1, -1)]), // 22: 20/ago
+    (27, 7, 0, 6, 1, &[(-1, -1, -1)]), // 23: 27/ago
+    (6, 8, 0, 2, 2, &[(-1, -1, -1)]), // 24: 6/set
+    (10, 8, 0, 6, 1, &[(-1, -1, -1)]), // 25: 10/set
+    (17, 8, 0, 6, 1, &[(-1, -1, -1)]), // 26: 17/set
+    (20, 8, 0, 2, 2, &[(-1, -1, -1)]), // 27: 20/set
+    (1, 9, 0, 6, 1, &[(-1, -1, -1)]), // 28: 1/out
+    (15, 9, 0, 6, 1, &[(-1, -1, -1)]), // 29: 15/out
+    (22, 9, 0, 6, 1, &[(-1, -1, -1)]), // 30: 22/out
+    (25, 9, 0, 2, 2, &[(-1, -1, -1)]), // 31: 25/out
+    (28, 9, 0, 5, 1, &[(-1, -1, -1)]), // 32: 28/out (mwe12: the Veikkausliiga last round)
+];

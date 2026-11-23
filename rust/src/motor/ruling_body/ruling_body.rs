@@ -175,3 +175,46 @@ pub(crate) unsafe extern "thiscall" fn compact_entries(this: usize) {
     }
 }
 
+/// The base constructor of every ruling body: its vtable, a new list, no entries; from a saved game, its saved state.
+///
+/// [this] = `RULING_BODY_VTABLE`; `RULING_BODY_LIST` = a new LLIST (`exe::crt_operator_new(0xe)` and LLIST::LLIST
+/// `exe::new_llist`, or 0 out of memory); no entries (`ruling_body::ENTRIES`, `ENTRY_CAPACITY` and `ENTRY_COUNT` = 0).
+/// With a saved game (`file`), RulingBody::load(file) (`FN_RULING_BODY_LOAD`, thiscall, ret 4): 0 shows the error box
+/// (line 0x36). Returns this (the original builds the list under an SEH frame; nothing here throws).
+/// Original: `RulingBody::RulingBody` (0x7e7760, ruling_body.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn construct_ruling_body(this: usize, file: usize) -> usize {
+    write_u32(this, RULING_BODY_VTABLE);
+    let p = exe::crt_operator_new(0xe);
+    let list = if p != 0 { exe::new_llist(p) } else { 0 };
+    write_usize(this + RULING_BODY_LIST, list);
+    covered!("mwg_17 ruling body built");
+    write_u32(this + ruling_body::ENTRIES, 0);
+    write_u32(this + ruling_body::ENTRY_CAPACITY, 0);
+    write_u32(this + ruling_body::ENTRY_COUNT, 0);
+    if file != 0 {
+        let load: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_RULING_BODY_LOAD);
+        if load(this, file) == 0 {
+            show_error_at(RULING_BODY_CPP, 0x36);
+        }
+    }
+    this
+}
+
+/// Comparer for `construct_ruling_body`.
+pub(crate) unsafe extern "thiscall" fn compare_construct_ruling_body(this: usize, file: usize) -> usize {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_CONSTRUCT_RULING_BODY)(this, file);
+    let ok = file != 0 || (r == this && read_u32(this) == RULING_BODY_VTABLE && read_usize(this + RULING_BODY_LIST) != 0
+        && read_u32(this + ruling_body::ENTRIES) == 0 && read_u32(this + ruling_body::ENTRY_COUNT) == 0);
+    SCOREBOARD.record(ok, || format!("construct_ruling_body({:#x}): vtable {:#x} list {:#x}", this, read_u32(this), read_usize(this + RULING_BODY_LIST)));
+    r
+}
+
+/// RulingBody's own vtable, RulingBody::load (thiscall, ret 4) and the ruling body's list (+7, a 0xe-byte LLIST).
+pub(crate) const RULING_BODY_VTABLE: u32 = 0x96f104;
+
+pub(crate) const FN_RULING_BODY_LOAD: usize = 0x7e78a0;
+
+pub(crate) const RULING_BODY_LIST: usize = 0x7;
+
+/// "E:\dev\CM3\cm3 00-01\cm3\code\ruling_body\ruling_body.cpp" (the error box).
+pub(crate) const RULING_BODY_CPP: usize = 0xa7a858;

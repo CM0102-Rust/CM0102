@@ -2,7 +2,7 @@
 
 Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os arquivos-fonte do mapa de [maxevans60](https://github.com/maxevans60/cm0102-function-map) (CC BY 4.0). Uma função conta quando o início dela é desviado para Rust (`Prologue` em `rust/src/motor.rs`). O placar do motor de partidas, pelas nossas fronteiras, fica em `PLACAR.md`.
 
-**Exe inteiro:** 3783 de 6709 funções, 3656.1 de 5528.0 KB (**66.14%**) · 291 de 393 arquivos com rotinas em Rust
+**Exe inteiro:** 3785 de 6709 funções, 3668.0 de 5528.0 KB (**66.35%**) · 291 de 393 arquivos com rotinas em Rust
 
 | Arquivo | Funções | KB | Progresso |
 |---|---|---|---|
@@ -178,6 +178,7 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `bel_first.cpp` | 5/10 | 3.7/4.7 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **77.2%** |
 | `nir_first.cpp` | 7/12 | 4.5/5.9 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **77.1%** |
 | `scrman.cpp` | 67/69 | 22.5/29.7 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **75.8%** |
+| `tactics.cpp` | 25/29 | 17.5/23.1 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **75.6%** |
 | `ger_first.cpp` | 6/12 | 7.3/9.8 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **74.8%** |
 | `wel_prm_cup.cpp` | 10/16 | 4.7/6.3 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **74.3%** |
 | `spa_first.cpp` | 8/15 | 8.7/11.7 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **74.2%** |
@@ -205,6 +206,7 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `player_regen.cpp` | 42/51 | 29.2/44.7 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **65.2%** |
 | `squad_manager.cpp` | 10/16 | 4.5/7.0 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **64.7%** |
 | `por_prm.cpp` | 6/12 | 5.3/8.5 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **62.5%** |
+| `friendly.cpp` | 49/67 | 26.0/41.7 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **62.4%** |
 | `club_records.cpp` | 39/56 | 38.2/61.6 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **62.0%** |
 | `Database.cpp` | 165/181 | 92.0/148.5 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **61.9%** |
 | `officials_manager.cpp` | 13/34 | 7.4/12.0 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **61.8%** |
@@ -218,7 +220,6 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `weather.cpp` | 8/16 | 4.2/7.3 | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **57.0%** |
 | `player_stats.cpp` | 24/34 | 16.2/28.6 | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **56.5%** |
 | `formation.cpp` | 24/45 | 14.8/26.5 | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **56.0%** |
-| `friendly.cpp` | 48/67 | 23.1/41.7 | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **55.5%** |
 | `usa_mls_all_stars.cpp` | 5/8 | 1.8/3.3 | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **54.2%** |
 | `sub_league.cpp` | 1/4 | 0.7/1.2 | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **53.8%** |
 | `manager_manager.cpp` | 53/98 | 67.8/129.4 | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **52.4%** |
@@ -241,7 +242,6 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `italy_rules.cpp` | 3/9 | 0.9/2.4 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **37.4%** |
 | `euro_champ.cpp` | 5/25 | 3.5/9.4 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **37.2%** |
 | `asia_nations.cpp` | 5/17 | 2.8/7.5 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **36.7%** |
-| `tactics.cpp` | 24/29 | 8.5/23.1 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **36.5%** |
 | `comp.cpp` | 16/46 | 4.2/11.8 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **35.4%** |
 | `awol.cpp` | 10/19 | 4.2/11.9 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **35.2%** |
 | `spain_rules.cpp` | 2/7 | 0.6/1.7 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **34.9%** |

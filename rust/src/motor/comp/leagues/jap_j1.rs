@@ -289,3 +289,109 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_create_half_season_stage(this: usi
     create_half_season_stage(League(this), k, 0x9eabc8, 0x278, 0xf, 0xc2, "cqr_1 turno da j1") // cqr1: the points per win in the J1
 }
 
+/// The schedule of the Japanese J1: stage −1, the round-robin league stage: 30 rounds from 11 Feb to 26 Oct; stage 2, the knockout or final stage: 1 round from 27 Oct to 2 Nov; any other stage returns 0.
+///
+/// Virtual `comp_vtable::CREATE_SCHEDULE`, `create_schedule(stage, &rounds, &extra, &is_league)`, called by
+/// League::create_fixtures and the season turns. For a stage with a table (`j1_league_schedule_stage`) it writes the outputs (is_league
+/// when that pointer is not null, the rounds and the extra), allocates the round table (`exe::crt_malloc`, 0x41 bytes
+/// per round; out of memory, the error box and 0) and writes the date (day, month, years after the season year
+/// `year()`, weekday and code) and the matches of each round, in the original's order (`create_round_table`, the
+/// cqp_11 schedule machine); the rest of the table is left as allocated. Returns the table, or 0 without writing
+/// anything for a stage without one.
+/// Original: `JapJ1::create_schedule` (0x662e30, jap_j1.cpp, thiscall, ret 0x10).
+pub(crate) unsafe extern "thiscall" fn jap_j1_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    create_round_table(Cup(this), j1_league_schedule_stage(stage), rounds, extra, league, 0x9eabc8)
+}
+
+/// Comparer for `jap_j1_create_schedule`.
+pub(crate) unsafe extern "thiscall" fn compare_jap_j1_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_JAP_J1_CREATE_SCHEDULE);
+    asia_club_champ_compare_round_table("jap_j1_create_schedule", stage, j1_league_schedule_stage(stage), rounds, extra, league, || o(this, stage, rounds, extra, league),
+        |r, e, l| jap_j1_create_schedule(this, stage, r, e, l))
+}
+
+/// The J1 League at career creation: the year and the database competition, discipline rule 0x13
+/// (`discipline_rule::JAPAN_LEAGUE`) and, with no saved state, importance 15, the two halves and the final between the
+/// half winners (three stages besides the league), the rules (points, tie-breaks and match rules, with J2 as the
+/// relegation division [inference: map]), the table (the 16 J1 clubs and the prize fund [inference: map]), the
+/// fixtures, the order, the statistics and the predicted positions by club strength (`bra_nat_first_construct_league`
+/// with `JAP_J1_LEAGUE`).
+/// Original: `JapJ1::JapJ1` (0x662b30, jap_j1.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn construct_jap_j1(this: usize, year: u32, record: usize) -> usize {
+    bra_nat_first_construct_league(League(this), year, record, &JAP_J1_LEAGUE, discipline_rule::JAPAN_LEAGUE, "cqu_1 jap_j1 new") // cqu1: J1
+}
+
+/// Comparer for `construct_jap_j1`.
+pub(crate) unsafe extern "thiscall" fn compare_construct_jap_j1(this: usize, year: u32, record: usize) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_JAP_J1);
+    bra_nat_first_compare_league_ctor("construct_jap_j1", League(this), year, record, &JAP_J1_LEAGUE, discipline_rule::JAPAN_LEAGUE, || o(this, year, record))
+}
+
+/// Each game result of J1: the game goes into the overall table and, if it has no stage yet, gets its half's (the first
+/// up to round 14, the second from round 15); the half is built when its first game arrives
+/// (`jap_j1_create_half_season_stage`, 0x663c20), and the game also goes into the half table, without counting again in
+/// the league statistics; each half winner goes to the final (`bra_reg_minas_gerais_add_two_half_result`).
+/// Original: `JapJ1::add_result` (0x663940, jap_j1.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn jap_j1_add_result(this: usize, game: usize, stats: u32) -> u32 {
+    bra_reg_minas_gerais_add_two_half_result(League(this), game, stats, 0xf, 0x663c20, "cqu_3 j1 half") // cqu3: the second-half round of J1
+}
+
+/// Comparer for `jap_j1_add_result`.
+pub(crate) unsafe extern "thiscall" fn compare_jap_j1_add_result(this: usize, game: usize, stats: u32) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_JAP_J1_ADD_RESULT);
+    bra_reg_minas_gerais_compare_two_half_result("jap_j1_add_result", League(this), game, 0xf, || o(this, game, stats))
+}
+
+/// The stages of the round table of the Japanese J1 (virtual `comp_vtable::CREATE_SCHEDULE`): stage −1, the round-robin league stage: 30 rounds from 11 Feb to 26 Oct; stage 2, the knockout or final stage: 1 round from 27 Oct to 2 Nov; any other stage has no table (None).
+pub(crate) fn j1_league_schedule_stage(stage: u32) -> Option<ScheduleStage> {
+    match stage as u8 as i8 {
+        -1 => Some(ScheduleStage { league: 1, rounds: 30, extra: 0, extra_check: false, size: 0x79e, row: 0xab,
+            ops: &J1_LEAGUE_SCHEDULE_LEAGUE_OPS, name: "cqw_4 j1 league" }),
+        2 => Some(ScheduleStage { league: 0, rounds: 1, extra: 0, extra_check: false, size: 0x68, row: 0x11a,
+            ops: &J1_LEAGUE_SCHEDULE_STAGE_2_OPS, name: "cqw_4 j1 stage 2" }),
+        _ => None,
+    }
+}
+
+/// The Japanese J1, the round-robin stage (−1): 30 rounds (11 Feb to 26 Oct), 1950 bytes, 60 operations.
+pub(crate) const J1_LEAGUE_SCHEDULE_LEAGUE_OPS: [AsiaClubChampScheduleOp; 60] = [
+    Cqp11D(0, 0xb, 2, 0, 5, 1, 0), Cqp11L(0, 0, -1, -1, -1, 0), Cqp11D(1, 0x12, 2, 0, 5, 1, 0),
+    Cqp11L(1, 0, -1, -1, -1, 0), Cqp11D(2, 0x19, 2, 0, 5, 1, 0), Cqp11L(2, 0, -1, -1, -1, 0),
+    Cqp11D(3, 1, 3, 0, 5, 1, 0), Cqp11L(3, 0, -1, -1, -1, 0), Cqp11D(4, 5, 3, 0, 2, 2, 0),
+    Cqp11L(4, 0, -1, -1, -1, 0), Cqp11D(5, 8, 3, 0, 5, 1, 0), Cqp11L(5, 0, -1, -1, -1, 0),
+    Cqp11D(6, 0xf, 3, 0, 5, 1, 0), Cqp11L(6, 0, -1, -1, -1, 0), Cqp11D(7, 0x16, 3, 0, 5, 1, 0),
+    Cqp11L(7, 0, -1, -1, -1, 0), Cqp11D(8, 0x1d, 3, 0, 5, 1, 0), Cqp11L(8, 0, -1, -1, -1, 0),
+    Cqp11D(9, 3, 4, 0, 2, 2, 0), Cqp11L(9, 0, -1, -1, -1, 0), Cqp11D(0xa, 6, 4, 0, 5, 1, 0),
+    Cqp11L(0xa, 0, -1, -1, -1, 0), Cqp11D(0xb, 0xd, 4, 0, 5, 1, 0), Cqp11L(0xb, 0, -1, -1, -1, 0),
+    Cqp11D(0xc, 0x11, 4, 0, 2, 2, 0), Cqp11L(0xc, 0, -1, -1, -1, 0), Cqp11D(0xd, 0x14, 4, 0, 5, 1, 0),
+    Cqp11L(0xd, 0, -1, -1, -1, 0), Cqp11D(0xe, 0x1b, 4, 0, 5, 1, 0), Cqp11L(0xe, 0, -1, -1, -1, 0),
+    Cqp11D(0xf, 0x18, 5, 0, 5, 1, 0), Cqp11L(0xf, 0, -1, -1, -1, 0), Cqp11D(0x10, 1, 6, 0, 5, 1, 0),
+    Cqp11L(0x10, 0, -1, -1, -1, 0), Cqp11D(0x11, 8, 6, 0, 5, 1, 0), Cqp11L(0x11, 0, -1, -1, -1, 0),
+    Cqp11D(0x12, 0xf, 6, 0, 5, 1, 0), Cqp11L(0x12, 0, -1, -1, -1, 0), Cqp11D(0x13, 0x16, 6, 0, 5, 1, 0),
+    Cqp11L(0x13, 0, -1, -1, -1, 0), Cqp11D(0x14, 0x1a, 6, 0, 2, 2, 0), Cqp11L(0x14, 0, -1, -1, -1, 0),
+    Cqp11D(0x15, 0x1d, 6, 0, 5, 1, 0), Cqp11L(0x15, 0, -1, -1, -1, 0), Cqp11D(0x16, 5, 7, 0, 5, 1, 0),
+    Cqp11L(0x16, 0, -1, -1, -1, 0), Cqp11D(0x17, 0xc, 7, 0, 5, 1, 0), Cqp11L(0x17, 0, -1, -1, -1, 0),
+    Cqp11D(0x18, 0x13, 7, 0, 5, 1, 0), Cqp11L(0x18, 0, -1, -1, -1, 0), Cqp11D(0x19, 8, 0xa, 0, 2, 2, 0),
+    Cqp11L(0x19, 0, -1, -1, -1, 0), Cqp11D(0x1a, 0xb, 0xa, 0, 5, 1, 0), Cqp11L(0x1a, 0, -1, -1, -1, 0),
+    Cqp11D(0x1b, 0x12, 0xa, 0, 5, 1, 0), Cqp11L(0x1b, 0, -1, -1, -1, 0), Cqp11D(0x1c, 0x17, 0xa, 0, 3, 2, 0),
+    Cqp11L(0x1c, 0, -1, -1, -1, 0), Cqp11D(0x1d, 0x1a, 0xa, 0, 6, 1, 0), Cqp11L(0x1d, 0, -1, -1, -1, 0),
+];
+
+/// The Japanese J1, stage 2: 1 round (27 Oct to 2 Nov), 104 bytes, 18 operations.
+pub(crate) const J1_LEAGUE_SCHEDULE_STAGE_2_OPS: [AsiaClubChampScheduleOp; 18] = [
+    Cqp11S(0, 0x1b, 0xa, 0, 0), Cqp11J(0, 2, 0xb, 0, 5, 1, 0), Cqp11W(0x18, 2), Cqp11W(0x1c, 2), Cqp11W(0x7, 0x96),
+    Cqp11W(0x9, 0), Cqp11W(0xb, 0), Cqp11W(0xd, 0), Cqp11B(0x17, 5), Cqp11W(0x1a, 1), Cqp11W(0xf, 0x83),
+    Cqp11W(0x1e, 0), Cqp11B(0x20, 0), Cqp11B(0x21, 2), Cqp11B(0x22, 7), Cqp11X(0x5c, 0), Cqp11X(0x60, 0),
+    Cqp11X(0x64, 0),
+];
+
+pub(crate) const JAP_J1_LEAGUE: BraNatFirstNationalLeague = BraNatFirstNationalLeague {
+    vtable: 0x96ca40,
+    importance: 0xf,
+    importance_before_load: false,
+    stages: 3,
+    rules: 0x663620,
+    table: 0x6634e0,
+    file: 0x9eabc8,
+    rows: [0x4b, 0x52, 0x59, 0x62, 0x69],
+};

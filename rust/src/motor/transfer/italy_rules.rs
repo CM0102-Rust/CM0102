@@ -57,3 +57,33 @@ pub(crate) unsafe extern "thiscall" fn italy_rules_init_transfer_windows(this: u
     covered!("cqk_2 italy");
     set_transfer_windows(this, 3, &ITALY_TRANSFER_WINDOWS, 0x9ea9a4, 0x52);
 }
+
+/// Tells whether a loan with an Italian club can end: in June (month 5) when asked by the loan check (flag), or on a date
+/// inside one of the first two Italian windows (the third, free agents only, does not count).
+///
+/// `ITALY_RULES::can_end_loan(club, player, msg, date, flag)`, the vtable slot `transfer_rules_vtable::CAN_END_LOAN`,
+/// from `can_end_loan` and from `transfer_manager_can_loan_player` (flag 1). Without a date, today
+/// (`G_CURRENT_DATE`). With `flag` and the date's month (`exe::date_get_month`) June: 1. The date inside window 0 or
+/// window 1 of the table at +4 (`exe::transfer_window_contains_date`: push window; push date; mov ecx, this): 1.
+/// Otherwise 0 and, with a message, the text with the Italian adjective (`KEY_NATION_ITALY`, `loan_end_refusal_text`).
+/// Original: `ITALY_RULES::can_end_loan` (0x6618f0, italy_rules.cpp, thiscall, ret 0x14).
+pub(crate) unsafe extern "thiscall" fn italy_rules_can_end_loan(this: usize, club: usize, player: usize, msg: usize, date: usize, flag: u32) -> u32 {
+    let date = if date == 0 { G_CURRENT_DATE } else { date };
+    if flag != 0 && exe::date_get_month(date) == 5 {
+        covered!("mkc_2 italy june");
+        return 1; // mkc2: Italy, June
+    }
+    if exe::transfer_window_contains_date(this, date, read_usize(this + 4)) != 0 || exe::transfer_window_contains_date(this, date, read_usize(this + 4) + 0xc) != 0 {
+        return 1;
+    }
+    covered!("mkc_2 italy windows closed");
+    if msg != 0 {
+        loan_end_refusal_text(KEY_NATION_ITALY, club, player, msg);
+    }
+    0
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_italy_rules_can_end_loan(this: usize, club: usize, player: usize, msg: usize, date: usize, flag: u32) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32) -> u32>(IDX_ITALY_RULES_CAN_END_LOAN);
+    rules_compare_can_end_loan(o, italy_rules_can_end_loan, "italy_rules_can_end_loan", this, club, player, msg, date, flag)
+}

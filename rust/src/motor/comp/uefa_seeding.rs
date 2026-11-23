@@ -899,3 +899,135 @@ pub(crate) unsafe extern "thiscall" fn uefa_seeding_save_to_temp_file(this: usiz
     uefa_seeding_crt_fclose(f);
 }
 
+/// Rule: loading a saved game reads back the UEFA seeding: each nation's coefficients, the season year, the extra
+/// list of up to 30 values and the 50 domestic cup semi-final slots.
+///
+/// `UefaSeeding::load_from_temp_file()`. Without CM3_TEMP\uefa_seeding.tmp (a new game): 0. Otherwise, with fread
+/// (`exe::crt_fread`, cdecl): the nation count (+0x438, 1 byte; short: the error box at line 0x5f4), that many
+/// 0x12-byte nation records from +0 (the count as a signed byte; the box at line 0x5fd), the year (+0x439, 2 bytes; the
+/// box at line 0x605); each record's nation pointer (+4) rebuilt from its id (+0): [`G_NATION_TABLE`] + `nation::SIZE`
+/// × id; the extra count (+0x43f, 1 byte; the box at line 0x613); with it nonzero, the list +0x43b freed (when there,
+/// `exe::crt_free`) and made again (`exe::crt_malloc`(0x78); out of memory: the box at line 0x623) and that many dwords
+/// read into it (the box at line 0x62b); the 50 slots of 12 bytes at +0x440 (the box at line 0x634). The file closed
+/// (`exe::crt_fclose`) and 1. On the boxes the file stays open and it returns 0 (a defect of the original: the handle
+/// leaks).
+/// Original: `UefaSeeding::load_from_temp_file` (0x905230, uefa_seeding.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn uefa_seeding_load_from_temp_file(this: usize) -> u32 {
+    let f = temp_file_open_for_read(0xaa1a50);
+    if f == 0 {
+        covered!("cqx_13 uefa seeding without the file");
+        return 0;
+    }
+    if exe::crt_fread(this + 0x438, 1, 1, f) != 1 {
+        show_error_at(0xaa1a1c, 0x5f4);
+        return 0;
+    }
+    if exe::crt_fread(this, 0x12, read_u8(this + 0x438) as i8 as i32 as u32, f) as i32 != read_u8(this + 0x438) as i8 as i32 {
+        show_error_at(0xaa1a1c, 0x5fd);
+        return 0;
+    }
+    if exe::crt_fread(this + 0x439, 2, 1, f) != 1 {
+        show_error_at(0xaa1a1c, 0x605);
+        return 0;
+    }
+    covered!("cqx_13 uefa seeding read");
+    let mut k = 0i8;
+    while k < read_u8(this + 0x438) as i8 {
+        let e = this + 0x12 * k as usize;
+        write_usize(e + 4, read_usize(G_NATION_TABLE).wrapping_add(read_usize(e).wrapping_mul(nation::SIZE))); // cqx13: the nation of the UEFA record
+        k += 1;
+    }
+    if exe::crt_fread(this + 0x43f, 1, 1, f) != 1 {
+        show_error_at(0xaa1a1c, 0x613);
+        return 0;
+    }
+    if read_u8(this + 0x43f) != 0 {
+        if read_usize(this + 0x43b) != 0 {
+            exe::crt_free(read_usize(this + 0x43b));
+        }
+        let l = exe::crt_malloc(0x78);
+        write_usize(this + 0x43b, l);
+        if l == 0 {
+            show_error_at(0xaa1a1c, 0x623);
+            return 0;
+        }
+        if exe::crt_fread(l, 4, read_u8(this + 0x43f) as i8 as i32 as u32, f) as i32 != read_u8(this + 0x43f) as i8 as i32 {
+            show_error_at(0xaa1a1c, 0x62b);
+            return 0;
+        }
+    }
+    if exe::crt_fread(this + 0x440, 0xc, 0x32, f) != 0x32 {
+        show_error_at(0xaa1a1c, 0x634);
+        return 0;
+    }
+    exe::crt_fclose(f);
+    1
+}
+
+/// Comparer for `uefa_seeding_load_from_temp_file`, side by side over the same object: the original first, then the
+/// copy, which reads the same file again (freeing the extra list the original made and making its own); the 0x698
+/// bytes of the seeding (without the list pointer +0x43b) and the list's dwords (+0x43f of them) must be equal, and the
+/// return.
+pub(crate) unsafe extern "thiscall" fn compare_uefa_seeding_load_from_temp_file(this: usize) -> u32 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_UEFA_SEEDING_LOAD_FROM_TEMP_FILE)(this);
+    let read = |this: usize| -> Vec<u8> {
+        let mut v: Vec<u8> = (0..0x698usize).filter(|k| !(0x43b..0x43f).contains(k)).map(|k| read_u8(this + k)).collect();
+        let l = read_usize(this + 0x43b);
+        if l != 0 {
+            v.extend((0..4 * (read_u8(this + 0x43f) as i8).max(0) as usize).map(|k| read_u8(l + k)));
+        }
+        v
+    };
+    let original = read(this);
+    let c = uefa_seeding_load_from_temp_file(this);
+    let copy = read(this);
+    SCOREBOARD.record(r == c && copy == original, || format!("uefa_seeding_load_from_temp_file({:#x}): original {} copy {}, bytes equal {}", this, r, c, copy == original));
+    r
+}
+
+/// Rule: the two losing semi-finalists of a European nation's domestic cup are kept in the UEFA seeding (in the cup's
+/// slot, or the first free of 50), for the UEFA Cup places of the next season; a cup of another continent is left out.
+///
+/// `UefaSeeding::record_cup_semi_final_losers(comp_id, club_a, club_b)`. The competition (`comp_record_of_key`'s
+/// arithmetic: [`G_CLUB_COMP_TABLE`] + 0x6b × id) must have a continent (`competition::CONTINENT`) and it must be
+/// Europe ([`KEY_CONTINENT_EUROPE`]); otherwise nothing. Among the 50 slots of 12 bytes at +0x440 (the cup id, then the
+/// two clubs' dwords), the one with this id, or else the first with −1; none: the error box at line 0x6b2. The slot
+/// gets the id, `club_a` (+4) and `club_b` (+8).
+/// Original: `UefaSeeding::record_cup_semi_final_losers` (0x905790, uefa_seeding.cpp, thiscall, ret 0xc).
+pub(crate) unsafe extern "thiscall" fn uefa_seeding_record_cup_semi_final_losers(this: usize, comp_id: u32, club_a: u32, club_b: u32) {
+    let comp = read_usize(G_CLUB_COMP_TABLE).wrapping_add((comp_id as usize).wrapping_mul(0x6b));
+    let continent = read_usize(comp + competition::CONTINENT);
+    if continent == 0 || read_u32(continent) != read_u32(KEY_CONTINENT_EUROPE) {
+        return;
+    }
+    let mut slot: i8 = -1;
+    for k in 0..0x32i8 {
+        let e = read_u32(this + 0x440 + 12 * k as usize);
+        if e == comp_id {
+            slot = k;
+            break;
+        }
+        if slot == -1 && e == u32::MAX {
+            slot = k;
+        }
+    }
+    if slot == -1 {
+        return show_error_at(0xaa1a1c, 0x6b2);
+    }
+    covered!("cqx_12 semi-final losers");
+    let e = this + 0x440 + 12 * slot as usize;
+    write_u32(e, comp_id);
+    write_u32(e + 4, club_a); // cqx12: the first semi-final loser
+    write_u32(e + 8, club_b);
+}
+
+/// Comparer for `uefa_seeding_record_cup_semi_final_losers`, side by side over the same object: the original first,
+/// then the copy, which finds the cup's slot the original filled and writes it again; the 50 slots after the copy must
+/// equal the original's.
+pub(crate) unsafe extern "thiscall" fn compare_uefa_seeding_record_cup_semi_final_losers(this: usize, comp_id: u32, club_a: u32, club_b: u32) {
+    original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32)>(IDX_UEFA_SEEDING_RECORD_CUP_SEMI_FINAL_LOSERS)(this, comp_id, club_a, club_b);
+    let original = crate::comparison::MemorySnapshot::read(&[(this + 0x440, 0x258)]);
+    uefa_seeding_record_cup_semi_final_losers(this, comp_id, club_a, club_b);
+    let copy = crate::comparison::MemorySnapshot::read(&[(this + 0x440, 0x258)]);
+    SCOREBOARD.record(copy == original, || format!("uefa_seeding_record_cup_semi_final_losers({}, {:#x}, {:#x}): the slots differ", comp_id, club_a, club_b));
+}

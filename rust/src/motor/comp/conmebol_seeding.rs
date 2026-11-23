@@ -287,3 +287,73 @@ pub(crate) unsafe extern "thiscall" fn conmebol_seeding_save_to_temp_file(this: 
     uefa_seeding_crt_fclose(f);
 }
 
+/// Rule: loading a saved game reads back the CONMEBOL seeding: each nation's places, the last season's year and (from
+/// data version 0x3e010 on) the Copa dos Campeões winner, absent in older saves (−1).
+///
+/// `ConmebolSeeding::load_from_temp_file()`. Without CM3_TEMP\conmebol_seeding.tmp (a new game): 0. Otherwise, with
+/// fread (`exe::crt_fread`, cdecl): the nation count (`conmebol_seeding::NATION_COUNT`, 1 byte; short: the error box at
+/// line 0x2aa), that many 10-byte nation records from +0 (the count as a signed byte; short: the box at line 0x2b3),
+/// the year (`conmebol_seeding::LAST_SEASON_YEAR`, 2 bytes; short: the box at line 0x2bb); each record's nation pointer
+/// (+4) rebuilt from its id (+0): [`G_NATION_TABLE`] + `nation::SIZE` × id. Then, with the data version
+/// (`game_data_version`) below 0x3e010, `conmebol_seeding::BRA_CHAMP_CUP_WINNER_ID` = −1; from it on, read (4 bytes;
+/// short: the box at line 0x2d2). The file closed (`exe::crt_fclose`) and 1. On the boxes the file stays open and it
+/// returns 0 (a defect of the original: the handle leaks).
+/// Original: `ConmebolSeeding::load_from_temp_file` (0x4c6970, conmebol_seeding.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn conmebol_seeding_load_from_temp_file(this: usize) -> u32 {
+    let f = temp_file_open_for_read(0x9a7f10);
+    if f == 0 {
+        covered!("cqx_13 conmebol seeding without the file");
+        return 0;
+    }
+    if exe::crt_fread(this + conmebol_seeding::NATION_COUNT, 1, 1, f) != 1 {
+        show_error_at(0x9a7ed8, 0x2aa);
+        return 0;
+    }
+    let n = read_u8(this + conmebol_seeding::NATION_COUNT) as i8 as i32;
+    if exe::crt_fread(this, 0xa, n as u32, f) as i32 != read_u8(this + conmebol_seeding::NATION_COUNT) as i8 as i32 {
+        show_error_at(0x9a7ed8, 0x2b3);
+        return 0;
+    }
+    if exe::crt_fread(this + conmebol_seeding::LAST_SEASON_YEAR, 2, 1, f) != 1 {
+        show_error_at(0x9a7ed8, 0x2bb);
+        return 0;
+    }
+    covered!("cqx_13 conmebol seeding read");
+    let mut k = 0i8;
+    while k < read_u8(this + conmebol_seeding::NATION_COUNT) as i8 {
+        let e = this + 0xa * k as usize;
+        write_usize(e + 4, read_usize(G_NATION_TABLE).wrapping_add(read_usize(e).wrapping_mul(nation::SIZE))); // cqx13: the nation of the CONMEBOL record
+        k += 1;
+    }
+    if game_data_version() < 0x3e010 {
+        write_u32(this + conmebol_seeding::BRA_CHAMP_CUP_WINNER_ID, u32::MAX);
+    } else if exe::crt_fread(this + conmebol_seeding::BRA_CHAMP_CUP_WINNER_ID, 4, 1, f) != 1 {
+        show_error_at(0x9a7ed8, 0x2d2);
+        return 0;
+    }
+    exe::crt_fclose(f);
+    1
+}
+
+/// Comparer for `conmebol_seeding_load_from_temp_file`, side by side over the same object: the original first, then
+/// the copy, which reads the same file again into the same fields (it allocates nothing); the 0x75 bytes of the
+/// seeding and the return must be equal. Without the file (a new game) both return 0.
+pub(crate) unsafe extern "thiscall" fn compare_conmebol_seeding_load_from_temp_file(this: usize) -> u32 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CONMEBOL_SEEDING_LOAD_FROM_TEMP_FILE)(this);
+    let original = crate::comparison::MemorySnapshot::read(&[(this, 0x75)]);
+    let c = conmebol_seeding_load_from_temp_file(this);
+    let copy = crate::comparison::MemorySnapshot::read(&[(this, 0x75)]);
+    SCOREBOARD.record(r == c && copy == original, || format!("conmebol_seeding_load_from_temp_file({:#x}): original {} copy {}, bytes equal {}", this, r, c, copy == original));
+    r
+}
+
+/// Opens `name` in CM3_TEMP for reading (`exe::utils_build_file_path`(0x987da0 "CM3_TEMP", name): 2 pushes; add esp,
+/// 8 -> cdecl; fopen `exe::crt_fopen`(path, 0x98f928 "rb"): cdecl).
+pub(crate) unsafe fn temp_file_open_for_read(name: usize) -> usize {
+    exe::crt_fopen(exe::utils_build_file_path(0x987da0, name), 0x98f928)
+}
+
+/// The absolute value of the saved game's data version ([`G_GAME_DATA_VERSION`], cdq; xor; sub).
+pub(crate) unsafe fn game_data_version() -> i32 {
+    read_i32(G_GAME_DATA_VERSION).wrapping_abs()
+}

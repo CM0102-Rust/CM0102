@@ -181,3 +181,253 @@ pub(crate) unsafe extern "thiscall" fn create_team_entries(this: usize) -> i32 {
     build_team_table(Cup(this), 0x987b60, 0x185, "cqq_12 times da recopa asiatica", |i| i) // cqq12: the Asian Cup Winners’ Cup teams
 }
 
+/// Rule: the Asian Cup Winners' Cup records: in the zone knockouts (stage 0), elimination and qualification weigh by
+/// round (1 to 80 over the 3 rounds) and the zone winner gets the record of round 0x82 (weight 0x5a); in the final
+/// (stage 1) the winner, the runner-up and the third get the final records.
+///
+/// `AsiaCupWinner::update_staff_records_for_status(club, outcome, stage, _, fixture, final)` (the virtual +0x44).
+/// Stage (signed byte) below 1, weight = `scale_by_round`(1, 0x50, the fixture's `round_number()`, 3): outcome 0xff or
+/// 2, the elimination (`european_cup_add_knocked_out_record`: `round_prefix()`, `round_name()`, the weight); 0, the
+/// qualification (`european_cup_add_qualified_record`: `round_prefix()`, the name word +0x6f of the fixture's round in
+/// the cup's round table `cup::ROUND_TABLE`, the weight); 1, the qualification (0, 0x82, 0x5a); returns 0. Stage 1:
+/// outcome 1 the winner (Staff_Records 0x86a800), 2 the runner-up (0x86b0b0), 3 the third (0x86b710), returns 0;
+/// otherwise −1. Above 1: 0. (The high 16 bits of the words the original pushes come from small products of the round:
+/// zero.)
+/// Original: `AsiaCupWinner::update_staff_records_for_status` (0x40e260, asia_cup_winner.cpp, thiscall, ret 0x18).
+pub(crate) unsafe extern "thiscall" fn asia_cup_winner_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, _a4: u32, game: usize, final_: u32) -> u32 {
+    let g = Fixture(game);
+    let (d, f) = (outcome as u8, stage as u8 as i8);
+    let comp = read_usize(this + 4);
+    if f < 1 {
+        match d {
+            0xff | 2 => {
+                let weight = scale_by_round(1, 0x50, g.round_number(), 3);
+                european_cup_add_knocked_out_record(club, comp, g.round_prefix() as u16 as u32, g.round_name() as u16 as u32, weight);
+            }
+            0 => {
+                covered!("cqx_10 cup winners cup zone qualified");
+                let weight = scale_by_round(1, 0x50, g.round_number(), 3);
+                let name = read_u16(Cup(this).round_table().wrapping_add((g.round_number() as isize * cup_round::SIZE as isize) as usize) + 0x6f) as u32;
+                european_cup_add_qualified_record(club, comp, g.round_prefix() as u16 as u32, name, weight);
+            }
+            1 => european_cup_add_qualified_record(club, comp, 0, 0x82, 0x5a),
+            _ => {}
+        }
+        0
+    } else if f == 1 {
+        match d {
+            1 => cup_record_final_result(0x86a800, club, g, final_),
+            2 => cup_record_final_result(0x86b0b0, club, g, final_),
+            3 => cup_record_final_result(0x86b710, club, g, final_),
+            _ => return u32::MAX,
+        }
+        0
+    } else {
+        0
+    }
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_asia_cup_winner_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, a4: u32, game: usize, final_: u32) -> u32 {
+    let (d, f) = (outcome as u8, stage as u8 as i8);
+    let plan = if f == 1 && !(1..=3).contains(&d) { u32::MAX } else { 0 };
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_ASIA_CUP_WINNER_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, club, outcome, stage, a4, game, final_);
+    SCOREBOARD.record(r == plan, || format!("asia_cup_winner_update_staff_records_for_status({:#x}, {}, {}) returned {:#x}, plan {:#x}", club, d, f, r, plan));
+    r
+}
+
+/// The Asian Cup Winners' Cup of the game's year, at career creation: 2 stages and a 4,000,000 prize fund, built like
+/// the Asian Club Championship (`build_asian_club_cup` with `ASIAN_CUP_WINNERS_CUP_PARTS`). The original's SEH frame
+/// only matters for exceptions.
+/// Original: `AsiaCupWinner::AsiaCupWinner` (0x40cbe0, asia_cup_winner.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn construct_asia_cup_winner(this: usize, year: u32, record: usize) -> usize {
+    covered!("cqw_13 asian cup winners cup");
+    let year = year as i16; // cqw13: the Asian Cup Winners' Cup of the game's year
+    build_asian_club_cup(Cup(this), year, record, &ASIAN_CUP_WINNERS_CUP_PARTS)
+}
+
+/// Comparer for `construct_asia_cup_winner`.
+pub(crate) unsafe extern "thiscall" fn compare_construct_asia_cup_winner(this: usize, year: u32, record: usize) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_ASIA_CUP_WINNER);
+    compare_asian_club_cup_ctor("construct_asia_cup_winner", this, year, record, 0x967574, || o(this, year, record))
+}
+
+/// The 32 Asian Cup Winners' Cup qualifiers: +0xb6 = 32 and the 32-place list +0xb2 (`exe::crt_calloc`(0x20, 4), cdecl;
+/// out of memory, the error box of line 0x241 and 0). The latest winner of the Cup Winners' Cup itself
+/// (`exe::comp_util_get_latest_placed_club`([+4], 0), cdecl), if it does not play the Champions League, goes to place
+/// 0 if its nation is in the east zone, otherwise to 16. In a local list of up to 1,200 clubs: the Emperor's Cup winner
+/// ([`KEY_CLUB_COMP_JAPANESE_EMPEROR_S_CUP`]; the runner-up if the winner is already in places 0/16 or plays the
+/// Champions League), if Japan has its `nation::LEAGUE_SELECTED` byte, and the Korean cup's
+/// ([`KEY_CLUB_COMP_KOREAN_FA_CUP`]) in the same way; and every Asian club ([`KEY_CONTINENT_ASIA`]) outside places 0
+/// and 16. The list is sorted and shuffled (`exe::comp_util_sort_and_shuffle_top_clubs`(list, n − 1, 40), cdecl). In
+/// its order, each club whose nation has not had a place yet and that does not play the Champions League takes the
+/// first free place of its zone (0..15 east, 16..31 west), while the zone's last place is free; the nation is marked
+/// even when the zone is full. Returns 1. (Stack frame 0x1598.)
+/// Original: `AsiaCupWinner::select_qualified_clubs` (0x40d830, asia_cup_winner.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn asia_cup_winner_select_qualified_clubs(this: usize) -> u32 {
+    write_u32(this + 0xb6, 0x20);
+    let east: [u32; 23] = core::array::from_fn(|i| read_usize(ASIAN_CUP_WINNERS_EAST_ZONE_KEYS[i]) as u32);
+    let west: [u32; 19] = core::array::from_fn(|i| read_usize(ASIAN_CUP_WINNERS_WEST_ZONE_KEYS[i]) as u32);
+    let list = exe::crt_calloc(0x20, 4);
+    write_usize(this + 0xb2, list);
+    if list == 0 {
+        show_error_at(0x987b60, 0x241);
+        return 0;
+    }
+    let holder = exe::comp_util_get_latest_placed_club(read_usize(this + 4), 0);
+    if !asia_cup_winner_in_champions_league(holder) {
+        if asia_cup_winner_zone_index(holder, &east) > -1 {
+            write_usize(list, holder);
+        } else {
+            write_usize(list + 0x40, holder);
+        }
+    }
+    let mut clubs = [0usize; 0x4b0];
+    let mut n = 0usize;
+    if let Some(c) = asia_cup_winner_national_cup_club(this, KEY_NATION_JAPAN, KEY_CLUB_COMP_JAPANESE_EMPEROR_S_CUP) {
+        covered!("cqu_11 emperors cup club");
+        clubs[0] = c;
+        n = 1;
+    }
+    if let Some(c) = asia_cup_winner_national_cup_club(this, KEY_NATION_SOUTH_KOREA, KEY_CLUB_COMP_KOREAN_FA_CUP) {
+        clubs[n] = c;
+        n += 1;
+    }
+    let total = (read_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
+    let asia = read_usize(KEY_CONTINENT_ASIA);
+    let mut c = read_usize(G_CLUB_TABLE);
+    for _ in 0..total.max(0) {
+        let nation = Nation(read_usize(c + club::NATION));
+        if !nation.is_null() {
+            let continent = nation.continent();
+            if continent != 0 && read_usize(continent) == asia && (n as i16) < 0x4b0 && c != read_usize(list) && c != read_usize(list + 0x40) {
+                clubs[n] = c;
+                n += 1;
+            }
+        }
+        c += club::SIZE;
+    }
+    covered!("cqu_11 club draw");
+    exe::comp_util_sort_and_shuffle_top_clubs(clubs.as_mut_ptr() as usize, (n as u32).wrapping_sub(1), 0x28); // cqu11: 40 picks in the shuffle
+    let (mut east_marks, mut west_marks) = ([0u8; 23], [0u8; 19]);
+    for &club in clubs.iter().take((n as i16).max(0) as usize) {
+        let i = asia_cup_winner_zone_index(club, &east);
+        let (mark, first) = if i > -1 {
+            (&mut east_marks[i as usize], 0usize)
+        } else {
+            let j = asia_cup_winner_zone_index(club, &west);
+            if j <= -1 {
+                continue;
+            }
+            (&mut west_marks[j as usize], 16usize)
+        };
+        if *mark != 0 || asia_cup_winner_in_champions_league(club) {
+            continue;
+        }
+        *mark = 1;
+        if read_usize(list + (first + 15) * 4) != 0 {
+            continue;
+        }
+        if let Some(k) = (first..first + 16).find(|&k| read_usize(list + k * 4) == 0) {
+            write_usize(list + k * 4, club);
+        }
+    }
+    1
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_asia_cup_winner_select_qualified_clubs(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ASIA_CUP_WINNER_SELECT_QUALIFIED_CLUBS);
+    let r = o(this);
+    if r == 1 {
+        let list = read_usize(this + 0xb2);
+        let mut nations: Vec<i32> = Vec::new();
+        let mut error = 0usize;
+        for k in 0..32usize {
+            let c = if list != 0 { read_usize(list + k * 4) } else { 0 };
+            if c == 0 {
+                continue;
+            }
+            if asia_cup_winner_in_champions_league(c) {
+                error = 100 + k;
+            }
+            if k == 0 || k == 16 {
+                continue;
+            }
+            let nation = asia_cup_winner_club_nation_id(c);
+            let zone = if k < 16 { &ASIAN_CUP_WINNERS_EAST_ZONE_KEYS[..] } else { &ASIAN_CUP_WINNERS_WEST_ZONE_KEYS[..] };
+            if !zone.iter().any(|&g| read_usize(g) as i32 == nation) || nations.contains(&nation) {
+                error = k;
+            }
+            nations.push(nation);
+        }
+        let ok = list != 0 && read_usize(this + 0xb6) == 0x20 && error == 0;
+        SCOREBOARD.record(ok, || format!("asia_cup_winner_select_qualified_clubs({:#x}): list {:#x} +0xb6 {} wrong place {}", this, list, read_usize(this + 0xb6), error));
+    }
+    r
+}
+
+/// Stage 0 of the Asian Cup Winners' Cup, a knockout of the 16 west zone qualifiers (boxes at lines 0x2fd and 0x314).
+/// (The original's SEH frame is only for the stage's new: no destructor on the normal path.)
+/// Original: `AsiaCupWinner::create_zone_stage` (0x40ddf0, asia_cup_winner.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn asia_cup_winner_create_zone_stage(this: usize) {
+    asia_cup_winner_zone_knockout_stage(this, 0x987b60, (0x2fd, 0x314), "cqu_11 west zone team")
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_asia_cup_winner_create_zone_stage(this: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ASIA_CUP_WINNER_CREATE_ZONE_STAGE);
+    asia_cup_winner_check_zone_stage("asia_cup_winner_create_zone_stage", this, || o(this))
+}
+
+/// The predicted positions of the two Asian Cup Winners' Cup zones (boxes at lines 0x3db and 0x3e3).
+/// Original: `AsiaCupWinner::rank_teams` (0x40e3b0, asia_cup_winner.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn asia_cup_winner_rank_teams(this: usize) {
+    asia_cup_winner_predicted_positions(this, 0x987b60, (0x3db, 0x3e3))
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_asia_cup_winner_rank_teams(this: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ASIA_CUP_WINNER_RANK_TEAMS);
+    asia_cup_winner_check_positions("asia_cup_winner_rank_teams", this, || o(this))
+}
+
+/// The index of the club's nation in a list of nation ids (0x40cba0(club, list, n): 3 pushes; add esp, 0xc -> cdecl;
+/// returns the index byte or −1).
+pub(crate) unsafe fn asia_cup_winner_zone_index(club: usize, list: &[u32]) -> i8 {
+    exe::asia_cup_winner_find_club_nation_slot(club, list.as_ptr(), list.len() as u32) as i8
+}
+
+/// Does the club already play the Asian Club Championship (0x40e7b0(club): push; add esp, 4 -> cdecl): in that cup's
+/// team table or in that of its stage 0.
+pub(crate) unsafe fn asia_cup_winner_in_champions_league(club: usize) -> bool {
+    exe::asia_cup_winner_club_in_club_championship(club) != 0
+}
+
+/// The winner of the cup `cup_key` of the nation `nation_key` (when the nation's `nation::LEAGUE_SELECTED` byte is set,
+/// in its [`G_NATION_TABLE`] record): the winner, or the runner-up if the winner is already in place 0 or 16 or plays
+/// the Champions League; the runner-up in those conditions (or null) does not enter.
+pub(crate) unsafe fn asia_cup_winner_national_cup_club(this: usize, nation_key: usize, cup_key: usize) -> Option<usize> {
+    let n = read_usize(nation_key);
+    if read_u8(read_usize(G_NATION_TABLE).wrapping_add(n.wrapping_mul(nation::SIZE)).wrapping_add(nation::LEAGUE_SELECTED)) == 0 {
+        return None;
+    }
+    let cup_record = comp_record_of_key(cup_key);
+    let list = read_usize(this + 0xb2);
+    let c = exe::comp_util_get_latest_placed_club(cup_record, 0); // cqu11: the cup winner
+    if c != read_usize(list) && c != read_usize(list + 0x40) && !asia_cup_winner_in_champions_league(c) {
+        return if c != 0 { Some(c) } else { None };
+    }
+    let c = exe::comp_util_get_latest_placed_club(cup_record, 1);
+    if c == read_usize(list) || c == read_usize(list + 0x40) || asia_cup_winner_in_champions_league(c) || c == 0 {
+        return None;
+    }
+    Some(c)
+}
+
+/// The Asian Cup Winners' Cup: vtable 0x967574, 2 stages; AsiaCupWinner::select_qualified_clubs (0x40d830),
+/// create_team_entries (0x40d4d0), create_zone_stage (0x40ddf0) and rank_teams (0x40e3b0); error boxes of source
+/// 0x987b60 at lines 0x4e, 0x55, 0x64 and 0x74.
+pub(crate) const ASIAN_CUP_WINNERS_CUP_PARTS: AsianClubCupParts = AsianClubCupParts { vtable: 0x967574, stages: 2, file: 0x987b60, select_qualified: 0x40d830, build_team_table: 0x40d4d0, create_stage: 0x40ddf0, predicted: 0x40e3b0, rows: [0x4e, 0x55, 0x64, 0x74] };
+
+/// The Cup Winners' Cup east zone (23 nations, in the original's order; Pakistan comes after Laos).
+pub(crate) const ASIAN_CUP_WINNERS_EAST_ZONE_KEYS: [usize; 23] = [KEY_NATION_BANGLADESH, KEY_NATION_BRUNEI_DARUSSALAM, KEY_NATION_CHINA, KEY_NATION_HONG_KONG, KEY_NATION_INDIA,
+    KEY_NATION_INDONESIA, KEY_NATION_JAPAN, KEY_NATION_KAMPUCHEA, KEY_NATION_LAOS, KEY_NATION_PAKISTAN, KEY_NATION_MACAU, KEY_NATION_MALAYSIA, KEY_NATION_MALDIVES,
+    KEY_NATION_MYANMAR, KEY_NATION_NEPAL, KEY_NATION_NORTH_KOREA, KEY_NATION_SINGAPORE, KEY_NATION_SOUTH_KOREA, KEY_NATION_SRI_LANKA, KEY_NATION_TAIWAN,
+    KEY_NATION_THAILAND, KEY_NATION_THE_PHILIPPINES, KEY_NATION_VIETNAM];

@@ -190,3 +190,128 @@ pub(crate) unsafe extern "thiscall" fn con_champ_create_round_table(this: usize,
     t
 }
 
+/// Rule: the CONCACAF Champions' Cup turnover: the finished cup is cleared, its statistics archived and the year moves
+/// on; an empty team table is made for the entrants (chosen later) and the rules and the tie tree are made again.
+///
+/// `ConChamp::start_new_season()` (virtual +8): the first half (`cup_turnover_free_season`); the team table
+/// (`exe::crt_calloc`(`cup::TEAM_COUNT`, 6): push 6; push n; add esp, 8 -> cdecl) in `cup::TEAM_TABLE`; without it, the
+/// error box at line 0x184 and return; the rules (virtual `comp_vtable::SET_UP_RULES`; negative: the box at line
+/// 0x18b) and the tie tree (virtual `cup_vtable::MAP_FIXTURE_TREE`; negative: the box at line 0x192).
+/// Original: `ConChamp::start_new_season` (0x4c1440, con_champ.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn con_champ_start_new_season(this: usize) {
+    let cup = Cup(this);
+    covered!("cqx_9 concacaf champions cup turnover");
+    cup_turnover_free_season(cup);
+    let t = exe::crt_calloc(cup.team_count() as i32 as u32, 6);
+    cup.set_team_table(t);
+    if t == 0 {
+        return show_error_at(0x9a7d30, 0x184);
+    }
+    if cup_turnover_virtual(cup, comp_vtable::SET_UP_RULES) < 0 {
+        return show_error_at(0x9a7d30, 0x18b);
+    }
+    if cup_turnover_virtual(cup, cup_vtable::MAP_FIXTURE_TREE) < 0 { // cqx9: the CONCACAF tie tree
+        show_error_at(0x9a7d30, 0x192);
+    }
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_con_champ_start_new_season(this: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CON_CHAMP_START_NEW_SEASON);
+    let year = Cup(this).year();
+    o(this);
+    SCOREBOARD.record(Cup(this).year() == year.wrapping_add(1) && Cup(this).team_table() != 0, || format!("con_champ_start_new_season({:#x}): year {} -> {}, team table {:#x}", this, year, Cup(this).year(), Cup(this).team_table()));
+}
+
+/// The CONCACAF Champions Cup of the game's year, at career creation: 8 clubs that come in later (the table starts
+/// empty) and a 2,000,000 prize fund.
+///
+/// Cup::Cup (`exe::new_cup`, mov ecx -> thiscall, ret 0); the competition record at +4, the vtable 0x968aa0, the year
+/// (`set_year`), the common fields (`intercontinental_cup_common_fields`), `club_sides` 2, `discipline_index` 0xff and
+/// `run_by_stages` 0. If the saved state loads (`intercontinental_cup_loads`), returns this. Otherwise 8 teams
+/// (`team_count`) in a zeroed team table of 6 bytes each (calloc `exe::crt_calloc(8, 6)`: push 6; push 8; add esp, 8 ->
+/// cdecl; out of memory, the error box of line 0x41, source 0x9a7d30, and this), the prize fund 2,000,000 and the common
+/// end (`finish_intercontinental_cup`). Returns this. The original's SEH frame only matters for exceptions.
+/// Original: `ConChamp::ConChamp` (0x4c0c40, con_champ.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn construct_con_champ(this: usize, year: u32, record: usize) -> usize {
+    let this = Cup(this);
+    exe::new_cup(this);
+    covered!("cqw_12 concacaf champions cup");
+    write_u32(this.addr() + 4, record as u32);
+    write_u32(this.addr(), 0x968aa0);
+    this.set_year(year as i16); // cqw12: the CONCACAF cup of the game's year
+    intercontinental_cup_common_fields(this);
+    this.set_club_sides(2);
+    this.set_discipline_index(0xff);
+    this.set_run_by_stages(0);
+    if intercontinental_cup_loads(this) {
+        return this.addr();
+    }
+    this.set_team_count(8);
+    let t = exe::crt_calloc(8, 6);
+    write_u32(this.addr() + cup::TEAM_TABLE, t as u32);
+    if t == 0 {
+        show_error_at(0x9a7d30, 0x41);
+        return this.addr();
+    }
+    this.set_prize_fund(0x1e8480);
+    finish_intercontinental_cup(this, 0x9a7d30);
+    this.addr()
+}
+
+/// Comparer for `construct_con_champ`.
+pub(crate) unsafe extern "thiscall" fn compare_construct_con_champ(this: usize, year: u32, record: usize) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_CON_CHAMP);
+    compare_intercontinental_cup_ctor("construct_con_champ", this, year, record, 0x968aa0, || o(this, year, record))
+}
+
+/// The fields every inter-continental knockout cup sets: `current_round` 0, `stage_index` 0xff (the main
+/// competition), `stage_count` 0 and `current_stage` −1.
+pub(crate) unsafe fn intercontinental_cup_common_fields(this: Cup) {
+    this.set_current_round(0);
+    this.set_stage_index(stage_index::MAIN);
+    write_u32(this.addr() + cup::STAGE_COUNT, 0);
+    write_u32(this.addr() + cup::CURRENT_STAGE, 0xffff_ffff);
+}
+
+/// The common end of a new inter-continental cup; returns whether it got to the end with the statistics.
+///
+/// The round table (virtual `comp_vtable::CREATE_SCHEDULE`(−1, &`cup::ROUND_COUNT`, &`cup::STAGE_LABEL`, 0): push 0;
+/// push; push; push −1; mov ecx -> thiscall, ret 0x10) in `round_table()`; the tie tree (Cup::map_fixture_tree
+/// 0x518790, thiscall, ret 0; negative: the error box of line 0x4f of source `file` and false); the statistics
+/// (operator new `exe::crt_operator_new` of 0x5ce and Comp_Stats::Comp_Stats `exe::new_comp_stats(new, this)`: push
+/// this; mov ecx -> thiscall, ret 4) at +8 (null: the box of line 0x56 and false).
+pub(crate) unsafe fn finish_intercontinental_cup(this: Cup, file: usize) -> bool {
+    let create_schedule: unsafe extern "thiscall" fn(usize, i32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
+    write_u32(this.addr() + cup::ROUND_TABLE, create_schedule(this.addr(), -1, this.addr() + cup::ROUND_COUNT, this.addr() + cup::STAGE_LABEL, 0) as u32);
+    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_MAP_FIXTURE_TREE); // Cup::map_fixture_tree
+    if map_fixture_tree(this.addr()) < 0 {
+        show_error_at(file, 0x4f);
+        return false;
+    }
+    let p = exe::crt_operator_new(0x5ce);
+    let e = if p != 0 { exe::new_comp_stats(p, this) } else { 0 };
+    write_u32(this.addr() + 8, e as u32);
+    if e == 0 {
+        show_error_at(file, 0x56);
+        return false;
+    }
+    true
+}
+
+/// Whether the saved state of the cup loads (Cup::load_from_disk 0x51fc00(this, 1): push 1; mov ecx -> thiscall, ret 4;
+/// nonzero).
+pub(crate) unsafe fn intercontinental_cup_loads(this: Cup) -> bool {
+    let load_from_disk: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_CUP_LOAD_FROM_DISK); // Cup::load_from_disk
+    load_from_disk(this.addr(), 1) != 0
+}
+
+/// Shared comparer of the inter-continental cup constructors. They allocate the table, the tree and the statistics,
+/// so they cannot run twice: only the original runs, then the plan is checked: it returns this, the vtable, the record
+/// at +4 and the year (`cup::YEAR`).
+pub(crate) unsafe fn compare_intercontinental_cup_ctor(name: &str, this: usize, year: u32, record: usize, vtable: usize, o: impl FnOnce() -> usize) -> usize {
+    let r = o();
+    let read = Cup(this).year();
+    let ok = r == this && read_usize(this) == vtable && read_usize(this + 4) == record && built_year_ok(read as u16, year as u16);
+    SCOREBOARD.record(ok, || format!("{}({:#x}): year {} requested {}, vtable {:#x}", name, this, read, year as i16, read_usize(this)));
+    r
+}

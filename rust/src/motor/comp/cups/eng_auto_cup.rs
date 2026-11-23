@@ -404,3 +404,341 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_create_round_table(this: usi
     create_round_table(Cup(this), ldv_trophy_stage(stage), rounds, extra, league, 0x9c4180)
 }
 
+/// The season turnover of the Auto Windscreens Shield (the Football League Trophy): last season's tables, selected
+/// clubs and section stages dropped, the season archived, the year plus one, then the 56 clubs selected again, the
+/// entrants, the round table, the tie tree and the first section stage rebuilt; the selected list is freed again and
+/// the predicted positions close it.
+///
+/// `cup::SEASON_CLOSED` = 0; the team table (`cup::TEAM_TABLE`), the round table (`cup::ROUND_TABLE`) and the selected
+/// clubs (`eng_auto_cup::SELECTED_CLUBS`) freed (`exe::crt_free`) and zeroed; when there are tie tables
+/// (`cup::TIE_TABLES`), each round's (`cup::ROUND_COUNT` rounds, a signed word) freed and zeroed and the array freed and
+/// zeroed; with a current stage (`cup::CURRENT_STAGE`) ≥ 0, the stages 0..=current destroyed (virtual 0 with 1) and
+/// then `cup::CURRENT_STAGE` = −1; with statistics, Comp_Stats::archive_season_and_reset
+/// (`exe::comp_stats_archive_season_and_reset`, thiscall(stats, 1), ret 4); the year up by one and
+/// `cup::CURRENT_ROUND` = 0.
+///
+/// Then, each with its own box (eng_auto_cup.cpp): the 56 section clubs (EngAutoCup::select_section_clubs 0x56b730,
+/// thiscall, ret 0; box 0x1ee when it returns 0); `cup::RUN_BY_STAGES` = 0; the entrants (EngAutoCup::collect_entrants
+/// 0x56b3c0, box 0x1f8 when negative); the round table (virtual `comp_vtable::SET_UP_RULES`, box 0x1ff when negative)
+/// and the tie tree (virtual `cup_vtable::MAP_FIXTURE_TREE`, box 0x206 when negative). Then the first section stage
+/// (EngAutoCup::create_section_stage 0x56bab0, thiscall, ret 0), the selected clubs freed and zeroed again, and the
+/// predicted positions (virtual `comp_vtable::SET_PREDICTED_POSITIONS`), whose eax it returns. After a box the copy
+/// returns 0 (the original returns the box's eax; the turnover's caller does not read it).
+/// Original: `EngAutoCup::start_new_season` (0x56b4b0, eng_auto_cup.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn eng_auto_cup_start_new_season(this: usize) -> u32 {
+    let this = Cup(this);
+    this.set_season_closed(0);
+    for o in [cup::TEAM_TABLE, cup::ROUND_TABLE, eng_auto_cup::SELECTED_CLUBS] {
+        let l = read_usize(this.addr() + o);
+        if l != 0 {
+            exe::crt_free(l);
+            write_usize(this.addr() + o, 0);
+        }
+    }
+    if this.tie_tables() != 0 {
+        let mut i = 0i32;
+        while i < this.round_count() as i32 {
+            let p = read_usize(this.tie_tables() + i as usize * 4);
+            if p != 0 {
+                exe::crt_free(p);
+                write_usize(this.tie_tables() + i as usize * 4, 0);
+            }
+            i += 1;
+        }
+        exe::crt_free(this.tie_tables());
+        this.set_tie_tables(0);
+    }
+    if read_i32(this.addr() + cup::CURRENT_STAGE) >= 0 {
+        let mut i = 0i32;
+        loop {
+            let f = read_usize(read_usize(this.addr() + cup::STAGES) + 4 * i as usize);
+            if f != 0 {
+                let destroy: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(f)));
+                destroy(f, 1);
+            }
+            i += 1;
+            if i > read_i32(this.addr() + cup::CURRENT_STAGE) {
+                break;
+            }
+        }
+    }
+    write_i32(this.addr() + cup::CURRENT_STAGE, -1);
+    let stats = read_usize(this.addr() + 8);
+    if stats != 0 {
+        exe::comp_stats_archive_season_and_reset(stats, 1);
+    }
+    let a = this.year();
+    this.set_year(a.wrapping_add(1)); // mwf13: the year of the Auto Windscreens Shield
+    this.set_current_round(0);
+    covered!("mwf_13 auto windscreens rollover");
+    if (exe::engautocup_select_section_clubs(this) as u32) == 0 {
+        show_error_at(0x9c4180, 0x1ee);
+        return 0;
+    }
+    this.set_run_by_stages(0);
+    let entrants: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ENGAUTOCUP_COLLECT_ENTRANTS);
+    if entrants(this.addr()) < 0 {
+        show_error_at(0x9c4180, 0x1f8);
+        return 0;
+    }
+    if call_cup_virtual(this, comp_vtable::SET_UP_RULES) < 0 {
+        show_error_at(0x9c4180, 0x1ff);
+        return 0;
+    }
+    if call_cup_virtual(this, cup_vtable::MAP_FIXTURE_TREE) < 0 {
+        show_error_at(0x9c4180, 0x206);
+        return 0;
+    }
+    exe::engautocup_create_section_stage(this);
+    let l = read_usize(this.addr() + eng_auto_cup::SELECTED_CLUBS);
+    if l != 0 {
+        exe::crt_free(l);
+        write_usize(this.addr() + eng_auto_cup::SELECTED_CLUBS, 0);
+    }
+    call_cup_virtual(this, comp_vtable::SET_PREDICTED_POSITIONS) as u32
+}
+
+/// Comparer for `eng_auto_cup_start_new_season`: only the original runs (it frees and rebuilds the cup); the year must
+/// go up by one.
+pub(crate) unsafe extern "thiscall" fn compare_eng_auto_cup_start_new_season(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ENG_AUTO_CUP_START_NEW_SEASON);
+    compare_cup_new_season("eng_auto_cup_start_new_season", Cup(this), || o(this))
+}
+
+/// The Auto Windscreens Shield rounds: a prize fund of 400,000 and the round table.
+///
+/// `cup::PRIZE_FUND` = 400,000 (0x61a80); the round table of stage −1 (virtual `comp_vtable::CREATE_SCHEDULE`: push 0;
+/// push &`cup::STAGE_LABEL`; push &`cup::ROUND_COUNT`; push −1 -> thiscall, ret 0x10) into `cup::ROUND_TABLE`. The
+/// substitutes and changes are not set here. Returns 1.
+/// Original: `EngAutoCup::set_up_rounds` (0x56b700, eng_auto_cup.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn eng_auto_cup_set_up_rounds(this: usize) -> i32 {
+    let this = Cup(this);
+    covered!("mwf_13 auto windscreens rounds");
+    this.set_prize_fund(0x61a80); // mwf13: the Auto Windscreens Shield prize fund
+    let table: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
+    let t = table(this.addr(), 0xffff_ffff, this.addr() + cup::ROUND_COUNT, this.addr() + cup::STAGE_LABEL, 0);
+    this.set_round_table(t);
+    1
+}
+
+/// Comparer for `eng_auto_cup_set_up_rounds`: side by side (as the Copa do Brasil's): the prize fund, the round count
+/// and the stage label, and the bytes the round table writes (`eng_cc_cup_written_round_bytes`); the copy's table is
+/// freed and the original's kept.
+pub(crate) unsafe extern "thiscall" fn compare_eng_auto_cup_set_up_rounds(this: usize) -> i32 {
+    let this = Cup(this);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_ENG_AUTO_CUP_SET_UP_ROUNDS);
+    let to = core::cell::Cell::new(0usize);
+    let tr = core::cell::Cell::new(0usize);
+    let before = this.round_table();
+    let reg = [(this.addr() + cup::PRIZE_FUND, 4usize), (this.addr() + cup::STAGE_LABEL, 4), (G_MOUSE_LEFT_BUTTON_DOWN, 4)];
+    let (a, b, same, _, _) = crate::comparison::side_by_side(&reg, || {
+        let r = o(this.addr());
+        to.set(this.round_table());
+        this.set_round_table(before);
+        r
+    }, || {
+        let r = eng_auto_cup_set_up_rounds(this.addr());
+        tr.set(this.round_table());
+        this.set_round_table(to.get());
+        r
+    });
+    let (to, tr) = (to.get(), tr.get());
+    let n = this.round_count();
+    let table = if to != 0 && tr != 0 { eng_cc_cup_written_round_bytes(to, n) == eng_cc_cup_written_round_bytes(tr, n) } else { to == 0 && tr == 0 };
+    if tr != 0 && tr != to {
+        exe::crt_free(tr);
+    }
+    SCOREBOARD.record(same && a == b && table, || format!("eng_auto_cup_set_up_rounds({:#x}) returned {} x {} memory {} table {}", this.addr(), a, b, same, table));
+    a
+}
+
+/// Rule: in the LDV Vans Trophy, in the sections (stages up to 0) elimination and qualification weigh by round (1 to 80
+/// over the 5 rounds) and the section winner gets the record of reaching the final (round 0x96, weight 0x5a); in the
+/// final (stage 1) the winner and runner-up get the final records.
+///
+/// `EngAutoCup::update_staff_records_for_status(club, outcome, stage, _, fixture, final)` (the virtual +0x44); returns
+/// 0. Stage (signed byte) up to 0, weight = `scale_by_round`(1, 0x50, the fixture's `round_number()`, 5): outcome 0xff
+/// or 2, the elimination (`european_cup_add_knocked_out_record`: `round_prefix()`, `round_name()`, the weight); 0, the
+/// qualification (`european_cup_add_qualified_record`: `round_prefix()`, the name word +0x6f of the fixture's round in
+/// the cup's round table `cup::ROUND_TABLE`, the weight; the high 16 bits the original pushes come from small products
+/// of the round: zero); 1, the qualification for the final (0, 0x96, 0x5a). Stage 1: outcome 1 the winner
+/// (Staff_Records 0x86a800), 2 the runner-up (0x86b0b0). Anything else: nothing.
+/// Original: `EngAutoCup::update_staff_records_for_status` (0x56bee0, eng_auto_cup.cpp, thiscall, ret 0x18).
+pub(crate) unsafe extern "thiscall" fn eng_auto_cup_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, _a4: u32, game: usize, final_: u32) -> u32 {
+    let g = Fixture(game);
+    let (d, f) = (outcome as u8, stage as u8 as i8);
+    let comp = read_usize(this + 4);
+    if f <= 0 {
+        match d {
+            0xff | 2 => {
+                covered!("cqx_11 ldv trophy knocked out");
+                let weight = scale_by_round(1, 0x50, g.round_number(), 5);
+                european_cup_add_knocked_out_record(club, comp, g.round_prefix() as u16 as u32, g.round_name() as u16 as u32, weight);
+            }
+            0 => {
+                let weight = scale_by_round(1, 0x50, g.round_number(), 5);
+                let name = read_u16(Cup(this).round_table().wrapping_add((g.round_number() as isize * cup_round::SIZE as isize) as usize) + 0x6f) as u32;
+                european_cup_add_qualified_record(club, comp, g.round_prefix() as u16 as u32, name, weight);
+            }
+            1 => european_cup_add_qualified_record(club, comp, 0, 0x96, 0x5a),
+            _ => {}
+        }
+    } else if f == 1 {
+        match d {
+            1 => cup_record_final_result(0x86a800, club, g, final_),
+            2 => cup_record_final_result(0x86b0b0, club, g, final_),
+            _ => {}
+        }
+    }
+    0
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_eng_auto_cup_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, a4: u32, game: usize, final_: u32) -> u32 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_ENG_AUTO_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, club, outcome, stage, a4, game, final_);
+    SCOREBOARD.record(r == 0, || format!("eng_auto_cup_update_staff_records_for_status({:#x}, {}, {}) returned {}", club, outcome as u8, stage as u8, r));
+    r
+}
+
+/// The English League Trophy constructor: see `eng_auto_cup_constructor_body`.
+/// Original: `EngAutoCup::EngAutoCup` (0x56aa30, eng_auto_cup.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn construct_eng_auto_cup(this: usize, year: u32, owner: usize) -> usize {
+    eng_auto_cup_constructor_body(this, year, owner) // cqv9: the League Trophy
+}
+
+/// Only the original (it allocates, draws and reads the save file), checking the plan
+/// (`eng_auto_european_check_constructor_plan`).
+pub(crate) unsafe extern "thiscall" fn compare_construct_eng_auto_cup(this: usize, year: u32, owner: usize) -> usize {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_ENG_AUTO_CUP)(this, year, owner);
+    let error = eng_auto_european_check_constructor_plan(this, r, year, owner, 0x969894, &LEAGUE_TROPHY_FIELDS, true);
+    SCOREBOARD.record(error.is_none(), || format!("construct_eng_auto_cup({:#x}, {}, {:#x}): {}", this, year as u16, owner, error.clone().unwrap_or_default()));
+    r
+}
+
+/// The plan the comparer checks after the original: the return value (this), the vtable, the competition record
+/// (`league::COMPETITION`) and the year (`cup::YEAR`); on a new cup (`cup::STAGE_INDEX` = `stage_index::MAIN`), each
+/// fixed field the constructor writes (offset, width, value) and the rounds (`cup::ROUND_TABLE`, when `rounds`) and the
+/// statistics created.
+pub(crate) unsafe fn eng_auto_european_check_constructor_plan(this: usize, r: usize, year: u32, owner: usize, vt: usize, fields: &[(usize, u8, u32)], rounds: bool) -> Option<String> {
+    let this = League(this);
+    if r != this.addr() || read_usize(this.addr()) != vt || this.competition().addr() != owner || read_u16(this.addr() + cup::YEAR) != year as u16 {
+        return Some(format!("returned {:#x}, vtable {:#x}, +4 {:#x}, year {}", r, read_usize(this.addr()), this.competition().addr(), read_u16(this.addr() + cup::YEAR)));
+    }
+    if read_u8(this.addr() + cup::STAGE_INDEX) != stage_index::MAIN || league_will_load_saved_state(owner) {
+        return None;
+    }
+    for &(o, t, v) in fields {
+        let x = match t {
+            1 => read_u8(this.addr() + o) as u32,
+            2 => read_u16(this.addr() + o) as u32,
+            _ => read_u32(this.addr() + o),
+        };
+        if x != v {
+            return Some(format!("+{:#x} = {:#x}, the constructor writes {:#x}", o, x, v));
+        }
+    }
+    if (rounds && read_usize(this.addr() + cup::ROUND_TABLE) == 0) || this.comp_stats() == 0 {
+        return Some(format!("rounds {:#x}, statistics {:#x}", read_usize(this.addr() + cup::ROUND_TABLE), this.comp_stats()));
+    }
+    None
+}
+
+/// The constructor of the English League Trophy, on the Cup base (`exe::new_cup`, thiscall, ret 0): the fixed fields
+/// (the competition record in `league::COMPETITION`, the vtable 0x969894, the year in `cup::YEAR`,
+/// `cup::CURRENT_ROUND` = 0, `cup::STAGE_INDEX` = `stage_index::MAIN`, `cup::CURRENT_STAGE` = -1, `cup::STAGE_COUNT` =
+/// 2, `cup::COMP_TYPE` = `comp_type::CUP`, +0x1c and +0x20 = -1, `eng_auto_cup::SELECTED_CLUBS` = 0, discipline rule
+/// `ENGLAND` (9), 5 substitutes named, 3 substitutions allowed); if the saved state loads (Cup::load_from_disk 0x51fc00:
+/// push 1; mov ecx, this -> thiscall, ret 4; returns != 0), returns this. On a new cup, in order: the stage array in
+/// `cup::STAGES` (`exe::crt_malloc` of 4 x `cup::STAGE_COUNT`, or 0 with no stages); `cup::IMPORTANCE_BIAS` = 0xf and
+/// `cup::RUN_BY_STAGES` = 0; the 56 section clubs (`select_section_clubs`, 0x56b730, thiscall, ret 0; the box for line
+/// 0x52 if it returns 0); the entrants (`eng_auto_cup_collect_entrants`, 0x56b3c0, thiscall, ret 0; the box for line
+/// 0x59 if it returns 0); the prize fund (`cup::PRIZE_FUND` = 400,000); the rounds (`eng_auto_european_create_rounds`);
+/// the statistics in `league::COMP_STATS` (the box for line 0x68 without them); the section stage
+/// (`create_section_stage`, 0x56bab0, thiscall, ret 0, unchecked); the list `eng_auto_cup::SELECTED_CLUBS` freed
+/// (`exe::crt_free`) and zeroed; the tie tree (`map_fixture_tree`, 0x518790, thiscall, ret 0; the box for line 0x78 if
+/// it returns 0); the final ranking (`eng_auto_cup_rank_teams`, 0x56c010, thiscall, ret 0, unchecked). Every failing
+/// step shows its box (`show_error_at`) and returns this. Returns this. Rule: prize fund of 400,000; 5 substitutes on the
+/// bench and 3 substitutions; discipline rule 9 [from the competitions reference reading, section 2.1].
+/// Original: `EngAutoCup::EngAutoCup` (0x56aa30, eng_auto_cup.cpp, thiscall, ret 8).
+pub(crate) unsafe fn eng_auto_cup_constructor_body(this: usize, year: u32, owner: usize) -> usize {
+    let this = League(this);
+    let cup = Cup(this.addr());
+    exe::new_cup(cup);
+    write_usize(this.addr() + league::COMPETITION, owner);
+    write_usize(this.addr(), 0x969894);
+    write_u16(this.addr() + cup::YEAR, year as u16);
+    cup.set_current_round(0x0);
+    cup.set_stage_index(stage_index::MAIN);
+    write_u32(this.addr() + cup::CURRENT_STAGE, 0xffffffff);
+    write_u32(this.addr() + cup::STAGE_COUNT, 0x2);
+    cup.set_comp_type(comp_type::CUP);
+    this.set_upper_division_id(0xffffffffu32 as i32);
+    this.set_lower_division_id((0xffffffff) as usize);
+    write_u32(this.addr() + eng_auto_cup::SELECTED_CLUBS, 0x0);
+    cup.set_discipline_index(discipline_rule::ENGLAND);
+    cup.set_substitutes_named(0x5);
+    cup.set_substitutions_allowed(0x3);
+    if exe::cup_load_from_disk(this, 1) != 0 {
+        return this.addr();
+    }
+    covered!("cqv_9 league trophy new");
+    let stages = cup.stage_count() as i32;
+    cup.set_stages(if stages > 0 { exe::crt_malloc((stages << 2) as u32) } else { 0 });
+    cup.set_importance_bias(0xf);
+    cup.set_run_by_stages(0x0);
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ENGAUTOCUP_SELECT_SECTION_CLUBS);
+    let r = f(this.addr());
+    if r == 0 {
+        show_error_at(0x9c4180, 0x52);
+        return this.addr();
+    }
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ENGAUTOCUP_COLLECT_ENTRANTS);
+    let r = f(this.addr());
+    if r == 0 {
+        show_error_at(0x9c4180, 0x59);
+        return this.addr();
+    }
+    cup.set_prize_fund(0x61a80);
+    eng_auto_european_create_rounds(cup);
+    if !eng_auto_european_create_comp_stats(this.addr()) {
+        show_error_at(0x9c4180, 0x68);
+        return this.addr();
+    }
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ENGAUTOCUP_CREATE_SECTION_STAGE);
+    f(this.addr());
+    let l = read_usize(this.addr() + eng_auto_cup::SELECTED_CLUBS);
+    if l != 0 {
+        exe::crt_free(l);
+        write_u32(this.addr() + eng_auto_cup::SELECTED_CLUBS, 0);
+    }
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_MAP_FIXTURE_TREE);
+    let r = f(this.addr());
+    if r == 0 {
+        show_error_at(0x9c4180, 0x78);
+        return this.addr();
+    }
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ENGAUTOCUP_RANK_TEAMS);
+    f(this.addr());
+    this.addr()
+}
+
+/// The cup's rounds through its virtual `comp_vtable::CREATE_SCHEDULE` (push 0; push &`cup::STAGE_LABEL`; push
+/// &`cup::ROUND_COUNT`; push -1; mov ecx, this -> thiscall, ret 0x10): the round table, stored in `cup::ROUND_TABLE`.
+pub(crate) unsafe fn eng_auto_european_create_rounds(cup: Cup) {
+    let f: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(cup.addr()) + comp_vtable::CREATE_SCHEDULE));
+    let t = f(cup.addr(), 0xffff_ffff, cup.addr() + cup::ROUND_COUNT, cup.addr() + cup::STAGE_LABEL, 0);
+    cup.set_round_table(t);
+}
+
+/// The statistics (`exe::crt_operator_new` of 0x5ce, cdecl; `exe::new_comp_stats`(new, this), thiscall, ret 4) into
+/// `league::COMP_STATS` (the Comp base field); the original's SEH frame covers only that `new`. Returns whether they
+/// were created.
+pub(crate) unsafe fn eng_auto_european_create_comp_stats(this: usize) -> bool {
+    let this = League(this);
+    let n = exe::crt_operator_new(0x5ce);
+    let s = if n != 0 { exe::new_comp_stats(n, this) } else { 0 };
+    this.set_comp_stats(s);
+    s != 0
+}
+
+/// The fixed fields the League Trophy constructor writes on a new cup (offset, width, value).
+pub(crate) const LEAGUE_TROPHY_FIELDS: [(usize, u8, u32); 13] = [(0x1c, 4, 0xffffffff), (0x20, 4, 0xffffffff), (cup::PRIZE_FUND, 4, 0x61a80), (cup::STAGE_COUNT, 4, 0x2), (cup::COMP_TYPE, 1, 0x1), (cup::STAGE_INDEX, 1, 0xff), (cup::SUBSTITUTES_NAMED, 1, 0x5), (cup::SUBSTITUTIONS_ALLOWED, 1, 0x3), (cup::DISCIPLINE_INDEX, 1, 0x9), (cup::IMPORTANCE_BIAS, 1, 0xf), (cup::CURRENT_ROUND, 1, 0x0), (cup::RUN_BY_STAGES, 1, 0x0), (eng_auto_cup::SELECTED_CLUBS, 4, 0x0)];

@@ -9226,3 +9226,1927 @@ pub(crate) unsafe extern "thiscall" fn note_terms_offered_to_main_player(manager
     }
 }
 
+/// Writes the headline or the body of the news that a transfer, a contract or a player exchange is set to complete,
+/// with the confirmations, the cancellations or a delay.
+///
+/// `write_transfer_finalised_news_text(news, full, out)` (the 0xfa5 news of `post_transfer_finalised_news`): slots 0
+/// (the person), 1..3 (his name ids), 4 (the buyer), 5 (the seller, −1 none), 6 and 7 (the offer's index and serial),
+/// 8 (the fee), 9 (the offer status), 10 (the total value), 11 (the exchange players), 12 (`pre_contract`), 13 (the
+/// completion timing), 14 and 15 (the completion day and year), 17 (the job type).
+///
+/// First, for the human manager of the current slot (`G_SCREEN_RECORDS_MANAGER`), the status is brought up to date
+/// unless it is already final (0xe, 3, 0x10, 2, 0x12, 0x11 or −1): the offer at the index (`G_TRANSFER_MANAGER`, an
+/// index past the count reads the first) with the same serial gives its status (0: the news keeps its own); a missing
+/// offer stores −1. At the manager's club (the buyer): 0x12 and 3 are stored as they are, 0xd, 0xe and 0x13 become
+/// 0xd; at the other club: 0x11 and 2 as they are, 0xc, 0xe and 0x13 become 0xc; other statuses store nothing. Storing
+/// goes through `News::set_item_slot` (slot 9, into the inbox and into this news item).
+///
+/// The body: the name (mode 1); the fee text (`news_text_money`) of the total when it is above the fee and there is no
+/// pre-contract (with the exchange: 0xa9705c with the number of players, "a player" 0xa97210 or 0xa91ba0 with the
+/// number in words, `exe::utils_number_to_words`; without: 0xa97158), otherwise of the fee: without the exchange, a fee
+/// above 0 and no pre-contract 0xa96fa8, else with a seller 0xa96f10, else the contract offer 0xa96e98; with the
+/// exchange, a fee above 0 0xa96da8, else 0xa96cfc. Then, with a completion timing, the completion date (0xa96ca8,
+/// `date_string_no_weekday`) appended. Then by the status: 0xe both clubs confirmed (0xa96c7c with a seller, else the
+/// buyer confirmed 0xa96c38); 0xd the buyer confirmed the transfer (0xa96c38 with a seller) or the deal (0xa96bf8);
+/// with a seller, 0xc the seller confirmed (0xa96c38; nothing with a pre-contract); 3 the buyer cancelled (0xa96bb4);
+/// 2 the seller cancelled (0xa96bb4; nothing without a seller); 0x10 cancelled (0xa96b90); 0x12 the buyer asked for a
+/// week's delay (0xa96b3c), 0x11 the seller (0xa96b3c); otherwise nothing; a non-empty sentence is appended. The links
+/// to the buyer, the seller (when ≥ 0) and the person (0x7d7) when the names still match.
+///
+/// The headline: the name (mode 5); a job that is not the plain player job (`exe::database_is_not_plain_player_job`)
+/// with a pre-contract "set for role" (0xa96ae4), else with a total value "set to buy" (0xa96a90), else "set to sign"
+/// (0xa96a3c); the links to the buyer and to the person.
+/// Original: `TRANSFER_MANAGER::write_transfer_finalised_news_text` (0x8da8f0, transfer_manager.cpp, thiscall, ret 0xc).
+pub(crate) unsafe extern "thiscall" fn write_transfer_finalised_news_text(_this: usize, news: usize, full: u32, out: usize) {
+    let fmt = news_text_format();
+    let slot = |k: u32| exe::newsitem_get_slot(news, k);
+    let mut status = slot(9) as u8;
+    let hm = read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize as usize);
+    if hm != 0 && ![0xe, 3, 0x10, 2, 0x12, 0x11, 0xff].contains(&status) {
+        let index = slot(6) as i32;
+        let serial = slot(7);
+        let tm = read_usize(G_TRANSFER_MANAGER);
+        let arr = read_usize(tm);
+        let at = if index < read_i32(tm + 4) { arr.wrapping_add((index as usize).wrapping_mul(4)) } else { arr };
+        let o = Offer(read_usize(at));
+        let set: unsafe extern "thiscall" fn(usize, usize, u32, u32, i32, usize) = core::mem::transmute(FN_NEWS_SET_ITEM_SLOT); // News::set_item_slot
+        let store = |v: u8| set(read_usize(G_NEWS), hm, read_u32(news + 0xd6), 9, v as i8 as i32, news);
+        if o.is_null() || (o.serial() as u32) != serial {
+            store(0xff);
+            status = 0xff;
+        } else {
+            let st = o.status();
+            if st != 0 {
+                let buyer = club_at(o.buyer_club_id() as i32 as isize).addr();
+                let new = if read_usize(hm + 0x39) == buyer {
+                    match st { 0x12 | 3 => Some(st), 0xd | 0xe | 0x13 => Some(0xd), _ => None }
+                } else {
+                    match st { 0x11 | 2 => Some(st), 0xc | 0xe | 0x13 => Some(0xc), _ => None }
+                };
+                if let Some(v) = new {
+                    covered!("gra_11 finalised status stored");
+                    store(v);
+                    status = v;
+                }
+            }
+        }
+    }
+    let mut name = [0u8; 0x12c];
+    let np = name.as_ptr() as usize;
+    if full != 0 {
+        covered!("gra_11 finalised body");
+        let (person, s1, s2, s3, buyer, seller) = (slot(0), slot(1), slot(2), slot(3), slot(4), slot(5));
+        let (fee, total) = (slot(8) as i32, slot(0xa) as i32);
+        let swap = slot(0xb) as u8;
+        let pre_contract = slot(0xc) as u8;
+        let timing = slot(0xd) as u8;
+        let (day, year) = (slot(0xe), slot(0xf));
+        let mut money = [0u8; 0x34];
+        let mut players = [0u8; 0x34];
+        if swap != 0 {
+            exe::utils_number_to_words(swap as i8 as i32, money.as_mut_ptr(), 0x32, 1);
+            if swap == 1 {
+                fmt(players.as_mut_ptr() as usize, 0xa97210); // "a player"
+            } else {
+                fmt(players.as_mut_ptr() as usize, 0xa91ba0, money.as_ptr() as usize); // "<number> players"
+            }
+        }
+        news_text_person_name(s1, s2, s3, &mut name, 1, person);
+        let c4 = club_at(buyer as i32 as isize).addr();
+        let c5 = Club(club_at(seller as i32 as isize).addr());
+        let (g4, g5) = (read_i8(c4 + club::SHORT_GENDER_NAME) as i32, (c5.short_gender_name() as i8) as i32);
+        let (sn4, sn5) = (c4 + club::SHORT_NAME, c5.addr() + club::SHORT_NAME);
+        let (mp, pp) = (money.as_ptr() as usize, players.as_ptr() as usize);
+        if total > fee && pre_contract == 0 {
+            news_text_money(total as u32, &mut money);
+            if swap == 0 {
+                fmt(NEWS_TEXT_BUFFER, 0xa97158, g5, g5, 100, g4, g4, sn5, np, sn4, mp);
+            } else {
+                fmt(NEWS_TEXT_BUFFER, 0xa9705c, g5, g5, 100, g4, g4, mp, pp, sn5, np, sn4);
+            }
+        } else {
+            news_text_money(fee as u32, &mut money);
+            if swap == 0 {
+                if fee > 0 && pre_contract == 0 {
+                    fmt(NEWS_TEXT_BUFFER, 0xa96fa8, 100, g5, g5, 100, g4, g4, mp, sn5, np, sn4);
+                } else if seller as i32 > -1 {
+                    fmt(NEWS_TEXT_BUFFER, 0xa96f10, g5, g5, 100, g4, g4, sn5, np, sn4); // gra11: the transfer set to complete
+                } else {
+                    fmt(NEWS_TEXT_BUFFER, 0xa96e98, 100, g4, g4, np, sn4);
+                }
+            } else if fee > 0 {
+                fmt(NEWS_TEXT_BUFFER, 0xa96da8, g5, g5, 100, g4, g4, mp, pp, sn5, np, sn4);
+            } else {
+                fmt(NEWS_TEXT_BUFFER, 0xa96cfc, g5, g5, 100, g4, g4, sn5, np, sn4);
+            }
+        }
+        exe::text_set_string(out, NEWS_TEXT_BUFFER as *const u8);
+        if timing != 0 {
+            covered!("gra_11 completion date");
+            let mut date = [0u8; 8];
+            let mut when = [0u8; 0xc8];
+            exe::new_date(date.as_mut_ptr() as usize, day, year);
+            date_string_no_weekday(date.as_ptr() as usize, when.as_mut_ptr() as usize, 0xc8, 0xff);
+            fmt(NEWS_TEXT_BUFFER, 0xa96ca8, 100, when.as_ptr() as usize);
+            news_text_append(out, NEWS_TEXT_BUFFER);
+        }
+        let has_seller = seller as i32 != -1;
+        let written = match status {
+            0xe => {
+                if has_seller { fmt(NEWS_TEXT_BUFFER, 0xa96c7c); } else { fmt(NEWS_TEXT_BUFFER, 0xa96c38, g4, g4, sn4); }
+                true
+            }
+            0xd => {
+                if has_seller { fmt(NEWS_TEXT_BUFFER, 0xa96c38, g4, g4, sn4); } else { fmt(NEWS_TEXT_BUFFER, 0xa96bf8, g4, g4, sn4); }
+                true
+            }
+            0xc if has_seller => {
+                if pre_contract == 0 { fmt(NEWS_TEXT_BUFFER, 0xa96c38, g5, g5, sn5); }
+                pre_contract == 0
+            }
+            3 => { fmt(NEWS_TEXT_BUFFER, 0xa96bb4, g4, g4, sn4); true }
+            2 if has_seller => { fmt(NEWS_TEXT_BUFFER, 0xa96bb4, g5, g5, sn5); true }
+            0x10 => { fmt(NEWS_TEXT_BUFFER, 0xa96b90); true }
+            0x12 => { fmt(NEWS_TEXT_BUFFER, 0xa96b3c, g4, g4, sn4); true }
+            0x11 => { fmt(NEWS_TEXT_BUFFER, 0xa96b3c, g5, g5, sn5); true }
+            _ => false,
+        };
+        if !written {
+            write_u8(NEWS_TEXT_BUFFER, 0);
+        } else if read_u8(NEWS_TEXT_BUFFER) != 0 {
+            news_text_append(out, NEWS_TEXT_BUFFER);
+        }
+        news_text_link_club(out, buyer); // gra11: the buyer's link in the body
+        if has_seller {
+            news_text_link_club(out, seller);
+        }
+        news_text_link_person(out, &name, person, s1, s2, s3, 0x7d7);
+    } else {
+        let (person, s1, s2, s3, buyer) = (slot(0), slot(1), slot(2), slot(3), slot(4));
+        let total = slot(0xa);
+        let pre_contract = slot(0xc) as u8;
+        let job = slot(0x11) as u8;
+        news_text_person_name(s1, s2, s3, &mut name, 5, person);
+        let c4 = club_at(buyer as i32 as isize).addr();
+        let g4 = read_i8(c4 + club::SHORT_GENDER_NAME) as i32;
+        let sn4 = c4 + club::SHORT_NAME;
+        if exe::database_is_not_plain_player_job(job as i8) != 0 && pre_contract != 0 {
+            fmt(NEWS_TEXT_BUFFER, 0xa96ae4, g4, g4, np, sn4); // "<name> set for <club> role"
+        } else if total != 0 {
+            fmt(NEWS_TEXT_BUFFER, 0xa96a90, g4, g4, sn4, np); // "<club> set to buy <name>"
+        } else {
+            fmt(NEWS_TEXT_BUFFER, 0xa96a3c, g4, g4, sn4, np); // "<club> set to sign <name>"
+        }
+        exe::text_set_string(out, NEWS_TEXT_BUFFER as *const u8);
+        news_text_link_club(out, buyer);
+        news_text_link_person(out, &name, person, s1, s2, s3, 0x7d7);
+    }
+}
+
+/// Comparer for `write_transfer_finalised_news_text`: the text side by side (`compare_text_writer`).
+pub(crate) unsafe extern "thiscall" fn compare_write_transfer_finalised_news_text(this: usize, news: usize, full: u32, out: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_WRITE_TRANSFER_FINALISED_NEWS_TEXT);
+    compare_text_writer(out, || o(this, news, full, out), |t| write_transfer_finalised_news_text(this, news, full, t), || format!("write_transfer_finalised_news_text(news {:#x}, full {})", news, full));
+}
+
+/// Writes the headline or the body of the news that a player rejected a contract or a loan, or agreed terms with a
+/// buying club.
+///
+/// `write_contract_response_news_text(news, full, out)` (the 0xfa4 news): slots 0..3 (the player and his name ids), 4
+/// (the selling club, −1 none), 5 (the buying club), 6 (the answer: 2 agreed, 3 rejected, 4 rejected with the
+/// reasons), 9 (1 a loan), 10 and 11 (the two wages, or fees, compared), 12..15 (a second person and his name ids),
+/// 16 (the club he joins instead, −1 none), 17 (6 a loan), 18..21 (an agent and his name ids, mode 1), 22..25 (another
+/// person and his name ids, mode 1), 26 (the reason flags), 27 (the interest × 1000, read as a float × 0.001f), 28 (the
+/// number of rejected clubs) and 29.. (up to three of those clubs).
+///
+/// The body (the player's name in mode 1; c4 the selling club, c5 the buying one; "standard" = the selling club's short
+/// gender twice, the buying one's twice, the selling club's short name, the name, the buying club's short name;
+/// "swapped" = the buying club's gender twice, the selling one's twice, the name, the buying and the selling club's
+/// short names):
+/// - not agreed (answer ≠ 2) and no other club: answer 3: rejected 0xa9696c (standard), without a selling club
+///   0xa968cc; answer 4: without a selling club 0xa96464; a loan: interest < 1.0 "no intention of going on loan"
+///   0xa96828, else 0xa96788 (standard); different wages: the money (`news_text_money` of slot 10, 0x64 bytes) and the
+///   second person's name (mode 1) in 0xa9663c, the second person's link (0x7d7) added before the text when the names
+///   still match; equal wages: with refusal reasons (`refusal_reasons_text`) and interest > 1.25 0xa9657c with them,
+///   else 0xa964d8; other answers write nothing (the buffer stays as it was).
+/// - agreed or joining another club (16 ≠ −1: that club becomes the buying one and slot 17 = 6 makes it a loan):
+///   without a selling club by the flags (0x10 0xa956f8; 0x40 with the other person 0xa9561c; else 0xa955b4); a loan:
+///   interest < 5.5 with flag 0x20000 "close proximity" 0xa963a4, else 0xa9630c; otherwise by the flags: 0x10, 8 and
+///   0x4000 0xa96210 (swapped); 0x10 and 0x4000 0xa96110; 0x10 and 0x200000 with a European buying club (nation →
+///   continent = `KEY_CONTINENT_EUROPE`) 0xa96018; 0x10 or interest > 10.5 0xa95770; 0x4000 and 0x200000 with a
+///   European club 0xa95f1c; 0x4000 0xa95e2c; 0x200000 with a European club 0xa95d44; 0x40 with the other person
+///   0xa95c44; 0x800 or 4 0xa95814 (swapped); 0x100 with the agent 0xa95b30; 0x40000000 with a wage above 100000, not
+///   a loan, by 8 and 0x400 (0xa95a34) or by 0x400 alone (0xa95964); otherwise 0xa958d0.
+/// Then the text, the player's link (0x7d7, always), the buying club's and the selling club's (when ≥ 0) links (0x7d5);
+/// the rejected clubs (one 0xa95570, two 0xa95510, three 0xa95490, more 0xa953e4 with the number) appended with their
+/// links, and the other person's link (0x7d7) when slot 22 ≥ 0.
+///
+/// The headline (the name in mode 5): not agreed and no other club: a loan 0xa95384, else by the player id mod 3 "snubs"
+/// 0xa95334 (0) or "rejects" 0xa952e4; agreed or another club: a loan "set for loan deal" 0xa95244, else by (club id +
+/// player id) mod 3 "set for" 0xa95298 (0) or "accepts offer" 0xa951f4; the player's link (always) and the club's.
+/// Original: `TRANSFER_MANAGER::write_contract_response_news_text` (0x8d9480, transfer_manager.cpp, thiscall, ret 0xc).
+pub(crate) unsafe extern "thiscall" fn write_contract_response_news_text(_this: usize, news: usize, full: u32, out: usize) {
+    let fmt = news_text_format();
+    let slot = |k: u32| exe::newsitem_get_slot(news, k);
+    let s: [u32; 28] = core::array::from_fn(|k| if (6..9).contains(&k) && k != 6 { 0 } else { slot(k as u32) });
+    let (s0, s1, s2, s3, s4) = (s[0], s[1], s[2], s[3], s[4]);
+    let mut s5 = s[5];
+    let answer = s[6] as u8;
+    let s9 = s[9] as u8;
+    let (s10, s11, s12, s13, s14, s15, s16) = (s[10] as i32, s[11] as i32, s[12], s[13], s[14], s[15], s[16] as i32);
+    let flags = s[26];
+    let interest = (s[27] as i32 as f64 * read_f32(rdata::F32_0_001000000047) as f64) as f32 as f64; // f32 = 0.001 (x87, 53 bits, stored as f32)
+    let count = slot(0x1c) as u8 as i8;
+    let shown = if count > 3 { 3 } else { count };
+    let mut clubs = [0usize; 3];
+    let mut i = 0i8;
+    while i < shown {
+        clubs[i as usize] = club_at(exe::newsitem_get_slot(news, (i as u8).wrapping_add(0x1d) as u32) as i32 as isize).addr();
+        i += 1;
+    }
+    let mut agent = [0u8; 0x190];
+    let mut other = [0u8; 0x190];
+    if s[18] as i32 > -1 {
+        exe::database_format_name_from_ids(s[19], s[20], s[21], agent.as_mut_ptr(), 0x190, 1, s[18]);
+    }
+    if s[22] as i32 > -1 {
+        exe::database_format_name_from_ids(s[23], s[24], s[25], other.as_mut_ptr(), 0x190, 1, s[22]);
+    }
+    let mut reasons = [0u8; 0x190];
+    let mut name = [0u8; 0x190];
+    let np = name.as_ptr() as usize;
+    let player = staff_at(s0 as i32 as isize);
+    if full != 0 {
+        exe::database_format_name_from_ids(s1, s2, s3, name.as_mut_ptr(), 0x190, 1, s0);
+        let club = |id: u32| club_at(id as i32 as isize).addr();
+        let european = |c: usize| {
+            let nation = Nation(read_usize(c + club::NATION));
+            if nation.is_null() { return false; }
+            let continent = nation.continent();
+            continent != 0 && read_u32(continent) == read_u32(KEY_CONTINENT_EUROPE)
+        };
+        if answer != 2 && s16 == -1 {
+            let (c4, c5) = (club(s4), club(s5));
+            let (g4, g5) = (read_i8(c4 + club::SHORT_GENDER_NAME) as i32, read_i8(c5 + club::SHORT_GENDER_NAME) as i32);
+            let (sn4, sn5) = (c4 + club::SHORT_NAME, c5 + club::SHORT_NAME);
+            if answer == 3 {
+                if s4 as i32 != -1 {
+                    fmt(NEWS_TEXT_BUFFER, 0xa9696c, g4, g4, g5, g5, sn4, np, sn5);
+                } else {
+                    fmt(NEWS_TEXT_BUFFER, 0xa968cc, g5, g5, np, sn5);
+                }
+            } else if answer == 4 {
+                if s4 as i32 == -1 {
+                    fmt(NEWS_TEXT_BUFFER, 0xa96464, g5, g5, np, sn5);
+                } else if s9 == 1 {
+                    if interest < read_f64(rdata::F64_1) {
+                        fmt(NEWS_TEXT_BUFFER, 0xa96828, g4, g4, g5, g5, sn4, np, sn5);
+                    } else {
+                        fmt(NEWS_TEXT_BUFFER, 0xa96788, g4, g4, g5, g5, sn4, np, sn5);
+                    }
+                } else if s10 != s11 {
+                    covered!("gra_12 rejected over the money");
+                    let mut money = [0u8; 0x64];
+                    let amount = exe::cash_get_display_amount(&(s10 as u32), 6);
+                    exe::cash_format_money(money.as_mut_ptr() as usize, 0x64, amount, 6);
+                    let mut second = [0u8; 0x12c];
+                    exe::database_format_name_from_ids(s13, s14, s15, second.as_mut_ptr(), 0x12c, 1, s12);
+                    fmt(NEWS_TEXT_BUFFER, 0xa9663c, g4, g4, g5, g5, g4, g4, sn4, np, sn5, sn4, second.as_ptr() as usize, money.as_ptr() as usize);
+                    let p12 = staff_at(s12 as i32 as isize);
+                    if exe::database_staff_matches_names(p12, s13, s14, s15, 0usize) != 0 {
+                        exe::text_add_link(out, second.as_ptr(), 0x7d7, p12);
+                    }
+                } else if refusal_reasons_text(s4, s5, s[18], s[22], flags, interest, reasons.as_mut_ptr() as usize) != 0
+                    && interest > read_f64(rdata::F64_1_25)
+                {
+                    fmt(NEWS_TEXT_BUFFER, 0xa9657c, g4, g4, g5, g5, sn4, np, sn5, reasons.as_ptr() as usize);
+                } else {
+                    fmt(NEWS_TEXT_BUFFER, 0xa964d8, g4, g4, g5, g5, sn4, np, sn5);
+                }
+            }
+        } else {
+            // the loan byte: slot 9, or with another club (slot 16) whether slot 17 is 6
+            let b13 = if s16 != -1 {
+                s5 = s16 as u32;
+                (s[17] as u8 == 6) as u8
+            } else {
+                s9
+            };
+            let (c4, c5) = (club(s4), club(s5));
+            let (g4, g5) = (read_i8(c4 + club::SHORT_GENDER_NAME) as i32, read_i8(c5 + club::SHORT_GENDER_NAME) as i32);
+            let (sn4, sn5) = (c4 + club::SHORT_NAME, c5 + club::SHORT_NAME);
+            let standard = |t: usize| { fmt(NEWS_TEXT_BUFFER, t, g4, g4, g5, g5, sn4, np, sn5); };
+            let swapped = |t: usize| { fmt(NEWS_TEXT_BUFFER, t, g5, g5, g4, g4, np, sn5, sn4); };
+            if s4 as i32 == -1 {
+                if flags as u8 & 0x10 != 0 {
+                    fmt(NEWS_TEXT_BUFFER, 0xa956f8, g5, g5, np, sn5);
+                } else if flags as u8 & 0x40 != 0 && s[22] as i32 > -1 {
+                    fmt(NEWS_TEXT_BUFFER, 0xa9561c, g5, g5, 100, np, sn5, other.as_ptr() as usize);
+                } else {
+                    fmt(NEWS_TEXT_BUFFER, 0xa955b4, g5, g5, np, sn5);
+                }
+            } else if b13 == 1 {
+                if interest < read_f64(rdata::F64_5_5) && flags & 0x20000 != 0 {
+                    standard(0xa963a4);
+                } else {
+                    standard(0xa9630c);
+                }
+            } else {
+                covered!("gra_12 agreed terms");
+                let f10 = flags & 0x10 != 0;
+                if f10 && flags & 8 != 0 && flags & 0x4000 != 0 {
+                    swapped(0xa96210);
+                } else if f10 && flags & 0x4000 != 0 {
+                    standard(0xa96110);
+                } else if f10 && flags & 0x200000 != 0 && european(c5) {
+                    standard(0xa96018);
+                } else if f10 || interest > read_f64(rdata::F64_10_5) {
+                    standard(0xa95770);
+                } else if flags & 0x4000 != 0 && flags & 0x200000 != 0 && european(c5) {
+                    fmt(NEWS_TEXT_BUFFER, 0xa95f1c, g4, g4, 100, 100, g5, g5, sn4, np, sn5);
+                } else if flags & 0x4000 != 0 {
+                    standard(0xa95e2c);
+                } else if flags & 0x200000 != 0 && european(c5) {
+                    standard(0xa95d44);
+                } else if flags & 0x40 != 0 && s[22] as i32 > -1 {
+                    fmt(NEWS_TEXT_BUFFER, 0xa95c44, g4, g4, g5, g5, 100, sn4, np, sn5, other.as_ptr() as usize);
+                } else if flags & 0x800 != 0 || flags & 4 != 0 {
+                    swapped(0xa95814);
+                } else if flags & 0x100 != 0 && s[18] as i32 > -1 {
+                    fmt(NEWS_TEXT_BUFFER, 0xa95b30, g5, g5, g4, g4, np, sn5, sn4, agent.as_ptr() as usize);
+                } else if flags & 0x40000000 != 0 && (s11 > 100000 || s10 > 100000) && b13 == 0 && flags & 0x400 != 0 {
+                    swapped(if flags & 8 != 0 { 0xa95a34 } else { 0xa95964 });
+                } else {
+                    standard(0xa958d0); // gra12: the plain agreed terms
+                }
+            }
+        }
+        exe::text_set_string(out, NEWS_TEXT_BUFFER as *const u8);
+        exe::text_add_link(out, name.as_ptr(), 0x7d7, player);
+        let c5 = club(s5);
+        exe::text_add_link(out, (c5 + club::SHORT_NAME) as *const u8, 0x7d5, c5);
+        if s4 as i32 != -1 {
+            news_text_link_club(out, s4);
+        }
+        let sentence = match count {
+            1 => {
+                let c = clubs[0];
+                let g = read_i8(c + club::SHORT_GENDER_NAME) as i32;
+                fmt(NEWS_TEXT_BUFFER, 0xa95570, g, g, c + club::SHORT_NAME);
+                true
+            }
+            2 => {
+                let (c0, c1) = (clubs[0], clubs[1]);
+                let (g0, g1) = (read_i8(c0 + club::SHORT_GENDER_NAME) as i32, read_i8(c1 + club::SHORT_GENDER_NAME) as i32);
+                fmt(NEWS_TEXT_BUFFER, 0xa95510, g0, g0, g1, g1, c0 + club::SHORT_NAME, c1 + club::SHORT_NAME);
+                true
+            }
+            n if n >= 3 => {
+                let [c0, c1, c2] = clubs;
+                let g = |c: usize| read_i8(c + club::SHORT_GENDER_NAME) as i32;
+                let (g0, g1, g2) = (g(c0), g(c1), g(c2));
+                let (n0, n1, n2) = (c0 + club::SHORT_NAME, c1 + club::SHORT_NAME, c2 + club::SHORT_NAME);
+                if n == 3 {
+                    fmt(NEWS_TEXT_BUFFER, 0xa95490, g0, g0, g1, g1, g2, g2, n0, n1, n2);
+                } else {
+                    fmt(NEWS_TEXT_BUFFER, 0xa953e4, g0, g0, g1, g1, g2, g2, n as i32, n0, n1, n2);
+                }
+                true
+            }
+            _ => false,
+        };
+        if sentence {
+            covered!("gra_12 rejected clubs");
+            news_text_append(out, NEWS_TEXT_BUFFER);
+            for &c in clubs.iter().take(shown.max(0) as usize) {
+                exe::text_add_link(out, (c + club::SHORT_NAME) as *const u8, 0x7d5, c);
+            }
+        }
+        if s[22] as i32 > -1 {
+            exe::text_add_link(out, other.as_ptr(), 0x7d7, staff_at(s[22] as i32 as isize));
+        }
+    } else {
+        exe::database_format_name_from_ids(s1, s2, s3, name.as_mut_ptr(), 0x190, 5, s0);
+        let t;
+        if answer != 2 && s16 == -1 {
+            t = if s9 == 1 {
+                0xa95384 // "<name> rejects loan offer from <club>"
+            } else if (s0 as i32) % 3 == 0 {
+                0xa95334 // "<name> snubs <club>"
+            } else {
+                0xa952e4 // "<name> rejects <club>"
+            };
+        } else {
+            let on_loan = if s16 != -1 {
+                s5 = s16 as u32;
+                s[17] as u8 == 6
+            } else {
+                s9 == 1
+            };
+            t = if on_loan {
+                0xa95244 // "<name> set for <club> loan deal"
+            } else if (s5 as i32).wrapping_add(s0 as i32) % 3 == 0 {
+                0xa95298 // "<name> set for <club>"
+            } else {
+                0xa951f4 // "<name> accepts <club> offer"
+            };
+        }
+        let c = club_at(s5 as i32 as isize).addr();
+        let g = read_i8(c + club::SHORT_GENDER_NAME) as i32;
+        fmt(NEWS_TEXT_BUFFER, t, g, g, np, c + club::SHORT_NAME);
+        exe::text_set_string(out, NEWS_TEXT_BUFFER as *const u8);
+        exe::text_add_link(out, name.as_ptr(), 0x7d7, player);
+        exe::text_add_link(out, (c + club::SHORT_NAME) as *const u8, 0x7d5, c);
+    }
+}
+
+/// Comparer for `write_contract_response_news_text`: the text side by side (`compare_text_writer`).
+pub(crate) unsafe extern "thiscall" fn compare_write_contract_response_news_text(this: usize, news: usize, full: u32, out: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_WRITE_CONTRACT_RESPONSE_NEWS_TEXT);
+    compare_text_writer(out, || o(this, news, full, out), |t| write_contract_response_news_text(this, news, full, t), || format!("write_contract_response_news_text(news {:#x}, full {})", news, full));
+}
+
+/// Writes the headline or the body of the news that a club signed or appointed a person, for a fee, on a free
+/// transfer or in a player swap.
+///
+/// `write_transfer_completed_news_text(news, full, out)` (the 0xfa8 news). The body: slots 0..3 (the person and his
+/// name ids, mode 1), 4 (the buying club, always linked), 5 (the selling club, −1 none), 6 (the fee), 9 (a pending
+/// move: 0 the move is done), 10 and 11 (the joining day and year), 12 (the job), 13 (the appearance fee clause), 14
+/// (the swapped players); from slot 15 on, read in turn: four slots per swapped player for up to three of them (the
+/// person and his three name ids; their names, mode 1, joined as "A", "A and B" (0xa91c40), "A, B and C" (0xa91bc0)
+/// or, for more, the number in words, "<n> players" 0xa91ba0), then the kind of move (0 / 1 / other), then a flag
+/// that, when not 0, brings two more slots (the strengths and the positions: `exe::write_position_name` then
+/// `exe::write_player_description` (person, positions, strengths, 0xc8, the gender of the position, 1) give the player
+/// type and its gender; without the flag the "gender" is the slot counter, as in the original).
+///
+/// - A pending move (slot 9 ≠ 0) of a job that is not the plain player's (`exe::database_is_not_plain_player_job`):
+///   the job name (`exe::database_get_job_name`, long form, lower case, with its gender) and, with a joining year, the
+///   joining date (`exe::new_date`, `exe::date_get_long_date_string`): appointed from another club 0xa98d20 or not
+///   0xa98c64; without the year: 0xa98bcc / 0xa98b58.
+/// - A pending move of a player with no fee: with a joining year (the date), from another club by the kind: 0
+///   "snapped up" 0xa9882c, 1 "agreed to sign" 0xa98948, other "signed from" 0xa98a6c; with no other club: 0xa985e8,
+///   0xa986c8, 0xa98780; without the year, from another club: 0xa983d4, 0xa98490, 0xa9855c; with no other club:
+///   0xa98240, 0xa982d4, 0xa9836c.
+/// - Otherwise (the move done, or a fee): the fee text (`news_text_money`); without swapped players and a fee above 0
+///   by the kind 0xa98028, 0xa980c8, 0xa981a4; with no fee as the no-year texts above; with swapped players and a fee
+///   0xa97d30, 0xa97e30, 0xa97f54; with no fee 0xa97aac, 0xa97b94, 0xa97c64.
+/// Then the text and the links of the two clubs; with the appearance clause, the fee text of fee + clause is appended
+/// ("may be increased" 0xa97a54 with a fee, "a fee may be payable" 0xa97a00 without) unless it equals the fee text
+/// (a defect of the original: on the paths that never wrote the fee text it compares with whatever the stack held;
+/// the copy compares with an empty text); the person's link (0x7d7) and the swapped players' links (for 1..3 of them)
+/// when the names still match.
+///
+/// The headline: slots 0..4 and 15 (the name in mode 5); by (slot 15 × club + person) mod 4 (C remainder): 0 "get"
+/// 0xa978cc, 1 "moves to" 0xa97914, 2 "seal deal" 0xa97968, otherwise "sign" 0xa979b8; the club's link and the
+/// person's (when the names still match).
+/// Original: `TRANSFER_MANAGER::write_transfer_completed_news_text` (0x8dc370, transfer_manager.cpp, thiscall, ret 0xc).
+pub(crate) unsafe extern "thiscall" fn write_transfer_completed_news_text(_this: usize, news: usize, full: u32, out: usize) {
+    let fmt = news_text_format();
+    let slot = |k: u32| exe::newsitem_get_slot(news, k);
+    let mut name = [0u8; 0x12c];
+    let np = name.as_ptr() as usize;
+    if full == 0 {
+        let (s0, s1, s2, s3, s4) = (slot(0), slot(1), slot(2), slot(3), slot(4));
+        let s15 = slot(0xf) as u8 as i8 as i32;
+        exe::database_format_name_from_ids(s1, s2, s3, name.as_mut_ptr(), 0x12c, 5, s0);
+        let c = club_at(s4 as i32 as isize).addr();
+        let g = read_i8(c + club::SHORT_GENDER_NAME) as i32;
+        let sn = c + club::SHORT_NAME;
+        match s15.wrapping_mul(s4 as i32).wrapping_add(s0 as i32) % 4 {
+            0 => { fmt(NEWS_TEXT_BUFFER, 0xa978cc, g, g, sn, np); } // "<club> get <name>"
+            1 => { fmt(NEWS_TEXT_BUFFER, 0xa97914, 100, g, g, np, sn); } // "<name> moves to <club>"
+            2 => { fmt(NEWS_TEXT_BUFFER, 0xa97968, g, g, 3, sn, np); } // "<club> seal <name> deal"
+            _ => { fmt(NEWS_TEXT_BUFFER, 0xa979b8, g, g, sn, np); } // "<club> sign <name>"
+        }
+        exe::text_set_string(out, NEWS_TEXT_BUFFER as *const u8);
+        news_text_link_club(out, s4);
+        news_text_link_person(out, &name, s0, s1, s2, s3, 0x7d7);
+        return;
+    }
+    covered!("gra_13 completed body");
+    let mut kind_text = [0u8; 0xc8]; // the player type (write_player_description)
+    let mut players = [0u8; 0x190];
+    let (s0, s1, s2, s3, buyer, seller, fee) = (slot(0), slot(1), slot(2), slot(3), slot(4), slot(5), slot(6) as i32);
+    let pending = slot(9) as u8;
+    let (day, year) = (slot(0xa), slot(0xb));
+    let job = slot(0xc) as u8;
+    let clause = slot(0xd);
+    let swaps = slot(0xe) as u8 as i8;
+    let mut counter: u8 = 0xf;
+    let mut next = || { let k = counter; counter = counter.wrapping_add(1); exe::newsitem_get_slot(news, k as u32) };
+    let mut swap_names = [[0u8; 0x12c]; 3];
+    let mut swap_ids = [[0u32; 4]; 3]; // the person and his three name ids
+    if swaps != 0 {
+        let shown = if swaps < 3 { swaps } else { 3 };
+        let mut i = 0i8;
+        while i < shown {
+            let ids = [next(), next(), next(), next()];
+            swap_ids[i as usize] = ids;
+            exe::database_format_name_from_ids(ids[1], ids[2], ids[3], swap_names[i as usize].as_mut_ptr(), 0x12c, 1, ids[0]);
+            i += 1;
+        }
+        let pp = players.as_mut_ptr() as usize;
+        match swaps {
+            1 => players[..0x12c].copy_from_slice(&swap_names[0]),
+            2 => { fmt(pp, 0xa91c40, swap_names[0].as_ptr() as usize, swap_names[1].as_ptr() as usize); }
+            3 => { fmt(pp, 0xa91bc0, swap_names[0].as_ptr() as usize, swap_names[1].as_ptr() as usize, swap_names[2].as_ptr() as usize); }
+            _ => {
+                let mut words = [0u8; 0x34];
+                exe::utils_number_to_words(swaps as i32, words.as_mut_ptr(), 0x32, 1);
+                fmt(pp, 0xa91ba0, words.as_ptr() as usize); // "<number> players"
+            }
+        }
+    }
+    let kind = next() as u8 as i8;
+    // the player type's gender, or without one the slot counter (as in the original)
+    let type_gender;
+    if next() != 0 {
+        let strengths = exe::newsitem_get_slot(news, counter as u32);
+        counter = counter.wrapping_add(1);
+        let positions = exe::newsitem_get_slot(news, counter as u32);
+        let position_gender = exe::write_position_name(positions, kind_text.as_mut_ptr() as usize, 0xc8, 1);
+        type_gender = exe::write_player_description(s0 as i32, positions, strengths, kind_text.as_mut_ptr() as usize, 0xc8, position_gender as u32, 1);
+    } else {
+        type_gender = counter;
+    }
+    exe::database_format_name_from_ids(s1, s2, s3, name.as_mut_ptr(), 0x12c, 1, s0);
+    let c4 = club_at(buyer as i32 as isize).addr();
+    let c5 = club_at(seller as i32 as isize).addr();
+    let (g4, g5) = (read_i8(c4 + club::SHORT_GENDER_NAME) as i32, read_i8(c5 + club::SHORT_GENDER_NAME) as i32);
+    let (sn4, sn5) = (c4 + club::SHORT_NAME, c5 + club::SHORT_NAME);
+    let n = type_gender as i8 as i32;
+    let kt = kind_text.as_ptr() as usize;
+    let has_seller = seller as i32 > -1;
+    let mut money = [0u8; 0x34];
+    let mp = money.as_ptr() as usize;
+    let pl = players.as_ptr() as usize;
+    let with_date = year as u16 != 0;
+    let mut when = [0u8; 0xc8];
+    let wp = when.as_ptr() as usize;
+    let long_date = |when: &mut [u8; 0xc8]| {
+        let mut date = [0u8; 8];
+        exe::new_date(date.as_mut_ptr() as usize, day, year);
+        exe::date_get_long_date_string(date.as_ptr() as usize, when.as_mut_ptr() as usize, 0xc8, 0xff);
+    };
+    // the "no year" texts of a player with no fee, shared with the done move without swaps
+    let free_no_year = |kind: i8| {
+        if has_seller {
+            match kind {
+                0 => { fmt(NEWS_TEXT_BUFFER, 0xa983d4, g4, g4, n, n, g5, g5, sn4, kt, np, sn5); }
+                1 => { fmt(NEWS_TEXT_BUFFER, 0xa98490, g4, g4, n, n, g5, g5, sn4, kt, np, sn5); }
+                _ => { fmt(NEWS_TEXT_BUFFER, 0xa9855c, g4, g4, g5, g5, sn4, np, sn5); }
+            }
+        } else {
+            match kind {
+                0 => { fmt(NEWS_TEXT_BUFFER, 0xa98240, g4, g4, n, n, sn4, kt, np); }
+                1 => { fmt(NEWS_TEXT_BUFFER, 0xa982d4, g4, g4, n, n, sn4, kt, np); }
+                _ => { fmt(NEWS_TEXT_BUFFER, 0xa9836c, g4, g4, sn4, np); }
+            }
+        }
+    };
+    let not_plain = exe::database_is_not_plain_player_job(job as i8) != 0;
+    if pending != 0 && not_plain {
+        covered!("gra_13 appointment");
+        let mut job_gender = pending as i8;
+        if with_date {
+            long_date(&mut when);
+        }
+        let r = exe::database_get_job_name(job as u32, 0, 0, &mut job_gender);
+        let jg = job_gender as i32;
+        match (with_date, has_seller) {
+            (true, true) => { fmt(NEWS_TEXT_BUFFER, 0xa98d20, g4, g4, g5, g5, jg, jg, g4, g4, 100, sn4, sn5, np, r, sn4, wp); }
+            (true, false) => { fmt(NEWS_TEXT_BUFFER, 0xa98c64, g4, g4, jg, jg, 100, sn4, np, r, wp); }
+            (false, true) => { fmt(NEWS_TEXT_BUFFER, 0xa98bcc, g4, g4, g5, g5, jg, jg, sn4, sn5, np, r); }
+            (false, false) => { fmt(NEWS_TEXT_BUFFER, 0xa98b58, g4, g4, jg, jg, sn4, np, r); }
+        }
+    } else if pending != 0 && fee == 0 {
+        covered!("gra_13 free transfer");
+        if with_date {
+            long_date(&mut when);
+            if has_seller {
+                match kind {
+                    0 => { fmt(NEWS_TEXT_BUFFER, 0xa9882c, g4, g4, n, n, g5, g5, g4, g4, 100, sn4, kt, np, sn5, sn4, wp); }
+                    1 => { fmt(NEWS_TEXT_BUFFER, 0xa98948, g4, g4, g5, g5, n, n, g4, g4, 100, sn4, sn5, kt, np, sn4, wp); }
+                    _ => { fmt(NEWS_TEXT_BUFFER, 0xa98a6c, g4, g4, g5, g5, g4, g4, 100, sn4, np, sn5, sn4, wp); }
+                }
+            } else {
+                match kind {
+                    0 => { fmt(NEWS_TEXT_BUFFER, 0xa985e8, g4, g4, n, n, 100, sn4, kt, np, wp); }
+                    1 => { fmt(NEWS_TEXT_BUFFER, 0xa986c8, g4, g4, 100, np, sn4, wp); }
+                    _ => { fmt(NEWS_TEXT_BUFFER, 0xa98780, g4, g4, 100, sn4, np, wp); }
+                }
+            }
+        } else {
+            free_no_year(kind);
+        }
+    } else {
+        news_text_money(fee as u32, &mut money);
+        if swaps == 0 {
+            if fee > 0 {
+                match kind {
+                    0 => { fmt(NEWS_TEXT_BUFFER, 0xa98028, g4, g4, g5, g5, sn4, sn5, np, mp); }
+                    1 => { fmt(NEWS_TEXT_BUFFER, 0xa980c8, g4, g4, g5, g5, n, n, sn4, sn5, kt, np, mp); }
+                    _ => { fmt(NEWS_TEXT_BUFFER, 0xa981a4, g4, g4, g5, g5, sn4, np, sn5, mp); } // gra13: signed for a fee
+                }
+            } else {
+                free_no_year(kind);
+            }
+        } else if fee > 0 {
+            match kind {
+                0 => { fmt(NEWS_TEXT_BUFFER, 0xa97d30, g4, g4, n, n, g5, g5, sn4, kt, np, sn5, mp, pl); }
+                1 => { fmt(NEWS_TEXT_BUFFER, 0xa97e30, g4, g4, g5, g5, n, n, sn4, sn5, kt, np, mp, pl); }
+                _ => { fmt(NEWS_TEXT_BUFFER, 0xa97f54, g4, g4, g5, g5, sn4, np, sn5, mp, pl); }
+            }
+        } else {
+            match kind {
+                0 => { fmt(NEWS_TEXT_BUFFER, 0xa97aac, g4, g4, g5, g5, n, n, sn4, sn5, kt, np, pl); }
+                1 => { fmt(NEWS_TEXT_BUFFER, 0xa97b94, g4, g4, g5, g5, sn4, np, sn5, pl); }
+                _ => { fmt(NEWS_TEXT_BUFFER, 0xa97c64, g4, g4, g5, g5, sn4, np, sn5, pl); }
+            }
+        }
+    }
+    exe::text_set_string(out, NEWS_TEXT_BUFFER as *const u8);
+    news_text_link_club(out, buyer);
+    if seller as i32 != -1 {
+        news_text_link_club(out, seller);
+    }
+    if clause != 0 {
+        let mut total = [0u8; 0x34];
+        news_text_money(clause.wrapping_add(fee as u32), &mut total);
+        let same = money.iter().position(|&b| b == 0).map(|e| &money[..e]) == total.iter().position(|&b| b == 0).map(|e| &total[..e]);
+        if !same {
+            covered!("gra_13 appearance clause");
+            if fee != 0 {
+                fmt(NEWS_TEXT_BUFFER, 0xa97a54, total.as_ptr() as usize); // "The fee may be increased to ..."
+            } else {
+                fmt(NEWS_TEXT_BUFFER, 0xa97a00, total.as_ptr() as usize); // "A fee of ... may be payable ..."
+            }
+            news_text_append(out, NEWS_TEXT_BUFFER);
+        }
+    }
+    news_text_link_person(out, &name, s0, s1, s2, s3, 0x7d7);
+    if swaps > 0 && swaps <= 3 {
+        for i in 0..swaps as usize {
+            let [id, a, b, c] = swap_ids[i];
+            let person = staff_at(id as i32 as isize);
+            if exe::database_staff_matches_names(person, a, b, c, 0usize) != 0 {
+                exe::text_add_link(out, swap_names[i].as_ptr(), 0x7d7, person);
+            }
+        }
+    }
+}
+
+/// Comparer for `write_transfer_completed_news_text`: the text side by side (`compare_text_writer`).
+pub(crate) unsafe extern "thiscall" fn compare_write_transfer_completed_news_text(this: usize, news: usize, full: u32, out: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_WRITE_TRANSFER_COMPLETED_NEWS_TEXT);
+    compare_text_writer(out, || o(this, news, full, out), |t| write_transfer_completed_news_text(this, news, full, t), || format!("write_transfer_completed_news_text(news {:#x}, full {})", news, full));
+}
+
+/// Writes the headline or the body of the news that a club offered a fee, players, a contract or a job for a person.
+///
+/// `write_offer_made_news_text(news, full, out)` (the 0xfa0 news). First the offer status (slot 9): when it is 0, the
+/// offer at the index of slot 6 (an index past the count reads the first) with the serial of slot 7 gives its status
+/// (`offer::STATUS`, when not 0), stored back through `News::set_item_slot` (slot 9, into the inbox of the human
+/// manager of the current slot, even when there is none, and into this news item).
+///
+/// The body: slots 0..3 (the person and his name ids, mode 1), 4 (the bidding club: its long name and gender, always
+/// linked by the long name), 5 (the selling club, −1 none), 8 (the fee), 10 (the total value), 11 (a contract offer),
+/// 12 and 13 (the start day and year), 14 (the kind: 1, 2, 3 and 5), 15 (the contract kind: 1 and 3), 16 (the flags:
+/// 1 and 2), 17 (a third club), 18 (the job), 23 (the swapped players); from slot 24 on, four slots per swapped player
+/// for up to three of them (their names, mode 1, joined as in the other transfer texts) and then the job slot (read
+/// without advancing). "The seller is someone else" = the selling club exists and its manager (`club::MANAGER`) is
+/// not the human manager of the current slot.
+/// - A contract offer (slot 11): the job name (`exe::database_get_job_name`, with its gender); a job that is not the
+///   plain player's with a name: 0xa91afc with the seller or 0xa91a80; otherwise by the seller: contract kind 1 or 3
+///   0xa91668 (someone else) / 0xa91314; with a start year (the long date of slots 12 and 13) by the kind 3 (0xa91980
+///   / 0xa91590), 5 (0xa91870 / 0xa914a8) or other (0xa91794 / 0xa913f4); without the year 0xa91708 / 0xa91390.
+/// - A transfer with the total above the fee: the two money texts (`news_text_money`); without swapped players, the
+///   seller someone else: kind 1 0xa91260, 2 0xa911b4, else by the flags (1 and 3 with a third club 0xa910ec with the
+///   fee, without 0xa9101c; otherwise 0xa90d98 with the total); not someone else: 1 0xa90f8c, 2 0xa90f08, else by the
+///   flags (1 and 2: a third club 0xa910ec, else 0xa90e3c with the fee; 2 alone 0xa90e3c; otherwise 0xa90d98); with
+///   swapped players: 0xa90ca8, 0xa90bc4, 0xa90ae4 (someone else) / 0xa90a1c, 0xa9095c, 0xa908a0.
+/// - Otherwise (the fee text): without swapped players and a fee above 0, someone else: 1 0xa907f0, 2 0xa90748, else
+///   flags 1 and 2 (a third club 0xa90674, else 0xa905b0), flag 1 with a third club and a fee of at least 500000
+///   0xa910ec, flag 2 0xa905b0, otherwise 0xa9050c; not someone else: 0xa90480, 0xa903fc, 0xa90380; no fee: 0xa902f0,
+///   0xa90268, 0xa901e4 / 0xa90178, 0xa90114, 0xa900b4; with swapped players and a fee: 0xa8ffc8, 0xa8fee4, 0xa8fe08 /
+///   0xa8fd40, 0xa8fc84, 0xa8fbcc; with no fee: 0xa8faf4, 0xa8fa28, 0xa8f960 / 0xa8f8b0, 0xa8f808, 0xa8f764.
+/// Then the text; a contract offer with a fee: the compensation due to the seller (0xa8f6ec); otherwise by the status
+/// the seller's sentence (1 0xa8f6a0, 5 0xa8f660, 2 0xa8f620, 0x11 0xa8f5d4, else nothing); a non-empty sentence is
+/// appended. The links: the bidding club (long name), the seller (short name, when ≥ 0), the person and the swapped
+/// players (0x7d7, for 1..3 of them) when the names still match.
+///
+/// The headline: "transfer bid for" (0xa8f578) with the club of slot 4 and the name (mode 5); its link and the
+/// person's.
+/// Original: `TRANSFER_MANAGER::write_offer_made_news_text` (0x8d3520, transfer_manager.cpp, thiscall, ret 0xc).
+pub(crate) unsafe extern "thiscall" fn write_offer_made_news_text(_this: usize, news: usize, full: u32, out: usize) {
+    let fmt = news_text_format();
+    let slot = |k: u32| exe::newsitem_get_slot(news, k);
+    let hm = read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize as usize);
+    let mut status = slot(9) as u8;
+    if status == 0 {
+        let index = slot(6) as i32;
+        let serial = slot(7);
+        let tm = read_usize(G_TRANSFER_MANAGER);
+        let arr = read_usize(tm);
+        let at = if index < read_i32(tm + 4) { arr.wrapping_add((index as usize).wrapping_mul(4)) } else { arr };
+        let o = Offer(read_usize(at));
+        if !o.is_null() && (o.serial() as u32) == serial && o.status() != 0 {
+            covered!("gra_14 offer status stored");
+            status = o.status();
+            let set: unsafe extern "thiscall" fn(usize, usize, u32, u32, i32, usize) = core::mem::transmute(FN_NEWS_SET_ITEM_SLOT); // News::set_item_slot
+            let hm2 = read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize as usize);
+            set(read_usize(G_NEWS), hm2, read_u32(news + 0xd6), 9, status as i8 as i32, news);
+        }
+    }
+    let mut name = [0u8; 0x12c];
+    let np = name.as_ptr() as usize;
+    if full == 0 {
+        let (s0, s1, s2, s3, s4) = (slot(0), slot(1), slot(2), slot(3), slot(4));
+        exe::database_format_name_from_ids(s1, s2, s3, name.as_mut_ptr(), 0x12c, 5, s0);
+        let c = club_at(s4 as i32 as isize).addr();
+        let g = read_i8(c + club::SHORT_GENDER_NAME) as i32;
+        fmt(NEWS_TEXT_BUFFER, 0xa8f578, g, g, c + club::SHORT_NAME, np); // "<club> transfer bid for <name>"
+        exe::text_set_string(out, NEWS_TEXT_BUFFER as *const u8);
+        news_text_link_club(out, s4);
+        news_text_link_person(out, &name, s0, s1, s2, s3, 0x7d7);
+        return;
+    }
+    covered!("gra_14 offer body");
+    let mut players = [0u8; 0x190];
+    let (s0, s1, s2, s3, bidder, seller) = (slot(0), slot(1), slot(2), slot(3), slot(4), slot(5));
+    let fee = slot(8) as i32;
+    let total = slot(0xa) as i32;
+    let contract = slot(0xb) as u8;
+    let (day, year) = (slot(0xc), slot(0xd));
+    let kind = slot(0xe) as u8;
+    let contract_kind = slot(0xf) as u8;
+    let flags = slot(0x10) as u8;
+    let third = slot(0x11) as i32;
+    let _job_slot = slot(0x12) as u8;
+    let swaps = slot(0x17) as u8 as i8;
+    let someone_else = if seller as i32 != -1 {
+        let m = read_usize(club_at(seller as i32 as isize).addr() + club::MANAGER);
+        m == 0 || m != hm
+    } else {
+        false
+    };
+    let mut counter: u8 = 0x18;
+    let mut swap_names = [[0u8; 0x12c]; 3];
+    let mut swap_ids = [[0u32; 4]; 3];
+    if swaps != 0 {
+        let shown = if swaps < 3 { swaps } else { 3 };
+        let mut i = 0i8;
+        while i < shown {
+            let mut ids = [0u32; 4];
+            for v in ids.iter_mut() {
+                *v = exe::newsitem_get_slot(news, counter as u32);
+                counter = counter.wrapping_add(1);
+            }
+            swap_ids[i as usize] = ids;
+            exe::database_format_name_from_ids(ids[1], ids[2], ids[3], swap_names[i as usize].as_mut_ptr(), 0x12c, 1, ids[0]);
+            i += 1;
+        }
+        let pp = players.as_mut_ptr() as usize;
+        match swaps {
+            1 => players[..0x12c].copy_from_slice(&swap_names[0]),
+            2 => { fmt(pp, 0xa91c40, swap_names[0].as_ptr() as usize, swap_names[1].as_ptr() as usize); }
+            3 => { fmt(pp, 0xa91bc0, swap_names[0].as_ptr() as usize, swap_names[1].as_ptr() as usize, swap_names[2].as_ptr() as usize); }
+            _ => {
+                let mut words = [0u8; 0x34];
+                exe::utils_number_to_words(swaps as i32, words.as_mut_ptr(), 0x32, 1);
+                fmt(pp, 0xa91ba0, words.as_ptr() as usize); // "<number> players"
+            }
+        }
+    }
+    exe::database_format_name_from_ids(s1, s2, s3, name.as_mut_ptr(), 0x12c, 1, s0);
+    let job = exe::newsitem_get_slot(news, counter as u32) as u8;
+    let c4 = club_at(bidder as i32 as isize).addr();
+    let c5 = club_at(seller as i32 as isize).addr();
+    let g4 = read_i8(c4 + club::GENDER_NAME) as i32; // the bidding club by its long name
+    let n4 = c4 + club::NAME;
+    let g5 = read_i8(c5 + club::SHORT_GENDER_NAME) as i32;
+    let sn5 = c5 + club::SHORT_NAME;
+    // the third club (slot 17) by its long name, read only on the paths that use it (it is −1 on the others)
+    let c17 = || club_at(third as isize).addr();
+    let pl = players.as_ptr() as usize;
+    let mut money = [0u8; 0x34];
+    let mp = money.as_ptr() as usize;
+    if contract != 0 {
+        let mut job_gender = flags as i8; // the original writes the gender over the flags' byte
+        let r = exe::database_get_job_name(job as u32, 0, 0, &mut job_gender);
+        let jg = job_gender as i32;
+        if exe::database_is_not_plain_player_job(job as i8) != 0 && r != 0 {
+            covered!("gra_14 job offer");
+            if seller as i32 > -1 {
+                fmt(NEWS_TEXT_BUFFER, 0xa91afc, g4, g4, g5, g5, jg, jg, n4, sn5, np, r);
+            } else {
+                fmt(NEWS_TEXT_BUFFER, 0xa91a80, g4, g4, jg, jg, n4, np, r);
+            }
+        } else {
+            let date_text = |when: &mut [u8; 0xc8]| {
+                let mut date = [0u8; 8];
+                exe::new_date(date.as_mut_ptr() as usize, day, year);
+                exe::date_get_long_date_string(date.as_ptr() as usize, when.as_mut_ptr() as usize, 0xc8, 0xff);
+            };
+            let mut when = [0u8; 0xc8];
+            let wp = when.as_ptr() as usize;
+            if someone_else {
+                if contract_kind == 1 || contract_kind == 3 {
+                    fmt(NEWS_TEXT_BUFFER, 0xa91668, g4, g4, g5, g5, n4, sn5, np);
+                } else if year as u16 != 0 {
+                    date_text(&mut when);
+                    match kind {
+                        3 => { fmt(NEWS_TEXT_BUFFER, 0xa91980, g4, g4, g5, g5, 100, n4, sn5, np, wp); }
+                        5 => { fmt(NEWS_TEXT_BUFFER, 0xa91870, g4, g4, g5, g5, 100, n4, sn5, np, wp); }
+                        _ => { fmt(NEWS_TEXT_BUFFER, 0xa91794, g4, g4, g5, g5, n4, sn5, np); }
+                    }
+                } else {
+                    fmt(NEWS_TEXT_BUFFER, 0xa91708, g4, g4, g5, g5, n4, sn5, np);
+                }
+            } else if contract_kind == 1 || contract_kind == 3 {
+                fmt(NEWS_TEXT_BUFFER, 0xa91314, g4, g4, n4, np);
+            } else if year as u16 != 0 {
+                date_text(&mut when);
+                match kind {
+                    3 => { fmt(NEWS_TEXT_BUFFER, 0xa91590, g4, g4, 100, n4, np, wp); }
+                    5 => { fmt(NEWS_TEXT_BUFFER, 0xa914a8, g4, g4, 100, n4, np, wp); }
+                    _ => { fmt(NEWS_TEXT_BUFFER, 0xa913f4, g4, g4, n4, np); }
+                }
+            } else {
+                fmt(NEWS_TEXT_BUFFER, 0xa91390, g4, g4, n4, np); // "<club> have offered a contract to <name>"
+            }
+        }
+    } else if total > fee {
+        let mut fee_text = [0u8; 0x34];
+        news_text_money(total as u32, &mut money);
+        news_text_money(fee as u32, &mut fee_text);
+        let fp = fee_text.as_ptr() as usize;
+        if swaps == 0 {
+            if someone_else {
+                match kind {
+                    1 => { fmt(NEWS_TEXT_BUFFER, 0xa91260, g4, g4, g5, g5, n4, mp, sn5, np); }
+                    2 => { fmt(NEWS_TEXT_BUFFER, 0xa911b4, g4, g4, g5, g5, n4, mp, sn5, np); }
+                    _ => {
+                        if flags & 3 != 0 {
+                            if third != -1 {
+                                fmt(NEWS_TEXT_BUFFER, 0xa910ec, g4, g4, read_i8(c17() + club::GENDER_NAME) as i32, read_i8(c17() + club::GENDER_NAME) as i32, n4, c17() + club::NAME, np, fp);
+                            } else {
+                                fmt(NEWS_TEXT_BUFFER, 0xa9101c, g4, g4, g5, g5, n4, fp, sn5, np);
+                            }
+                        } else {
+                            fmt(NEWS_TEXT_BUFFER, 0xa90d98, g4, g4, g5, g5, n4, mp, sn5, np);
+                        }
+                    }
+                }
+            } else {
+                match kind {
+                    1 => { fmt(NEWS_TEXT_BUFFER, 0xa90f8c, g4, g4, n4, mp, np); }
+                    2 => { fmt(NEWS_TEXT_BUFFER, 0xa90f08, g4, g4, n4, mp, np); }
+                    _ => {
+                        if flags & 1 != 0 && flags & 2 != 0 && third != -1 {
+                            fmt(NEWS_TEXT_BUFFER, 0xa910ec, g4, g4, read_i8(c17() + club::GENDER_NAME) as i32, read_i8(c17() + club::GENDER_NAME) as i32, n4, c17() + club::NAME, np, fp);
+                        } else if flags & 2 != 0 {
+                            fmt(NEWS_TEXT_BUFFER, 0xa90e3c, g4, g4, g5, g5, n4, fp, sn5, np);
+                        } else {
+                            fmt(NEWS_TEXT_BUFFER, 0xa90d98, g4, g4, g5, g5, n4, mp, sn5, np);
+                        }
+                    }
+                }
+            }
+        } else if someone_else {
+            let t = match kind { 1 => 0xa90ca8, 2 => 0xa90bc4, _ => 0xa90ae4 };
+            fmt(NEWS_TEXT_BUFFER, t, g4, g4, g5, g5, n4, mp, pl, sn5, np);
+        } else {
+            let t = match kind { 1 => 0xa90a1c, 2 => 0xa9095c, _ => 0xa908a0 };
+            fmt(NEWS_TEXT_BUFFER, t, g4, g4, n4, mp, pl, np);
+        }
+    } else {
+        news_text_money(fee as u32, &mut money);
+        if swaps == 0 {
+            if fee > 0 {
+                if someone_else {
+                    match kind {
+                        1 => { fmt(NEWS_TEXT_BUFFER, 0xa907f0, g4, g4, g5, g5, n4, mp, sn5, np); }
+                        2 => { fmt(NEWS_TEXT_BUFFER, 0xa90748, g4, g4, g5, g5, n4, mp, sn5, np); }
+                        _ => {
+                            if flags & 1 != 0 && flags & 2 != 0 {
+                                if third != -1 {
+                                    fmt(NEWS_TEXT_BUFFER, 0xa90674, g4, g4, read_i8(c17() + club::GENDER_NAME) as i32, read_i8(c17() + club::GENDER_NAME) as i32, n4, c17() + club::NAME, np, mp);
+                                } else {
+                                    fmt(NEWS_TEXT_BUFFER, 0xa905b0, g4, g4, g5, g5, n4, mp, sn5, np);
+                                }
+                            } else if flags & 1 != 0 && third != -1 && fee >= 500000 {
+                                fmt(NEWS_TEXT_BUFFER, 0xa910ec, g4, g4, read_i8(c17() + club::GENDER_NAME) as i32, read_i8(c17() + club::GENDER_NAME) as i32, n4, c17() + club::NAME, np, mp);
+                            } else if flags & 2 != 0 {
+                                fmt(NEWS_TEXT_BUFFER, 0xa905b0, g4, g4, g5, g5, n4, mp, sn5, np);
+                            } else {
+                                fmt(NEWS_TEXT_BUFFER, 0xa9050c, g4, g4, g5, g5, n4, mp, sn5, np); // gra14: the plain offer for a fee
+                            }
+                        }
+                    }
+                } else {
+                    let t = match kind { 1 => 0xa90480, 2 => 0xa903fc, _ => 0xa90380 };
+                    fmt(NEWS_TEXT_BUFFER, t, g4, g4, n4, mp, np);
+                }
+            } else if someone_else {
+                let t = match kind { 1 => 0xa902f0, 2 => 0xa90268, _ => 0xa901e4 };
+                fmt(NEWS_TEXT_BUFFER, t, g4, g4, g5, g5, n4, sn5, np);
+            } else {
+                let t = match kind { 1 => 0xa90178, 2 => 0xa90114, _ => 0xa900b4 };
+                fmt(NEWS_TEXT_BUFFER, t, g4, g4, n4, np);
+            }
+        } else if fee > 0 {
+            if someone_else {
+                let t = match kind { 1 => 0xa8ffc8, 2 => 0xa8fee4, _ => 0xa8fe08 };
+                fmt(NEWS_TEXT_BUFFER, t, g4, g4, g5, g5, n4, mp, pl, sn5, np);
+            } else {
+                let t = match kind { 1 => 0xa8fd40, 2 => 0xa8fc84, _ => 0xa8fbcc };
+                fmt(NEWS_TEXT_BUFFER, t, g4, g4, n4, mp, pl, np);
+            }
+        } else if someone_else {
+            let t = match kind { 1 => 0xa8faf4, 2 => 0xa8fa28, _ => 0xa8f960 };
+            fmt(NEWS_TEXT_BUFFER, t, g4, g4, g5, g5, n4, pl, sn5, np);
+        } else {
+            let t = match kind { 1 => 0xa8f8b0, 2 => 0xa8f808, _ => 0xa8f764 };
+            fmt(NEWS_TEXT_BUFFER, t, g4, g4, n4, pl, np);
+        }
+    }
+    exe::text_set_string(out, NEWS_TEXT_BUFFER as *const u8);
+    if contract != 0 && fee != 0 {
+        covered!("gra_14 compensation due");
+        news_text_money(fee as u32, &mut money);
+        fmt(NEWS_TEXT_BUFFER, 0xa8f6ec, g5, g5, sn5, mp); // "<club> will be due compensation"
+    } else {
+        match status {
+            1 => { fmt(NEWS_TEXT_BUFFER, 0xa8f6a0, g5, g5, sn5); }
+            5 => { fmt(NEWS_TEXT_BUFFER, 0xa8f660, g5, g5, sn5); }
+            2 => { fmt(NEWS_TEXT_BUFFER, 0xa8f620, g5, g5, sn5); }
+            0x11 => { fmt(NEWS_TEXT_BUFFER, 0xa8f5d4, g5, g5, sn5); }
+            _ => write_u8(NEWS_TEXT_BUFFER, 0),
+        }
+    }
+    if read_u8(NEWS_TEXT_BUFFER) != 0 {
+        news_text_append(out, NEWS_TEXT_BUFFER);
+    }
+    exe::text_add_link(out, n4 as *const u8, 0x7d5, c4);
+    if seller as i32 != -1 {
+        news_text_link_club(out, seller);
+    }
+    news_text_link_person(out, &name, s0, s1, s2, s3, 0x7d7);
+    if swaps > 0 && swaps <= 3 {
+        for i in 0..swaps as usize {
+            let [id, a, b, c] = swap_ids[i];
+            let person = staff_at(id as i32 as isize);
+            if exe::database_staff_matches_names(person, a, b, c, 0usize) != 0 {
+                exe::text_add_link(out, swap_names[i].as_ptr(), 0x7d7, person);
+            }
+        }
+    }
+}
+
+/// Comparer for `write_offer_made_news_text`: the text side by side (`compare_text_writer`).
+pub(crate) unsafe extern "thiscall" fn compare_write_offer_made_news_text(this: usize, news: usize, full: u32, out: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_WRITE_OFFER_MADE_NEWS_TEXT);
+    compare_text_writer(out, || o(this, news, full, out), |t| write_offer_made_news_text(this, news, full, t), || format!("write_offer_made_news_text(news {:#x}, full {})", news, full));
+}
+
+/// One person (player or staff) moves to his new club `club` through the completed offer `offer`.
+///
+/// `move_player_to_club(person, club, offer)` (the transfer manager in ecx): a local contract offer
+/// (`exe::new_staff_contract`, its date `exe::date_date_54a110`); the club's manager's note on the person removed
+/// (`Notes::remove_note`, 0x795660, with notes); the old job and the old club (the main contract's), and whether he was
+/// happy there (the contract with that club, `exe::contract_manager_get_contract_for_club`: happiness above 0 and fewer
+/// than 5 matches left out). The agreed contract offer (`exe::contract_manager_find_contract_offer` by the person and
+/// the club); without one, the local offer gets the desired contract (`exe::staff_contract_set_to_desired_contract`,
+/// job 11) with job 11 at +0x61 and no staff record (+0x63 = −1). A national manager leaving for a non-coach job and a
+/// club manager or assistant (jobs 5, 12) leave their posts (`exe::manager_manager_remove_club_manager` with 4).
+///
+/// The past transfer record (`exe::transfer_manager_add_past_transfer`): the person, his three name ids, the buyer, the
+/// seller (the main contract's club, not on loan; −1), the fee (the offer's when it is for him), the type (4 a
+/// pre-contract with no fee completing at the contract end, 1 with exchange players, 5 a non-player job, else 0) and
+/// today. A sale above 2.5 million and above (resources + ambition + 750) × the club's reputation: with the chairman's
+/// interference above random(30), the person enters the chairman's favoured staff (`exe::staff_add_favoured_staff` with
+/// random(2)).
+///
+/// At an AI club, the shortlist slot (one of the first 25) that had him as a player target: his rating
+/// (`exe::match_man_score_player_for_selection`, 0x5e82) is kept and the slot's replacement, still at the club, loses
+/// 50 happiness (at least −100) and goes on the shortlists. On the club's shortlist pairs
+/// (`exe::shortlist_manager_is_on_shortlist`) the club's status becomes 2; his old club's (another club) 4; a loan's
+/// owner club 4 too. A human buyer's scout shortlist drops him (`SCOUT_MANAGER::remove_from_shortlist`, 0x7f7a20); his
+/// transfer record loses bit 0x10.
+///
+/// With a loan contract (`exe::contract_manager_get_loan_contract`): going to another club than the loan club (or its
+/// main club), the loan ends (`end_loan`) and the bans move (`clear_bans_invalid_for_club`); back to the loan's owner,
+/// the stats are archived with the fee, the squad number kept, the held bans dropped, the loan contract removed, he
+/// leaves the club and takes the main contract's club and squad flags (by the B team, `exe::staff_set_squad_flags`).
+/// Without a loan: a loan-type main contract keeps the squad number and he leaves the club with no club job; otherwise
+/// the bans move. A player's squad selection (+0x6d) is 8 when he has played (`exe::playerstats_get_stat` 4 above 0);
+/// the stats are archived (with the fee, the loan flag of type 1 and the pre-contract mark) unless done already. With a
+/// contract club, the five former clubs move down and the newest gets the club and the years there. The old club drops
+/// him (shortlist days 100 if he was not listed, the selections and the club), the virtual players
+/// (`exe::virtual_staff_remove_virtual_players`) and he joins the new club (`exe::database_add_staff_to_club` with the
+/// offer's job and today), taking the offer's staff record. The vacated jobs: a scout (9) or another non-player job at
+/// the old and new clubs (`exe::scout_manager_sync_scout_lists`, `exe::training_manager_update_coach_assignments`,
+/// `fill_vacated_staff_job`).
+///
+/// A player: the value (the offer's total `exe::transfer_offer_get_total_value` or `exe::contract_manager_calc_player_value`);
+/// the buyer gains world reputation / 100 (at most 10000), the seller loses it; the reputation floor r from the value
+/// (above 5 million × 0.0005 + 2500; above 2.5 million × 0.001; else × 0.003 − 5000): a human club max(reputation / 3 −
+/// 750, r), an AI club max(reputation / 2 − 1000, r) and, with the shortlist rating, max(that, (current reputation ×
+/// (150 − m) + m × rating × 2/9) / 150) with m the manager's and club's reputations / 200 (or the club's / 150); at most
+/// 9500. The unsettlement: random(20 − adaptability) + random(20 − leadership) + random(gap / max(20 × pressure, 1)),
+/// the gap the reputation above the seller's (or above his own), × (1.5 − fluency × 0.1), at most 100, added to the
+/// 79-byte record's +0xa. His reputations: current = (home or world by nation)/2 + current/2, at least the floor; home
+/// at least floor − 2000 + 0.15 × the club's reputation; world at least floor − 8000 + 0.6 × the club's.
+///
+/// Then the contract (transfer status 4, `exe::contract_manager_sign_contract` with his job), the scout requests
+/// (`remove_scout_request`), the talks (`remove_talks_records`), the sign-on fee (`exe::finance_pay_sign_on_fee`); a
+/// player's value at the new club and the clubs' shortlists suspended (`exe::shortlist_manager_suspend_clubs_shortlisting_player`);
+/// the squad number (`exe::squad_manager_set_squad_number`); the squad flags (2 at a human club with a reserve squad
+/// and no B team for status 0 or above 4, else 1); the work permit (`exe::transfer_manager_update_work_permit_on_move`);
+/// the retirement bits cleared (`STATUS_FLAGS` & 0xcf); the caps in the transfer record; AWOL cleared
+/// (`exe::awol_clear_awol`); the squad reactions (`process_transfer_squad_reactions`). The SEH frame only matters for
+/// exceptions.
+/// Original: `TRANSFER_MANAGER::move_player_to_club` (0x8c9720, transfer_manager.cpp, thiscall, ret 0xc).
+pub(crate) unsafe extern "thiscall" fn transfer_manager_move_player_to_club(this: usize, person: usize, club: usize, offer: usize) {
+    let mut local = [0u8; 0x80];
+    let l = local.as_mut_ptr() as usize;
+    exe::new_staff_contract(l);
+    exe::date_date_54a110(l + 0x51);
+    let mut record = [0u8; 0x28];
+    move_to_club_body(this, Staff(person), Club(club), Offer(offer), l, record.as_mut_ptr() as usize);
+}
+
+/// Comparer for `transfer_manager_move_player_to_club`: the original only (it moves the person between clubs, signs
+/// the contract, writes the past transfers, draws random numbers and posts news; it cannot run twice).
+pub(crate) unsafe extern "thiscall" fn compare_transfer_manager_move_player_to_club(this: usize, person: usize, club: usize, offer: usize) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(IDX_TRANSFER_MANAGER_MOVE_PLAYER_TO_CLUB)(this, person, club, offer) // simplification: original only
+}
+
+/// Writes the headline or the body of the news that a club may discuss a contract with a person, and the state of the
+/// talks.
+///
+/// `write_contract_talks_news_text(news, full, out)`: the talks state is slot 9 of the news item; when it is 0, the
+/// offer in slot 7 of the transfer manager's offers (index past the count reads the first) with the serial of slot 8
+/// gives it (`TRANSFER_OFFER::get_player_talks_status`, 0x8e7f10, for the person of slot 0) and, when not 0, it is
+/// written back into the stored item of the human manager's inbox (`News::set_item_slot`, 0x786d30, slot 9). The body:
+/// the person's name (slots 1-3 and 0, mode 1), the template 0xa94c24 with the clubs of slots 4 and 5 (short names and
+/// genders), then 0xa94be4 (state 1) or 0xa94b98 / 0xa94b48 (state 4, by slot 10) with the club of slot 5, or nothing;
+/// the links to the club of slot 4 (when ≥ 0) and of slot 5, and to the person (0x7d7) when the names still match. The
+/// headline: "Offer contract to" (0xa94b0c) with the name (mode 5) and the person's link.
+/// Original: `TRANSFER_MANAGER::write_contract_talks_news_text` (0x8d7fb0, transfer_manager.cpp, thiscall, ret 0xc).
+pub(crate) unsafe extern "thiscall" fn write_contract_talks_news_text(_this: usize, news: usize, full: u32, out: usize) {
+    let fmt = news_text_format();
+    let slot = |k: u32| exe::newsitem_get_slot(news, k);
+    let person = slot(0);
+    let mut state = slot(9) as u8;
+    if state == 0 {
+        let index = slot(7) as i32;
+        let serial = slot(8);
+        let tm = read_usize(G_TRANSFER_MANAGER);
+        let arr = read_usize(tm);
+        let at = if index < read_i32(tm + 4) { arr.wrapping_add((index as usize).wrapping_mul(4)) } else { arr };
+        let o = Offer(read_usize(at));
+        if !o.is_null() && (o.serial() as u32) == serial {
+            let status: unsafe extern "thiscall" fn(usize, u32) -> u8 = core::mem::transmute(FN_TRANSFER_OFFER_GET_PLAYER_TALKS_STATUS); // TRANSFER_OFFER::get_player_talks_status
+            state = status(o.addr(), person);
+            if state != 0 {
+                covered!("mke_5 talks state stored");
+                let hm = read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize as usize);
+                let set: unsafe extern "thiscall" fn(usize, usize, u32, u32, i32, usize) = core::mem::transmute(FN_NEWS_SET_ITEM_SLOT); // News::set_item_slot
+                set(read_usize(G_NEWS), hm, read_u32(news + 0xd6), 9, state as i8 as i32, 0);
+            }
+        }
+    }
+    let mut name = [0u8; 0x12c];
+    if full != 0 {
+        let (s1, s2, s3, s4, s5, s10) = (slot(1), slot(2), slot(3), slot(4), slot(5), slot(0xa));
+        news_text_person_name(s1, s2, s3, &mut name, 1, person);
+        let c4 = Club(club_at(s4 as i32 as isize).addr());
+        let c5 = Club(club_at(s5 as i32 as isize).addr());
+        let g4 = (c4.short_gender_name() as i8) as i32;
+        let g5 = (c5.short_gender_name() as i8) as i32;
+        fmt(NEWS_TEXT_BUFFER, 0xa94c24, g4, g4, g5, g5, c4.addr() + club::SHORT_NAME, c5.addr() + club::SHORT_NAME, name.as_ptr() as usize);
+        exe::text_set_string(out, NEWS_TEXT_BUFFER as *const u8);
+        match state {
+            1 => {
+                fmt(NEWS_TEXT_BUFFER, 0xa94be4, g5, g5, c5.addr() + club::SHORT_NAME);
+            }
+            4 => {
+                let t = if s10 != 0 { 0xa94b98 } else { 0xa94b48 };
+                fmt(NEWS_TEXT_BUFFER, t, g5, g5, c5.addr() + club::SHORT_NAME);
+            }
+            _ => write_u8(NEWS_TEXT_BUFFER, 0),
+        }
+        news_text_append(out, NEWS_TEXT_BUFFER);
+        if (s4 as i32) > -1 {
+            news_text_link_club(out, s4);
+        }
+        news_text_link_club(out, s5);
+        news_text_link_person(out, &name, person, s1, s2, s3, 0x7d7);
+    } else {
+        let (s1, s2, s3) = (slot(1), slot(2), slot(3));
+        news_text_person_name(s1, s2, s3, &mut name, 5, person);
+        fmt(NEWS_TEXT_BUFFER, 0xa94b0c, name.as_ptr() as usize); // "Offer contract to <name>"
+        exe::text_set_string(out, NEWS_TEXT_BUFFER as *const u8);
+        news_text_link_person(out, &name, person, s1, s2, s3, 0x7d7);
+    }
+}
+
+/// Comparer for `write_contract_talks_news_text`: the text side by side (`compare_text_writer`).
+pub(crate) unsafe extern "thiscall" fn compare_write_contract_talks_news_text(this: usize, news: usize, full: u32, out: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_WRITE_CONTRACT_TALKS_NEWS_TEXT);
+    compare_text_writer(out, || o(this, news, full, out), |t| write_contract_talks_news_text(this, news, full, t), || format!("write_contract_talks_news_text(news {:#x}, full {})", news, full));
+}
+
+/// Writes the headline or the body of the news that a club accepted an offer, or that a player agreed to talk about a
+/// contract.
+///
+/// `write_offer_accepted_news_text(news, full, out)`: the person of slot 0 (name from slots 1-3; mode 1 in the body,
+/// 5 in the headline), the clubs of slots 4 (−1 none) and 5, slot 6 (a talks agreement), slot 9 (1 a loan). The body:
+/// a talks agreement 0xa947d8; no club in slot 4 0xa94aa4 (club 5 and the name); a loan 0xa94a14 when club 5 is the
+/// current human manager's club (`G_SCREEN_RECORDS_MANAGER` of the current slot, +0x39), else 0xa94988; a transfer
+/// 0xa948fc / 0xa94874 the same way; the others with the two clubs (short names, genders) and the name. The links to
+/// club 4 (when ≥ 0) and club 5 (0x7d5) and to the person (0x7d7) when the names still match. The headline: "agrees to
+/// contract discussion" (0xa94790) without club 4, "loan offer accepted" (0xa94754) for a loan, else "transfer offer
+/// accepted" (0xa94714), and the person's link.
+/// Original: `TRANSFER_MANAGER::write_offer_accepted_news_text` (0x8d7870, transfer_manager.cpp, thiscall, ret 0xc).
+pub(crate) unsafe extern "thiscall" fn write_offer_accepted_news_text(_this: usize, news: usize, full: u32, out: usize) {
+    let fmt: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+    let slot = |k: u32| exe::newsitem_get_slot(news, k);
+    let mut name = [0u8; 0x12c];
+    let np = name.as_ptr() as usize;
+    if full != 0 {
+        let hm = read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize as usize);
+        let human_club = if hm != 0 { read_usize(hm + 0x39) } else { 0 };
+        let (person, s1, s2, s3, s4, s5) = (slot(0), slot(1), slot(2), slot(3), slot(4), slot(5));
+        let talks = slot(6) != 0;
+        let loan = slot(9) as u8 == 1;
+        news_text_person_name(s1, s2, s3, &mut name, 1, person);
+        let c5 = Club(club_at(s5 as i32 as isize).addr());
+        let g5 = (c5.short_gender_name() as i8) as i32;
+        let mine = human_club != 0 && read_u32(human_club) == s5;
+        if !talks && s4 as i32 == -1 {
+            fmt(NEWS_TEXT_BUFFER, 0xa94aa4, g5, g5, np, c5.addr() + club::SHORT_NAME);
+        } else {
+            let t = if talks {
+                0xa947d8
+            } else if loan {
+                if mine { 0xa94a14 } else { 0xa94988 }
+            } else if mine {
+                0xa948fc
+            } else {
+                0xa94874 // mke6: the transfer accepted body
+            };
+            let c4 = Club(club_at(s4 as i32 as isize).addr());
+            let g4 = (c4.short_gender_name() as i8) as i32;
+            covered!("mke_6 offer accepted body");
+            fmt(NEWS_TEXT_BUFFER, t, g4, g4, g5, g5, c4.addr() + club::SHORT_NAME, c5.addr() + club::SHORT_NAME, np);
+        }
+        exe::text_set_string(out, NEWS_TEXT_BUFFER as *const u8);
+        if s4 as i32 > -1 {
+            news_text_link_club(out, s4);
+        }
+        news_text_link_club(out, s5);
+        news_text_link_person(out, &name, person, s1, s2, s3, 0x7d7);
+    } else {
+        let (person, s1, s2, s3, s4) = (slot(0), slot(1), slot(2), slot(3), slot(4));
+        let loan = slot(9) as u8 == 1;
+        news_text_person_name(s1, s2, s3, &mut name, 5, person);
+        let t = if s4 as i32 == -1 {
+            0xa94790 // "<name> agrees to contract discussion"
+        } else if loan {
+            0xa94754 // "<name> loan offer accepted"
+        } else {
+            0xa94714 // "<name> transfer offer accepted"
+        };
+        fmt(NEWS_TEXT_BUFFER, t, np);
+        exe::text_set_string(out, NEWS_TEXT_BUFFER as *const u8);
+        news_text_link_person(out, &name, person, s1, s2, s3, 0x7d7);
+    }
+}
+
+/// Comparer for `write_offer_accepted_news_text`: the text side by side (`compare_text_writer`).
+pub(crate) unsafe extern "thiscall" fn compare_write_offer_accepted_news_text(this: usize, news: usize, full: u32, out: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_WRITE_OFFER_ACCEPTED_NEWS_TEXT);
+    compare_text_writer(out, || o(this, news, full, out), |t| write_offer_accepted_news_text(this, news, full, t), || format!("write_offer_accepted_news_text(news {:#x}, full {})", news, full));
+}
+
+/// The AI buyer reviews its bid after the selling club's answer: it values the target from its shortlist slot and,
+/// when the price asked (the offer's weighted value plus the asking price of each exchange player kept) is above that
+/// value, withdraws (and the target may hear of it); otherwise it tops the fee up with what the dropped exchange
+/// players were worth, up to the value, and resubmits the bid if the transfer budget covers it.
+///
+/// `TRANSFER_MANAGER::review_ai_club_bid(slot, keep_existing)`, from `process_due_offer` (0x8c63a0) for a transfer bid
+/// with status `offer_status::ON_HOLD` and an AI buyer (keep_existing 0), from the human manager's holiday answers
+/// (0x784100), `handle_player_rejected_terms` (0x8c28c0) and the exchange-player dialog (0x8f2870). With keep_existing
+/// 0 the offer reviewed is the seller's counter offer, the negotiation `.negotiation_index()` in
+/// `transfer_manager_fields::NEGOTIATIONS` (the first one when the index is not below
+/// `transfer_manager_fields::NEGOTIATION_CAPACITY`); with no negotiation (−1) the bid gets status 0x10 and is scheduled
+/// (`exe::transfer_manager_schedule_offer` with 1, 0). Otherwise the bid in `slot` itself.
+///
+/// A local offer (`exe::new_transfer_offer`) takes a copy of it (the due date by `exe::date_operator_3d`; the low
+/// nibbles of `offer::COMPLETION_TIMING` and `offer::OFFER_KIND` only), with +0 = 0, `.negotiation_index()` = −1 and
+/// its own copy of the exchange players (`exe::new_llist`, `exe::llist_copy_from`). The buyer's shortlist slot for the
+/// target (`exe::shortlist_manager_find_club_shortlist_entry` with the bid's `.job_type()` ≠ 11): none, the bid is
+/// withdrawn (`exe::transfer_manager_withdraw_transfer_offer` with 0, 2). The value: `exe::shortlist_manager_value_player_for_club`
+/// (−1, 1); the price `w`: `exe::transfer_offer_get_weighted_value` (0, 1, 1, 1, 1); each exchange player's asking
+/// price (`exe::contract_manager_calc_asking_price` with his contract's club, 0, 1, 1) is added to `w` unless that
+/// passes the value, when the player leaves the local offer (`exe::llist_remove`) and his price is counted as dropped;
+/// an empty list is freed. The local offer's kind becomes 2 (low byte & 0xf2 | 2).
+///
+/// `w` above the value: the target's status in the shortlist (`exe::shortlist_manager_update_staff_status` with 1,
+/// slot role ≠ 11), the withdrawal and `review_bid_maybe_unsettle`. Otherwise: the fee (`.fee()`) + min(dropped, value −
+/// `w`, never negative); the total (`exe::transfer_offer_get_total_value` with 0, 1, 0, 1) above the buyer's transfer
+/// budget (`exe::finance_get_transfer_budget` with the target, 0, 0, 1, 0): the status and the withdrawal; within it
+/// and keep_existing 0, the local offer is submitted as a new bid (`exe::transfer_manager_add_transfer_offer`). The
+/// local offer is destroyed (`exe::drop_transfer_offer`). The original's SEH frame only matters for exceptions.
+/// Original: `TRANSFER_MANAGER::review_ai_club_bid` (0x8c0810, transfer_manager.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn review_ai_club_bid(this: usize, slot: usize, keep_existing: u32) {
+    let mut storage = [0u8; 0x44];
+    let local = Offer(storage.as_mut_ptr() as usize);
+    exe::new_transfer_offer(local);
+    review_ai_club_bid_body(this, slot, keep_existing, local);
+    exe::drop_transfer_offer(local);
+}
+
+/// Comparer for `review_ai_club_bid`: the original only (it withdraws and submits offers, moves shortlist slots and
+/// may unsettle a contract; it cannot run twice).
+pub(crate) unsafe extern "thiscall" fn compare_review_ai_club_bid(this: usize, slot: usize, keep_existing: u32) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_REVIEW_AI_CLUB_BID)(this, slot, keep_existing) // simplification: original only
+}
+
+/// `Date::get_date_string_no_weekday` (0x54c3b0; thiscall(date, out, size, time of day), ret 0xc): the date as
+/// ordinal day, month name and year (time of day 0xff: none).
+pub(crate) unsafe fn date_string_no_weekday(date: usize, out: usize, size: u32, time_of_day: u32) -> i32 {
+    exe::date_get_date_string_no_weekday(date, out, size, time_of_day)
+}
+
+/// The cash amount `value` as display text (`exe::cash_get_display_amount` and `exe::cash_format_money`, unit 6) into
+/// `buf` (0x32 bytes).
+pub(crate) unsafe fn news_text_money(value: u32, buf: &mut [u8; 0x34]) {
+    let amount = exe::cash_get_display_amount(&value, 6);
+    exe::cash_format_money(buf.as_mut_ptr() as usize, 0x32, amount, 6);
+}
+
+/// `transfer_manager_build_refusal_reasons_text` (0x8e4ae0; stdcall(selling club, buying club, two unused, reason
+/// flags, interest, out), ret 0x20): up to two refusal reasons from the flags into `out`; the reason count.
+pub(crate) unsafe fn refusal_reasons_text(seller: u32, buyer: u32, a: u32, b: u32, flags: u32, interest: f64, out: usize) -> u8 {
+    exe::transfer_manager_build_refusal_reasons_text(seller, buyer, a, b, flags, interest, out)
+}
+
+/// The body of `transfer_manager_move_player_to_club` after the local offer is built; `rec` is the past transfer
+/// record (0x25 bytes: person, 3 name ids, buyer, seller, fee, type, date).
+#[allow(clippy::too_many_arguments)]
+pub(crate) unsafe fn move_to_club_body(this: usize, p: Staff, club: Club, offer: Offer, local: usize, rec: usize) {
+    use move_to_club_rdata::*;
+    let cm = read_usize(G_CONTRACT_MANAGER);
+    let sm = read_usize(this + transfer_manager_fields::SHORTLIST_MANAGER);
+    let mut pre_contract: u32 = 0; // [esp+0x30]
+    let mut found_slot = false; // [esp+0x20]
+    let mut archived = false; // [esp+0x10]
+    let mut squad_number: u8 = 0; // [esp+0x2c]
+    let mut rating: i32 = 0; // [esp+0x18]
+    if read_usize(G_NOTES) != 0 && !club.is_null() && !club.manager().is_null() {
+        let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_NOTES_REMOVE_NOTE); // Notes::remove_note
+        f(read_usize(G_NOTES), club.manager().addr(), p.addr());
+    }
+    let old_job = p.job_for_club();
+    let old_club = move_contract_club(p, false);
+    let mut happy = false;
+    let cc = Contract(exe::contract_manager_get_contract_for_club(cm, p, old_club));
+    if !cc.is_null() && cc.happiness() > 0 && cc.unhappy_flag() < 5 {
+        happy = true;
+    }
+    let mut oc = exe::contract_manager_find_contract_offer(cm, read_u32(p.addr()), read_u32(club.addr()));
+    if oc == 0 {
+        exe::staff_contract_set_to_desired_contract(local, p, club, -1, u32::MAX, 0xb, 0, 0);
+        write_u8(local + 0x61, 0xb);
+        write_i32(local + 0x63, -1);
+        oc = local;
+    }
+    let oc = Contract(oc);
+    if p.job_for_nation() == 5 && p.national_job().addr() != 0 && offer.job_type() != 9 {
+        exe::manager_manager_remove_club_manager(read_usize(G_MANAGER_MANAGER), p.national_job().addr(), 4, 0, 0);
+    }
+    let job = p.job_for_club();
+    if (job == 5 || job == 0xc) && !p.club_job().is_null() {
+        exe::manager_manager_remove_club_manager(read_usize(G_MANAGER_MANAGER), p.club_job(), 4, 0, 0);
+    }
+    // the past transfer record
+    exe::date_date_54a110(rec + 0x1d);
+    let seller = move_contract_club(p, true);
+    let seller_id: i32 = if seller.is_null() { -1 } else { read_i32(move_contract_club(p, true).addr()) };
+    write_i32(rec + 0x10, read_i32(club.addr()));
+    write_i32(rec + 0x14, seller_id);
+    let mut t = [0u8; 8];
+    exe::date_operator_3d(rec + 0x1d, t.as_mut_ptr() as usize, G_CURRENT_DATE);
+    write_u32(rec, read_u32(p.addr()));
+    write_u32(rec + 4, read_u32(p.first_name() + 0x33));
+    write_u32(rec + 8, read_u32(p.second_name() + 0x33));
+    write_u32(rec + 0xc, read_u32(p.common_name() + 0x33));
+    let kind: u8 = if offer.pre_contract() != 0 && (offer.fee() as i32) == 0 && matches!(offer.completion_timing() & 0xf, 3 | 4) {
+        pre_contract = 1;
+        4
+    } else {
+        (offer.exchange_players().addr() != 0) as u8
+    };
+    write_u8(rec + 0x1c, if exe::database_is_player_job(offer.job_type() as i8) == 0 { 5 } else { kind });
+    let fee = if read_u32(p.addr()) == (offer.target_staff_id() as u32) { offer.fee() as i32 } else { 0 };
+    write_i32(rec + 0x18, fee);
+    let chairman = club.chairman();
+    if !chairman.is_null() && !chairman.non_player().is_null() {
+        let np = chairman.non_player().addr();
+        let paid = offer.fee() as i32;
+        if paid > 2_500_000
+            && (read_i8(np + 0x20) as i32 + chairman.ambition() as i32 + 0x2ee).wrapping_mul(club.reputation() as i32) < paid
+        {
+            let r = exe::utils_random(0x1e);
+            if read_i8(read_usize(club.chairman().addr() + staff::NON_PLAYER) + 0x16) as i32 > r {
+                covered!("mke_4 chairman's favourite");
+                let r2 = exe::utils_random(2);
+                exe::staff_add_favoured_staff(club.chairman().addr(), p, r2 as u32);
+            }
+        }
+    }
+    exe::transfer_manager_add_past_transfer(this, rec as *mut u8);
+    // the AI buyer's shortlist slot that had him as a target
+    let entry = read_usize(sm + shortlist_manager_fields::CLUB_SHORTLISTS).wrapping_add((read_u32(club.addr()) as usize).wrapping_mul(9));
+    if exe::human_manager_is_human_club(club, 0, 1, 0, 0) == 0 && entry != 0 {
+        let slots = read_usize(entry);
+        for k in 0..0x19usize {
+            let slot = slots.wrapping_add(k * 0x25);
+            if read_u32(slot + shortlist_slot::TARGET_STAFF_ID) == read_u32(p.addr()) && read_u8(slot) == 0xb {
+                rating = exe::match_man_score_player_for_selection(p, u32::MAX, 0x5e82, club, -1, 0usize);
+                found_slot = true;
+                let rid = read_i32(slot + shortlist_slot::REPLACEMENT_STAFF_ID);
+                if rid > -1 {
+                    let rp = staff_at(rid as isize);
+                    if move_contract_club(rp, true) == club {
+                        let rc = Contract(exe::contract_manager_get_contract_for_club(cm, staff_at(read_i32(slot + shortlist_slot::REPLACEMENT_STAFF_ID) as isize), club));
+                        let h = (rc.happiness() as i16).wrapping_sub(0x32);
+                        let v: i8 = if h < -100 {
+                            -100
+                        } else if (h as i8) > 100 {
+                            100
+                        } else if (h as i8) < -100 {
+                            -100
+                        } else {
+                            h as i8
+                        };
+                        rc.set_happiness(v);
+                        covered!("mke_4 replaced player unsettled");
+                        exe::shortlist_manager_add_player_to_club_shortlists(sm, staff_at(read_i32(slot + shortlist_slot::REPLACEMENT_STAFF_ID) as isize), 0);
+                    }
+                }
+                break;
+            }
+        }
+    }
+    if exe::shortlist_manager_is_on_shortlist(sm, p, club) != 0 {
+        exe::shortlist_manager_update_staff_status(sm, p, club, 2, (offer.job_type() != 0xb) as u32);
+    }
+    let cj = p.club_job();
+    if !cj.is_null() && cj != club {
+        exe::shortlist_manager_update_staff_status(sm, p, cj, 4, 2);
+    }
+    if p.club_job() != move_contract_club(p, true) && exe::contract_manager_get_loan_contract(cm, p) != 0 && !move_contract_club(p, true).is_null() {
+        let owner = move_contract_club(p, true);
+        exe::shortlist_manager_update_staff_status(sm, p, owner, 4, 2);
+    }
+    if exe::human_manager_is_human_club(club, 1, 1, 0, 0) != 0 && exe::scout_manager_is_player_shortlisted(read_usize(G_SCOUT_MANAGER), p, club.manager()) != 0 {
+        let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_SCOUT_MANAGER_REMOVE_FROM_SHORTLIST); // SCOUT_MANAGER::remove_from_shortlist
+        f(read_usize(G_SCOUT_MANAGER), p.addr(), club.manager().addr());
+    }
+    let flags = read_usize(this + transfer_manager_fields::PERSON_FLAGS).wrapping_add((read_u32(p.addr()) as usize).wrapping_mul(8));
+    write_u8(flags, read_u8(flags) & 0xef);
+    let clear_bans = |p: Staff, from: Club, to: Club| {
+        let f: unsafe extern "thiscall" fn(usize, usize, usize, usize) = core::mem::transmute(FN_DISCIPLINE_CLEAR_BANS_INVALID_FOR_CLUB); // clear_bans_invalid_for_club
+        f(read_usize(G_DISCIPLINE), p.addr(), from.addr(), to.addr());
+    };
+    if exe::contract_manager_get_loan_contract(cm, p) != 0 {
+        if club != p.club_job() && exe::club_get_linked_b_team(club, core::ptr::null_mut(), 1) != p.club_job().addr() {
+            // to another club: the loan ends
+            covered!("mke_4 loan ended by the move");
+            let f: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_CONTRACT_MANAGER_END_LOAN); // end_loan
+            f(cm, p.addr());
+            clear_bans(p, move_contract_club(p, false), club);
+        } else {
+            // back to the loan's owner
+            let owner = move_contract_club(p, false);
+            exe::playerstats_archive_player_stats(read_usize(G_PLAYER_STATS), p, fee, 0, 0, read_i32(owner.addr()), 0);
+            archived = true;
+            squad_number = exe::squad_manager_get_squad_number(read_usize(G_SQUAD_MANAGER), p, p.club_job()) as u8;
+            let drop: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_DISCIPLINE_DROP_HELD_BANS); // drop_held_bans
+            drop(read_usize(G_DISCIPLINE), p.addr());
+            let remove: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_CONTRACT_MANAGER_REMOVE_LOAN_CONTRACT); // remove_loan_contract
+            remove(cm, p.addr());
+            exe::database_remove_staff_from_club(p.club_job(), p, 0usize, 1, 0);
+            write_usize(p.addr() + staff::CLUB_JOB, move_contract_club(p, false).addr());
+            let main = Contract(exe::contract_manager_get_contract(cm, p));
+            if exe::database_club_has_reserve_squad(p.club_job()) != 0 {
+                exe::staff_set_squad_flags(p, if main.contract_type() & 0x40 == 0 { 1 } else { 2 });
+            } else {
+                let b = Club(exe::club_get_linked_b_team(p.club_job(), core::ptr::null_mut(), 1));
+                exe::staff_set_squad_flags(p, 1);
+                if !b.is_null() {
+                    for k in 0..50usize {
+                        if b.squad(k) == p.addr() {
+                            write_usize(p.addr() + staff::CLUB_JOB, b.addr());
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        let c = Contract(contract_of_staff_cached(p));
+        if !c.is_null() && c.contract_type() & 0x3f == 5 {
+            squad_number = exe::squad_manager_get_squad_number(read_usize(G_SQUAD_MANAGER), p, p.club_job()) as u8;
+            exe::database_remove_staff_from_club(p.club_job(), p, 0usize, 1, 0);
+            write_usize(p.addr() + staff::CLUB_JOB, 0);
+        } else {
+            clear_bans(p, move_contract_club(p, false), club);
+        }
+    }
+    if !p.player().is_null() {
+        if p.squad_selected_for() != 0 {
+            let played = exe::playerstats_get_stat(read_usize(G_PLAYER_STATS), p.player(), 4, 1, 6.5);
+            p.set_squad_selected_for(if played > read_f32(F32_0) as f64 { 8 } else { 0 });
+        } else {
+            p.set_squad_selected_for(0);
+        }
+        if !archived {
+            exe::playerstats_archive_player_stats(read_usize(G_PLAYER_STATS), p, fee, (read_u8(rec + 0x1c) == 1) as u32, 0, read_i32(club.addr()), pre_contract);
+        }
+    }
+    // the former clubs
+    if !move_contract_club(p, false).is_null() {
+        let r = contract_manager_staff_state_record(read_usize(p.addr()));
+        for k in 0..4usize {
+            write_u32(r + 0xe + k * 5, read_u32(r + 0x13 + k * 5));
+            write_u8(r + 0xe + k * 5 + 4, read_u8(r + 0x13 + k * 5 + 4));
+        }
+        let now = move_contract_club(p, false);
+        write_u32(r + 0x22, read_u32(now.addr()));
+        write_u8(r + 0x26, read_u8(G_CURRENT_DATE + 2).wrapping_sub(read_u8(p.addr() + staff::DATE_JOINED_CLUB + 2)));
+    }
+    let cj = p.club_job();
+    if !cj.is_null() {
+        if exe::staff_is_transfer_listed(p, 0usize) == 0 {
+            let e = read_usize(sm + shortlist_manager_fields::CLUB_SHORTLISTS).wrapping_add((read_u32(cj.addr()) as usize).wrapping_mul(9));
+            write_u8(e + club_shortlist::DAYS, 100);
+        }
+        exe::tactics_remove_player_from_selection(read_usize(G_TACTICS), p.club_job(), p, 1, 1);
+        exe::tactics_remove_player_from_selection(read_usize(G_TACTICS), p.club_job(), p, 0, 1);
+        exe::database_remove_staff_from_club(p.club_job(), p, 0usize, 1, 0);
+    }
+    exe::virtual_staff_remove_virtual_players(read_usize(G_VIRTUAL_STAFF), club, 0);
+    exe::database_add_staff_to_club(club, p, read_u8(oc.addr() + 0x61) as u32, G_CURRENT_DATE, 1, 0);
+    let np = read_i32(oc.addr() + 0x63);
+    if np != -1 {
+        if p.non_player().is_null() {
+            write_usize(p.addr() + staff::NON_PLAYER, read_usize(G_NON_PLAYER_TABLE).wrapping_add((np as usize).wrapping_mul(0x44)));
+        }
+        write_i32(oc.addr() + 0x63, -1);
+    }
+    // the vacated jobs
+    let fill: unsafe extern "stdcall" fn(usize, u32) = core::mem::transmute(FN_TRANSFER_MANAGER_FILL_VACATED_STAFF_JOB); // fill_vacated_staff_job
+    if old_job == 9 {
+        if !old_club.is_null() {
+            if exe::human_manager_is_human_club(old_club, 1, 1, 0, 0) != 0 {
+                exe::scout_manager_sync_scout_lists(read_usize(G_SCOUT_MANAGER), old_club.manager());
+            } else {
+                fill(old_club.addr(), 9);
+            }
+        }
+    } else if old_job != 0xb && !old_club.is_null() {
+        if exe::human_manager_is_human_club(old_club, 1, 1, 0, 0) != 0 {
+            exe::training_manager_update_coach_assignments(read_usize(G_TRAINING_MANAGER), old_club, 0);
+        } else {
+            fill(old_club.addr(), old_job as u32);
+        }
+    }
+    let job = p.job_for_club();
+    if job == 9 {
+        if exe::human_manager_is_human_club(club, 1, 1, 0, 0) != 0 {
+            exe::scout_manager_sync_scout_lists(read_usize(G_SCOUT_MANAGER), club.manager());
+        }
+    } else if job != 0xb && !p.club_job().is_null() && exe::human_manager_is_human_club(p.club_job(), 1, 1, 0, 0) != 0 {
+        exe::training_manager_update_coach_assignments(read_usize(G_TRAINING_MANAGER), p.club_job(), 0);
+    }
+    if !p.player().is_null() && exe::database_is_player_job(p.job_for_club() as i8) != 0 {
+        move_to_club_reputations(p, club, offer, seller_id, found_slot, rating);
+    }
+    // the contract
+    oc.set_transfer_status(4);
+    exe::contract_manager_sign_contract(cm, oc, p.job_for_club() as u32);
+    let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_SCOUT_MANAGER_REMOVE_SCOUT_REQUEST); // remove_scout_request
+    f(read_usize(G_SCOUT_MANAGER), p.addr(), club.addr());
+    let f: unsafe extern "thiscall" fn(usize, usize, usize, usize) = core::mem::transmute(FN_CONTRACT_MANAGER_REMOVE_TALKS_RECORDS); // remove_talks_records
+    f(cm, p.addr(), 0, 0);
+    let fin = exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), club);
+    exe::finance_pay_sign_on_fee(fin, oc.unknown());
+    if !p.player().is_null() {
+        let human = (exe::human_manager_is_human_club(club, 0, 1, 0, 0) != 0) as u32;
+        let v = exe::contract_manager_calc_player_value(cm, p, club, 0, -1, human);
+        p.set_value((v) as usize);
+        exe::shortlist_manager_suspend_clubs_shortlisting_player(sm, p, 1);
+    }
+    if exe::database_is_player_job(p.job_for_club() as i8) != 0 && exe::squad_manager_club_uses_squad_numbers(read_usize(G_SQUAD_MANAGER), club, 0) != 0 {
+        exe::squad_manager_set_squad_number(read_usize(G_SQUAD_MANAGER), p, club, squad_number as u32);
+    }
+    let reserve = exe::human_manager_is_human_club(club, 1, 1, 0, 0) != 0
+        && exe::club_get_linked_b_team(club, core::ptr::null_mut(), 1) == 0
+        && exe::database_club_has_reserve_squad(club) != 0
+        && {
+            let st = oc.squad_status() >> 4;
+            st == 0 || st > 4
+        };
+    exe::staff_set_squad_flags(p, if reserve { 2 } else { 1 });
+    exe::transfer_manager_update_work_permit_on_move(this, p, club);
+    let r = contract_manager_staff_state_record(read_usize(p.addr())) + staff_state::STATUS_FLAGS;
+    write_u8(r, read_u8(r) & 0xcf);
+    let flags = read_usize(this + transfer_manager_fields::PERSON_FLAGS).wrapping_add((read_u32(p.addr()) as usize).wrapping_mul(8));
+    write_u8(flags + 7, p.int_apps());
+    exe::awol_clear_awol(read_usize(G_AWOL), p);
+    covered!("mke_4 moved");
+    let f: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32) = core::mem::transmute(FN_MEDIA_PROCESS_TRANSFER_SQUAD_REACTIONS); // process_transfer_squad_reactions
+    f(read_usize(G_MEDIA), p.addr(), club.addr(), old_club.addr(), happy as u32);
+}
+
+/// `langlib_sprintf` into `NEWS_TEXT_BUFFER` (the game's formatter of the news templates).
+pub(crate) unsafe fn news_text_format() -> unsafe extern "C" fn(usize, usize, ...) -> i32 {
+    core::mem::transmute(FN_LANGLIB_SPRINTF)
+}
+
+/// `Text::append_string` (0x4ae770; thiscall, ret 4): appends a string to a Text object.
+pub(crate) unsafe fn news_text_append(out: usize, s: usize) {
+    exe::text_append_string(out, s);
+}
+
+/// The person's name from the news item's name ids (`exe::database_format_name_from_ids`, 300 bytes, mode `mode`)
+/// into `buf`.
+pub(crate) unsafe fn news_text_person_name(first: u32, second: u32, common: u32, buf: &mut [u8; 0x12c], mode: u32, id: u32) {
+    exe::database_format_name_from_ids(first, second, common, buf.as_mut_ptr(), 0x12c, mode, id);
+}
+
+/// Links the person's name to the person (`exe::text_add_link` with `kind`) when the news item's names still match
+/// him (`exe::database_staff_matches_names`).
+pub(crate) unsafe fn news_text_link_person(out: usize, buf: &[u8; 0x12c], id: u32, first: u32, second: u32, common: u32, kind: u32) {
+    let p = staff_at(id as i32 as isize);
+    if exe::database_staff_matches_names(p, first, second, common, 0usize) != 0 {
+        exe::text_add_link(out, buf.as_ptr(), kind, p);
+    }
+}
+
+/// Links a club's short name to the club (`exe::text_add_link`, 0x7d5).
+pub(crate) unsafe fn news_text_link_club(out: usize, id: u32) {
+    let c = club_at(id as i32 as isize);
+    exe::text_add_link(out, (c.addr() + club::SHORT_NAME) as *const u8, 0x7d5, c);
+}
+
+/// The player at the selling club of a bid his AI buyer walked away from may become unsettled: with a contract
+/// (`contract_of_staff_cached`, not of type 5), a selling club, a contract with it (`exe::contract_manager_get_contract_for_club`)
+/// and a buyer; at the club for more than (`.loyalty()` + 42) × 5 + `.professionalism()` days since
+/// `.date_joined_club()` (`exe::date_days_since`); and the buyer's `.reputation()` above the seller's + 1250, or
+/// listed by request (`exe::staff_is_listed_by_request`), or contract flag 8 (`exe::staff_contract_get_flags`), or
+/// `.grievances()` bits 0x14. The level is the player's value for the seller (`exe::contract_manager_calc_player_value`
+/// with 0, −1, human seller) through `review_bid_unsettle_level`; a bid `w` above 17,500,000, or above 1.5 × the level,
+/// or above 250,000 and the level with random(`.temperament()` + 1) = 0, sets the contract's event flag 0x800000
+/// (`exe::staff_contract_apply_event_flags` with 0).
+pub(crate) unsafe fn review_bid_maybe_unsettle(player: Staff, buyer: Club, w: i32) {
+    let c = Contract(contract_of_staff_cached(player));
+    if c.is_null() || c.contract_type() & 0x3f == 5 {
+        return;
+    }
+    let seller = transfer_manager_club_by_id(c.club());
+    if seller.is_null() {
+        return;
+    }
+    let cs = Contract(exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), player, seller));
+    if cs.is_null() || buyer.is_null() {
+        return;
+    }
+    let days = exe::date_days_since(G_CURRENT_DATE, player.date_joined_club() as u32, player.date_joined_club_leap_year() as u32);
+    if days <= (player.loyalty() as i32 + 42) * 5 + player.professionalism() as i32 {
+        return;
+    }
+    if !((seller.reputation() as i32 + 1250) < buyer.reputation() as i32
+        || exe::staff_is_listed_by_request(player, 0) != 0
+        || exe::staff_contract_get_flags(cs) & 8 != 0
+        || cs.grievances() as u8 & 0x14 != 0)
+    {
+        return;
+    }
+    let human = exe::human_manager_is_human_club(seller, 0, 1, 0, 0) != 0;
+    let v = exe::contract_manager_calc_player_value(read_usize(G_CONTRACT_MANAGER), player, seller, 0, -1, human as u32);
+    let level = review_bid_unsettle_level(v, review_bid_unsettle_factor(player, seller, cs.grievances()));
+    covered!("mkb_1 player hears of the bid");
+    let unsettle = w > 17_500_000 // mkb1: the fee that always unsettles
+        || (level as f64 * read_f64(rdata::F64_1_5)) < w as f64
+        || (w > 250_000 && w > level && exe::utils_random(player.temperament() as i32 + 1) == 0);
+    if unsettle {
+        exe::staff_contract_apply_event_flags(cs, 0x800000, 0);
+    }
+}
+
+/// The body of `review_ai_club_bid` between the construction and the destruction of the local offer.
+pub(crate) unsafe fn review_ai_club_bid_body(this: usize, slot: usize, keep_existing: u32, local: Offer) {
+    let mut source = slot;
+    if keep_existing == 0 {
+        let bid = Offer(read_usize(slot));
+        let k = bid.negotiation_index() as i32;
+        if k == -1 {
+            bid.set_status(0x10);
+            exe::transfer_manager_schedule_offer(this, bid, 1, 0);
+            return;
+        }
+        let base = read_usize(this + transfer_manager_fields::NEGOTIATIONS);
+        source = if k < read_i32(this + transfer_manager_fields::NEGOTIATION_CAPACITY) { base.wrapping_add((k as usize).wrapping_mul(4)) } else { base };
+    }
+    let src = read_usize(source);
+    review_bid_copy_offer(local, src);
+    if !local.exchange_players().is_null() {
+        let p = exe::crt_operator_new(0xe);
+        let list = if p != 0 { exe::new_llist(p) } else { 0 };
+        write_usize(local.addr() + offer::EXCHANGE_PLAYERS, list);
+        exe::llist_copy_from(list, Offer(read_usize(source)).exchange_players());
+    }
+    let src = Offer(read_usize(source));
+    let player = transfer_manager_staff_by_id(src.target_staff_id());
+    let buyer = transfer_manager_club_by_id(src.buyer_club_id());
+    let sm = read_usize(this + transfer_manager_fields::SHORTLIST_MANAGER);
+    let job_is_player = Offer(read_usize(slot)).job_type() == 0xb;
+    let entry = exe::shortlist_manager_find_club_shortlist_entry(sm, buyer, player, (!job_is_player) as u32, 0);
+    if entry == 0 {
+        exe::transfer_manager_withdraw_transfer_offer(this, slot as *mut usize, 0, 2);
+        return;
+    }
+    let mut scratch: i32 = 0;
+    let value = exe::shortlist_manager_value_player_for_club(read_usize(read_usize(G_TRANSFER_MANAGER) + transfer_manager_fields::SHORTLIST_MANAGER), buyer, player, entry, &mut scratch, -1, 1);
+    let mut w = exe::transfer_offer_get_weighted_value(local, 0, 1, 1, 1, 1);
+    let mut dropped: i32 = 0;
+    let list = local.exchange_players();
+    if !list.is_null() {
+        list.set_cursor(list.head());
+        let mut item = exe::llist_get_next(list);
+        while item != 0 {
+            let other = transfer_manager_staff_by_id(read_usize(item));
+            let c = Contract(contract_of_staff_cached(other));
+            let club = if c.is_null() { 0 } else { transfer_manager_club_by_id(c.club()).addr() };
+            let ask = exe::contract_manager_calc_asking_price(read_usize(G_CONTRACT_MANAGER), buyer, club, other, 0, 1, 1);
+            if ask.wrapping_add(w) > value {
+                covered!("mkb_1 exchange player dropped");
+                dropped = dropped.wrapping_add(ask);
+                exe::llist_remove(list, item);
+            } else {
+                w = ask.wrapping_add(w);
+            }
+            item = exe::llist_get_next(local.exchange_players());
+        }
+        let list = local.exchange_players();
+        if read_i16(list.addr()) == 0 {
+            exe::drop_llist(list);
+            exe::crt_operator_delete(list);
+            write_usize(local.addr() + offer::EXCHANGE_PLAYERS, 0);
+        }
+    }
+    write_u8(local.addr() + offer::OFFER_KIND, ((local.offer_kind() as u8) & 0xf2) | 2);
+    let role_not_player = (read_u8(entry) != 0xb) as u32;
+    if w > value {
+        // mkb1: the price above the buyer's value of the target
+        covered!("mkb_1 buyer walks away");
+        exe::shortlist_manager_update_staff_status(sm, player, buyer, 1, role_not_player);
+        exe::transfer_manager_withdraw_transfer_offer(this, slot as *mut usize, 0, 2);
+        review_bid_maybe_unsettle(player, buyer, w);
+        return;
+    }
+    let room = value.wrapping_sub(w);
+    if dropped >= room {
+        dropped = room;
+    }
+    if dropped < 0 {
+        dropped = 0;
+    }
+    local.set_fee(((local.fee() as u32).wrapping_add(dropped as u32)) as usize); // mkb1: the fee topped up
+    let total = exe::transfer_offer_get_total_value(local, 0, 1, 0, 1);
+    let finance = exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), buyer);
+    let budget = exe::finance_get_transfer_budget(finance, player.addr() as u32, 0, 0usize, 1, 0);
+    if budget < total as i64 {
+        // mkb1: the total above the transfer budget
+        covered!("mkb_1 over budget");
+        exe::shortlist_manager_update_staff_status(sm, player, buyer, 1, role_not_player);
+        exe::transfer_manager_withdraw_transfer_offer(this, slot as *mut usize, 0, 2);
+    } else if keep_existing == 0 {
+        covered!("mkb_1 bid resubmitted");
+        exe::transfer_manager_add_transfer_offer(this, local.addr() as *mut u8, core::ptr::null_mut());
+    }
+}
+
+/// The club of the person's contract (`exe::contract_manager_get_contract`, stored in `G_CONTRACT_LOOKUP_RESULT`); with
+/// `not_loan`, a loan contract (type 5) gives no club; no contract, no club.
+pub(crate) unsafe fn move_contract_club(p: Staff, not_loan: bool) -> Club {
+    let c = Contract(contract_of_staff_cached(p));
+    if c.is_null() || (not_loan && c.contract_type() & 0x3f == 5) {
+        return Club(0);
+    }
+    transfer_manager_club_by_id(c.club())
+}
+
+/// A player's reputations after the move (see `transfer_manager_move_player_to_club`): the clubs' reputations, the floor
+/// from the value, the unsettlement and his current, home and world reputations.
+pub(crate) unsafe fn move_to_club_reputations(p: Staff, club: Club, offer: Offer, seller_id: i32, found_slot: bool, rating: i32) {
+    use move_to_club_rdata::*;
+    let cm = read_usize(G_CONTRACT_MANAGER);
+    let sheet = p.player();
+    let value = if read_u32(p.addr()) == (offer.target_staff_id() as u32) {
+        exe::transfer_offer_get_total_value(offer, 0, 0, 0, 1)
+    } else {
+        exe::contract_manager_calc_player_value(cm, p, club, 0, -1, 0)
+    };
+    // the clubs' reputations
+    let buyer = club_at(read_i32(club.addr()) as isize);
+    let world = sheet.world_reputation() as i32;
+    buyer.set_reputation(buyer.reputation().wrapping_add((world / 100) as i16));
+    if buyer.reputation() > 0x2710 {
+        buyer.set_reputation(0x2710);
+    }
+    if seller_id > -1 {
+        let s = club_at(seller_id as isize);
+        s.set_reputation(s.reputation().wrapping_add((-world / 100) as i16));
+    }
+    // the reputation floor from the value
+    let v = value as f64;
+    let y = ftol(if value > 0x4c4b40 {
+        v * read_f64(F64_0_0005) + read_f64(F64_2500)
+    } else if value > 0x2625a0 {
+        v * read_f64(F64_0_001)
+    } else {
+        v * read_f64(F64_0_003) - read_f64(F64_5000)
+    }) as i16 as i32;
+    let rep = buyer.reputation() as i32;
+    let mut floor: i32;
+    if exe::human_manager_is_human_club(buyer, 0, 1, 0, 0) != 0 {
+        let t = rep / 3 - 0x2ee;
+        floor = if t > y { t } else { y };
+    } else {
+        let t = rep / 2 - 1000;
+        floor = if t > y { t } else { y };
+        if found_slot {
+            let m = if !club.manager().is_null() && !club.manager().non_player().is_null() {
+                read_i16(club.manager().non_player().addr() + non_player::CURRENT_REPUTATION) as i32 / 200 + club.reputation() as i32 / 200
+            } else {
+                club.reputation() as i32 / 150
+            };
+            let q = (sheet.current_reputation() as i32).wrapping_mul(150 - m);
+            let r = m.wrapping_mul(rating);
+            let z = ftol((q as f64 + r as f64 * read_f64(F64_2_9)) * read_f64(F64_1_150)); // mke4: the shortlist rating lifts the floor
+            floor = if floor as i16 as i32 > z { floor as i16 as i32 } else { z };
+        }
+    }
+    if floor as i16 > 0x251c {
+        floor = 0x251c;
+    }
+    // the gap
+    let gap = if seller_id != -1 {
+        let d = club.reputation() as i32 - read_i16(club_at(seller_id as isize).addr() + club::REPUTATION) as i32;
+        if d < 0 { 0 } else { d }
+    } else {
+        let d = club.reputation() as i32 - sheet.current_reputation() as i32;
+        if d < 0 { 0 } else { d }
+    };
+    let pr = p.pressure() as i32 * 20;
+    let div = if pr < 1 { 1 } else { pr };
+    let mut u = exe::utils_random(20 - p.adaptability() as i32) as u8;
+    u = u.wrapping_add(exe::utils_random(20 - sheet.leadership() as i32) as u8);
+    u = u.wrapping_add(exe::utils_random((gap as i16 as i32) / div) as u8);
+    let nation = club.nation();
+    let lang = if nation.is_null() { 0 } else { nation.first_language() as i32 };
+    let fl = exe::playerstats_get_language_fluency(read_usize(G_PLAYER_STATS), p, club, lang as u32, 0) as i8;
+    let mut add = ftol((read_f64(F64_1_5) - fl as f64 * read_f64(rdata::F64_0_1)) * u as f64) as u8; // mke4: the unsettlement after a move
+    if add > 100 {
+        add = 100;
+    }
+    let r = contract_manager_staff_state_record(read_usize(p.addr())) + 0xa;
+    write_u8(r, read_u8(r).wrapping_add(add));
+    // his reputations
+    let a = if club.nation() == p.nation() {
+        sheet.home_reputation() as i32
+    } else {
+        sheet.world_reputation() as i32
+    };
+    let cur = sheet.current_reputation() as i32;
+    sheet.set_current_reputation((a / 2 + cur / 2) as i16);
+    let fl16 = floor as i16;
+    if sheet.current_reputation() <= fl16 {
+        sheet.set_current_reputation(fl16);
+    }
+    let f = fl16 as i32;
+    let mut h = (f - 2000) as f64 + club.reputation() as i32 as f64 * read_f64(rdata::F64_0_15);
+    if read_f64(F64_0) > h {
+        h = read_f64(F64_0);
+    }
+    let h = ftol(h) as i16;
+    if !(sheet.home_reputation() > h) {
+        sheet.set_home_reputation(h);
+    }
+    let mut w = club.reputation() as i32 as f64 * read_f64(F64_0_6) + (f - 8000) as f64;
+    if read_f64(F64_0) > w {
+        w = read_f64(F64_0);
+    }
+    let w = ftol(w) as i16;
+    if !(sheet.world_reputation() > w) {
+        sheet.set_world_reputation(w);
+    }
+}
+
+/// The unsettling factor of a player whose AI buyer walked away (the `mood` score of the original, built from the
+/// contract's `.grievances()`, `.ambition()`, `.loyalty()`, liking the selling club and `.age()`): above 10 → 0.9,
+/// above 8 → 0.95, above 5 → 1.0, above 3 → 1.1, above 1 → 1.25, 1 → 1.5, 0 → 1.75, −2 or −1 → 2.0, below −2 → 2.5
+/// (the f32 constants of the original).
+pub(crate) unsafe fn review_bid_unsettle_factor(player: Staff, seller: Club, grievances: u32) -> f64 {
+    let mut mood: i8 = if grievances != 0 { 5 } else { 0 };
+    if grievances & 0x101 != 0 {
+        mood = mood.wrapping_add(5);
+    }
+    let ambition = player.ambition();
+    if ambition == 20 {
+        mood = mood.wrapping_add(2);
+    } else if ambition > 15 {
+        mood = mood.wrapping_add(1);
+    }
+    let loyalty = player.loyalty();
+    if loyalty == 1 {
+        mood = mood.wrapping_add(3);
+    } else if loyalty < 5 {
+        mood = mood.wrapping_add(1);
+    } else if loyalty == 20 {
+        mood = mood.wrapping_sub(3);
+    } else if loyalty > 15 {
+        mood = mood.wrapping_sub(1);
+    }
+    if exe::staff_favours_club(player, seller) != 0 {
+        mood = mood.wrapping_sub(2);
+    } else if exe::staff_dislikes_club(player, seller) != 0 {
+        mood = mood.wrapping_add(2);
+    }
+    let age = player.age() as i8;
+    if age < 20 {
+        mood = mood.wrapping_sub(4);
+    } else if age < 23 {
+        mood = mood.wrapping_sub(2);
+    }
+    let k = if mood > 10 {
+        rdata::F32_0_8999999762
+    } else if mood > 8 {
+        rdata::F32_0_9499999881
+    } else if mood > 5 {
+        rdata::F32_1
+    } else if mood > 3 {
+        rdata::F32_1_100000024
+    } else if mood > 1 {
+        rdata::F32_1_25
+    } else if mood == 0 {
+        rdata::F32_1_75
+    } else if mood < -2 {
+        rdata::F32_2_5
+    } else if mood < 0 {
+        rdata::F32_2
+    } else {
+        rdata::F32_1_5
+    };
+    read_f32(k) as f64
+}
+
+/// The fee level above which the player hears of the bid: his value `v` for the selling club scaled (v × 8 below
+/// 500,000; (v − 500,000) × 2 + 2,000,000 below 2,500,000; (v − 2,500,000) × 1.25 + 6,000,000 above), times the
+/// unsettling factor.
+pub(crate) unsafe fn review_bid_unsettle_level(v: i32, factor: f64) -> i32 {
+    let v_f = v as f64;
+    let x = if v < 500_000 {
+        v_f * read_f64(rdata::F64_8)
+    } else if v < 2_500_000 {
+        (v_f - read_f32(rdata::F32_500000) as f64) * 2.0 + read_f64(rdata::F64_2000000) // f32 500,000
+    } else {
+        (v_f - read_f32(rdata::F32_2500000) as f64) * read_f64(rdata::F64_1_25) + read_f64(rdata::F64_6000000) // f32 2,500,000
+    };
+    ftol(factor * ftol(x) as f64)
+}
+
+/// The local offer takes a copy of `src` as the original copies it (0x8c0896..0x8c0980).
+pub(crate) unsafe fn review_bid_copy_offer(local: Offer, src: usize) {
+    let src = Offer(src);
+    let l = local;
+    for k in [0usize, 4, 8, 0xc, 0x1b, 0x20, 0x24, 0x28, 0x35, 0x3a] {
+        write_u32(l.addr() + k, read_u32(src.addr() + k));
+    }
+    for k in [0x10usize, 0x11, 0x1a, 0x1f, 0x2c, 0x2d, 0x2e, 0x2f, 0x39, 0x3e, 0x3f, 0x40] {
+        write_u8(l.addr() + k, read_u8(src.addr() + k));
+    }
+    let mut scratch = [0u32; 2];
+    exe::date_operator_3d(l.addr() + offer::DUE_DATE, scratch.as_mut_ptr() as usize, src.addr() + offer::DUE_DATE);
+    l.set_completion_timing((l.completion_timing() & 0xf0) | (src.completion_timing() & 0xf));
+    l.set_offer_kind((((l.offer_kind() as u32) & !0xf) | ((src.offer_kind() as u32) & 0xf)) as usize);
+    write_u32(l.addr(), 0);
+    l.set_negotiation_index((0xffff_ffff) as usize);
+}

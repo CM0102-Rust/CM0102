@@ -113,3 +113,74 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_b_create_table(this: usize) -> u3
     set_prize_fund(League(this), 0x11170);
     1
 }
+
+/// The season turnover of Serie B: the season archived, the table and the dates cleared, the stage array dropped, the
+/// year plus one, then the rules, the 20 Serie B clubs, the fixtures and the order rebuilt; then the predicted
+/// positions, the board expectations and the referee renewal.
+///
+/// `league::SEASON_CLOSED` = 0; the table freed (League::free_table `exe::league_free_table`, thiscall(this, 0), ret 4);
+/// `.round_dates()` freed (`exe::crt_free`) and zeroed; with statistics, Comp_Stats::archive_season_and_reset
+/// (`exe::comp_stats_archive_season_and_reset`, thiscall(stats, 1), ret 4); the stage array (`.stages()`) freed when
+/// there is one, without destroying the stage objects (Serie B has none [inference]), and zeroed, `league::STAGE_COUNT`
+/// = 0; the year up by one; `league::CURRENT_STAGE` = −1; and `league::SEASON_CLOSED` = 1 (as Serie A's turnover
+/// also does; the other sisters leave 0; a possible defect of the original [inference: the end of the next season may
+/// be taken as already closed]).
+///
+/// Then, each with its own box (ita_ser_b.cpp, lines 0x20c, 0x213, 0x219 and 0x220) when it returns 0: the rules
+/// (virtual `comp_vtable::SET_UP_RULES`), the table (ItaSerB::create_table 0x646780, thiscall, ret 0: the 20 Serie B
+/// clubs and a prize fund from 70000), the fixtures (League::create_fixtures `exe::league_create_fixtures`) and the
+/// order (League::sort_table `exe::league_sort_table`, thiscall(this, 0), ret 4); then `set_expectations_and_renew_officials`
+/// after the predicted positions (virtual `comp_vtable::SET_PREDICTED_POSITIONS`), whose eax (the referee renewal's)
+/// it returns. After a box the copy returns 0 (the original returns the box's eax; the turnover's caller does not read
+/// it).
+/// Original: `ItaSerB::start_new_season` (0x646960, ita_ser_b.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn ita_ser_b_start_new_season(this: usize) -> u32 {
+    let this = League(this);
+    this.set_season_closed(0);
+    exe::league_free_table(this, 0);
+    let l = this.round_dates();
+    if l != 0 {
+        exe::crt_free(l);
+        this.set_round_dates(0);
+    }
+    let stats = this.comp_stats();
+    if stats != 0 {
+        exe::comp_stats_archive_season_and_reset(stats, 1);
+    }
+    if this.stages() != 0 {
+        exe::crt_free(this.stages());
+    }
+    let a = this.year();
+    this.set_year(a.wrapping_add(1)); // mwf10: the year of Serie B
+    this.set_stages(0);
+    write_u32(this.addr() + league::STAGE_COUNT, 0);
+    write_i32(this.addr() + league::CURRENT_STAGE, -1);
+    this.set_season_closed(1);
+    covered!("mwf_10 serie b rollover");
+    if bra_nat_first_call_virtual_no_args(this.addr(), comp_vtable::SET_UP_RULES) == 0 {
+        show_error_at(0x9ea384, 0x20c);
+        return 0;
+    }
+    let table: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_ITASERB_CREATE_TABLE);
+    if table(this.addr()) == 0 {
+        show_error_at(0x9ea384, 0x213);
+        return 0;
+    }
+    if exe::league_create_fixtures(this) == 0 {
+        show_error_at(0x9ea384, 0x219);
+        return 0;
+    }
+    if exe::league_sort_table(this, 0) == 0 {
+        show_error_at(0x9ea384, 0x220);
+        return 0;
+    }
+    bra_nat_first_call_virtual_no_args(this.addr(), comp_vtable::SET_PREDICTED_POSITIONS);
+    set_expectations_and_renew_officials(this)
+}
+
+/// Comparer for `ita_ser_b_start_new_season`: only the original runs (it frees and rebuilds the league); the year must
+/// go up by one.
+pub(crate) unsafe extern "thiscall" fn compare_ita_ser_b_start_new_season(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ITA_SER_B_START_NEW_SEASON);
+    compare_state_league_new_season("ita_ser_b_start_new_season", League(this), || o(this))
+}

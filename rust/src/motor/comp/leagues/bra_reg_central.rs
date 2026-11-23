@@ -228,3 +228,81 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_central_create_knockout_stage(thi
     create_knockout_from_table(League(this), &[0, 7, 2, 5, 6, 1, 4, 3], &[0, 7, 2, 5, 6, 1, 4, 3], 0x98ae10, 0x21c, 0x234, "cqn_9 centro_oeste"); // cqn9: 1º × 8º, 3º × 6º, 7º × 2º, 5º × 4º Centro-Oeste
 }
 
+/// The predicted positions of the Centre-West league (at creation and at the season turnover): the clubs sorted by strength; the
+/// first ones get the knockout places, 1, 2, 3, 3, 5, 5, 5, 5, and the others their place in the order (`state_league_predicted_positions`
+/// with `CENTRAL_PREDICTED`); it is the board and press expectation for each club [inference]. The error boxes at
+/// lines 0x30c (no statistics) and 0x314 (no memory).
+/// Original: `BraRegCentral::set_predicted_positions` (0x431610, bra_reg_central.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn bra_reg_central_set_predicted_positions(this: usize) {
+    state_league_predicted_positions(this, &CENTRAL_PREDICTED)
+}
+
+/// Comparer for `bra_reg_central_set_predicted_positions` (`compare_state_league_predicted`, side by side).
+pub(crate) unsafe extern "thiscall" fn compare_bra_reg_central_set_predicted_positions(this: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_CENTRAL_SET_PREDICTED_POSITIONS);
+    compare_state_league_predicted("bra_reg_central_set_predicted_positions", this, &CENTRAL_PREDICTED, || o(this));
+}
+
+/// The Centre-West state league schedule (the virtual `comp_vtable::CREATE_SCHEDULE`): the stage from
+/// `bra_reg_central_schedule_stage`, run by the schedule machine of cqp_11 (`create_round_table`: the outputs, the table of
+/// 0x41 bytes per round and, for each round, its date (day, month, years after the season's, weekday and code) and its
+/// fixtures; the rest of the table is left as allocated); a stage without a table returns 0 and writes nothing.
+/// Original: `BraRegCentral::create_schedule` (0x4307b0, bra_reg_central.cpp, thiscall, ret 0x10).
+pub(crate) unsafe extern "thiscall" fn bra_reg_central_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    create_round_table(Cup(this), bra_reg_central_schedule_stage(stage), rounds, extra, league, 0x98ae10)
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_bra_reg_central_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_BRA_REG_CENTRAL_CREATE_SCHEDULE);
+    asia_club_champ_compare_round_table("bra_reg_central_create_schedule", stage, bra_reg_central_schedule_stage(stage), rounds, extra, league, || o(this, stage, rounds, extra, league),
+        |r, e, l| bra_reg_central_create_schedule(this, stage, r, e, l))
+}
+
+/// The stages of the Centre-West round table: the round-robin stage (-1) (a league): 15 rounds, from 11 January to 6 April; stage 0
+/// (knockout or final stage): 3 rounds, from 7 April to 10 May.
+pub(crate) fn bra_reg_central_schedule_stage(stage: u32) -> Option<ScheduleStage> {
+    match stage as u8 as i8 {
+        -1 => Some(ScheduleStage { league: 1, rounds: 15, extra: 0, extra_check: false, size: 0x3cf, row: 0xa4,
+            ops: &CENTRAL_LEAGUE_STAGE_OPS, name: "cqw_1 centre-west league" }),
+        0 => Some(ScheduleStage { league: 0, rounds: 3, extra: 0, extra_check: false, size: 0x138, row: 0x114,
+            ops: &CENTRAL_STAGE_0_OPS, name: "cqw_1 centre-west stage 0" }),
+        _ => None,
+    }
+}
+
+/// The Centre-West league: the fixed places 1, 2, 3, 3, 5, 5, 5, 5 (the quarter-finals).
+pub(crate) const CENTRAL_PREDICTED: StateLeaguePredicted = StateLeaguePredicted { file: 0x98ae10, lines: [0x30c, 0x314], places: &[1, 2, 3, 3, 5, 5, 5, 5], label: "cqx_3 centre-west predicted" }; // cqx3: the centre-west places
+
+/// The Centre-West state league, the round-robin stage: 15 rounds (from 11 January to 6 April), 975 bytes, 56 operations.
+pub(crate) const CENTRAL_LEAGUE_STAGE_OPS: [AsiaClubChampScheduleOp; 56] = [
+    Cqp11D(0, 0xb, 1, 0, 6, 1, 0), Cqp11L(0, 0, 5, 1, 1, 0), Cqp11L(0, 1, 5, 1, 1, 0), Cqp11L(0, 2, -1, -1, -1, 0),
+    Cqp11D(1, 0x12, 1, 0, 6, 2, 0), Cqp11L(1, 0, 5, 1, 1, 0), Cqp11L(1, 1, 5, 1, 1, 0), Cqp11L(1, 2, -1, -1, -1, 0),
+    Cqp11D(2, 0x19, 1, 0, 6, 1, 0), Cqp11L(2, 0, 5, 1, 1, 0), Cqp11L(2, 1, 5, 1, 1, 0), Cqp11L(2, 2, -1, -1, -1, 0),
+    Cqp11D(3, 4, 2, 0, 6, 1, 0), Cqp11L(3, 0, 5, 1, 1, 0), Cqp11L(3, 1, 5, 1, 1, 0), Cqp11L(3, 2, -1, -1, -1, 0),
+    Cqp11D(4, 0xb, 2, 0, 6, 1, 0), Cqp11L(4, 0, 5, 1, 1, 0), Cqp11L(4, 1, 5, 1, 1, 0), Cqp11L(4, 2, -1, -1, -1, 0),
+    Cqp11D(5, 0x12, 2, 0, 6, 1, 0), Cqp11L(5, 0, 5, 1, 1, 0), Cqp11L(5, 1, 5, 1, 1, 0), Cqp11L(5, 2, -1, -1, -1, 0),
+    Cqp11D(6, 0x19, 2, 0, 6, 1, 0), Cqp11L(6, 0, 5, 1, 1, 0), Cqp11L(6, 1, 5, 1, 1, 0), Cqp11L(6, 2, -1, -1, -1, 0),
+    Cqp11D(7, 1, 3, 0, 6, 1, 0), Cqp11L(7, 0, 5, 1, 1, 0), Cqp11L(7, 1, 5, 1, 1, 0), Cqp11L(7, 2, -1, -1, -1, 0),
+    Cqp11D(8, 4, 3, 0, 2, 2, 0), Cqp11L(8, 0, -1, -1, -1, 0), Cqp11D(9, 8, 3, 0, 6, 1, 0), Cqp11L(9, 0, 5, 1, 1, 0),
+    Cqp11L(9, 1, 5, 1, 1, 0), Cqp11L(9, 2, -1, -1, -1, 0), Cqp11D(0xa, 0xf, 3, 0, 6, 1, 0),
+    Cqp11L(0xa, 0, 5, 1, 1, 0), Cqp11L(0xa, 1, 5, 1, 1, 0), Cqp11L(0xa, 2, -1, -1, -1, 0),
+    Cqp11D(0xb, 0x16, 3, 0, 6, 1, 0), Cqp11L(0xb, 0, 5, 1, 1, 0), Cqp11L(0xb, 1, 5, 1, 1, 0),
+    Cqp11L(0xb, 2, -1, -1, -1, 0), Cqp11D(0xc, 0x19, 3, 0, 2, 2, 0), Cqp11L(0xc, 0, -1, -1, -1, 0),
+    Cqp11D(0xd, 0x1d, 3, 0, 6, 1, 0), Cqp11L(0xd, 0, 5, 1, 1, 0), Cqp11L(0xd, 1, 5, 1, 1, 0),
+    Cqp11L(0xd, 2, -1, -1, -1, 0), Cqp11D(0xe, 6, 4, 0, 6, 1, 0), Cqp11L(0xe, 0, 5, 1, 1, 0),
+    Cqp11L(0xe, 1, 5, 1, 1, 0), Cqp11L(0xe, 2, -1, -1, -1, 0),
+];
+
+/// The Centre-West state league, stage 0: 3 rounds (from 7 April to 10 May), 312 bytes, 54 operations.
+pub(crate) const CENTRAL_STAGE_0_OPS: [AsiaClubChampScheduleOp; 54] = [
+    Cqp11S(0, 7, 4, 0, 0), Cqp11J(0, 0xd, 4, 0, 6, 1, 0), Cqp11W(0x7, 0x78), Cqp11W(0x9, 0), Cqp11W(0xb, 0),
+    Cqp11W(0xd, 0x200), Cqp11B(0x17, 8), Cqp11W(0x18, 8), Cqp11W(0x1a, 4), Cqp11W(0x1c, 8), Cqp11W(0xf, 0x804),
+    Cqp11W(0x1e, 0), Cqp11B(0x20, 0), Cqp11B(0x21, 2), Cqp11B(0x22, 7), Cqp11X(0x5c, 0), Cqp11X(0x60, 0),
+    Cqp11X(0x64, 0), Cqp11S(1, 0x15, 4, 0, 0), Cqp11J(1, 0x1b, 4, 0, 6, 1, 0), Cqp11W(0x6f, 0x82), Cqp11W(0x71, 1),
+    Cqp11W(0x73, 0), Cqp11W(0x75, 0x200), Cqp11B(0x7f, 8), Cqp11W(0x80, 4), Cqp11W(0x82, 2), Cqp11W(0x84, 0),
+    Cqp11W(0x77, 0x804), Cqp11W(0x86, 0), Cqp11B(0x88, 0), Cqp11B(0x89, 2), Cqp11B(0x8a, 7), Cqp11X(0xc4, 0),
+    Cqp11X(0xc8, 0), Cqp11X(0xcc, 0), Cqp11S(2, 4, 5, 0, 0), Cqp11J(2, 0xa, 5, 0, 6, 1, 0), Cqp11W(0xd9, 2),
+    Cqp11W(0xe8, 2), Cqp11W(0xd7, 0x96), Cqp11W(0xdb, 0), Cqp11W(0xdd, 0), Cqp11B(0xe7, 8), Cqp11W(0xea, 1),
+    Cqp11W(0xec, 0), Cqp11W(0xdf, 0x804), Cqp11W(0xee, 0), Cqp11B(0xf0, 0), Cqp11B(0xf1, 2), Cqp11B(0xf2, 7),
+    Cqp11X(0x12c, 0), Cqp11X(0x130, 0x3d090), Cqp11X(0x134, 0x186a0),
+];

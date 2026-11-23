@@ -533,3 +533,210 @@ pub(crate) unsafe extern "thiscall" fn eng_cc_cup_update_for_date(this: usize, t
 
 // simplification: the call-up touches the squads and the cup update plays: they do not run twice. Only the original runs.
 
+/// The season turnover of the League Cup: last season's tables freed, the season archived, the year plus one, an empty
+/// team table of the same size, the rounds and the tie tree (no predicted positions).
+///
+/// `start_new_cup_season_empty_teams` with the eng_cc_cup.cpp boxes at lines 0x2ad, 0x2b4 and 0x2bb.
+/// Original: `EngCcCup::start_new_season` (0x56d130, eng_cc_cup.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn eng_cc_cup_start_new_season(this: usize) -> u32 {
+    start_new_cup_season_empty_teams(Cup(this), 0x9c4224, [0x2ad, 0x2b4, 0x2bb], 1, false, false, "mwf_5 league cup rollover") // mwf5: the League Cup turnover
+}
+
+/// Comparer for `eng_cc_cup_start_new_season`: only the original runs (it frees and rebuilds the cup); the year must go
+/// up by one.
+pub(crate) unsafe extern "thiscall" fn compare_eng_cc_cup_start_new_season(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ENG_CC_CUP_START_NEW_SEASON);
+    compare_cup_new_season("eng_cc_cup_start_new_season", Cup(this), || o(this))
+}
+
+/// The constructor of the English League Cup: with a table of 92 entrants (6-byte records, zeroed); type 1 (clubs of
+/// one nation), 92 teams, prize fund of 1,000,000, bench and substitutions from the base, discipline rule 9; on a new
+/// cup, in order: the rounds (the cup's own virtual `comp_vtable::CREATE_SCHEDULE`, into `cup::ROUND_TABLE`); the tie
+/// tree (Cup::map_fixture_tree, `map_fixture_tree`, 0x518790, thiscall, ret 0; the error box of line 0x5e if it returns
+/// a negative value); the statistics at Comp +8 (the error box of line 0x65 without them). Over the base Cup::Cup
+/// (`exe::new_cup`, thiscall, ret 0) it writes the fixed fields in the original's order (the vtable 0x969934, the
+/// competition record at Comp +4, `cup::YEAR` and those of `LEAGUE_CUP_CONSTRUCTOR_FIELDS`); if the saved state loads
+/// (Cup::load_from_disk 0x51fc00: push 1; mov ecx, this -> thiscall, ret 4; returns ≠ 0) it returns this. Each step
+/// that fails shows its own error box (`show_error_at`) and returns this. Returns this.
+/// Original: `EngCcCup::EngCcCup` (0x56c2a0, eng_cc_cup.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn construct_eng_cc_cup(this: usize, year: u32, record: usize) -> usize {
+    construct_eng_cc_cup_body(Cup(this), year, record) // cqu5: the League Cup
+}
+
+/// Comparer for `construct_eng_cc_cup`: only the original runs (it allocates, draws and reads the save file), and the plan
+/// is checked (`eng_fa_cup_check_constructor_plan`).
+pub(crate) unsafe extern "thiscall" fn compare_construct_eng_cc_cup(this: usize, year: u32, record: usize) -> usize {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_ENG_CC_CUP)(this, year, record);
+    let error = eng_fa_cup_check_constructor_plan(Cup(this), r, year, record, 0x969934, &LEAGUE_CUP_CONSTRUCTOR_FIELDS, true);
+    SCOREBOARD.record(error.is_none(), || format!("construct_eng_cc_cup({:#x}, {}, {:#x}): {}", this, year as u16, record, error.clone().unwrap_or_default()));
+    r
+}
+
+/// The season turnover of a cup whose clubs come in round by round (the English League Cup and FA Cup, the Copa del
+/// Rey): the same frees and archive as `start_new_cup_season`, but the team table is not filled by an entrants routine:
+/// a zeroed one of the same size is allocated and the clubs are placed when their round is drawn [inference: from the
+/// entrant book `cup::ENTRANT_BOOK`, built when the cup was created].
+///
+/// `cup::SEASON_CLOSED` = 0; the team table (`cup::TEAM_TABLE`) and the round table (`cup::ROUND_TABLE`) freed
+/// (`exe::crt_free`) and zeroed; the ties of each round (`cup::TIE_TABLES`, `cup::ROUND_COUNT` rounds, a signed word)
+/// freed and zeroed, then the array freed and zeroed; with statistics, Comp_Stats::archive_season_and_reset
+/// (`exe::comp_stats_archive_season_and_reset`, thiscall(stats, 1), ret 4); the year (`cup::YEAR`) up by `year` (1);
+/// `cup::CURRENT_ROUND` = 0, `cup::RUN_BY_STAGES` = 0 and `cup::SEASON_SET_UP` = 0; with `fa_cup`, also
+/// `cup::NEXT_DRAW_ROUND` = 0 and `eng_fa_cup::FIFTH_ROUND_QUESTION_ASKED` = 0 (a byte). The new team table:
+/// calloc(`cup::TEAM_COUNT` (a signed word, read before the year moves), 6) (`exe::crt_calloc`, cdecl) into
+/// `cup::TEAM_TABLE`; out of memory, the box of line `rows[0]`.
+///
+/// Then, each with its own box (lines `rows[1]` and `rows[2]`) when it returns a negative value: the round table
+/// (virtual `comp_vtable::SET_UP_RULES`) and the tie tree (virtual `cup_vtable::MAP_FIXTURE_TREE`); with `predicted`,
+/// the predicted positions (virtual `comp_vtable::SET_PREDICTED_POSITIONS`), whose eax it returns, otherwise the tie
+/// tree's eax. After a box the copy returns 0 (the original returns the box's eax; the turnover's caller does not read
+/// it).
+pub(crate) unsafe fn start_new_cup_season_empty_teams(this: Cup, file: usize, rows: [u32; 3], year: i16, fa_cup: bool, predicted: bool, ramo: &'static str) -> u32 {
+    this.set_season_closed(0);
+    for o in [cup::TEAM_TABLE, cup::ROUND_TABLE] {
+        let l = read_usize(this.addr() + o);
+        if l != 0 {
+            exe::crt_free(l);
+            write_usize(this.addr() + o, 0);
+        }
+    }
+    if this.tie_tables() != 0 {
+        let mut i = 0i32;
+        while i < this.round_count() as i32 {
+            let p = read_usize(this.tie_tables() + i as usize * 4);
+            if p != 0 {
+                exe::crt_free(p);
+                write_usize(this.tie_tables() + i as usize * 4, 0);
+            }
+            i += 1;
+        }
+        exe::crt_free(this.tie_tables());
+        this.set_tie_tables(0);
+    }
+    let stats = read_usize(this.addr() + 8);
+    if stats != 0 {
+        exe::comp_stats_archive_season_and_reset(stats, 1);
+    }
+    let teams = this.team_count() as i32;
+    let a = this.year();
+    this.set_year(a.wrapping_add(year));
+    covered!(ramo);
+    if fa_cup {
+        this.set_next_draw_round(0);
+    }
+    this.set_current_round(0);
+    this.set_run_by_stages(0);
+    this.set_season_set_up(0);
+    if fa_cup {
+        write_u8(this.addr() + eng_fa_cup::FIFTH_ROUND_QUESTION_ASKED, 0);
+    }
+    let t = exe::crt_calloc(teams as u32, 6);
+    this.set_team_table(t);
+    if t == 0 {
+        show_error_at(file, rows[0]);
+        return 0;
+    }
+    if call_cup_virtual(this, comp_vtable::SET_UP_RULES) < 0 {
+        show_error_at(file, rows[1]);
+        return 0;
+    }
+    let r = call_cup_virtual(this, cup_vtable::MAP_FIXTURE_TREE);
+    if r < 0 {
+        show_error_at(file, rows[2]);
+        return 0;
+    }
+    if !predicted {
+        return r as u32;
+    }
+    call_cup_virtual(this, comp_vtable::SET_PREDICTED_POSITIONS) as u32
+}
+
+/// The plan the comparer checks after the original constructor: the return value (this), the vtable, the competition
+/// record (Comp +4) and `cup::YEAR`; on a new cup (`cup::STAGE_INDEX` = `stage_index::MAIN`), every fixed field the
+/// constructor writes (offset, width, value) and the round table and statistics created. `None` = as planned.
+pub(crate) unsafe fn eng_fa_cup_check_constructor_plan(this: Cup, r: usize, year: u32, record: usize, vtable: usize, fields: &[(usize, u8, u32)], rounds: bool) -> Option<String> {
+    if r != this.addr() || read_usize(this.addr()) != vtable || read_usize(this.addr() + 4) != record || read_u16(this.addr() + cup::YEAR) != year as u16 {
+        return Some(format!("returned {:#x}, vtable {:#x}, +4 {:#x}, year {}", r, read_usize(this.addr()), read_usize(this.addr() + 4), read_u16(this.addr() + cup::YEAR)));
+    }
+    if this.stage_index() != stage_index::MAIN || league_will_load_saved_state(record) {
+        return None;
+    }
+    for &(o, w, v) in fields {
+        let x = match w {
+            1 => read_u8(this.addr() + o) as u32,
+            2 => read_u16(this.addr() + o) as u32,
+            _ => read_u32(this.addr() + o),
+        };
+        if x != v {
+            return Some(format!("+{:#x} = {:#x}, the constructor writes {:#x}", o, x, v));
+        }
+    }
+    if (rounds && this.round_table() == 0) || read_usize(this.addr() + 8) == 0 {
+        return Some(format!("rounds {:#x}, statistics {:#x}", this.round_table(), read_usize(this.addr() + 8)));
+    }
+    None
+}
+
+/// The body of `construct_eng_cc_cup` (its arguments are what the mutation tests change).
+pub(crate) unsafe fn construct_eng_cc_cup_body(this: Cup, year: u32, record: usize) -> usize {
+    exe::new_cup(this);
+    write_usize(this.addr() + 4, record); // the competition record (Comp +4)
+    write_usize(this.addr(), 0x969934); // the vtable
+    write_u16(this.addr() + cup::YEAR, year as u16);
+    this.set_current_round(0);
+    this.set_stage_index(stage_index::MAIN);
+    this.set_stage_count(0);
+    write_i32(this.addr() + cup::CURRENT_STAGE, -1);
+    this.set_club_sides(1);
+    this.set_discipline_index(discipline_rule::ENGLAND);
+    this.set_run_by_stages(0);
+    this.set_season_set_up(0);
+    write_u8(this.addr() + eng_cc_cup::EUROPEAN_ENTRANT_COUNT, 0);
+    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_CUP_LOAD_FROM_DISK); // Cup::load_from_disk
+    if load(this.addr(), 1) != 0 {
+        return this.addr();
+    }
+    covered!("cqu_5 league cup new");
+    this.set_team_count(0x5c);
+    let v = exe::crt_calloc(0x5c, 6);
+    this.set_team_table(v);
+    if v == 0 {
+        show_error_at(0x9c4224, 0x50);
+        return this.addr();
+    }
+    this.set_prize_fund(0xf4240);
+    eng_fa_cup_create_rounds(this);
+    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_MAP_FIXTURE_TREE); // Cup::map_fixture_tree
+    let r = map_fixture_tree(this.addr());
+    if r < 0 {
+        show_error_at(0x9c4224, 0x5e);
+        return this.addr();
+    }
+    if !eng_fa_cup_create_comp_stats(this) {
+        show_error_at(0x9c4224, 0x65);
+        return this.addr();
+    }
+    this.addr()
+}
+
+/// Builds the cup's round table through its own virtual `comp_vtable::CREATE_SCHEDULE` (create_round_table(−1,
+/// &`cup::ROUND_COUNT`, &`cup::STAGE_LABEL`, null): push 0; push &+0x3a; push &+0x3c; push −1; mov ecx, this ->
+/// thiscall, ret 0x10) and stores it in `cup::ROUND_TABLE`.
+pub(crate) unsafe fn eng_fa_cup_create_rounds(this: Cup) {
+    let f: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
+    let t = f(this.addr(), 0xffff_ffff, this.addr() + cup::ROUND_COUNT, this.addr() + cup::STAGE_LABEL, 0);
+    this.set_round_table(t);
+}
+
+/// Creates the cup's statistics at Comp +8 (operator new `exe::crt_operator_new` of 0x5ce, cdecl, and
+/// Comp_Stats::Comp_Stats `exe::new_comp_stats`: push this; mov ecx, new -> thiscall, ret 4; the original's SEH frame
+/// covers only that new; 0 without memory). Returns whether they were created.
+pub(crate) unsafe fn eng_fa_cup_create_comp_stats(this: Cup) -> bool {
+    let n = exe::crt_operator_new(0x5ce);
+    let s = if n != 0 { exe::new_comp_stats(n, this) } else { 0 };
+    write_usize(this.addr() + 8, s); // Comp +8: the Comp_Stats object
+    s != 0
+}
+
+/// The fixed fields `construct_eng_cc_cup` writes on a new cup, for the comparer: (offset, width, value).
+pub(crate) const LEAGUE_CUP_CONSTRUCTOR_FIELDS: [(usize, u8, u32); 11] = [(cup::PRIZE_FUND, 4, 0xf4240), (cup::STAGE_COUNT, 4, 0x0), (cup::CURRENT_STAGE, 4, 0xffffffff), (cup::TEAM_COUNT, 2, 0x5c), (cup::CLUB_SIDES, 1, 0x1), (cup::STAGE_INDEX, 1, 0xff), (cup::SEASON_SET_UP, 4, 0x0), (cup::DISCIPLINE_INDEX, 1, 0x9), (cup::CURRENT_ROUND, 1, 0x0), (cup::RUN_BY_STAGES, 1, 0x0), (eng_cc_cup::EUROPEAN_ENTRANT_COUNT, 1, 0x0)];

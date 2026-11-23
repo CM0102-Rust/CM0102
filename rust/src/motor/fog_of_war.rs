@@ -72,3 +72,29 @@ pub(crate) unsafe extern "stdcall" fn fog_after_match(fixture: usize, data: usiz
     }
 }
 
+/// The daily fog of war update: each of the sixteen human manager maps that exists runs its daily knowledge update.
+///
+/// `this` holds 16 map pointers; each non-null one gets FOG_OF_WAR_MAP::daily_update (`FN_FOG_OF_WAR_MAP_DAILY_UPDATE`,
+/// thiscall, ret 0), in slot order.
+/// Original: `FOG_OF_WAR::daily_update` (0x5afce0, fog_of_war.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn fog_of_war_daily_update(this: usize) {
+    let update: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_FOG_OF_WAR_MAP_DAILY_UPDATE);
+    for k in 0..16 {
+        let map = read_usize(this + k * 4);
+        if map != 0 {
+            covered!("mwg_17 fog of war map");
+            update(map);
+        }
+    }
+}
+
+/// Comparer for `fog_of_war_daily_update`.
+pub(crate) unsafe extern "thiscall" fn compare_fog_of_war_daily_update(this: usize) {
+    let before: Vec<usize> = (0..16).map(|k| read_usize(this + k * 4)).collect();
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_FOG_OF_WAR_DAILY_UPDATE)(this);
+    let same = (0..16).all(|k| read_usize(this + k * 4) == before[k]);
+    SCOREBOARD.record(same, || format!("fog_of_war_daily_update({:#x}): the maps changed", this));
+}
+
+/// FOG_OF_WAR_MAP::daily_update (thiscall, ret 0): one human manager's map's daily knowledge update.
+pub(crate) const FN_FOG_OF_WAR_MAP_DAILY_UPDATE: usize = 0x5b0260;

@@ -130,3 +130,90 @@ pub(crate) unsafe extern "thiscall" fn fra_super_select_teams(this: usize) -> i3
     french_super_cup_select_teams(Cup(this)).0
 }
 
+/// The season turnover of the French Super Cup: last season's entrant, round and tie tables freed, the season archived in the
+/// statistics, the year moved on by one and the entrants, the round table and the tie tree rebuilt; no predicted positions: it returns the eax of the tie tree.
+///
+/// The cup turnover template (`usa_mls_all_stars_cup_start_new_season`, checked instruction by instruction against the sisters): `cup::SEASON_CLOSED` = 0;
+/// the team table (`cup::TEAM_TABLE`) and the round table (`cup::ROUND_TABLE`) freed (`exe::crt_free`) and zeroed; the
+/// ties of each round (`cup::TIE_TABLES`, `cup::ROUND_COUNT` rounds) freed and zeroed, then the array; with statistics,
+/// Comp_Stats::archive_season_and_reset (`exe::comp_stats_archive_season_and_reset`, thiscall(stats, 1), ret 4); the
+/// year (`cup::YEAR`) up by one; `cup::CURRENT_ROUND` = 0 and `cup::RUN_BY_STAGES` = 0. Then, each with its own box
+/// (fra_super.cpp, lines 0x127, 0x12e and 0x135) when it returns a negative value: the entrants (FraSuper::select_teams at 0x5bf770, thiscall, ret 0), the round
+/// table (virtual `comp_vtable::SET_UP_RULES`) and the tie tree (virtual `cup_vtable::MAP_FIXTURE_TREE`).
+/// After a box the copy returns 0 (the original returns the box's eax; the turnover's caller does not read it).
+/// Original: `FraSuper::start_new_season` (0x5bf9a0, fra_super.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn fra_super_start_new_season(this: usize) -> u32 {
+    usa_mls_all_stars_cup_start_new_season(Cup(this), 0x5bf770, 0x9ccc48, [0x127, 0x12e, 0x135], 1, false, "mwf_3 French Super Cup rollover") // mwf3: the turnover of the French Super Cup
+}
+
+/// Comparer for `fra_super_start_new_season`: only the original runs (it frees and rebuilds the cup); the year must go up by one.
+pub(crate) unsafe extern "thiscall" fn compare_fra_super_start_new_season(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_FRA_SUPER_START_NEW_SEASON);
+    compare_cup_new_season("fra_super_start_new_season", Cup(this), || o(this))
+}
+
+/// The constructor of the French Super Cup: with no entrant table of its own; type 1 (clubs of one nation), no prize
+/// fund (`cup::PRIZE_FUND` stays as the base left it), bench and substitutions from the base, discipline rule 12; on a
+/// new cup, in order: the two clubs (FraSuper::select_teams, `fra_super_select_teams`, 0x5bf770, thiscall, ret 0; the
+/// error box of line 0x3f if it returns a negative value); the rounds (the cup's own virtual
+/// `comp_vtable::CREATE_SCHEDULE`, into `cup::ROUND_TABLE`); the tie tree (Cup::map_fixture_tree, `map_fixture_tree`,
+/// 0x518790, thiscall, ret 0; the error box of line 0x4d if it returns a negative value); the statistics at Comp +8
+/// (the error box of line 0x54 without them). Over the base Cup::Cup (`exe::new_cup`, thiscall, ret 0) it writes the
+/// fixed fields in the original's order (the vtable 0x96ace0, the competition record at Comp +4, `cup::YEAR` and those
+/// of `FRENCH_SUPER_CUP_CONSTRUCTOR_FIELDS`); if the saved state loads (Cup::load_from_disk 0x51fc00: push 1; mov ecx,
+/// this -> thiscall, ret 4; returns ≠ 0) it returns this. Each step that fails shows its own error box
+/// (`show_error_at`) and returns this. Returns this.
+/// Original: `FraSuper::FraSuper` (0x5bf320, fra_super.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn construct_fra_super(this: usize, year: u32, record: usize) -> usize {
+    construct_fra_super_body(Cup(this), year, record) // cqu7: the French Super Cup
+}
+
+/// Comparer for `construct_fra_super`: only the original runs (it allocates, draws and reads the save file), and the plan
+/// is checked (`fra_cup_check_constructor_plan`).
+pub(crate) unsafe extern "thiscall" fn compare_construct_fra_super(this: usize, year: u32, record: usize) -> usize {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_FRA_SUPER)(this, year, record);
+    let error = fra_cup_check_constructor_plan(Cup(this), r, year, record, 0x96ace0, &FRENCH_SUPER_CUP_CONSTRUCTOR_FIELDS, true);
+    SCOREBOARD.record(error.is_none(), || format!("construct_fra_super({:#x}, {}, {:#x}): {}", this, year as u16, record, error.clone().unwrap_or_default()));
+    r
+}
+
+/// The body of `construct_fra_super` (its arguments are what the mutation tests change).
+pub(crate) unsafe fn construct_fra_super_body(this: Cup, year: u32, record: usize) -> usize {
+    exe::new_cup(this);
+    write_usize(this.addr() + 4, record); // the competition record (Comp +4)
+    write_usize(this.addr(), 0x96ace0); // the vtable
+    write_u16(this.addr() + cup::YEAR, year as u16);
+    this.set_current_round(0);
+    this.set_stage_index(stage_index::MAIN);
+    this.set_stage_count(0);
+    write_i32(this.addr() + cup::CURRENT_STAGE, -1);
+    this.set_club_sides(1);
+    this.set_discipline_index(discipline_rule::FRANCE);
+    this.set_run_by_stages(0);
+    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_CUP_LOAD_FROM_DISK); // Cup::load_from_disk
+    if load(this.addr(), 1) != 0 {
+        return this.addr();
+    }
+    covered!("cqu_7 french super cup new");
+    let select_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_FRASUPER_SELECT_TEAMS); // FraSuper::select_teams
+    let r = select_teams(this.addr());
+    if r < 0 {
+        show_error_at(0x9ccc48, 0x3f);
+        return this.addr();
+    }
+    fra_cup_create_rounds(this);
+    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_MAP_FIXTURE_TREE); // Cup::map_fixture_tree
+    let r = map_fixture_tree(this.addr());
+    if r < 0 {
+        show_error_at(0x9ccc48, 0x4d);
+        return this.addr();
+    }
+    if !fra_cup_create_comp_stats(this) {
+        show_error_at(0x9ccc48, 0x54);
+        return this.addr();
+    }
+    this.addr()
+}
+
+/// The fixed fields `construct_fra_super` writes on a new cup, for the comparer: (offset, width, value).
+pub(crate) const FRENCH_SUPER_CUP_CONSTRUCTOR_FIELDS: [(usize, u8, u32); 7] = [(cup::STAGE_COUNT, 4, 0x0), (cup::CURRENT_STAGE, 4, 0xffffffff), (cup::CLUB_SIDES, 1, 0x1), (cup::STAGE_INDEX, 1, 0xff), (cup::DISCIPLINE_INDEX, 1, 0xc), (cup::CURRENT_ROUND, 1, 0x0), (cup::RUN_BY_STAGES, 1, 0x0)];

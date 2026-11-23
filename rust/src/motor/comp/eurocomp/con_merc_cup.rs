@@ -140,11 +140,11 @@ pub(crate) struct NationClubList {
 }
 
 impl NationClubList {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         NationClubList { clubs: [0; 30], n: 0 }
     }
 
-    fn por(&mut self, c: usize) {
+    pub(crate) fn por(&mut self, c: usize) {
         if self.n < 0x1e {
             self.clubs[self.n as usize] = c;
             self.n += 1;
@@ -475,3 +475,230 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_set_up_rules(this: usize) ->
     apply_cup_rules(League(this), &MERCONORTE_RULES, MERCONORTE_RULES.day, 3)
 }
 
+/// Rule: the Merconorte records: in the groups (stages below 3) the qualified club gets the record of round 0x82 and
+/// the club going out the failed record (weight 0x28 both); in the knockout (stage 3) elimination and qualification
+/// weigh by round (50 to 100 over the 2 rounds) and the winner and runner-up get the final records.
+///
+/// `ConMercCup::update_staff_records_for_status(club, outcome, stage, _, fixture, final)` (the virtual +0x44); returns
+/// 0. Stage (signed byte) below 3: outcome 6, the qualification (`european_cup_add_qualified_record`: 0, 0x82, 0x28);
+/// 0xfe, the failure (`european_cup_add_failed_to_qualify_record`: 0x41c, 0x28). Stage 3, weight =
+/// `scale_by_round`(0x32, 0x64, the fixture's `round_number()`, 2): 0xff, the elimination
+/// (`european_cup_add_knocked_out_record`: `round_prefix()`, `round_name()`, the weight); 0, the qualification with
+/// `round_prefix()` and the name word +0x6f of the fixture's round in the round table of stage 3 ([`cup::STAGES`][3] +
+/// `cup::ROUND_TABLE`; the high 16 bits the original pushes are the stage pointer's); 1, the winner (0x86a800); 2, the
+/// runner-up (0x86b0b0). Anything else, and above stage 3: nothing.
+/// Original: `ConMercCup::update_staff_records_for_status` (0x4c2940, con_merc_cup.cpp, thiscall, ret 0x18).
+pub(crate) unsafe extern "thiscall" fn con_merc_cup_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, _a4: u32, game: usize, final_: u32) -> u32 {
+    let g = Fixture(game);
+    let (d, f) = (outcome as u8, stage as u8 as i8);
+    let comp = read_usize(this + 4);
+    if f < 3 {
+        if d == 6 {
+            covered!("cqx_10 merconorte group qualified");
+            european_cup_add_qualified_record(club, comp, 0, 0x82, 0x28);
+        } else if d == 0xfe {
+            european_cup_add_failed_to_qualify_record(club, comp, 0x41c, 0x28);
+        }
+    } else if f == 3 {
+        match d {
+            0xff => {
+                let weight = scale_by_round(0x32, 0x64, g.round_number(), 2);
+                european_cup_add_knocked_out_record(club, comp, g.round_prefix() as u16 as u32, g.round_name() as u16 as u32, weight);
+            }
+            0 => {
+                let weight = scale_by_round(0x32, 0x64, g.round_number(), 2);
+                let knockout = read_usize(read_usize(this + cup::STAGES) + 0xc);
+                let name = read_u16(read_usize(knockout + cup::ROUND_TABLE).wrapping_add((g.round_number() as isize * cup_round::SIZE as isize) as usize) + 0x6f) as u32;
+                european_cup_add_qualified_record(club, comp, g.round_prefix() as u16 as u32, (knockout as u32 & 0xffff_0000) | name, weight);
+            }
+            1 => cup_record_final_result(0x86a800, club, g, final_),
+            2 => cup_record_final_result(0x86b0b0, club, g, final_),
+            _ => {}
+        }
+    }
+    0
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_con_merc_cup_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, a4: u32, game: usize, final_: u32) -> u32 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_CON_MERC_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, club, outcome, stage, a4, game, final_);
+    SCOREBOARD.record(r == 0, || format!("con_merc_cup_update_staff_records_for_status({:#x}, {}, {}) returned {}", club, outcome as u8, stage as u8, r));
+    r
+}
+
+/// The Mercosur Cup at career creation: the year and the database competition, discipline rule 255 and importance 15;
+/// a new cup has league flags 0x28, four stages, the rules and the statistics (see `build_mercosur_cup`).
+/// Original: `ConMercCup::ConMercCup` (0x4c16f0, con_merc_cup.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn construct_con_merc_cup(this: usize, year: u32, record: usize) -> usize {
+    build_mercosur_cup(League(this), year, record) // cqw5: the Mercosur Cup
+}
+
+/// Comparer for `construct_con_merc_cup`: only the original runs (it allocates and reads the save file), then the plan
+/// is checked (`cup_constructor_plan_mismatch`, without the round table).
+pub(crate) unsafe extern "thiscall" fn compare_construct_con_merc_cup(this: usize, year: u32, record: usize) -> usize {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_CON_MERC_CUP)(this, year, record);
+    let error = cup_constructor_plan_mismatch(this, r, year, record, 0x968b40, &MERCOSUR_CUP_CTOR_FIELDS, false);
+    SCOREBOARD.record(error.is_none(), || format!("construct_con_merc_cup({:#x}, {}, {:#x}): {}", this, year as u16, record, error.clone().unwrap_or_default()));
+    r
+}
+
+/// The Merconorte season turnover: the first half (`conmebol_free_season`), the next year and the rules; only with them
+/// `league::ACTIVE` = 0 (the box for line 0x1b1 leaves it as it was).
+/// Original: `ConMercCup::start_new_season` (0x4c1fb0, con_merc_cup.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn con_merc_cup_start_new_season(this: usize) -> u32 {
+    let this = League(this);
+    let league = this;
+    conmebol_free_season(league);
+    conmebol_next_year(league);
+    let r = conmebol_set_up_rules_again(league, 0x9a7d6c, 0x1b1);
+    if r != 0 {
+        this.set_active((0) as usize);
+    }
+    r
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_con_merc_cup_start_new_season(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CON_MERC_CUP_START_NEW_SEASON);
+    conmebol_compare_new_season("con_merc_cup_start_new_season", this, false, || o(this))
+}
+
+/// The Merconorte predicted positions, by the rounds of stage 3 (the knockout) and in blocks of 4 for those staying in
+/// the groups (the error box at line 0x32e).
+/// Original: `ConMercCup::set_predicted_positions` (0x4c2a90, con_merc_cup.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn con_merc_cup_set_predicted_positions(this: usize) {
+    con_merc_cup_predicted_positions(this, 3, 4, 0x9a7d6c, 0x32e)
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_con_merc_cup_set_predicted_positions(this: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CON_MERC_CUP_SET_PREDICTED_POSITIONS);
+    con_merc_cup_check_predicted("con_merc_cup_set_predicted_positions", this, 3, 4, || o(this))
+}
+
+/// The constructor of the Mercosur Cup (`ConMercCup::ConMercCup(year, record)`), run once, at career creation.
+///
+/// On the League base (League::League `exe::new_league`, thiscall, ret 0): the competition record (`league::COMPETITION`),
+/// the vtable 0x968b40, the year (`set_year`), `discipline_rule` 0xff, the drawn club list `con_merc_cup::DRAWN_CLUBS` = 0 and `importance` 0xf;
+/// substitutes, substitutions and the prize fund stay as the base left them. If the saved state loads
+/// (`exe::league_load_from_temp_file`: push 1; mov ecx, this -> thiscall, ret 4; returns nonzero), returns this.
+///
+/// On a new cup, in order: `league_flags` 0x28, `stage_index` 0xff, `current_stage` −1, `stage_count` 4 and the stage
+/// vector (`exe::crt_malloc` of 0x10: push; add esp, 4 -> cdecl, unchecked); the rules (ConMercCup::set_up_rules
+/// 0x4c1ed0, thiscall, ret 0; the error box of line 0x4d, source 0x9a7d6c, and this when it returns 0); `club_count` 0
+/// and `table` 0; the statistics (`create_comp_stats_at_8`; the box of line 0x59 and this without them); `active` 0.
+/// Returns this.
+pub(crate) unsafe fn build_mercosur_cup(this: League, year: u32, record: usize) -> usize {
+    exe::new_league(this);
+    write_u32(this.addr() + league::COMPETITION, record as u32);
+    write_u32(this.addr(), 0x968b40);
+    this.set_year(year as u16 as i16);
+    this.set_discipline_rule(0xff);
+    write_u32(this.addr() + con_merc_cup::DRAWN_CLUBS, 0);
+    this.set_importance(0xf);
+    if exe::league_load_from_temp_file(this, 1) != 0 {
+        return this.addr();
+    }
+    covered!("cqw_5 mercosur cup new");
+    this.set_league_flags(0x28);
+    this.set_stage_index(stage_index::MAIN);
+    this.set_current_stage((0xffff_ffff) as usize);
+    this.set_stage_count((0x4) as usize);
+    this.set_stages((exe::crt_malloc(0x10) as u32) as usize);
+    let set_up_rules: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CONMERCCUP_SET_UP_RULES); // ConMercCup::set_up_rules
+    if set_up_rules(this.addr()) == 0 {
+        show_error_at(0x9a7d6c, 0x4d);
+        return this.addr();
+    }
+    this.set_club_count(0);
+    this.set_table((0) as usize);
+    if !create_comp_stats_at_8(this.addr()) {
+        show_error_at(0x9a7d6c, 0x59);
+        return this.addr();
+    }
+    this.set_active((0) as usize);
+    this.addr()
+}
+
+/// The predicted positions body: without statistics (+8), the error box `line`; the list +0xee of +0xf2 invited clubs
+/// sorted by reputation (`exe::crt_qsort`(list, n, 4, 0x4b07d0), cdecl); the round table of stage `stage` through
+/// `comp_vtable::CREATE_SCHEDULE` (push 0; push &extra; push &rounds; push stage; mov ecx, this -> thiscall, ret
+/// 0x10); each club of the plan with its position (`exe::comp_stats_set_club_final_position`(stats, club, position),
+/// thiscall, ret 8; the original pushes the byte with garbage in the high bytes, the routine reads the byte); the table
+/// freed (`exe::crt_free`).
+pub(crate) unsafe fn con_merc_cup_predicted_positions(this: usize, stage: u32, group: u32, file: usize, line: u32) {
+    if read_usize(this + 8) == 0 {
+        return show_error_at(file, line);
+    }
+    exe::crt_qsort(read_usize(this + 0xee), read_usize(this + 0xf2) as u32, 4, 0x4b07d0usize);
+    let create_schedule: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + comp_vtable::CREATE_SCHEDULE));
+    let (mut rounds, mut extra) = (0i16, 0i16);
+    let table = create_schedule(this, stage, &mut rounds, &mut extra, 0);
+    for (c, p) in con_merc_cup_predicted_plan(this, table, rounds, group) {
+        exe::comp_stats_set_club_final_position(read_usize(this + 8), c, p as u32);
+    }
+    exe::crt_free(table);
+}
+
+pub(crate) unsafe fn con_merc_cup_check_predicted(name: &str, this: usize, _stage: u32, _group: u32, o: impl FnOnce()) {
+    o();
+    let stats = read_usize(this + 8);
+    let list = read_usize(this + 0xee);
+    let n = read_usize(this + 0xf2) as i32;
+    if stats == 0 || list == 0 || !(1..=256).contains(&n) {
+        return;
+    }
+    let mut read: Vec<i32> = Vec::new();
+    for k in 0..n as usize {
+        let c = read_usize(list + k * 4);
+        let e = if c != 0 { exe::comp_stats_find_club_entry(stats, c) } else { 0 };
+        read.push(if e != 0 { read_u8(e + comp_stats_club::FINAL_POSITION) as i32 } else { -1 });
+    }
+    let ok = read[0] == 1 && read.iter().all(|&x| x >= 1) && read.windows(2).all(|w| w[0] <= w[1]);
+    SCOREBOARD.record(ok, || format!("{}({:#x}): positions {:?}", name, this, read));
+}
+
+/// The calls of the CONMEBOL cups' predicted positions (0x4c2a90, 0x4c4210 and 0x4c5a90, the same body), in order: the
+/// invited list (+0xee, +0xf2 clubs) already sorted; the rounds of the table `table` (`cup_round::SIZE`-byte records;
+/// the word `cup_round::TIES` of each, those leaving in it), from the last to the first: the last gives position 1 to
+/// those leaving in it and, like all of them, the running position (which goes up with each club) to as many again;
+/// those remaining go in blocks of `group` with the position of the block's start. Returns (club, position).
+pub(crate) unsafe fn con_merc_cup_predicted_plan(this: usize, table: usize, rounds: i16, group: u32) -> Vec<(usize, u8)> {
+    let mut v = Vec::new();
+    let list = read_usize(this + 0xee);
+    let mut i: i16 = 0;
+    let mut bl: u8 = 1;
+    let mut current: u8 = 1;
+    let mut r = rounds as i32 - 1;
+    while r >= 0 {
+        let p = table + r as usize * cup_round::SIZE + cup_round::TIES;
+        if r == rounds as i32 - 1 {
+            let mut j: i16 = 0;
+            while j < read_i16(p) {
+                v.push((read_usize(list + i as isize as usize * 4), current));
+                i = i.wrapping_add(1);
+                bl = bl.wrapping_add(1);
+                j += 1;
+            }
+        }
+        current = bl;
+        let mut j: i16 = 0;
+        while j < read_i16(p) {
+            v.push((read_usize(list + i as isize as usize * 4), current));
+            i = i.wrapping_add(1);
+            bl = bl.wrapping_add(1);
+            j += 1;
+        }
+        r -= 1;
+    }
+    let mut pos = bl;
+    while (i as i32) < read_usize(this + 0xf2) as i32 {
+        v.push((read_usize(list + i as isize as usize * 4), pos));
+        bl = bl.wrapping_add(1);
+        if bl as u32 == pos as u32 + group {
+            pos = bl;
+        }
+        i = i.wrapping_add(1);
+    }
+    v
+}
+
+/// The fixed fields the Mercosur Cup constructor writes (offset, width, value), checked by the comparer.
+pub(crate) const MERCOSUR_CUP_CTOR_FIELDS: [(usize, u8, u32); 10] = [(league::STAGE_COUNT, 4, 0x4), (league::CURRENT_STAGE, 4, 0xffffffff), (league::CLUB_COUNT, 2, 0x0), (league::STAGE_INDEX, 1, 0xff), (league::ACTIVE, 4, 0x0), (league::DISCIPLINE_RULE, 1, 0xff), (league::IMPORTANCE, 1, 0xf), (league::TABLE, 4, 0x0), (league::LEAGUE_FLAGS, 2, 0x28), (con_merc_cup::DRAWN_CLUBS, 4, 0x0)];

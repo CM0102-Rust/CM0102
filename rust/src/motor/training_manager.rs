@@ -1155,3 +1155,9 @@ pub(crate) unsafe extern "thiscall" fn init_player_entries(this: usize) {
     }
 }
 
+/// The edit session's schedule number `k` (a signed byte).
+pub(crate) fn training_schedule(session: usize, k: i8) -> usize {
+    (session as isize + TRAINING_SESSION_SCHEDULES as isize + k as isize * TRAINING_SCHEDULE_SIZE as isize) as usize
+}
+
+pub(crate) const TRAINING_SESSION_SCHEDULES: usize = 0xfa;

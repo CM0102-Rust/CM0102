@@ -3741,3 +3741,2380 @@ pub(crate) unsafe extern "thiscall" fn post_contract_end_news(this: usize, p: us
     exe::drop_llist(l);
 }
 
+/// The contracts' day, run at every slice of the day by the day loop (and while running to the start date).
+///
+/// `daily_update(&date, slice, people)` (the contract manager in ecx). Slice 0 recomputes the fixed dates
+/// (`contract_day_fixed_dates`); slice 2 expires the contract talks (`contract_day_expire_talks`) and, with `people` =
+/// 1, passes over every person (`contract_day_person`): on 31 December the "Updating game data" bar (one step every
+/// 250 people, `exe::screenmanager_send_network_status_message` with staff count × 0.004 steps); before the full load
+/// only the contracts ending today become type 1; otherwise the value (`contract_day_value`), the loan end
+/// (`contract_day_loan_end`), with a player sheet the renewal before the rules change (`contract_day_rule_change`), a
+/// type 2 contract ending after today + 182 with no loan the FIFA period (`contract_day_fifa_period`, then the next
+/// person), a type 1 contract with no loan the expired contract (`contract_day_expired`), another type the Bosman rule,
+/// the shortlists and the AI renewals (`contract_day_bosman`), and then the contract end on the day
+/// (`contract_day_end`). Every slice ends with the decision dates (`contract_day_decisions` after the people pass, then
+/// the re-sort and `process_due_decision_dates` 0x4cd9c0 with the date and the slice). The SEH frame only matters for
+/// exceptions.
+/// Original: `CONTRACT_MANAGER::daily_update` (0x4c7ac0, contract_manager.cpp, thiscall, ret 0xc).
+pub(crate) unsafe extern "thiscall" fn contract_manager_daily_update(this: usize, date: usize, slice: u32, people: u32) {
+    let mut table = read_usize(G_STAFF_TABLE);
+    let mut d = [0u16; 4];
+    let dec31 = exe::date_date_549f70(&mut d, 0x1f, 0xb, read_u16(date + 2) as u32, u32::MAX);
+    let dec31 = contract_day_same(dec31, date);
+    match slice as u8 {
+        0 => contract_day_fixed_dates(date),
+        2 => {
+            contract_day_expire_talks(this, date);
+            let steps = ftol(read_i32(G_STAFF_COUNT) as f64 * read_f64(rdata::F64_0_004));
+            let mut progress: i32 = 0;
+            let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+            if dec31 {
+                text(contract_day_globals::PROGRESS_TEXT, contract_day_globals::PROGRESS_FORMAT);
+                exe::screenmanager_send_network_status_message(G_SCREEN_MANAGER, contract_day_globals::PROGRESS_TEXT, 0, steps as u32, -1);
+            }
+            let mut i: i32 = 0;
+            while i < read_i32(G_STAFF_COUNT) && people as u8 == 1 {
+                if dec31 && i % 250 == 0 {
+                    progress += 1;
+                    text(contract_day_globals::PROGRESS_TEXT, contract_day_globals::PROGRESS_FORMAT);
+                    exe::screenmanager_send_network_status_message(G_SCREEN_MANAGER, contract_day_globals::PROGRESS_TEXT, progress, steps as u32, -1);
+                }
+                contract_day_person(this, date, Staff(table));
+                i += 1;
+                table += staff::SIZE;
+            }
+            contract_day_decisions(this, date);
+        }
+        _ => {}
+    }
+    if read_i32(this + contract_manager_fields::DECISIONS_ADDED) != 0 {
+        let k = read_i32(this + contract_manager_fields::DECISION_NEXT_INDEX);
+        let n = read_i32(this + contract_manager_fields::DECISION_COUNT);
+        let base = read_usize(this + contract_manager_fields::DECISION_DATES).wrapping_add((k as usize).wrapping_mul(14));
+        exe::crt_qsort(base, (n - k) as u32, 14, contract_day_globals::COMPARE_DECISIONS);
+        write_i32(this + contract_manager_fields::DECISIONS_ADDED, 0);
+    }
+    let f: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_CONTRACT_MANAGER_PROCESS_DUE_DECISION_DATES); // process_due_decision_dates
+    f(this, date, slice);
+}
+
+/// Comparer for `contract_manager_daily_update`: the original only (it offers contracts, writes news, queues free
+/// transfers, draws random numbers and moves the decision dates; it cannot run twice).
+pub(crate) unsafe extern "thiscall" fn compare_contract_manager_daily_update(this: usize, date: usize, slice: u32, people: u32) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32)>(IDX_CONTRACT_MANAGER_DAILY_UPDATE)(this, date, slice, people) // simplification: original only
+}
+
+/// Writes the headline or the body of the news that a person's contract expires in twelve, six, three, two or one
+/// months or next week.
+///
+/// `write_contract_expiry_news_text(news, full, out)`: the name from slots 3-5 and 2 (mode 1). The body by the period
+/// (slot 6, `CONTRACT_EXPIRY_TEMPLATES`; slot 7 not 0 the first template, else slot 8 not 0 the second, else the third;
+/// period 7 the template 0x9aad3c; another period leaves the buffer as it was), each with 100 and the name; the link
+/// to the club of slot 0 (full name) and to the person (0x7d7) when the names still match. The headline: 0x9aa520
+/// ("... contract") with 100 and the name, and the person's link.
+/// Original: `CONTRACT_MANAGER::write_contract_expiry_news_text` (0x4d6a00, contract_manager.cpp, thiscall, ret 0xc).
+pub(crate) unsafe extern "thiscall" fn write_contract_expiry_news_text(_this: usize, news: usize, full: u32, out: usize) {
+    let fmt = news_text_format();
+    let slot = |k: u32| exe::newsitem_get_slot(news, k);
+    let (club, person, s3, s4, s5, period, s7, s8) = (slot(0), slot(2), slot(3), slot(4), slot(5), slot(6), slot(7), slot(8));
+    let mut name = [0u8; 0x12c];
+    news_text_person_name(s3, s4, s5, &mut name, 1, person);
+    let np = name.as_ptr() as usize;
+    if full != 0 {
+        match period as i32 {
+            1..=6 => {
+                let (a, b, c) = CONTRACT_EXPIRY_TEMPLATES[(period - 1) as usize];
+                let t = if s7 != 0 { a } else if s8 != 0 { b } else { c };
+                fmt(NEWS_TEXT_BUFFER, t, 100, np);
+            }
+            7 => {
+                fmt(NEWS_TEXT_BUFFER, 0x9aad3c, 100, np);
+            }
+            _ => {} // the buffer keeps what it had
+        }
+        exe::text_set_string(out, NEWS_TEXT_BUFFER as *const u8);
+        let c = club_at(club as i32 as isize);
+        exe::text_add_link(out, (c.addr() + club::NAME) as *const u8, 0x7d5, c);
+    } else {
+        fmt(NEWS_TEXT_BUFFER, 0x9aa520, 100, np); // "<name>{s} contract"
+        exe::text_set_string(out, NEWS_TEXT_BUFFER as *const u8);
+    }
+    news_text_link_person(out, &name, person, s3, s4, s5, 0x7d7);
+}
+
+/// Comparer for `write_contract_expiry_news_text`: the text side by side (`compare_text_writer`).
+pub(crate) unsafe extern "thiscall" fn compare_write_contract_expiry_news_text(this: usize, news: usize, full: u32, out: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_WRITE_CONTRACT_EXPIRY_NEWS_TEXT);
+    compare_text_writer(out, || o(this, news, full, out), |t| write_contract_expiry_news_text(this, news, full, t), || format!("write_contract_expiry_news_text(news {:#x}, full {})", news, full));
+}
+
+/// Writes the headline or the body of the news that a person leaves when his contract, trial or loan ends.
+///
+/// `write_contract_end_news_text(news, full, out)`: the club of slot 0, the person of slot 2 (name from slots 3-5, mode
+/// 1), the kind of slot 6 (5 trial, 6 loan, 1 ...), the loan club of slot 7, "own" = slot 8 is 1, and whether the club of
+/// slot 0 is the current human manager's (`G_SCREEN_RECORDS_MANAGER` of the current slot, its club +0x39). Headline: own
+/// and not the human's club 0x9aeff4 ("<name> leaves <club>"); trial 0x9aefbc; loan 0x9aef88; neither kind 1 nor own
+/// 0x9aef50 ("contract expires"); otherwise 0x9aef20 ("leaves club"). Body: trial 0x9aeec8; loan 0x9aee54 with the loan
+/// club; kind 1 0x9aedc8; own: the human's club 0x9aed5c, otherwise 0x9aeccc with the club; else 0x9aec58. The person's
+/// link (0x7da) when the names still match, then (body) the loan club's link when slot 7 ≠ −1, and the club's when slot
+/// 0 ≠ −1.
+/// Original: `CONTRACT_MANAGER::write_contract_end_news_text` (0x4daa00, contract_manager.cpp, thiscall, ret 0xc).
+pub(crate) unsafe extern "thiscall" fn write_contract_end_news_text(_this: usize, news: usize, full: u32, out: usize) {
+    let fmt = news_text_format();
+    let slot = |k: u32| exe::newsitem_get_slot(news, k);
+    let (club, person, s3, s4, s5) = (slot(0), slot(2), slot(3), slot(4), slot(5));
+    let kind = slot(6) as u8;
+    let loan_club = slot(7);
+    let own = slot(8) == 1;
+    let hm = read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize as usize);
+    let human_club = hm != 0 && read_usize(hm + 0x39) != 0 && club == read_u32(read_usize(hm + 0x39));
+    let mut name = [0u8; 0x12c];
+    news_text_person_name(s3, s4, s5, &mut name, 1, person);
+    let np = name.as_ptr() as usize;
+    let c0 = Club(club_at(club as i32 as isize).addr());
+    if full == 0 {
+        if own && !human_club {
+            let g = (c0.short_gender_name() as i8) as i32;
+            fmt(NEWS_TEXT_BUFFER, 0x9aeff4, g, g, np, c0.addr() + club::SHORT_NAME);
+        } else if kind == 5 {
+            fmt(NEWS_TEXT_BUFFER, 0x9aefbc, 100, np);
+        } else if kind == 6 {
+            fmt(NEWS_TEXT_BUFFER, 0x9aef88, 100, np);
+        } else if kind != 1 && !own {
+            fmt(NEWS_TEXT_BUFFER, 0x9aef50, 100, np);
+        } else {
+            fmt(NEWS_TEXT_BUFFER, 0x9aef20, np);
+        }
+        exe::text_set_string(out, NEWS_TEXT_BUFFER as *const u8);
+        news_text_link_person(out, &name, person, s3, s4, s5, 0x7da);
+        if club as i32 != -1 {
+            news_text_link_club(out, club);
+        }
+        return;
+    }
+    if kind == 5 {
+        fmt(NEWS_TEXT_BUFFER, 0x9aeec8, np);
+    } else if kind == 6 {
+        let c7 = Club(club_at(loan_club as i32 as isize).addr());
+        let g = (c7.short_gender_name() as i8) as i32;
+        fmt(NEWS_TEXT_BUFFER, 0x9aee54, g, g, np, c7.addr() + club::SHORT_NAME);
+    } else if kind == 1 {
+        fmt(NEWS_TEXT_BUFFER, 0x9aedc8, 100, np);
+    } else if own {
+        if human_club {
+            fmt(NEWS_TEXT_BUFFER, 0x9aed5c, 100, np);
+        } else {
+            let g = (c0.short_gender_name() as i8) as i32;
+            covered!("mke_5 contract end at the club");
+            fmt(NEWS_TEXT_BUFFER, 0x9aeccc, g, g, 100, c0.addr() + club::SHORT_NAME, np);
+        }
+    } else {
+        fmt(NEWS_TEXT_BUFFER, 0x9aec58, 100, np); // mke5: the contract end body
+    }
+    exe::text_set_string(out, NEWS_TEXT_BUFFER as *const u8);
+    news_text_link_person(out, &name, person, s3, s4, s5, 0x7da);
+    if loan_club as i32 != -1 {
+        news_text_link_club(out, loan_club);
+    }
+    if club as i32 != -1 {
+        news_text_link_club(out, club);
+    }
+}
+
+/// Comparer for `write_contract_end_news_text`: the text side by side (`compare_text_writer`).
+pub(crate) unsafe extern "thiscall" fn compare_write_contract_end_news_text(this: usize, news: usize, full: u32, out: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_WRITE_CONTRACT_END_NEWS_TEXT);
+    compare_text_writer(out, || o(this, news, full, out), |t| write_contract_end_news_text(this, news, full, t), || format!("write_contract_end_news_text(news {:#x}, full {})", news, full));
+}
+
+/// The asking price for a player of a human club, as the computer's bids read it (`TRANSFER_OFFER::build_bid`
+/// 0x8e5d60 and the shortlist and media routines, 9 call sites).
+///
+/// The player's main contract (`main_contract_of_staff`, kept in `G_CONTRACT_LOOKUP_RESULT`) gives his club; when that
+/// club is not human (`exe::human_manager_is_human_club` with 0, 1) the "Error" box (contract_manager.cpp, line
+/// 0x1f28) and the stored value (`.value()`). Otherwise the contract with that club (`exe::contract_manager_get_contract_for_club`):
+/// none, not of type 2 (`.contract_type()` & 0x3f, a player contract) or leaving on a Bosman (`.leaving_on_bosman()`):
+/// 0. The stored value, at most the release fee (`.release_fee()`) when the clause is active
+/// (`exe::staff_contract_has_active_release_clause`), is the floor; the computed price
+/// (`exe::contract_manager_calc_asking_price` with `seller`, `buyer`, no reason flags, adjust 1, flag 1) is raised to
+/// that floor and limited by the active release fee. Transfer listed or requested
+/// (`exe::staff_is_transfer_listed_or_requested`): the floor. Without bit 4 of `.transfer_status()` [inference: the
+/// manager set the asking price]: the floor. By `.squad_status()` & 0xf0: 0x10 and 0x50 [inference: key players] the
+/// computed price; 0x20 and 0x30 the mean of both (signed, truncated); the others the floor.
+/// Original: `contract_manager_get_human_asking_price` (0x4d42d0, contract_manager.cpp, thiscall, ret 0xc).
+pub(crate) unsafe extern "thiscall" fn get_human_asking_price(this: usize, seller: usize, buyer: usize, player: usize) -> i32 {
+    let p = Staff(player);
+    let main = main_contract_of_staff(p);
+    write_usize(G_CONTRACT_LOOKUP_RESULT, main);
+    let club = if main != 0 { club_at(Contract(main).club() as isize) } else { Club(0) };
+    if exe::human_manager_is_human_club(club, 0, 1, 0, 0) == 0 {
+        show_error_at(0x9a8190, 0x1f28);
+        return p.value() as i32;
+    }
+    let c = Contract(exe::contract_manager_get_contract_for_club(this, p, club));
+    if c.is_null() || c.contract_type() & 0x3f != 2 || c.leaving_on_bosman() != 0 {
+        return 0;
+    }
+    covered!("mka_1 human asking price");
+    let mut stored = p.value() as i32;
+    if exe::staff_contract_has_active_release_clause(c) != 0 && stored >= c.release_fee() as i32 {
+        stored = c.release_fee() as i32;
+    }
+    let mut price = exe::contract_manager_calc_asking_price(this, seller, buyer, p, 0, 1, 1);
+    if price <= stored {
+        price = stored;
+    }
+    if exe::staff_contract_has_active_release_clause(c) != 0 && price >= c.release_fee() as i32 {
+        price = c.release_fee() as i32;
+    }
+    if exe::staff_is_transfer_listed_or_requested(p, 0usize) != 0 || c.transfer_status() & 4 == 0 {
+        return stored;
+    }
+    covered!("mka_1 human asking price by status");
+    match c.squad_status() & 0xf0 {
+        0x10 | 0x50 => price,
+        0x20 | 0x30 => price.wrapping_add(stored) / 2,
+        _ => stored,
+    }
+}
+
+/// Comparer for `get_human_asking_price`: side by side from the same draw state (the computed price may draw); a
+/// player whose club is not human (the "Error" box) runs only in the original.
+pub(crate) unsafe extern "thiscall" fn compare_get_human_asking_price(this: usize, seller: usize, buyer: usize, player: usize) -> i32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> i32>(IDX_GET_HUMAN_ASKING_PRICE);
+    let main = main_contract_of_staff(Staff(player));
+    let club = if main != 0 { club_at(Contract(main).club() as isize) } else { Club(0) };
+    if exe::human_manager_is_human_club(club, 0, 1, 0, 0) == 0 {
+        return o(this, seller, buyer, player);
+    }
+    let mut reg = crate::rng::STATE_REGIONS.to_vec();
+    reg.push((G_CONTRACT_LOOKUP_RESULT, 4));
+    let (r, n, equal, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, seller, buyer, player),
+        || crate::rng::without_counting(|| get_human_asking_price(this, seller, buyer, player)));
+    SCOREBOARD.record(equal && r == n, || format!("get_human_asking_price(seller {:#x}, buyer {:#x}, player {:#x}) original={} rust={} {:x?} x {:x?}", seller, buyer, player, r, n, mo, mr));
+    r
+}
+
+/// The asking price a club wants for one of its players (the fee it would accept), with the reasons for a refusal.
+///
+/// Called by the transfer request (0x4d8705), the board veto (0x696ec5), the human club's price
+/// (`get_human_asking_price` 0x4d4429), the computer's bids (0x8e6533, 0x8e6554), the bid ladders of the transfer manager
+/// (0x8c8291, 0x8c8c6e, 0x8cd391...), the shortlists and the screens. `seller` owns the player, `buyer` (may be 0) wants
+/// him; `reasons` (may be null) receives bits; `adjust` turns on the recent-signing factor; `flag` the youngster floor.
+/// In this order:
+/// 1. No seller, no contract with him (`exe::contract_manager_get_contract_for_club`), not a player contract
+///    (`.contract_type()` & 0x3f ≠ 2) or leaving on a Bosman (`.leaving_on_bosman()`): 0. A human seller
+///    (`exe::human_manager_is_human_club` with 1, 1) whose manager is on holiday (`exe::human_manager_is_on_holiday`)
+///    with the holiday option 0 set (`exe::human_manager_get_holiday_option`) and without bit 4 of `.transfer_status()`:
+///    the stored value (`.value()`) at once.
+/// 2. The league factor L: x = the nation's `.state_of_development()` (3 when outside 1..3); with a division,
+///    x = (x + 1) / 2, × 4 (`.professional_status()` 2) or × 7.5 (3), and y = (division `.reputation()`² × 25 + club
+///    `.reputation()`); without one, x × 2 or × 7.5 and y = (nation `.league_standard()`² × 25 + club reputation); no
+///    nation: 1. L = 1 − (20 − y / (x × 1000))² × 0.2 / 60, between 0.1 and 1.1.
+/// 3. The age factor A: above 28, (1 − (age − 28) × 0.1)² (the CRT pow, `game_pow`).
+/// 4. Happiness h (`.happiness()`) and the shortfall s by squad role (`.squad_status()` >> 4): 1: max(75 − h, 0); 2 and 5:
+///    max(50 − h, 0); 3: max(40 − h, 0); 4: max(25 − h, 0); 6: max(−h, 0); 7: h = −100, s = 0. A player absent without
+///    leave (`exe::awol_is_player_awol`): s = 0, the adjust is off and h is at most −5 × the seller manager's
+///    `.discipline()` (−100 without a manager).
+/// 5. Morale M = 1 + morale (`.morale()`) × 1/300 (positive) or × 1/134 (otherwise); × 1.2 without grievances
+///    (`.grievances()` = 0), × 0.8333 with them.
+/// 6. The seen potential: `exe::match_man_judge_player_ability` (the seller's `.manager()`, kind 1, with the player's
+///    `.current_reputation()` / 2 + `.potential_ability()` × 25); the value V = `exe::contract_manager_calc_player_value`
+///    (player, seller, 0, seen, 0). V = 0: returns 0.
+/// 7. The recent-signing factor C (adjust on, a computer seller, the player neither listed nor requesting
+///    (`exe::staff_is_transfer_listed_or_requested`), role not 7 or 8): f = 7.5, 6 (role 2), 5.5 (3) or 3.5 (4 and 5);
+///    d = the days since the player joined the club (`staff::DATE_JOINED_CLUB`), 121 to 365; C = f − d / (365 / (f − 1))
+///    (f after 121 days or less, 1 after a year). Above 2: reason 0x100.
+/// 8. Happiness factor H = (s / 2 + h) × 0.01167 + 1.4165; h ≥ 50 at a computer seller: × ((s / 2 + h)² / 50 × 0.006
+///    + 0.7). Reasons: h > 60 → 0x200, h > 20 → 0x400.
+/// 9. The finance factor G: the balance B (`exe::financetable_get_club_finance`, `.balance()`) against the table T at
+///    0x9a7f48 by reputation / 500 (50 thousand to 25 million): B ≥ T: B / T; else ((B − T) / T + x) / (x + 1), x =
+///    B × 1.25e-6 between 0 and 10. G = (that + n² × 0.05) + h × 0.002, n = the low nibble of the player's
+///    `staff_state::STATUS_FLAGS` [inference: the knowledge level]; above 1: × 0.25 + 0.75, else × 0.2125 + 0.7875; at
+///    least h × 0.0025 + 0.5, else at most 2.5.
+/// 10. The buyer factor D (1 without a buyer); h' = h, or h × 1.5 when h > 20 without grievances: Celtic × Rangers
+///     (`G_KEY_CLUB_GLASGOW_CELTIC`, `G_KEY_CLUB_GLASGOW_RANGERS`): h' × 0.04 + 2.3, at least 2.3; a league clash
+///     (`exe::comp_util_get_league_clash_type`): h' / 30 + 2, at least 2, in the same city (the stadiums' `.city()`),
+///     else h' × 0.02 + 1.6, at least 1.3; one of the seller's rivals (`.rival1()`..`.rival3()`): h' × 0.02 + 1.6 (same
+///     city) or h' × 0.01 + 1.3, at least 1.3; these three set reason 0x800 when D ≥ 1.3. Same division, not
+///     `KEY_CLUB_COMP_A_LOWER_DIVISION`: h' × 0.005 + 1, at least 1, reason 0x1000 above 1.3.
+/// 11. Squad importance S (1): role 5 (key) sets reason 0x2000; otherwise, seen above k × 17 / 20 (k = reputation / 50
+///     + 1), age below 25 and role below 7: role 6 sets 0x2000; else S = 1 + ftol((seen − k × 17 / 20) × k × 0.005) ×
+///     0.04, at least 1; role 4 also multiplies H by S; S > 1.6 sets 0x2000.
+/// 12. The multiplier Q = G × H × M × S × D × C, at most clamp(D² × C, 4.25, 10) and at most 6 × G.
+/// 13. R = (`.current_reputation()` + `.home_reputation()`) × 0.3 + `.world_reputation()` × 0.4; e = (reputation + R −
+///     4000) × 225 between 150 thousand and 2 million; E = ((1 + (R − (1.2 × reputation − 2000)) × R × 5e-8) × u + 100
+///     − u) / 100, u = h / 2 + 50; above 1, E⁵; E between 1 and 3.
+/// 14. The premium p = V × Q − V: negative, at least −0.4 V and −3 million; otherwise min(p × C, e × Q) × min(C², 25) ×
+///     L × A, halved when listed or requesting, at most 50 million. Price = V + p; with E > 1, + L × A × t, t = price ×
+///     E − price (above 5 million 0.625 t + 1.875 million, above 10 million 0.125 t + 8.75 million); at least 1000.
+/// 15. A work permit needed (`exe::transfer_manager_player_needs_work_permit`): at most V. Listed or requesting, or
+///     at a club with a linked B team (`exe::club_get_linked_b_team`, not the B side) and not role 1, 5, 2 or 3: the
+///     reasons keep only 0x800 and the price is at most `.value()` × D.
+/// 16. A computer seller with reason 0x800, reputation above 4250, age above 18, role not 7, wealth band
+///     (`exe::finance_get_wealth_band`) not −1 or −2: at least (the player's club's `.reputation()` + 25000) × 100 when
+///     below (the seller's reputation + 25000) × 100.
+/// 17. At most max(3V, V + 5 million) × D × C.
+/// 18. Above V with grievance bits 0x16b: the contract days left (`.contract_expires()`) pull the price towards V'
+///     (V × days / 365 below a year): w = days × 0.0027 − 0.485 (0..1), p' = (1 − w) V' + w price; ratio = (V' + p') /
+///     max(2 B D, 1) between 1 and 3, y = 1.375 − 0.375 ratio, price = (1 − y) V' + y p'.
+/// 19. The seller's shortlist entry for the player (`exe::shortlist_manager_find_club_shortlist_entry` with 0, 1). A big
+///     nation (England, Italy, Spain, France, Germany, Scotland, the USA, Japan, Holland, Portugal) with reputation
+///     above 4000, league standard above 12 or reputation 7000, a finance object with a wealth band, the player neither
+///     listed (`exe::staff_is_transfer_listed`) nor listed by request (`exe::staff_is_listed_by_request`): with the entry
+///     targeting him (`.target_staff_id()`) or picked for a continental squad (`.squad_selected_for()` 2 with
+///     `.continental_comp_id()` ≥ 0), the ladder A, else with an empty entry (target −1) the ladder B; the ladders
+///     raise the price by role (1, 2, 3) with steps min(price + K, price × f), more for clubs above reputation 6750 or
+///     a division above 15, less with grievances or low morale (`exe::date_days_since` of the contract end above 425 or
+///     225 days), and again in the buyer's division; the youth step (A: below 25, B: below 22, roles not 6 or 7, seen ×
+///     50 above the reputation): min(seen / (125 − morale / 4) × price, price − |age − 20| × 1333333 + 5 million).
+///     Without the big-nation conditions and without an entry, above V: h < 60, 0.67 V + 0.33 price; else t = 1.27 −
+///     h × 0.01, (1 − t) price + t V.
+/// 20. The youngster floor (`flag`, age below 24, seen above 110, a nation, role not 7): si = seen, raised by pace +
+///     acceleration, the physical score ((stamina × 1.2 + strength) × (2.6 − 0.07 age) + teamwork × 0.8 + work rate ×
+///     1.2 + jumping × 0.75) and the dribbling and finishing ratings (`exe::staff_get_player_attribute` 11 and 12, ×
+///     the same age factor); reputation / 1000 with the entry; by role reputation / 500 or / 670 (at least 121 for a
+///     role 1 under 19); − reputation / 1000 above 20 with current ability below 45; training (`.training()`) above 10
+///     with seen above 120; **the seller manager's `.youngsters()` − 10 at a computer club**; half of what is missing to
+///     `.potential_ability()` when the player joined after the manager (`exe::date_operator_3e`). si above 120, at most
+///     clamp(reputation × 0.0167 + 100, 150, 220): Y = (si² − 14400) × 250 × 0.6153846 + bonus (si above 150 with the
+///     entry, reputation ≥ 2500 and league standard above 10: (min(4 si − 600, 200))² × 250 × reputation / 6000);
+///     league standard below 13 or professional status 3: × r / 5250 (r the reputation, 0.75 r at status 3 below 5250,
+///     pulled to 4000 + (r − 4000) / 5 below standard 5); grievances: × 0.75 (morale below −50), × 0.8 (0x800000),
+///     × 0.95 (`exe::staff_contract_get_flags` 8), × 0.9 (1), × 0.9 (0x40); loyalty below 6 with professionalism below 10:
+///     × 0.9 (negative morale), × 0.9 (buyer 750 above the seller's reputation); loyalty above 15 without negative morale:
+///     × 1.1. The price is at least Y (reason 0x2000).
+/// 21. The age cap (goalkeepers, `.goalkeeper()` 20, count 3 years less): 29 V + 5 million, 30 + 4, 31 + 3.25, 32 + 2.5,
+///     33 + 1.75, 34 + 1, 35 + 0.5, 36 + 0.2, 37 + 0.1, 38 to 45 V.
+/// 22. Portugal above V: below 6 million × (price × 1e-7 + 0.3), else × 0.9, at least V. South Korea above V and 50000:
+///     (price − 50000) × 0.15 + 50000.
+/// 23. The active release fee (`exe::staff_contract_has_active_release_clause`, `.release_fee()`) caps it.
+/// Original: `contract_manager_calc_asking_price` (0x4d1600, contract_manager.cpp, thiscall, ret 0x18).
+pub(crate) unsafe extern "thiscall" fn calc_asking_price(this: usize, seller: usize, buyer: usize, player: usize, reasons: *mut u16, adjust: u32, flag: u32) -> i32 {
+    let seller = Club(seller);
+    let buyer = Club(buyer);
+    let p = Staff(player);
+    let mark = |bits: u16| {
+        if !reasons.is_null() {
+            write_u16(reasons as usize, read_u16(reasons as usize) | bits);
+        }
+    };
+    if seller.is_null() {
+        return 0;
+    }
+    let contract = Contract(exe::contract_manager_get_contract_for_club(this, p, seller));
+    if contract.is_null() || contract.contract_type() & 0x3f != 2 || contract.leaving_on_bosman() != 0 {
+        return 0;
+    }
+    if exe::human_manager_is_human_club(seller, 1, 1, 0, 0) != 0
+        && exe::human_manager_is_on_holiday(read_usize(G_HUMAN_MANAGER), exe::database_get_club_manager(seller)) != 0
+        && exe::human_manager_get_holiday_option(read_usize(G_HUMAN_MANAGER), 0, exe::database_get_club_manager(seller)) != 0
+        && contract.transfer_status() & 4 == 0 {
+        covered!("mka_2 manager on holiday");
+        return p.value() as i32;
+    }
+    let rep = seller.reputation() as i32;
+    let nation = seller.nation();
+    let division = seller.division();
+    // the league factor (0x4d16ea..0x4d185a)
+    let x0 = if nation.is_null() { 0.0 } else {
+        let x = nation.state_of_development() as i8 as f64;
+        if x < read_f64(rdata::F64_1) || x > read_f64(rdata::F64_3) { read_f64(rdata::F64_3) } else { x }
+    };
+    let league_y = if nation.is_null() {
+        read_f64(rdata::F64_1)
+    } else if !division.is_null() {
+        let mut x = (x0 + read_f64(rdata::F64_1)) * read_f64(rdata::F64_0_5);
+        match seller.professional_status() as i8 {
+            2 => x *= read_f64(rdata::F64_4),
+            3 => x *= read_f64(rdata::F64_7_5),
+            _ => {}
+        }
+        let dr = division.reputation() as i32;
+        dr.wrapping_mul(dr).wrapping_mul(25).wrapping_add(rep) as f64 / (x * read_f64(rdata::F64_1000))
+    } else {
+        let mut x = x0;
+        match seller.professional_status() as i8 {
+            2 => x = x + x,
+            3 => x *= read_f64(rdata::F64_7_5),
+            _ => {}
+        }
+        let ls = nation.league_standard() as i8 as i32;
+        ls.wrapping_mul(ls).wrapping_mul(25).wrapping_add(rep) as f64 / (x * read_f64(rdata::F64_1000))
+    };
+    let z = read_f64(rdata::F64_20) - league_y;
+    let mut league = read_f64(rdata::F64_1) - z * z * read_f64(rdata::F64_0_2) * read_f64(rdata::F64_0_01666666667);
+    if league < read_f64(rdata::F64_0_1) {
+        league = read_f64(rdata::F64_0_1);
+    } else if league > read_f64(rdata::F64_1_1) {
+        league = read_f64(rdata::F64_1_1);
+    }
+    // the age factor (0x4d185a)
+    let age = p.age() as i8;
+    let mut age_factor = read_f64(rdata::F64_1);
+    if age > 28 {
+        age_factor = game_pow(read_f64(rdata::F64_1) - (age as i32 - 28) as f64 * read_f64(rdata::F64_0_1), read_f64(rdata::F64_2));
+    }
+    // happiness and the shortfall by squad role (0x4d188e)
+    let mut h = contract.happiness() as i16;
+    let hi = h as i32;
+    let mut short: i32 = match contract.squad_status() >> 4 {
+        1 => (75 - hi).max(0),
+        2 | 5 => (50 - hi).max(0),
+        3 => (40 - hi).max(0),
+        4 => (25 - hi).max(0),
+        6 => (-hi).max(0),
+        7 => {
+            h = -100;
+            0
+        }
+        _ => 0,
+    };
+    let adj: u8;
+    if exe::awol_is_player_awol(read_usize(G_AWOL), p, 1) != 0 {
+        covered!("mka_2 absent without leave");
+        let manager = Staff(exe::database_get_club_manager(seller));
+        if manager.is_null() {
+            h = -100;
+        } else if !manager.non_player().is_null() {
+            let least = -5 * (manager.non_player().discipline() as i8 as i32);
+            if h as i32 >= least {
+                h = least as i16;
+            }
+        }
+        short = 0;
+        adj = 0;
+    } else {
+        adj = adjust as u8;
+    }
+    // morale (0x4d19cd)
+    let morale = contract.morale();
+    let per_point = if morale > 0 { read_f64(rdata::F64_0_003333333333) } else { read_f64(rdata::F64_0_007462686567) }; // 1/300, 1/134
+    let mut morale_factor = morale as f64 * per_point + read_f64(rdata::F64_1);
+    morale_factor *= if contract.grievances() == 0 { read_f64(rdata::F64_1_2) } else { read_f64(rdata::F64_0_8333333333) };
+    // the seen potential and the value (0x4d1a13..0x4d1a69)
+    let sheet = p.player();
+    let seen_arg = (sheet.current_reputation() / 2).wrapping_add(sheet.potential_ability().wrapping_mul(25));
+    let seen = exe::match_man_judge_player_ability(seller.manager(), p, seller, 1, seen_arg);
+    let value = exe::contract_manager_calc_player_value(this, p, seller, 0, seen as i32, 0);
+    if value == 0 {
+        return 0;
+    }
+    // the recent-signing factor (0x4d1a6f..0x4d1b80)
+    let mut signing = read_f64(rdata::F64_1);
+    if adj != 0 && exe::human_manager_is_human_club(seller, 0, 1, 0, 0) == 0 && exe::staff_is_transfer_listed_or_requested(p, 0usize) == 0
+        && contract.squad_status() & 0xf0 != 0x70 && contract.squad_status() & 0xf0 != 0x80 {
+        covered!("mka_2 recent signing");
+        let f = match contract.squad_status() >> 4 {
+            2 => read_f32(rdata::F32_6), // 6.0
+            3 => read_f32(rdata::F32_5_5),
+            4 | 5 => read_f32(rdata::F32_3_5),
+            _ => read_f32(rdata::F32_7_5),
+        } as f64;
+        let mut days = 365i32.wrapping_mul(read_u16(G_CURRENT_DATE_YEAR) as i32 - p.date_joined_club_year() as i32)
+            .wrapping_sub((p.date_joined_club() as i16) as i32).wrapping_add(read_i16(G_CURRENT_DATE) as i32);
+        if days <= 121 {
+            days = 121;
+        } else if days > 365 {
+            days = 365;
+        }
+        signing = f - days as f64 / (read_f64(rdata::F64_365) / (f - read_f64(rdata::F64_1)));
+        if signing > read_f64(rdata::F64_2) {
+            mark(0x100);
+        }
+    }
+    // the happiness factor (0x4d1b80..0x4d1c15)
+    let hs = (short as i16 as i32) / 2 + h as i32;
+    let mut happy = hs as f64 * read_f64(rdata::F64_0_01167) + read_f64(rdata::F64_1_4165); // 0.01167, 1.4165
+    if h >= 50 && exe::human_manager_is_human_club(seller, 0, 1, 0, 0) == 0 {
+        let k = hs.wrapping_mul(hs) / 50;
+        happy = (k as f64 * read_f64(rdata::F64_0_006) + read_f64(rdata::F64_0_7)) * happy; // 0.006
+    }
+    if h > 60 {
+        mark(0x200);
+    } else if h > 20 {
+        mark(0x400);
+    }
+    // the finance factor (0x4d1c15..0x4d1d74)
+    let fin = exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), seller);
+    let balance = if fin == 0 { read_f64(rdata::F64_0) } else { Finance(fin).balance() as f64 };
+    let band = read_f64((0x9a7f48isize + (rep / 500) as isize * 8) as usize);
+    let rich = if balance < band {
+        let r = (balance - band) / band;
+        let mut x = balance * read_f64(rdata::F64_1_25ENEG_06); // 1.25e-6
+        if read_f64(rdata::F64_0) > x {
+            x = read_f64(rdata::F64_0);
+        } else if read_f64(rdata::F64_10) < x {
+            x = read_f64(rdata::F64_10);
+        }
+        (r + x) / (x + read_f64(rdata::F64_1))
+    } else {
+        balance / band
+    };
+    let hf = h as f64;
+    let n = (read_u8(contract_manager_staff_state_record(read_i32(p.addr()) as usize) + staff_state::STATUS_FLAGS) & 0xf) as i32;
+    let mut money = rich + (n * n) as f64 * read_f64(rdata::F64_0_05) + hf * read_f64(rdata::F64_0_002);
+    money = if money > read_f64(rdata::F64_1) {
+        money * read_f64(rdata::F64_0_25) + read_f64(rdata::F64_0_75)
+    } else {
+        money * read_f64(rdata::F64_0_2125) + read_f64(rdata::F64_0_7875) // 0.2125, 0.7875
+    };
+    let least = hf * read_f64(rdata::F64_0_0025) + read_f64(rdata::F64_0_5);
+    if least > money {
+        money = least;
+    } else if read_f64(rdata::F64_2_5) < money {
+        money = read_f64(rdata::F64_2_5);
+    }
+    // the buyer factor (0x4d1d74..0x4d2006)
+    let mut dfac = read_f64(rdata::F64_1);
+    if !buyer.is_null() {
+        let h2 = (if h > 20 && contract.grievances() == 0 { ftol(hf * read_f64(rdata::F64_1_5)) as i16 } else { h }) as f64;
+        let celtic = read_i32(G_KEY_CLUB_GLASGOW_CELTIC);
+        let rangers = read_i32(G_KEY_CLUB_GLASGOW_RANGERS);
+        let (b, s) = (read_i32(buyer.addr()), read_i32(seller.addr()));
+        let same_city = !buyer.stadium().is_null() && !seller.stadium().is_null() && buyer.stadium().city() == seller.stadium().city();
+        let floor = |d: f64, least: f64| if least > d { least } else { d };
+        let clash = if (b == celtic || b == rangers) && (s == celtic || s == rangers) {
+            covered!("mka_2 old firm");
+            dfac = floor(h2 * read_f64(rdata::F64_0_04) + read_f64(rdata::F64_2_3), read_f64(rdata::F64_2_3)); // 2.3
+            true
+        } else if exe::comp_util_get_league_clash_type(buyer, seller) != 0 {
+            covered!("mka_2 derby");
+            dfac = if same_city {
+                floor(h2 * read_f64(rdata::F64_0_03333333333) + read_f64(rdata::F64_2), read_f64(rdata::F64_2))
+            } else {
+                floor(h2 * read_f64(rdata::F64_0_02) + read_f64(rdata::F64_1_6), read_f64(rdata::F64_1_3))
+            };
+            true
+        } else if buyer.addr() == seller.rival1() || buyer.addr() == seller.rival2() || buyer.addr() == seller.rival3() {
+            covered!("mka_2 rival");
+            dfac = if same_city {
+                floor(h2 * read_f64(rdata::F64_0_02) + read_f64(rdata::F64_1_6), read_f64(rdata::F64_1_3))
+            } else {
+                floor(h2 * read_f64(rdata::F64_0_01) + read_f64(rdata::F64_1_3), read_f64(rdata::F64_1_3))
+            };
+            true
+        } else {
+            let bd = buyer.division();
+            if !bd.is_null() && read_i32(bd.addr()) != read_i32(KEY_CLUB_COMP_A_LOWER_DIVISION) && bd == division {
+                covered!("mka_2 same division");
+                dfac = floor(h2 * read_f64(rdata::F64_0_005) + read_f64(rdata::F64_1), read_f64(rdata::F64_1));
+                if dfac > read_f64(rdata::F64_1_3) {
+                    mark(0x1000);
+                }
+            }
+            false
+        };
+        if clash && !(dfac < read_f64(rdata::F64_1_3)) {
+            mark(0x800);
+        }
+    }
+    // squad importance (0x4d2006..0x4d2124)
+    let k = ((rep / 50) + 1) as i16 as i32;
+    let th = (k * 17) / 20;
+    let mut importance = read_f64(rdata::F64_1);
+    let status = contract.squad_status() & 0xf0;
+    if !reasons.is_null() && status == 0x50 {
+        mark(0x2000);
+    } else if seen > th as i16 && age < 25 && (contract.squad_status() >> 4) < 7 {
+        if !reasons.is_null() && status == 0x60 {
+            mark(0x2000);
+        } else {
+            covered!("mka_2 squad importance");
+            let rise = ftol((seen as i32 - th as i16 as i32) as f64 * (k as f64 * read_f64(rdata::F64_0_005))) as i16;
+            importance = rise as f64 * read_f64(rdata::F64_0_04) + read_f64(rdata::F64_1);
+            if importance < read_f64(rdata::F64_1) {
+                importance = read_f64(rdata::F64_1);
+            }
+            if status == 0x40 {
+                happy = happy * importance;
+            }
+            if importance > read_f64(rdata::F64_1_6) {
+                mark(0x2000);
+            }
+        }
+    }
+    // the multiplier and its caps (0x4d2124..0x4d21bd)
+    let mut cap = dfac * dfac * signing;
+    if read_f64(rdata::F64_4_25) > cap { // 4.25
+        cap = read_f64(rdata::F64_4_25);
+    } else if read_f64(rdata::F64_10) < cap {
+        cap = read_f64(rdata::F64_10);
+    }
+    let mut q = money * happy * morale_factor * importance * dfac * signing;
+    if cap < q {
+        q = cap;
+    }
+    if q > money * read_f64(rdata::F64_6) {
+        q = money * read_f64(rdata::F64_6);
+    }
+    // the reputation terms (0x4d21bd..0x4d22fa)
+    let r = ftol((sheet.current_reputation() as f64 + sheet.home_reputation() as f64) * read_f64(rdata::F64_0_3)
+        + sheet.world_reputation() as f64 * read_f64(rdata::F64_0_4)) as i16 as i32;
+    let mut e = rep.wrapping_add(r).wrapping_sub(4000).wrapping_mul(225);
+    if e < 150_000 {
+        e = 150_000;
+    } else if e > 2_000_000 {
+        e = 2_000_000;
+    }
+    let u = hf * read_f64(rdata::F64_0_5) + read_f64(rdata::F64_50);
+    let v = (r as f64 - (rep as f64 * read_f64(rdata::F64_1_2) - read_f64(rdata::F64_2000))) * (r as f64 * read_f64(rdata::F64_5ENEG_08)); // 2000, 5e-8
+    let mut ex = (((v + read_f64(rdata::F64_1)) * u + read_f64(rdata::F64_100)) - u) * read_f64(rdata::F64_0_01);
+    if ex > read_f64(rdata::F64_1) {
+        ex = game_pow(ex, read_f64(rdata::F64_5));
+    }
+    if read_f64(rdata::F64_1) > ex {
+        ex = read_f64(rdata::F64_1);
+    } else if read_f64(rdata::F64_3) < ex {
+        ex = read_f64(rdata::F64_3);
+    }
+    // the premium (0x4d22fa..0x4d24aa)
+    let ceiling = ftol(e as f64 * q);
+    let vf = value as f64;
+    let raw = ftol(vf * q - vf);
+    let mut premium;
+    if raw < 0 {
+        let least = vf * read_f64(rdata::F64_NEG_0_4);
+        premium = ftol(if raw as f64 > least { raw as f64 } else { least });
+    } else {
+        let a = raw as f64 * signing;
+        let t = ftol(if a < ceiling as f64 { a } else { ceiling as f64 });
+        let mut cc = signing * signing;
+        if read_f64(rdata::F64_25) < cc {
+            cc = read_f64(rdata::F64_25);
+        }
+        premium = ftol(cc * league * age_factor * t as f64);
+    }
+    if premium < -3_000_000 {
+        premium = -3_000_000;
+    } else {
+        if premium > 0 && exe::staff_is_transfer_listed_or_requested(p, 0usize) != 0 {
+            premium = ftol(premium as f64 * read_f64(rdata::F64_0_5));
+        }
+        if premium > 50_000_000 {
+            premium = 50_000_000;
+        }
+    }
+    covered!("mka_2 premium");
+    let mut price = value.wrapping_add(premium);
+    if ex > read_f64(rdata::F64_1) {
+        covered!("mka_2 reputation premium");
+        let pf = price as f64;
+        let mut t = ftol(pf * ex - pf);
+        if t > 5_000_000 {
+            t = ftol(t as f64 * read_f64(rdata::F64_0_625) + read_f64(rdata::F64_1875000)); // 1875000
+        }
+        if t > 10_000_000 {
+            t = ftol(t as f64 * read_f64(rdata::F64_0_125) + read_f64(rdata::F64_8750000)); // 8750000
+        }
+        price = price.wrapping_add(ftol(league * age_factor * t as f64));
+    }
+    if price < 1000 {
+        price = 1000;
+    }
+    // the work permit, the listed player and the B team (0x4d24aa..0x4d2585)
+    let at_value_times_d = |price: i32| -> i32 {
+        let a = p.value() as i32 as f64 * dfac;
+        if a < price as f64 { ftol(a) } else { price }
+    };
+    if exe::transfer_manager_player_needs_work_permit(read_usize(G_TRANSFER_MANAGER), p, seller, 0) != 0 {
+        if price >= value {
+            price = value;
+        }
+    } else if exe::staff_is_transfer_listed_or_requested(p, 0usize) != 0 {
+        covered!("mka_2 listed");
+        if !reasons.is_null() {
+            write_u16(reasons as usize, read_u16(reasons as usize) & 0x800);
+        }
+        price = at_value_times_d(price);
+    } else if !p.club_job().is_null() {
+        let mut b_side: u32 = 0; // the original's slot is not initialized: the callee writes it whenever it returns a club
+        if exe::club_get_linked_b_team(p.club_job(), &mut b_side, 1) != 0 && b_side == 0 && !matches!(status, 0x10 | 0x50 | 0x20 | 0x30) {
+            if !reasons.is_null() {
+                write_u16(reasons as usize, read_u16(reasons as usize) & 0x800);
+            }
+            price = at_value_times_d(price);
+        }
+    }
+    // the rich club's floor (0x4d2585..0x4d261f)
+    if exe::human_manager_is_human_club(seller, 0, 1, 0, 0) == 0 && !reasons.is_null() && read_u16(reasons as usize) & 0x800 != 0
+        && rep > 4250 && age > 18 && status != 0x70 && exe::finance_get_wealth_band(fin) != 0xff && exe::finance_get_wealth_band(fin) != 0xfe
+        && price < rep.wrapping_add(25000).wrapping_mul(100) {
+        covered!("mka_2 rich club floor");
+        price = (p.club_job().reputation() as i32).wrapping_add(25000).wrapping_mul(100);
+    }
+    // at most max(3 V, V + 5 million) × D × C (0x4d261f..0x4d267e)
+    let triple = value.wrapping_mul(3);
+    let most = (if triple > value.wrapping_add(5_000_000) { triple } else { value.wrapping_add(5_000_000) }) as f64 * dfac * signing;
+    if !((price as f64) < most) {
+        price = ftol(most);
+    }
+    // the grievances and the contract days left (0x4d267e..0x4d27e7)
+    if price > value && contract.grievances() & 0x16b != 0 {
+        covered!("mka_2 grievances");
+        let days = 365i32.wrapping_mul(contract.contract_expires_year() as u16 as i32 - read_u16(G_CURRENT_DATE_YEAR) as i32)
+            .wrapping_add(contract.contract_expires() as i32).wrapping_sub(read_i16(G_CURRENT_DATE) as i32);
+        let base = if days >= 365 { value } else { ftol(days as f64 * read_f64(rdata::F64_0_002739726027) * value as f64) };
+        let mut w = days as f64 * read_f64(rdata::F64_0_0027) - read_f64(rdata::F64_0_485); // 0.0027, 0.485
+        if read_f64(rdata::F64_0) > w {
+            w = read_f64(rdata::F64_0);
+        } else if read_f64(rdata::F64_1) < w {
+            w = read_f64(rdata::F64_1);
+        }
+        let bf = base as f64;
+        let pulled = ftol((read_f64(rdata::F64_1) - w) * bf + price as f64 * w);
+        let mut x = balance * dfac;
+        x = x + x;
+        if read_f64(rdata::F64_1) > x {
+            x = read_f64(rdata::F64_1);
+        }
+        let mut ratio = base.wrapping_add(pulled) as f64 / x;
+        if read_f64(rdata::F64_1) > ratio {
+            ratio = read_f64(rdata::F64_1);
+        } else if read_f64(rdata::F64_3) < ratio {
+            ratio = read_f64(rdata::F64_3);
+        }
+        let y = read_f64(rdata::F64_1_375) - ratio * read_f64(rdata::F64_0_375);
+        price = ftol((read_f64(rdata::F64_1) - y) * bf + pulled as f64 * y);
+    }
+    // the big nations' ladders (0x4d27e7..0x4d3886)
+    let entry = ShortlistSlot(exe::shortlist_manager_find_club_shortlist_entry(read_usize(read_usize(G_TRANSFER_MANAGER) + transfer_manager_fields::SHORTLIST_MANAGER), seller, p, 0, 1));
+    let is = |g: usize| read_i32(nation.addr()) == read_i32(g);
+    let big = rep > 4000 && !nation.is_null()
+        && [KEY_NATION_ENGLAND, KEY_NATION_ITALY, KEY_NATION_SPAIN, KEY_NATION_FRANCE, KEY_NATION_GERMANY, KEY_NATION_SCOTLAND, KEY_NATION_UNITED_STATES, KEY_NATION_JAPAN, KEY_NATION_HOLLAND, KEY_NATION_PORTUGAL].iter().any(|&g| is(g))
+        && ((nation.league_standard() as i8) > 12 || rep >= 7000)
+        && fin != 0 && exe::finance_get_wealth_band(fin) != 0xff && exe::finance_get_wealth_band(fin) != 0xfe
+        && exe::staff_is_transfer_listed(p, 0usize) == 0 && exe::staff_is_listed_by_request(p, 0usize) == 0;
+    let same_div = || !buyer.is_null() && seller.division() == buyer.division();
+    let days_left = || exe::date_days_since(contract.addr() + contract::CONTRACT_EXPIRES, read_u32(G_CURRENT_DATE), read_u32(G_CURRENT_DATE_LEAP));
+    let youth = |price: i32, below: i8| -> i32 {
+        if age < below && status != 0x70 && status != 0x60 && (seen as i32).wrapping_mul(50) > rep {
+            covered!("mka_2 youth step");
+            let ratio = seen as f64 / (125 - morale as i32 / 4) as f64;
+            let lose = (age as i32 - 20).abs().wrapping_mul(1_333_333);
+            let a = ratio * price as f64;
+            let b = price.wrapping_sub(lose).wrapping_add(5_000_000) as f64;
+            ftol(if a < b { a } else { b })
+        } else {
+            price
+        }
+    };
+    let small_club = rep <= 6750 && (division.is_null() || division.reputation() <= 15);
+    let g = contract.grievances();
+    let target = if entry.is_null() { -2 } else { entry.target_staff_id() as i32 };
+    if big && (target == read_i32(p.addr()) || (p.squad_selected_for() == 2 && seller.continental_comp_id() as i32 > -1)) {
+        covered!("mka_2 ladder A");
+        price = youth(price, 25);
+        if small_club {
+            if g != 0 && morale <= 0 {
+                if g & 0x101 != 0 && days_left() > 425 {
+                    match status {
+                        0x10 => {
+                            price = asking_step(price, 375_000, read_f64(rdata::F64_1_25));
+                            if same_div() { price = asking_step(price, 50_000, read_f64(rdata::F64_1_05)); }
+                        }
+                        0x20 => {
+                            price = asking_step(price, 200_000, read_f64(rdata::F64_1_2));
+                            if same_div() { price = asking_step(price, 37_500, read_f64(rdata::F64_1_025)); }
+                        }
+                        _ => {}
+                    }
+                }
+            } else {
+                match status {
+                    0x10 => {
+                        price = asking_step(price, 750_000, read_f64(rdata::F64_1_75));
+                        if same_div() { price = asking_step(price, 100_000, read_f64(rdata::F64_1_1)); }
+                    }
+                    0x20 => {
+                        price = asking_step(price, 400_000, read_f64(rdata::F64_1_4));
+                        if same_div() { price = asking_step(price, 75_000, read_f64(rdata::F64_1_075)); } // 1.075
+                    }
+                    0x30 => {
+                        price = asking_step(price, 150_000, read_f64(rdata::F64_1_15));
+                        if same_div() { price = asking_step(price, 25_000, read_f64(rdata::F64_1_025)); }
+                    }
+                    _ => {}
+                }
+            }
+        } else if g != 0 && morale <= -50 {
+            if g & 0x101 != 0 && days_left() > 425 {
+                match status {
+                    0x10 => {
+                        price = asking_step_int(price, 2_500_000, 2);
+                        if same_div() { price = asking_step_int(price, 1_000_000, 2); }
+                    }
+                    0x20 => {
+                        price = asking_step(price, 1_500_000, read_f64(rdata::F64_1_5));
+                        if same_div() { price = asking_step(price, 750_000, read_f64(rdata::F64_1_75)); }
+                    }
+                    0x30 => {
+                        price = asking_step(price, 1_000_000, read_f64(rdata::F64_1_25));
+                        if same_div() { price = asking_step(price, 400_000, read_f64(rdata::F64_1_25)); }
+                    }
+                    _ => {}
+                }
+            } else if !buyer.is_null() && days_left() > 225 && status != 0x70 && p.professionalism() > 5 && p.loyalty() > 5
+                && !sheet.is_null() && sheet.current_reputation() > 6250 && contract.happiness() > p.loyalty().wrapping_neg()
+                && age > 22 && age < 31 {
+                price = asking_step(price, 1_000_000, read_f64(rdata::F64_1_25));
+                if seller.division() == buyer.division() && exe::comp_util_get_league_clash_type(seller, buyer) != 0 {
+                    price = asking_step(price, 400_000, read_f64(rdata::F64_1_25));
+                }
+            }
+        } else {
+            match status {
+                0x10 => {
+                    price = asking_step_int(price, 5_000_000, 5);
+                    if same_div() { price = asking_step_int(price, 1_000_000, 2); }
+                }
+                0x20 => {
+                    price = asking_step(price, 2_500_000, read_f64(rdata::F64_2_5));
+                    if same_div() { price = asking_step(price, 750_000, read_f64(rdata::F64_1_75)); }
+                }
+                0x30 => {
+                    price = asking_step_int(price, 1_500_000, 2);
+                    if same_div() { price = asking_step(price, 400_000, read_f64(rdata::F64_1_4)); }
+                }
+                _ => {}
+            }
+        }
+    } else if big && !entry.is_null() {
+        if target == -1 {
+            covered!("mka_2 ladder B");
+            price = youth(price, 22);
+            if small_club {
+                if g == 0 || morale > 0 {
+                    if status == 0x10 {
+                        price = asking_step(price, 250_000, read_f64(rdata::F64_1_25));
+                        if same_div() { price = asking_step(price, 50_000, read_f64(rdata::F64_1_05)); }
+                    } else if status == 0x20 || contract.happiness() as i32 > 40 - p.loyalty() as i32 {
+                        price = asking_step(price, 100_000, read_f64(rdata::F64_1_1));
+                        if same_div() { price = asking_step(price, 25_000, read_f64(rdata::F64_1_025)); }
+                    }
+                }
+            } else if g != 0 && morale <= 0 {
+                if g & 0x101 != 0 && days_left() > 425 {
+                    match status {
+                        0x10 => {
+                            price = asking_step(price, 500_000, read_f64(rdata::F64_1_25));
+                            if same_div() { price = asking_step(price, 250_000, read_f64(rdata::F64_1_1)); }
+                        }
+                        0x20 => {
+                            price = asking_step(price, 1_000_000, read_f64(rdata::F64_1_2));
+                            if same_div() { price = asking_step(price, 200_000, read_f64(rdata::F64_1_05)); }
+                        }
+                        0x30 => {
+                            price = asking_step(price, 750_000, read_f64(rdata::F64_1_15));
+                            if same_div() { price = asking_step(price, 150_000, read_f64(rdata::F64_1_02)); }
+                        }
+                        _ => {}
+                    }
+                } else if days_left() > 225 && status != 0x70 && p.loyalty() as i32 + p.professionalism() as i32 > 10
+                    && !sheet.is_null() && sheet.current_reputation() > 5250 && contract.happiness() > 10i8.wrapping_sub(p.loyalty())
+                    && age > 22 && age < 31 {
+                    price = asking_step(price, 750_000, read_f64(rdata::F64_1_15));
+                    if same_div() { price = asking_step(price, 150_000, read_f64(rdata::F64_1_02)); }
+                }
+            } else {
+                match status {
+                    0x10 => {
+                        price = asking_step_int(price, 2_000_000, 2);
+                        if same_div() { price = asking_step(price, 100_000, read_f64(rdata::F64_1_1)); }
+                    }
+                    0x20 => {
+                        price = asking_step(price, 1_500_000, read_f64(rdata::F64_1_5));
+                        if same_div() { price = asking_step(price, 75_000, read_f64(rdata::F64_1_075)); } // 1.075
+                    }
+                    0x30 => {
+                        price = asking_step(price, 1_000_000, read_f64(rdata::F64_1_5));
+                        if same_div() { price = asking_step(price, 20_000, read_f64(rdata::F64_1_02)); }
+                    }
+                    _ => {}
+                }
+            }
+        }
+    } else if entry.is_null() && price > value {
+        // no shortlist entry outside the big nations' conditions: the price comes back towards the value
+        covered!("mka_2 pull to value");
+        price = if h < 60 {
+            ftol(value as f64 * read_f64(rdata::F64_0_67) + price as f64 * read_f64(rdata::F64_0_33))
+        } else {
+            let t = read_f64(rdata::F64_1_27) - hf * read_f64(rdata::F64_0_01); // 1.27
+            ftol((read_f64(rdata::F64_1) - t) * price as f64 + value as f64 * t)
+        };
+    }
+    // the youngster floor (0x4d3886..0x4d402e)
+    if age < 24 && flag != 0 && seen > 110 && !nation.is_null() && status != 0x70 {
+        let mut bonus: i32 = 0;
+        let mut si = seen;
+        if sheet.goalkeeper() != 20 {
+            let af = read_f64(rdata::F64_2_6) - age as f64 * read_f64(rdata::F64_0_07); // 2.6, 0.07
+            let pace = (sheet.player_pace() as u8).wrapping_add(sheet.acceleration() as u8) as i8;
+            let physical = ftol((sheet.stamina() as f64 * read_f64(rdata::F64_1_2) + sheet.strength() as f64) * af
+                + sheet.teamwork() as f64 * read_f64(rdata::F64_0_8) + sheet.work_rate() as f64 * read_f64(rdata::F64_1_2)
+                + sheet.jumping() as f64 * read_f64(rdata::F64_0_75)) as i8;
+            let mut dribbling = ftol(exe::staff_get_player_attribute(p, 11) as f64 * af) as i8;
+            if dribbling >= 20 {
+                dribbling = 20;
+            }
+            let mut finishing = ftol(exe::staff_get_player_attribute(p, 12) as f64 * af) as i8;
+            if finishing >= 20 {
+                finishing = 20;
+            }
+            let sq = |a: i8, b: i32| ((a as i32 - b) * (a as i32 - b)) as i16;
+            let sqf = |a: i8, f: f64| ftol(((a as i32 - 15) * (a as i32 - 15)) as f64 * f) as i16;
+            if pace == 40 {
+                si = seen.wrapping_add(if physical > 85 { 15 } else if physical > 75 { 10 } else if physical > 65 { 8 } else if physical > 50 { 5 } else if physical > 35 { 3 } else { 0 });
+                if dribbling > 15 { si = si.wrapping_add(sq(dribbling, 13)); }
+                if finishing > 15 { si = si.wrapping_add(sq(finishing, 14)); }
+            } else if pace > 34 {
+                si = seen.wrapping_add(if physical > 75 { 8 } else if physical > 65 { 5 } else if physical > 50 { 3 } else if physical > 35 { 1 } else { 0 });
+                if dribbling > 15 { si = si.wrapping_add(sq(dribbling, 15)); }
+                if finishing > 15 { si = si.wrapping_add(sqf(finishing, read_f64(rdata::F64_0_8))); }
+            } else if pace > 25 {
+                si = seen.wrapping_add(if physical > 75 { 5 } else if physical > 65 { 3 } else if physical > 50 { 1 } else if physical < 35 { -3 } else { 0 });
+                if dribbling > 15 { si = si.wrapping_add(sqf(dribbling, read_f64(rdata::F64_0_8))); }
+                if finishing > 15 { si = si.wrapping_add(sqf(finishing, read_f64(rdata::F64_0_5))); }
+            } else if pace < 15 {
+                si = seen.wrapping_sub(if physical > 50 { 5 } else if physical > 35 { 8 } else { 10 });
+            }
+        }
+        if !entry.is_null() && target == read_i32(p.addr()) {
+            si = si.wrapping_add((rep / 1000) as i16);
+        }
+        match status {
+            0x10 => {
+                if age < 19 && (rep / 500 + si as i32) < 121 {
+                    si = 121;
+                } else {
+                    si = si.wrapping_add((rep / 500) as i16);
+                }
+            }
+            0x20 | 0x30 => si = si.wrapping_add((if age >= 19 { rep / 670 } else { rep / 500 }) as i16),
+            0x40 if age < 19 => si = si.wrapping_add((rep / 670) as i16),
+            _ => {}
+        }
+        if age > 20 && sheet.current_ability() < 45 {
+            si = si.wrapping_add((rep / -1000) as i16);
+        }
+        if seen > 120 && seller.training() > 10 {
+            si = si.wrapping_add(seller.training() as i16 - 10);
+        }
+        let manager = seller.manager();
+        if !manager.is_null() && !manager.non_player().is_null() {
+            if exe::human_manager_is_human_club(seller, 1, 1, 0, 0) == 0 {
+                covered!("mka_2 manager youngsters");
+                si = si.wrapping_add(manager.non_player().youngsters() as i16 - 10);
+            }
+            if exe::date_operator_3e(p.addr() + staff::DATE_JOINED_CLUB, manager.date_joined_club() as u32, manager.date_joined_club_leap_year() as u32) != 0 {
+                let pa = sheet.potential_ability();
+                if si < pa {
+                    si = si.wrapping_add(ftol((pa as i32 - si as i32) as f64 * read_f64(rdata::F64_0_5)) as i16);
+                }
+            }
+        }
+        if si > 120 {
+            covered!("mka_2 youngster floor");
+            let mut c = rep as f64 * read_f64(rdata::F64_0_0167) + read_f64(rdata::F64_100); // 0.0167
+            if read_f64(rdata::F64_150) > c {
+                c = read_f64(rdata::F64_150);
+            } else if read_f64(rdata::F64_220) < c {
+                c = read_f64(rdata::F64_220);
+            }
+            let c = ftol(c) as i16;
+            if si >= c {
+                si = c;
+            }
+            if si > 150 && !entry.is_null() && rep >= 2500 && (nation.league_standard() as i8) > 10 {
+                let mut t = (si as i32).wrapping_mul(4) - 600;
+                if t >= 200 {
+                    t = 200;
+                }
+                let t = t as i16 as i32;
+                bonus = ftol(t.wrapping_mul(t).wrapping_mul(250) as f64 * (rep as f64 * read_f64(rdata::F64_0_0001666666667)));
+            }
+            let s2 = (si as i32).wrapping_mul(si as i32).wrapping_sub(14400).wrapping_mul(250);
+            let mut y = ftol(s2 as f64 * read_f64(rdata::F64_0_6153846154) + bonus as f64); // 0.6153846
+            let ls = nation.league_standard() as i8;
+            if ls < 13 || seller.professional_status() as i8 == 3 {
+                let mut r = seller.reputation();
+                if seller.professional_status() as i8 == 3 && r < 5250 {
+                    r = ftol(r as f64 * read_f64(rdata::F64_0_75)) as i16;
+                }
+                if ls < 5 && r > 4000 {
+                    r = (4000 - ftol((r as i32 - 4000) as f64 * read_f64(rdata::F64_NEG_0_2))) as i16;
+                }
+                if r < 5250 {
+                    y = ftol(r as f64 * read_f64(rdata::F64_0_0001904761905) * y as f64); // 1/5250
+                }
+            }
+            if g != 0 {
+                if morale < -50 {
+                    y = ftol(y as f64 * read_f64(rdata::F64_0_75));
+                }
+                if g & 0x80_0000 != 0 {
+                    y = ftol(y as f64 * read_f64(rdata::F64_0_8));
+                }
+                if exe::staff_contract_get_flags(contract) & 8 != 0 {
+                    y = ftol(y as f64 * read_f64(rdata::F64_0_95));
+                }
+                let g2 = contract.grievances();
+                if g2 & 1 != 0 {
+                    y = ftol(y as f64 * read_f64(rdata::F64_0_9));
+                }
+                if g2 & 0x40 != 0 {
+                    y = ftol(y as f64 * read_f64(rdata::F64_0_9));
+                }
+            }
+            if p.loyalty() < 6 && p.professionalism() < 10 {
+                if contract.morale() < 0 {
+                    y = ftol(y as f64 * read_f64(rdata::F64_0_9));
+                }
+                if !buyer.is_null() && buyer.reputation() as i32 - 750 > rep {
+                    y = ftol(y as f64 * read_f64(rdata::F64_0_9));
+                }
+            } else if p.loyalty() > 15 && contract.morale() >= 0 {
+                y = ftol(y as f64 * read_f64(rdata::F64_1_1));
+            }
+            if price < y {
+                price = y;
+                mark(0x2000);
+            }
+        }
+    }
+    // the age cap (0x4d402e..0x4d4159)
+    let mut a = age;
+    if sheet.goalkeeper() == 20 {
+        a = a.wrapping_sub(3);
+    }
+    let over = match a {
+        29 => Some(5_000_000),
+        30 => Some(4_000_000),
+        31 => Some(3_250_000),
+        32 => Some(2_500_000),
+        33 => Some(1_750_000),
+        34 => Some(1_000_000),
+        35 => Some(500_000),
+        36 => Some(200_000),
+        37 => Some(100_000),
+        38..=45 => Some(0),
+        _ => None,
+    };
+    if let Some(over) = over {
+        let most = value.wrapping_add(over);
+        if price >= most {
+            covered!("mka_2 age cap");
+            price = most;
+        }
+    }
+    // Portugal and South Korea (0x4d4159..0x4d422a)
+    if !nation.is_null() {
+        if is(KEY_NATION_PORTUGAL) {
+            if price > value {
+                let pf = price as f64;
+                let x = if price < 6_000_000 {
+                    (pf * read_f64(rdata::F64_1_666666667ENEG_07) * read_f64(rdata::F64_0_6) + read_f64(rdata::F64_0_3)) * pf
+                } else {
+                    pf * read_f64(rdata::F64_0_9)
+                };
+                price = ftol(if value as f64 > x { value as f64 } else { x });
+            }
+        } else if is(KEY_NATION_SOUTH_KOREA) && price > value && price > 50_000 {
+            price = ftol(price.wrapping_sub(50_000) as f64 * read_f64(rdata::F64_0_15) + read_f64(rdata::F64_50000));
+        }
+    }
+    if exe::staff_contract_has_active_release_clause(contract) != 0 && price >= contract.release_fee() as i32 {
+        return contract.release_fee() as i32;
+    }
+    price
+}
+
+/// Comparer for `calc_asking_price`: side by side from the same draw state, checking the result, the reasons and the
+/// regions of `calc_player_value` (the draw state, `G_CONTRACT_LOOKUP_RESULT` and the date statics).
+pub(crate) unsafe extern "thiscall" fn compare_calc_asking_price(this: usize, seller: usize, buyer: usize, player: usize, reasons: *mut u16, adjust: u32, flag: u32) -> i32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16, u32, u32) -> i32>(IDX_CALC_ASKING_PRICE);
+    let mut reg = player_value_regions().to_vec();
+    if !reasons.is_null() {
+        reg.push((reasons as usize, 2));
+    }
+    let (r, n, equal, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, seller, buyer, player, reasons, adjust, flag),
+        || crate::rng::without_counting(|| calc_asking_price(this, seller, buyer, player, reasons, adjust, flag)));
+    SCOREBOARD.record(equal && r == n, || format!("calc_asking_price(seller {:#x}, buyer {:#x}, player {:#x}, adjust {}, flag {}) original={} rust={} {:x?} x {:x?}", seller, buyer, player, adjust as u8, flag, r, n, mo, mr));
+    r
+}
+
+/// The person decides on his contract offers (the decision date of type 3 fell due): each open offer gets a score and
+/// the best one above 2.75 is accepted; the others are turned down.
+///
+/// k = (`professionalism` − `ambition` − 9 + `loyalty`) × 1/300. With a pending transfer offer
+/// (`TRANSFER_MANAGER::player_has_pending_offer`): a new type 3 decision date two days from today
+/// (`exe::contract_manager_add_decision_date` at the current slice) and nothing else. Otherwise the offers in
+/// `contract_manager_fields::CONTRACT_OFFERS` for the person with `contract_offer::DECISION_VALID` set
+/// (`choose_contract_offer`): a plain offer (`contract_offer::TRANSFER_OFFER_SLOT` −1) from a club that is not the one
+/// of his contract (stored in `G_CONTRACT_LOOKUP_RESULT`), outside loans, is stale: removed from the list and from the
+/// counter (byte +8 of the 79-byte record). State 2 (already agreed) marks an agreed offer; other states are skipped.
+/// State 0: a loan (type 5) is worth the will (`staff_interest_in_joining_club`, loan 1, status 8) and a trial (type
+/// 6) the will with the squad status the club gives (`get_squad_status_for_club`); taken at once when above the best
+/// so far and at least 3.15. Any other: the squad status (high nibble of `contract::SQUAD_STATUS`) goes to the
+/// transfer offer's entry for the person; the desired contract at the club (`exe::staff_contract_set_to_desired_contract`
+/// with −1, the status and the job `contract_offer::MARK`); ratio = value(offer) / value(desired)
+/// (`exe::staff_contract_calc_contract_value`, both against the desired) − k; the will is
+/// `staff_interest_in_joining_club` for a player (no non-player sheet, or job 11), otherwise
+/// `exe::staff_interest_in_job_at_club`, averaged with the first for a player job; an offer from the club of his
+/// contract is a renewal: a ratio of at least 0.99 lifts a will up to 3.15 to 3.15; a ratio below 0.6 is 0. Refused
+/// (0): a job other than plain player for someone without a non-player sheet when no spare record is left
+/// (`PLAYER_REGEN::has_spare_non_player_record`), or a ratio above 0.5 with a work permit needed
+/// (`exe::transfer_manager_player_needs_work_permit`) and the offer's end less than 90 days away. Each one goes into
+/// two local lists (pointer, score). Then: ratio ≥ 0.9, or above 0.7 with a will above 3.5, lifts the will to at least
+/// 3.15; above 0.8 with a will above 3.15 keeps it; otherwise turned down. Score = will × ratio; the highest above the
+/// best so far is chosen; a renewal not chosen is remembered. An agreed offer, or a manager candidate for a vacancy
+/// (`exe::manager_manager_is_vacancy_candidate`, with a non-player sheet), chooses nothing.
+///
+/// Second pass over the evaluated offers: the chosen one becomes state 2 (`Media::remove_transfer_interest`,
+/// `TRANSFER_MANAGER::set_agreed_contract_flag`); the others state 1, with the rejected terms
+/// (`TRANSFER_MANAGER::handle_player_rejected_terms`, the chosen offer as the third argument) when tied to a transfer
+/// offer or the response news (`contract_manager_post_offer_response_news`, flag 1 for the turned-down renewal of a
+/// player in job 11 when nothing is chosen). None chosen: a turned-down renewal sets bit 0x80 of
+/// `staff_state::STATUS_FLAGS`. Chosen, outside loans and trials, with a score above 10: when random(max(40 − score,
+/// 5)) < `loyalty` and the club has a manager (reputation above 4500, or random(4) = 0), the person comes to favour
+/// the manager (random(2) ≠ 0, `exe::staff_add_favoured_staff`) or the club (`exe::staff_add_favoured_club`).
+///
+/// Third pass: with a chosen offer, an offer of the same club without a transfer completes the contract
+/// (`TRANSFER_MANAGER::complete_accepted_contract_offer` with the local copy; on success, a staff job for someone
+/// without a non-player sheet takes a spare record (`PLAYER_REGEN::take_spare_non_player_record`; an id outside
+/// 0..=count shows the line 0x13b4 box), a human club of his contract updates the coaches and the scouts' lists, and
+/// the player value is recomputed (`exe::contract_manager_calc_player_value`, `contract::TRANSFER_STATUS` bit 4 of
+/// the copy)); it leaves the list (counter − 1, `exe::transfer_manager_clear_agreed_contract_flag`). With a transfer
+/// it stays. An offer of another club leaves the list (into `contract_manager_fields::HELD_OFFERS` when the chosen one
+/// has a transfer; its club into the third local list). With none chosen, every offer outside state 3 leaves. A failed
+/// completion ends here. Finally: with a transfer, the accepted terms (`TRANSFER_MANAGER::handle_player_accepted_terms`
+/// with the copy, the job dword and the clubs list; a spare record first for a staff job without a sheet), otherwise
+/// the response news of the copy; bit 0x80 cleared. Defect of the original: the spare record id is accepted up to the
+/// count itself (`> count` is the error, not `>=`).
+/// Original: `CONTRACT_MANAGER::resolve_contract_offers` (0x4ce4e0, contract_manager.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn resolve_contract_offers(this: usize, person: usize) {
+    use resolve_offers_fns::*;
+    let p = Staff(person);
+    let mut chosen_buf = [0u8; 0x70]; // [esp+0x88]: the local copy of the chosen offer
+    let chosen = Contract(chosen_buf.as_mut_ptr() as usize);
+    exe::new_staff_contract(chosen);
+    exe::date_date_54a110(chosen.addr() + contract_offer::OFFER_DATE);
+    let mut buf = [[0u8; 0x10]; 3];
+    let l1 = Llist(buf[0].as_mut_ptr() as usize); // the evaluated offers (pointers)
+    let l2 = Llist(buf[1].as_mut_ptr() as usize); // their scores (doubles)
+    let l3 = Llist(buf[2].as_mut_ptr() as usize); // the clubs of the other offers (ids)
+    exe::new_llist(l1);
+    exe::new_llist(l2);
+    let mut desired_buf = [0u8; 0x50];
+    let desired = desired_buf.as_mut_ptr() as usize;
+    exe::new_staff_contract(desired);
+    exe::new_llist(l3);
+    'body: {
+        if tm_call1(FN_PLAYER_HAS_PENDING_OFFER, person) != 0 {
+            covered!("mkd_4 postponed");
+            let mut d = [0u32; 2];
+            exe::date_add_days(G_CURRENT_DATE, d.as_mut_ptr() as usize, 2);
+            exe::contract_manager_add_decision_date(this, person, d.as_ptr() as *const u8, read_u8(G_CURRENT_DAY_SLICE) as u32, 3);
+            break 'body;
+        }
+        let c = choose_contract_offer(this, p, desired, Some((l1, l2)));
+        let best = c.best;
+        // second pass: states, news, rejected terms
+        l2.set_cursor(l2.head());
+        l1.set_cursor(l1.head());
+        loop {
+            let node = exe::llist_get_next(l1);
+            if node == 0 {
+                break;
+            }
+            let _score = read_f64(exe::llist_get_next(l2));
+            let o = read_usize(node);
+            if o == best && !c.accepted {
+                ContractOffer(o).set_state(2);
+                remove_transfer_interest(person);
+                tm_call1(FN_SET_AGREED_CONTRACT_FLAG, person);
+            } else {
+                ContractOffer(o).set_state(1);
+                let slot = ContractOffer(o).transfer_offer_slot() as i32;
+                if slot != -1 {
+                    handle_player_rejected_terms(person, slot, best);
+                } else {
+                    let flag = c.rejected_own == o && !p.player().is_null() && read_u8(c.rejected_own + contract_offer::MARK) == 0xb && best == 0;
+                    post_offer_response_news(this, o, flag as u32);
+                }
+            }
+        }
+        let state = read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person).wrapping_mul(staff_state::SIZE));
+        if best == 0 {
+            if c.rejected_own != 0 {
+                covered!("mkd_4 renewal turned down");
+                write_u8(state + staff_state::STATUS_FLAGS, read_u8(state + staff_state::STATUS_FLAGS) | 0x80);
+            }
+        } else {
+            // the original copies the chosen offer field by field (the dates through Date::operator=): the same 0x6f bytes
+            core::ptr::copy_nonoverlapping(best as *const u8, chosen.addr() as *mut u8, OFFER_SIZE);
+            let kind = chosen.contract_type() & 0x3f;
+            if kind != 5 && kind != 6 && c.best_score > read_f64(rdata::F64_10) {
+                let mut n = read_f64(rdata::F64_40) - c.best_score;
+                if n < read_f64(rdata::F64_5) {
+                    n = read_f64(rdata::F64_5);
+                }
+                let r = exe::utils_random(ftol(n));
+                let id = read_i32(chosen.addr() + contract_offer::CLUB_ID);
+                if (p.loyalty() as i32) > r && id > -1 {
+                    let club = club_at(id as isize);
+                    if !club.manager().is_null() && (club.reputation() as i16 > 0x1194 || exe::utils_random(4) == 0) {
+                        covered!("mkd_4 favoured");
+                        if exe::utils_random(2) != 0 {
+                            exe::staff_add_favoured_staff(p, club.manager(), 1);
+                        } else {
+                            exe::staff_add_favoured_club(p, club, 1);
+                        }
+                    }
+                }
+            }
+        }
+        // third pass: complete, hold or drop the offers
+        let list = || Llist(read_usize(this + contract_manager_fields::CONTRACT_OFFERS));
+        let mut failed = false;
+        l1.set_cursor(l1.head());
+        loop {
+            let node = exe::llist_get_next(l1);
+            if node == 0 {
+                break;
+            }
+            let o = read_usize(node);
+            if best != 0 {
+                let transfer = read_i32(chosen.addr() + contract_offer::TRANSFER_OFFER_SLOT);
+                if read_usize(o + contract_offer::CLUB_ID) == read_usize(chosen.addr() + contract_offer::CLUB_ID) {
+                    if transfer != -1 {
+                        continue;
+                    }
+                    failed = tm_call1(FN_COMPLETE_ACCEPTED_CONTRACT_OFFER, chosen.addr()) == 0;
+                    if !failed {
+                        covered!("mkd_4 contract completed");
+                        if exe::database_is_not_plain_player_job(read_u8(chosen.addr() + contract_offer::MARK) as i8) != 0 && p.non_player().is_null() {
+                            let (mut id, mut nation, mut second) = (0i32, 0u32, 0u32);
+                            take_spare_non_player_record(&mut id as *mut i32 as usize, &mut nation as *mut u32 as usize, &mut second as *mut u32 as usize);
+                            if id < 0 || id > read_i32(G_NON_PLAYER_COUNT) {
+                                show_contract_error_box(0x13b4);
+                            } else {
+                                p.set_non_player(NonPlayer(read_usize(G_NON_PLAYER_TABLE).wrapping_add((id as usize).wrapping_mul(0x44))));
+                            }
+                        }
+                        let club = current_contract_club(p);
+                        let mut flag = None;
+                        if !club.is_null() && exe::human_manager_is_human_club(club, 1, 1, 0, 0) != 0 {
+                            exe::training_manager_update_coach_assignments(read_usize(G_TRAINING_MANAGER), p.club_job(), 0);
+                            exe::scout_manager_sync_scout_lists(read_usize(G_SCOUT_MANAGER), club.manager());
+                            if chosen.transfer_status() & 4 != 0 && !p.player().is_null() {
+                                flag = Some(1);
+                            }
+                        } else if !p.player().is_null() {
+                            chosen.set_transfer_status(chosen.transfer_status() | 4);
+                            flag = Some(0);
+                        }
+                        if let Some(f) = flag {
+                            let v = exe::contract_manager_calc_player_value(this, p, club, 0, -1, f);
+                            p.set_value(v as usize);
+                        }
+                    }
+                    exe::llist_remove(list(), o);
+                    resolve_offers_count_down(p);
+                    exe::transfer_manager_clear_agreed_contract_flag(read_usize(G_TRANSFER_MANAGER), person as *const u32);
+                    continue;
+                }
+                if transfer != -1 {
+                    // held until the transfer goes through
+                    if read_usize(this + contract_manager_fields::HELD_OFFERS) == 0 {
+                        let m = exe::crt_operator_new(0xe);
+                        let h = if m != 0 { exe::new_llist(m) } else { 0 };
+                        write_usize(this + contract_manager_fields::HELD_OFFERS, h);
+                    }
+                    exe::llist_add_tail(read_usize(this + contract_manager_fields::HELD_OFFERS), o, OFFER_SIZE as u32);
+                }
+                exe::llist_add_tail(l3, o + contract_offer::CLUB_ID, 4);
+            } else if ContractOffer(o).state() == 3 {
+                continue;
+            }
+            exe::llist_remove(list(), o);
+            resolve_offers_count_down(p);
+        }
+        if failed || best == 0 {
+            break 'body;
+        }
+        let transfer = read_i32(chosen.addr() + contract_offer::TRANSFER_OFFER_SLOT);
+        if transfer != -1 {
+            covered!("mkd_4 accepted terms");
+            if exe::database_is_not_plain_player_job(read_u8(chosen.addr() + contract_offer::MARK) as i8) != 0 && p.non_player().is_null() {
+                take_spare_non_player_record(best + contract_offer::RESERVED_RECORD, best + contract_offer::RESERVED_RECORD_ARG1, best + contract_offer::RESERVED_RECORD_ARG2);
+            }
+            handle_player_accepted_terms(person, transfer, chosen.addr(), read_u32(chosen.addr() + contract_offer::MARK), l3.addr());
+        } else {
+            post_offer_response_news(this, chosen.addr(), 0);
+        }
+        let state = read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person).wrapping_mul(staff_state::SIZE));
+        write_u8(state + staff_state::STATUS_FLAGS, read_u8(state + staff_state::STATUS_FLAGS) & 0x7f);
+    }
+    exe::drop_llist(l3);
+    exe::drop_llist(l2);
+    exe::drop_llist(l1);
+}
+
+/// Comparer for `resolve_contract_offers`.
+///
+/// The decision allocates, draws, posts news and signs contracts (it cannot run twice), so only the original runs; the
+/// plan is the copy's evaluation (`choose_contract_offer` without lists: nothing removed, the entries put back; the
+/// generator, the lookup and the static dates restored). After the original: with nothing chosen, the person's contract
+/// is the same (club, wage, end) and bit 0x80 of `staff_state::STATUS_FLAGS` is the old one plus the turned-down
+/// renewal; with an offer chosen, the contract is either the same (a failed completion, a loan, a transfer still to go
+/// through) or has the chosen club and wage, and the bit is cleared or untouched. With a pending transfer offer (the
+/// decision is postponed) only the original runs.
+pub(crate) unsafe extern "thiscall" fn compare_resolve_contract_offers(this: usize, person: usize) {
+    use resolve_offers_fns::*;
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_RESOLVE_CONTRACT_OFFERS);
+    let p = Staff(person);
+    if tm_call1(FN_PLAYER_HAS_PENDING_OFFER, person) != 0 {
+        return o(this, person);
+    }
+    let mut regions = vec![(G_CONTRACT_LOOKUP_RESULT, 4usize)];
+    regions.extend(TRANSFER_MANAGER_DATE_STATICS);
+    regions.extend(crate::rng::STATE_REGIONS);
+    let before = crate::comparison::MemorySnapshot::read(&regions);
+    let mut desired_buf = [0u8; 0x50];
+    let desired = desired_buf.as_mut_ptr() as usize;
+    exe::new_staff_contract(desired);
+    let plan = crate::rng::pause_trace(|| crate::rng::without_counting(|| choose_contract_offer(this, p, desired, None)));
+    before.write_back();
+    let terms = || {
+        let c = get_contract(person);
+        if c.is_null() { (usize::MAX, 0, 0) } else { (c.club(), c.wage(), read_u64(c.addr() + contract::CONTRACT_EXPIRES)) }
+    };
+    let state = read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person).wrapping_mul(staff_state::SIZE)) + staff_state::STATUS_FLAGS;
+    let (t0, bit0) = (terms(), read_u8(state) & 0x80);
+    let chosen = if plan.best != 0 { Some((read_usize(plan.best + contract_offer::CLUB_ID), read_i32(plan.best + contract::WAGE))) } else { None };
+    o(this, person);
+    let (t1, bit1) = (terms(), read_u8(state) & 0x80);
+    let same = match chosen {
+        None => t1 == t0 && bit1 == (bit0 | if plan.rejected_own != 0 { 0x80 } else { 0 }),
+        Some((club, wage)) => (t1 == t0 || (t1.0 == club && t1.1 == wage)) && (bit1 == 0 || bit1 == bit0),
+    };
+    SCOREBOARD.record(same, || format!(
+        "resolve_contract_offers(person {:#x}): plan best {:?} score {} renewal turned down {} agreed {}; contract {:x?} -> {:x?}, bit {:#x} -> {:#x}",
+        read_usize(person), chosen, plan.best_score, plan.rejected_own != 0, plan.accepted, t0, t1, bit0, bit1));
+}
+
+/// Two dates (day i16 at +0, year at +2) are the same day.
+pub(crate) unsafe fn contract_day_same(a: usize, b: usize) -> bool {
+    read_u16(a + 2) == read_u16(b + 2) && read_u16(a) == read_u16(b)
+}
+
+/// Slice 0: the fixed dates today + 7, 30, 60, 91, 121, 152, 182, 365, 550 and 1095 (`exe::date_add_days`, copied
+/// with `exe::date_operator_3d`).
+pub(crate) unsafe fn contract_day_fixed_dates(date: usize) {
+    use contract_day_globals::*;
+    let dates: [(usize, u32); 10] = [
+        (G_CONTRACT_DATE_PLUS_7_DAYS, 7),
+        (G_CONTRACT_DATE_PLUS_30_DAYS, 0x1e),
+        (G_CONTRACT_DATE_PLUS_60_DAYS, 0x3c),
+        (G_CONTRACT_DATE_PLUS_91_DAYS, 0x5b),
+        (G_CONTRACT_DATE_PLUS_121_DAYS, 0x79),
+        (G_CONTRACT_DATE_PLUS_152_DAYS, 0x98),
+        (G_CONTRACT_DATE_PLUS_182_DAYS, 0xb6),
+        (G_CONTRACT_DATE_PLUS_365_DAYS, 0x16d),
+        (PLUS_550_DAYS, 0x226),
+        (PLUS_1095_DAYS, 0x447),
+    ];
+    for (g, n) in dates {
+        let mut t = [0u8; 8];
+        let mut u = [0u8; 8];
+        let r = exe::date_add_days(date, t.as_mut_ptr() as usize, n);
+        exe::date_operator_3d(g, u.as_mut_ptr() as usize, r);
+    }
+}
+
+/// The contract talks expire (25 − the person's loyalty) × 2 days after their date (+0xc): an expired record is
+/// overwritten by the last one (21 bytes), the count goes down and the same place is looked at again; then the records
+/// are sorted again (qsort with 0x4dc970).
+pub(crate) unsafe fn contract_day_expire_talks(this: usize, date: usize) {
+    let mut i: i32 = 0;
+    let mut off: i32 = 0;
+    while i < read_i32(this + 0x2c) {
+        let talks = read_usize(this + contract_manager_fields::TALKS_RECORDS);
+        let rec = talks.wrapping_add(off as usize);
+        let p = staff_at(read_i32(rec + 8) as isize);
+        let days = (25 - p.loyalty() as i32) * 2; // mke2: the talks last (25 − loyalty) × 2 days
+        let mut t = [0u8; 8];
+        let end = exe::date_add_days(rec + 0xc, t.as_mut_ptr() as usize, days as u32);
+        if fill_slot_date_before(end, date) {
+            let n = read_i32(this + 0x2c);
+            let last = talks.wrapping_add((n as usize).wrapping_mul(21)).wrapping_sub(21);
+            core::ptr::copy(last as *const u8, rec as *mut u8, 21);
+            write_i32(this + 0x2c, n - 1);
+            i -= 1;
+            off -= 21;
+            covered!("mke_2 talks expired");
+        }
+        i += 1;
+        off += 21;
+    }
+    let n = read_i32(this + 0x2c);
+    if n != 0 {
+        exe::crt_qsort(read_usize(this + contract_manager_fields::TALKS_RECORDS), n as u32, 21, contract_day_globals::COMPARE_TALKS);
+    }
+}
+
+/// The value of the person: at a human club, a player (`exe::database_is_player_job`) with `TRANSFER_STATUS` bit 4 and
+/// a sheet is valued again (`exe::contract_manager_calc_player_value` with 1), then capped by an active release fee;
+/// at an AI club, a player only on odd days of the year, bit 4 set, valued with 0 and capped; a non-player every day
+/// (bit 4 set, valued with 0, no cap); without a contract or a club, 0.
+pub(crate) unsafe fn contract_day_value(this: usize, date: usize, p: Staff, club: Club, c: Contract) {
+    let cap = |c: Contract| {
+        if exe::staff_contract_has_active_release_clause(c) != 0 && (p.value() as i32) > (c.release_fee() as i32) {
+            p.set_value(((c.release_fee() as i32)) as usize);
+        }
+    };
+    if club.is_null() || c.is_null() {
+        p.set_value((0) as usize);
+        return;
+    }
+    let ts = c.addr() + contract::TRANSFER_STATUS;
+    if exe::human_manager_is_human_club(club, 1, 1, 0, 0) != 0 && exe::database_is_player_job(p.job_for_club() as i8) != 0 {
+        if read_u8(ts) & 4 != 0 && !p.player().is_null() {
+            p.set_value((exe::contract_manager_calc_player_value(this, p, club, 0, -1, 1)) as usize);
+        }
+        cap(c);
+        return;
+    }
+    if exe::database_is_player_job(p.job_for_club() as i8) != 0 {
+        if (read_i16(date) as i32) % 2 == 0 { // mke2: the AI's players are valued on odd days
+            return;
+        }
+        write_u8(ts, read_u8(ts) | 4);
+        p.set_value((exe::contract_manager_calc_player_value(this, p, club, 0, -1, 0)) as usize);
+        cap(c);
+        return;
+    }
+    write_u8(ts, read_u8(ts) | 4);
+    p.set_value((exe::contract_manager_calc_player_value(this, p, club, 0, -1, 0)) as usize);
+}
+
+/// The loan contract (index +4 of the 79-byte record) ending today: without a club job only the index becomes −1;
+/// otherwise the end news 6 (outside contract type 7) and `end_loan` (0x4d07e0). Returns the loan contract (0 none).
+pub(crate) unsafe fn contract_day_loan_end(this: usize, date: usize, p: Staff) -> Contract {
+    let loan = contract_day_contract(this, p, 4);
+    if loan.is_null() {
+        return loan;
+    }
+    if contract_day_same(date, loan.addr() + contract::CONTRACT_EXPIRES) {
+        if p.club_job().is_null() {
+            write_i32(contract_manager_staff_state_record(read_usize(p.addr())) + 4, -1);
+        } else {
+            if loan.contract_type() & 0x3f != 7 {
+                contract_day_end_news(this, p, 6, 0);
+            }
+            covered!("mke_2 loan ended");
+            let f: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_CONTRACT_MANAGER_END_LOAN); // end_loan
+            f(this, p.addr());
+        }
+    }
+    loan
+}
+
+/// Before the transfer rules change (`G_TRANSFER_RULE_CHANGE_DATE` after today), for a person with a player sheet: the
+/// six rule dates (today + 7, 30, 42, 60, 70, 91) are recomputed; a contract started over 180 days ago
+/// (`exe::date_days_since`) and ending before today + 1095, when the change falls on one of those dates, at a club that
+/// does not dislike him (`exe::club_dislikes_staff`) and whose manager does not (`exe::staff_is_disliked_by`), not human,
+/// with the person under 32: status 1 renews (1.0); 2 and 3 with current reputation above 6750, or under 24 with
+/// potential above 100; 5 with potential above 100.
+pub(crate) unsafe fn contract_day_rule_change(this: usize, date: usize, p: Staff, club: Club, c: Contract) {
+    use contract_day_globals::*;
+    if !fill_slot_date_before(date, G_TRANSFER_RULE_CHANGE_DATE) {
+        return;
+    }
+    let rules: [(usize, u32); 6] = [
+        (RULE_PLUS_7_DAYS, 7),
+        (RULE_PLUS_30_DAYS, 0x1e),
+        (RULE_PLUS_42_DAYS, 0x2a),
+        (RULE_PLUS_60_DAYS, 0x3c),
+        (RULE_PLUS_70_DAYS, 0x46),
+        (RULE_PLUS_91_DAYS, 0x5b),
+    ];
+    for (g, n) in rules {
+        let mut t = [0u8; 8];
+        let mut u = [0u8; 8];
+        let r = exe::date_add_days(date, t.as_mut_ptr() as usize, n);
+        exe::date_operator_3d(g, u.as_mut_ptr() as usize, r);
+    }
+    let s = c.addr() + contract::DATE_STARTED;
+    if exe::date_days_since(date, read_u32(s), read_u32(s + 4)) <= 0xb4 {
+        return;
+    }
+    if !fill_slot_date_before(c.addr() + contract::CONTRACT_EXPIRES, PLUS_1095_DAYS) {
+        return;
+    }
+    if !rules.iter().any(|&(g, _)| contract_day_same(g, G_TRANSFER_RULE_CHANGE_DATE)) {
+        return;
+    }
+    let disliked = exe::club_dislikes_staff(p, club) != 0;
+    let m = club.manager();
+    if !m.is_null() && exe::staff_is_disliked_by(p, m) != 0 {
+        return;
+    }
+    if disliked || exe::human_manager_is_human_club(club, 0, 1, 0, 0) != 0 {
+        return;
+    }
+    let age = p.age() as i8;
+    if age >= 0x20 {
+        return;
+    }
+    let sheet = p.player();
+    let renew = match contract_day_status(c) {
+        1 => true,
+        2 | 3 => sheet.current_reputation() > 0x1a5e || (age < 0x18 && sheet.potential_ability() > 100),
+        5 => sheet.potential_ability() > 100,
+        _ => false,
+    };
+    if renew {
+        covered!("mke_2 renewal before the rules change");
+        contract_day_offer(this, p, 1.0);
+    }
+}
+
+/// A type 2 contract ending after today + 182, not on loan: outside the FIFA protected period
+/// (`exe::staff_contract_check_fifa_protected_period` 0 with the limit flag set), not retiring, a player (job 11): the
+/// AI club (not human, under 32) renews by status (1 and 2: 1.0; 3: current reputation above 6750, or under 24 with
+/// potential above 100; 5: potential above 100); with a human manager of the contract's club, the expiry news 7 (Bosman
+/// by the age at today + 182). Always the next person afterwards.
+pub(crate) unsafe fn contract_day_fifa_period(this: usize, p: Staff, club: Club, c: Contract) {
+    let mut at_limit: u32 = 0;
+    if exe::staff_contract_check_fifa_protected_period(c, 0usize, &mut at_limit as *mut u32 as usize, 0usize) != 0 || at_limit == 0 {
+        return;
+    }
+    if contract_day_retiring(p) || p.job_for_club() != 0xb {
+        return;
+    }
+    if exe::human_manager_is_human_club(club, 0, 1, 0, 0) == 0 {
+        let age = p.age() as i8;
+        if age < 0x20 {
+            let sheet = p.player();
+            let renew = match contract_day_status(c) {
+                1 | 2 => true,
+                3 => sheet.current_reputation() > 0x1a5e || (age < 0x18 && sheet.potential_ability() > 100),
+                5 => sheet.potential_ability() > 100,
+                _ => false,
+            };
+            if renew {
+                covered!("mke_2 renewal at the FIFA limit");
+                contract_day_offer(this, p, 1.0);
+            }
+        }
+    }
+    if contract_day_news_human(contract_day_club(c)) {
+        let bosman = contract_day_bosman_at(p, G_CONTRACT_DATE_PLUS_182_DAYS);
+        contract_day_expiry_news(this, c, 7, bosman, 1);
+    }
+}
+
+/// A type 1 contract (expired) with no loan: 31 days after the end, a person who wants to leave
+/// (`exe::staff_contract_wants_to_leave`) or leaves on a Bosman, with no offers, exchanges or queue: the end news 1 to a
+/// human manager of the contract's club; jobs 12 (always), 13 and 15 (at an AI club) leave the club's squad (the 50
+/// places of `club::SQUAD`) and become 5, 6 and 8; the others go to the free transfer queue.
+pub(crate) unsafe fn contract_day_expired(this: usize, date: usize, p: Staff, c: Contract) -> ContractDayFlow {
+    let mut t = [0u8; 8];
+    let after = exe::date_add_days(c.addr() + contract::CONTRACT_EXPIRES, t.as_mut_ptr() as usize, 0x1f);
+    if !fill_slot_date_before(after, date) {
+        return ContractDayFlow::End;
+    }
+    if exe::staff_contract_wants_to_leave(c) == 0 && c.leaving_on_bosman() == 0 {
+        return ContractDayFlow::End;
+    }
+    if !contract_day_no_offers(p) {
+        return ContractDayFlow::End;
+    }
+    if contract_day_news_human(contract_day_club(c)) {
+        contract_day_end_news(this, p, 1, 0);
+    }
+    let leave_squad = |p: Staff, job: u8| {
+        let cj = p.club_job();
+        if !cj.is_null() {
+            for k in 0..50usize {
+                let a = cj.addr() + club::SQUAD + k * 4;
+                if read_usize(a) == p.addr() {
+                    write_usize(a, 0);
+                }
+            }
+        }
+        p.set_job_for_club(job);
+    };
+    let job = p.job_for_club();
+    if job == 0xc {
+        leave_squad(p, 5);
+        return ContractDayFlow::Next;
+    }
+    if job == 0xd && exe::human_manager_is_human_club(contract_day_club(c), 0, 1, 0, 0) == 0 {
+        leave_squad(p, 6);
+        return ContractDayFlow::Next;
+    }
+    if p.job_for_club() == 0xf && exe::human_manager_is_human_club(contract_day_club(c), 0, 1, 0, 0) == 0 {
+        leave_squad(p, 8);
+        return ContractDayFlow::Next;
+    }
+    covered!("mke_2 expired to the queue");
+    contract_day_queue(p);
+    ContractDayFlow::Next
+}
+
+/// The Bosman rule and the clubs' shortlists for a contract of another type. A player (sheet, job 11, not retiring, no
+/// future transfer) already leaving on a Bosman goes on the shortlists on the odd bands (`exe::staff_contract_get_expiry_band`
+/// 1, 3, .., 13). Otherwise, for a type 2 contract started over 93 days ago with no future transfer: inside the bands
+/// window (band ≠ 0 and ≠ 14), not retiring, a player of the main contract's club (not a loan, with a nation): current
+/// reputation above 3750, world above 1750, loyalty below 15, 19 to 30 years, the nation allows free transfers
+/// (`exe::nation_allows_free_transfers`), not (at a club above 4750 and under 23), and wanting to leave or
+/// `TRANSFER_STATUS` bit 8: he leaves on a Bosman (+0x49 = 1, bit 8 cleared), goes on the shortlists and the Bosman news
+/// (0x4d6d70). When those fail, the odd bands put him on the shortlists, band 14 with random(20) = 0. Then the AI
+/// renewals (`contract_day_renewals`).
+pub(crate) unsafe fn contract_day_bosman(this: usize, date: usize, p: Staff, club: Club, c: Contract) -> ContractDayFlow {
+    let tm = read_usize(G_TRANSFER_MANAGER);
+    if !p.player().is_null() && p.job_for_club() == 0xb && !contract_day_retiring(p) && exe::transfer_manager_get_future_transfer(tm, p, 0) == 0 {
+        if c.leaving_on_bosman() != 0 {
+            let band = exe::staff_contract_get_expiry_band(c) as i8;
+            if (1..=13).contains(&band) && band % 2 == 1 {
+                contract_day_shortlist(p);
+            }
+            return ContractDayFlow::End;
+        }
+    } else if c.leaving_on_bosman() != 0 {
+        return ContractDayFlow::End;
+    }
+    if exe::transfer_manager_get_future_transfer(tm, p, 0) != 0 || c.contract_type() & 0x3f != 2 {
+        return ContractDayFlow::End;
+    }
+    let mut t = [0u8; 8];
+    let ago = exe::date_sub_days(date, t.as_mut_ptr() as usize, 0x5d);
+    if !fill_slot_date_before(c.addr() + contract::DATE_STARTED, ago) {
+        return ContractDayFlow::End;
+    }
+    if exe::staff_contract_get_expiry_band(c) != 0xe && exe::staff_contract_get_expiry_band(c) != 0 && !contract_day_retiring(p) && !p.player().is_null() && p.job_for_club() == 0xb {
+        let main = Contract(main_contract_lookup(p));
+        if main.is_null() || main.contract_type() & 0x3f == 5 {
+            return ContractDayFlow::Next;
+        }
+        let mc = contract_day_club(main);
+        if mc.is_null() {
+            return ContractDayFlow::Next;
+        }
+        let nation = mc.nation().addr();
+        if nation == 0 {
+            return ContractDayFlow::Next;
+        }
+        let sheet = p.player();
+        let age = p.age() as i8;
+        let cj = p.club_job();
+        if sheet.current_reputation() > 0xea6
+            && sheet.world_reputation() > 0x6d6
+            && p.loyalty() < 15 // mke2: the Bosman needs loyalty below 15
+            && age < 0x1f
+            && age > 0x12
+            && exe::nation_allows_free_transfers(nation) != 0
+            && !(!cj.is_null() && cj.reputation() > 0x128e && age < 0x17)
+            && (exe::staff_contract_wants_to_leave(c) != 0 || c.transfer_status() & 8 != 0)
+        {
+            c.set_leaving_on_bosman(1);
+            c.set_transfer_status(c.transfer_status() & 0xf7);
+            contract_day_shortlist(p);
+            covered!("mke_2 leaves on a Bosman");
+            let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_CONTRACT_MANAGER_POST_BOSMAN_DEPARTURE_NEWS); // post_bosman_departure_news
+            f(this, c.addr(), 0);
+            return ContractDayFlow::Next;
+        }
+        let band = exe::staff_contract_get_expiry_band(c) as i8;
+        if (1..=13).contains(&band) && band % 2 == 1 {
+            contract_day_shortlist(p);
+        } else if band == 14 && exe::utils_random(20) == 0 {
+            contract_day_shortlist(p);
+        }
+    }
+    contract_day_renewals(this, date, p, club, c);
+    ContractDayFlow::End
+}
+
+/// The contract end on the day (today = `CONTRACT_EXPIRES`): a loan contract (type 5) gets the end news 5, the stats
+/// archived (`exe::playerstats_archive_player_stats`), the main contract erased (its person −1, the index −1) and its
+/// club's wage bill updated (`exe::finance_update_wage_bill`), the person out of the selections
+/// (`exe::tactics_remove_player_from_selection` twice) and of the club (`exe::database_remove_staff_from_club`). Another
+/// type becomes type 1; leaving on a Bosman, with no loan contract and no offers: the end news 2 and released at once
+/// (`exe::transfer_manager_free_transfer_staff`).
+pub(crate) unsafe fn contract_day_end(this: usize, date: usize, p: Staff, c: Contract) {
+    if !contract_day_same(date, c.addr() + contract::CONTRACT_EXPIRES) {
+        return;
+    }
+    if c.contract_type() & 0x3f == 5 {
+        contract_day_end_news(this, p, 5, 0);
+        exe::playerstats_archive_player_stats(read_usize(G_PLAYER_STATS), p, -1, 0, 0, -1, 0);
+        let rec = contract_manager_staff_state_record(read_usize(p.addr()));
+        let k = read_i32(rec);
+        if k != -1 {
+            let main = Contract(read_usize(this).wrapping_add((k as usize).wrapping_mul(0x50)));
+            let cl = club_at((main.club() as i32) as isize);
+            write_i32(main.addr(), -1);
+            write_i32(rec, -1);
+            let fin = exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), cl);
+            if fin != 0 {
+                exe::finance_update_wage_bill(fin);
+            }
+        }
+        covered!("mke_2 loan contract ended");
+        exe::tactics_remove_player_from_selection(read_usize(G_TACTICS), p.club_job(), p, 0, 1);
+        exe::tactics_remove_player_from_selection(read_usize(G_TACTICS), p.club_job(), p, 1, 1);
+        exe::database_remove_staff_from_club(p.club_job(), p, 0usize, 1, 0);
+        return;
+    }
+    c.set_contract_type((c.contract_type() & 0xc1) | 1);
+    if c.leaving_on_bosman() == 0 {
+        return;
+    }
+    if !contract_day_contract(this, p, 4).is_null() {
+        return;
+    }
+    if exe::transfer_manager_get_offers_for_player(read_usize(G_TRANSFER_MANAGER), p, 0usize, 0) != 0 {
+        return;
+    }
+    contract_day_end_news(this, p, 2, 1);
+    covered!("mke_2 released on a Bosman");
+    exe::transfer_manager_free_transfer_staff(read_usize(G_TRANSFER_MANAGER), p, p.club_job(), 0, -1, 0);
+}
+
+/// One person of the people pass (slice 2).
+pub(crate) unsafe fn contract_day_person(this: usize, date: usize, p: Staff) {
+    if read_u32(G_GAME_DATA_LOADED_FLAG) == 0 {
+        // before the full load, a contract ending today only becomes type 1
+        let c = contract_day_contract(this, p, 0);
+        if !c.is_null() && contract_day_same(date, c.addr() + contract::CONTRACT_EXPIRES) {
+            c.set_contract_type((c.contract_type() & 0xc1) | 1);
+        }
+        return;
+    }
+    let looked = Contract(main_contract_lookup(p));
+    let club = if looked.is_null() { Club(0) } else { contract_day_club(looked) };
+    contract_day_value(this, date, p, club, contract_day_contract(this, p, 0));
+    let loan = contract_day_loan_end(this, date, p);
+    let c = contract_day_contract(this, p, 0);
+    if c.is_null() {
+        return;
+    }
+    if !p.player().is_null() {
+        contract_day_rule_change(this, date, p, club, c);
+    }
+    if fill_slot_date_before(G_CONTRACT_DATE_PLUS_182_DAYS, c.addr() + contract::CONTRACT_EXPIRES) && c.contract_type() & 0x3f == 2 && loan.is_null() {
+        contract_day_fifa_period(this, p, club, c);
+        return;
+    }
+    let flow = if c.contract_type() & 0x3f == 1 {
+        if !contract_day_contract(this, p, 4).is_null() {
+            ContractDayFlow::End
+        } else {
+            contract_day_expired(this, date, p, c)
+        }
+    } else {
+        contract_day_bosman(this, date, p, club, c)
+    };
+    if flow == ContractDayFlow::End {
+        contract_day_end(this, date, p, c);
+    }
+}
+
+/// On days 36 and 200 of the year the decision dates already processed (`DECISION_NEXT_INDEX`) leave the array (the
+/// pending ones move down, the dates with `exe::date_operator_3d`); then, when decisions were added (`DECISIONS_ADDED`),
+/// the pending part is sorted again (qsort with 0x4dc910) and the counter is reset.
+pub(crate) unsafe fn contract_day_decisions(this: usize, date: usize) {
+    let day = read_i16(date);
+    if day == 0x24 || day == 0xc8 {
+        let n = read_i32(this + contract_manager_fields::DECISION_COUNT);
+        let k = read_i32(this + contract_manager_fields::DECISION_NEXT_INDEX);
+        if n > 0 && k < n {
+            let base = read_usize(this + contract_manager_fields::DECISION_DATES);
+            let mut dst = base;
+            let mut src = base.wrapping_add((k as usize).wrapping_mul(14));
+            let mut i = k;
+            while i < read_i32(this + contract_manager_fields::DECISION_COUNT) {
+                write_u32(dst, read_u32(src));
+                let mut t = [0u8; 8];
+                exe::date_operator_3d(dst + 4, t.as_mut_ptr() as usize, src + 4);
+                write_u8(dst + 0xc, read_u8(src + 0xc));
+                write_u8(dst + 0xd, read_u8(src + 0xd));
+                dst += 14;
+                src += 14;
+                i += 1;
+            }
+            let k = read_i32(this + contract_manager_fields::DECISION_NEXT_INDEX);
+            let n = read_i32(this + contract_manager_fields::DECISION_COUNT);
+            write_i32(this + contract_manager_fields::DECISION_NEXT_INDEX, 0);
+            write_i32(this + contract_manager_fields::DECISION_COUNT, n - k);
+        }
+    }
+}
+
+/// `price` + `add` against `price` × `factor`, the lesser truncated (_ftol), as the original's ladders of the big
+/// nations do (0x4d2a23 and the 37 steps like it: fild of the integer sum, fild of the price × the factor, fcom).
+pub(crate) fn asking_step(price: i32, add: i32, factor: f64) -> i32 {
+    let a = price.wrapping_add(add) as f64;
+    let b = price as f64 * factor;
+    ftol(if a < b { a } else { b })
+}
+
+/// The lesser of `price` + `add` and `price` × `times`, in integers (0x4d2d3e: lea, add edi, edi; cmp; jge).
+pub(crate) fn asking_step_int(price: i32, add: i32, times: i32) -> i32 {
+    let a = price.wrapping_add(add);
+    let b = price.wrapping_mul(times);
+    if a >= b { b } else { a }
+}
+
+/// One less contract offer for the person (byte +8 of the 79-byte staff state record).
+pub(crate) unsafe fn resolve_offers_count_down(person: Staff) {
+    let c = contract_offer_counter(person.addr());
+    write_u8(c, read_u8(c).wrapping_sub(1));
+}
+
+/// The first part of `resolve_contract_offers`: walks the person's offers and scores each one, keeping the best. With
+/// `lists` (the real run) each evaluated offer goes into the first list (its pointer) and its score into the second,
+/// the stale offers leave the contract manager's list and the transfer offer's entry gets the squad status; without
+/// (`None`, the comparer's plan) nothing is changed: the removals are only counted and the entries' bytes are put
+/// back. `desired` is the local STAFF_CONTRACT the desired contract is written into (reused from offer to offer, as in
+/// the original).
+pub(crate) unsafe fn choose_contract_offer(this: usize, person: Staff, desired: usize, lists: Option<(Llist, Llist)>) -> ContractOfferChoice {
+    use resolve_offers_fns::*;
+    // k = (professionalism − ambition − 9 + loyalty) × 1/300 (fild of the int, fmul 0x968e60)
+    let numerator = person.professionalism() as i32 - person.ambition() as i32 + person.loyalty() as i32 - 9;
+    let k = numerator as f64 * read_f64(rdata::F64_0_003333333333);
+    let mut c = ContractOfferChoice { best: 0, best_score: 2.75, rejected_own: 0, accepted: false, removed: 0 };
+    let mut own: i32 = numerator; // [esp+0x28]: the original's slot holds the numerator until the first renewal test
+    let mut will = 0.0f64; // [esp+0x2c]
+    let mut put_back: Vec<(usize, u8)> = Vec::new();
+    let list = Llist(read_usize(this + contract_manager_fields::CONTRACT_OFFERS));
+    if !list.is_null() {
+        list.set_cursor(list.head());
+        loop {
+            let o = Contract(exe::llist_get_next(list));
+            if o.is_null() {
+                break;
+            }
+            let offer = ContractOffer(o.addr());
+            if read_usize(o.addr()) != read_usize(person.addr()) || offer.decision_valid() == 0 {
+                continue;
+            }
+            let club = club_at(offer.club_id() as isize);
+            if offer.transfer_offer_slot() as i32 == -1 {
+                // a plain offer from a club that is not the one of his contract (loans aside) is stale
+                let current = current_contract_club(person);
+                if current != club && offer.contract_type() & 0x3f != 5 {
+                    covered!("mkd_4 stale offer");
+                    c.removed += 1;
+                    if lists.is_some() {
+                        exe::llist_remove(list, o);
+                        resolve_offers_count_down(person);
+                    }
+                    continue;
+                }
+            }
+            match offer.state() {
+                0 => {}
+                2 => {
+                    c.accepted = true;
+                    continue;
+                }
+                _ => continue,
+            }
+            let sl = TransferManagerFields(read_usize(G_TRANSFER_MANAGER)).shortlist_manager();
+            let kind = offer.contract_type() & 0x3f;
+            let mut score: f64;
+            let base: f64; // [esp+0x4c]: the desired contract's value against itself (0 for loans and trials)
+            if kind == 5 || kind == 6 {
+                // a loan (status 8) or a trial (the squad status the club would give): the will alone
+                let status = if kind == 5 { 8 } else { exe::shortlist_manager_get_squad_status_for_club(sl, person, club, 0usize) as u32 };
+                let sl = TransferManagerFields(read_usize(G_TRANSFER_MANAGER)).shortlist_manager();
+                let w = exe::shortlist_manager_staff_interest_in_joining_club(sl, person, club, 0, 1, status, 0);
+                if w <= c.best_score || w < read_f64(rdata::F64_3_15) {
+                    score = 0.0;
+                } else {
+                    covered!("mkd_4 loan or trial");
+                    score = w;
+                    c.best_score = w;
+                    c.best = o.addr();
+                }
+                base = 0.0;
+            } else {
+                let status = o.squad_status() >> 4;
+                if offer.transfer_offer_slot() as i32 != -1 {
+                    let slot = exe::transfer_manager_get_offer_slot(read_usize(G_TRANSFER_MANAGER), offer.transfer_offer_slot() as i32);
+                    let e = find_offer_player_entry(read_usize(slot), person.addr());
+                    if e != 0 {
+                        if lists.is_none() {
+                            put_back.push((e + 5, read_u8(e + 5)));
+                        }
+                        write_u8(e + 5, status);
+                    }
+                }
+                let job = offer.mark();
+                exe::staff_contract_set_to_desired_contract(desired, person, club, -1, status as u32, job as u32, 0, 0);
+                base = exe::staff_contract_calc_contract_value(desired, person, desired) as f64;
+                if base <= read_f64(rdata::F64_0) {
+                    score = 0.0;
+                } else {
+                    // the ratio: the offer against the desired contract, less k
+                    let v = exe::staff_contract_calc_contract_value(o, person, desired);
+                    score = v as f64 / base - k; // mkd4: the ratio less k
+                    let sl = TransferManagerFields(read_usize(G_TRANSFER_MANAGER)).shortlist_manager();
+                    if person.non_player().is_null() || job == 0xb {
+                        will = exe::shortlist_manager_staff_interest_in_joining_club(sl, person, club, 0, 0, status as u32, 0);
+                    } else {
+                        will = exe::staff_interest_in_job_at_club(sl, person, club, 0, job as u32, 0);
+                        if exe::database_is_player_job(job as i8) != 0 {
+                            let sl = TransferManagerFields(read_usize(G_TRANSFER_MANAGER)).shortlist_manager();
+                            let w = exe::shortlist_manager_staff_interest_in_joining_club(sl, person, club, 0, 0, status as u32, 0);
+                            will = (w + will) * read_f64(rdata::F64_0_5);
+                        }
+                    }
+                    // a renewal (an offer from the club of his contract): a ratio of 0.99 lifts the will to 3.15
+                    own = 0;
+                    if !current_contract_club(person).is_null() {
+                        let current = current_contract_club(person);
+                        if read_usize(current.addr()) == offer.club_id() {
+                            own = 1;
+                            if score >= read_f64(F64_0_99) && will <= read_f64(rdata::F64_3_15) {
+                                covered!("mkd_4 renewal floor");
+                                will = 3.15; // mkd4: the renewal floor
+                            }
+                        }
+                    }
+                    if score < read_f64(rdata::F64_0_6) {
+                        score = 0.0; // mkd4: the ratio cut
+                    }
+                }
+            }
+            // refusals: a staff job without a non-player sheet and no spare record; a work permit with under 90 days
+            let job = offer.mark();
+            if (exe::database_is_not_plain_player_job(job as i8) != 0 && person.non_player().is_null() && has_spare_non_player_record() == 0)
+                || (score > read_f64(rdata::F64_0_5)
+                    && exe::transfer_manager_player_needs_work_permit(read_usize(G_TRANSFER_MANAGER), person, club, 0) != 0
+                    && exe::date_days_since(o.addr() + contract::CONTRACT_EXPIRES, read_u32(G_CURRENT_DATE), read_u32(G_CURRENT_DATE + 4)) < 0x5a)
+            {
+                covered!("mkd_4 refused");
+                score = 0.0;
+            }
+            if let Some((l1, l2)) = lists {
+                let at = o.addr();
+                exe::llist_add_tail(l1, &at as *const usize as usize, 4);
+                exe::llist_add_tail(l2, &score as *const f64 as usize, 8);
+            }
+            if base == read_f64(rdata::F64_0) {
+                continue;
+            }
+            // the score: ratio ≥ 0.9, or > 0.7 with a will above 3.5, lifts the will to 3.15; > 0.8 with a will above
+            // 3.15 keeps it; otherwise the offer is turned down
+            let lift = if score >= read_f64(rdata::F64_0_9) {
+                true
+            } else if score > read_f64(rdata::F64_0_8) && will > read_f64(rdata::F64_3_15) {
+                false
+            } else if score > read_f64(rdata::F64_0_7) && will > read_f64(rdata::F64_3_5) {
+                true
+            } else {
+                if own != 0 {
+                    c.rejected_own = o.addr();
+                }
+                continue;
+            };
+            if lift && will <= read_f64(rdata::F64_3_15) {
+                will = read_f64(rdata::F64_3_15);
+            }
+            let s = will * score;
+            if s > c.best_score {
+                covered!("mkd_4 best offer");
+                c.best_score = s;
+                c.best = o.addr();
+            } else if own != 0 {
+                c.rejected_own = o.addr();
+            }
+        }
+    }
+    for &(a, v) in put_back.iter().rev() {
+        write_u8(a, v);
+    }
+    // an agreed offer, or a manager candidate for a vacancy: nothing is chosen
+    if c.accepted || (!person.non_player().is_null() && exe::manager_manager_is_vacancy_candidate(read_usize(G_MANAGER_MANAGER), person) != 0) {
+        c.best = 0;
+    }
+    c
+}
+
+/// The contract record of `person` in the manager's 0x50-byte array through the index at `field` of his 79-byte
+/// state record (+0 the contract, +4 the loan); 0 for an id out of range or a negative index (the original's inline
+/// lookup over `[this]`, which does not store the cached contract).
+pub(crate) unsafe fn contract_day_contract(this: usize, person: Staff, field: usize) -> Contract {
+    let id = read_i32(person.addr());
+    if id >= read_i32(G_STAFF_COUNT) {
+        return Contract(0);
+    }
+    let k = read_i32(contract_manager_staff_state_record(id as usize) + field);
+    if k < 0 {
+        return Contract(0);
+    }
+    Contract(read_usize(this).wrapping_add((k as usize).wrapping_mul(0x50)))
+}
+
+/// The club of a contract (`club_at` of its `contract::CLUB`, no check, as the original's inline arithmetic).
+pub(crate) unsafe fn contract_day_club(c: Contract) -> Club {
+    club_at((c.club() as i32) as isize)
+}
+
+/// The squad status of a contract: the high nibble of `contract::SQUAD_STATUS`.
+pub(crate) unsafe fn contract_day_status(c: Contract) -> u8 {
+    c.squad_status() >> 4
+}
+
+/// The AI renewal offer of the contracts' day: `exe::contract_manager_offer_contract` with no club, no output, slot −1,
+/// the factor and mode 2. Returns its result.
+pub(crate) unsafe fn contract_day_offer(this: usize, p: Staff, factor: f64) -> u32 {
+    exe::contract_manager_offer_contract(this, p, 0, 0, -1, factor, 2)
+}
+
+/// The person goes on the clubs' shortlists (`exe::shortlist_manager_add_player_to_club_shortlists` with 1).
+pub(crate) unsafe fn contract_day_shortlist(p: Staff) {
+    let sm = read_usize(read_usize(G_TRANSFER_MANAGER) + transfer_manager_fields::SHORTLIST_MANAGER);
+    exe::shortlist_manager_add_player_to_club_shortlists(sm, p, 1);
+}
+
+/// The contract expiry news (`post_contract_expiry_news` 0x4d6790, Rust; thiscall, ret 0x10) through its address.
+pub(crate) unsafe fn contract_day_expiry_news(this: usize, c: Contract, period: u32, bosman: u32, warn: u32) {
+    exe::contract_manager_post_contract_expiry_news(this, c, period, bosman, warn)
+}
+
+/// The contract end news (`post_contract_end_news` 0x4da590, Rust; thiscall, ret 0xc) through its address.
+pub(crate) unsafe fn contract_day_end_news(this: usize, p: Staff, kind: u32, wide: u32) {
+    exe::contract_manager_post_contract_end_news(this, p, kind, wide)
+}
+
+/// The free transfer queue (`queue_free_transfer` 0x8c16b0, Rust; thiscall, ret 0xc) with reason 1 and no
+/// compensation (−1), through its address.
+pub(crate) unsafe fn contract_day_queue(p: Staff) {
+    exe::transfer_manager_queue_free_transfer(read_usize(G_TRANSFER_MANAGER), p, 1, u32::MAX);
+}
+
+/// Whether the expiry news speaks of a Bosman: the person is 24 or more at `date` (`exe::database_get_staff_age`) and
+/// his club uses the Bosman ruling (`exe::transfer_manager_player_club_uses_bosman`).
+pub(crate) unsafe fn contract_day_bosman_at(p: Staff, date: usize) -> u32 {
+    (exe::database_get_staff_age(p, date as *const u16) >= 0x18 && exe::transfer_manager_player_club_uses_bosman(read_usize(G_TRANSFER_MANAGER), p) != 0) as u32
+}
+
+/// The person is retiring (`exe::player_regen_get_retirement_status` ≠ 0).
+pub(crate) unsafe fn contract_day_retiring(p: Staff) -> bool {
+    exe::player_regen_get_retirement_status(read_usize(G_PLAYER_REGEN), p) != 0
+}
+
+/// The club has a human manager for the news (`exe::news_club_has_human_manager`).
+pub(crate) unsafe fn contract_day_news_human(club: Club) -> bool {
+    exe::news_club_has_human_manager(read_usize(G_NEWS), club) != 0
+}
+
+/// No offer, exchange offer or free transfer queue entry for the person (`exe::transfer_manager_get_offers_for_player`,
+/// `exe::transfer_manager_get_exchange_offers_for_player`, `exe::transfer_manager_is_queued_for_free_transfer`, in this
+/// order, stopping at the first).
+pub(crate) unsafe fn contract_day_no_offers(p: Staff) -> bool {
+    let tm = read_usize(G_TRANSFER_MANAGER);
+    exe::transfer_manager_get_offers_for_player(tm, p, 0usize, 0) == 0
+        && exe::transfer_manager_get_exchange_offers_for_player(tm, p, 0usize) == 0
+        && exe::transfer_manager_is_queued_for_free_transfer(tm, p) == 0
+}
+
+/// The AI renewal offers of a contract of another type (`contract_day_offer`, the factor by the path), in this order:
+/// - 550 days left (`PLUS_550_DAYS`): a player job not retiring at an AI club, status 1-3 on his club's list: 1.0;
+/// - 365 days left (or, on the game's first day, an end before that): a player job not retiring; exactly 365 days: the
+///   expiry news 6 (Bosman by the age then); an AI club, status 1-3 or 5 on the list: 1.0, and when it is not made the
+///   refusal (`contract_day_refusal`);
+/// - bands 3 and 5 (152/121 days): a player job not retiring at an AI club: status 1-3 on the list 1.2 (off it 1.0), 4
+///   and 5 1.0;
+/// - band 1 (182 days), not retiring: a player gets the expiry news 5 (Bosman at today + 182, warned); another job the
+///   news 5 to a human manager or else 1.0; then a player job at an AI club: status 1-3 on the list 1.1, off it 1.0, and
+///   when it is not made the refusal with bit 0x80; status 4-6 1.0;
+/// - band 7 (91 days), not retiring: a player at a club with a human manager gets the expiry news 1 (Bosman at today +
+///   91); at an AI club status 1-2 on the list 1.3 (off it 1.0) with the refusal and bit 0x80 when not made, 3-5 1.1 /
+///   1.0, 6 1.0; another job the news 1 to a human manager or else 1.0;
+/// - bands 9 and 11 (60/30 days): a player job not retiring at an AI club by status (`contract_day_offer_by_status`);
+/// - band 13 (7 days), not retiring: a player gets the expiry news 4 at a club with a human manager (Bosman at today +
+///   7), otherwise by status; another job the news 4 to a human manager or else 1.0;
+/// - the end reached (today not before the end): the contract becomes type 1 and the end news 2; a player who wants to
+///   leave (or `TRANSFER_STATUS` bit 8) leaves on a Bosman and goes on the shortlists; otherwise, unless the main
+///   contract's club has a human manager or the club is human: status 1-6 with a loan index (+4 of the 79-byte record ≠
+///   −1) by status; another status: a transfer-listed player (`exe::staff_is_transfer_listed`) with a club, no offers,
+///   exchanges or queue goes to the free transfer queue; another job at an AI club: 1.0.
+pub(crate) unsafe fn contract_day_renewals(this: usize, date: usize, p: Staff, club: Club, c: Contract) {
+    use contract_day_globals::*;
+    let job = p.job_for_club();
+    let player_job = |p: Staff| exe::database_is_player_job(p.job_for_club() as i8) != 0;
+    let human = |c: Contract| exe::human_manager_is_human_club(contract_day_club(c), 0, 1, 0, 0) != 0;
+    let is_player = !p.player().is_null() && job == 0xb;
+    // 550 days
+    if contract_day_same(PLUS_550_DAYS, c.addr() + contract::CONTRACT_EXPIRES) && player_job(p) && !contract_day_retiring(p) {
+        if human(c) {
+            return;
+        }
+        let st = contract_day_status(c);
+        if st == 0 || st > 3 || !contract_day_on_list(contract_day_club(c), p) {
+            return;
+        }
+        covered!("mke_2 renewal at 550 days");
+        contract_day_offer(this, p, 1.0);
+        return;
+    }
+    // 365 days
+    let exp = c.addr() + contract::CONTRACT_EXPIRES;
+    let at_365 = contract_day_same(G_CONTRACT_DATE_PLUS_365_DAYS, exp)
+        || (contract_day_same(G_GAME_START_DATE, date) && fill_slot_date_before(exp, G_CONTRACT_DATE_PLUS_365_DAYS));
+    if at_365 && player_job(p) && !contract_day_retiring(p) {
+        if contract_day_same(G_CONTRACT_DATE_PLUS_365_DAYS, exp) {
+            let bosman = contract_day_bosman_at(p, G_CONTRACT_DATE_PLUS_365_DAYS);
+            contract_day_expiry_news(this, c, 6, bosman, 0);
+        }
+        if human(c) {
+            return;
+        }
+        let st = contract_day_status(c);
+        if st == 0 || !(st <= 3 || st == 5) || !contract_day_on_list(contract_day_club(c), p) {
+            return;
+        }
+        if contract_day_offer(this, p, 1.0) == 0 {
+            contract_day_refusal(this, p, club, c, false);
+        }
+        return;
+    }
+    // bands 3 and 5
+    if (exe::staff_contract_get_expiry_band(c) == 3 || exe::staff_contract_get_expiry_band(c) == 5) && player_job(p) && !contract_day_retiring(p) {
+        if human(c) {
+            return;
+        }
+        match contract_day_status(c) {
+            1..=3 => {
+                let f = if contract_day_on_list(contract_day_club(c), p) { 1.2 } else { 1.0 };
+                contract_day_offer(this, p, f);
+            }
+            4 | 5 => {
+                contract_day_offer(this, p, 1.0);
+            }
+            _ => {}
+        }
+        return;
+    }
+    // band 1
+    if exe::staff_contract_get_expiry_band(c) == 1 && !contract_day_retiring(p) {
+        if is_player {
+            let bosman = contract_day_bosman_at(p, G_CONTRACT_DATE_PLUS_182_DAYS);
+            contract_day_expiry_news(this, c, 5, bosman, 1);
+        } else if contract_day_news_human(contract_day_club(c)) {
+            contract_day_expiry_news(this, c, 5, 0, 0);
+        } else {
+            contract_day_offer(this, p, 1.0);
+        }
+        if !player_job(p) || human(c) {
+            return;
+        }
+        match contract_day_status(c) {
+            1..=3 => {
+                let f = if contract_day_on_list(contract_day_club(c), p) { 1.1 } else { 1.0 };
+                if contract_day_offer(this, p, f) == 0 {
+                    contract_day_refusal(this, p, club, c, true);
+                }
+            }
+            4..=6 => {
+                contract_day_offer(this, p, 1.0);
+            }
+            _ => {}
+        }
+        return;
+    }
+    // band 7
+    if exe::staff_contract_get_expiry_band(c) == 7 && !contract_day_retiring(p) {
+        if is_player {
+            if contract_day_news_human(contract_day_club(c)) {
+                let bosman = contract_day_bosman_at(p, G_CONTRACT_DATE_PLUS_91_DAYS);
+                contract_day_expiry_news(this, c, 1, bosman, 0);
+                return;
+            }
+            if !player_job(p) {
+                return;
+            }
+            match contract_day_status(c) {
+                1 | 2 => {
+                    let f = if contract_day_on_list(contract_day_club(c), p) { 1.3 } else { 1.0 };
+                    if contract_day_offer(this, p, f) == 0 {
+                        contract_day_refusal(this, p, club, c, true);
+                    }
+                }
+                3..=5 => {
+                    let f = if contract_day_on_list(contract_day_club(c), p) { 1.1 } else { 1.0 };
+                    contract_day_offer(this, p, f);
+                }
+                6 => {
+                    contract_day_offer(this, p, 1.0);
+                }
+                _ => {}
+            }
+        } else if contract_day_news_human(contract_day_club(c)) {
+            contract_day_expiry_news(this, c, 1, 0, 0);
+        } else {
+            contract_day_offer(this, p, 1.0);
+        }
+        return;
+    }
+    // bands 9 and 11
+    if (exe::staff_contract_get_expiry_band(c) == 9 || exe::staff_contract_get_expiry_band(c) == 0xb) && player_job(p) && !contract_day_retiring(p) {
+        if human(c) {
+            return;
+        }
+        contract_day_offer_by_status(this, p, contract_day_club(c), contract_day_status(c));
+        return;
+    }
+    // band 13
+    if exe::staff_contract_get_expiry_band(c) == 0xd && !contract_day_retiring(p) {
+        if is_player {
+            if contract_day_news_human(contract_day_club(c)) {
+                let bosman = contract_day_bosman_at(p, G_CONTRACT_DATE_PLUS_7_DAYS);
+                contract_day_expiry_news(this, c, 4, bosman, 0);
+                return;
+            }
+            contract_day_offer_by_status(this, p, contract_day_club(c), contract_day_status(c));
+        } else if contract_day_news_human(contract_day_club(c)) {
+            contract_day_expiry_news(this, c, 4, 0, 0);
+        } else {
+            contract_day_offer(this, p, 1.0);
+        }
+        return;
+    }
+    // the end reached
+    if fill_slot_date_before(date, exp) {
+        return;
+    }
+    c.set_contract_type((c.contract_type() & 0xc1) | 1);
+    contract_day_end_news(this, p, 2, 0);
+    if !is_player {
+        if !human(c) {
+            contract_day_offer(this, p, 1.0);
+        }
+        return;
+    }
+    if exe::staff_contract_wants_to_leave(c) != 0 || c.transfer_status() & 8 != 0 {
+        c.set_leaving_on_bosman(1);
+        c.set_transfer_status(c.transfer_status() & 0xf7);
+        covered!("mke_2 leaves at the end");
+        contract_day_shortlist(p);
+        return;
+    }
+    let main = Contract(main_contract_lookup(p));
+    if !main.is_null() && !contract_day_club(main).is_null() {
+        let again = Contract(main_contract_lookup(p));
+        let cl = if again.is_null() { Club(0) } else { contract_day_club(again) };
+        if contract_day_news_human(cl) {
+            return;
+        }
+    }
+    if human(c) {
+        return;
+    }
+    let st = contract_day_status(c);
+    if (1..=6).contains(&st) {
+        if read_i32(contract_manager_staff_state_record(read_usize(p.addr())) + 4) == -1 {
+            return;
+        }
+        covered!("mke_2 renewal at the end");
+        contract_day_offer_by_status(this, p, contract_day_club(c), st);
+        return;
+    }
+    if !p.club_job().is_null() && !p.player().is_null() && p.job_for_club() == 0xb && exe::staff_is_transfer_listed(p, 0usize) != 0 && contract_day_no_offers(p) {
+        covered!("mke_2 listed to the queue");
+        contract_day_queue(p);
+    }
+}
+
+/// The club's shortlist holds the person (`exe::shortlist_manager_find_club_shortlist_entry` of the transfer manager's
+/// shortlist manager, with 0, 0).
+pub(crate) unsafe fn contract_day_on_list(club: Club, p: Staff) -> bool {
+    let sm = read_usize(read_usize(G_TRANSFER_MANAGER) + transfer_manager_fields::SHORTLIST_MANAGER);
+    exe::shortlist_manager_find_club_shortlist_entry(sm, club, p, 0, 0) != 0
+}
+
+/// The refusal of a renewal the AI could not offer: a local contract offer (`exe::new_staff_contract`, its date at
+/// +0x51 `exe::date_date_54a110`) for the person at `club`, type 2 (`contract::CONTRACT_TYPE` & 0xc2 | 2), the squad
+/// status of his contract, +0x50 = 1, +0x59 = −1, +0x61 = his job; with `mark`, bit 0x80 of his 79-byte record's
+/// `STATUS_FLAGS`; then the offer response news (0x4d49a0) with 1.
+pub(crate) unsafe fn contract_day_refusal(this: usize, p: Staff, club: Club, c: Contract, mark: bool) {
+    let mut o = [0u8; 0x80];
+    let l = Contract(o.as_mut_ptr() as usize);
+    exe::new_staff_contract(l);
+    exe::date_date_54a110(l.addr() + 0x51);
+    write_u32(l.addr(), read_u32(p.addr()));
+    l.set_club((read_u32(club.addr())) as usize);
+    l.set_contract_type((l.contract_type() & 0xc2) | 2);
+    l.set_squad_status((l.squad_status() & 0xf) | (contract_day_status(c) << 4));
+    write_u8(l.addr() + 0x50, 1);
+    write_i32(l.addr() + 0x59, -1);
+    write_u8(l.addr() + 0x61, p.job_for_club());
+    if mark {
+        let r = contract_manager_staff_state_record(read_usize(p.addr())) + staff_state::STATUS_FLAGS;
+        write_u8(r, read_u8(r) | 0x80);
+    }
+    covered!("mke_2 renewal refused");
+    let f: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_CONTRACT_MANAGER_POST_OFFER_RESPONSE_NEWS); // post_offer_response_news
+    f(this, l.addr(), 1);
+}
+
+/// The renewal by squad status of bands 9, 11 and 13 and of the end day: status 1-2 on his club's list 1.4, 3-5 on the
+/// list 1.2, otherwise (and status 6) 1.0; status 0 or above 6 no offer.
+pub(crate) unsafe fn contract_day_offer_by_status(this: usize, p: Staff, club: Club, st: u8) {
+    match st {
+        1 | 2 => {
+            let f = if contract_day_on_list(club, p) { 1.4 } else { 1.0 }; // mke2: the late renewal of a key player
+            contract_day_offer(this, p, f);
+        }
+        3..=5 => {
+            let f = if contract_day_on_list(club, p) { 1.2 } else { 1.0 };
+            contract_day_offer(this, p, f);
+        }
+        6 => {
+            contract_day_offer(this, p, 1.0);
+        }
+        _ => {}
+    }
+}
+
+/// What the person pass does after a step: go on to the contract end of the day, or go to the next person.
+#[derive(PartialEq)]
+pub(crate) enum ContractDayFlow {
+    End,
+    Next,
+}
+
+/// The body templates of the contract expiry news by the period (slot 6): (another club, own club, other), period 1 = 3
+/// months, 2 = 2 months, 3 = next month, 4 = next week, 5 = 6 months, 6 = 12 months; period 7 has one template.
+pub(crate) const CONTRACT_EXPIRY_TEMPLATES: [(usize, usize, usize); 6] = [
+    (0x9aac74, 0x9aab88, 0x9aab30),
+    (0x9aaa68, 0x9aa980, 0x9aa92c),
+    (0x9aa86c, 0x9aa78c, 0x9aa740),
+    (0x9aa680, 0x9aa5a0, 0x9aa554),
+    (0x9aaf0c, 0x9aae24, 0x9aadd0),
+    (0x9ab118, 0x9ab02c, 0x9aafd4),
+];
+
+/// What the evaluation of a person's contract offers decided (`choose_contract_offer`).
+#[derive(Clone, Copy)]
+pub(crate) struct ContractOfferChoice {
+    /// the chosen offer (0 none)
+    pub(crate) best: usize,
+    /// its score (the will × the ratio; the will for a loan or a trial); starts at 2.75
+    pub(crate) best_score: f64,
+    /// the last offer of his own club that he turned down (0 none)
+    pub(crate) rejected_own: usize,
+    /// an offer already agreed (state 2) was found: nothing is chosen
+    pub(crate) accepted: bool,
+    /// how many stale offers were taken out of the list
+    pub(crate) removed: u32,
+}

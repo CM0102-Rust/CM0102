@@ -216,3 +216,109 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_create_round_table(this
     t.addr()
 }
 
+/// The MLS All-Star Game at career creation: the year and the database competition; a new game has the two all-star
+/// teams (clubs of one nation), discipline rule 255, no prize fund of its own, the rounds, the tie tree and the
+/// statistics (see `build_mls_all_star_game`).
+/// Original: `UsaMlsAllStars::UsaMlsAllStars` (0x90a150, usa_mls_all_stars.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn construct_usa_mls_all_stars(this: usize, year: u32, record: usize) -> usize {
+    build_mls_all_star_game(Cup(this), year, record) // cqw5: the MLS All-Star Game
+}
+
+/// Comparer for `construct_usa_mls_all_stars`: only the original runs (it allocates, draws and reads the save file),
+/// then the plan is checked (`cup_constructor_plan_mismatch`).
+pub(crate) unsafe extern "thiscall" fn compare_construct_usa_mls_all_stars(this: usize, year: u32, record: usize) -> usize {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_USA_MLS_ALL_STARS)(this, year, record);
+    let error = cup_constructor_plan_mismatch(this, r, year, record, 0x9708f8, &MLS_ALL_STAR_GAME_CTOR_FIELDS, true);
+    SCOREBOARD.record(error.is_none(), || format!("construct_usa_mls_all_stars({:#x}, {}, {:#x}): {}", this, year as u16, record, error.clone().unwrap_or_default()));
+    r
+}
+
+/// The plan the comparer checks after the original constructor ran; `None` when it holds, otherwise the difference.
+///
+/// Always: the return value is `this`, the vtable, the competition record at +4 and the year (`cup::YEAR`, word). On a
+/// new cup (`cup::STAGE_INDEX` = 0xff), every fixed field the constructor writes (`fields`: offset, width in bytes,
+/// value), the round table (`cup::ROUND_TABLE`, when `rounds`) and the statistics at +8 must be set.
+pub(crate) unsafe fn cup_constructor_plan_mismatch(this: usize, r: usize, year: u32, record: usize, vt: usize, fields: &[(usize, u8, u32)], rounds: bool) -> Option<String> {
+    if r != this || read_usize(this) != vt || read_usize(this + 4) != record || read_u16(this + cup::YEAR) != year as u16 {
+        return Some(format!("returned {:#x}, vtable {:#x}, +4 {:#x}, year {}", r, read_usize(this), read_usize(this + 4), read_u16(this + cup::YEAR)));
+    }
+    if read_u8(this + cup::STAGE_INDEX) != stage_index::MAIN || league_will_load_saved_state(record) {
+        return None;
+    }
+    for &(o, t, v) in fields {
+        let x = match t {
+            1 => read_u8(this + o) as u32,
+            2 => read_u16(this + o) as u32,
+            _ => read_u32(this + o),
+        };
+        if x != v {
+            return Some(format!("+{:#x} = {:#x}, the constructor writes {:#x}", o, x, v));
+        }
+    }
+    if (rounds && read_usize(this + cup::ROUND_TABLE) == 0) || read_usize(this + 8) == 0 {
+        return Some(format!("rounds {:#x}, statistics {:#x}", read_usize(this + cup::ROUND_TABLE), read_usize(this + 8)));
+    }
+    None
+}
+
+/// The constructor of the MLS All-Star Game (`UsaMlsAllStars::UsaMlsAllStars(year, record)`), run once, at career
+/// creation.
+///
+/// On the Cup base (Cup::Cup `exe::new_cup`, thiscall, ret 0): the competition record at +4, the vtable 0x9708f8, the
+/// year (`set_year`), `current_round` 0, `stage_index` 0xff, `stage_count` 0, `current_stage` −1, `club_sides` 1 (clubs
+/// of one nation), `discipline_index` 0xff and `run_by_stages` 0; substitutes, substitutions and the prize fund stay as
+/// the base left them. If the saved state loads (Cup::load_from_disk 0x51fc00: push 1; mov ecx, this -> thiscall, ret
+/// 4; returns nonzero), returns this.
+///
+/// On a new cup, in order, each step with its error box (source 0xaa20a0) and returning this when it fails: the two
+/// all-star teams (UsaMlsAllStars::set_up_teams 0x90a540, thiscall, ret 0; the box of line 0x44 when negative); the
+/// round table (`build_cup_round_table_by_vtable`); the tie tree (Cup::map_fixture_tree 0x518790; the box of line 0x52
+/// when negative); the statistics at +8 (the box of line 0x59 without them). No final ranking. Returns this.
+pub(crate) unsafe fn build_mls_all_star_game(this: Cup, year: u32, record: usize) -> usize {
+    exe::new_cup(this);
+    write_u32(this.addr() + 4, record as u32);
+    write_u32(this.addr(), 0x9708f8);
+    this.set_year(year as u16 as i16);
+    this.set_current_round(0);
+    this.set_stage_index(stage_index::MAIN);
+    write_u32(this.addr() + cup::STAGE_COUNT, 0);
+    write_u32(this.addr() + cup::CURRENT_STAGE, 0xffff_ffff);
+    this.set_club_sides(1);
+    this.set_discipline_index(0xff);
+    this.set_run_by_stages(0);
+    let load_from_disk: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_CUP_LOAD_FROM_DISK); // Cup::load_from_disk
+    if load_from_disk(this.addr(), 1) != 0 {
+        return this.addr();
+    }
+    covered!("cqw_5 mls all-star game new");
+    let set_up_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_USAMLSALLSTARS_SET_UP_TEAMS); // UsaMlsAllStars::set_up_teams
+    if set_up_teams(this.addr()) < 0 {
+        show_error_at(0xaa20a0, 0x44);
+        return this.addr();
+    }
+    build_cup_round_table_by_vtable(this);
+    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_MAP_FIXTURE_TREE); // Cup::map_fixture_tree
+    if map_fixture_tree(this.addr()) < 0 {
+        show_error_at(0xaa20a0, 0x52);
+        return this.addr();
+    }
+    if !create_comp_stats_at_8(this.addr()) {
+        show_error_at(0xaa20a0, 0x59);
+        return this.addr();
+    }
+    this.addr()
+}
+
+/// Builds a new cup's round table through virtual `comp_vtable::CREATE_SCHEDULE` and stores it in `round_table()`.
+///
+/// The call is `create_schedule(−1, &round_count, &stage_label, 0)` (push 0; push &+0x3a; push &+0x3c; push −1; mov
+/// ecx, this -> thiscall, ret 0x10): stage −1, the rounds into `cup::ROUND_COUNT` and the extra into
+/// `cup::STAGE_LABEL`, no is_league output.
+pub(crate) unsafe fn build_cup_round_table_by_vtable(this: Cup) {
+    let f: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
+    let t = f(this.addr(), 0xffff_ffff, this.addr() + cup::ROUND_COUNT, this.addr() + cup::STAGE_LABEL, 0);
+    write_u32(this.addr() + cup::ROUND_TABLE, t as u32);
+}
+
+/// The fixed fields the MLS All-Star Game constructor writes (offset, width, value), checked by the comparer.
+pub(crate) const MLS_ALL_STAR_GAME_CTOR_FIELDS: [(usize, u8, u32); 7] = [(cup::STAGE_COUNT, 4, 0x0), (cup::CURRENT_STAGE, 4, 0xffffffff), (cup::CLUB_SIDES, 1, 0x1), (cup::STAGE_INDEX, 1, 0xff), (cup::DISCIPLINE_INDEX, 1, 0xff), (cup::CURRENT_ROUND, 1, 0x0), (cup::RUN_BY_STAGES, 1, 0x0)];

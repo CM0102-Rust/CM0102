@@ -635,3 +635,358 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_first_update_staff_records_for_st
     serie_a_staff_records(this, club, status, stage, true).0
 }
 
+/// The schedule of the Brazilian Série A: stage −1, the round-robin league stage: 27 rounds from 5 Jul to 2 Nov; stage 0, the knockout or final stage: 2 rounds from 3 Nov to 12 Nov; any other stage returns 0.
+///
+/// Virtual `comp_vtable::CREATE_SCHEDULE`, `create_schedule(stage, &rounds, &extra, &is_league)`, called by
+/// League::create_fixtures and the season turns. For a stage with a table (`brazil_serie_a_schedule_stage`) it writes the outputs (is_league
+/// when that pointer is not null, the rounds and the extra), allocates the round table (`exe::crt_malloc`, 0x41 bytes
+/// per round; out of memory, the error box and 0) and writes the date (day, month, years after the season year
+/// `year()`, weekday and code) and the matches of each round, in the original's order (`create_round_table`, the
+/// cqp_11 schedule machine); the rest of the table is left as allocated. Returns the table, or 0 without writing
+/// anything for a stage without one.
+/// Original: `BraNatFirst::create_schedule` (0x429b50, bra_nat_first.cpp, thiscall, ret 0x10).
+pub(crate) unsafe extern "thiscall" fn bra_nat_first_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    create_round_table(Cup(this), brazil_serie_a_schedule_stage(stage), rounds, extra, league, 0x98aa30)
+}
+
+/// Comparer for `bra_nat_first_create_schedule`.
+pub(crate) unsafe extern "thiscall" fn compare_bra_nat_first_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_BRA_NAT_FIRST_CREATE_SCHEDULE);
+    asia_club_champ_compare_round_table("bra_nat_first_create_schedule", stage, brazil_serie_a_schedule_stage(stage), rounds, extra, league, || o(this, stage, rounds, extra, league),
+        |r, e, l| bra_nat_first_create_schedule(this, stage, r, e, l))
+}
+
+/// The Brazilian first division at career creation: the year and the database competition, discipline rule 6
+/// (`discipline_rule::BRAZIL_NATIONAL`) and, with no saved state, importance 10, a round robin and the knockout (one
+/// stage besides the league), the rules (no league above, the second division below, eight relegated [inference:
+/// maxevans60 map]), the table (the 28 national first division clubs [inference: map]), the fixtures, the order, the
+/// statistics and the predicted positions by club strength (`bra_nat_first_construct_league` with
+/// `BRA_NAT_FIRST_LEAGUE`).
+/// Original: `BraNatFirst::BraNatFirst` (0x429850, bra_nat_first.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn construct_bra_nat_first(this: usize, year: u32, record: usize) -> usize {
+    bra_nat_first_construct_league(League(this), year, record, &BRA_NAT_FIRST_LEAGUE, discipline_rule::BRAZIL_NATIONAL, "cqu_1 bra_nat_first new") // cqu1: the Brazilian first division
+}
+
+/// Comparer for `construct_bra_nat_first`.
+pub(crate) unsafe extern "thiscall" fn compare_construct_bra_nat_first(this: usize, year: u32, record: usize) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_NAT_FIRST);
+    bra_nat_first_compare_league_ctor("construct_bra_nat_first", League(this), year, record, &BRA_NAT_FIRST_LEAGUE, discipline_rule::BRAZIL_NATIONAL, || o(this, year, record))
+}
+
+/// At the Brazilian season turnover, promotion and relegation between the twelve state leagues
+/// (`BRA_STATE_LEAGUE_KEYS`) and their twelve lower divisions (`BRA_STATE_LOWER_DIVISION_KEYS`); as many clubs go up
+/// from each lower division as its state league's `league::RELEGATED_COUNT` (signed byte).
+/// 1) A list of 200 clubs (`exe::crt_malloc` of 0x320; out of memory: the error box of line 0x3d0 and return) with the
+///    database clubs whose regional division (`club::RESERVE_DIVISION`) is one of the twelve lower ones, in database
+///    order, up to 200.
+/// 2) The list sorted by reputation and the first 75 shuffled (`exe::comp_util_sort_and_shuffle_top_clubs`(list, n,
+///    25), cdecl: it draws).
+/// 3) In list order, each club goes up to its division's state league while there are places
+///    (`club::RESERVE_DIVISION` = the state league's record, its `league::COMPETITION`); if it has a national division
+///    (`club::DIVISION`) and no manager (`club::MANAGER` = 0), it opens the job (`exe::manager_manager_add_job_vacancy`
+///    ([`G_MANAGER_MANAGER`], club, 0), thiscall, ret 8).
+/// 4) In each state league, the clubs of the last `league::RELEGATED_COUNT` table rows (`exe::league_get_table_row`)
+///    go down to the lower division (`club::RESERVE_DIVISION` = its record) and leave the division
+///    (`bra_nat_first_club_left_division`, with the state league's record).
+/// 5) The list is freed (`exe::crt_free`).
+/// Original: `bra_nat_first_exchange_state_league_clubs` (0x42b130, bra_nat_first.cpp, cdecl).
+pub(crate) unsafe extern "C" fn bra_nat_first_exchange_state_league_clubs() {
+    let leagues: [usize; 12] = core::array::from_fn(|i| comp_object_of_key(BRA_STATE_LEAGUE_KEYS[i]));
+    let lower: [usize; 12] = core::array::from_fn(|i| comp_record_of_key(BRA_STATE_LOWER_DIVISION_KEYS[i]));
+    let mut places: [i8; 12] = core::array::from_fn(|i| read_i8(leagues[i] + league::RELEGATED_COUNT));
+    let list = exe::crt_malloc(0x320);
+    if list == 0 {
+        return show_error_at(0x98aa30, 0x3d0);
+    }
+    let mut n = 0i16;
+    let mut i = 0usize;
+    while (i as i32) < read_usize(G_CLUB_COUNT) as i32 && n < 0xc8 {
+        let c = club_at(i as isize).addr();
+        let d = read_usize(c + club::RESERVE_DIVISION);
+        if d != 0 && lower.contains(&d) {
+            write_usize(list + 4 * n as usize, c);
+            n += 1;
+        }
+        i += 1;
+    }
+    exe::comp_util_sort_and_shuffle_top_clubs(list, n as u16 as u32, 0x19);
+    for k in 0..n.max(0) as usize { // cqv3: the list in order
+        let c = read_usize(list + 4 * k);
+        let d = read_usize(c + club::RESERVE_DIVISION);
+        let e = match lower.iter().position(|&b| b == d) {
+            Some(e) => e,
+            None => continue, // ponytail: every club of the list belongs to one of the twelve
+        };
+        if places[e] > 0 { // cqv3: the state league's promotion places
+            covered!("cqv_3 promotion to the state league");
+            write_usize(c + club::RESERVE_DIVISION, read_usize(leagues[e] + league::COMPETITION));
+            if read_usize(c + club::DIVISION) != 0 && read_usize(c + club::MANAGER) == 0 {
+                exe::manager_manager_add_job_vacancy(read_usize(G_MANAGER_MANAGER), c, 0usize);
+            }
+            places[e] -= 1;
+        }
+    }
+    for e in 0..12 {
+        let l = League(leagues[e]);
+        let total = l.club_count() as i32;
+        let mut s = total - (l.relegated_count() as i8) as i32;
+        while s < l.club_count() as i32 {
+            let c = read_usize(exe::league_get_table_row(l, s));
+            write_usize(c + club::RESERVE_DIVISION, lower[e]); // cqv3: the relegated club goes to the lower division
+            covered!("cqv_3 relegated from the state league");
+            bra_nat_first_club_left_division(c, l.competition().addr());
+            s += 1;
+        }
+    }
+    exe::crt_free(list);
+}
+
+/// The promotion comparer: runs only the original (it moves clubs between divisions, draws the shuffle and calls the
+/// manager and contract code; it cannot run twice), with the plan made before: the clubs of each lower division in the
+/// list (up to 200) and those of the last rows of each state league. Afterwards: exactly min(places, its clubs in the
+/// list) clubs go up from each division (`club::RESERVE_DIVISION` = the state league's record) and its others stay;
+/// those of the last rows are in the lower division.
+pub(crate) unsafe extern "C" fn compare_bra_nat_first_exchange_state_league_clubs() {
+    let o = original_fn::<unsafe extern "C" fn()>(IDX_BRA_NAT_FIRST_EXCHANGE_STATE_LEAGUE_CLUBS);
+    let leagues: [usize; 12] = core::array::from_fn(|i| comp_object_of_key(BRA_STATE_LEAGUE_KEYS[i]));
+    let lower: [usize; 12] = core::array::from_fn(|i| comp_record_of_key(BRA_STATE_LOWER_DIVISION_KEYS[i]));
+    let mut theirs: Vec<Vec<usize>> = vec![Vec::new(); 12];
+    let mut n = 0;
+    let mut i = 0usize;
+    while (i as i32) < read_usize(G_CLUB_COUNT) as i32 && n < 0xc8 {
+        let c = club_at(i as isize).addr();
+        if let Some(e) = lower.iter().position(|&b| b == read_usize(c + club::RESERVE_DIVISION) && b != 0) {
+            theirs[e].push(c);
+            n += 1;
+        }
+        i += 1;
+    }
+    let places: Vec<i32> = leagues.iter().map(|&l| read_i8(l + league::RELEGATED_COUNT) as i32).collect();
+    let records: Vec<usize> = leagues.iter().map(|&l| read_usize(l + league::COMPETITION)).collect();
+    let mut going_down: Vec<(usize, usize)> = Vec::new();
+    for e in 0..12 {
+        let l = leagues[e];
+        let t = read_i16(l + league::CLUB_COUNT) as i32;
+        for s in (t - places[e]).max(0)..t {
+            going_down.push((read_usize(exe::league_get_table_row(l, s)), lower[e]));
+        }
+    }
+    o();
+    let mut errors = Vec::new();
+    for e in 0..12 {
+        let went_up = theirs[e].iter().filter(|&&c| read_usize(c + club::RESERVE_DIVISION) == records[e]).count();
+        let stayed = theirs[e].iter().filter(|&&c| read_usize(c + club::RESERVE_DIVISION) == lower[e]).count();
+        let expected = (places[e].max(0) as usize).min(theirs[e].len());
+        if went_up != expected || went_up + stayed != theirs[e].len() {
+            errors.push(format!("division {}: {} went up (expected {}), {} of {} stayed", e, went_up, expected, stayed, theirs[e].len()));
+        }
+    }
+    for &(c, b) in &going_down {
+        if read_usize(c + club::RESERVE_DIVISION) != b {
+            errors.push(format!("relegated {:#x} in {:#x} (expected {:#x})", c, read_usize(c + club::RESERVE_DIVISION), b));
+        }
+    }
+    SCOREBOARD.record(errors.is_empty(), || format!("bra_nat_first_exchange_state_league_clubs: {}", errors.join("; ")));
+}
+
+/// At the Brazilian season turnover, the third division renews itself.
+/// 1) A list of 160 (`exe::crt_malloc` of 0x280; out of memory: the error box of line 0x43a and return) with the
+///    Brazilian clubs without a national division (`bra_nat_first_clubs_without_division`). Fewer than 16: the list is
+///    freed and nothing changes.
+/// 2) The list sorted by reputation and the first 48 shuffled (`exe::comp_util_sort_and_shuffle_top_clubs`(list, n,
+///    16), cdecl: it draws); the first 16 enter the third division (`club::DIVISION` = the third division's record) and
+///    those with a regional division (`club::RESERVE_DIVISION`) and no manager (`club::MANAGER` = 0) open the job
+///    (`exe::manager_manager_add_job_vacancy`([`G_MANAGER_MANAGER`], club, 0), thiscall, ret 8).
+/// 3) In the third division's table and in those of its seven groups (stages 0 to 6 of `league::STAGES`), the clubs of
+///    the rows marked `league_table_row::STATUS` = 3 (eliminated in the first stage [inference]) leave the national
+///    division (`club::DIVISION` = 0) and leave the division (`bra_nat_first_club_left_division`, with the record of the
+///    table they leave).
+/// 4) The list is freed (`exe::crt_free`).
+/// Original: `bra_nat_first_refresh_third_division_clubs` (0x42b520, bra_nat_first.cpp, cdecl).
+pub(crate) unsafe extern "C" fn bra_nat_first_refresh_third_division_clubs() {
+    let (t, record) = bra_nat_first_third_division();
+    let list = exe::crt_malloc(0x280);
+    if list == 0 {
+        return show_error_at(0x98aa30, 0x43a);
+    }
+    let v = bra_nat_first_clubs_without_division();
+    for (k, &c) in v.iter().enumerate() {
+        write_usize(list + 4 * k, c);
+    }
+    if v.len() < 0x10 {
+        return exe::crt_free(list);
+    }
+    exe::comp_util_sort_and_shuffle_top_clubs(list, v.len() as u32, 0x10);
+    for k in 0..0x10 { // cqv3: the 16 entering the third division
+        let c = read_usize(list + 4 * k);
+        write_usize(c + club::DIVISION, record);
+        if read_usize(c + club::RESERVE_DIVISION) != 0 && read_usize(c + club::MANAGER) == 0 {
+            exe::manager_manager_add_job_vacancy(read_usize(G_MANAGER_MANAGER), c, 0usize);
+        }
+    }
+    covered!("cqv_3 third division renewed");
+    for g in -1i32..7 {
+        let s = League(if g == -1 { t } else { read_usize(read_usize(t + league::STAGES) + 4 * g as usize) });
+        let mut e = 0i32;
+        while e < s.club_count() as i32 {
+            let r = exe::league_get_table_row(s, e);
+            if read_u8(r + league_table_row::STATUS) == 3 {
+                let c = read_usize(r + league_table_row::CLUB);
+                write_usize(c + club::DIVISION, 0); // cqv3: the eliminated club leaves the third division
+                bra_nat_first_club_left_division(c, s.competition().addr());
+            }
+            e += 1;
+        }
+    }
+    exe::crt_free(list);
+}
+
+/// The renewal comparer: runs only the original (it draws the shuffle and calls the manager and contract code; it
+/// cannot run twice), with the plan made before: the clubs without a division (up to 160) and those of the rows
+/// marked 3 in the eight tables. Afterwards, with 16 or more without a division: exactly 16 of them are in the third
+/// division and the others without a division; the marked ones, without a division. With fewer than 16: nothing
+/// changed for them.
+pub(crate) unsafe extern "C" fn compare_bra_nat_first_refresh_third_division_clubs() {
+    let o = original_fn::<unsafe extern "C" fn()>(IDX_BRA_NAT_FIRST_REFRESH_THIRD_DIVISION_CLUBS);
+    let (t, record) = bra_nat_first_third_division();
+    let v = bra_nat_first_clubs_without_division();
+    let mut marked = Vec::new();
+    if v.len() >= 0x10 {
+        for g in -1i32..7 {
+            let s = League(if g == -1 { t } else { read_usize(read_usize(t + league::STAGES) + 4 * g as usize) });
+            for e in 0..s.club_count() as i32 {
+                let r = exe::league_get_table_row(s, e);
+                if read_u8(r + league_table_row::STATUS) == 3 {
+                    marked.push(read_usize(r + league_table_row::CLUB));
+                }
+            }
+        }
+    }
+    o();
+    let entered = v.iter().filter(|&&c| read_usize(c + club::DIVISION) == record).count();
+    let outside = v.iter().filter(|&&c| read_usize(c + club::DIVISION) == 0).count();
+    let expected = if v.len() >= 0x10 { 0x10 } else { 0 };
+    let left = marked.iter().all(|&c| read_usize(c + club::DIVISION) == 0);
+    SCOREBOARD.record(entered == expected && entered + outside == v.len() && left,
+                     || format!("bra_nat_first_refresh_third_division_clubs: {} without a division, {} entered (expected {}), {} stayed out, {} marked, all out: {}", v.len(), entered, expected, outside, marked.len(), left));
+}
+
+/// The stages of the round table of the Brazilian Série A (virtual `comp_vtable::CREATE_SCHEDULE`): stage −1, the round-robin league stage: 27 rounds from 5 Jul to 2 Nov; stage 0, the knockout or final stage: 2 rounds from 3 Nov to 12 Nov; any other stage has no table (None).
+pub(crate) fn brazil_serie_a_schedule_stage(stage: u32) -> Option<ScheduleStage> {
+    match stage as u8 as i8 {
+        -1 => Some(ScheduleStage { league: 1, rounds: 27, extra: 0, extra_check: false, size: 0x6db, row: 0xb6,
+            ops: &BRAZIL_SERIE_A_SCHEDULE_LEAGUE_OPS, name: "cqw_4 serie a league" }),
+        0 => Some(ScheduleStage { league: 0, rounds: 2, extra: 0, extra_check: false, size: 0xd0, row: 0x15f,
+            ops: &BRAZIL_SERIE_A_SCHEDULE_STAGE_0_OPS, name: "cqw_4 serie a stage 0" }),
+        _ => None,
+    }
+}
+
+/// The competition object (league) of key `key`: [[`G_COMP_OBJECT_TABLE`] + 4 × [key]].
+pub(crate) unsafe fn comp_object_of_key(key: usize) -> usize {
+    read_usize(read_usize(G_COMP_OBJECT_TABLE) + 4 * read_usize(key))
+}
+
+/// What a club leaving a division goes through in the original (both relegations): if it cannot be managed
+/// (`exe::club_can_be_managed`, cdecl, returns al = 0) and a human manager decides for it
+/// (`exe::human_manager_is_human_club`(club, 1, 1, 0, 0), cdecl), the manager leaves
+/// (`exe::manager_manager_remove_club_manager`([`G_MANAGER_MANAGER`], club, 1, 7, 0), thiscall, ret 0x10); then the
+/// relegation clauses of the contracts (`exe::contract_manager_trigger_relegation_clauses`([`G_CONTRACT_MANAGER`],
+/// club, the record of the division it left), thiscall, ret 8).
+pub(crate) unsafe fn bra_nat_first_club_left_division(club: usize, record: usize) {
+    if exe::club_can_be_managed(club) == 0 && exe::human_manager_is_human_club(club, 1, 1, 0, 0) != 0 {
+        exe::manager_manager_remove_club_manager(read_usize(G_MANAGER_MANAGER), club, 1, 7, 0);
+    }
+    exe::contract_manager_trigger_relegation_clauses(read_usize(G_CONTRACT_MANAGER), club, record);
+}
+
+/// The third division league object and its record.
+pub(crate) unsafe fn bra_nat_first_third_division() -> (usize, usize) {
+    (comp_object_of_key(KEY_CLUB_COMP_BRAZILIAN_NATIONAL_THIRD_DIVISION), comp_record_of_key(KEY_CLUB_COMP_BRAZILIAN_NATIONAL_THIRD_DIVISION))
+}
+
+/// The Brazilian clubs without a national division, in database order, up to 160: a club (outside the national teams:
+/// the ids below [`G_CLUB_COUNT`] − 2 × [`G_NATION_COUNT`]) with a nation (`club::NATION`), no division
+/// (`club::DIVISION` = 0) and Brazil's nation (the nation id = [`KEY_NATION_BRAZIL`]).
+pub(crate) unsafe fn bra_nat_first_clubs_without_division() -> Vec<usize> {
+    let mut v = Vec::new();
+    let mut i = 0i32;
+    while i < read_usize(G_CLUB_COUNT) as i32 - 2 * read_usize(G_NATION_COUNT) as i32 && v.len() < 0xa0 {
+        let c = Club(club_at(i as isize).addr());
+        let nation = c.nation().addr();
+        if nation != 0 && c.division().addr() == 0 && read_usize(nation) == read_usize(KEY_NATION_BRAZIL) {
+            v.push(c.addr());
+        }
+        i += 1;
+    }
+    v
+}
+
+/// The Brazilian Série A, the round-robin stage (−1): 27 rounds (5 Jul to 2 Nov), 1755 bytes, 88 operations.
+pub(crate) const BRAZIL_SERIE_A_SCHEDULE_LEAGUE_OPS: [AsiaClubChampScheduleOp; 88] = [
+    Cqp11D(0, 5, 7, 0, 6, 1, 0), Cqp11L(0, 0, 5, 1, 1, 0), Cqp11L(0, 1, 5, 1, 1, 0), Cqp11L(0, 2, -1, -1, -1, 0),
+    Cqp11D(1, 8, 7, 0, 2, 2, 0), Cqp11L(1, 0, -1, -1, -1, 0), Cqp11D(2, 0xc, 7, 0, 6, 1, 0), Cqp11L(2, 0, 5, 1, 1, 0),
+    Cqp11L(2, 1, 5, 1, 1, 0), Cqp11L(2, 2, -1, -1, -1, 0), Cqp11D(3, 0xf, 7, 0, 2, 2, 0), Cqp11L(3, 0, -1, -1, -1, 0),
+    Cqp11D(4, 0x13, 7, 0, 6, 1, 0), Cqp11L(4, 0, 5, 1, 1, 0), Cqp11L(4, 1, 5, 1, 1, 0), Cqp11L(4, 2, -1, -1, -1, 0),
+    Cqp11D(5, 0x1a, 7, 0, 6, 1, 0), Cqp11L(5, 0, 5, 1, 1, 0), Cqp11L(5, 1, 5, 1, 1, 0), Cqp11L(5, 2, -1, -1, -1, 0),
+    Cqp11D(6, 0x1d, 7, 0, 2, 2, 0), Cqp11L(6, 0, -1, -1, -1, 0), Cqp11D(7, 2, 8, 0, 6, 1, 0),
+    Cqp11L(7, 0, 5, 1, 1, 0), Cqp11L(7, 1, 5, 1, 1, 0), Cqp11L(7, 2, -1, -1, -1, 0), Cqp11D(8, 5, 8, 0, 2, 2, 0),
+    Cqp11L(8, 0, -1, -1, -1, 0), Cqp11D(9, 9, 8, 0, 6, 1, 0), Cqp11L(9, 0, 5, 1, 1, 0), Cqp11L(9, 1, 5, 1, 1, 0),
+    Cqp11L(9, 2, -1, -1, -1, 0), Cqp11D(0xa, 0x10, 8, 0, 6, 1, 0), Cqp11L(0xa, 0, 5, 1, 1, 0),
+    Cqp11L(0xa, 1, 5, 1, 1, 0), Cqp11L(0xa, 2, -1, -1, -1, 0), Cqp11D(0xb, 0x13, 8, 0, 2, 2, 0),
+    Cqp11L(0xb, 0, -1, -1, -1, 0), Cqp11D(0xc, 0x17, 8, 0, 6, 1, 0), Cqp11L(0xc, 0, 5, 1, 1, 0),
+    Cqp11L(0xc, 1, 5, 1, 1, 0), Cqp11L(0xc, 2, -1, -1, -1, 0), Cqp11D(0xd, 0x1e, 8, 0, 6, 1, 0),
+    Cqp11L(0xd, 0, 5, 1, 1, 0), Cqp11L(0xd, 1, 5, 1, 1, 0), Cqp11L(0xd, 2, -1, -1, -1, 0),
+    Cqp11D(0xe, 3, 9, 0, 2, 2, 0), Cqp11L(0xe, 0, -1, -1, -1, 0), Cqp11D(0xf, 7, 9, 0, 6, 1, 0),
+    Cqp11L(0xf, 0, 5, 1, 1, 0), Cqp11L(0xf, 1, 5, 1, 1, 0), Cqp11L(0xf, 2, -1, -1, -1, 0),
+    Cqp11D(0x10, 0xa, 9, 0, 2, 2, 0), Cqp11L(0x10, 0, -1, -1, -1, 0), Cqp11D(0x11, 0xe, 9, 0, 6, 1, 0),
+    Cqp11L(0x11, 0, 5, 1, 1, 0), Cqp11L(0x11, 1, 5, 1, 1, 0), Cqp11L(0x11, 2, -1, -1, -1, 0),
+    Cqp11D(0x12, 0x15, 9, 0, 6, 1, 0), Cqp11L(0x12, 0, 5, 1, 1, 0), Cqp11L(0x12, 1, 5, 1, 1, 0),
+    Cqp11L(0x12, 2, -1, -1, -1, 0), Cqp11D(0x13, 0x1c, 9, 0, 6, 1, 0), Cqp11L(0x13, 0, 5, 1, 1, 0),
+    Cqp11L(0x13, 1, 5, 1, 1, 0), Cqp11L(0x13, 2, -1, -1, -1, 0), Cqp11D(0x14, 4, 0xa, 0, 6, 1, 0),
+    Cqp11L(0x14, 0, 5, 1, 1, 0), Cqp11L(0x14, 1, 5, 1, 1, 0), Cqp11L(0x14, 2, -1, -1, -1, 0),
+    Cqp11D(0x15, 7, 0xa, 0, 2, 2, 0), Cqp11L(0x15, 0, -1, -1, -1, 0), Cqp11D(0x16, 0xb, 0xa, 0, 6, 1, 0),
+    Cqp11L(0x16, 0, 5, 1, 1, 0), Cqp11L(0x16, 1, 5, 1, 1, 0), Cqp11L(0x16, 2, -1, -1, -1, 0),
+    Cqp11D(0x17, 0xe, 0xa, 0, 2, 2, 0), Cqp11L(0x17, 0, -1, -1, -1, 0), Cqp11D(0x18, 0x12, 0xa, 0, 6, 1, 0),
+    Cqp11L(0x18, 0, 5, 1, 1, 0), Cqp11L(0x18, 1, 5, 1, 1, 0), Cqp11L(0x18, 2, -1, -1, -1, 0),
+    Cqp11D(0x19, 0x19, 0xa, 0, 6, 1, 0), Cqp11L(0x19, 0, 5, 1, 1, 0), Cqp11L(0x19, 1, 5, 1, 1, 0),
+    Cqp11L(0x19, 2, -1, -1, -1, 0), Cqp11D(0x1a, 2, 0xb, 0, 6, 1, 0), Cqp11L(0x1a, 0, -1, -1, -1, 0),
+];
+
+/// The Brazilian Série A, stage 0: 2 rounds (3 Nov to 12 Nov), 208 bytes, 38 operations.
+pub(crate) const BRAZIL_SERIE_A_SCHEDULE_STAGE_0_OPS: [AsiaClubChampScheduleOp; 38] = [
+    Cqp11S(0, 3, 0xb, 0, 0), Cqp11J(0, 5, 0xb, 0, 2, 2, 0), Cqp11W(0x7, 0x82), Cqp11W(0x9, 0), Cqp11W(0xb, 8),
+    Cqp11W(0xd, 0x200), Cqp11B(0x17, 5), Cqp11W(0x18, 4), Cqp11W(0x1a, 2), Cqp11W(0x1c, 4), Cqp11W(0xf, 1),
+    Cqp11W(0x11, 0), Cqp11W(0x1e, 0), Cqp11B(0x20, 0), Cqp11B(0x21, 2), Cqp11B(0x22, 4), Cqp11X(0x5c, 0),
+    Cqp11X(0x60, 0), Cqp11X(0x64, 0), Cqp11S(1, 6, 0xb, 0, 3), Cqp11J(1, 0xc, 0xb, 0, 2, 2, 0), Cqp11W(0x6f, 0x96),
+    Cqp11W(0x71, 1), Cqp11W(0x73, 8), Cqp11W(0x75, 0x200), Cqp11B(0x7f, 5), Cqp11W(0x80, 2), Cqp11W(0x82, 1),
+    Cqp11W(0x84, 0), Cqp11W(0x77, 1), Cqp11W(0x79, 0), Cqp11W(0x86, 0), Cqp11B(0x88, 0), Cqp11B(0x89, 2),
+    Cqp11B(0x8a, 4), Cqp11X(0xc4, 0), Cqp11X(0xc8, 0xf4240), Cqp11X(0xcc, 0),
+];
+
+pub(crate) const BRA_NAT_FIRST_LEAGUE: BraNatFirstNationalLeague = BraNatFirstNationalLeague {
+    vtable: 0x967d98,
+    importance: 0xa,
+    importance_before_load: false,
+    stages: 1,
+    rules: 0x42a5a0,
+    table: 0x42a480,
+    file: 0x98aa30,
+    rows: [0x56, 0x5d, 0x64, 0x6d, 0x74],
+};
+
+/// The keys of the twelve state leagues (the league object in [[`G_COMP_OBJECT_TABLE`] + key × 4]) and those of each
+/// one's lower division (the record in [`G_CLUB_COMP_TABLE`] + key × 0x6b), in the original's order.
+pub(crate) const BRA_STATE_LEAGUE_KEYS: [usize; 12] = [
+    KEY_CLUB_COMP_BRAZILIAN_SAO_PAULO_STATE_CHAMP, KEY_CLUB_COMP_BRAZILIAN_RIO_DE_JANEIRO_STATE_CHAMPIONS, KEY_CLUB_COMP_BRAZILIAN_MINAS_GERAIS_STATE_CHAMPIONSHI,
+    KEY_CLUB_COMP_BRAZILIAN_PARANA_STATE_CHAMPIONSHIP, KEY_CLUB_COMP_BRAZILIAN_CENTRAL_STATE_CHAMPIONSHIP, KEY_CLUB_COMP_BRAZILIAN_PERNAMBUCO_STATE_CHAMPIONSHIP,
+    KEY_CLUB_COMP_BRAZILIAN_BAHIA_STATE_CHAMPIONSHIP, KEY_CLUB_COMP_BRAZILIAN_SANTA_CATARINA_STATE_CHAMPIONS, KEY_CLUB_COMP_BRAZILIAN_GOIAS_STATE_CHAMPIONSHIP,
+    KEY_CLUB_COMP_BRAZILIAN_NORTH_STATE_CHAMPIONSHIP, KEY_CLUB_COMP_BRAZILIAN_NORTHEAST_STATE_CHAMPIONSHIP, KEY_CLUB_COMP_BRAZILIAN_GAUCHO_STATE_CHAMPIONSHIP,
+];
+
+pub(crate) const BRA_STATE_LOWER_DIVISION_KEYS: [usize; 12] = [
+    KEY_CLUB_COMP_BRAZILIAN_SAO_PAULO_LOWER_DIVISION, KEY_CLUB_COMP_BRAZILIAN_RIO_DE_JANEIRO_LOWER_DIVISION, KEY_CLUB_COMP_BRAZILIAN_MINAS_GERAIS_LOWER_DIVISION,
+    KEY_CLUB_COMP_BRAZILIAN_PARANA_LOWER_DIVISION, KEY_CLUB_COMP_BRAZILIAN_CENTRAL_LOWER_DIVISION, KEY_CLUB_COMP_BRAZILIAN_PERNAMBUCO_LOWER_DIVISION,
+    KEY_CLUB_COMP_BRAZILIAN_BAHIA_LOWER_DIVISION, KEY_CLUB_COMP_BRAZILIAN_SANTA_CATARINA_LOWER_DIVISION, KEY_CLUB_COMP_BRAZILIAN_GOIAS_LOWER_DIVISION,
+    KEY_CLUB_COMP_BRAZILIAN_NORTH_LOWER_DIVISION, KEY_CLUB_COMP_BRAZILIAN_NORTHEAST_LOWER_DIVISION, KEY_CLUB_COMP_BRAZILIAN_GAUCHO_LOWER_DIVISION,
+];

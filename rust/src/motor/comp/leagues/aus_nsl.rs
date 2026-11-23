@@ -240,3 +240,288 @@ pub(crate) unsafe extern "thiscall" fn aus_nsl_create_table(this: usize) -> u32 
     1
 }
 
+/// The NSL honours: the grand final winner as champion, its runner-up second and the regular season leader third in
+/// the competition history.
+///
+/// The grand final is stage 1 (`.stages()`[1], a Cup_Stage): in its team table (`cup::TEAM_TABLE`, 6-byte entries,
+/// `.team_count()` of them, a signed word) the club with status (+5) 1 is the winner and the one with status 2 the
+/// runner-up (the last of each, 0 when none). The history row (`exe::comp_util_add_history_record`: push 0; push
+/// leader; push runner-up; push winner; push this; add esp, 0x14 -> cdecl) takes the winner, the runner-up, the club
+/// in the first row of the league table (`.table()`) and 0; its eax is returned.
+/// Original: `AusNsl::record_season_honours` (0x411d90, aus_nsl.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn aus_nsl_record_season_honours(this: usize) -> usize {
+    let this = League(this);
+    let fin = Cup(read_usize(this.stages() + 4));
+    let (mut winner, mut runner_up) = (0usize, 0usize);
+    let mut k = 0i16;
+    while k < fin.team_count() {
+        let e = fin.team_table() + k as usize * 6;
+        let status = read_u8(e + 5);
+        if status == 1 {
+            winner = read_usize(e);
+        }
+        if status == 2 {
+            runner_up = read_usize(e);
+        }
+        k += 1;
+    }
+    covered!("mwf_12 nsl honours");
+    exe::comp_util_add_history_record(this, winner, runner_up, read_usize(this.table()), 0) // mwf12: the NSL champion, runner-up and leader
+}
+
+/// Comparer for `aus_nsl_record_season_honours`: side by side over the competition history (count, pointer and rows),
+/// when there is a free row; when the history has to grow (realloc), only the original.
+pub(crate) unsafe extern "thiscall" fn compare_aus_nsl_record_season_honours(this: usize) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_AUS_NSL_RECORD_SEASON_HONOURS);
+    if free_comp_history_row() == 0 {
+        return o(this); // simplification: the history grows, original only
+    }
+    let reg = comp_history_regions();
+    let (r, n, same, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || aus_nsl_record_season_honours(this));
+    SCOREBOARD.record(same && r == n, || format!("aus_nsl_record_season_honours({:x}) {:x}/{:x} {:x?} x {:x?}", this, r, n, mo, mr));
+    r
+}
+
+/// The NSL season turnover: the season archived, the table and the dates cleared, the year plus one, then the rules,
+/// the 13 Australian clubs, the fixtures and the order rebuilt; then the predicted positions, the board expectations
+/// and the referee renewal. Unlike the sisters it neither destroys the finals stages nor resets
+/// `league::CURRENT_STAGE` [inference: the NSL rules rebuild the stages].
+///
+/// `league::SEASON_CLOSED` = 0; the table freed (League::free_table `exe::league_free_table`, thiscall(this, 0), ret 4);
+/// `.round_dates()` freed (`exe::crt_free`) and zeroed; with statistics, Comp_Stats::archive_season_and_reset
+/// (`exe::comp_stats_archive_season_and_reset`, thiscall(stats, 1), ret 4); the year up by one. Then, each with its own
+/// box (aus_nsl.cpp, lines 0x2bd, 0x2c4, 0x2ca and 0x2d1) when it returns 0: the rules (virtual
+/// `comp_vtable::SET_UP_RULES`), the table (AusNsl::create_table 0x411b70, thiscall, ret 0: the 13 clubs of Australia),
+/// the fixtures (League::create_fixtures `exe::league_create_fixtures`) and the order (League::sort_table
+/// `exe::league_sort_table`, thiscall(this, 0), ret 4); then the predicted positions (virtual
+/// `comp_vtable::SET_PREDICTED_POSITIONS`) and `set_expectations_and_renew_officials`, whose eax (the referee
+/// renewal's) it returns. After a box the copy returns 0 (the original returns the box's eax; the turnover's caller
+/// does not read it).
+/// Original: `AusNsl::start_new_season` (0x411de0, aus_nsl.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn aus_nsl_start_new_season(this: usize) -> u32 {
+    let this = League(this);
+    this.set_season_closed(0);
+    exe::league_free_table(this, 0);
+    let l = this.round_dates();
+    if l != 0 {
+        exe::crt_free(l);
+        this.set_round_dates(0);
+    }
+    let stats = this.comp_stats();
+    if stats != 0 {
+        exe::comp_stats_archive_season_and_reset(stats, 1);
+    }
+    let a = this.year();
+    this.set_year(a.wrapping_add(1)); // mwf12: the year of the NSL
+    covered!("mwf_12 nsl rollover");
+    if bra_nat_first_call_virtual_no_args(this.addr(), comp_vtable::SET_UP_RULES) == 0 {
+        show_error_at(0x987c20, 0x2bd);
+        return 0;
+    }
+    let table: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_AUSNSL_CREATE_TABLE);
+    if table(this.addr()) == 0 {
+        show_error_at(0x987c20, 0x2c4);
+        return 0;
+    }
+    if exe::league_create_fixtures(this) == 0 {
+        show_error_at(0x987c20, 0x2ca);
+        return 0;
+    }
+    if exe::league_sort_table(this, 0) == 0 {
+        show_error_at(0x987c20, 0x2d1);
+        return 0;
+    }
+    bra_nat_first_call_virtual_no_args(this.addr(), comp_vtable::SET_PREDICTED_POSITIONS);
+    set_expectations_and_renew_officials(this)
+}
+
+/// Comparer for `aus_nsl_start_new_season`: only the original runs (it frees and rebuilds the league); the year must go
+/// up by one.
+pub(crate) unsafe extern "thiscall" fn compare_aus_nsl_start_new_season(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_AUS_NSL_START_NEW_SEASON);
+    compare_state_league_new_season("aus_nsl_start_new_season", League(this), || o(this))
+}
+
+/// The schedule of the Australian NSL: stage −1, the round-robin league stage: 24 rounds from 5 Sep to 15 Feb of the following year, stage id 0x434; stage 0, a second league stage: 10 rounds from 29 Feb of the following year to 29 May of the following year, stage id 0x435; any other stage, the final: 1 round from 1 Jun of the following year to 7 Jun of the following year, stage id 0x96.
+///
+/// Virtual `comp_vtable::CREATE_SCHEDULE`, `create_schedule(stage, &rounds, &extra, &is_league)`, called by
+/// League::create_fixtures and the season turns. For a stage with a table (`nsl_schedule_stage`) it writes the outputs (is_league
+/// when that pointer is not null, the rounds and the extra), allocates the round table (`exe::crt_malloc`, 0x41 bytes
+/// per round; out of memory, the error box and 0) and writes the date (day, month, years after the season year
+/// `year()`, weekday and code) and the matches of each round, in the original's order (`create_round_table`, the
+/// cqp_11 schedule machine); the rest of the table is left as allocated. Returns the table, or 0 without writing
+/// anything for a stage without one.
+/// Original: `AusNsl::create_schedule` (0x4111a0, aus_nsl.cpp, thiscall, ret 0x10).
+pub(crate) unsafe extern "thiscall" fn aus_nsl_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    create_round_table(Cup(this), nsl_schedule_stage(stage), rounds, extra, league, 0x987c20)
+}
+
+/// Comparer for `aus_nsl_create_schedule`.
+pub(crate) unsafe extern "thiscall" fn compare_aus_nsl_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_AUS_NSL_CREATE_SCHEDULE);
+    asia_club_champ_compare_round_table("aus_nsl_create_schedule", stage, nsl_schedule_stage(stage), rounds, extra, league, || o(this, stage, rounds, extra, league),
+        |r, e, l| aus_nsl_create_schedule(this, stage, r, e, l))
+}
+
+/// The Australian NSL at career creation: the year and the database competition, discipline rule 0x22
+/// (`discipline_rule::AUSTRALIA`) and importance 10 (written before loading the saved state) and, with no saved state,
+/// the finals series and the grand final (two stages besides the league), the rules (among them the substitute
+/// counts [inference: map]), the table (the NSL clubs), the fixtures, the order, the statistics and the predicted
+/// positions by club strength (`bra_nat_first_construct_league` with `AUS_NSL_LEAGUE`).
+/// Original: `AusNsl::AusNsl` (0x410e90, aus_nsl.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn construct_aus_nsl(this: usize, year: u32, record: usize) -> usize {
+    bra_nat_first_construct_league(League(this), year, record, &AUS_NSL_LEAGUE, discipline_rule::AUSTRALIA, "cqu_1 aus_nsl new") // cqu1: the discipline of the NSL
+}
+
+/// Comparer for `construct_aus_nsl`.
+pub(crate) unsafe extern "thiscall" fn compare_construct_aus_nsl(this: usize, year: u32, record: usize) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_AUS_NSL);
+    bra_nat_first_compare_league_ctor("construct_aus_nsl", League(this), year, record, &AUS_NSL_LEAGUE, discipline_rule::AUSTRALIA, || o(this, year, record))
+}
+
+/// The stages of the round table of the Australian NSL (virtual `comp_vtable::CREATE_SCHEDULE`): stage −1, the round-robin league stage: 24 rounds from 5 Sep to 15 Feb of the following year, stage id 0x434; stage 0, a second league stage: 10 rounds from 29 Feb of the following year to 29 May of the following year, stage id 0x435; any other stage, the final: 1 round from 1 Jun of the following year to 7 Jun of the following year, stage id 0x96.
+pub(crate) fn nsl_schedule_stage(stage: u32) -> Option<ScheduleStage> {
+    match stage as u8 as i8 {
+        -1 => Some(ScheduleStage { league: 1, rounds: 24, extra: 0x434, extra_check: false, size: 0x618, row: 0xa7,
+            ops: &NSL_SCHEDULE_LEAGUE_OPS, name: "cqw_4 nsl league" }),
+        0 => Some(ScheduleStage { league: 1, rounds: 10, extra: 0x435, extra_check: false, size: 0x28a, row: 0x123,
+            ops: &NSL_SCHEDULE_STAGE_0_OPS, name: "cqw_4 nsl league" }),
+        _ => Some(ScheduleStage { league: 0, rounds: 1, extra: 0x96, extra_check: false, size: 0x68, row: 0x164,
+            ops: &NSL_SCHEDULE_OTHER_STAGES_OPS, name: "cqw_4 nsl other stages" }),
+    }
+}
+
+/// The constructor of a national league (the same 544-byte template as the state leagues, checked instruction by
+/// instruction: only the vtable, the discipline rule, the importance and when it is written, the stages, the rules, the
+/// table, the source file and the lines change; the predicted positions are League's).
+///
+/// League::League (`exe::new_league`, thiscall, ret 0); `league::COMPETITION` = the competition record; the vtable; the
+/// year (`league::YEAR`, word) = `year`; the discipline rule (`league::DISCIPLINE_RULE`) = `discipline` (and, in the NSL,
+/// the importance `league::IMPORTANCE`). If the saved state loads (League::load_from_temp_file
+/// `exe::league_load_from_temp_file`, thiscall(this, 1), ret 4; returns ≠ 0), returns this.
+///
+/// Otherwise (new career): the importance (outside the NSL), `league::STAGE_INDEX` = `stage_index::MAIN` (0xff),
+/// `league::CURRENT_STAGE` = −1, `league::STAGE_COUNT` = the stages and their array `league::STAGES` (malloc
+/// `exe::crt_malloc`, unchecked); then, each with its own error box (returning this) if it returns 0: the rules, the
+/// table, the fixtures (League::create_fixtures `exe::league_create_fixtures`, thiscall, ret 0) and the order
+/// (League::sort_table `exe::league_sort_table`, thiscall(this, 0), ret 4); the statistics (operator new
+/// `exe::crt_operator_new` of 0x5ce and Comp_Stats::Comp_Stats `exe::new_comp_stats`, thiscall(new, this), ret 4; the
+/// original's SEH frame covers only that new) at `league::COMP_STATS` (without them: the error box); finally the
+/// predicted positions (League::set_predicted_positions `exe::league_set_predicted_positions`, thiscall, ret 0).
+pub(crate) unsafe fn bra_nat_first_construct_league(this: League, year: u32, record: usize, e: &BraNatFirstNationalLeague, discipline: u8, branch: &'static str) -> usize {
+    let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.rules);
+    let table: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.table);
+    exe::new_league(this);
+    write_usize(this.addr() + league::COMPETITION, record);
+    write_usize(this.addr(), e.vtable);
+    write_u16(this.addr() + league::YEAR, year as u16);
+    this.set_discipline_rule(discipline);
+    if e.importance_before_load {
+        this.set_importance(e.importance);
+    }
+    if exe::league_load_from_temp_file(this, 1) != 0 {
+        return this.addr();
+    }
+    covered!(branch);
+    if !e.importance_before_load {
+        this.set_importance(e.importance);
+    }
+    this.set_stage_index(stage_index::MAIN);
+    write_i32(this.addr() + league::CURRENT_STAGE, -1);
+    write_u32(this.addr() + league::STAGE_COUNT, e.stages);
+    let v = exe::crt_malloc(e.stages * 4);
+    this.set_stages(v);
+    if rules(this.addr()) == 0 {
+        show_error_at(e.file, e.rows[0]);
+        return this.addr();
+    }
+    if table(this.addr()) == 0 {
+        show_error_at(e.file, e.rows[1]);
+        return this.addr();
+    }
+    if exe::league_create_fixtures(this) == 0 {
+        show_error_at(e.file, e.rows[2]);
+        return this.addr();
+    }
+    if exe::league_sort_table(this, 0usize) == 0 {
+        show_error_at(e.file, e.rows[3]);
+        return this.addr();
+    }
+    let n = exe::crt_operator_new(0x5ce);
+    let s = if n != 0 { exe::new_comp_stats(n, this) } else { 0 };
+    this.set_comp_stats(s);
+    if s == 0 {
+        show_error_at(e.file, e.rows[4]);
+        return this.addr();
+    }
+    exe::league_set_predicted_positions(this);
+    this.addr()
+}
+
+/// Comparer of the four national league constructors: they allocate and draw the fixtures, so only the original runs,
+/// and what it writes is checked: the return value, the vtable, the year, the record and the discipline rule; the
+/// importance when it is always written (the NSL); on a new league (`stage_index::MAIN`, with the statistics), the
+/// stage count, the stage array and the importance.
+pub(crate) unsafe fn bra_nat_first_compare_league_ctor(name: &str, this: League, year: u32, record: usize, e: &BraNatFirstNationalLeague, discipline: u8, original: impl FnOnce() -> usize) -> usize {
+    let r = original();
+    let mut ok = r == this.addr() && read_usize(this.addr()) == e.vtable && built_year_ok(this.year() as u16, year as u16)
+        && this.competition().addr() == record && this.discipline_rule() == discipline;
+    if e.importance_before_load {
+        ok = ok && this.importance() == e.importance;
+    }
+    if this.stage_index() == stage_index::MAIN && this.comp_stats() != 0 {
+        ok = ok && this.stage_count() == e.stages as usize && this.stages() != 0 && this.importance() == e.importance;
+    }
+    SCOREBOARD.record(ok, || format!("{}({:#x}): returned {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}, +0x51 = {}", name, this.addr(), r, read_usize(this.addr()), this.stage_count(), this.stages(), this.comp_stats(), this.importance()));
+    r
+}
+
+/// The Australian NSL, every stage other than −1 and 0 (the final): 1 round (1 Jun of the following year to 7 Jun of the following year), 104 bytes, 19 operations.
+pub(crate) const NSL_SCHEDULE_OTHER_STAGES_OPS: [AsiaClubChampScheduleOp; 19] = [
+    Cqp11S(0, 1, 6, 1, 0), Cqp11J(0, 7, 6, 1, 5, 1, 0), Cqp11W(0x7, 0), Cqp11W(0x9, 0), Cqp11W(0xb, 0),
+    Cqp11W(0xd, 0x83), Cqp11B(0x17, 5), Cqp11W(0x18, 2), Cqp11W(0x1a, 1), Cqp11W(0x1c, 2), Cqp11W(0xf, 0),
+    Cqp11W(0x11, 0), Cqp11W(0x1e, 0), Cqp11B(0x20, 0), Cqp11B(0x21, 1), Cqp11B(0x22, 0), Cqp11X(0x5c, 0),
+    Cqp11X(0x60, 0x2ee0), Cqp11X(0x64, 0x1388),
+];
+
+/// The Australian NSL, the round-robin stage (−1): 24 rounds (5 Sep to 15 Feb of the following year), 1560 bytes, 48 operations.
+pub(crate) const NSL_SCHEDULE_LEAGUE_OPS: [AsiaClubChampScheduleOp; 48] = [
+    Cqp11D(0, 5, 9, 0, 5, 1, 0), Cqp11L(0, 0, -1, -1, -1, 0), Cqp11D(1, 0xc, 9, 0, 5, 1, 0),
+    Cqp11L(1, 0, -1, -1, -1, 0), Cqp11D(2, 0x13, 9, 0, 5, 1, 0), Cqp11L(2, 0, -1, -1, -1, 0),
+    Cqp11D(3, 0x1a, 9, 0, 5, 1, 0), Cqp11L(3, 0, -1, -1, -1, 0), Cqp11D(4, 2, 0xa, 0, 5, 1, 0),
+    Cqp11L(4, 0, -1, -1, -1, 0), Cqp11D(5, 9, 0xa, 0, 5, 1, 0), Cqp11L(5, 0, -1, -1, -1, 0),
+    Cqp11D(6, 0x10, 0xa, 0, 2, 2, 0), Cqp11L(6, 0, -1, -1, -1, 0), Cqp11D(7, 0x17, 0xa, 0, 5, 1, 0),
+    Cqp11L(7, 0, -1, -1, -1, 0), Cqp11D(8, 0x1e, 0xa, 0, 5, 1, 0), Cqp11L(8, 0, -1, -1, -1, 0),
+    Cqp11D(9, 7, 0xb, 0, 5, 1, 0), Cqp11L(9, 0, -1, -1, -1, 0), Cqp11D(0xa, 0xe, 0xb, 0, 5, 1, 0),
+    Cqp11L(0xa, 0, -1, -1, -1, 0), Cqp11D(0xb, 0x15, 0xb, 0, 5, 1, 0), Cqp11L(0xb, 0, -1, -1, -1, 0),
+    Cqp11D(0xc, 0x1c, 0xb, 0, 5, 1, 0), Cqp11L(0xc, 0, -1, -1, -1, 0), Cqp11D(0xd, 4, 0, 1, 5, 1, 0),
+    Cqp11L(0xd, 0, -1, -1, -1, 0), Cqp11D(0xe, 0xb, 0, 1, 5, 1, 0), Cqp11L(0xe, 0, -1, -1, -1, 0),
+    Cqp11D(0xf, 0x12, 0, 1, 5, 1, 0), Cqp11L(0xf, 0, -1, -1, -1, 0), Cqp11D(0x10, 0x19, 0, 1, 5, 1, 0),
+    Cqp11L(0x10, 0, -1, -1, -1, 0), Cqp11D(0x11, 1, 1, 1, 5, 1, 0), Cqp11L(0x11, 0, -1, -1, -1, 0),
+    Cqp11D(0x12, 8, 1, 1, 5, 1, 0), Cqp11L(0x12, 0, -1, -1, -1, 0), Cqp11D(0x13, 0xf, 1, 1, 5, 1, 0),
+    Cqp11L(0x13, 0, -1, -1, -1, 0), Cqp11D(0x14, 0x16, 1, 1, 5, 1, 0), Cqp11L(0x14, 0, -1, -1, -1, 0),
+    Cqp11D(0x15, 1, 2, 1, 5, 1, 0), Cqp11L(0x15, 0, -1, -1, -1, 0), Cqp11D(0x16, 8, 2, 1, 5, 1, 0),
+    Cqp11L(0x16, 0, -1, -1, -1, 0), Cqp11D(0x17, 0xf, 2, 1, 5, 1, 0), Cqp11L(0x17, 0, -1, -1, -1, 0),
+];
+
+/// The Australian NSL, stage 0 (league): 10 rounds (29 Feb of the following year to 29 May of the following year), 650 bytes, 20 operations.
+pub(crate) const NSL_SCHEDULE_STAGE_0_OPS: [AsiaClubChampScheduleOp; 20] = [
+    Cqp11D(0, 0x1d, 2, 1, 5, 1, 0), Cqp11L(0, 0, -1, -1, -1, 0), Cqp11D(1, 5, 3, 1, 5, 1, 0),
+    Cqp11L(1, 0, -1, -1, -1, 0), Cqp11D(2, 0xc, 3, 1, 5, 1, 0), Cqp11L(2, 0, -1, -1, -1, 0),
+    Cqp11D(3, 0x11, 3, 1, 5, 1, 0), Cqp11L(3, 0, -1, -1, -1, 0), Cqp11D(4, 0x18, 3, 1, 5, 1, 0),
+    Cqp11L(4, 0, -1, -1, -1, 0), Cqp11D(5, 1, 5, 1, 5, 1, 0), Cqp11L(5, 0, -1, -1, -1, 0),
+    Cqp11D(6, 8, 5, 1, 5, 1, 0), Cqp11L(6, 0, -1, -1, -1, 0), Cqp11D(7, 0xf, 5, 1, 5, 1, 0),
+    Cqp11L(7, 0, -1, -1, -1, 0), Cqp11D(8, 0x16, 5, 1, 5, 1, 0), Cqp11L(8, 0, -1, -1, -1, 0),
+    Cqp11D(9, 0x1d, 5, 1, 5, 1, 0), Cqp11L(9, 0, -1, -1, -1, 0),
+];
+
+pub(crate) const AUS_NSL_LEAGUE: BraNatFirstNationalLeague = BraNatFirstNationalLeague {
+    vtable: 0x967768,
+    importance: 0xa,
+    importance_before_load: true,
+    stages: 2,
+    rules: 0x411ce0,
+    table: 0x411b70,
+    file: 0x987c20,
+    rows: [0x46, 0x4d, 0x53, 0x5a, 0x61],
+};

@@ -418,3 +418,36 @@ pub(crate) unsafe extern "thiscall" fn save_temp_file(this: usize) {
     uefa_seeding_crt_fclose(f);
 }
 
+/// Rule: the Oceania Club Championship's host alternates between Australia and New Zealand every edition.
+///
+/// `HostCountry::alternate_oceania_club_champ_host()` on the host table (`this`: +0 the 0x22-byte entries, +4 their
+/// count, a signed word): each entry of the Oceania Club Championship (`host_entry::COMP` equal to
+/// [`KEY_CLUB_COMP_OCEANIA_CLUB_CHAMPIONSHIP`]) gets New Zealand ([`KEY_NATION_NEW_ZEALAND`]) as its default host
+/// (`host_entry::HOST`) when it was Australia ([`KEY_NATION_AUSTRALIA`]), and Australia otherwise (any other value,
+/// −1 too). The keys are read again for each entry, as in the original.
+/// Original: `HostCountry::alternate_oceania_club_champ_host` (0x5face0, host_country.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn alternate_oceania_club_champ_host(this: usize) {
+    let entries = read_usize(this);
+    let count = read_i16(this + 4) as i32;
+    for k in 0..count.max(0) as usize {
+        let e = entries + k * HOST_ENTRY_SIZE;
+        if read_u32(e + host_entry::COMP) == read_u32(KEY_CLUB_COMP_OCEANIA_CLUB_CHAMPIONSHIP) {
+            covered!("mwg_11 oceania host alternated");
+            let australia = read_u32(KEY_NATION_AUSTRALIA);
+            let host = if read_u32(e + host_entry::HOST) == australia { read_u32(KEY_NATION_NEW_ZEALAND) } else { australia }; // mwg11: Australia, then New Zealand
+            write_u32(e + host_entry::HOST, host);
+        }
+    }
+}
+
+/// Comparer for `alternate_oceania_club_champ_host`: side by side over the host table's entries.
+pub(crate) unsafe extern "thiscall" fn compare_alternate_oceania_club_champ_host(this: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ALTERNATE_OCEANIA_CLUB_CHAMP_HOST);
+    let count = read_i16(this + 4).max(0) as usize;
+    let regions = [(read_usize(this), count * HOST_ENTRY_SIZE)];
+    let (_, _, equal, mo, mr) = crate::comparison::side_by_side(&regions, || o(this), || alternate_oceania_club_champ_host(this));
+    SCOREBOARD.record(equal, || format!("alternate_oceania_club_champ_host({} entries) original={:x?} rust={:x?}", count, mo, mr));
+}
+
+/// The size of a host table entry (`host_entry`).
+pub(crate) const HOST_ENTRY_SIZE: usize = 0x22;

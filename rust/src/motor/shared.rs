@@ -548,3 +548,123 @@ compare_value!(compare_near_goal, near_goal, IDX_NEAR_GOAL, () -> u8);
 compare_value!(compare_behind_on_aggregate, behind_on_aggregate, IDX_BEHIND_ON_AGGREGATE, (lado: i8) -> u8);
 compare_value!(compare_free_teammate, free_teammate, IDX_FREE_TEAMMATE, (p: usize) -> usize);
 
+
+/// Comparer of `game_settings_box_build`: side by side over the display list, with the option colour made once.
+pub(crate) unsafe extern "C" fn compare_game_settings_box_build() {
+    let o = original_fn::<unsafe extern "C" fn()>(IDX_GAME_SETTINGS_BOX_BUILD);
+    let extra = [(G_SETTINGS_OPTION_COLOUR, 2), (G_SETTINGS_STATICS_GUARD, 1)];
+    compare_by_display_list_with("Game Settings box", &extra, || o(), || game_settings_box_build());
+}
+
+#[allow(clippy::too_many_arguments)]
+pub(crate) unsafe extern "thiscall" fn compare_search_on_side_recording(this: usize, lado: i8, grupo: usize, a3: u32, a4: u32, a5: u32, a6: u32, modo: i8) -> u8 {
+    let r = compare_procurar(this, lado, grupo, a3, a4, a5, a6, modo);
+    if RECORDING_6CD330.load(std::sync::atomic::Ordering::Relaxed) {
+        let depois = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
+        TAPE_6CD330.lock().unwrap_or_else(|e| e.into_inner()).push(((lado, grupo, a3, a4, a5, a6, modo), r, depois));
+    }
+    r
+}
+
+
+/// The token after "-load" on the command line, as the original reads it: the "-load" is marked used (its '-' becomes
+/// '+'), the rest of the word and the spaces are skipped, then the path is copied, between quotes or up to the next
+/// space, into `out`.
+pub(crate) unsafe fn setup_take_load_argument(p: usize, out: &mut [u8; 0x100]) {
+    write_u8(p, b'+');
+    let mut p = p;
+    let mut c = b'+';
+    while c != b' ' {
+        c = read_u8(p + 1);
+        p += 1;
+        if c == 0 {
+            break;
+        }
+    }
+    let mut c = read_u8(p);
+    while c != 0 && c == b' ' {
+        c = read_u8(p + 1);
+        p += 1;
+    }
+    let (end, mut q) = if read_u8(p) == b'"' {
+        c = read_u8(p + 1);
+        p += 2;
+        (b'"', 0usize)
+    } else {
+        c = read_u8(p);
+        p += 1;
+        (b' ', 0usize)
+    };
+    out[q] = c;
+    q += 1;
+    if c == 0 {
+        return;
+    }
+    loop {
+        if c == end {
+            out[q - 1] = 0;
+            return;
+        }
+        c = read_u8(p);
+        if q >= out.len() {
+            return; // simplification: the original copies past its 256-byte buffer
+        }
+        out[q] = c;
+        q += 1;
+        p += 1;
+        if c == 0 {
+            return;
+        }
+    }
+}
+
+/// The quick start production of `quick_start.cfg` (`f` open for reading): for each `AUTO_SETUP=` line, each file the
+/// pattern finds whose quick start (CM3_QSTART\<name>.qst) does not exist yet is created from it
+/// (`create_game_from_setup_file`(file, name)); a failure writes the message into the shared text, shows the error box
+/// (0x1bdd) and stops the search. Returns whether everything went well (the original's `ebp`).
+pub(crate) unsafe fn setup_process_quick_start_file(f: usize) -> bool {
+    let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
+    let create: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_CREATE_GAME_FROM_SETUP_FILE);
+    let mut ok = true;
+    let mut line = [0u8; 0x400];
+    let mut find = [0u8; 0x140];
+    let (mut drive, mut dir, mut cfg, mut name, mut qst) = ([0u8; 4], [0u8; 0x104], [0u8; 0x104], [0u8; 0x100], [0u8; 0x104]);
+    while exe::utils_read_config_line(f, line.as_mut_ptr()) != 0 {
+        exe::utils_trim_control_chars(line.as_mut_ptr());
+        if exe::at_947120((line.as_ptr() as usize) as usize as *const u8, 0xa80398, (0xb) as usize as u32) != 0 {
+            continue; // not "AUTO_SETUP="
+        }
+        let pattern = line.as_ptr() as usize + 0xb;
+        let fd = find.as_mut_ptr() as usize;
+        if exe::file_find_first(pattern, fd, 0) != 0 {
+            continue;
+        }
+        loop {
+            exe::crt_strtok(pattern, drive.as_mut_ptr() as usize, dir.as_mut_ptr() as usize, core::ptr::null_mut(), core::ptr::null_mut());
+            exe::crt_makepath(cfg.as_mut_ptr(), drive.as_ptr() as usize, dir.as_ptr() as usize, fd + 0x10, 0);
+            exe::crt_strtok(fd + 0x10, 0usize, 0usize, name.as_mut_ptr(), core::ptr::null_mut());
+            exe::crt_makepath(qst.as_mut_ptr(), 0, 0, name.as_ptr() as usize, 0xa803b4); // ".qst"
+            let full = exe::utils_build_file_path(0xa80204, qst.as_ptr() as usize); // "CM3_QSTART"
+            copy_text(qst.as_mut_ptr(), full as *const u8);
+            if exe::utils_file_exists(qst.as_ptr() as usize) == 0 && create(cfg.as_ptr() as usize, name.as_ptr() as usize) == 0 {
+                format(SETUP_TEXT, 0xa80350, cfg.as_ptr());
+                ok = false;
+                setup_warning(0x1bdd);
+                break;
+            }
+            if exe::file_find_next(find.as_mut_ptr()) != 0 {
+                break;
+            }
+        }
+        exe::file_find_close(fd);
+    }
+    ok
+}
+
+pub(crate) const FN_SETUP_OPEN_MANAGER_STATUS_SCREEN: usize = 0x81fea0; // setup_open_manager_status_screen()
+
+pub(crate) const FN_CREDITS_SCREEN_OPEN: usize = 0x4e5920; // credits_screen_open()
+
+pub(crate) const FN_WEB_SITES_SCREEN_OPEN: usize = 0x5134c0; // web_sites_screen_open()
+
+pub(crate) const FN_CREATE_GAME_FROM_SETUP_FILE: usize = 0x827110; // create_game_from_setup_file(cfg, qst) -> 1 or 0

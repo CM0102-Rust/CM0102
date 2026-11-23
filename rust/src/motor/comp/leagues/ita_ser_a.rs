@@ -1589,3 +1589,294 @@ pub(crate) unsafe fn ita_ser_a_compare_league_table(name: &str, this: League, n:
     r
 }
 
+/// The Italian promotion and relegation chain: the final positions of Serie A, B, C1 A and C1 B; four up and four down
+/// between Serie A and B, the swaps between Serie B and each C1 group; when Serie C2 is loaded, its three groups'
+/// positions and the swaps between each C1 group and each C2 group.
+///
+/// The final positions (virtual `league_vtable::RECORD_FINAL_POSITIONS`, thiscall, ret 0) of the objects of
+/// [`KEY_CLUB_COMP_ITALIAN_SERIE_A`], [`KEY_CLUB_COMP_ITALIAN_SERIE_B`], [`KEY_CLUB_COMP_ITALIAN_SERIE_C1_A`] and
+/// [`KEY_CLUB_COMP_ITALIAN_SERIE_C1_B`] (`G_COMP_OBJECT_TABLE`, none checked for null); League::promote_and_relegate
+/// (`exe::league_promote_and_relegate`, thiscall(this, upper, lower, a, b, c, d), ret 0x18) for A and B with (1, 1, 4,
+/// 4), B and C1 A and B and C1 B with (1, 1, −1, −1). When the Serie C2 A object exists: the final positions of C2 A,
+/// C2 B and C2 C, then C1 A with C2 A (1, 1, −1, −1), C1 B with C2 A (0, 1, −1, −1), C1 A with C2 B (1, 1), C1 B with
+/// C2 B (0, 1), C1 A with C2 C (1, 1) and C1 B with C2 C (0, 1); the last one's eax is returned. Without C2 A it returns
+/// the competition object table's address (the eax the original leaves; the caller does not read it).
+/// Original: `ItaSerA::process_promotion_relegation_chain` (0x642410, ita_ser_a.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn ita_ser_a_process_promotion_relegation_chain(this: usize, _pairs: u32) -> u32 {
+    let (a, b, c1a, c1b) = (KEY_CLUB_COMP_ITALIAN_SERIE_A, KEY_CLUB_COMP_ITALIAN_SERIE_B, KEY_CLUB_COMP_ITALIAN_SERIE_C1_A, KEY_CLUB_COMP_ITALIAN_SERIE_C1_B);
+    covered!("mwf_16 italian chain");
+    for k in [a, b, c1a, c1b] {
+        bra_nat_first_call_virtual_no_args(comp_by_global(k), league_vtable::RECORD_FINAL_POSITIONS);
+    }
+    exe::league_promote_and_relegate(this, comp_by_global(a), comp_by_global(b), 1, 1, 4, 4); // mwf16: four up and four down between A and B
+    exe::league_promote_and_relegate(this, comp_by_global(b), comp_by_global(c1a), 1, 1, -1, -1);
+    exe::league_promote_and_relegate(this, comp_by_global(b), comp_by_global(c1b), 1, 1, -1, -1);
+    if comp_by_global(KEY_CLUB_COMP_ITALIAN_SERIE_C2_A) == 0 {
+        return read_usize(G_COMP_OBJECT_TABLE) as u32;
+    }
+    covered!("mwf_16 serie c2 chain");
+    let (c2a, c2b, c2c) = (KEY_CLUB_COMP_ITALIAN_SERIE_C2_A, KEY_CLUB_COMP_ITALIAN_SERIE_C2_B, KEY_CLUB_COMP_ITALIAN_SERIE_C2_C);
+    for k in [c2a, c2b, c2c] {
+        bra_nat_first_call_virtual_no_args(comp_by_global(k), league_vtable::RECORD_FINAL_POSITIONS);
+    }
+    let mut r = 0;
+    for lower in [c2a, c2b, c2c] {
+        exe::league_promote_and_relegate(this, comp_by_global(c1a), comp_by_global(lower), 1, 1, -1, -1);
+        r = exe::league_promote_and_relegate(this, comp_by_global(c1b), comp_by_global(lower), 0, 1, -1, -1);
+    }
+    r
+}
+
+/// Comparer for `ita_ser_a_process_promotion_relegation_chain`: only the original (it moves the clubs between the
+/// divisions, as the Brazilian chain's comparer).
+pub(crate) unsafe extern "thiscall" fn compare_ita_ser_a_process_promotion_relegation_chain(this: usize, pairs: u32) -> u32 {
+    original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_ITA_SER_A_PROCESS_PROMOTION_RELEGATION_CHAIN)(this, pairs)
+}
+
+/// Without Serie C2: the six best Serie C2 clubs go up to Serie C1 A and the clubs relegated from either C1 group go
+/// down to Serie C2 A (the C1 regrouping that follows rebalances the two groups).
+///
+/// C1 A and C1 B are the objects of [`KEY_CLUB_COMP_ITALIAN_SERIE_C1_A`] and [`KEY_CLUB_COMP_ITALIAN_SERIE_C1_B`]. A
+/// list of `G_CLUB_COUNT` × 4 bytes (`exe::crt_malloc`; out of memory, the box of ita_ser_a.cpp line 0x419 and it
+/// returns) takes, in club table order, every club whose division has the id of C2 A, C2 B or C2 C (the count is a
+/// word). With fewer than six, nothing moves. Otherwise the list is sorted by reputation and shuffled in sixes
+/// (`exe::comp_util_sort_and_shuffle_top_clubs`(list, n, 6), cdecl) and its first six go up to C1 A
+/// (League::move_club_to_division `exe::league_move_club_to_division`, thiscall(this, club, the C1 A record, 1), ret
+/// 0xc). Then for each row i below C1 A's `.club_count()` (read once; C1 B is assumed the same size): a C1 A row with
+/// `league_table_row::STATUS` 3 and then a C1 B row with status 3 send their clubs down to C2 A
+/// (League::relegate_club_to_division 0x6831a0, thiscall(this, club, the C2 A record, 1), ret 0xc). The list is freed.
+/// Original: `ItaSerA::exchange_serie_c2_clubs_unplayed` (0x641fc0, ita_ser_a.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn ita_ser_a_exchange_serie_c2_clubs_unplayed(this: usize) {
+    let this = League(this);
+    let (c1a, c1b) = (League(comp_by_global(KEY_CLUB_COMP_ITALIAN_SERIE_C1_A)), League(comp_by_global(KEY_CLUB_COMP_ITALIAN_SERIE_C1_B)));
+    let list = exe::crt_malloc((read_i32(G_CLUB_COUNT) as u32).wrapping_mul(4));
+    if list == 0 {
+        show_error_at(0x9ea2a8, 0x419);
+        return;
+    }
+    let c2 = [KEY_CLUB_COMP_ITALIAN_SERIE_C2_A, KEY_CLUB_COMP_ITALIAN_SERIE_C2_B, KEY_CLUB_COMP_ITALIAN_SERIE_C2_C];
+    let mut n = 0i16;
+    let mut k = 0i32;
+    while k < read_i32(G_CLUB_COUNT) {
+        let c = Club(read_usize(G_CLUB_TABLE) + k as usize * club::SIZE);
+        let d = c.division().addr();
+        if d != 0 && c2.iter().any(|&g| read_u32(d) == read_u32(g)) {
+            write_usize(list + n as usize * 4, c.addr());
+            n = n.wrapping_add(1);
+        }
+        k += 1;
+    }
+    if n >= 6 {
+        covered!("mwf_16 serie c2 up to c1");
+        exe::comp_util_sort_and_shuffle_top_clubs(list, n as u16 as u32, 6); // mwf16: the C2 clubs by reputation, shuffled in sixes
+        for t in 0..6 {
+            exe::league_move_club_to_division(this, read_usize(list + t * 4), comp_record_of_key(KEY_CLUB_COMP_ITALIAN_SERIE_C1_A), 1);
+        }
+        let rows = c1a.club_count() as i32;
+        for i in 0..rows.max(0) {
+            for group in [c1a, c1b] {
+                if read_u8(exe::league_get_table_row(group, i) + league_table_row::STATUS) == 3 {
+                    exe::league_relegate_club_to_division(this, read_usize(exe::league_get_table_row(group, i)), comp_record_of_key(KEY_CLUB_COMP_ITALIAN_SERIE_C2_A), 1);
+                }
+            }
+        }
+    }
+    exe::crt_free(list);
+}
+
+/// Comparer for `ita_ser_a_exchange_serie_c2_clubs_unplayed`: only the original runs (it draws and moves clubs);
+/// afterwards every club in a C1 A or C1 B row marked relegated (status 3) must be in Serie C2 A.
+pub(crate) unsafe extern "thiscall" fn compare_ita_ser_a_exchange_serie_c2_clubs_unplayed(this: usize) {
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ITA_SER_A_EXCHANGE_SERIE_C2_CLUBS_UNPLAYED)(this);
+    let c2a = comp_record_of_key(KEY_CLUB_COMP_ITALIAN_SERIE_C2_A);
+    let mut wrong = Vec::new();
+    for key in [KEY_CLUB_COMP_ITALIAN_SERIE_C1_A, KEY_CLUB_COMP_ITALIAN_SERIE_C1_B] {
+        let g = League(comp_by_global(key));
+        for i in 0..g.club_count().max(0) as i32 {
+            let row = exe::league_get_table_row(g, i);
+            if read_u8(row + league_table_row::STATUS) == 3 && read_usize(read_usize(row) + club::DIVISION) != c2a {
+                wrong.push(read_usize(row));
+            }
+        }
+    }
+    SCOREBOARD.record(wrong.is_empty(), || format!("ita_ser_a_exchange_serie_c2_clubs_unplayed({:#x}) relegated clubs not in C2 A: {:x?}", this, wrong));
+}
+
+/// The Serie C1 regrouping: the 36 clubs of the two C1 groups sorted from north to south (by their stadium's city) and
+/// split, the first 18 into C1 B and the other 18 into C1 A; the human manager of a club that changes group gets the
+/// news.
+///
+/// In club table order (the index compared as a word with `G_CLUB_COUNT`, read once), the clubs whose division is the
+/// C1 A or the C1 B record (`comp_record_of_key`) enter a local list of 36 (the count is a signed byte; it stops at
+/// 36). The list is sorted (`exe::crt_qsort`(list, n, 4, 0x53fd40), the latitude comparer). Then the 36 entries (always
+/// 36: with fewer clubs the original reads stack garbage, a defect [inference]): entry k < 18 goes to C1 B, the others
+/// to C1 A; a club that was not already there and whose manager is human (`exe::news_club_has_human_manager`, thiscall
+/// (`G_NEWS`, club)) gets the news item 0x13 (NewsItem::NewsItem `exe::new_newsitem`(item, 0x13, 0); slot 0 the club's
+/// id, slot 1 the group's id; News::send_to_club_manager `exe::news_send_to_club_manager`(`G_NEWS`, item, club)); every
+/// club's `club::DIVISION` becomes its group's record.
+/// Original: `ita_ser_a_regroup_serie_c1_clubs` (0x642630, ita_ser_a.cpp, called with ecx = the Serie A object and no
+/// arguments, ret 0).
+pub(crate) unsafe extern "thiscall" fn ita_ser_a_regroup_serie_c1_clubs(_this: usize) {
+    let (a, b) = (comp_record_of_key(KEY_CLUB_COMP_ITALIAN_SERIE_C1_A), comp_record_of_key(KEY_CLUB_COMP_ITALIAN_SERIE_C1_B));
+    let count = read_i32(G_CLUB_COUNT);
+    let mut list = [0usize; 36];
+    let mut n = 0i8;
+    let mut k = 0i16;
+    if count > 0 {
+        loop {
+            let c = read_usize(G_CLUB_TABLE) + k as u16 as usize * club::SIZE;
+            let d = read_usize(c + club::DIVISION);
+            if d == a || d == b {
+                list[n as usize] = c;
+                n += 1;
+                if n == 36 {
+                    break;
+                }
+            }
+            k = k.wrapping_add(1);
+            if k as i32 >= count {
+                break;
+            }
+        }
+    }
+    covered!("mwf_16 serie c1 regrouping");
+    exe::crt_qsort(list.as_mut_ptr() as usize, n as i32 as u32, 4, 0x53fd40usize); // mwf16: north to south
+    for (k, &c) in list.iter().enumerate() {
+        if c == 0 {
+            continue; // simplification: an empty entry (fewer than 36 clubs) is skipped; the original reads stack garbage
+        }
+        let group = if k < 18 { b } else { a };
+        if read_usize(c + club::DIVISION) != group && exe::news_club_has_human_manager(read_usize(G_NEWS), c) != 0 {
+            let mut news = [0u32; 0x38];
+            let nt = news.as_mut_ptr() as usize;
+            exe::new_newsitem(nt, 0x13, 0);
+            exe::newsitem_set_slot(nt, 0, read_u32(c));
+            exe::newsitem_set_slot(nt, 1, read_u32(group));
+            exe::news_send_to_club_manager(read_usize(G_NEWS), nt, c);
+        }
+        write_usize(c + club::DIVISION, group);
+    }
+}
+
+/// Comparer for `ita_ser_a_regroup_serie_c1_clubs`: only the original runs (it sends news); the plan, made before from
+/// the same sort over a copy of the list, is the group of each of the 36 clubs.
+pub(crate) unsafe extern "thiscall" fn compare_ita_ser_a_regroup_serie_c1_clubs(this: usize) {
+    let (a, b) = (comp_record_of_key(KEY_CLUB_COMP_ITALIAN_SERIE_C1_A), comp_record_of_key(KEY_CLUB_COMP_ITALIAN_SERIE_C1_B));
+    let mut list: Vec<usize> = (0..read_i32(G_CLUB_COUNT).max(0) as usize)
+        .map(|k| read_usize(G_CLUB_TABLE) + k * club::SIZE)
+        .filter(|&c| { let d = read_usize(c + club::DIVISION); d == a || d == b })
+        .take(36)
+        .collect();
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ITA_SER_A_REGROUP_SERIE_C1_CLUBS)(this);
+    if list.len() != 36 {
+        return; // simplification: with fewer than 36 the original reads stack garbage; nothing to check
+    }
+    exe::crt_qsort(list.as_mut_ptr() as usize, 36, 4, 0x53fd40usize);
+    let wrong: Vec<usize> = list.iter().enumerate().filter(|&(k, &c)| read_usize(c + club::DIVISION) != if k < 18 { b } else { a }).map(|(_, &c)| c).collect();
+    SCOREBOARD.record(wrong.is_empty(), || format!("ita_ser_a_regroup_serie_c1_clubs: clubs in the wrong group {:x?}", wrong));
+}
+
+/// The Italian season turnover, led by Serie A: promotion and relegation, the exchange with the level below (Serie D
+/// and the C2 regrouping when Serie C2 is loaded, otherwise the C2 exchange), the C1 regrouping, then Serie A rebuilt
+/// (next year, rules, 18 clubs, fixtures, order); the division tier capped in the lowest loaded groups; Serie B, C1 A,
+/// C1 B (and C2 A, B and C) turned over; then the predicted positions, the board expectations and the referee renewal.
+///
+/// `league::SEASON_CLOSED` = 0; the chain (virtual `league_vtable::PROCESS_PROMOTION_RELEGATION_CHAIN`, thiscall(this,
+/// 1), ret 4); with the Serie C2 A object ([`KEY_CLUB_COMP_ITALIAN_SERIE_C2_A`] in `G_COMP_OBJECT_TABLE`),
+/// ItaSerA::exchange_serie_d_clubs (0x6421c0) and ita_ser_a_regroup_serie_c2_clubs (0x642790), otherwise
+/// ItaSerA::exchange_serie_c2_clubs_unplayed (0x641fc0); then ita_ser_a_regroup_serie_c1_clubs (0x642630); all called
+/// with ecx = this and no arguments. The table freed (League::free_table `exe::league_free_table`, thiscall(this, 0),
+/// ret 4); `.round_dates()` freed and zeroed; with statistics, Comp_Stats::archive_season_and_reset
+/// (`exe::comp_stats_archive_season_and_reset`, thiscall(stats, 1), ret 4); the stage array freed when there is one
+/// (without destroying stages) and zeroed, `league::STAGE_COUNT` = 0; the year up by one; `league::CURRENT_STAGE` = −1;
+/// and `league::SEASON_CLOSED` = 1 (as in Serie B; the sisters leave 0).
+///
+/// Then, each with its own box (ita_ser_a.cpp, lines 0x2da, 0x2e1, 0x2e7 and 0x2ee) when it returns 0: the rules
+/// (virtual `comp_vtable::SET_UP_RULES`), the exe::itasera_create_table(ItaSerA::create_table 0x641510), the fixtures
+/// (League::create_fixtures `exe::league_create_fixtures`) and the order (League::sort_table `exe::league_sort_table`,
+/// thiscall(this, 0), ret 4). Then League::limit_club_division_tier (`exe::league_limit_club_division_tier`, thiscall(
+/// group, 1, 3, −3, 1), ret 0x10) on C2 A, C2 B and C2 C when C2 A exists, otherwise on C1 A and C1 B; the turnovers
+/// (virtual `comp_vtable::START_NEW_SEASON`) of Serie B, C1 A and C1 B (none checked for null) and, when C2 A exists,
+/// of C2 A, C2 B and C2 C; the predicted positions (virtual `comp_vtable::SET_PREDICTED_POSITIONS`) and
+/// `set_expectations_and_renew_officials`, whose eax (the referee renewal's) it returns. After a box the copy returns 0
+/// (the original returns the box's eax; the turnover's caller does not read it).
+/// Original: `ItaSerA::start_new_season` (0x641700, ita_ser_a.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn ita_ser_a_start_new_season(this: usize) -> u32 {
+    let this = League(this);
+    let call = |f: usize| {
+        let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(f);
+        f(this.addr());
+    };
+    this.set_season_closed(0);
+    let chain: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + league_vtable::PROCESS_PROMOTION_RELEGATION_CHAIN));
+    chain(this.addr(), 1); // mwf17: the Italian promotion and relegation
+    if comp_by_global(KEY_CLUB_COMP_ITALIAN_SERIE_C2_A) != 0 {
+        call(0x6421c0);
+        call(0x642790);
+    } else {
+        call(0x641fc0);
+    }
+    call(0x642630); // the Serie C1 regrouping
+    exe::league_free_table(this, 0);
+    let l = this.round_dates();
+    if l != 0 {
+        exe::crt_free(l);
+        this.set_round_dates(0);
+    }
+    let stats = this.comp_stats();
+    if stats != 0 {
+        exe::comp_stats_archive_season_and_reset(stats, 1);
+    }
+    if this.stages() != 0 {
+        exe::crt_free(this.stages());
+    }
+    let a = this.year();
+    this.set_year(a.wrapping_add(1)); // mwf17: the year of Serie A
+    this.set_stages(0);
+    write_u32(this.addr() + league::STAGE_COUNT, 0);
+    write_i32(this.addr() + league::CURRENT_STAGE, -1);
+    this.set_season_closed(1);
+    covered!("mwf_17 serie a rollover");
+    if bra_nat_first_call_virtual_no_args(this.addr(), comp_vtable::SET_UP_RULES) == 0 {
+        show_error_at(0x9ea2a8, 0x2da);
+        return 0;
+    }
+    if exe::itasera_create_table(this) == 0 {
+        show_error_at(0x9ea2a8, 0x2e1);
+        return 0;
+    }
+    if exe::league_create_fixtures(this) == 0 {
+        show_error_at(0x9ea2a8, 0x2e7);
+        return 0;
+    }
+    if exe::league_sort_table(this, 0) == 0 {
+        show_error_at(0x9ea2a8, 0x2ee);
+        return 0;
+    }
+    let c2 = comp_by_global(KEY_CLUB_COMP_ITALIAN_SERIE_C2_A) != 0;
+    let capped: &[usize] = if c2 {
+        &[KEY_CLUB_COMP_ITALIAN_SERIE_C2_A, KEY_CLUB_COMP_ITALIAN_SERIE_C2_B, KEY_CLUB_COMP_ITALIAN_SERIE_C2_C]
+    } else {
+        &[KEY_CLUB_COMP_ITALIAN_SERIE_C1_A, KEY_CLUB_COMP_ITALIAN_SERIE_C1_B]
+    };
+    for &k in capped {
+        exe::league_limit_club_division_tier(comp_by_global(k), 1, 3, -3, 1);
+    }
+    for k in [KEY_CLUB_COMP_ITALIAN_SERIE_B, KEY_CLUB_COMP_ITALIAN_SERIE_C1_A, KEY_CLUB_COMP_ITALIAN_SERIE_C1_B] {
+        bra_nat_first_call_virtual_no_args(comp_by_global(k), comp_vtable::START_NEW_SEASON);
+    }
+    if comp_by_global(KEY_CLUB_COMP_ITALIAN_SERIE_C2_A) != 0 {
+        for k in [KEY_CLUB_COMP_ITALIAN_SERIE_C2_A, KEY_CLUB_COMP_ITALIAN_SERIE_C2_B, KEY_CLUB_COMP_ITALIAN_SERIE_C2_C] {
+            bra_nat_first_call_virtual_no_args(comp_by_global(k), comp_vtable::START_NEW_SEASON);
+        }
+    }
+    bra_nat_first_call_virtual_no_args(this.addr(), comp_vtable::SET_PREDICTED_POSITIONS);
+    set_expectations_and_renew_officials(this)
+}
+
+/// Comparer for `ita_ser_a_start_new_season`: only the original runs (it moves clubs and rebuilds the Italian
+/// leagues); the year must go up by one.
+pub(crate) unsafe extern "thiscall" fn compare_ita_ser_a_start_new_season(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ITA_SER_A_START_NEW_SEASON);
+    compare_state_league_new_season("ita_ser_a_start_new_season", League(this), || o(this))
+}

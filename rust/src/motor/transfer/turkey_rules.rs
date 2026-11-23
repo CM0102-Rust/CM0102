@@ -35,3 +35,36 @@ pub(crate) const FINLAND_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
     [0x08, 0x00, 0xff, 0x0f, 0x07, 0x00], // cqm3: a Finlândia
 ];
 
+/// Tells whether a club under the Turkish rules can take a player on loan: only today inside one of the rules' transfer
+/// windows.
+///
+/// `TURKEY_RULES::can_loan_player(club, player, msg, reason)`, the vtable slot `transfer_rules_vtable::CAN_LOAN_PLAYER` of
+/// Turkey and the USA, from `transfer_manager_can_loan_player` and `handle_player_accepted_terms` with the borrowing
+/// club's nation. A window open today (`exe::transfer_rules_find_open_window`, push 0; push `G_CURRENT_DATE`; mov ecx,
+/// this): the player's main contract is looked up and kept in `G_CONTRACT_LOOKUP_RESULT`
+/// (`transfer_manager_get_contract_stored`; the club it points to is computed and not used) and 1. Otherwise, with a
+/// message, "The deadline for loans to <adjective> clubs has passed." (0x987d38, the adjective of the rules' nation
+/// `transfer_rules::NATION_ID`, form 2); the reason 9 (written even without a message) and 0. `club` is not read.
+/// Original: `TURKEY_RULES::can_loan_player` (0x902240, turkey_rules.cpp, thiscall, ret 0x10).
+pub(crate) unsafe extern "thiscall" fn turkey_rules_can_loan_player(this: usize, _club: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
+    if exe::transfer_rules_find_open_window(this, G_CURRENT_DATE, 0) != 0 {
+        transfer_manager_get_contract_stored(player);
+        return 1; // mkc3: Turkey, the window open
+    }
+    covered!("mkc_3 turkey deadline");
+    if msg != 0 {
+        let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+        let mut adjective = [0u8; 100];
+        exe::nation_get_nationality_adjective(read_usize(this + transfer_rules::NATION_ID), adjective.as_mut_ptr() as usize, 100, 2);
+        text(msg, 0x987d38, 100, 100, adjective.as_ptr());
+    }
+    if !reason.is_null() {
+        *reason = 9;
+    }
+    0
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_turkey_rules_can_loan_player(this: usize, club: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(IDX_TURKEY_RULES_CAN_LOAN_PLAYER);
+    england_rules_compare_can_loan(o, turkey_rules_can_loan_player, "turkey_rules_can_loan_player", this, club, player, msg, reason)
+}

@@ -82,3 +82,19 @@ macro_rules! compare_order {
         }
     };
 }
+
+/// The game's text formatter (`FN_LANGLIB_SPRINTF`, cdecl, variadic: every argument a dword).
+macro_rules! story_lang {
+    ($buf:expr, $tpl:expr $(, $a:expr)* $(,)?) => {{
+        let f: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+        f(($buf) as usize, ($tpl) as usize $(, ($a) as usize)*);
+    }};
+}
+
+/// The C runtime's sprintf (`FN_CRT_SPRINTF`).
+macro_rules! story_crt {
+    ($buf:expr, $tpl:expr $(, $a:expr)* $(,)?) => {{
+        let f: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
+        f(($buf) as usize, ($tpl) as usize $(, ($a) as usize)*);
+    }};
+}

@@ -635,3 +635,38 @@ pub(crate) unsafe extern "thiscall" fn construct_referee(a: usize) -> usize {
     a
 }
 
+pub(crate) unsafe extern "thiscall" fn compare_look_for_offside(this: usize, l: i8, linha: i8, y: i8, passador: usize) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, i8, usize) -> usize>(IDX_LOOK_FOR_OFFSIDE);
+    let motor = Engine(read_usize(this));
+    let mut reg = vec![(this + 8, 2), (motor.addr() + engine::PENDING_PLAY_KIND, 16)];
+    reg.extend(crate::rng::STATE_REGIONS);
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, l, linha, y, passador), || crate::rng::without_counting(|| look_for_offside(this, l, linha, y, passador)));
+    SCOREBOARD.record(igual && r == n, || format!("look_for_offside({}, {}, {}, {}) original={:#x} {:x?} rust={:#x} {:x?}", l, linha, y, passador != 0, r, mo, n, mr));
+    r
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_engine_look_for_offside(this: usize, l: i8, linha: i8, y: i8, passador: usize) -> usize {
+    let this = Engine(this);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, i8, usize) -> usize>(IDX_ENGINE_LOOK_FOR_OFFSIDE);
+    let mut reg = vec![(this.addr() + engine::REFEREE + 8, 2), (this.addr() + engine::PENDING_PLAY_KIND, 16)];
+    reg.extend(crate::rng::STATE_REGIONS);
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this.addr(), l, linha, y, passador), || crate::rng::without_counting(|| engine_look_for_offside(this.addr(), l, linha, y, passador)));
+    SCOREBOARD.record(igual && r == n, || format!("engine_look_for_offside original={:#x} {:x?} rust={:#x} {:x?}", r, mo, n, mr));
+    r
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_card_by_severity(this: usize, j: usize, tipo: *mut u8, g: u8, flag: u8) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, u8, u8)>(IDX_CARD_BY_SEVERITY);
+    let mut reg = vec![(j, 0x40), (tipo as usize, 1)];
+    reg.extend(crate::rng::STATE_REGIONS);
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, j, tipo, g, flag), || crate::rng::without_counting(|| card_by_severity(this, j, tipo, g, flag)));
+    SCOREBOARD.record(igual, || format!("card_by_severity(g {}, flag {}) original={:x?} rust={:x?}", g, flag, mo, mr));
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_engine_card_by_severity(this: usize, j: usize, tipo: *mut u8, g: u8, flag: u8) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, u8, u8)>(IDX_ENGINE_CARD_BY_SEVERITY);
+    let mut reg = vec![(j, 0x40), (tipo as usize, 1)];
+    reg.extend(crate::rng::STATE_REGIONS);
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, j, tipo, g, flag), || crate::rng::without_counting(|| engine_card_by_severity(this, j, tipo, g, flag)));
+    SCOREBOARD.record(igual, || format!("engine_card_by_severity original={:x?} rust={:x?}", mo, mr));
+}

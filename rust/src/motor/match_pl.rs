@@ -44,7 +44,7 @@ pub(crate) unsafe extern "thiscall" fn tire_fatigue(this: usize, x: f32, code: i
 }
 
 /// Game CRT _ftol (0x945640): truncates f64 to i32 (low half of i64); out of range or NaN gives 0 like x87 fistp.
-pub(crate) fn ftol(x: f64) -> i32 {
+pub(crate) fn ftol_x87(x: f64) -> i32 {
     if x.is_finite() && x.abs() < 9.223372036854775808e18 {
         x as i64 as i32
     } else {
@@ -65,7 +65,7 @@ pub(crate) unsafe extern "thiscall" fn facing(this: usize, a: i8, b: i8) -> u8 {
     if dir == target {
         return 1;
     }
-    let tolerancia = ftol(this.moment_agility() as f64 * read_f64(rdata::F64_2_25) + read_f64(rdata::F64_45)) as i16;
+    let tolerancia = ftol_x87(this.moment_agility() as f64 * read_f64(rdata::F64_2_25) + read_f64(rdata::F64_45)) as i16;
     let mut d = (dir as i32 - target as i32).abs();
     if d as i16 > 0xb4 {
         d = 0x168 - d;
@@ -324,7 +324,7 @@ pub(crate) unsafe extern "thiscall" fn update_player(this: usize) {
     if (this.assists() as i32 + (this.goals() as u8) as i32) < 2 && this.key_tackles() < 7 && this.key_passes() < 4 && this.dribbles() < 6 {
         let edi = *w35 as i32;
         if edi > random(0x5dc) + 0x203a {
-            *w35 = ftol((edi - 0x203a) as f64 * read_f64(rdata::F64_0_96) + read_f64(rdata::F64_8250)) as i16;
+            *w35 = ftol_x87((edi - 0x203a) as f64 * read_f64(rdata::F64_0_96) + read_f64(rdata::F64_8250)) as i16;
         }
     }
     // 0x6f4b78
@@ -984,7 +984,7 @@ pub(crate) unsafe extern "thiscall" fn adjust_17(this: usize, delta: i8) -> u8 {
     if disp >= 0x1d4c {
         let x = a as f64;
         let y = disp as f64 * read_f64(rdata::F64_0_004) - read_f64(rdata::F64_20_5);
-        a = ftol(if x > y { x } else { y }) as i8;
+        a = ftol_x87(if x > y { x } else { y }) as i8;
     }
     let a = a.clamp(1, 20);
     this.set_match_form(a);
@@ -1089,8 +1089,8 @@ pub(crate) unsafe fn defence_roll(j: MatchPlayer, b: i16) -> i32 {
     let r = random(j.effective_ability() as i32);
     if r > random(0x11d) {
         let x = b as f64;
-        let t = random(ftol(x * read_f64(rdata::F64_0_7)));
-        ftol(t as f64 + x * read_f64(rdata::F64_0_3))
+        let t = random(ftol_x87(x * read_f64(rdata::F64_0_7)));
+        ftol_x87(t as f64 + x * read_f64(rdata::F64_0_3))
     } else {
         random(b as i32)
     }
@@ -1116,7 +1116,7 @@ pub(crate) unsafe extern "thiscall" fn goalkeeper_save(this: usize, a: i8, b: i8
     if exe::cm3_match_engine_get_player_position(engine, this) != 1 {
         return 0;
     }
-    let far = |e: i32| if dist > read_f64(rdata::F64_2_1) { e + 10 - ftol(this.effective_ability() as f64 * read_f64(rdata::F64_NEG_0_35)) } else { e };
+    let far = |e: i32| if dist > read_f64(rdata::F64_2_1) { e + 10 - ftol_x87(this.effective_ability() as f64 * read_f64(rdata::F64_NEG_0_35)) } else { e };
     let near = |e: i32| if !(dist >= read_f64(rdata::F64_1)) { e + 100 } else { e };
     let e: i32 = if code == 0x33 {
         let b0 = base as i32;
@@ -1158,15 +1158,15 @@ pub(crate) unsafe extern "thiscall" fn goalkeeper_save(this: usize, a: i8, b: i8
         }
     };
     let engine = this.engine();
-    let r1 = random(ftol(this.reflexes() as f64 * 2.0 + this.goals_conceded() as f64 + read_f64(rdata::F64_10)));
-    let r2 = random(ftol((read_f64(rdata::F64_2) - dist) * engine.ball_roll() as f64 * read_f64(rdata::F64_10)));
+    let r1 = random(ftol_x87(this.reflexes() as f64 * 2.0 + this.goals_conceded() as f64 + read_f64(rdata::F64_10)));
+    let r2 = random(ftol_x87((read_f64(rdata::F64_2) - dist) * engine.ball_roll() as f64 * read_f64(rdata::F64_10)));
     let v = if r1 > r2 {
         e as i16
     } else {
         *rebote = 1;
         defence_roll(this, e as i16) as i16
     };
-    ftol((w as i32 / 6) as f64 + v as f64 * read_f64(rdata::F64_0_5714285714) + read_f64(rdata::F64_20)) as u16
+    ftol_x87((w as i32 / 6) as f64 + v as f64 * read_f64(rdata::F64_0_5714285714) + read_f64(rdata::F64_20)) as u16
 }
 
 /// Bytes of one cell of the engine's occupancy grid.
@@ -1256,8 +1256,8 @@ pub(crate) unsafe extern "thiscall" fn control_of_move(this: usize, code: *mut i
         let dy = (if side_of_player(this) == 1 { y - 0xb } else { y }).abs() as i8 as isize;
         let dx = (x - 4).abs() as i8 as isize;
         let t = read_f32((0xa15e44 + 4 * (dy * 9 + dx)) as usize) as f64;
-        let r1 = random(ftol(this.aggression() as f64 + read_f32(rdata::F32_2) as f64));
-        if r1 < random(ftol(t + t)) {
+        let r1 = random(ftol_x87(this.aggression() as f64 + read_f32(rdata::F32_2) as f64));
+        if r1 < random(ftol_x87(t + t)) {
             *b = 0;
             *a = 0;
             return 0xffec;
@@ -1273,7 +1273,7 @@ pub(crate) unsafe extern "thiscall" fn control_of_move(this: usize, code: *mut i
         }
     }
     let bp: u16 = if owner == this { owner.ball_control() as u16  } else { 0 };
-    let c = 10000 - ftol(this.stamina() as f64) as i16 as i32;
+    let c = 10000 - ftol_x87(this.stamina() as f64) as i16 as i32;
     let r = random(c.wrapping_mul(c) / 50000) as u16;
     let mut dif: u16 = 0;
     if owner.is_null() {
@@ -1574,7 +1574,7 @@ pub(crate) unsafe fn tackle_injected(j: MatchPlayer, strong: u8, call: &mut dyn 
     let in_the_box = |p: MatchPlayer, lado1: bool| {
         (2..=6).contains(&p.cell_x()) && if lado1 { (10..=11).contains(&p.cell_y()) } else { (0..=1).contains(&p.cell_y()) }
     };
-    let d = 10000 - ftol(j.stamina() as f64) as i16 as i32;
+    let d = 10000 - ftol_x87(j.stamina() as f64) as i16 as i32;
     let folego = random(d.wrapping_mul(d) / 50000);
     let (mut a, mut b2, mut nota, mut lance, mut arriscado) = (0u8, 0u8, 0i16, 0i8, 0i8);
     let mut advantage = 0u8;
@@ -2003,7 +2003,7 @@ pub(crate) unsafe fn contest_ball_injected(j: MatchPlayer, strength: i16, kind_i
     let mut kind = kind_in;
     let mut attack: i32 = if exe::cm3_match_engine_get_player_position(m, j) == 1 && in_the_box() {
         covered!("respond goalkeeper in the box");
-        random(ftol(2000.0 - j.handling() as f64 * 40.0))
+        random(ftol_x87(2000.0 - j.handling() as f64 * 40.0))
     } else {
         match kind {
             0 => random(500),
@@ -2029,7 +2029,7 @@ pub(crate) unsafe fn contest_ball_injected(j: MatchPlayer, strength: i16, kind_i
     }
     let st = p4 as f64 + 1.0;
     if st > 0.0 {
-        attack = ftol(((m.ball_roll() as i32 + 1) * attack as i16 as i32) as f64 / st);
+        attack = ftol_x87(((m.ball_roll() as i32 + 1) * attack as i16 as i32) as f64 / st);
     }
     let espirra = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, inside: u32, shooter: usize| {
         let r = random(m.ball_roll() as i32);
@@ -2188,7 +2188,7 @@ pub(crate) unsafe fn contest_ball_injected(j: MatchPlayer, strength: i16, kind_i
         }
     }
     let p = p4 as f64;
-    let mut lim = ftol((1500.0 - p * p * 100.0) + (m.ball_roll() as i32 * 100) as f64) as i16;
+    let mut lim = ftol_x87((1500.0 - p * p * 100.0) + (m.ball_roll() as i32 * 100) as f64) as i16;
     if lim < 0xa0 {
         lim = 0xa0;
     }
@@ -2308,7 +2308,7 @@ pub(crate) unsafe fn shoot_injected(j: MatchPlayer, strength_in: i16, x_in: i8, 
     let chance = if j.side() == 0 { distance_table_cell_yx(jy as i32 - 11, jx as i32 - 4) } else { exe::match_player_distance_to_cell(j, 4, 0) };
     let mut kind = m.ball_height();
     let (x, y) = if x_in == -1 { (m.ball_x(), m.ball_y()) } else { (x_in, y_in) };
-    let d = 10000 - ftol(j.stamina() as f64) as i16 as i32;
+    let d = 10000 - ftol_x87(j.stamina() as f64) as i16 as i32;
     let folego = random(d.wrapping_mul(d) / 50000);
     let mut ang = (j.facing() as i32 - (m.ball_direction() as i16) as i32).abs();
     if ang as i16 > 0xb4 {
@@ -2359,7 +2359,7 @@ pub(crate) unsafe fn shoot_injected(j: MatchPlayer, strength_in: i16, x_in: i8, 
             kind = m.ball_height();
             ((j.moment_agility() as i16 - 20).wrapping_mul(10).wrapping_add(j.move_skill(moves::HIGH_KICK)), 0xc)
         } else {
-            let v = ftol(((j.confidence() as f64 * read_f64(rdata::F64_0_01) + 0.75) * j.anger() as f64 + 5.0) * 0.5) as i8;
+            let v = ftol_x87(((j.confidence() as f64 * read_f64(rdata::F64_0_01) + 0.75) * j.anger() as f64 + 5.0) * 0.5) as i8;
             let r1 = random(j.yellow_cards() as i32 * 80 + in_own as i32 * 1500 + 0x46);
             if random(v as i32) > r1 { (j.move_skill(moves::PUSH), 0x2e) } else { (j.move_skill(moves::JUMP_FOR_BALL), 0x15) }
         }
@@ -2372,7 +2372,7 @@ pub(crate) unsafe fn shoot_injected(j: MatchPlayer, strength_in: i16, x_in: i8, 
                 let r1 = random(j.move_skill(moves::HIGH_KICK) as i32);
                 random(j.move_skill(moves::DIVING_HEADER) as i32) > r1
             }
-            && random(ftol(j.finishing() as f64)) >= random(5);
+            && random(ftol_x87(j.finishing() as f64)) >= random(5);
         if ok {
             covered!("shot 0x3b");
             (j.move_skill(moves::DIVING_HEADER), 0x3b)
@@ -2389,7 +2389,7 @@ pub(crate) unsafe fn shoot_injected(j: MatchPlayer, strength_in: i16, x_in: i8, 
     let (mut cartao, mut grav) = (0u8, 0u8);
     let t = exe::cm3_match_engine_referee_check_foul(m, j, lance as i16 as u16, &mut cartao, &mut grav);
     if t != 0 {
-        if random(ftol(chance as f64 * 5.0 + 2.0)) == 0 {
+        if random(ftol_x87(chance as f64 * 5.0 + 2.0)) == 0 {
             covered!("shot foul recorded");
             exe::cm3_match_engine_set_pending_foul(m, lance as i16 as u16, j.addr() as u32, 0, 0, t, j.cell_x() as u8 , j.cell_y() as u8 , cartao, grav);
         } else {
@@ -2707,7 +2707,7 @@ pub(crate) unsafe fn shoot_injected(j: MatchPlayer, strength_in: i16, x_in: i8, 
     call(FN_MATCH_PLAYER_TAKE_POSSESSION, j.addr(), [0; 5]);
     more((j.addr() + match_player::MATCH_RATING) as *mut i16 , 4);
     j.set_action((lance as i16) as u16);
-    let v = ftol(rating_shot as f64 * read_f64(rdata::F64_NEG_0_1818181818));
+    let v = ftol_x87(rating_shot as f64 * read_f64(rdata::F64_NEG_0_1818181818));
     let posse = |o: usize| write_i32(m.addr() + o, read_i32(m.addr() + o).wrapping_sub(v));
     posse(engine::MOMENTUM_A);
     posse(engine::MOMENTUM_B);
@@ -2857,7 +2857,7 @@ pub(crate) unsafe fn shot_outcome_injected(p: MatchPlayer, f_in: f32, call: &mut
     let factor = m.ball_roll();
     let r1 = random(0x7d0);
     let r2 = random(0x3e8);
-    let quality = ftol(r2.wrapping_sub(r1).wrapping_mul(factor as i32 + 1) as f64 / f as f64);
+    let quality = ftol_x87(r2.wrapping_sub(r1).wrapping_mul(factor as i32 + 1) as f64 / f as f64);
     let g = MatchPlayer(hold_position_one(m.addr(), side));
     if g.is_null() {
         return original_fn::<unsafe extern "thiscall" fn(usize, f32)>(IDX_SHOT_OUTCOME)(p.addr(), f_in);
@@ -3245,7 +3245,7 @@ pub(crate) unsafe fn shot_on_goal_injected(p: MatchPlayer, f_in: f32, call: &mut
     let factor = m.ball_roll();
     let r1 = random(0x7d0);
     let r2 = random(0x3e8);
-    let quality = ftol(r2.wrapping_sub(r1).wrapping_mul(factor as i32 + 1) as f64 / f as f64);
+    let quality = ftol_x87(r2.wrapping_sub(r1).wrapping_mul(factor as i32 + 1) as f64 / f as f64);
     let g = MatchPlayer(hold_position_one(m.addr(), other as i8));
     if g.is_null() {
         return original_fn::<unsafe extern "thiscall" fn(usize, f32)>(IDX_SHOT_ON_GOAL)(p.addr(), f_in);
@@ -3670,10 +3670,10 @@ pub(crate) unsafe fn player_move_injected(p: MatchPlayer, x: i8, y: i8, code: i1
         }
         covered!("movement with the ball");
         // o ataque
-        let d = 10000 - ftol(p.stamina() as f64) as i16 as i32;
+        let d = 10000 - ftol_x87(p.stamina() as f64) as i16 as i32;
         let folego = random(d.wrapping_mul(d) / 50000) as i16;
         if carries != 0 {
-            let v = ftol(p.finishing() as f64 + read_f64(rdata::F64_20)) as i16;
+            let v = ftol_x87(p.finishing() as f64 + read_f64(rdata::F64_20)) as i16;
             fixar_19c(p, (p.ball_control()).wrapping_add(v));
         }
         let base = read_i16(p.addr() + match code {
@@ -3706,7 +3706,7 @@ pub(crate) unsafe fn player_move_injected(p: MatchPlayer, x: i8, y: i8, code: i1
                 } else {
                     distance_to_point(p.addr(), 4, 0)
                 };
-                ftol(t as f64 * read_f32(rdata::F32_9) as f64 + read_f64(rdata::F64_2_5)) as i8
+                ftol_x87(t as f64 * read_f32(rdata::F32_9) as f64 + read_f64(rdata::F64_2_5)) as i8
             };
             let v = value();
             let n = if (v as i32 / 5) * 5 < 1 { 1i8 } else { (((value() as i32 / 5) as u8).wrapping_mul(5)) as i8 };
@@ -3788,7 +3788,7 @@ pub(crate) unsafe fn player_move_injected(p: MatchPlayer, x: i8, y: i8, code: i1
         if p.injury_pending() != 0 {
             lost = true;
         } else if mode != 4 && at16 < 1 {
-            let r = random(ftol(p.technique() as f64 * read_f32(rdata::F32_5) as f64 + read_f32(rdata::F32_75) as f64));
+            let r = random(ftol_x87(p.technique() as f64 * read_f32(rdata::F32_5) as f64 + read_f32(rdata::F32_75) as f64));
             if r == 0 && (e.is_null() || nota < at16) {
                 lost = true;
             }
@@ -3845,7 +3845,7 @@ pub(crate) unsafe fn player_move_injected(p: MatchPlayer, x: i8, y: i8, code: i1
         *q = (*q).wrapping_add(5);
         let limit_rating = (nota as i32 + 0x32).max(0xfa);
         let v = (at16 as i32 - limit_rating) as f64 + (p.technique() as f64 * p.dribbling() as f64);
-        let delta = if (read_f32(rdata::F32_0) as f64) < v { 0 } else { ftol(v) as i16 };
+        let delta = if (read_f32(rdata::F32_0) as f64) < v { 0 } else { ftol_x87(v) as i16 };
         fixar_19c(p, (p.ball_control()).wrapping_add(delta));
         let home = (m.cell(p.cell_x(), p.cell_y()).addr() + grid_cell::OCCUPANT_COUNT + other as usize) as *const u8;
         if *home == 0 {
@@ -3907,7 +3907,7 @@ pub(crate) unsafe fn move_action_commentary_injected(m: Engine, p: MatchPlayer, 
         let cod = if !tabela1(e) {
             let v = p.acceleration();
             let strong = v > read_f32(rdata::F32_15) || (v as f64 - e.acceleration() as f64) > read_f32(rdata::F32_10) as f64;
-            if strong && random(ftol(p.dribbling() as f64)) < random(0x1e) { 0x2173 } else { 0x1f4a }
+            if strong && random(ftol_x87(p.dribbling() as f64)) < random(0x1e) { 0x2173 } else { 0x1f4a }
         } else if is_in_attacked_box(side, px, py) {
             0x1f55
         } else {
@@ -4139,7 +4139,7 @@ pub(crate) unsafe fn challenger_wins_injected(m: Engine, p: MatchPlayer, e: Matc
         _ => false,
     };
     if !in_row {
-        gain = ftol(gain as f64 * read_f64(rdata::F64_0_85)) as i16;
+        gain = ftol_x87(gain as f64 * read_f64(rdata::F64_0_85)) as i16;
     }
     e.set_match_rating((e.match_rating()).wrapping_add(gain));
     let target = if e.side() != 0 { 0xb } else { 0 };
@@ -4215,7 +4215,7 @@ pub(crate) unsafe fn punish_move_foul_injected(m: Engine, e: MatchPlayer, p: Mat
     let sent_off = matches!(kind, 3..=6);
     if colour as i16 > -1 {
         // event 0x82 (card 4/5 for reasons 5, 10, 11 and the player’s history)
-        let v = ftol(exe::playerstats_get_stat(read_usize(G_PLAYER_STATS + 0), e.player(), 0xb, 2, 6.5)) as i8;
+        let v = ftol_x87(exe::playerstats_get_stat(read_usize(G_PLAYER_STATS + 0), e.player(), 0xb, 2, 6.5)) as i8;
         let base = read_i32(G_STAFF_COUNT);
         let list = if !m.is_null() { m.event_list() } else { 0 };
         if list != 0
@@ -4710,7 +4710,7 @@ pub(crate) unsafe fn dribble_injected(p: MatchPlayer, mode: u8, call: &mut dyn F
                 write_u8(m.addr() + engine::RESTART_TYPE, 0);
                 if c == 6 && (2..=6).contains(&x0()) && ff < read_f64(rdata::F64_3_1) {
                     let bl = p.moment_flair() as i32;
-                    let n = (random(ftol(fl(match_player::FREE_KICKS) + read_f32(rdata::F32_20) as f64)) + bl) / 3;
+                    let n = (random(ftol_x87(fl(match_player::FREE_KICKS) + read_f32(rdata::F32_20) as f64)) + bl) / 3;
                     if (n as f64) > ff {
                         covered!("dribble direct free kick");
                         write_u8(m.addr() + engine::SET_PIECE_KIND, 6);
@@ -4774,14 +4774,14 @@ pub(crate) unsafe fn dribble_injected(p: MatchPlayer, mode: u8, call: &mut dyn F
                     if l60 as f64 > read_f64(rdata::F64_3_5) {
                         l60 = 3.5;
                     }
-                    p.set_space_on_ball(ftol(l60 as f64 * read_f32(rdata::F32_60) as f64 + read_f32(rdata::F32_57) as f64) as i16);
+                    p.set_space_on_ball(ftol_x87(l60 as f64 * read_f32(rdata::F32_60) as f64 + read_f32(rdata::F32_57) as f64) as i16);
                 } else {
                     if l70 < 0 {
                         l70 = 0;
                     }
                     let s = l70 as i32;
                     let k = (l49 as i32).wrapping_mul(s).wrapping_mul(s);
-                    l58 = ftol(-(k as f64 * read_f64(rdata::F64_0_75)));
+                    l58 = ftol_x87(-(k as f64 * read_f64(rdata::F64_0_75)));
                     if l58 < -500 {
                         l58 = random((l58 + 500) / 3) - 500;
                         if l58 < -2000 {
@@ -4790,7 +4790,7 @@ pub(crate) unsafe fn dribble_injected(p: MatchPlayer, mode: u8, call: &mut dyn F
                     } else if l58 > 32000 {
                         l58 = 32000;
                     }
-                    p.set_space_on_ball(ftol(l58 as f64 * read_f64(rdata::F64_0_75)) as i16);
+                    p.set_space_on_ball(ftol_x87(l58 as f64 * read_f64(rdata::F64_0_75)) as i16);
                 }
             }
             if is_in_attacking_half(side, y0()) {
@@ -4811,12 +4811,12 @@ pub(crate) unsafe fn dribble_injected(p: MatchPlayer, mode: u8, call: &mut dyn F
         // the shot rating
         if m.ball_height() == 4 {
             if ff < read_f64(rdata::F64_1) || ((y0() == 0 || y0() == 0xb) && (x0() as i32 - 4).abs() == 1) {
-                l10 = ftol(fl(match_player::HEADING) * read_f32(rdata::F32_75) as f64 + read_f32(rdata::F32_2500) as f64 - (400 * l27 as i32) as f64);
+                l10 = ftol_x87(fl(match_player::HEADING) * read_f32(rdata::F32_75) as f64 + read_f32(rdata::F32_2500) as f64 - (400 * l27 as i32) as f64);
             } else {
                 l10 = -5000;
             }
         } else if ff <= read_f64(rdata::F64_1_5) {
-            l10 = ftol(fl(match_player::FINISHING) * read_f32(rdata::F32_100) as f64 + read_f32(rdata::F32_3000) as f64 - (400 * l27 as i32) as f64 + p.space_on_ball() as f64 * read_f64(rdata::F64_1_2));
+            l10 = ftol_x87(fl(match_player::FINISHING) * read_f32(rdata::F32_100) as f64 + read_f32(rdata::F32_3000) as f64 - (400 * l27 as i32) as f64 + p.space_on_ball() as f64 * read_f64(rdata::F64_1_2));
         } else {
             let bl = p.moment_flair() as i32;
             let n = bl / 7 + random(3) + 3;
@@ -4826,13 +4826,13 @@ pub(crate) unsafe fn dribble_injected(p: MatchPlayer, mode: u8, call: &mut dyn F
                 covered!("dribble long-range shot");
                 let v = shot_value(p.addr(), &mut l88, &mut l64) as i16 as i32;
                 let k = p.moment_decisions() as i32 * 4;
-                let r1 = random(ftol(ff * read_f32(rdata::F32_75) as f64 - k as f64));
-                let t2 = ftol(k as f64 - ff * read_f32(rdata::F32_75) as f64);
+                let r1 = random(ftol_x87(ff * read_f32(rdata::F32_75) as f64 - k as f64));
+                let t2 = ftol_x87(k as f64 - ff * read_f32(rdata::F32_75) as f64);
                 la4 = random(-(r1.wrapping_add(t2))).wrapping_add(v);
                 l37 = true;
                 if v > 0 {
                     let div = if p.moment_flair() < 1 { 1 } else { p.moment_flair() as i32 };
-                    l10 = ftol((v * v) as f64 * read_f64(rdata::F64_0_3333333333) - ff * ff * read_f32(rdata::F32_4000) as f64 / div as f64 - (700 * l27 as i32) as f64);
+                    l10 = ftol_x87((v * v) as f64 * read_f64(rdata::F64_0_3333333333) - ff * ff * read_f32(rdata::F32_4000) as f64 / div as f64 - (700 * l27 as i32) as f64);
                 } else {
                     l10 = ((p.moment_vision() as i32 + p.moment_decisions() as i32) * 4 + 2) * v;
                 }
@@ -4853,19 +4853,19 @@ pub(crate) unsafe fn dribble_injected(p: MatchPlayer, mode: u8, call: &mut dyn F
         }
         if m.ball_height() < 4 && ff > read_f32(rdata::F32_0) as f64 {
             if l68 == 2 {
-                let pw = game_pow(ftol(ff) as f64, read_f64(rdata::F64_3));
+                let pw = game_pow(ftol_x87(ff) as f64, read_f64(rdata::F64_3));
                 let q = fl(match_player::DRIBBLING);
                 let r = random(4) + 1;
-                let k = ftol((q * q + read_f64(rdata::F64_1)) * read_f64(rdata::F64_0_5)) as i16 as i32;
-                l14 = l14.wrapping_add(ftol((r * k) as f64 * pw));
+                let k = ftol_x87((q * q + read_f64(rdata::F64_1)) * read_f64(rdata::F64_0_5)) as i16 as i32;
+                l14 = l14.wrapping_add(ftol_x87((r * k) as f64 * pw));
             }
             if distance_table_cell_yx(y0() as i32 - g.cell_y() as i32, x0() as i32 - g.cell_x() as i32) as f64 == read_f64(rdata::F64_0)
                 && read_i8(m.cell(x0() as i8, y0() as i8).addr() + grid_cell::OCCUPANT_COUNT + (side == 0) as usize) == 1
             {
                 covered!("dribble one on one");
-                let r1 = random(ftol(fl(match_player::FINISHING) * read_f32(rdata::F32_10) as f64));
-                let r2 = random(ftol(fl(match_player::DRIBBLING) * read_f32(rdata::F32_10) as f64));
-                l14 = l14.wrapping_add(ftol((r2 - r1) as f64 * (ff * read_f32(rdata::F32_50) as f64 + read_f32(rdata::F32_150) as f64)));
+                let r1 = random(ftol_x87(fl(match_player::FINISHING) * read_f32(rdata::F32_10) as f64));
+                let r2 = random(ftol_x87(fl(match_player::DRIBBLING) * read_f32(rdata::F32_10) as f64));
+                l14 = l14.wrapping_add(ftol_x87((r2 - r1) as f64 * (ff * read_f32(rdata::F32_50) as f64 + read_f32(rdata::F32_150) as f64)));
                 l4c = true;
             }
         }
@@ -4895,7 +4895,7 @@ pub(crate) unsafe fn dribble_injected(p: MatchPlayer, mode: u8, call: &mut dyn F
         }
         if !m.is_null() && table_a(m.addr(), p.addr()) == 1 {
             if p.moment_positioning() != 0 {
-                l14 = l14.wrapping_add(ftol(fl(match_player::FLAIR) * read_f32(rdata::F32_250) as f64 - read_f32(rdata::F32_5000) as f64));
+                l14 = l14.wrapping_add(ftol_x87(fl(match_player::FLAIR) * read_f32(rdata::F32_250) as f64 - read_f32(rdata::F32_5000) as f64));
             }
             if is_in_defending_half(side, y0()) {
                 l10 = l10.wrapping_sub(25000);
@@ -4906,33 +4906,33 @@ pub(crate) unsafe fn dribble_injected(p: MatchPlayer, mode: u8, call: &mut dyn F
             let t = if !g.engine().is_null() { table_a(g.engine().addr(), g.addr()) } else { 0 };
             if t & 1 == 0 {
                 l10 = l10.wrapping_add(5000);
-            } else if g.busy() != 0 && p.moment_vision() as i32 + 5 > random(ftol(ff * read_f32(rdata::F32_20) as f64)) {
+            } else if g.busy() != 0 && p.moment_vision() as i32 + 5 > random(ftol_x87(ff * read_f32(rdata::F32_20) as f64)) {
                 l10 = l10.wrapping_add(1500);
             }
             let (gx, gy) = (g.cell_x(), g.cell_y());
             if !is_in_attacked_box(side, gx, gy) {
-                if p.moment_vision() as i32 + 5 > random(ftol(ff)) {
-                    l10 = l10.wrapping_sub(ftol(fl(match_player::DRIBBLING) * read_f32(rdata::F32_100) as f64 - read_f32(rdata::F32_2500) as f64));
+                if p.moment_vision() as i32 + 5 > random(ftol_x87(ff)) {
+                    l10 = l10.wrapping_sub(ftol_x87(fl(match_player::DRIBBLING) * read_f32(rdata::F32_100) as f64 - read_f32(rdata::F32_2500) as f64));
                 }
             } else if gx == 4 && gy == if g.side() == 1 { 0xb } else { 0 } {
-                if reaches_the_point(g.addr(), x0(), y0()) == 0 && p.moment_vision() as i32 > random(ftol(ff * read_f32(rdata::F32_10) as f64)) {
+                if reaches_the_point(g.addr(), x0(), y0()) == 0 && p.moment_vision() as i32 > random(ftol_x87(ff * read_f32(rdata::F32_10) as f64)) {
                     covered!("dribble keeper in goal");
-                    l10 = l10.wrapping_sub(ftol(fl(match_player::DRIBBLING) * read_f32(rdata::F32_40) as f64 - read_f32(rdata::F32_1000) as f64));
+                    l10 = l10.wrapping_sub(ftol_x87(fl(match_player::DRIBBLING) * read_f32(rdata::F32_40) as f64 - read_f32(rdata::F32_1000) as f64));
                 }
             } else {
                 let e17 = p.match_form() as i32;
-                let r = random(ftol(ff * ff * read_f32(rdata::F32_3) as f64));
+                let r = random(ftol_x87(ff * ff * read_f32(rdata::F32_3) as f64));
                 if p.moment_vision() as i32 + e17 - 10 > r {
                     covered!("dribble keeper off his line");
-                    l10 = l10.wrapping_sub(ftol(fl(match_player::DRIBBLING) * read_f32(rdata::F32_40) as f64 - read_f32(rdata::F32_1500) as f64));
+                    l10 = l10.wrapping_sub(ftol_x87(fl(match_player::DRIBBLING) * read_f32(rdata::F32_40) as f64 - read_f32(rdata::F32_1500) as f64));
                 }
                 if x0() == gx && y0() == gy {
-                    l14 = l14.wrapping_add(ftol((e17 as f64 + fl(match_player::DRIBBLING)) * read_f32(rdata::F32_100) as f64 - read_f32(rdata::F32_3000) as f64));
+                    l14 = l14.wrapping_add(ftol_x87((e17 as f64 + fl(match_player::DRIBBLING)) * read_f32(rdata::F32_100) as f64 - read_f32(rdata::F32_3000) as f64));
                 }
             }
         }
         if m.ball_height() == 4 && ff > read_f64(rdata::F64_1) {
-            l10 = l10.wrapping_add(ftol(ff * ff * read_f64(rdata::F64_NEG_750)));
+            l10 = l10.wrapping_add(ftol_x87(ff * ff * read_f64(rdata::F64_NEG_750)));
         } else if (4..=6).contains(&x0()) && ((side == 1 && y0() == 0) || (side == 0 && y0() == 0xb)) {
             l10 = l10.wrapping_add(5000 - (x0() as i32 - 4).abs() * 2000);
         }
@@ -4947,7 +4947,7 @@ pub(crate) unsafe fn dribble_injected(p: MatchPlayer, mode: u8, call: &mut dyn F
         }
         let near = (is_in_defended_box(side, x0(), y0()) && l60 as f64 <= read_f64(rdata::F64_1_5)) || (limit((side == 0) as u8, y0()) != 0 && (l60 as f64) < read_f64(rdata::F64_1));
         if near {
-            let r1 = random(ftol(read_f32(rdata::F32_3000) as f64 - l60 as f64 * read_f32(rdata::F32_1000) as f64));
+            let r1 = random(ftol_x87(read_f32(rdata::F32_3000) as f64 - l60 as f64 * read_f32(rdata::F32_1000) as f64));
             if r1 > random(l30 + 2000) && m.ball_height() != -1 && mode != 4 {
                 covered!("dribble clearance");
                 call(FN_MATCH_PLAYER_PLAY_BALL_INTO_AREA, p.addr(), [m.ball_height() as u8 as u32, 0, 0, 0, 0]);
@@ -4970,9 +4970,9 @@ pub(crate) unsafe fn dribble_injected(p: MatchPlayer, mode: u8, call: &mut dyn F
             }
         } else {
             l44 -= 5000;
-            l14 = l14.wrapping_add(ftol(ff * read_f32(rdata::F32_1500) as f64 - read_f32(rdata::F32_1500) as f64));
+            l14 = l14.wrapping_add(ftol_x87(ff * read_f32(rdata::F32_1500) as f64 - read_f32(rdata::F32_1500) as f64));
             if mode == 4 {
-                l14 = l14.wrapping_add(ftol(ff * read_f32(rdata::F32_2000) as f64 - read_f32(rdata::F32_1500) as f64));
+                l14 = l14.wrapping_add(ftol_x87(ff * read_f32(rdata::F32_2000) as f64 - read_f32(rdata::F32_1500) as f64));
             }
             if is_in_defending_half(side, y0()) {
                 l10 -= 3000;
@@ -4983,9 +4983,9 @@ pub(crate) unsafe fn dribble_injected(p: MatchPlayer, mode: u8, call: &mut dyn F
             }
         }
         if table_a(m.addr(), p.addr()) == 1 || is_in_defended_box(side, x0(), y0()) {
-            l44 = l44.wrapping_add(ftol(l60 as f64 * read_f32(rdata::F32_500) as f64 - read_f32(rdata::F32_1200) as f64));
+            l44 = l44.wrapping_add(ftol_x87(l60 as f64 * read_f32(rdata::F32_500) as f64 - read_f32(rdata::F32_1200) as f64));
         } else {
-            l14 = l14.wrapping_add(ftol((fl(match_player::DRIBBLING) - read_f32(rdata::F32_20) as f64 + l60 as f64 * read_f64(rdata::F64_7_5)) * read_f64(rdata::F64_120)));
+            l14 = l14.wrapping_add(ftol_x87((fl(match_player::DRIBBLING) - read_f32(rdata::F32_20) as f64 + l60 as f64 * read_f64(rdata::F64_7_5)) * read_f64(rdata::F64_120)));
         }
         if !na_boca() && !consegue() && is_in_attacking_half(side, y0()) {
             l14 = l14.wrapping_add(2000 - l30);
@@ -5014,9 +5014,9 @@ pub(crate) unsafe fn dribble_injected(p: MatchPlayer, mode: u8, call: &mut dyn F
             let k = (p.moment_flair() as f64 + fl(match_player::DRIBBLING)) * read_f32(rdata::F32_10) as f64;
             if table_a(m.addr(), p.addr()) & 0x38 != 0 && ta(p) & 0x880 != 0 && tb(p) & 0x880 != 0 && !((side == 0 && y0() < 3) || (side == 1 && y0() > 8)) {
                 covered!("dribble target man");
-                l14 = l14.wrapping_add(ftol(k));
+                l14 = l14.wrapping_add(ftol_x87(k));
             } else if table_a(m.addr(), p.addr()) & 0x38 != 0 && table_a(m.addr(), p.addr()) & 0x880 != 0 {
-                l14 = l14.wrapping_add(ftol(k - read_f32(rdata::F32_250) as f64));
+                l14 = l14.wrapping_add(ftol_x87(k - read_f32(rdata::F32_250) as f64));
             } else {
                 l14 -= 3000;
             }
@@ -5027,29 +5027,29 @@ pub(crate) unsafe fn dribble_injected(p: MatchPlayer, mode: u8, call: &mut dyn F
         if (2..=6).contains(&x0()) && !in_the_box && m.ball_height() != 4 {
             let t = table_a(m.addr(), p.addr());
             let bl = p.moment_flair() as i32;
-            let r = random(ftol((l27 as i32 + 1) as f64 * (ff + read_f32(rdata::F32_1) as f64) * ff * ff * ff * read_f32(rdata::F32_200) as f64));
+            let r = random(ftol_x87((l27 as i32 + 1) as f64 * (ff + read_f32(rdata::F32_1) as f64) * ff * ff * ff * read_f32(rdata::F32_200) as f64));
             l10 = l10.wrapping_add(if t & 0x40 != 0 { bl * 500 } else { bl * 325 } - r);
         } else if in_the_box {
-            l10 = l10.wrapping_add(ftol((p.moment_flair() as f64 + fl(match_player::FINISHING) - fl(match_player::TEAMWORK)) * (read_f32(rdata::F32_20) as f64 - ff * read_f32(rdata::F32_4) as f64)));
+            l10 = l10.wrapping_add(ftol_x87((p.moment_flair() as f64 + fl(match_player::FINISHING) - fl(match_player::TEAMWORK)) * (read_f32(rdata::F32_20) as f64 - ff * read_f32(rdata::F32_4) as f64)));
         } else if is_in_attacking_half(side, y0()) {
-            l10 = l10.wrapping_sub(ftol(ff * read_f32(rdata::F32_300) as f64 - (p.moment_flair() as i32 * 75) as f64));
+            l10 = l10.wrapping_sub(ftol_x87(ff * read_f32(rdata::F32_300) as f64 - (p.moment_flair() as i32 * 75) as f64));
         }
         let marks = |q: MatchPlayer| position_marks(m.addr() + engine::TACTICS + q.side() as isize as usize * formation_fields::SIZE, q.position());
         'rating: {
-            if random(ftol(fl(match_player::TEAMWORK))) == 0 && !(table_a(m.addr(), p.addr()) & 0x40 == 0 && random(4) != 0) {
+            if random(ftol_x87(fl(match_player::TEAMWORK))) == 0 && !(table_a(m.addr(), p.addr()) & 0x40 == 0 && random(4) != 0) {
                 covered!("dribble stamina");
                 if !(is_in_defending_half(side, y0()) && (p.moment_decisions() != 0 || p.moment_vision() != 0)) {
                     let bl = is_in_defended_box(side, x0(), y0()) as i32;
                     let pw = game_pow(fl(match_player::DRIBBLING), read_f64(rdata::F64_3));
-                    l14 = l14.wrapping_add(ftol(pw + (1000 - bl * 1000) as f64));
+                    l14 = l14.wrapping_add(ftol_x87(pw + (1000 - bl * 1000) as f64));
                 }
                 if ff >= read_f64(rdata::F64_2) && ff < read_f64(rdata::F64_4_5) && (2..=6).contains(&x0()) {
                     if p.moment_flair() != 0 {
-                        let r = random(ftol(fl(match_player::LONG_SHOTS)));
+                        let r = random(ftol_x87(fl(match_player::LONG_SHOTS)));
                         l10 = l10.wrapping_add(p.space_on_ball() as i32 * 2 + r * 400 + 2500);
                     }
                 } else if in_the_box {
-                    l10 = l10.wrapping_add(ftol((read_f32(rdata::F32_20) as f64 - ff * read_f32(rdata::F32_4) as f64) * (p.moment_flair() as f64 + fl(match_player::FINISHING))));
+                    l10 = l10.wrapping_add(ftol_x87((read_f32(rdata::F32_20) as f64 - ff * read_f32(rdata::F32_4) as f64) * (p.moment_flair() as f64 + fl(match_player::FINISHING))));
                 }
                 break 'rating;
             }
@@ -5061,7 +5061,7 @@ pub(crate) unsafe fn dribble_injected(p: MatchPlayer, mode: u8, call: &mut dyn F
                 if follows {
                     covered!("dribble playmaker");
                     let k = ((p.dribbles() as i8) as u8 as i32 * 30 + p.space_on_ball() as i32 + 400) * 10 - l30;
-                    l14 = l14.wrapping_add(ftol(k as f64 + p.moment_flair() as f64 * fl(match_player::DRIBBLING) * fl(match_player::TEAMWORK)));
+                    l14 = l14.wrapping_add(ftol_x87(k as f64 + p.moment_flair() as f64 * fl(match_player::DRIBBLING) * fl(match_player::TEAMWORK)));
                     if !(2..=6).contains(&x0()) && ta(p) & 0x880 != 0 && tb(p) & 0x880 != 0 && !bottom && marks(p) & 0x4_0000_0000 != 0 {
                         l14 += 500;
                         l30 -= 250;
@@ -5072,7 +5072,7 @@ pub(crate) unsafe fn dribble_injected(p: MatchPlayer, mode: u8, call: &mut dyn F
                 l44 += 3500;
             }
             if marks(p) & 0x20000000 != 0 && ff >= read_f64(rdata::F64_2) && ff < read_f64(rdata::F64_4_5) {
-                let r = random(ftol(fl(match_player::LONG_SHOTS)));
+                let r = random(ftol_x87(fl(match_player::LONG_SHOTS)));
                 l10 = l10.wrapping_add((p.space_on_ball() as i32 + r * 200) * 2);
             }
         }
@@ -5087,24 +5087,24 @@ pub(crate) unsafe fn dribble_injected(p: MatchPlayer, mode: u8, call: &mut dyn F
         }
         if ff < read_f64(rdata::F64_5) {
             let s = l70 as i32;
-            l10 = l10.wrapping_sub(ftol(s.wrapping_mul(s).wrapping_mul(s) as f64 / (read_f64(rdata::F64_10) - ff)));
+            l10 = l10.wrapping_sub(ftol_x87(s.wrapping_mul(s).wrapping_mul(s) as f64 / (read_f64(rdata::F64_10) - ff)));
         }
         if m.ball_height() == 3 {
             l10 -= 2000;
         }
         let e = (l43 as i32 - l2f as i8 as i32) * 100;
-        let t = ftol((read_f32(rdata::F32_400) as f64 - fl(match_player::FLAIR) * read_f32(rdata::F32_15) as f64) * l90 as f64 * l90 as f64);
+        let t = ftol_x87((read_f32(rdata::F32_400) as f64 - fl(match_player::FLAIR) * read_f32(rdata::F32_15) as f64) * l90 as f64 * l90 as f64);
         l44 = l44.wrapping_add(e);
         l14 = l14.wrapping_add(e - t);
         let bl = p.moment_flair() as i32;
-        if !(ff < read_f64(rdata::F64_1)) && bl * bl * bl * bl > random(ftol(ff * read_f32(rdata::F32_10000) as f64)) {
+        if !(ff < read_f64(rdata::F64_1)) && bl * bl * bl * bl > random(ftol_x87(ff * read_f32(rdata::F32_10000) as f64)) {
             if !is_in_defended_box(side, x0(), y0()) && ff >= read_f64(rdata::F64_2) && l49 < 2 && !(is_in_defending_half(side, y0()) && (p.moment_decisions() != 0 || p.moment_vision() != 0)) {
                 let pw = game_pow(fl(match_player::DRIBBLING), read_f64(rdata::F64_3));
-                l14 = l14.wrapping_add(random(ftol(pw + (p.space_on_ball() as i32 * 3) as f64 + (10000 - l30) as f64)));
+                l14 = l14.wrapping_add(random(ftol_x87(pw + (p.space_on_ball() as i32 * 3) as f64 + (10000 - l30) as f64)));
             }
             if m.ball_height() < 4 && l27 < 2 && (ff < read_f64(rdata::F64_5) || (ff < read_f64(rdata::F64_7) && random(500) == 0)) {
                 covered!("dribble placed shot");
-                let mut r = random(ftol(ff * read_f32(rdata::F32_10) as f64)) as i8;
+                let mut r = random(ftol_x87(ff * read_f32(rdata::F32_10) as f64)) as i8;
                 if r < 10 {
                     r = 10;
                 }
@@ -5112,7 +5112,7 @@ pub(crate) unsafe fn dribble_injected(p: MatchPlayer, mode: u8, call: &mut dyn F
             }
             l44 -= 10000;
         } else if !is_in_defended_box(side, x0(), y0()) {
-            let e = random(ftol(p.moment_decisions() as f64 * read_f64(rdata::F64_30)));
+            let e = random(ftol_x87(p.moment_decisions() as f64 * read_f64(rdata::F64_30)));
             if e > random(200) {
                 // the opponents on the same square
                 let home = m.cell(x0() as i8, y0() as i8).addr();
@@ -5121,16 +5121,16 @@ pub(crate) unsafe fn dribble_injected(p: MatchPlayer, mode: u8, call: &mut dyn F
                 while i < read_i8(home + other + grid_cell::OCCUPANT_COUNT) {
                     let q = read_usize(home + other * 44 + i as usize * 4);
                     if read_i8(q + match_player::YELLOW_CARDS) != 0 {
-                        l14 = l14.wrapping_add(random(ftol((p.match_form() as i32 * 100) as f64 + fl(match_player::DRIBBLING) * read_f32(rdata::F32_125) as f64)));
+                        l14 = l14.wrapping_add(random(ftol_x87((p.match_form() as i32 * 100) as f64 + fl(match_player::DRIBBLING) * read_f32(rdata::F32_125) as f64)));
                     }
                     i += 1;
                 }
             }
         }
         // the dribbling discount (the original’s ebx)
-        let k = ftol(game_pow(m.ball_height() as f64, read_f64(rdata::F64_3)) * read_f64(rdata::F64_NEG_200));
+        let k = ftol_x87(game_pow(m.ball_height() as f64, read_f64(rdata::F64_3)) * read_f64(rdata::F64_NEG_200));
         let mut nc = (-(p.space_on_ball() as i32) - p.ball_control() as i32 * 10) * 10;
-        nc = nc.wrapping_sub(ftol((read_f32(rdata::F32_10000) as f64 - fl(match_player::STAMINA)) * read_f32(rdata::F32_NEG_0_200000003) as f64)).wrapping_sub(k);
+        nc = nc.wrapping_sub(ftol_x87((read_f32(rdata::F32_10000) as f64 - fl(match_player::STAMINA)) * read_f32(rdata::F32_NEG_0_200000003) as f64)).wrapping_sub(k);
         if l58 != 0 && l30 > 0 && matches!(l8c as u8, 0x5e | 8 | 7 | 6) {
             nc = nc.wrapping_add(l30);
         } else if marks(p) & 0x4_0000_0000 != 0 && ta(p) & 0x880 != 0 && tb(p) & 0x880 != 0 {
@@ -5242,7 +5242,7 @@ pub(crate) unsafe fn dribble_injected(p: MatchPlayer, mode: u8, call: &mut dyn F
                     action = 4;
                 } else {
                     let bl = p.moment_flair() as i32;
-                    let e = random(ftol(fl(match_player::DRIBBLING)) as i16 as i32) + bl;
+                    let e = random(ftol_x87(fl(match_player::DRIBBLING)) as i16 as i32) + bl;
                     action = if e < random(0x32) { 2 } else { 4 };
                 }
             } else if action == 4 && (m.ball_height() == 4 || m.ball_height() == -1) {
@@ -5673,7 +5673,7 @@ pub(crate) unsafe fn pass_foul_injected(m: Engine, e: MatchPlayer, p: MatchPlaye
         }
     };
     // event 0x82 (card 4/5 for reasons 5, 10, 11 and the player’s history)
-    let v = ftol(exe::playerstats_get_stat(read_usize(G_PLAYER_STATS + 0), e.player(), 0xb, 2, 6.5)) as i8;
+    let v = ftol_x87(exe::playerstats_get_stat(read_usize(G_PLAYER_STATS + 0), e.player(), 0xb, 2, 6.5)) as i8;
     let base = read_i32(G_STAFF_COUNT);
     let list = if !m.is_null() { m.event_list() } else { 0 };
     if list != 0
@@ -5844,19 +5844,19 @@ pub(crate) unsafe fn execute_pass_injected(p: MatchPlayer, x: i8, y: i8, kind_in
     };
     // the stamina and the distance
     let r0 = random({
-        let v = 10000 - ftol(p.stamina() as f64) as i16 as i32;
+        let v = 10000 - ftol_x87(p.stamina() as f64) as i16 as i32;
         v * v / 50000
     }) as i16 as i32;
     let mut d = distance_between(x, y, tx, ty);
     let k = if (p.passing() as f64) < read_f32(rdata::F32_1) as f64 { read_f32(rdata::F32_1) as f64 } else { p.passing() as f64 };
-    let mut l14 = random(ftol(d as f64 * d as f64 * d as f64 * d as f64 * read_f32(rdata::F32_4) as f64 / k));
+    let mut l14 = random(ftol_x87(d as f64 * d as f64 * d as f64 * d as f64 * read_f32(rdata::F32_4) as f64 / k));
     if receiver.is_null() {
         l14 = random(l14 as i16 as i32);
     }
     if (d as f64) < read_f64(rdata::F64_2) && tipo != 0x3d && tipo != 0x5c {
-        l14 = l14.wrapping_add(ftol(read_f32(rdata::F32_250) as f64 - d as f64 * read_f32(rdata::F32_125) as f64));
+        l14 = l14.wrapping_add(ftol_x87(read_f32(rdata::F32_250) as f64 - d as f64 * read_f32(rdata::F32_125) as f64));
     }
-    let five = |v: f64| ((ftol(v * read_f32(rdata::F32_9) as f64 + read_f64(rdata::F64_2_5)) as i8 as i32 / 5) * 5) as i8;
+    let five = |v: f64| ((ftol_x87(v * read_f32(rdata::F32_9) as f64 + read_f64(rdata::F64_2_5)) as i8 as i32 / 5) * 5) as i8;
     let mut l12: i8 = 1;
     let c5 = five(d as f64);
     if c5 as i32 >= 1 {
@@ -5900,7 +5900,7 @@ pub(crate) unsafe fn execute_pass_injected(p: MatchPlayer, x: i8, y: i8, kind_in
         };
         if n != 0 && random(n) == 0 {
             covered!("pass penalty shootout contest");
-            bp = bp.wrapping_mul(ftol(bp as f64 * read_f64(c)) as i16);
+            bp = bp.wrapping_mul(ftol_x87(bp as f64 * read_f64(c)) as i16);
         }
     }
     let r1 = random(r0 as i16 as i32);
@@ -5992,10 +5992,10 @@ pub(crate) unsafe fn execute_pass_injected(p: MatchPlayer, x: i8, y: i8, kind_in
     if c != 0 {
         factor = (factor as f64 * read_f32(c) as f64) as f32;
     }
-    let r = random(ftol(factor as f64 * factor as f64 * read_f32(rdata::F32_10) as f64));
+    let r = random(ftol_x87(factor as f64 * factor as f64 * read_f32(rdata::F32_10) as f64));
     if (l44 as i32 - nota as i32) < r {
         covered!("pass inaccurate");
-        let e8 = ftol((factor as f64 * d as f64 + read_f64(rdata::F64_1)) * read_f64(rdata::F64_0_5)) as i8 as i32;
+        let e8 = ftol_x87((factor as f64 * d as f64 + read_f64(rdata::F64_1)) * read_f64(rdata::F64_0_5)) as i8 as i32;
         let s1 = random(e8);
         let s2 = random(e8);
         let nx = (tx as u8).wrapping_sub(s1 as u8).wrapping_add(s2 as u8) as i8;
@@ -6356,7 +6356,7 @@ pub(crate) unsafe fn execute_pass_injected(p: MatchPlayer, x: i8, y: i8, kind_in
     }
     let v = m.ball_roll() as i32;
     let k = if (v as f64 + read_f64(rdata::F64_0_2)) < read_f64(rdata::F64_1) { read_f64(rdata::F64_1) } else { m.ball_roll() as f64 + read_f64(rdata::F64_0_2) };
-    m.set_ball_transit_ticks((ftol((d as f64 + d as f64) / k + read_f64(rdata::F64_0_5)) as u8) as i8);
+    m.set_ball_transit_ticks((ftol_x87((d as f64 + d as f64) / k + read_f64(rdata::F64_0_5)) as u8) as i8);
     m.set_transit_target_x((tx as u8) as i8);
     m.set_transit_target_y((ty as u8) as i8);
     m.set_transit_origin_x((p.cell_x() as u8) as i8);
@@ -6712,7 +6712,7 @@ pub(crate) unsafe fn save_shot_injected(j: MatchPlayer, strength: i16, call: &mu
     };
     let sheet = j.player();
     let pega = strength <= 1000 && {
-        let n = ftol(sheet.consistency() as f64 + j.handling() as f64);
+        let n = ftol_x87(sheet.consistency() as f64 + j.handling() as f64);
         random(n) < random(0x14)
     };
     if !pega {
@@ -6928,7 +6928,7 @@ pub(crate) unsafe fn long_ball_injected(j: MatchPlayer, mode: i8, refinar: u8, c
             let col = (q.cell_x() as i32 - 4).abs() as i8 as isize;
             let lin = lin.abs() as i8 as isize;
             let d = read_f32((0xa15e44 + 4 * (lin * 9 + col)) as usize) as f64;
-            if random(ftol(d * d + d * d)) != 0 {
+            if random(ftol_x87(d * d + d * d)) != 0 {
                 let mm = m();
                 call(FN_MATCH_EVENTS_ADD_EVENT, mm.commentator(), [event::RESTART_OFFSIDE, mm.addr() as u32, (q.commentary_id() as i8) as u8 as u32, dir as u8 as u32, u32::MAX]);
                 let count = (m().addr() as isize + (engine::OFFSIDES as isize) + 54 * dir as isize) as *mut u8;
@@ -7006,7 +7006,7 @@ pub(crate) unsafe fn pass_ball_injected(j: MatchPlayer, kind: u8, receiver: Matc
             let goal = if q.side() == 0 { 11 } else { 0 };
             let d1 = exe::match_player_distance_to_cell(q, 4, goal);
             let d2 = exe::match_player_distance_to_cell(q, 4, goal);
-            let n = ftol(d2 as f64 * d1 as f64 + d2 as f64 * d1 as f64);
+            let n = ftol_x87(d2 as f64 * d1 as f64 + d2 as f64 * d1 as f64);
             if random(n) != 0 {
                 let mm = m();
                 call(FN_MATCH_EVENTS_ADD_EVENT, mm.commentator(), [event::RESTART_OFFSIDE, mm.addr() as u32, (q.commentary_id() as i8) as u8 as u32, dir as u8 as u32, u32::MAX]);
@@ -7189,7 +7189,7 @@ pub(crate) unsafe fn player_decide_injected(j: MatchPlayer, call: &mut dyn FnMut
         if j == m.ball_holder() || *w(match_player::ACTION) == 0x6d || b(match_player::BUSY) != 0 || m.restart_type() != 0 || b(match_player::MOMENT_MOVEMENT) == 0 {
             return;
         }
-        let r = random(ftol(j.anticipation() as f64));
+        let r = random(ftol_x87(j.anticipation() as f64));
         if r <= random(5) {
             return;
         }
@@ -7352,9 +7352,9 @@ pub(crate) unsafe fn off_ball_move_injected(j: MatchPlayer, call: &mut dyn FnMut
             }
             if ta() & 0x700 != 0 && ta() & 0x38 != 0 {
                 let d = dist_table(bx, by);
-                let r1 = random(ftol(j.tackling() as f64));
+                let r1 = random(ftol_x87(j.tackling() as f64));
                 let v = r1 + b(match_player::MOMENT_WORK_RATE) as i32;
-                if v > random(ftol(d as f64 * read_f32(rdata::F32_8) as f64)) {
+                if v > random(ftol_x87(d as f64 * read_f32(rdata::F32_8) as f64)) {
                     rep(call, bx, by, 0x100);
                     *w(match_player::ACTION) = 0x100;
                     return;
@@ -7410,7 +7410,7 @@ pub(crate) unsafe fn off_ball_move_injected(j: MatchPlayer, call: &mut dyn FnMut
     let (mut px, mut py) = (0i8, 0i8);
     let mut pressiona = false;
     if ae != -1 && t & 1 == 0 {
-        let threshold: f64 = if random(ftol(j.teamwork() as f64 + read_f64(rdata::F64_0_5))) == 0 {
+        let threshold: f64 = if random(ftol_x87(j.teamwork() as f64 + read_f64(rdata::F64_0_5))) == 0 {
             read_f64(rdata::F64_0)
         } else {
             let mut f = f64::from_bits(0x3ff8_0000_0000_0000);
@@ -7792,7 +7792,7 @@ pub(crate) unsafe fn off_ball_decide_injected(j: MatchPlayer, call: &mut dyn FnM
         }
         return;
     }
-    let n = ftol(j.teamwork() as f64 + read_f32(rdata::F32_10) as f64);
+    let n = ftol_x87(j.teamwork() as f64 + read_f32(rdata::F32_10) as f64);
     if j.moment_flair() as i32 > random(n) && free(call, &subir) {
         return;
     }
@@ -8010,7 +8010,7 @@ pub(crate) unsafe extern "thiscall" fn match_performance(this: usize, marcar: u8
     let soma37 = move |v: i32| *p37 = (*p37).wrapping_add(v as i16);
     let word = |o: usize, v: i32| write_i16(this.addr() + o, v as i16);
     exe::match_player_calc_match_attributes(this);
-    let bl: i8 = if (sheet().goalkeeper() as i32) > 15 { 20 } else { ftol((sheet().goalkeeper() as i32) as f64 * read_f64(rdata::F64_0_75) + read_f64(rdata::F64_5)) as i8 };
+    let bl: i8 = if (sheet().goalkeeper() as i32) > 15 { 20 } else { ftol_x87((sheet().goalkeeper() as i32) as f64 * read_f64(rdata::F64_0_75) + read_f64(rdata::F64_5)) as i8 };
     *p37 = 0;
     // the position in table A against the attributes at +0x10..+0x1a
     let greater_13_14 = || core::cmp::max(fb(player_sheet::ATTACKING_MIDFIELDER) - 5, fb(player_sheet::MIDFIELDER));
@@ -8051,7 +8051,7 @@ pub(crate) unsafe extern "thiscall" fn match_performance(this: usize, marcar: u8
         None
     };
     if let Some(x) = x {
-        soma37(ftol(x * read_f64(rdata::F64_NEG_1_5)) as i16 as i32);
+        soma37(ftol_x87(x * read_f64(rdata::F64_NEG_1_5)) as i16 as i32);
     }
     if ta() & 0x80 != 0 {
         soma37(fb(player_sheet::LEFT_SIDE) - 20);
@@ -8069,7 +8069,7 @@ pub(crate) unsafe extern "thiscall" fn match_performance(this: usize, marcar: u8
     }
     // table B, when it differs from A
     if tb() != ta() {
-        let tres_quartos = |v: i32| soma37(ftol(v as f64 * read_f64(rdata::F64_NEG_0_75)) as i16 as i32);
+        let tres_quartos = |v: i32| soma37(ftol_x87(v as f64 * read_f64(rdata::F64_NEG_0_75)) as i16 as i32);
         let b_altas = || tb() & 0x100 != 0 || tb() & 0x200 != 0 || tb() & 0x400 != 0;
         let mark = || (engine().addr() as isize + (engine::SIDE_OUT_OF_POSITION as isize) + this.side() as isize) as *mut u8;
         if tb() & 2 != 0 {
@@ -8104,12 +8104,12 @@ pub(crate) unsafe extern "thiscall" fn match_performance(this: usize, marcar: u8
     } else if tb() & 0x800 != 0 {
         middle(fb(player_sheet::RIGHT_SIDE));
     }
-    *p37 = ftol((read_f64(rdata::F64_1_079) - (this.versatility() as f64) * read_f64(rdata::F64_0_0395)) * *p37 as f64) as i16;
+    *p37 = ftol_x87((read_f64(rdata::F64_1_079) - (this.versatility() as f64) * read_f64(rdata::F64_0_0395)) * *p37 as f64) as i16;
     let w37 = move || *p37 as i32;
 
     // bytes +0x10e..+0x117 (no minimo 2)
     let min2 = |v: f64, two: f64| if v > two { v } else { two };
-    let byte_em = |o: usize, v: f64| write_u8(this.addr() + o, ftol(v) as u8);
+    let byte_em = |o: usize, v: f64| write_u8(this.addr() + o, ftol_x87(v) as u8);
     let d3 = || (w37() / 3) as f64;
     byte_em(match_player::BASE_PACE, min2((this.pace() as f64) + (read_f32(rdata::F32_4) as f64), read_f32(rdata::F32_2) as f64));
     byte_em(match_player::BASE_POSITIONING, min2(d3() + (this.positioning() as f64) + (read_f32(rdata::F32_4) as f64), read_f32(rdata::F32_2) as f64));
@@ -8123,10 +8123,10 @@ pub(crate) unsafe extern "thiscall" fn match_performance(this: usize, marcar: u8
     byte_em(match_player::BASE_DECISIONS, min2((this.decisions() as f64) + (read_f32(rdata::F32_2) as f64), read_f32(rdata::F32_2) as f64));
 
     // palavras derivadas: T = x*10 + 0,5; Q = (x^2 + 1)/2; D = 2x*10 + 0,5 (truncados)
-    let t = |o: usize| ftol((read_f32(this.addr() + o) as f64) * read_f64(rdata::F64_10) + read_f64(rdata::F64_0_5)) as i16 as i32;
-    let qd = |o: usize| ftol(((read_f32(this.addr() + o) as f64) * (read_f32(this.addr() + o) as f64) + read_f64(rdata::F64_1)) * read_f64(rdata::F64_0_5)) as i16 as i32;
-    let d = |o: usize| ftol(((read_f32(this.addr() + o) as f64) + (read_f32(this.addr() + o) as f64)) * read_f64(rdata::F64_10) + read_f64(rdata::F64_0_5)) as i16 as i32;
-    let blq = ftol(((bl as i32 as f64) * (bl as i32 as f64) + read_f64(rdata::F64_1)) * read_f64(rdata::F64_0_5)) as i16 as i32;
+    let t = |o: usize| ftol_x87((read_f32(this.addr() + o) as f64) * read_f64(rdata::F64_10) + read_f64(rdata::F64_0_5)) as i16 as i32;
+    let qd = |o: usize| ftol_x87(((read_f32(this.addr() + o) as f64) * (read_f32(this.addr() + o) as f64) + read_f64(rdata::F64_1)) * read_f64(rdata::F64_0_5)) as i16 as i32;
+    let d = |o: usize| ftol_x87(((read_f32(this.addr() + o) as f64) + (read_f32(this.addr() + o) as f64)) * read_f64(rdata::F64_10) + read_f64(rdata::F64_0_5)) as i16 as i32;
+    let blq = ftol_x87(((bl as i32 as f64) * (bl as i32 as f64) + read_f64(rdata::F64_1)) * read_f64(rdata::F64_0_5)) as i16 as i32;
     let v = (blq + t(match_player::HANDLING) + t(match_player::POSITIONING) + t(match_player::JUMPING) + t(match_player::DECISIONS) + t(match_player::ANTICIPATION)) / 6;
     word(match_player::MOVE_SKILL, v);
     word(match_player::MOVE_SKILL + 0x2, v);
@@ -8149,18 +8149,18 @@ pub(crate) unsafe extern "thiscall" fn match_performance(this: usize, marcar: u8
     word(match_player::MOVE_SKILL + 0x1c, (qd(match_player::TECHNIQUE) + t(match_player::TECHNIQUE)) / 2);
     word(match_player::MOVE_SKILL + 0x1e, (t(match_player::TECHNIQUE) + t(match_player::AGILITY) + t(match_player::BALANCE) + t(match_player::STRENGTH)) / 4);
     word(match_player::MOVE_SKILL + 0x20, (t(match_player::TECHNIQUE) + t(match_player::BALANCE) + t(match_player::STRENGTH)) / 3);
-    word(match_player::MOVE_SKILL + 0x22, ftol((qd(match_player::TECHNIQUE) + d(match_player::TECHNIQUE) + t(match_player::ACCELERATION)) as f64 * read_f64(rdata::F64_0_2298850575)) as i32);
-    word(match_player::MOVE_SKILL + 0x24, ftol((d(match_player::PACE) + d(match_player::DRIBBLING) + qd(match_player::DRIBBLING) + t(match_player::TECHNIQUE)) as f64 * read_f64(rdata::F64_0_1538461538)) as i32);
+    word(match_player::MOVE_SKILL + 0x22, ftol_x87((qd(match_player::TECHNIQUE) + d(match_player::TECHNIQUE) + t(match_player::ACCELERATION)) as f64 * read_f64(rdata::F64_0_2298850575)) as i32);
+    word(match_player::MOVE_SKILL + 0x24, ftol_x87((d(match_player::PACE) + d(match_player::DRIBBLING) + qd(match_player::DRIBBLING) + t(match_player::TECHNIQUE)) as f64 * read_f64(rdata::F64_0_1538461538)) as i32);
     word(match_player::MOVE_SKILL + 0x28, (t(match_player::AGILITY) + t(match_player::BALANCE)) / 2);
     word(match_player::MOVE_SKILL + 0x2c, t(match_player::FINISHING));
     word(match_player::MOVE_SKILL + 0x2e, t(match_player::FINISHING));
     // the square of +0xe5 stays on the x87 stack between the following calculations
     let e5q = (this.technique() as f64) * (this.technique() as f64);
-    let a = ftol((e5q + read_f64(rdata::F64_1)) * read_f64(rdata::F64_0_5)) as i16 as i32;
+    let a = ftol_x87((e5q + read_f64(rdata::F64_1)) * read_f64(rdata::F64_0_5)) as i16 as i32;
     let t99 = t(match_player::FINISHING);
     word(match_player::MOVE_SKILL + 0x30, (a + t99) / 2);
     word(match_player::MOVE_SKILL + 0x32, (t(match_player::TECHNIQUE) + t99) / 2);
-    let bq = ftol(((e5q + e5q) + read_f64(rdata::F64_1)) * read_f64(rdata::F64_0_5)) as i16 as i32;
+    let bq = ftol_x87(((e5q + e5q) + read_f64(rdata::F64_1)) * read_f64(rdata::F64_0_5)) as i16 as i32;
     let d99 = d(match_player::FINISHING);
     let tc5 = t(match_player::PASSING);
     word(match_player::MOVE_SKILL + 0x36, (bq + d99 + tc5) / 5);
@@ -8173,17 +8173,17 @@ pub(crate) unsafe extern "thiscall" fn match_performance(this: usize, marcar: u8
     word(match_player::MOVE_SKILL + 0x40, (a + tc5) / 2);
     word(match_player::MOVE_SKILL + 0x7a, t(match_player::HEADING));
     let ddq = (this.tackling() as f64) * (this.tackling() as f64);
-    let c = ftol(((ddq + ddq) + read_f64(rdata::F64_1)) * read_f64(rdata::F64_0_5)) as i16 as i32;
+    let c = ftol_x87(((ddq + ddq) + read_f64(rdata::F64_1)) * read_f64(rdata::F64_0_5)) as i16 as i32;
     let t81 = t(match_player::BALANCE);
     let t7d = t(match_player::ANTICIPATION);
     word(match_player::MOVE_SKILL + 0x42, (t81 + t7d + c) / 4);
     word(match_player::MOVE_SKILL + 0x26, (qd(match_player::PACE) + t81 + t7d + c) / 5);
-    word(match_player::MOVE_SKILL + 0x44, ftol((ddq + read_f64(rdata::F64_1)) * read_f64(rdata::F64_0_5)) as i32);
-    word(match_player::MOVE_SKILL + 0x46, ftol(qd(match_player::BRAVERY) as f64 * read_f64(rdata::F64_0_9090909091)) as i32);
+    word(match_player::MOVE_SKILL + 0x44, ftol_x87((ddq + read_f64(rdata::F64_1)) * read_f64(rdata::F64_0_5)) as i32);
+    word(match_player::MOVE_SKILL + 0x46, ftol_x87(qd(match_player::BRAVERY) as f64 * read_f64(rdata::F64_0_9090909091)) as i32);
     let t79 = t(match_player::AGILITY);
-    word(match_player::MOVE_SKILL + 0x48, ftol((t7d + t79) as f64 * read_f64(rdata::F64_0_4)) as i32);
+    word(match_player::MOVE_SKILL + 0x48, ftol_x87((t7d + t79) as f64 * read_f64(rdata::F64_0_4)) as i32);
     word(match_player::MOVE_SKILL + 0x4c, (qd(match_player::STRENGTH) + t81) / 2);
-    let bq2 = ftol(((bl as i32 * bl as i32) as f64 + read_f64(rdata::F64_1)) * read_f64(rdata::F64_0_5)) as i16 as i32;
+    let bq2 = ftol_x87(((bl as i32 * bl as i32) as f64 + read_f64(rdata::F64_1)) * read_f64(rdata::F64_0_5)) as i16 as i32;
     let ba5 = bq2 + t(match_player::HANDLING);
     word(match_player::MOVE_SKILL + 0x4e, (ba5 + t79) / 3);
     word(match_player::MOVE_SKILL + 0x50, (ba5 + t79) / 3);
@@ -8226,7 +8226,7 @@ pub(crate) unsafe extern "thiscall" fn match_performance(this: usize, marcar: u8
             6 => w * read_f64(rdata::F64_3_5),
             _ => ((w37f + 30) * 7) as f64 + w * read_f64(rdata::F64_0_775),
         };
-        *p = ftol(v) as i16;
+        *p = ftol_x87(v) as i16;
     }
     exe::match_player_roll_current_ratings(this);
 }
@@ -8356,7 +8356,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
     let teto30 = |v: i32| if v as f64 > read_f64(rdata::F64_30) { v as f64 } else { read_f64(rdata::F64_30) };
     if !p.is_null() && *(p.addr() as *const i32) >= n_persons() {
         let v = (read_i16(sheet().addr() + 5) as i32) as f64 + l18 as f64 * read_f64(rdata::F64_1_75) - l1c as f64;
-        this.set_effective_ability(ftol(v) as i16);
+        this.set_effective_ability(ftol_x87(v) as i16);
         let h = (exe::database_get_contract_rating_modifier(p, club_side()) as i8 as i32) / 2;
         let a = h as f64 + (l30 as f64 - l1c as f64);
         if (this.consistency_roll() as f64) < a {
@@ -8365,7 +8365,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
     } else {
         let id = *(p.addr() as *const i32);
         let v = (read_i16(sheet().addr() + 5) as i32) as f64 + l18 as f64 * read_f64(rdata::F64_1_75) - l1c as f64 - tabela79(id) as f64 + (this.frustration() as i32 / 2) as f64;
-        this.set_effective_ability(ftol(v) as i16);
+        this.set_effective_ability(ftol_x87(v) as i16);
         let h = (exe::database_get_contract_rating_modifier(p, club_side()) as i8 as i32) / 2;
         let h17 = this.match_form() as i32 / 2 - 5;
         let a = (h as f64 + h17 as f64) + (l30 as f64 - l1c as f64) + bl as f64 + this.frustration() as f64;
@@ -8376,7 +8376,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
     if exe::database_is_national_team(this.club()) != 0 && ta() != 1 {
         l14 = (l14 as f64 + (read_f32(rdata::F32_5) as f64)) as f32;
     }
-    this.set_effective_ability(ftol(((this.match_form() as i32 - 10) * this.consistency_roll() as i32) as f64 * read_f64(rdata::F64_0_03333333333) + (this.effective_ability() as i32) as f64) as i16);
+    this.set_effective_ability(ftol_x87(((this.match_form() as i32 - 10) * this.consistency_roll() as i32) as f64 * read_f64(rdata::F64_0_03333333333) + (this.effective_ability() as i32) as f64) as i16);
     // youth bonus (+0x14 of the tactics frame, cell +0x69) in L14
     {
         let t = *((engine().addr() + engine::MATCH) as *const usize);
@@ -8417,7 +8417,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
     }
     let p3b = (this.addr() + match_player::EFFECTIVE_ABILITY) as *mut i16;
     if ta() == 1 {
-        let v = ftol((read_i16(sheet().addr() + 5) as i32) as f64 * read_f64(rdata::F64_0_75)) as i16;
+        let v = ftol_x87((read_i16(sheet().addr() + 5) as i32) as f64 * read_f64(rdata::F64_0_75)) as i16;
         if *p3b < v {
             *p3b = v;
         }
@@ -8430,7 +8430,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
     if *p3b > lim {
         *p3b = lim;
     }
-    *p3b = ftol(*p3b as f64 * read_f64(rdata::F64_0_5) + read_f64(rdata::F64_80)) as i16;
+    *p3b = ftol_x87(*p3b as f64 * read_f64(rdata::F64_0_5) + read_f64(rdata::F64_80)) as i16;
     let maior150 = *p3b > 150;
     let w3 = || *p3b as f64;
     let zera = |o: usize| *((this.addr() + o) as *mut u32) = 0;
@@ -8982,7 +8982,7 @@ pub(crate) unsafe extern "thiscall" fn player_rating(this: usize) -> i32 {
     };
     let y = if x > 1000.0 { (x - 1000.0) * 0.000125 + 1.0 } else { 1.0 };
     let e = sheet.leadership() as f64;
-    ftol(e * y - (n * n + 5.0) * 0.1 + form + c + 0.5)
+    ftol_x87(e * y - (n * n + 5.0) * 0.1 + form + c + 0.5)
 }
 
 /// Match player: a test by physical condition (+0x1a2): code 1 passes if random(110 - condition) < limit; codes 2..5 if
@@ -8992,13 +8992,13 @@ pub(crate) unsafe extern "thiscall" fn condition_test(this: usize, code: i8, tar
     let this = MatchPlayer(this);
     let limit: i32 = if target != 0 && target == this.last_fouled_by() { 8 } else { 1 };
     let c = this.confidence() as f64;
-    let v = ftol(game_pow(c, read_f64(rdata::F64_2))) as f64;
+    let v = ftol_x87(game_pow(c, read_f64(rdata::F64_2))) as f64;
     let n = match code {
-        1 => 0x6e - ftol(c) as i8 as i32,
-        2 => ftol(read_f64(rdata::F64_400000) / v),
-        3 => ftol(read_f64(rdata::F64_2000000) / v),
-        4 => ftol(read_f64(rdata::F64_4000000) / v),
-        5 => ftol(read_f64(rdata::F64_8000000) / v),
+        1 => 0x6e - ftol_x87(c) as i8 as i32,
+        2 => ftol_x87(read_f64(rdata::F64_400000) / v),
+        3 => ftol_x87(read_f64(rdata::F64_2000000) / v),
+        4 => ftol_x87(read_f64(rdata::F64_4000000) / v),
+        5 => ftol_x87(read_f64(rdata::F64_8000000) / v),
         _ => return 0,
     };
     (random(n) < limit) as u8
@@ -9181,7 +9181,7 @@ pub(crate) unsafe extern "thiscall" fn shot_value(this: usize, kind: *mut i8, so
     let t = *kind;
     let mut e: i32;
     let match_condition = || {
-        let q = ftol(j.stamina() as f64) as i16 as i32;
+        let q = ftol_x87(j.stamina() as f64) as i16 as i32;
         let c = 10000 - q;
         random(c.wrapping_mul(c) / 50000)
     };
@@ -9218,7 +9218,7 @@ pub(crate) unsafe extern "thiscall" fn shot_value(this: usize, kind: *mut i8, so
             for o in [0x79, 0x81, 0xe5] {
                 let a = read_f32(j.addr() + o);
                 if !(a >= read_f32(rdata::F32_15)) {
-                    let v = ftol(a as f64 * read_f32(rdata::F32_667) as f64 - read_f32(rdata::F32_10000) as f64);
+                    let v = ftol_x87(a as f64 * read_f32(rdata::F32_667) as f64 - read_f32(rdata::F32_10000) as f64);
                     *bp = bp.wrapping_add(random(v) as u16);
                 }
             }
@@ -9233,7 +9233,7 @@ pub(crate) unsafe extern "thiscall" fn shot_value(this: usize, kind: *mut i8, so
             bp = bp.wrapping_add((j.moment_flair() as i16 as u16).wrapping_sub(15).wrapping_mul(20));
         } else if t == 0x39 {
             let v = (read_f64(rdata::F64_200) - j.agility() as f64 * read_f64(rdata::F64_7_5)) * (3 - c as i32) as f64;
-            let r = random(ftol(v));
+            let r = random(ftol_x87(v));
             bp = bp.wrapping_sub(r as u16);
             *q39 = (*q39).wrapping_sub(r as u16);
         } else if c == 3 {
@@ -9264,14 +9264,14 @@ pub(crate) unsafe extern "thiscall" fn shot_value(this: usize, kind: *mut i8, so
         if minimum > a {
             a = minimum;
         }
-        let mut k = ftol(a) as u16;
+        let mut k = ftol_x87(a) as u16;
         if *kind == 0x3a {
             k = (k as i16 as i32 / 3) as u16;
         }
         let e5 = j.technique() as f64;
         let f = if !(e5 >= 1.0) { 1.0 } else { e5 };
         let m = k as i16 as i32;
-        e -= random(ftol(m as f64 * read_f64(rdata::F64_5) / f));
+        e -= random(ftol_x87(m as f64 * read_f64(rdata::F64_5) / f));
         *q39 = (*q39).wrapping_add((-(m / 2)) as u16);
     }
     // long shot (outside the area, distance > 2.2): variation by the engine’s wind/pitch
@@ -9321,7 +9321,7 @@ pub(crate) unsafe extern "thiscall" fn shot_value(this: usize, kind: *mut i8, so
     let x = j.cell_x();
     let canto = (j.cell_y() == 0 || j.cell_y() == 0xb) && (x as i32 - 4).abs() == 1;
     if (t == 3 || t == 0x39) && dist >= read_f64(rdata::F64_1) && !canto {
-        let mut v = ftol(game_pow(dist + read_f64(rdata::F64_2), read_f64(rdata::F64_8)) * read_f64(rdata::F64_0_3333333333));
+        let mut v = ftol_x87(game_pow(dist + read_f64(rdata::F64_2), read_f64(rdata::F64_8)) * read_f64(rdata::F64_0_3333333333));
         if v > 0x3a98 {
             v = 0x3a98;
         }
@@ -9341,7 +9341,7 @@ pub(crate) unsafe extern "thiscall" fn shot_value(this: usize, kind: *mut i8, so
         e += 0x64;
         *q39 = (*q39).wrapping_add(0x64);
     } else if dist > read_f64(rdata::F64_1_5) {
-        let mut c = ftol(game_pow(dist * read_f64(rdata::F64_0_6) + read_f64(rdata::F64_1_5), read_f64(rdata::F64_7)));
+        let mut c = ftol_x87(game_pow(dist * read_f64(rdata::F64_0_6) + read_f64(rdata::F64_1_5), read_f64(rdata::F64_7)));
         if c > 0x7530 {
             c = 0x7530;
         }
@@ -9355,7 +9355,7 @@ pub(crate) unsafe extern "thiscall" fn shot_value(this: usize, kind: *mut i8, so
             f = read_f64(rdata::F64_0_2);
         }
         *q39 = (*q39).wrapping_add((-(k / 2)) as u16);
-        let mut r = ftol(k as f64 * f);
+        let mut r = ftol_x87(k as f64 * f);
         if r > 0x7530 {
             r = 0x7530;
         }
@@ -9583,3 +9583,59 @@ pub(crate) unsafe extern "thiscall" fn aim_set_facing_direction(this: usize, a: 
     }
 }
 
+pub(crate) unsafe extern "stdcall" fn compare_set_piece_code(c: i16) -> u8 {
+    let r = original_fn::<unsafe extern "stdcall" fn(i16) -> u8>(IDX_SET_PIECE_CODE)(c);
+    let n = set_piece_code(c);
+    SCOREBOARD.record(r == n, || format!("set_piece_code({}) original={} rust={}", c, r, n));
+    r
+}
+
+#[allow(clippy::too_many_arguments)]
+pub(crate) unsafe extern "thiscall" fn compare_goalkeeper_save(this: usize, a: i8, b: i8, a3: u8, codigo: i8, saida: *mut u8, rebote: *mut u8) -> u16 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, u8, i8, *mut u8, *mut u8) -> u16>(IDX_GOALKEEPER_SAVE);
+    let mut reg = vec![(saida as usize, 1), (rebote as usize, 1)];
+    reg.extend(crate::rng::STATE_REGIONS);
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, a, b, a3, codigo, saida, rebote), || crate::rng::without_counting(|| goalkeeper_save(this, a, b, a3, codigo, saida, rebote)));
+    SCOREBOARD.record(igual && r == n, || format!("goalkeeper_save({}, {}, {}, {}) original={} {:x?} rust={} {:x?}", a, b, a3, codigo, r as i16, mo, n as i16, mr));
+    r
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_control_of_move(this: usize, codigo: *mut i8, a: *mut u8, b: *mut u8) -> u16 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut i8, *mut u8, *mut u8) -> u16>(IDX_CONTROL_OF_MOVE);
+    let mut reg = vec![(codigo as usize, 1), (a as usize, 1), (b as usize, 1)];
+    reg.extend(crate::rng::STATE_REGIONS);
+    let c0 = *codigo;
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, codigo, a, b), || crate::rng::without_counting(|| control_of_move(this, codigo, a, b)));
+    SCOREBOARD.record(igual && r == n, || format!("control_of_move({}) original={} {:x?} rust={} {:x?}", c0, r as i16, mo, n as i16, mr));
+    r
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_shot_value(this: usize, tipo: *mut i8, som: *mut u16) -> u16 {
+    let this = MatchPlayer(this);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut i8, *mut u16) -> u16>(IDX_SHOT_VALUE);
+    let mut reg = vec![(tipo as usize, 1), (som as usize, 2), (this.addr() + match_player::SHOT_QUALITY, 2)];
+    reg.extend(crate::rng::STATE_REGIONS);
+    let t0 = *tipo;
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this.addr(), tipo, som), || crate::rng::without_counting(|| shot_value(this.addr(), tipo, som)));
+    SCOREBOARD.record(igual && r == n, || format!("shot_value(kind {}) original={} {:x?} rust={} {:x?}", t0, r as i16, mo, n as i16, mr));
+    r
+}
+
+/// { `player_side` } (match_pl.cpp, 4 bytes, not hookable): the player's side. Read directly.
+pub(crate) unsafe fn side_of_player(player: MatchPlayer) -> i8 {
+    player.side()
+}
+
+pub(crate) unsafe fn random(n: i32) -> i32 {
+    exe::utils_random(n)
+}
+
+/// `_ftol`: the x87 value truncated towards zero (64-bit, the caller keeps the low dword).
+pub(crate) fn ftol(v: f64) -> i32 {
+    v as i64 as i32
+}
+
+/// Runs the original recording the comments and the Rust copy replaying them; returns (equal, how many).
+pub(crate) unsafe fn compare_with_commentary(original: impl FnOnce(), rust: impl FnOnce(AddEventCall)) -> (bool, usize) {
+    compare_with_commentary_at(&[], original, rust)
+}

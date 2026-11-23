@@ -1313,3 +1313,313 @@ pub(crate) unsafe extern "thiscall" fn european_cup_create_round_table(this: usi
     t
 }
 
+/// The season turnover of the European Cup (the Champions League): last season's tables, entrant book and stages freed,
+/// the season archived, the year moved on by one, the UEFA seeding's new season, the entrants and the qualifying entry
+/// table collected, the round table and the tie tree rebuilt and the predicted positions.
+///
+/// `european_cup_free_season` with the entrant book (`cup::ENTRANT_BOOK`) and the stages (destroyed, then
+/// `cup::CURRENT_STAGE` = −1); then `european_turnover_update_seeding`. Then, each with its own box (european_cup.cpp):
+/// the entrants (`exe::europeancup_collect_entrants` EuropeanCup::collect_entrants, thiscall, ret 0) when it returns 0
+/// (line 0x40c: here zero is the failure, not a negative value), the qualifying entry table
+/// (`exe::europeancup_build_qualifying_entry_table`, thiscall, ret 0) when negative (line 0x413), the round table
+/// (virtual `comp_vtable::SET_UP_RULES`, line 0x41a) and the tie tree (virtual `cup_vtable::MAP_FIXTURE_TREE`, line
+/// 0x421) when negative. Finally the predicted positions (virtual `comp_vtable::SET_PREDICTED_POSITIONS`), whose eax it
+/// returns. After a box the copy returns 0 (the original returns the box's eax; the caller does not read it).
+/// Original: `EuropeanCup::start_new_season` (0x584d60, european_cup.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn european_cup_start_new_season(this: usize) -> u32 {
+    use european_turnover_consts as et;
+    let this = Cup(this);
+    european_cup_free_season(this, true, true);
+    european_turnover_update_seeding();
+    covered!("mwg_9 european cup rollover");
+    if exe::europeancup_collect_entrants(this) == 0 {
+        show_error_at(et::EUROPEAN_CUP_CPP, 0x40c);
+        return 0;
+    }
+    if exe::europeancup_build_qualifying_entry_table(this) < 0 {
+        show_error_at(et::EUROPEAN_CUP_CPP, 0x413);
+        return 0;
+    }
+    if call_cup_virtual(this, comp_vtable::SET_UP_RULES) < 0 {
+        show_error_at(et::EUROPEAN_CUP_CPP, 0x41a);
+        return 0;
+    }
+    if call_cup_virtual(this, cup_vtable::MAP_FIXTURE_TREE) < 0 {
+        show_error_at(et::EUROPEAN_CUP_CPP, 0x421);
+        return 0;
+    }
+    call_cup_virtual(this, comp_vtable::SET_PREDICTED_POSITIONS) as u32
+}
+
+/// Comparer for `european_cup_start_new_season`: only the original runs (it frees and rebuilds the cup); the year must
+/// go up by one.
+pub(crate) unsafe extern "thiscall" fn compare_european_cup_start_new_season(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_EUROPEAN_CUP_START_NEW_SEASON);
+    compare_cup_new_season("european_cup_start_new_season", Cup(this), || o(this))
+}
+
+/// Rule: the Champions League news of a club's fate: in the qualifying rounds (stage −1), a club going through to
+/// phase 1 gets its text and one dropping out goes to the UEFA Cup ("are entered for the UEFA Cup"), unless the round
+/// is a base round 0xfa or 0x104 or there is a news object (then the generic news); in the first group phase (stages up
+/// to 7) qualification uses the generic cup news and elimination sends the club to the UEFA Cup; in the second group
+/// phase (stages 8 to 11) elimination is "knocked out of" the competition; the final stage (12) goes to the generic
+/// news.
+///
+/// `EuropeanCup::build_fate_news_text(club_id, outcome, stage, a4, fixture, a6, a7, a8, news, text)` (10 dwords, ret
+/// 0x28). The UEFA Cup record is [`G_CLUB_COMP_TABLE`] + 0x6b × [`KEY_CLUB_COMP_UEFA_CUP`]; the competition's own is +4.
+/// Stage −1: if the base round id of the fixture's round word +0x30 (comp_util_get_base_round_id
+/// `FN_COMP_UTIL_GET_BASE_ROUND_ID`, cdecl, called twice) is 0xfa or 0x104, or `news` is set: the generic news (Comp
+/// 0x48c6d0(this, club_id, outcome, −1, a4, fixture, a6, 0, a8, news, text), thiscall, ret 0x28); otherwise outcome 1:
+/// the text 0x9c4a1c with the competition's short name (+0x38, byte +0x52) and its link; other outcomes: the text
+/// 0x9c49c0 ("are entered for the UEFA CUP") with the UEFA Cup's short name and link. Stages below 8 (signed): outcome
+/// 6, cdecl 0x4b4590(club_id, a4, competition, 6, news, text); 0xfe with `news`: the text 0x9c4940 with the
+/// competition's name (+4, byte +0x37) and its link; 0xfe without: the UEFA Cup text 0x9c49c0, whose competition link
+/// carries the UEFA Cup's name but the competition's own record as data (as the original). Stages 8 to 11: outcome 6 as
+/// above; 0xfe with `news`: the text 0x987ae0 with the competition's name (+4, byte +0x37); without: the text 0x987a80
+/// ("knocked out of") with its short name (+0x38, byte +0x52). Stage 12: the generic news with 0xc for the stage.
+/// Anything else: nothing (`european_cup_fate_text` writes the texts).
+/// Original: `EuropeanCup::build_fate_news_text` (0x584550, european_cup.cpp, thiscall, ret 0x28).
+#[allow(clippy::too_many_arguments)]
+pub(crate) unsafe extern "thiscall" fn european_cup_build_fate_news_text(this: usize, club_id: u32, outcome: u32, stage: u32, a4: u32, fixture: usize, a6: u32, _a7: u32, a8: u32, news: u32, text: usize) {
+    let (d, f) = (outcome as u8, stage as u8 as i8);
+    let comp = read_usize(this + 4);
+    let uefa = read_usize(G_CLUB_COMP_TABLE).wrapping_add(read_usize(KEY_CLUB_COMP_UEFA_CUP).wrapping_mul(0x6b));
+    let generic = |s: i32| {
+        let g: unsafe extern "thiscall" fn(usize, u32, u32, i32, u32, usize, u32, u32, u32, u32, usize) = core::mem::transmute(FN_COMP_BUILD_FATE_NEWS_TEXT);
+        g(this, club_id, outcome, s, a4, fixture, a6, 0, a8, news, text);
+    };
+    let cup_news = || {
+        let g: unsafe extern "C" fn(u32, u32, usize, i32, u32, usize) = core::mem::transmute(FN_COMP_UTIL_WRITE_GROUP_QUALIFY_NEWS);
+        g(club_id, a4, comp, 6, news, text);
+    };
+    if f == -1 {
+        let w = read_u16(fixture + 0x30) as u32;
+        if exe::comp_util_get_base_round_id(w) as u16 == 0xfa || exe::comp_util_get_base_round_id(w) as u16 == 0x104 || news != 0 {
+            return generic(-1);
+        }
+        covered!("cqx_14 champions league qualifying text");
+        if d == 1 {
+            european_cup_fate_text(text, club_id, 0x9c4a1c, read_u8(comp + 0x52), comp + 0x38, comp);
+        } else {
+            european_cup_fate_text(text, club_id, 0x9c49c0, read_u8(uefa + 0x52), uefa + 0x38, uefa); // cqx14: dropped into the UEFA Cup
+        }
+    } else if f < 8 {
+        if d == 6 {
+            cup_news();
+        } else if d == 0xfe {
+            if news != 0 {
+                european_cup_fate_text(text, club_id, 0x9c4940, read_u8(comp + 0x37), comp + 4, comp);
+            } else {
+                european_cup_fate_text(text, club_id, 0x9c49c0, read_u8(uefa + 0x52), uefa + 0x38, comp);
+            }
+        }
+    } else if f < 0xc {
+        if d == 6 {
+            cup_news();
+        } else if d == 0xfe {
+            if news != 0 {
+                european_cup_fate_text(text, club_id, 0x987ae0, read_u8(comp + 0x37), comp + 4, comp);
+            } else {
+                european_cup_fate_text(text, club_id, 0x987a80, read_u8(comp + 0x52), comp + 0x38, comp);
+            }
+        }
+    } else if f == 0xc {
+        generic(0xc);
+    }
+}
+
+/// Comparer for `european_cup_build_fate_news_text`: on the paths that only write the text (`european_cup_fate_text`)
+/// side by side with `compare_text_writer` (the original into the caller's Text, the copy into a local one); on the
+/// paths of the generic news (0x48c6d0, 0x4b4590, which may also write the news object) only the original.
+#[allow(clippy::too_many_arguments)]
+pub(crate) unsafe extern "thiscall" fn compare_european_cup_build_fate_news_text(this: usize, club_id: u32, outcome: u32, stage: u32, a4: u32, fixture: usize, a6: u32, a7: u32, a8: u32, news: u32, text: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, usize, u32, u32, u32, u32, usize)>(IDX_EUROPEAN_CUP_BUILD_FATE_NEWS_TEXT);
+    let (d, f) = (outcome as u8, stage as u8 as i8);
+    let text_only = text != 0 && if f == -1 {
+        let w = if fixture != 0 { read_u16(fixture + 0x30) as u32 } else { 0 };
+        fixture != 0 && news == 0 && exe::comp_util_get_base_round_id(w) as u16 != 0xfa && exe::comp_util_get_base_round_id(w) as u16 != 0x104
+    } else {
+        f < 0xc && d == 0xfe
+    };
+    if !text_only {
+        return o(this, club_id, outcome, stage, a4, fixture, a6, a7, a8, news, text);
+    }
+    compare_text_writer(text, || o(this, club_id, outcome, stage, a4, fixture, a6, a7, a8, news, text),
+        |t| european_cup_build_fate_news_text(this, club_id, outcome, stage, a4, fixture, a6, a7, a8, news, t),
+        || format!("european_cup_build_fate_news_text(club {}, outcome {}, stage {})", club_id, d, f));
+}
+
+/// The Champions League constructor: see `european_cup_constructor_body`.
+/// Original: `EuropeanCup::EuropeanCup` (0x5837c0, european_cup.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn construct_european_cup(this: usize, year: u32, owner: usize) -> usize {
+    european_cup_constructor_body(this, year, owner) // cqv9: the Champions League
+}
+
+/// Only the original (it allocates, draws and reads the save file), checking the plan
+/// (`eng_auto_european_check_constructor_plan`).
+pub(crate) unsafe extern "thiscall" fn compare_construct_european_cup(this: usize, year: u32, owner: usize) -> usize {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_EUROPEAN_CUP)(this, year, owner);
+    let error = eng_auto_european_check_constructor_plan(this, r, year, owner, 0x96a1d0, &CHAMPIONS_LEAGUE_FIELDS, true);
+    SCOREBOARD.record(error.is_none(), || format!("construct_european_cup({:#x}, {}, {:#x}): {}", this, year as u16, owner, error.clone().unwrap_or_default()));
+    r
+}
+
+/// The first half of a European cup's season turnover: last season's tables freed, the stages destroyed (when asked),
+/// the season archived and the year moved on by one.
+///
+/// `cup::SEASON_CLOSED` = 0; the team table (`cup::TEAM_TABLE`) freed (`exe::crt_free`, cdecl) and zeroed; with
+/// `entrant_book`, the entrant book (`cup::ENTRANT_BOOK`) freed and zeroed; the round table (`cup::ROUND_TABLE`) freed
+/// and zeroed; with tie tables (`cup::TIE_TABLES`), each of the `cup::ROUND_COUNT` rounds' (a signed word, read again on
+/// each pass) freed and zeroed, then the array freed and zeroed. With `stages`, the stages 0..=`cup::CURRENT_STAGE`
+/// (signed, read again on each pass) of `cup::STAGES` destroyed (virtual 0 with 1: the destructor that frees) and
+/// `cup::CURRENT_STAGE` = −1. The season archived in the statistics (+8, when there:
+/// `exe::comp_stats_archive_season_and_reset`(stats, 1), thiscall, ret 4); the year (`cup::YEAR`) up by one;
+/// `cup::CURRENT_ROUND` = 0 and `cup::RUN_BY_STAGES` = 0. The frees keep the original's order (the allocator is
+/// reproducible).
+pub(crate) unsafe fn european_cup_free_season(cup: Cup, entrant_book: bool, stages: bool) {
+    cup.set_season_closed(0);
+    if cup.team_table() != 0 {
+        exe::crt_free(cup.team_table());
+        cup.set_team_table(0);
+    }
+    if entrant_book && cup.entrant_book() != 0 {
+        exe::crt_free(cup.entrant_book());
+        cup.set_entrant_book(0);
+    }
+    if cup.round_table() != 0 {
+        exe::crt_free(cup.round_table());
+        cup.set_round_table(0);
+    }
+    if cup.tie_tables() != 0 {
+        let mut i = 0i32;
+        while i < cup.round_count() as i32 {
+            let p = read_usize(cup.tie_tables() + i as usize * 4);
+            if p != 0 {
+                exe::crt_free(p);
+                write_usize(cup.tie_tables() + i as usize * 4, 0);
+            }
+            i += 1;
+        }
+        exe::crt_free(cup.tie_tables());
+        cup.set_tie_tables(0);
+    }
+    if stages {
+        let mut i = 0i32;
+        while (cup.current_stage() as i32) >= 0 && i <= cup.current_stage() as i32 {
+            let f = read_usize(cup.stages() + i as usize * 4);
+            if f != 0 {
+                let destroy: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(f)));
+                destroy(f, 1);
+            }
+            i += 1;
+        }
+        cup.set_current_stage(usize::MAX);
+    }
+    let stats = read_usize(cup.addr() + 8);
+    if stats != 0 {
+        exe::comp_stats_archive_season_and_reset(stats, 1);
+    }
+    cup.set_year(cup.year().wrapping_add(1)); // mwg9: the next season's European cup
+    cup.set_current_round(0);
+    cup.set_run_by_stages(0);
+}
+
+/// The UEFA seeding's season update (when the seeding object exists): UefaSeeding::update_season(0)
+/// (`exe::uefaseeding_update_season`, push 0; mov ecx, [`G_UEFA_SEEDING`] -> thiscall, ret 4).
+pub(crate) unsafe fn european_turnover_update_seeding() {
+    let seeding = read_usize(G_UEFA_SEEDING);
+    if seeding != 0 {
+        exe::uefaseeding_update_season(seeding, 0); // mwg9: the seeding's new season
+    }
+}
+
+/// The news text "{club} ... {competition}" of the European Cup fates: the text (`exe::langlib_sprintf`(0xde1f64,
+/// `format`, the club's byte +0x52 twice, `comp_byte` twice, the club's name +0x38, `comp_name`): 8 pushes; add esp,
+/// 0x20 -> cdecl) set in `text` (Text::set_string 0x4ae660(text, 0xde1f64), thiscall, ret 4) with the club link
+/// (Text::add_link 0x4ae8a0(text, club name, 0x7d5, club), thiscall, ret 0xc) and the competition link (exe::text_add_link(text, (/// `link_name`) as usize as *const u8, 0x7d0, `link_data`)).
+pub(crate) unsafe fn european_cup_fate_text(text: usize, club_id: u32, format: usize, comp_byte: u8, comp_name: usize, link_data: usize) {
+    let club = read_usize(G_CLUB_TABLE).wrapping_add((club_id as usize).wrapping_mul(club::SIZE));
+    let b = read_u8(club + 0x52) as i8 as i32;
+    let k = comp_byte as i8 as i32;
+    let sprintf: unsafe extern "C" fn(usize, usize, i32, i32, i32, i32, usize, usize) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+    sprintf(0xde1f64, format, b, b, k, k, club + 0x38, comp_name);
+    exe::text_set_string(text, (0xde1f64) as usize as *const u8);
+    exe::text_add_link(text, (club + 0x38) as usize as *const u8, 0x7d5, club); // cqx14: the club link
+    exe::text_add_link(text, (comp_name) as usize as *const u8, 0x7d0, link_data);
+}
+
+/// The constructor of the Champions League, on the Cup base (`exe::new_cup`, thiscall, ret 0): the fixed fields (the
+/// year in `cup::YEAR`, the vtable 0x96a1d0, `cup::CURRENT_ROUND` = 0, `cup::STAGE_INDEX` = `stage_index::MAIN`,
+/// `cup::CURRENT_STAGE` = -1, `cup::STAGE_COUNT` = 0xd, the competition record in `league::COMPETITION`,
+/// `cup::CLUB_SIDES` = 2 (clubs of several nations), +0x1c and +0x20 = -1, +0x52 = 3, 7 substitutes named, 3
+/// substitutions allowed, `cup::IMPORTANCE_BIAS` = 0xa, discipline rule `EUROPE` (1), the stage array in `cup::STAGES`
+/// (`exe::crt_malloc` of 0x34, cdecl, unchecked), `cup::STAGE_LABEL` = 0, `cup::RUN_BY_STAGES` = 0); if the saved state
+/// loads (Cup::load_from_disk 0x51fc00: push 1; mov ecx, this -> thiscall, ret 4; returns != 0), returns this. On a new
+/// cup, in order: the year's European seeding (`update_season`, 0x9035a0, on `G_UEFA_SEEDING` if there is one: push 0;
+/// mov ecx -> thiscall, ret 4); the 71 entrants (`european_cup_collect_entrants`, 0x584fa0, thiscall, ret 0,
+/// unchecked); the qualifying table (`build_qualifying_entry_table`, 0x584990, thiscall, ret 0; the box for line 0x74 if
+/// it returns 0); the rounds (`eng_auto_european_create_rounds`); the tie tree (`map_fixture_tree`, 0x518790, thiscall,
+/// ret 0; the box for line 0x82 if it returns 0); the statistics in `league::COMP_STATS` (the box for line 0x89 without
+/// them); the final ranking (`european_cup_rank_teams`, 0x586900, thiscall, ret 0, unchecked). Every failing step shows
+/// its box (`show_error_at`) and returns this. Returns this. Rule: type 2 (clubs of several nations); no prize fund
+/// (`cup::PRIZE_FUND` stays as the base left it); 7 substitutes on the bench and 3 substitutions; discipline rule 1 [from
+/// the competitions reference reading, section 2.1].
+/// Original: `EuropeanCup::EuropeanCup` (0x5837c0, european_cup.cpp, thiscall, ret 8).
+pub(crate) unsafe fn european_cup_constructor_body(this: usize, year: u32, owner: usize) -> usize {
+    let this = League(this);
+    let cup = Cup(this.addr());
+    exe::new_cup(cup);
+    write_u16(this.addr() + cup::YEAR, year as u16);
+    write_usize(this.addr(), 0x96a1d0);
+    cup.set_current_round(0x0);
+    cup.set_stage_index(stage_index::MAIN);
+    write_u32(this.addr() + cup::CURRENT_STAGE, 0xffffffff);
+    write_u32(this.addr() + cup::STAGE_COUNT, 0xd);
+    write_usize(this.addr() + league::COMPETITION, owner);
+    cup.set_club_sides(0x2);
+    this.set_upper_division_id(0xffffffffu32 as i32);
+    this.set_lower_division_id((0xffffffff) as usize);
+    this.set_squad_flags(0x3);
+    cup.set_substitutes_named(0x7);
+    cup.set_substitutions_allowed(0x3);
+    cup.set_importance_bias(0xa);
+    cup.set_discipline_index(discipline_rule::EUROPE);
+    cup.set_stages(exe::crt_malloc(0x34));
+    cup.set_stage_label(0x0);
+    cup.set_run_by_stages(0x0);
+    if exe::cup_load_from_disk(this, 1) != 0 {
+        return this.addr();
+    }
+    covered!("cqv_9 champions league new");
+    // the year's European seeding (UefaSeeding::update_season 0x9035a0: push 0; mov ecx, [G_UEFA_SEEDING] -> thiscall, ret 4)
+    let s = read_usize(G_UEFA_SEEDING);
+    if s != 0 {
+        let f: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_UEFASEEDING_UPDATE_SEASON);
+        f(s, 0);
+    }
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_EUROPEANCUP_COLLECT_ENTRANTS);
+    f(this.addr());
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_EUROPEANCUP_BUILD_QUALIFYING_ENTRY_TABLE);
+    let r = f(this.addr());
+    if r == 0 {
+        show_error_at(0x9c4900, 0x74);
+        return this.addr();
+    }
+    eng_auto_european_create_rounds(cup);
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CUP_MAP_FIXTURE_TREE);
+    let r = f(this.addr());
+    if r == 0 {
+        show_error_at(0x9c4900, 0x82);
+        return this.addr();
+    }
+    if !eng_auto_european_create_comp_stats(this.addr()) {
+        show_error_at(0x9c4900, 0x89);
+        return this.addr();
+    }
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_EUROPEANCUP_RANK_TEAMS);
+    f(this.addr());
+    this.addr()
+}
+
+/// The fixed fields the Champions League constructor writes on a new cup (offset, width, value).
+pub(crate) const CHAMPIONS_LEAGUE_FIELDS: [(usize, u8, u32); 13] = [(0x1c, 4, 0xffffffff), (0x20, 4, 0xffffffff), (cup::STAGE_COUNT, 4, 0xd), (cup::CURRENT_STAGE, 4, 0xffffffff), (cup::CLUB_SIDES, 1, 0x2), (cup::STAGE_INDEX, 1, 0xff), (cup::SUBSTITUTES_NAMED, 1, 0x7), (cup::SUBSTITUTIONS_ALLOWED, 1, 0x3), (cup::DISCIPLINE_INDEX, 1, 0x1), (cup::IMPORTANCE_BIAS, 1, 0xa), (0x52, 1, 0x3), (cup::CURRENT_ROUND, 1, 0x0), (cup::RUN_BY_STAGES, 1, 0x0)];

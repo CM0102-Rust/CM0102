@@ -1,3 +1,6 @@
+use super::*;
+
+
 
 
 
@@ -2091,3 +2094,40 @@ pub const FN_PLAYER_SEARCH_PURGE_INVALID_RESULTS: usize = 0x7b1520; // PLAYER_SE
 pub const FN_PLAYER_SEARCH_ASSESS_PLAYER_TRAITS: usize = 0x7bd9d0; // player_search_assess_player_traits
 pub const FN_PLAYERSTATS_LOAD_STATS: usize = 0x7c48b0; // PlayerStats::load_stats
 pub const FN_TRANSFER_MANAGER_BUILD_REFUSAL_REASONS_TEXT: usize = 0x8e4ae0; // transfer_manager_build_refusal_reasons_text
+pub const FN_FORMATION_LOAD_FROM_DISK: usize = 0x5b5d10; // Formation::load_from_disk
+pub const FN_FRIENDLY_CREATE_AI_TOURNAMENT: usize = 0x5c3be0; // Friendly::create_ai_tournament
+pub const FN_FRIENDLY_SCHEDULE_TOUR_MATCHES: usize = 0x5c4040; // Friendly::schedule_tour_matches
+pub const FN_FRIENDLY_PICK_TOUR_NATION: usize = 0x5c4680; // Friendly::pick_tour_nation
+pub const FN_FRIENDLY_FIND_TOUR_OPPONENT: usize = 0x5c5040; // Friendly::find_tour_opponent
+pub const FN_TACTICS_READ_FROM_SAVE: usize = 0x8985c0; // Tactics::read_from_save
+
+/// Commands 25 and 26: the line array grows by one (`realloc` to count × 4 + 4; nothing on failure); 25 puts a copy of
+/// the text (`malloc` of its length + 1; nothing more when it fails), 26 a null line; the count goes up.
+pub(crate) unsafe fn add_print_line(d: usize, fr: &mut CommandFrame, command: i8) {
+    let list = read_usize(d + display_life::MEDIA_LIST);
+    if list == 0 {
+        return;
+    }
+    let lines = exe::crt_realloc(read_usize(list + print_list::LINES), read_u32(list + print_list::COUNT).wrapping_mul(4).wrapping_add(4));
+    if lines == 0 {
+        return;
+    }
+    write_usize(read_usize(d + display_life::MEDIA_LIST) + print_list::LINES, lines);
+    let list = read_usize(d + display_life::MEDIA_LIST);
+    let slot = |l: usize| read_usize(l + print_list::LINES) + (read_u32(l + print_list::COUNT) as usize).wrapping_mul(4);
+    if command == 0x19 {
+        let text = fr.addr(frame::TEXT);
+        let line = exe::crt_malloc(c_string_len(text) as u32 + 1);
+        write_usize(slot(list), line);
+        let list = read_usize(d + display_life::MEDIA_LIST);
+        let line = read_usize(slot(list));
+        if line == 0 {
+            return;
+        }
+        write_u32(list + print_list::COUNT, read_u32(list + print_list::COUNT).wrapping_add(1));
+        tel26_copy_text(line as *mut u8, text as *const u8);
+    } else {
+        write_usize(slot(list), 0);
+        write_u32(list + print_list::COUNT, read_u32(list + print_list::COUNT).wrapping_add(1));
+    }
+}

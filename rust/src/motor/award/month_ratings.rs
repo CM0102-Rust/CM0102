@@ -154,3 +154,32 @@ pub(crate) unsafe extern "thiscall" fn find_best_player(this: usize, league: i32
     }
 }
 
+/// Empties the month ratings for a new month.
+///
+/// `MONTH_RATINGS::reset(month, year)`: the entry table is freed (`exe::crt_free`) and cleared, the count and the
+/// capacity become 0, and `month_ratings_fields::MONTH` / `YEAR` the new month and year.
+/// Original: `MONTH_RATINGS::reset` (0x767f60, award/month_ratings.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn month_ratings_reset(this: usize, month: u8, year: i16) {
+    covered!("mwg_5 month reset");
+    let table = read_usize(this); // mwg5: the old month's table
+    if table != 0 {
+        exe::crt_free(table);
+        write_usize(this, 0);
+    }
+    write_u32(this + 8, 0);
+    write_u32(this + 4, 0);
+    write_u8(this + month_ratings_fields::MONTH, month);
+    write_i16(this + month_ratings_fields::YEAR, year); // mwg5: the new month's year
+}
+
+/// Comparer for `month_ratings_reset`.
+///
+/// The table is freed: it cannot run twice. Only the original runs, and what it guarantees is checked: an empty table
+/// with the month and year given.
+pub(crate) unsafe extern "thiscall" fn compare_month_ratings_reset(this: usize, month: u8, year: i16) {
+    original_fn::<unsafe extern "thiscall" fn(usize, u8, i16)>(IDX_MONTH_RATINGS_RESET)(this, month, year);
+    let ok = read_usize(this) == 0 && read_u32(this + 4) == 0 && read_u32(this + 8) == 0
+        && read_u8(this + month_ratings_fields::MONTH) == month && read_i16(this + month_ratings_fields::YEAR) == year;
+    SCOREBOARD.record(ok, || format!("month_ratings_reset({}, {}): table {:x} count {} capacity {} month {} year {}",
+        month, year, read_usize(this), read_u32(this + 4), read_u32(this + 8), read_u8(this + month_ratings_fields::MONTH), read_i16(this + month_ratings_fields::YEAR)));
+}

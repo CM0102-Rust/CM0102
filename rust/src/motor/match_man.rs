@@ -4261,3 +4261,12 @@ pub(crate) unsafe extern "C" fn perceived_ability(o: usize, p: usize, c: usize, 
     (((truth + noise) * weight + (20 - weight) * rep as i32) / 20) as i16
 }
 
+/// The first differing byte between the memories (the engine regions are large).
+pub(crate) fn first_difference(mo: &crate::comparison::MemorySnapshot, mr: &crate::comparison::MemorySnapshot) -> String {
+    mo.0.iter()
+        .zip(mr.0.iter())
+        .find_map(|(a, b)| {
+            a.1.iter().zip(b.1.iter()).position(|(x, y)| x != y).map(|k| format!("{:#x}+{:#x}: {:x?} x {:x?}", a.0, k, &a.1[k..(k + 8).min(a.1.len())], &b.1[k..(k + 8).min(b.1.len())]))
+        })
+        .unwrap_or_default()
+}

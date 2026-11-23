@@ -1208,3 +1208,115 @@ pub(crate) unsafe extern "C" fn stadium_compare_venues_by_capacity(a: usize, b: 
     eb.capacity().wrapping_sub(ea.capacity())
 }
 
+/// Rule: loading a saved game reads back the stadium bookings (the dates each venue is taken) and the venue list, and
+/// (from data version 0x3e029 on) the stashed venue id.
+///
+/// `Stadium::load_from_temp_file()`. Without CM3_TEMP\Stadium.tmp (a new game): 0. Otherwise, with fread
+/// (`exe::crt_fread`, cdecl): the booking capacity (+8, 4 bytes; short: the error box at line 0xf2) and count (+4; the
+/// box at line 0xf9); with a capacity, the booking array +0 made (`exe::crt_malloc`(12 × capacity); out of memory: the
+/// box at line 0x105) and, with a count, that many 12-byte bookings read into it (the box at line 0x113); the venue
+/// capacity (+0x14; the box at line 0x11d), count (+0x10; the box at line 0x124) and flag (+0x18, 1 byte; the box at
+/// line 0x12b); with a capacity, the venue array +0xc made (16 × capacity; the box at line 0x137) and, with a count,
+/// that many 16-byte venues read into it (the box at line 0x145), each venue's stadium (+0xc) rebuilt from its id: −1
+/// gives null, otherwise [`G_STADIUM_TABLE`] + 0x4e × id. With the data version (`game_data_version`) from 0x3e029 on,
+/// [`G_STADIUM_STASHED_VENUE_ID`] read (4 bytes; short: the box at line 0x15c, the file left open). The file closed
+/// (`exe::crt_fclose`) and 1; on the other boxes the file is closed and it returns 0. (The old arrays are not freed
+/// before the new ones, as the original.)
+/// Original: `Stadium::load_from_temp_file` (0x85ba40, stadium.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn stadium_load_from_temp_file(this: usize) -> u32 {
+    let f = temp_file_open_for_read(0xa835e0);
+    if f == 0 {
+        covered!("cqx_13 stadium without the file");
+        return 0;
+    }
+    let fail = |line: u32| -> u32 {
+        show_error_at(0xa835b0, line);
+        exe::crt_fclose(f);
+        0
+    };
+    if exe::crt_fread(this + 8, 4, 1, f) != 1 {
+        return fail(0xf2);
+    }
+    if exe::crt_fread(this + 4, 4, 1, f) != 1 {
+        return fail(0xf9);
+    }
+    if read_u32(this + 8) != 0 {
+        let b = exe::crt_malloc(read_u32(this + 8).wrapping_mul(12));
+        write_usize(this, b);
+        if b == 0 {
+            return fail(0x105);
+        }
+    }
+    if read_u32(this + 4) != 0 && exe::crt_fread(read_usize(this), 0xc, read_u32(this + 4), f) != read_u32(this + 4) {
+        return fail(0x113);
+    }
+    if exe::crt_fread(this + 0x14, 4, 1, f) != 1 {
+        return fail(0x11d);
+    }
+    if exe::crt_fread(this + 0x10, 4, 1, f) != 1 {
+        return fail(0x124);
+    }
+    if exe::crt_fread(this + 0x18, 1, 1, f) != 1 {
+        return fail(0x12b);
+    }
+    if read_u32(this + 0x14) != 0 {
+        let v = exe::crt_malloc(read_u32(this + 0x14) << 4);
+        write_usize(this + 0xc, v);
+        if v == 0 {
+            return fail(0x137);
+        }
+    }
+    if read_u32(this + 0x10) != 0 {
+        if exe::crt_fread(read_usize(this + 0xc), 0x10, read_u32(this + 0x10), f) != read_u32(this + 0x10) {
+            return fail(0x145);
+        }
+        covered!("cqx_13 stadium venues read");
+        let mut i = 0i32;
+        while i < read_i32(this + 0x10) {
+            let p = read_usize(this + 0xc) + 0x10 * i as usize + 0xc;
+            let id = read_i32(p);
+            write_usize(p, if id == -1 { 0 } else { read_usize(G_STADIUM_TABLE).wrapping_add((id as usize).wrapping_mul(0x4e)) }); // cqx13: the venue's stadium
+            i += 1;
+        }
+    }
+    if game_data_version() >= 0x3e029 && exe::crt_fread(G_STADIUM_STASHED_VENUE_ID, 4, 1, f) != 1 {
+        show_error_at(0xa835b0, 0x15c);
+        return 0;
+    }
+    exe::crt_fclose(f);
+    1
+}
+
+/// Comparer for `stadium_load_from_temp_file`, side by side over the same object: the original first, then the copy,
+/// which reads the same file again into new arrays; the counts, capacities and flag (+4..+0x19 without the venue
+/// pointer), the bookings, the venues and the stashed venue id must be equal, and the return; the copy's arrays are
+/// freed and the original's put back.
+pub(crate) unsafe extern "thiscall" fn compare_stadium_load_from_temp_file(this: usize) -> u32 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_STADIUM_LOAD_FROM_TEMP_FILE)(this);
+    let read = |this: usize| -> Vec<u8> {
+        let mut v: Vec<u8> = (4..0xcusize).chain(0x10..0x19).map(|k| read_u8(this + k)).collect();
+        let (b, n) = (read_usize(this), read_i32(this + 4).clamp(0, 0x10000) as usize);
+        if b != 0 {
+            v.extend((0..12 * n).map(|k| read_u8(b + k)));
+        }
+        let (s, m) = (read_usize(this + 0xc), read_i32(this + 0x10).clamp(0, 0x10000) as usize);
+        if s != 0 {
+            v.extend((0..16 * m).map(|k| read_u8(s + k)));
+        }
+        v.extend_from_slice(&read_u32(G_STADIUM_STASHED_VENUE_ID).to_le_bytes());
+        v
+    };
+    let original = read(this);
+    let (b, s) = (read_usize(this), read_usize(this + 0xc));
+    let c = stadium_load_from_temp_file(this);
+    let copy = read(this);
+    for (o, mine) in [(0usize, b), (0xc, s)] {
+        let p = read_usize(this + o);
+        if p != mine && p != 0 {
+            exe::crt_free(p);
+        }
+        write_usize(this + o, mine);
+    }
+    SCOREBOARD.record(r == c && copy == original, || format!("stadium_load_from_temp_file({:#x}): original {} copy {}, bytes equal {}", this, r, c, copy == original));
+    r
+}

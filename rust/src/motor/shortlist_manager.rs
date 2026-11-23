@@ -3915,3 +3915,2928 @@ pub(crate) unsafe extern "stdcall" fn position_code(m: i16) -> u8 {
     }
 }
 
+/// Places a player a club is offered (or comes across) in one of the forty slots of the club's shortlist, and returns 1
+/// when he is placed or already on it (0 otherwise).
+///
+/// `try_add_player_to_club_shortlist(player, club, positions)` (the shortlist manager in ecx). A local STAFF_CONTRACT
+/// (`exe::new_staff_contract`) receives the desired contract. Leaves with 0: a human club
+/// (`exe::human_manager_is_human_club` 0, 1); a human club (1, 1) whose manager is on holiday
+/// (`exe::human_manager_is_on_holiday`) with holiday option 4 (`exe::human_manager_get_holiday_option`) equal to 1, or
+/// equal to 2 with the player off the human's scout list (`exe::scout_manager_is_player_shortlisted`; the list is
+/// remembered for the foreign youngster rule below); the club's shortlist record (`CLUB_SHORTLISTS` + 9 × id) not active
+/// (`club_shortlist::ACTIVE` ≠ 1) or with `club_shortlist::DAYS` 100 or more. A player the club already has in the
+/// sorted (person, club) pairs returns 1 at once. Then 0 for: the work permit rules (0x84b180, with the club of the
+/// player's contract, `club_of_staff_contract`, which also stores the contract in `G_CONTRACT_LOOKUP_RESULT`); a player
+/// the club cannot bid for (`exe::transfer_manager_can_club_bid_for_player`); a club without finances. The transfer
+/// budget (`exe::finance_get_transfer_budget` with 0, 0, 0, 1, 0, at least 0) and the reputation factor (reputation ×
+/// 0.0008, at least 1) follow.
+///
+/// Each slot (`shortlist_slot`, 0x25 bytes) is skipped when: a loan slot (`FLAGS` bit 0); a non-player job (byte +0 ≠
+/// 11); an offer made (`OFFER_REF` ≠ −1); no position, or the slot's `POSITION` not all inside `positions`. A
+/// compensation deal (0x84b6f0, with the player's contract and the fee) is noted. With a contract, no compensation, a
+/// club reputation below 7000 and the player's `.value()` above the slot's ceiling (`MAX_PRICE`) × 1.3: only a
+/// transfer-listed (`exe::staff_is_transfer_listed`) player of a human seller whose value − 1,500,000 is below the
+/// ceiling goes on. A slot whose target is its replacement (`TARGET_STAFF_ID` = `REPLACEMENT_STAFF_ID` ≠ −1) or whose
+/// `DATE` is not before today is skipped. A status-5 slot (`FLAGS` & 0x1e = 0xa): over 24 years skipped; a player of
+/// another nation than the club's (the person's nation and his club's nation both differ), not on the human's scout
+/// list, needs a current reputation of 1000 and his reputation as the club's manager sees it
+/// (`exe::database_get_staff_reputation_for_viewer`) at least 1000 + random(2000). A work permit needed
+/// (`exe::transfer_manager_player_needs_work_permit`) outside status 1-3 skips.
+///
+/// The ceiling: when 0.2 × the budget is at least the slot's ceiling and there is no compensation deal, the ceiling
+/// becomes valuation² × 0.01536, at most 0.8 × the budget (the old one is kept to be put back when the player is not
+/// taken). The current target (`TARGET_STAFF_ID`, a person with a player sheet): his score and value
+/// (`exe::shortlist_manager_value_player_for_club`, with the slot's valuation), the asking price of his contract's club
+/// (human: `exe::contract_manager_get_human_asking_price`; AI: `exe::contract_manager_calc_asking_price`; none: 0), the
+/// score × the margin (`shortlist_offer_margin`); a score already at the valuation keeps the slot (next slot; the raised
+/// ceiling stays); otherwise the score to beat is the valuation less his injury (`shortlist_offer_injury_penalty`).
+/// Without a target, the target becomes −1 and the score to beat the valuation.
+///
+/// The player: his score and value for the club (with the valuation); at a seller in crisis (`finance::CRISIS_STATE` 1)
+/// his value is at most the human seller's value (`exe::contract_manager_calc_player_value`, called again when it is
+/// the lower) or his `.value()`; the asking price (none with a compensation deal: 0; a compensation fee below it
+/// replaces it, which with the 0 never happens); the seller's predicted answer
+/// (`exe::shortlist_manager_predict_selling_club_response`) 2 rejects; the score × the margin less his injury below
+/// the score to beat rejects; his interest (`exe::shortlist_manager_staff_interest_in_joining_club` with 1, 0 and the
+/// status) below 3.15 rejects. A rejection puts the ceiling back and goes to the next slot. Taken: in a purchase slot
+/// the desired wage (`exe::staff_contract_default_staff_contract`, kind = the status, job 11, as f32) × max(3.5 /
+/// interest (with 0, 0 and the status; at least 0.1), 0.9) above 1.2 × the club's wage cap (`exe::finance_get_max_wage`)
+/// ends the whole search with 0 (the ceiling stays). Otherwise he becomes the slot's target, the old target gets
+/// `exe::shortlist_manager_update_staff_status` with 3 and he enters the shortlist pairs (0x8423f0): 1. No slot: 0.
+/// The SEH frame only matters for exceptions.
+/// Original: `Shortlist_Manager::try_add_player_to_club_shortlist` (0x842e10, shortlist_manager.cpp, thiscall, ret 0xc).
+pub(crate) unsafe extern "thiscall" fn try_add_player_to_club_shortlist(this: usize, player: usize, club: usize, positions: u32) -> u32 {
+    let mut wanted = [0u8; 0x58];
+    exe::new_staff_contract(wanted.as_mut_ptr() as usize);
+    try_add_player_body(this, Staff(player), Club(club), positions, wanted.as_mut_ptr() as usize)
+}
+
+/// Comparer for `try_add_player_to_club_shortlist`: the original only (it draws random numbers, rewrites the slots'
+/// ceilings and targets, the shortlist pairs and the cached contract; it cannot run twice).
+pub(crate) unsafe extern "thiscall" fn compare_try_add_player_to_club_shortlist(this: usize, player: usize, club: usize, positions: u32) -> u32 {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(IDX_TRY_ADD_PLAYER_TO_CLUB_SHORTLIST)(this, player, club, positions) // simplification: original only
+}
+
+/// The AI's assessment of a club's squad, done when its shortlist is rebuilt: it clears and sets the squad statuses,
+/// sends players to the first team or the reserves, puts players on the transfer list, the loan list or the free
+/// transfer queue, fills and prices the shortlist slots and may sack idle staff.
+///
+/// `Shortlist_Manager::assess_club_squad(entry, club, daily, reset)`, from `update_club_shortlist` (0x83a730; daily 1,
+/// reset 0) when the club's list is redone, and with daily 0, reset 1 from `create_initial_shortlists` (0x83a1b0, at
+/// career creation) and `rebuild_club_shortlist` (0x84abe0, a new manager). `entry` is the club's 9-byte record in
+/// `shortlist_manager_fields::CLUB_SHORTLISTS` (+0 its 40 slots of 0x25 bytes, +4 `club_shortlist::ACTIVE`, +7 the
+/// formation, +8 `club_shortlist::DAYS`).
+///
+/// 1. DAYS = 0; reset is forced when slot 0's `shortlist_slot::INDEX` is −1. It leaves with ACTIVE 0 for a national
+///    team, a club without a nation, a human club when `daily`, `club::PROFESSIONAL_STATUS` 3, or a club whose linked B
+///    team lookup (`exe::club_get_linked_b_team`) succeeds with no partner. With bids out
+///    (`exe::shortlist_manager_count_slots_with_bids`) and ACTIVE 2 it leaves untouched. With no bids: ACTIVE 2 becomes
+///    1 with reset, and idle staff may be sacked at an AI club; a club of an unloaded league (no `.league_selected()`,
+///    no division or the division not in `G_COMP_OBJECT_TABLE`) with reputation below 4000 switches its list off
+///    (ACTIVE 0) when random(reputation + 1000) < random(5000). Then ACTIVE = 1.
+/// 2. The continental entry (`.continental_comp_id()`, or the club state's when none, or the Inter-Toto at a club of
+///    reputation ≥ 5000), the target rating and its base (`player_search_get_club_target_rating`), the club's target
+///    reputation (`update_club_target_reputation`) and, at a human club, the stand-in manager and the holiday state.
+/// 3. With reset the slots are rebuilt (`assess_set_up_slots`); otherwise they are sorted by index (qsort, 0x83b6c0).
+/// 4. `assess_release_slots`, `assess_sort_squad` and `assess_pick_squad` (`match_man_assign_players_to_positions`).
+/// 5. **The rest** (50 entries): a player on loan here from another club goes to the reserves (except a star with a B
+///    team); one of the club with a contract, not queued for a free transfer (with reset, queued ones get happiness
+///    −100): the threshold is ftol((age × 0.13 − 1.98) × base × 0.02), the cut base / 68 − 35 and his level
+///    ftol(current reputation × 0.25 + potential ability × 12.5 + current ability × 12.5 + club reputation × 0.25). A
+///    player the manager judges below the threshold (`match_man_judge_player_ability` mode 1) is surplus if his
+///    contract is of type 2 and he joined less than professionalism + pressure + 450 days ago or it ends in 450 days or
+///    more, or `staff::VALUE` ≥ reputation × 50, or the value ≥ the wages left (days to the end × wage / 30). A surplus
+///    player, with the squad (`database_count_club_squad`) above reputation / 500 + 20: with reset happiness −100 and
+///    `contract_manager_lower_match_morale`; at an AI club, judged (mode 2) below the cut and older than goalkeeper / 5
+///    + 21 or with current reputation above half the club's, **transfer listed** (`transfer_list_player`, news only
+///    without reset). Otherwise, at an AI club without reset, no offers or exchange offers, not queued, and the squad
+///    above reputation / 500 + 25: **free transfer queue** (`queue_free_transfer`). Both go to the reserves (except a
+///    star with a B team). A player at or above the threshold, with no manager on holiday: with reset happiness −50
+///    and lower morale; reserves (same exception); at an AI club without a B team, a player with negative happiness on
+///    the **loan list** (`transfer_status::LOAN_LISTED`, status 6 under 24) when a goalkeeper rated 20 aged 20 or more
+///    has happiness ≤ age × 50 / 3 − 433, or another player aged 18 or more ≤ age × 50 / 3 − 400; with a B team or at
+///    a human club, under 27 (goalkeeper 20) or 23, the status 5 when judged with three quarters of his level above
+///    the threshold + 20, else 6.
+/// 6. `assess_chosen_happiness`, then the picks fill the free slots in order (`assess_fill_slots`): the replacement
+///    is the pick, his contract takes the slot's status (list 2/3 not over statuses 1 and 2) when no manager is on
+///    holiday, the slot date is set from his arrival (`assess_slot_date`). Status 4: at slot 24, with a B team or at a
+///    human club and not a big club, the pick (not the manager) goes to the reserves; **loan list** when fatigue <
+///    −1000, current reputation < 4500, `player_sheet::WORK_RATE` < 3250 and happiness < −50. **Defect of the
+///    original:** WORK_RATE is a signed byte, so `< 3250` is always true (probably `WORLD_REPUTATION` was meant); kept.
+///    Status 5: to the reserves without a B team (not the manager); **loan list** when fatigue < −500 − random(300)
+///    and happiness < 0.
+/// 7. `assess_price_slots`: each player slot without a target is priced from p = min(target rating, 36000) (× 0.75
+///    for a goalkeeper slot without a replacement). Without a replacement: valuation p and price p × 2.5 + reputation,
+///    2p + reputation, p × 1.8 + reputation, p × 0.8 or p × 0.5 by status 1, 2, 3, 4/5, other; × 3 for a goalkeeper
+///    slot. With one: by the status he goes to the first team (2, 3 and 4; with reset happiness + 50, 10 matches left
+///    out) or to the reserves (5) and is scored for the position (in the first 200 days × (1.25 − days × 0.00125)),
+///    within −10000..60000; a score ≥ p with no grievances 0x100 or 1 and more than 364 days of contract keeps him as
+///    the target. Otherwise his happiness moves by ftol((1 − score / p) × −100) (with reset; statuses 2 and 3 at least
+///    25 and the slot loses him, the others at least 0; status 5 gets squad status 6), the valuation is p and the
+///    price (reputation × f + p × k) − score × k for k 2.5, 2, 1.8 (statuses 1..3, f = 1.25 − score / max(p, 1000)
+///    within 0.5..1), or p × k − score × k with k 0.8 (4/5) or 0.5.
+/// 8. `assess_staff_slots`: the assistant, coaches, physios and scouts not on the club's list are matched to the staff
+///    slots by job (6 or 13, 7 or 14, 8 or 15, 9, 10); threshold min(target / 5, 5000): every staff slot loses bit 0
+///    and the ceiling and gets the price threshold × 2.5; without a bid the valuation is the threshold and the first
+///    person of the job is scored (`score_staff_for_job`): at or above it he is the target (price 0); below it, when
+///    staff may be sacked and he has no contract offer (`contract_manager_find_contract_offer`), he is **sacked**
+///    (`manager_manager_remove_staff_from_club`); otherwise price (threshold − score) × 2.5.
+///
+/// The floating point is in f64 (the game's x87 at 53 bits) in the original's order of operations.
+/// Original: `Shortlist_Manager::assess_club_squad` (0x83cb40, shortlist_manager.cpp, thiscall, ret 0x10).
+pub(crate) unsafe extern "thiscall" fn assess_club_squad(this: usize, entry: usize, club: usize, daily: u32, reset: u32) {
+    let club = Club(club);
+    let mut reset = reset as u8 != 0;
+    let days_since_start = exe::date_days_since(G_CURRENT_DATE, read_u32(G_GAME_START_DATE), read_u32(G_GAME_START_DATE_FLAGS));
+    let flags: u32 = if exe::human_manager_is_human_club(club, 0, 1, 0, 0) != 0 { 0x800 } else { 0x1802 };
+    if assess_slot(entry, 0).index() == -1 {
+        reset = true;
+    }
+    let Some((partner, may_sack)) = assess_start(this, entry, club, daily, &mut reset) else {
+        return;
+    };
+    let mut s = SquadAssessment {
+        this,
+        entry,
+        club,
+        reset,
+        flags,
+        partner,
+        comp: 0,
+        target: 0,
+        target_base: 0,
+        days_since_start,
+        stand_in: 0,
+        on_holiday: 0,
+        may_sack,
+        big_club: false,
+        rating: 0, // uninitialised in the original until the first score
+        pos_a: [0; 50],
+        n_a: 0,
+        pos_b: [0; 50],
+        n_b: 0,
+        pos_c: [0; 50],
+        n_c: 0,
+        chosen_a: [0; 50],
+        chosen_b: [0; 50],
+        chosen_c: [0; 50],
+        rest: [0; 100],
+        n_rest: 0,
+        elsewhere: [0; 100],
+        n_elsewhere: 0,
+        old: [0; 50],
+        n_old: 0,
+    };
+    let mut comp_id = club.continental_comp_id() as i32;
+    if comp_id <= -1 || (comp_id == read_i32(KEY_CLUB_COMP_INTER_TOTO_CUP) && club.reputation() >= 5000) {
+        comp_id = read_i32(read_usize(G_CLUB_STATE_TABLE).wrapping_add((read_u32(club.addr()) as usize).wrapping_mul(6)));
+    }
+    if comp_id > -1 {
+        s.comp = read_usize(G_CLUB_COMP_TABLE).wrapping_add((comp_id as usize).wrapping_mul(0x6b));
+    }
+    const TARGET_RATING: usize = 0x7bca90; // player_search_get_club_target_rating, cdecl
+    let target_rating: unsafe extern "C" fn(usize, *mut i32, *const i16) -> i32 = core::mem::transmute(TARGET_RATING);
+    s.target = target_rating(club.addr(), &mut s.target_base, core::ptr::null());
+    const TARGET_REPUTATION: usize = 0x83bf40; // update_club_target_reputation, thiscall, ret 4
+    let target_reputation: unsafe extern "thiscall" fn(usize, usize) -> i32 = core::mem::transmute(TARGET_REPUTATION);
+    target_reputation(this, club.addr());
+    if exe::human_manager_is_human_club(club, 1, 1, 0, 0) != 0 {
+        s.stand_in = exe::human_manager_get_stand_in_manager(club);
+        let manager = exe::database_get_club_manager(club);
+        s.on_holiday = exe::human_manager_is_on_holiday(read_usize(G_HUMAN_MANAGER), manager);
+    }
+    if s.reset {
+        assess_set_up_slots(&mut s);
+    } else {
+        exe::crt_qsort(read_usize(entry), 0x28, 0x25, 0x83b6c0usize); // shortlist_compare_slots_by_index
+    }
+    assess_release_slots(&mut s);
+    assess_sort_squad(&mut s);
+    assess_pick_squad(&mut s);
+    for k in 0..50 {
+        let p = Staff(s.rest[k]);
+        if !p.is_null() {
+            assess_rest_player(&mut s, p);
+        }
+    }
+    assess_chosen_happiness(&mut s);
+    assess_fill_slots(&mut s);
+    assess_price_slots(&mut s);
+    assess_staff_slots(&mut s);
+}
+
+/// Comparer for `assess_club_squad`: the original only (random draws, moves people between first team and reserves,
+/// lists players, may sack staff: it cannot run twice), and the plan is checked on exit: DAYS 0; ACTIVE 0 or 1, or 2
+/// only if it was 2; after a full run (ACTIVE 1) every staff slot has bit 0 clear and no ceiling, and with `reset`
+/// every slot has its own index.
+pub(crate) unsafe extern "thiscall" fn compare_assess_club_squad(this: usize, entry: usize, club: usize, daily: u32, reset: u32) {
+    let before = read_u8(entry + club_shortlist::ACTIVE);
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(IDX_ASSESS_CLUB_SQUAD)(this, entry, club, daily, reset);
+    let active = read_u8(entry + club_shortlist::ACTIVE);
+    let mut ok = read_u8(entry + club_shortlist::DAYS) == 0 && (active <= 1 || (active == 2 && before == 2));
+    let mut bad_slot = usize::MAX;
+    if active == 1 {
+        for k in 0..40usize {
+            let slot = assess_slot(entry, k);
+            let staff_ok = read_u8(slot.addr()) == 0xb || (slot.flags() & 1 == 0 && slot.max_price() == 0);
+            let index_ok = reset as u8 == 0 || slot.index() as usize == k;
+            if !(staff_ok && index_ok) {
+                ok = false;
+                bad_slot = k;
+                break;
+            }
+        }
+    }
+    SCOREBOARD.record(ok, || {
+        format!("assess_club_squad(club {}, daily {}, reset {}) ACTIVE {} -> {}, DAYS {}, slot {:?}", read_i32(club), daily as u8, reset as u8, before, active, read_u8(entry + club_shortlist::DAYS), if bad_slot == usize::MAX { None } else { Some(bad_slot) })
+    });
+}
+
+/// The AI chooses the target of one shortlist slot of a computer club: it walks the shortlist manager's position lists
+/// of the slot's position, keeps the candidates the club can sign and knows, scores them and takes the best one whose
+/// willingness and wages fit; a slot with nobody may become a loan slot and start again.
+///
+/// From `allocate_transfer_budget` (0x83b6e0) for each open slot it gives budget to (`excluded` 0), from
+/// `update_staff_status` (0x843e10) when a slot's target is lost and the slot is filled again (`excluded` the person
+/// just lost), and from itself. The
+/// local STAFF_CONTRACT (`exe::new_staff_contract`) receives the desired contracts. Leaves: the club with no nation;
+/// a human club (`exe::human_manager_is_human_club` 0, 1); a human club (1, 1) whose manager is on holiday
+/// (`exe::human_manager_is_on_holiday`) with holiday option 4 equal to 1 (the stand-in manager,
+/// `exe::human_manager_get_stand_in_manager`, is kept for the replacement's rating); a slot with an offer
+/// (`shortlist_slot::OFFER_REF` ≠ −1); a national team (`exe::database_is_national_team`).
+///
+/// The season flag: a player slot of a key nation (`exe::key_nation_index_of_nation`, rows 0 to 34 of
+/// `G_LEAGUE_WORLD_CUP_START_DATE`/`END_DATE`, 0x48 bytes each) keeps it only between the season's start − 28 days and
+/// its end − 28 days (`exe::date_sub_days`); another nation keeps it; a non-player slot loses it.
+///
+/// The knowledge divisor k (i16): 100; reputation (`.reputation()`) below 3500: (6025 − reputation) × 4; Belgium,
+/// Holland, Sweden, Denmark, Norway: 50. Each of the 7 `club::SCOUTS` places: empty, +10 with the club's division
+/// loaded in `G_COMP_OBJECT_TABLE`, +5 otherwise; a scout with a non-player sheet: + 30 − 2 × a − b, where a and b are
+/// `exe::non_player_attribute_rating` of his sheet with the constants 6 and 5. **Defect of the original (probable):**
+/// the other callers of that routine pass the scout's judging attributes; here the constants 6 and 5 go, so the result
+/// depends only on the scout's current ability (`non_player::CURRENT_ABILITY`): his `JUDGEMENT`/`JUDGING_POTENTIAL`
+/// never count. Kept as the original does it. Then k = k / 10, at least 2.
+///
+/// The ceiling: `exe::shortlist_manager_max_fee_for_squad_status` (the slot's position, status = bits 1-4 of
+/// `shortlist_slot::FLAGS`). The reputation factor: reputation × 0.0008, or in Italy, England, Germany, France and Spain
+/// with finances (`G_FINANCE_TABLE`) by the wealth band (`exe::finance_get_wealth_band`): band 1, × 1/1175 (× 1/1125
+/// above 6250); band 2, × 1/1125 (× 1/1050 above 4750); at most 1.0 becomes 1.0.
+///
+/// The replacement (`shortlist_slot::REPLACEMENT_STAFF_ID` > −1; a non-player slot leaves here): his rating
+/// (`exe::match_man_score_player_for_selection` with the slot's position, the flags 0x1902 (status 0, 1, above 4),
+/// 0x18c2 (status 2, 3; 0x8118c2 at a human club), 0x19c2 (status 4), −1 and the stand-in manager); with no contract at
+/// the club (`exe::contract_manager_get_contract_for_club`), or grievances with 0x100, 1, or under 365 days left
+/// (`exe::staff_contract_days_to_end_date`), it is at most the valuation; the valuation becomes the larger of itself and
+/// rating × 1.05. The score to beat starts at the valuation.
+///
+/// The position code (`exe::shortlist_position_mask_to_index`, 0xf for a non-player) gives the lists: 0x11 → 1-4,
+/// 0x12 → 8-13, 0x13 → 5-7, 0x15 → 11-13, 0x14 → 14, others → itself. A loan player slot walks the lists sorted by key
+/// (`POSITION_LISTS_BY_KEY`, index + 16) with the counts of the others; an empty list (first id −1) ends the search.
+/// The excluded person, when the club has him in the shortlist pairs, gets `exe::shortlist_manager_update_staff_status`
+/// with 3.
+///
+/// A candidate (`fill_slot_candidate`) is skipped when: the excluded; id ≥ the number of people − 16; `.job_for_club()`
+/// or `.job_for_nation()` 5; a non-player who is a vacancy candidate (`exe::manager_manager_is_vacancy_candidate`).
+/// Player slot: at a human club on holiday, the human's scout list (`exe::scout_manager_is_player_shortlisted`) is
+/// kept and with holiday option 4 equal to 2 a player off the list is skipped; not a player (job 11); national team
+/// job 5; no sheet; retirement announced (state bits 0x30 = 0x10); Saudi; over 23 in a status-5 slot; purchase: the
+/// ceiling (`shortlist_slot::MAX_PRICE`) below his price × 1.3; loan: a price above 0 (or no club) and not loan listed
+/// (`exe::staff_is_loan_listed`). Non-player slot: no non-player sheet; the rest of a type-2 contract (days left ×
+/// wage / 7) at least the ceiling or above (reputation + 500) × 10. Then: already at the club (`.club_job()` or the
+/// contract's club, `club_of_staff_contract`); on 10 shortlists or more (low nibble of the state byte); a player who
+/// arrived less than 200 days ago with a contract not in status 7, without grievances and not listed
+/// (`exe::staff_is_transfer_listed_or_requested`); already in this club's shortlist pairs; the work permit rules
+/// (0x84b180) or a permit needed (`exe::transfer_manager_player_needs_work_permit`) outside status 1-3; loan: no club
+/// or no loan possible (`exe::transfer_manager_can_loan_player`), a human owner and not loan listed
+/// (`contract::TRANSFER_STATUS` bit 2); a future transfer (`exe::transfer_manager_get_future_transfer`); not known
+/// (`fill_slot_club_knows`).
+///
+/// The score: a player's value and score for the club (`exe::shortlist_manager_value_player_for_club`, with the score
+/// to beat); a non-player's `exe::score_staff_for_job` (manager, the slot's job) and `.value()`. Below the valuation or
+/// below the score to beat − 10000: skipped. Purchase: a player at a seller in crisis (`finance::CRISIS_STATE` 1) is
+/// valued at most at the seller's value (human seller: `exe::contract_manager_calc_player_value`, called again when it
+/// is the lower) or his `.value()`; a compensation deal (0x84b6f0) costs its fee; otherwise the asking price (non-player:
+/// `.value()`; human seller: `exe::contract_manager_get_human_asking_price`; AI: `exe::contract_manager_calc_asking_price`).
+/// A player without compensation: in status 4 under 28 or status 5, an asking price above the value adds to the offer
+/// min(asking − value, (reputation / 13000 + 0.5) × value, 2,500,000); the predicted answer of the contract's club
+/// (`exe::shortlist_manager_predict_selling_club_response`) 2 skips. The asking price above the slot's ceiling skips.
+/// A player's score × y, y = 1 − (asking − value) / (max price × factor), above 1 → y/3 + 0.67, between 0.01 and 3;
+/// injured (`exe::injury_get_player_injury`) more than 15 days: − (days − 15)². Loan: the lender's prediction (offer =
+/// value, asked −1, loan) 2 skips; injured more than 10 days: − (days − 10)² × 200. A player the club cannot bid for
+/// (`exe::transfer_manager_can_club_bid_for_player`) is skipped. Then score × (92 + random(17)) / 100.
+///
+/// Above the score to beat: the interest (`exe::shortlist_manager_staff_interest_in_joining_club` with 1, the loan bit,
+/// the status; a non-player `exe::staff_interest_in_job_at_club`). A purchase player whose interest is at least
+/// 3.15 − random(20) × 0.1, with random(79 − reputation / 150) = 0 and (reputation above 5000 + random(2000) or a human
+/// club): interest news (`Media::add_transfer_interest`, 0x754740) with 0 for a compensation deal or
+/// random(value × 1.25) + value × 0.75, which also becomes the value. Interest at least 3.15: for a purchase player
+/// the contract kind (1 if the value passes reputation × 1250 outside status 1; 2 if it passes reputation × 750 in
+/// status 0 or 1; 3 in status 5 for 21-23 years at a club below 4250 with his reputation 750 above the club's; else
+/// the status), the desired wage (`exe::staff_contract_default_staff_contract`, as f32) × max(3.5 / interest
+/// (interest without the loan and status flags, at least 0.1), 0.9) above 1.2 × the wage cap
+/// (`exe::finance_get_max_wage`) skips; otherwise he is the best so far. The kind argument carries the stand-in
+/// manager's upper 24 bits, as the original's frame does. Every candidate scored this far (not skipped): with
+/// random(score × 1.5) above the score to beat, a player younger than 28 − random(6) under contract at a club whose
+/// reputation + 2000 + random(1000) is below the club's, with a human manager (`exe::news_club_has_human_manager`): the
+/// scout watching story (0x587220).
+///
+/// The best becomes the target (`shortlist_slot::TARGET_STAFF_ID`) and enters the shortlist (0x8423f0); a purchase
+/// player slot then, with random(37 − reputation / 300) = 0 and (reputation above 5000 + random(2000) or a human club),
+/// gets the interest news with the asking price (or the compensation fee). Nobody: with the season flag, a purchase
+/// slot of status 2 or 3 with no target becomes a loan slot (bit 0) and starts again (recursion through 0x83f3a0) when
+/// (reputation² × 4e-9 + 0.6) × valuation < `shortlist_slot::PRICE`, or the ceiling is under 50000, or in Italy with
+/// random(2) ≠ 0 and reputation 3001 to 5999; and the nation's league is loaded (`.league_selected()`) or
+/// random(reputation) > random(20000). Otherwise the target is −1. The SEH frame only matters for exceptions.
+/// Original: `Shortlist_Manager::fill_shortlist_slot` (0x83f3a0, shortlist_manager.cpp, thiscall, ret 0xc).
+pub(crate) unsafe extern "thiscall" fn fill_shortlist_slot(this: usize, slot: usize, club: usize, excluded: usize) {
+    let mut wanted = [0u8; 0x58];
+    exe::new_staff_contract(wanted.as_mut_ptr() as usize);
+    fill_shortlist_slot_body(this, slot, Club(club), Staff(excluded), wanted.as_mut_ptr() as usize);
+}
+
+/// Comparer for `fill_shortlist_slot`: the original only (it draws random numbers, adds to the shortlist and to the
+/// media's interest list, may write news and recurses; it cannot run twice).
+pub(crate) unsafe extern "thiscall" fn compare_fill_shortlist_slot(this: usize, slot: usize, club: usize, excluded: usize) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(IDX_FILL_SHORTLIST_SLOT)(this, slot, club, excluded) // simplification: original only
+}
+
+/// Returns in st0 a person's will to take a job (`job`) at a club and marks the reason bits, as
+/// `staff_interest_in_joining_club` (0x846920) does for a player.
+///
+/// `staff_interest_in_job_at_club(person, club, check, job, reasons)` (the shortlist manager in ecx): 0 without a staff
+/// sheet, without the club's or the person's nation, for Dario Gradi, Pat Nevin and Kevin Keegan when they have a club
+/// job, for a media pundit (job 17), for the last 16 records (outside job 5), for a national manager (job 5 abroad), for a
+/// staff member of reputation above 4250 or ability above 100 wanting a manager's job (5 or 12) elsewhere, for a physio
+/// (10) asked for another job, for a player with a club job asked by another club, for a manager going to a club
+/// of lower division or reputation (more than 750 below) and for a club below 2750 of his own nation or that finds him
+/// foreign. Otherwise, the base: 3.5 at his own club; 2.25 for a manager's job, otherwise 1.5, plus (days out of a club
+/// since the game began)² / (reputation + 900), at most 12; ×0.33 / ×2 / ×0.5..0.85 / ×3 by disliking and favouring
+/// the clubs, ×0.5..0.85 − loyalty against a rival (Celtic and Rangers, Italy, the same division), ×0.05 / ×0.1 between
+/// Croatia and Yugoslavia, ×2 / ×0.33 / ×2 / ×0.5 by the managers' liking; 0 with a future transfer; the contract's
+/// morale; by the current job (×0.01 to ×10) and the job offered (×0.1 to ×10, 0 for job 0); ×1.4 for a manager the
+/// board has little confidence in; the language factor; ×0.85..0.01 or ×0.3..0.001 for a foreigner by job; the time at
+/// the club (0 below (loyalty + 8) × 15 days); the two clubs' weighted reputations (stadium, division, competition,
+/// manager, wealth band, shortlists) and their difference by ambition; the development ratio of the two nations and
+/// the continents; the reputation against his own. With `check` and a will of 1.75 or more: the default wage
+/// (`exe::staff_contract_default_staff_contract`) × 3.5 / will against the club's staff wage cap
+/// (`exe::finance_get_max_staff_wage`) and against his current wage.
+/// Original: `staff_interest_in_job_at_club` (0x844780, shortlist_manager.cpp, thiscall, ret 0x14).
+#[allow(clippy::too_many_arguments)]
+pub(crate) unsafe extern "thiscall" fn staff_interest_in_job_at_club(this: usize, person: usize, club: usize, check: u32, job_arg: u32, reasons: *mut u32) -> f64 {
+    let p = Staff(person);
+    let c = Club(club);
+    let job = job_arg as u8 as i8;
+    let zero = read_f64(rdata::F64_0);
+    let fl = move |b: u32| {
+        if !reasons.is_null() {
+            *reasons |= b;
+        }
+    };
+    if !reasons.is_null() {
+        *reasons = 0;
+    }
+    if p.non_player().is_null() || c.nation().is_null() || p.nation().is_null() {
+        return zero;
+    }
+    // three managers never move from a club job
+    let mut buf = [0u8; 0x1f4];
+    for name in job_interest_rdata::NAMES {
+        exe::database_format_staff_name(p, buf.as_mut_ptr() as usize, 0x1f4, 1);
+        if job_interest_name_is(&buf, name) {
+            if !p.club_job().is_null() {
+                return zero;
+            }
+            break;
+        }
+    }
+    let jfc = p.job_for_club() as i8;
+    let jfn = p.job_for_nation() as i8;
+    if jfc == 0x11 || jfn == 0x11 {
+        return zero;
+    }
+    if job != 5 && read_i32(p.addr()) >= read_i32(G_STAFF_COUNT) - 0x10 {
+        return zero;
+    }
+    let nj = p.national_job();
+    if !nj.is_null() && jfn == 5 {
+        return zero;
+    }
+    let manager_now = jfc == 5 || jfc == 0xc || jfn == 5 || jfn == 0xc;
+    if job != 0 {
+        if job != 5 && manager_now && (p.non_player().current_reputation() > 0x109a || p.non_player().current_ability() > 100) {
+            return zero;
+        }
+        if job == 10 && jfc != 10 && jfc != 0 {
+            return zero;
+        }
+        if jfn == 5 && !nj.is_null() {
+            return zero;
+        }
+        if job != 0xf && job != 0xc && job != 5 && !p.player().is_null() && jfc == 0xb {
+            let cj = p.club_job();
+            if !cj.is_null() && c != cj {
+                return zero;
+            }
+        }
+        if job != 10 && jfc == 10 {
+            return zero;
+        }
+    }
+    if !c.is_null() {
+        if job != 5 && manager_now {
+            let cj = p.club_job();
+            if !cj.is_null() {
+                let (dn, dc) = (c.division(), cj.division());
+                if !dn.is_null() && !dc.is_null() && dc.reputation() >= dn.reputation() {
+                    return zero;
+                }
+                if cj.reputation() as i32 > c.reputation() as i32 - 0x2ee {
+                    return zero;
+                }
+            }
+        }
+        if c.reputation() < 0xabe {
+            let n = c.nation();
+            if !n.is_null() {
+                let cj = p.club_job();
+                if !cj.is_null() && cj.nation() == n {
+                    return zero;
+                }
+                if exe::database_is_staff_foreign(p, n, 1) != 0 {
+                    return zero;
+                }
+            }
+        }
+    }
+    // the weights of the reputations (ambition and professionalism)
+    let l74: f32 = if job == 5 || job == 0xc { 0.0 } else { 1.0 };
+    let amb = p.ambition() as i32 as f64;
+    let w88 = ((read_f64(rdata::F64_1_4) - amb * read_f64(rdata::F64_0_025)) - p.professionalism() as i32 as f64 * read_f64(rdata::F64_0_025)) as f32;
+    let w84 = (amb * read_f64(rdata::F64_0_02) + read_f64(rdata::F64_0_8)) as f32;
+    let b = amb * read_f64(rdata::F64_0_05) + read_f64(rdata::F64_0_5);
+    let w60 = b as f32;
+    let d = (((b + w84 as f64) + w88 as f64) + l74 as f64) + read_f32(rdata::F32_1) as f64;
+    let den: f32 = if d > zero { d as f32 } else { 0.5 };
+    let w = (w60, w84, l74, w88, den);
+    // the club he is at (or the national side), and his job there
+    let mut cj = p.club_job();
+    let mut jb = jfc;
+    if (cj.is_null() || exe::database_is_national_team(c) != 0) && !nj.is_null() && jfn != 0xb {
+        cj = nj;
+        jb = jfn;
+    }
+    if !cj.is_null() && cj.nation().is_null() {
+        return read_f64(rdata::F64_3_5);
+    }
+    let k = Contract(exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, cj));
+    let mut score: f64;
+    covered!("mkd_7 job interest");
+    if c == cj {
+        score = 3.5;
+    } else {
+        if !k.is_null()
+            && !cj.is_null()
+            && !cj.nation().is_null()
+            && !c.nation().is_null()
+            && c.nation().first_language() == cj.nation().first_language()
+            && k.grievances() & 0x20 != 0
+        {
+            return zero;
+        }
+        score = if job == 5 || job == 0xc { 2.25 } else { 1.5 }; // mkd7: the base for another club
+        if cj.is_null() {
+            // out of a club: (days since the later of the game's start and joining)² / (reputation + 900), at most 12
+            let (gd, gy) = (read_i16(G_GAME_START_DATE), read_u16(G_GAME_START_DATE + 2));
+            let (td, ty) = (read_i16(G_CURRENT_DATE), read_u16(G_CURRENT_DATE_YEAR));
+            if !(gy > ty || (gy == ty && gd > td)) {
+                let mut l = [0u8; 8];
+                core::ptr::copy_nonoverlapping((p.addr() + staff::DATE_JOINED_CLUB) as *const u8, l.as_mut_ptr(), 8);
+                let (ld, ly) = (i16::from_le_bytes([l[0], l[1]]), u16::from_le_bytes([l[2], l[3]]));
+                if ly < gy || (ly == gy && ld < gd) {
+                    let mut tmp = [0u8; 8];
+                    exe::date_operator_3d(l.as_mut_ptr() as usize, tmp.as_mut_ptr() as usize, G_GAME_START_DATE);
+                }
+                let (ld, ly) = (i16::from_le_bytes([l[0], l[1]]), u16::from_le_bytes([l[2], l[3]]));
+                let mut dd = (read_u16(G_CURRENT_DATE_YEAR) as i32 - ly as i32) * 365 - ld as i32 + read_i16(G_CURRENT_DATE) as i32;
+                if dd > 0x1f4 {
+                    dd = 0x1f4;
+                }
+                let mut x = dd.wrapping_mul(dd) as f64 / (p.non_player().current_reputation() as f64 + read_f64(job_interest_rdata::F64_900));
+                if read_f64(rdata::F64_12) < x {
+                    x = read_f64(rdata::F64_12);
+                }
+                score = x + score;
+            }
+        }
+    }
+    // liking and disliking the clubs
+    if exe::staff_dislikes_club(p, c) != 0 {
+        score *= read_f64(rdata::F64_0_33);
+        fl(2);
+    }
+    if exe::staff_dislikes_club(p, cj) != 0 {
+        score = score + score;
+        fl(4);
+    }
+    if exe::staff_favours_club(p, cj) != 0 {
+        score *= read_f64(if cj.professional_status() != 1 && c.professional_status() == 1 { rdata::F64_0_85 } else { rdata::F64_0_5 });
+        if !reasons.is_null() && !k.is_null() && k.leaving_on_bosman() == 0 {
+            *reasons |= 8;
+        }
+    }
+    if exe::staff_favours_club(p, c) != 0 {
+        fl(0x10);
+        score *= read_f64(rdata::F64_3);
+    }
+    // rivals
+    if !cj.is_null() {
+        let rival = cj.rival1() == c.addr() || cj.rival2() == c.addr() || cj.rival3() == c.addr();
+        if c != cj && (rival || exe::comp_util_get_league_clash_type(c, cj) != 0) {
+            covered!("mkd_7 rival");
+            let loy = p.loyalty() as i32 as f64;
+            let (e1, e2) = (read_u32(G_KEY_CLUB_GLASGOW_CELTIC), read_u32(G_KEY_CLUB_GLASGOW_RANGERS));
+            let (ic, ij) = (read_u32(c.addr()), read_u32(cj.addr()));
+            let m = if (ic == e1 || ic == e2) && (ij == e1 || ij == e2) {
+                read_f64(rdata::F64_0_5) - loy * read_f64(rdata::F64_0_025)
+            } else if read_u32(c.nation().addr()) == read_u32(KEY_NATION_ITALY) {
+                read_f64(rdata::F64_1) - loy * read_f64(rdata::F64_0_01666666667)
+            } else if rival && c.division() == cj.division() {
+                if (c.reputation() as i32 - cj.reputation() as i32).abs() < 0x4e2 {
+                    read_f64(rdata::F64_0_75) - loy * read_f64(rdata::F64_0_025)
+                } else {
+                    read_f64(rdata::F64_0_8) - loy * read_f64(rdata::F64_0_01666666667)
+                }
+            } else {
+                read_f64(rdata::F64_0_85) - loy * read_f64(rdata::F64_0_025)
+            };
+            score *= m;
+            if !reasons.is_null() && m < read_f64(rdata::F64_0_7) {
+                *reasons |= 0x20;
+            }
+        } else {
+            let (yu, cr) = (read_u32(KEY_NATION_YUGOSLAVIA), read_u32(KEY_NATION_CROATIA));
+            let nc = read_u32(c.nation().addr());
+            let nj_ = read_u32(cj.nation().addr());
+            let np_ = read_u32(p.nation().addr());
+            if nc == yu {
+                if nj_ == cr && np_ == cr {
+                    score *= read_f64(rdata::F64_0_05);
+                    fl(2);
+                }
+            } else if nc == cr && nj_ == yu && np_ == yu {
+                score *= read_f64(rdata::F64_0_1);
+                fl(2);
+            }
+        }
+    }
+    // the managers' liking
+    if job != 5 && job != 0xc {
+        let m = c.manager();
+        if exe::staff_is_favoured_by(m, p) != 0 {
+            score = score + score;
+            fl(0x40);
+        }
+        if exe::staff_is_disliked_by(m, p) != 0 {
+            score *= read_f64(rdata::F64_0_33);
+            fl(0x80);
+        }
+    }
+    if !cj.is_null() {
+        let m = cj.manager();
+        if exe::staff_is_disliked_by(m, p) != 0 {
+            score = score + score;
+            fl(0x100);
+        }
+        if exe::staff_is_favoured_by(m, p) != 0 {
+            score *= read_f64(rdata::F64_0_5);
+            fl(0x200);
+        }
+    }
+    if !p.player().is_null() && exe::transfer_manager_get_future_transfer(read_usize(G_TRANSFER_MANAGER), p, 0) != 0 {
+        fl(0x10000000);
+        return zero;
+    }
+    // the morale in the contract
+    if !k.is_null() {
+        let m44 = k.morale() as i32 as f64;
+        if c == cj {
+            score = (m44 * read_f64(rdata::F64_0_0025) + read_f64(rdata::F64_1)) * score;
+        } else {
+            let v = read_f64(rdata::F64_1) - m44 * read_f64(rdata::F64_0_0025);
+            score = v * score;
+            if !reasons.is_null() && k.transfer_status() & 8 == 0 {
+                if v > read_f64(rdata::F64_1_5) {
+                    *reasons |= 0x400;
+                } else if v < read_f64(rdata::F64_0_5) {
+                    *reasons |= 0x800;
+                }
+            }
+        }
+    }
+    if c == cj {
+        jb = job;
+    }
+    let jb_manager = jb == 5 || jb == 0xc;
+    let job_manager = job == 5 || job == 0xc;
+    let mut devsq_new: i8 = 0;
+    let mut e_new: i16 = 0;
+    let mut div_new: i16 = 0;
+    let mut rec_new = 0usize; // [esp+0x78]
+    let mut l7c = 1.0f64; // [esp+0x7c]: how long he has been at the club (0.0025 × days² / 20 / (loyalty + 6), at most 1)
+    if c != cj {
+        // by the job he has now
+        match jb {
+            1 => score *= read_f64(rdata::F64_0_01),
+            2..=4 => {
+                if job == 5 && c.reputation() >= 0x1770 {
+                    score *= read_f64(rdata::F64_0_5);
+                } else {
+                    score *= read_f64(rdata::F64_0_01);
+                }
+            }
+            5 | 0xc => {
+                if !cj.is_null() {
+                    score *= read_f64(rdata::F64_0_45);
+                    fl(0x4000000);
+                } else {
+                    score *= read_f64(rdata::F64_0_65);
+                }
+            }
+            6 | 0xd => {
+                score *= read_f64(rdata::F64_1_5);
+                if job_manager {
+                    fl(0x8000000);
+                }
+            }
+            7 | 0xe => {
+                score *= read_f64(rdata::F64_2_2);
+                if job_manager {
+                    fl(0x8000000);
+                }
+            }
+            8 | 0xf => {
+                score = (amb * read_f64(rdata::F64_0_05) + read_f64(rdata::F64_0_8)) * score;
+                if job_manager {
+                    fl(0x8000000);
+                }
+            }
+            9 | 10 => {
+                if matches!(job, 5 | 0xc | 6 | 0xd | 0xe | 0xf | 7 | 8) {
+                    fl(0x8000000);
+                }
+            }
+            0x10 => {
+                let a = p.ambition();
+                score = (read_f64(rdata::F64_10) / (if a > 1 { a as i32 } else { 1 }) as f64) * score;
+            }
+            _ => {
+                score *= read_f64(rdata::F64_10); // mkd7: a player taking a staff job
+                fl(0x8000000);
+            }
+        }
+        // by the job offered
+        match job {
+            0 => return zero,
+            1 => score *= read_f64(rdata::F64_10),
+            2..=4 => score *= read_f64(job_interest_rdata::F64_1_176470588),
+            5 | 0xc => {
+                score *= read_f64(job_interest_rdata::F64_2_222222222);
+                if jb_manager {
+                    score *= read_f64(rdata::F64_1_5);
+                }
+            }
+            6 | 0xd => {
+                score *= read_f64(rdata::F64_0_5);
+                if jb_manager {
+                    score *= read_f64(rdata::F64_0_4);
+                }
+            }
+            7 | 8 | 0xe | 0xf => {
+                score *= read_f64(rdata::F64_0_4);
+                if jb_manager {
+                    score *= read_f64(rdata::F64_0_4);
+                }
+            }
+            9 | 10 => {
+                score *= read_f64(if jb == 9 || jb == 10 { rdata::F64_0_4 } else { rdata::F64_0_25 });
+                if !p.player().is_null() {
+                    score *= read_f64(rdata::F64_0_25);
+                }
+                if jb_manager {
+                    score *= read_f64(rdata::F64_0_4);
+                }
+            }
+            _ => {
+                score *= read_f64(rdata::F64_0_1);
+                if jb_manager {
+                    score *= read_f64(rdata::F64_0_4);
+                }
+            }
+        }
+        // a manager the board has little confidence in
+        if !cj.is_null() && jb_manager && read_usize(G_MANAGER_MANAGER) != 0 {
+            let t = read_usize(read_usize(G_MANAGER_MANAGER)).wrapping_add((read_u32(cj.addr()) as usize).wrapping_mul(0x49));
+            let v = read_i16(t + 8) as i32 + (p.loyalty() as i32 + p.determination() as i32) * 500 + read_i16(t + 6) as i32;
+            if v < 0x1f40 {
+                score *= read_f64(rdata::F64_1_4);
+            }
+        }
+        // the new club's reputation on his scale, and the language
+        devsq_new = job_interest_development_squared(c.nation());
+        let (e, dv, rec) = job_interest_club_scale(this, p, c, job, w, false);
+        e_new = e;
+        div_new = dv;
+        rec_new = rec;
+        if !c.nation().is_null() {
+            let m = job_interest_language_factor(p, c, e_new);
+            score = m * score;
+            if !reasons.is_null() && m < read_f64(rdata::F64_0_6) {
+                *reasons |= 0x10000;
+            }
+        }
+        // a foreigner: by the job offered (milder when not a foreigner to the club's manager)
+        let applies = if !cj.is_null() {
+            let n = c.nation();
+            !(!n.is_null() && exe::database_is_staff_foreign(p, n, 1) == 0) && cj.nation() != c.nation()
+        } else {
+            true
+        };
+        if applies {
+            let m = c.manager();
+            let mild = !job_manager && !m.is_null() && !m.nation().is_null() && exe::database_is_staff_foreign(p, m.nation(), 1) == 0;
+            let f = if mild {
+                match job {
+                    2..=4 => rdata::F64_0_85,
+                    6 | 0xd => rdata::F64_0_75,
+                    7 | 8 | 0xe | 0xf => rdata::F64_0_65,
+                    9 | 10 => rdata::F64_0_5,
+                    _ => rdata::F64_0_01,
+                }
+            } else {
+                covered!("mkd_7 foreigner");
+                match job {
+                    2..=4 => rdata::F64_0_25,
+                    5 | 0xc => rdata::F64_0_3,
+                    6 | 0xd => rdata::F64_0_225,
+                    7..=10 | 0xe | 0xf => rdata::F64_0_2,
+                    _ => rdata::F64_0_001,
+                }
+            };
+            score *= read_f64(f);
+        }
+        if cj.is_null() {
+            score *= read_f64(rdata::F64_2_5);
+        } else {
+            // the time at his club: 0 below (loyalty + 8) × 15 days
+            let dd = (read_u16(G_CURRENT_DATE_YEAR) as i32 - p.date_joined_club_year() as i32) * 365 - (p.date_joined_club() as i16) as i32
+                + read_i16(G_CURRENT_DATE) as i32;
+            let loy = p.loyalty() as i32;
+            if dd < (loy + 8) * 0xf {
+                covered!("mkd_7 too soon at his club");
+                return zero;
+            }
+            let q = dd.wrapping_mul(dd) / 20;
+            let mut r = q / (if loy + 6 < 1 { 1 } else { loy + 6 });
+            if r < 0 {
+                return zero;
+            }
+            if r > 0x190 {
+                r = 0x190;
+            } else if r == 0 {
+                return zero;
+            }
+            l7c = r as f64 * read_f64(rdata::F64_0_0025);
+        }
+    }
+    // his current club's reputation (or his own) on the same scale
+    let devsq_cur: i8;
+    let e_cur: i16;
+    let mut div_cur: i16 = 0;
+    let mut rec_cur = 0usize; // [esp+0x70]
+    if cj.is_null() {
+        devsq_cur = job_interest_development_squared(p.nation());
+        let np = p.non_player();
+        let avg = ((np.world_reputation() as i32 + np.current_reputation() as i32 + np.home_reputation() as i32) / 3) as i16;
+        e_cur = ftol(avg as f64 * read_f64(rdata::F64_1_5) - read_f64(rdata::F64_5000)) as i16;
+    } else {
+        devsq_cur = job_interest_development_squared(cj.nation());
+        let (e, dv, rec) = job_interest_club_scale(this, p, cj, job, w, true);
+        e_cur = e;
+        div_cur = dv;
+        rec_cur = rec;
+        if c != cj {
+            score /= job_interest_language_factor(p, cj, e_cur);
+        }
+    }
+    if c != cj {
+        let d = c.division();
+        if d.is_null() || read_u32(d.addr()) == read_u32(KEY_CLUB_COMP_A_LOWER_DIVISION) {
+            score *= read_f64(rdata::F64_0_1);
+        }
+        let np = p.non_player();
+        let avg = (np.world_reputation() as i32 + np.current_reputation() as i32 + np.home_reputation() as i32) / 3;
+        let g = (c.reputation() as i32 - avg) as f64 * read_f64(rdata::F64_0_000125) + read_f64(rdata::F64_1);
+        // the difference of the two scales, by ambition (up) or by the job (down)
+        let diff = (e_new as i32 - e_cur as i32) as f64;
+        let mut y = if e_new > e_cur {
+            diff * (amb * read_f64(rdata::F64_0_08771929825) + read_f64(rdata::F64_0_75))
+        } else if !job_manager {
+            diff * read_f64(rdata::F64_1_5)
+        } else if !(score > read_f64(rdata::F64_10)) {
+            diff
+        } else {
+            let mut k = read_f64(rdata::F64_1_1) - score * read_f64(rdata::F64_0_01);
+            if k < read_f64(rdata::F64_0_1) {
+                k = read_f64(rdata::F64_0_1);
+            } else if k > read_f64(rdata::F64_1) {
+                k = read_f64(rdata::F64_1);
+            }
+            k * diff
+        };
+        if y > zero && l7c < read_f64(rdata::F64_1) {
+            let mut z = y * read_f64(rdata::F64_0_02);
+            if read_f64(rdata::F64_100) < z {
+                z = read_f64(rdata::F64_100);
+            }
+            let f = ((read_f64(rdata::F64_150) - z) * l7c + z) * read_f64(rdata::F64_0_006666666667);
+            score *= f;
+            if !reasons.is_null() && f < read_f64(rdata::F64_0_6) {
+                *reasons |= 0x100000;
+            }
+        }
+        if !jb_manager && job_manager && y < zero {
+            let k = if jb == 8 || jb == 0xf || jb == 6 {
+                let k = read_f64(rdata::F64_1) - score * read_f64(rdata::F64_0_04);
+                if k < read_f64(rdata::F64_0_4) { read_f64(rdata::F64_0_4) } else { k }
+            } else {
+                let k = read_f64(rdata::F64_1) - score * read_f64(rdata::F64_0_1);
+                if k < read_f64(rdata::F64_0_2) { read_f64(rdata::F64_0_2) } else { k }
+            };
+            y *= k;
+        }
+        let mut t = y * read_f64(job_interest_rdata::F64_0_0002222222222) + read_f64(rdata::F64_1); // mkd7: the scales' difference
+        if t < read_f64(rdata::F64_0_001) {
+            t = 0.001;
+        }
+        score *= t;
+        if !reasons.is_null() {
+            let bosman_ok = k.is_null() || k.leaving_on_bosman() == 0;
+            let ambitious = w60 as f64 > read_f64(rdata::F64_1_2);
+            if t < read_f64(rdata::F64_0_6) {
+                if ambitious && rec_cur != 0 && rec_new == 0 && score > read_f64(rdata::F64_1_25) && jb_manager && bosman_ok {
+                    *reasons |= 0x400000;
+                } else {
+                    *reasons |= 0x800000;
+                }
+            } else if t > read_f64(rdata::F64_1_5) && ambitious && rec_cur == 0 && rec_new != 0 && job_manager && bosman_ok {
+                *reasons |= 0x200000;
+            }
+        }
+        // the development of the two nations and the continents
+        if !cj.is_null() {
+            if devsq_cur == devsq_new {
+                let pc = p.nation().continent();
+                if pc != 0 && read_u32(pc) == read_u32(KEY_CONTINENT_EUROPE) {
+                    let cc = c.nation().continent();
+                    if cc != 0 && read_u32(cc) != read_u32(KEY_CONTINENT_EUROPE) && cc != cj.nation().continent() {
+                        score *= read_f64(rdata::F64_0_4);
+                        fl(0x2000000);
+                    }
+                }
+            } else {
+                let dc = if div_cur > 0x1f4 { div_cur as i32 } else { 0x1f4 };
+                let mut r = (devsq_cur as i32 as f64 * div_new as f64) / (dc as f64 * devsq_new as i32 as f64);
+                if !(read_f64(rdata::F64_0_01) <= r) {
+                    r = read_f64(rdata::F64_0_01);
+                } else if read_f64(rdata::F64_10) < r {
+                    r = read_f64(rdata::F64_10);
+                }
+                score = r * score;
+                if c.nation().continent() != cj.nation().continent() && r < read_f64(rdata::F64_1) {
+                    score *= read_f64(rdata::F64_0_2);
+                    fl(0x2000000);
+                }
+            }
+        }
+        score *= g;
+        if !reasons.is_null() && g < read_f64(rdata::F64_0_6) {
+            *reasons |= 0x800000;
+        }
+    }
+    // the wage: the default wage × 3.5 / will against the club's staff cap and his current wage
+    if check != 0 && !(score < read_f64(rdata::F64_1_75)) {
+        covered!("mkd_7 wage check");
+        let mut local = [0u8; 0x50];
+        exe::new_staff_contract(local.as_mut_ptr() as usize);
+        let fin = exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), c);
+        if fin == 0 {
+            return zero;
+        }
+        let wage = exe::staff_contract_default_staff_contract(local.as_mut_ptr() as usize, p, c, 0, u32::MAX, job_arg, 0);
+        let m = if read_f64(rdata::F64_0_1) <= score { score } else { read_f64(rdata::F64_0_1) };
+        let mut q = read_f64(rdata::F64_3_5) / m;
+        if q < read_f64(rdata::F64_0_9) {
+            q = 0.9;
+        }
+        let asked = q * wage;
+        let mw = exe::finance_get_max_staff_wage(fin, job) as f64;
+        let (s2, wanted) = if !(asked <= mw) && !(asked <= zero) { ((mw / asked) * score, mw) } else { (score, asked) };
+        if k.is_null() {
+            return s2;
+        }
+        let mut cw = k.wage() as f64;
+        if cw < read_f64(rdata::F64_10) {
+            cw = read_f64(rdata::F64_10);
+        }
+        let ratio = wanted / cw;
+        if !(read_f64(rdata::F64_0_1) <= ratio) {
+            return s2;
+        }
+        if read_f64(rdata::F64_10) < ratio {
+            return (read_f64(rdata::F64_10) / q) * s2;
+        }
+        if ratio < read_f64(rdata::F64_1) {
+            return s2;
+        }
+        return (ratio / q) * s2;
+    }
+    score
+}
+
+/// Comparer for `staff_interest_in_job_at_club`: original and copy side by side over the reasons,
+/// `G_CONTRACT_LOOKUP_RESULT` (written by the default wage) and the generator's state.
+#[allow(clippy::too_many_arguments)]
+pub(crate) unsafe extern "thiscall" fn compare_staff_interest_in_job_at_club(this: usize, person: usize, club: usize, check: u32, job: u32, reasons: *mut u32) -> f64 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, *mut u32) -> f64>(IDX_STAFF_INTEREST_IN_JOB_AT_CLUB);
+    let est = crate::rng::STATE_REGIONS;
+    let mut regions = vec![(G_CONTRACT_LOOKUP_RESULT, 4usize), est[0], est[1]];
+    if !reasons.is_null() {
+        regions.push((reasons as usize, 4));
+    }
+    let (r, n, same, mo, mr) = crate::comparison::side_by_side_light(&regions,
+        || o(this, person, club, check, job, reasons),
+        || crate::rng::without_counting(|| staff_interest_in_job_at_club(this, person, club, check, job, reasons)));
+    SCOREBOARD.record(same && r.to_bits() == n.to_bits(), || format!("staff_interest_in_job_at_club(person {:#x}, club {:#x}, {}, job {}) original={} rust={} {:x?} x {:x?}",
+        person, club, check, job as u8, r, n, mo, mr));
+    r
+}
+
+/// The margin of a price over a value on a slot's scale: y = 1 − (asking − value) / (ceiling × reputation factor);
+/// below 0.01 it is 0.01; above 1 (3 at most) it becomes y / 3 + 0.67, as `try_add_player_to_club_shortlist` scales
+/// both the current target's and the candidate's scores.
+pub(crate) unsafe fn shortlist_offer_margin(diff: i32, max_price: i32, factor: f64) -> f64 {
+    let mut y = read_f64(rdata::F64_1) - diff as f64 / (max_price as f64 * factor);
+    if read_f64(rdata::F64_0_01) > y {
+        return read_f64(rdata::F64_0_01);
+    }
+    if read_f64(rdata::F64_3) < y {
+        y = read_f64(rdata::F64_3);
+    } else if !(y > read_f64(rdata::F64_1)) {
+        return y;
+    }
+    y * read_f64(rdata::F64_0_3333333333) + read_f64(rdata::F64_0_67)
+}
+
+/// The injury penalty of a shortlist score: with more than 15 days out (`injury_entry::DAYS_LEFT` of
+/// `exe::injury_get_player_injury`), (days − 15)² comes off the score.
+pub(crate) unsafe fn shortlist_offer_injury_penalty(p: Staff, score: i32) -> i32 {
+    let inj = exe::injury_get_player_injury(read_usize(G_INJURY), p);
+    if inj != 0 && read_i16(inj + injury_entry::DAYS_LEFT) > 15 {
+        let d = read_i16(inj + injury_entry::DAYS_LEFT) as i32 - 15;
+        return score.wrapping_sub(d.wrapping_mul(d));
+    }
+    score
+}
+
+/// The body of `try_add_player_to_club_shortlist` after the local STAFF_CONTRACT is built.
+pub(crate) unsafe fn try_add_player_body(this: usize, player: Staff, club: Club, positions: u32, wanted: usize) -> u32 {
+    let mut listed = false;
+    if exe::human_manager_is_human_club(club, 0, 1, 0, 0) != 0 {
+        return 0;
+    }
+    if exe::human_manager_is_human_club(club, 1, 1, 0, 0) != 0 {
+        let hm = read_usize(G_HUMAN_MANAGER);
+        if exe::human_manager_is_on_holiday(hm, exe::database_get_club_manager(club)) != 0 {
+            if exe::scout_manager_is_player_shortlisted(read_usize(G_SCOUT_MANAGER), player, exe::database_get_club_manager(club)) != 0 {
+                listed = true;
+            }
+            match exe::human_manager_get_holiday_option(hm, 4, exe::database_get_club_manager(club)) as i8 {
+                1 => return 0,
+                2 => {
+                    if exe::scout_manager_is_player_shortlisted(read_usize(G_SCOUT_MANAGER), player, exe::database_get_club_manager(club)) == 0 {
+                        return 0;
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+    let cm = read_usize(G_CONTRACT_MANAGER);
+    let tm = read_usize(G_TRANSFER_MANAGER);
+    let ft = read_usize(G_FINANCE_TABLE);
+    let entry = read_usize(this + shortlist_manager_fields::CLUB_SHORTLISTS).wrapping_add((read_u32(club.addr()) as usize).wrapping_mul(9));
+    let contract = Contract(exe::contract_manager_get_contract(cm, player));
+    let seller = if contract.is_null() { Club(0) } else { transfer_manager_club_by_id(contract.club()) };
+    if read_u8(entry + club_shortlist::ACTIVE) != 1 || read_u8(entry + club_shortlist::DAYS) >= 100 {
+        return 0;
+    }
+    if read_usize(this) != 0 && fill_slot_pair_listed(this, player, club) {
+        covered!("mke_1 already listed");
+        return 1;
+    }
+    if exe::shortlist_manager_passes_work_permit_check(this, player, club_of_staff_contract(player), club) == 0 {
+        return 0;
+    }
+    if exe::transfer_manager_can_club_bid_for_player(tm, player, club, core::ptr::null_mut(), 0) == 0 {
+        return 0;
+    }
+    let fin = exe::financetable_get_club_finance(ft, club);
+    if fin == 0 {
+        return 0;
+    }
+    let budget = (exe::finance_get_transfer_budget(fin, 0, 0, 0usize, 1, 0) as i32).max(0);
+    let mut factor = club.reputation() as i16 as f64 * read_f64(rdata::F64_0_0008);
+    if !(factor > read_f64(rdata::F64_1)) {
+        factor = read_f64(rdata::F64_1);
+    }
+    let slots = read_usize(entry);
+    // the original's frame keeps these across the slots
+    let mut score: i32 = 0;
+    let mut cand: i32 = 0;
+    let mut fee: i32 = 0;
+    for i in 0..40usize {
+        let slot = slots.wrapping_add(i * 0x25);
+        let mut saved: i32 = -1;
+        let flags = read_u8(slot + shortlist_slot::FLAGS);
+        if flags & 1 != 0 || read_u8(slot) != 0xb || read_i32(slot + shortlist_slot::OFFER_REF) != -1 {
+            continue;
+        }
+        let pos = read_u16(slot + shortlist_slot::POSITION);
+        if pos == 0 || pos & positions as u16 != pos {
+            continue;
+        }
+        let comp = fill_slot_is_compensation_deal(this, slot, contract.addr(), club, &mut fee) != 0;
+        if !contract.is_null() && !comp && club.reputation() < 7000
+            && player.value() as i32 as f64 > read_i32(slot + shortlist_slot::MAX_PRICE) as f64 * read_f64(rdata::F64_1_3)
+        {
+            // above the ceiling: only a listed player of a human seller, within 1.5 million
+            if seller.is_null() || exe::human_manager_is_human_club(seller, 0, 1, 0, 0) == 0 {
+                continue;
+            }
+            if (player.value() as i32).wrapping_sub(1_500_000) >= read_i32(slot + shortlist_slot::MAX_PRICE) {
+                continue;
+            }
+            if exe::staff_is_transfer_listed(player, 0usize) == 0 {
+                continue;
+            }
+            covered!("mke_1 listed above the ceiling");
+        }
+        let target = read_i32(slot + shortlist_slot::TARGET_STAFF_ID);
+        if target == read_i32(slot + shortlist_slot::REPLACEMENT_STAFF_ID) && target != -1 {
+            continue;
+        }
+        if !fill_slot_date_before(slot + shortlist_slot::DATE, G_CURRENT_DATE) {
+            continue;
+        }
+        let st = read_u8(slot + shortlist_slot::FLAGS) & 0x1e;
+        if st == 0xa {
+            if player.age() as i8 > 24 {
+                continue;
+            }
+            if !listed {
+                let nation = club.nation().addr();
+                let job = player.club_job();
+                if player.nation().addr() != nation && (job.is_null() || job.nation().addr() != nation) {
+                    if player.player().current_reputation() < 1000 {
+                        continue;
+                    }
+                    let seen = exe::database_get_staff_reputation_for_viewer(player, club.manager(), 0) as i32;
+                    if seen < exe::utils_random(2000) + 1000 { // mke1: the reputation a foreign youngster needs
+                        continue;
+                    }
+                    covered!("mke_1 foreign youngster seen");
+                }
+            }
+        }
+        if exe::transfer_manager_player_needs_work_permit(tm, player, club, 1) != 0 {
+            let st = read_u8(slot + shortlist_slot::FLAGS) & 0x1e;
+            if st != 2 && st != 4 && st != 6 {
+                continue;
+            }
+        }
+        // a slot's ceiling that the budget passes five times over is raised
+        let b = budget as f64;
+        if !(b * read_f64(rdata::F64_0_2) < read_i32(slot + shortlist_slot::MAX_PRICE) as f64) && !comp {
+            saved = read_i32(slot + shortlist_slot::MAX_PRICE);
+            let v = read_i32(slot + shortlist_slot::VALUATION) as f64;
+            let m = ftol(v * read_f64(TRY_ADD_F64_0_01536) * v);
+            write_i32(slot + shortlist_slot::MAX_PRICE, m);
+            let cap = b * read_f64(rdata::F64_0_8); // mke1: the raised ceiling within 0.8 × the budget
+            if m as f64 > cap {
+                write_i32(slot + shortlist_slot::MAX_PRICE, ftol(cap));
+            }
+            covered!("mke_1 ceiling raised");
+        }
+        let max_price = read_i32(slot + shortlist_slot::MAX_PRICE).max(1);
+        let valuation = read_i32(slot + shortlist_slot::VALUATION);
+        let target = read_i32(slot + shortlist_slot::TARGET_STAFF_ID);
+        let previous: Staff;
+        if target != -1 && !staff_at(target as isize).player().is_null() {
+            let tp = staff_at(target as isize);
+            previous = tp;
+            let value = exe::shortlist_manager_value_player_for_club(this, club, tp, slot, &mut score, valuation, 1);
+            let owner = Club(club_of_staff_contract(tp));
+            let ask = if owner.is_null() {
+                0
+            } else if exe::human_manager_is_human_club(owner, 0, 1, 0, 0) != 0 {
+                exe::contract_manager_get_human_asking_price(cm, owner, club, tp)
+            } else {
+                exe::contract_manager_calc_asking_price(cm, owner, club, tp, 0, 1, 1)
+            };
+            score = ftol(score as f64 * shortlist_offer_margin(ask.wrapping_sub(value), max_price, factor));
+            if score >= read_i32(slot + shortlist_slot::VALUATION) {
+                covered!("mke_1 target kept");
+                continue;
+            }
+            if score <= valuation {
+                score = valuation;
+            }
+            score = shortlist_offer_injury_penalty(tp, score);
+        } else {
+            write_i32(slot + shortlist_slot::TARGET_STAFF_ID, -1);
+            score = valuation;
+            previous = Staff(0);
+        }
+        // the player offered
+        let mut value = exe::shortlist_manager_value_player_for_club(this, club, player, slot, &mut cand, valuation, 1);
+        let mut ask: i32 = 0;
+        if !seller.is_null() {
+            if exe::financetable_get_club_finance(ft, seller) != 0 && read_u8(exe::financetable_get_club_finance(ft, seller) + finance::CRISIS_STATE) == 1 {
+                covered!("mke_1 seller in crisis");
+                if exe::human_manager_is_human_club(seller, 0, 1, 0, 0) != 0 {
+                    if value >= exe::contract_manager_calc_player_value(cm, player, seller, 0, -1, 0) {
+                        value = exe::contract_manager_calc_player_value(cm, player, seller, 0, -1, 0);
+                    }
+                } else if value >= player.value() as i32 {
+                    value = player.value() as i32;
+                }
+            }
+            if !comp {
+                ask = if exe::human_manager_is_human_club(seller, 0, 1, 0, 0) != 0 {
+                    exe::contract_manager_get_human_asking_price(cm, seller, club, player)
+                } else {
+                    exe::contract_manager_calc_asking_price(cm, seller, club, player, 0, 1, 1)
+                };
+            }
+        }
+        if fee != 0 && comp && fee < ask {
+            ask = fee;
+        }
+        let rejected = 'reject: {
+            if !seller.is_null() && !comp && exe::shortlist_manager_predict_selling_club_response(seller, player, value as i64, club, ask as i64, 0) == 2 {
+                covered!("mke_1 seller would refuse");
+                break 'reject true;
+            }
+            cand = ftol(cand as f64 * shortlist_offer_margin(ask.wrapping_sub(value), max_price, factor));
+            cand = shortlist_offer_injury_penalty(player, cand);
+            if cand < score {
+                break 'reject true;
+            }
+            let st = ((read_u8(slot + shortlist_slot::FLAGS) >> 1) & 0xf) as u32;
+            if exe::shortlist_manager_staff_interest_in_joining_club(this, player, club, 1, 0, st, 0) < read_f64(rdata::F64_3_15) { // mke1: the interest a player needs
+                covered!("mke_1 not interested");
+                break 'reject true;
+            }
+            false
+        };
+        if rejected {
+            if saved != -1 {
+                write_i32(slot + shortlist_slot::MAX_PRICE, saved);
+            }
+            continue;
+        }
+        if read_u8(slot + shortlist_slot::FLAGS) & 1 == 0 {
+            let st = ((read_u8(slot + shortlist_slot::FLAGS) >> 1) & 0xf) as u32;
+            let wage = exe::staff_contract_default_staff_contract(wanted, player, club, 0, st, 0xb, 0) as f32;
+            let st = ((read_u8(slot + shortlist_slot::FLAGS) >> 1) & 0xf) as u32;
+            let d = if exe::shortlist_manager_staff_interest_in_joining_club(this, player, club, 0, 0, st, 0) < read_f64(rdata::F64_0_1) {
+                read_f64(rdata::F64_0_1)
+            } else {
+                let st = ((read_u8(slot + shortlist_slot::FLAGS) >> 1) & 0xf) as u32;
+                exe::shortlist_manager_staff_interest_in_joining_club(this, player, club, 0, 0, st, 0)
+            };
+            let mut q = read_f64(rdata::F64_3_5) / d;
+            if q < read_f64(rdata::F64_0_9) {
+                q = read_f32(rdata::F32_0_8999999762) as f64;
+            }
+            let wanted_wage = q * wage as f64;
+            let st = ((read_u8(slot + shortlist_slot::FLAGS) >> 1) & 0xf) as u32;
+            let cap = exe::finance_get_max_wage(exe::financetable_get_club_finance(ft, club), player, st);
+            if (cap as f64 * read_f64(rdata::F64_1_2)) < wanted_wage { // mke1: the wage within 1.2 × the cap
+                covered!("mke_1 wage too high");
+                return 0;
+            }
+        }
+        write_u32(slot + shortlist_slot::TARGET_STAFF_ID, read_u32(player.addr()));
+        if !previous.is_null() {
+            exe::shortlist_manager_update_staff_status(this, previous, club, 3, 0);
+        }
+        let add_entry: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_SHORTLIST_MANAGER_ADD_SHORTLIST_ENTRY); // add_shortlist_entry
+        add_entry(this, player.addr(), club.addr());
+        covered!("mke_1 shortlisted");
+        return 1;
+    }
+    0
+}
+
+/// The slot `k` (0..40) of the club's shortlist entry (`0x25` bytes each).
+pub(crate) unsafe fn assess_slot(entry: usize, k: usize) -> ShortlistSlot {
+    ShortlistSlot(read_usize(entry).wrapping_add(k.wrapping_mul(0x25)))
+}
+
+/// The early checks of `assess_club_squad` (0x83cb40..0x83ccd0). `None`: the routine leaves (ACTIVE 0, or untouched
+/// when it was 2 with bids out).
+pub(crate) unsafe fn assess_start(this: usize, entry: usize, club: Club, daily: u32, reset: &mut bool) -> Option<(u32, bool)> {
+    write_u8(entry + club_shortlist::DAYS, 0);
+    let human = |a: u32| exe::human_manager_is_human_club(club, a, 1, 0, 0) != 0;
+    if exe::database_is_national_team(club) != 0
+        || club.nation().is_null()
+        || (human(0) && daily as u8 != 0)
+        || club.professional_status() == 3
+    {
+        write_u8(entry + club_shortlist::ACTIVE, 0);
+        return None;
+    }
+    let mut partner: u32 = 0;
+    if exe::club_get_linked_b_team(club, &mut partner, 1) == 0 {
+        partner = 0;
+    } else if partner == 0 {
+        write_u8(entry + club_shortlist::ACTIVE, 0);
+        return None;
+    }
+    let mut may_sack = false;
+    if exe::shortlist_manager_count_slots_with_bids(this, club, 0xffff_ffff) != 0 {
+        if read_u8(entry + club_shortlist::ACTIVE) == 2 {
+            return None;
+        }
+    } else {
+        if read_u8(entry + club_shortlist::ACTIVE) == 2 {
+            let h = human(1);
+            write_u8(entry + club_shortlist::ACTIVE, 1);
+            *reset = true;
+            may_sack = !h;
+        }
+        let division = club.division();
+        let not_loaded = club.nation().league_selected() == 0
+            || division.is_null()
+            || read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(division.addr()).wrapping_mul(4))) == 0;
+        if not_loaded && club.reputation() < 4000 {
+            let a = exe::utils_random(club.reputation() as i32 + 1000);
+            let b = exe::utils_random(5000);
+            if a < b {
+                covered!("mkb_2 small club switches off");
+                write_u8(entry + club_shortlist::ACTIVE, 0);
+                return None;
+            }
+        }
+    }
+    write_u8(entry + club_shortlist::ACTIVE, 1);
+    Some((partner, may_sack))
+}
+
+/// With `reset` the 40 slots are rebuilt (0x83cdf1..0x83cfe3): the formation (+7 of the entry) from the AI manager's
+/// non-player record (3 without one, 0 at a human club or with the holiday option 2), the roles and positions
+/// (`shortlist_set_up_formation_slots`), and for each slot its index, the date 1/1/1997 (day 1, year 0x7cd) and its
+/// status: slot 0 status 2; a goalkeeper slot (position 1) among 1..23 status 4; otherwise, at an AI club without a B
+/// team, a big club (a continental competition and base rating ≥ 6000, or base ≥ 8500) has status 3 up to slot 19 and 5
+/// from 20, the others status 2 up to slot 10, 4 up to 19 and 5 from 20; with a B team or at a human club, base < 6000
+/// without a B team is like the small ones and the rest status 3 up to slot 18, then 4 with a B team or 5 without.
+pub(crate) unsafe fn assess_set_up_slots(s: &mut SquadAssessment) {
+    let club = s.club;
+    let manager = club.manager();
+    let formation: u8 = if exe::human_manager_is_human_club(club, 0, 1, 0, 0) == 0
+        && !manager.is_null()
+        && (manager.non_player().is_null() || manager.non_player().formation() != 0)
+        && !(s.on_holiday != 0 && exe::human_manager_get_holiday_option(read_usize(G_HUMAN_MANAGER), 2, exe::database_get_club_manager(club)) != 0)
+    {
+        let np = club.manager().non_player();
+        if np.is_null() {
+            3
+        } else {
+            np.formation() as u8
+        }
+    } else {
+        0
+    };
+    write_u8(s.entry + 7, formation);
+    const SET_UP_FORMATION_SLOTS: usize = 0x83c090; // stdcall, ret 4 (the original passes this in ecx, unused)
+    let set_up: unsafe extern "stdcall" fn(usize) = core::mem::transmute(SET_UP_FORMATION_SLOTS);
+    set_up(s.entry);
+    for i in 0..40i8 {
+        let slot = assess_slot(s.entry, i as usize);
+        slot.set_index(i);
+        let mut date = [0u32; 2];
+        let mut scratch = [0u32; 2];
+        let d = exe::new_date(date.as_mut_ptr() as usize, 1, 0x7cd);
+        exe::date_operator_3d(slot.date_addr(), scratch.as_mut_ptr() as usize, d);
+        let small = |i: i8| if i >= 11 { if i >= 20 { 5 } else { 4 } } else { 2 };
+        let status = if i == 0 {
+            2
+        } else if i > 0 && i < 24 && slot.position() == 1 {
+            4
+        } else if s.partner == 0 && exe::human_manager_is_human_club(club, 1, 1, 0, 0) == 0 {
+            if (s.comp != 0 && s.target_base >= 6000) || s.target_base >= 8500 {
+                s.big_club = true;
+                if i >= 20 { 5 } else { 3 }
+            } else {
+                small(i)
+            }
+        } else if s.target_base < 6000 && s.partner == 0 {
+            small(i)
+        } else {
+            s.big_club = true;
+            if i < 19 {
+                3
+            } else if s.partner != 0 {
+                4
+            } else {
+                5
+            }
+        };
+        assess_set_slot_status(slot, status);
+    }
+}
+
+/// The slots are released (0x83cff9..0x83d1c7): a slot without a target, or whose target has no bid
+/// (`shortlist_slot::OFFER_REF` −1) and whose date has passed or who retired (job 0x10), loses target, replacement and
+/// ceiling (the target, if he is in the manager's person pairs, gets the event 3 in `update_staff_status`); its
+/// position goes to the list of its status (2 and 3, 4, 5).
+pub(crate) unsafe fn assess_release_slots(s: &mut SquadAssessment) {
+    for k in 0..40usize {
+        let slot = assess_slot(s.entry, k);
+        let t = slot.target_staff_id() as i32;
+        if t > -1 {
+            if slot.offer_ref() != -1 {
+                continue;
+            }
+            let year = read_u16(slot.date_addr() + 2);
+            let today = read_u16(G_CURRENT_DATE + 2);
+            let expired = year < today
+                || (year == today && read_i16(slot.date_addr()) < read_i16(G_CURRENT_DATE))
+                || staff_at(t as isize).job_for_club() == 0x10;
+            if !expired {
+                continue;
+            }
+            let pairs = read_usize(s.this);
+            if pairs != 0 {
+                let key = [read_u32(staff_at(t as isize).addr()), if s.club.is_null() { 0xffff_ffff } else { read_u32(s.club.addr()) }];
+                if exe::crt_bsearch(key.as_ptr() as usize, pairs, read_u32(s.this + shortlist_manager_fields::PAIRS_BY_PERSON_COUNT), 8, 0x757ea0usize) != 0 {
+                    exe::shortlist_manager_update_staff_status(s.this, staff_at(slot.target_staff_id() as i32 as isize), s.club, 3, 0);
+                }
+            }
+        }
+        slot.set_target_staff_id(usize::MAX);
+        slot.set_replacement_staff_id(0xffff_ffff);
+        slot.set_max_price(0);
+        if read_u8(slot.addr()) == 0xb {
+            let pos = slot.position() as u16;
+            match (slot.flags() >> 1) & 0xf {
+                2 | 3 => {
+                    s.pos_a[s.n_a as usize] = pos;
+                    s.n_a = s.n_a.wrapping_add(1);
+                }
+                4 => {
+                    s.pos_b[s.n_b as usize] = pos;
+                    s.n_b = s.n_b.wrapping_add(1);
+                }
+                5 => {
+                    s.pos_c[s.n_c as usize] = pos;
+                    s.n_c = s.n_c.wrapping_add(1);
+                }
+                _ => {}
+            }
+        }
+    }
+}
+
+/// The squad is sorted out (0x83d1c7..0x83d474): each player of the club (`database_collect_club_squad`) with a
+/// sheet, not retired, not on the club's own shortlist, with a contract at the club, no future transfer and not leaving
+/// on a Bosman. With no manager on holiday: the transfer and loan marks are cleared, the squad status becomes 6 under
+/// 20, else 7 at an AI club (cleared at a human one), and he goes to the first team; on holiday, with `reset` at an AI
+/// club, only the status (6 under 20, cleared otherwise). An injury longer than 150 days (30 when random(recurring
+/// level + 1) ≠ 0; 400 when his score reaches the target rating, 300 when it reaches 3/4 of it), or a retirement entry,
+/// sends him to the reserves (with a B team only past 300 days out) and clears the status at a human club; the others
+/// go to the rest, or to the list of those on loan elsewhere, and with `reset` their happiness becomes 0.
+pub(crate) unsafe fn assess_sort_squad(s: &mut SquadAssessment) {
+    let cm = read_usize(G_CONTRACT_MANAGER);
+    let mut squad = [0usize; 50];
+    exe::database_collect_club_squad(s.club, squad.as_mut_ptr(), 0);
+    for &p in squad.iter() {
+        let p = Staff(p);
+        if p.is_null() || read_i32(p.addr()) >= read_i32(G_STAFF_COUNT) || p.player().is_null() || p.job_for_club() == 0x10 {
+            continue;
+        }
+        if exe::shortlist_manager_find_club_shortlist_entry(s.this, s.club, p, 0, 0) != 0 {
+            continue;
+        }
+        let c = Contract(exe::contract_manager_get_contract_for_club(cm, p, s.club));
+        if c.is_null() || exe::transfer_manager_get_future_transfer(read_usize(G_TRANSFER_MANAGER), p, 0) != 0 || c.leaving_on_bosman() != 0 {
+            continue;
+        }
+        if s.on_holiday == 0 {
+            c.set_transfer_status(c.transfer_status() & 0xfc);
+            if (p.age() as i8) < 20 {
+                c.set_squad_status((c.squad_status() & 0xf) | 0x60);
+            } else if exe::human_manager_is_human_club(s.club, 0, 1, 0, 0) != 0 {
+                c.set_squad_status(c.squad_status() & 0xf);
+            } else {
+                c.set_squad_status((c.squad_status() & 0xf) | 0x70);
+            }
+            assess_move_to_first_team(p, s.club);
+        } else if s.reset && exe::human_manager_is_human_club(s.club, 1, 1, 0, 0) == 0 {
+            if (p.age() as i8) < 20 {
+                c.set_squad_status((c.squad_status() & 0xf) | 0x60);
+            } else {
+                c.set_squad_status(c.squad_status() & 0xf);
+            }
+        }
+        let injury = InjuryEntry(exe::injury_get_player_injury(read_usize(G_INJURY), p));
+        let level = exe::injury_get_recurring_injury_level(read_usize(G_INJURY), p) as i8;
+        let long_out = if exe::utils_random(level as i32 + 1) != 0 {
+            !injury.is_null() && injury.days_left() as i32 >= 30
+        } else if injury.is_null() {
+            false
+        } else {
+            s.rating = assess_score(s, p.addr(), 0xffff_ffff, s.flags | 0x6c0);
+            let days = if s.rating >= s.target {
+                400
+            } else if s.target as f64 * read_f64(rdata::F64_0_75) <= s.rating as f64 {
+                300
+            } else {
+                150
+            };
+            injury.days_left() as i32 >= days
+        };
+        if long_out || exe::player_regen_find_retirement_entry(read_usize(G_PLAYER_REGEN), p, 1) != 0 {
+            if s.partner == 0 || (!injury.is_null() && injury.days_left() > 300) {
+                assess_move_to_reserves(p, s.club);
+            }
+            if exe::human_manager_is_human_club(s.club, 0, 1, 0, 0) != 0 {
+                c.set_squad_status(c.squad_status() & 0xf);
+            }
+            continue;
+        }
+        if exe::contract_manager_get_loan_contract(cm, p) != 0 && p.club_job() != s.club {
+            s.elsewhere[s.n_elsewhere as usize] = p.addr();
+            s.n_elsewhere = s.n_elsewhere.wrapping_add(1);
+        } else {
+            s.rest[s.n_rest as usize] = p.addr();
+            s.n_rest = s.n_rest.wrapping_add(1);
+        }
+        if s.reset {
+            c.set_happiness(0);
+        }
+    }
+}
+
+/// The squad is picked for the free slots (0x83d474..0x83d8ac): the rest goes to the positions of status 2 and 3,
+/// then 4; those on loan elsewhere join the rest; those older than `player_sheet::GOALKEEPER` / 10 + 22 leave it
+/// (the swapped-in one is looked at again); the rest goes to the positions of status 5; the old ones come back.
+pub(crate) unsafe fn assess_pick_squad(s: &mut SquadAssessment) {
+    if s.n_a != 0 {
+        assess_pick_for(s, 0, s.flags);
+    }
+    if s.n_b != 0 {
+        assess_pick_for(s, 1, s.flags);
+    }
+    for k in 0..s.n_elsewhere.max(0) as usize {
+        s.rest[s.n_rest as usize] = s.elsewhere[k];
+        s.n_rest = s.n_rest.wrapping_add(1);
+    }
+    s.n_old = 0;
+    let mut i: i8 = 0;
+    while i < s.n_rest {
+        let p = Staff(s.rest[i as usize]);
+        if !p.is_null() && (p.age() as i8 as i32) > p.player().goalkeeper() as i32 / 10 + 22 {
+            s.old[s.n_old as usize] = p.addr();
+            s.n_old = s.n_old.wrapping_add(1);
+            let last = (s.n_rest - 1) as usize;
+            s.rest[i as usize] = s.rest[last];
+            s.n_rest -= 1;
+            s.rest[last] = 0;
+            i -= 1;
+        }
+        i += 1;
+    }
+    if s.n_c != 0 {
+        assess_pick_for(s, 2, s.flags);
+    }
+    for k in 0..s.n_old.max(0) as usize {
+        if s.old[k] != 0 {
+            s.rest[s.n_rest as usize] = s.old[k];
+            s.n_rest = s.n_rest.wrapping_add(1);
+        }
+    }
+}
+
+/// One player left over (0x83d8bf..0x83de6b). See `assess_club_squad` for the rule.
+pub(crate) unsafe fn assess_rest_player(s: &mut SquadAssessment, p: Staff) {
+    let cm = read_usize(G_CONTRACT_MANAGER);
+    let tm = read_usize(G_TRANSFER_MANAGER);
+    let club = s.club;
+    if exe::contract_manager_get_loan_contract(cm, p) != 0 {
+        if p.club_job() != club {
+            assess_to_reserves_unless_star(s, p);
+        }
+        return;
+    }
+    if p.club_job() != club {
+        return;
+    }
+    let c = Contract(exe::contract_manager_get_contract_for_club(cm, p, club));
+    if c.is_null() {
+        return;
+    }
+    let age = p.age() as i8;
+    if exe::transfer_manager_is_queued_for_free_transfer(tm, p) != 0 {
+        if s.reset {
+            c.set_happiness(-100);
+        }
+        return;
+    }
+    let age_i = age as i32;
+    let threshold = ftol((age_i as f64 * read_f64(rdata::F64_0_13) - read_f64(rdata::F64_1_98)) * s.target_base as f64 * read_f64(rdata::F64_0_02)) as i16; // f64 1.98
+    let cut = s.target_base / 68 - 35;
+    let sheet = p.player();
+    let level = ftol(
+        sheet.current_reputation() as f64 * read_f64(rdata::F64_0_25)
+            + sheet.potential_ability() as f64 * read_f64(rdata::F64_12_5)
+            + sheet.current_ability() as f64 * read_f64(rdata::F64_12_5)
+            + club.reputation() as f64 * read_f64(rdata::F64_0_25),
+    );
+    let manager = club.manager();
+    let rep = club.reputation() as i32;
+    if p.job_for_club() == 0xb && exe::match_man_judge_player_ability(manager, p, club, 1, level as i16) < threshold {
+        // below the manager's threshold
+        let wage_left = || {
+            let years = (c.contract_expires_year() as u16 as i32).wrapping_sub(read_u16(G_CURRENT_DATE + 2) as i32);
+            let days = years.wrapping_mul(365).wrapping_add(c.contract_expires() as i32).wrapping_sub(read_i16(G_CURRENT_DATE) as i32);
+            days.wrapping_mul(c.wage()) / 30
+        };
+        let value = p.value() as i32;
+        let surplus = (c.contract_type() & 0x3f == 2
+            && (exe::date_days_since(G_CURRENT_DATE, p.date_joined_club() as u32, p.date_joined_club_leap_year() as u32)
+                <= p.professionalism() as i32 + p.pressure() as i32 + 450
+                || exe::date_days_since(c.addr() + contract::CONTRACT_EXPIRES, read_u32(G_CURRENT_DATE), read_u32(G_CURRENT_DATE + 4)) >= 450))
+            || value >= rep.wrapping_mul(50)
+            || value >= wage_left();
+        if surplus {
+            if exe::database_count_club_squad(club, 0, 0) as i8 as i32 > rep / 500 + 20 { // mkb2: the squad size that allows listing
+                if s.reset {
+                    c.set_happiness(-100);
+                    c.set_unhappy_flag(0);
+                    c.set_matches_left_out(0);
+                    exe::contract_manager_lower_match_morale(cm, p, club, c);
+                }
+                if exe::human_manager_is_human_club(club, 1, 1, 0, 0) == 0
+                    && exe::match_man_judge_player_ability(manager, p, club, 2, level as i16) < cut as i16
+                    && (age_i > p.player().goalkeeper() as i32 / 5 + 21 || p.player().current_reputation() as i32 > rep / 2)
+                {
+                    covered!("mkb_2 transfer listed");
+                    const TRANSFER_LIST_PLAYER: usize = 0x842320; // thiscall, ret 8
+                    let f: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(TRANSFER_LIST_PLAYER);
+                    f(s.this, p.addr(), !s.reset as u32);
+                }
+            }
+        } else if exe::human_manager_is_human_club(club, 1, 1, 0, 0) == 0
+            && !s.reset
+            && exe::transfer_manager_get_offers_for_player(tm, p, 0usize, 0) == 0
+            && exe::transfer_manager_get_exchange_offers_for_player(tm, p, 0usize) == 0
+            && exe::transfer_manager_is_queued_for_free_transfer(tm, p) == 0
+            && exe::database_count_club_squad(club, 0, 0) as i8 as i32 > rep / 500 + 25 // mkb2: the squad size that frees a contract
+        {
+            covered!("mkb_2 free transfer");
+            const QUEUE_FREE_TRANSFER: usize = 0x8c16b0; // thiscall, ret 0xc
+            let f: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(QUEUE_FREE_TRANSFER);
+            f(tm, p.addr(), 0, 0xffff_ffff);
+        }
+        assess_to_reserves_unless_star(s, p);
+        return;
+    }
+    // at or above the threshold (or not a player)
+    if s.on_holiday != 0 {
+        return;
+    }
+    if s.reset {
+        c.set_happiness(-50);
+        c.set_unhappy_flag(0);
+        c.set_matches_left_out(0);
+        exe::contract_manager_lower_match_morale(cm, p, club, c);
+    }
+    assess_to_reserves_unless_star(s, p);
+    if s.partner == 0 && exe::human_manager_is_human_club(club, 0, 1, 0, 0) == 0 {
+        let h = c.happiness();
+        if h >= 0 || p.job_for_club() != 0xb {
+            return;
+        }
+        let limit = if p.player().goalkeeper() == 20 {
+            if age <= 19 {
+                return;
+            }
+            age_i * 50 / 3 - 433
+        } else {
+            if age <= 17 {
+                return;
+            }
+            age_i * 50 / 3 - 400 // mkb2: the unhappiness that puts a player on the loan list
+        };
+        if h as i32 > limit {
+            return;
+        }
+        covered!("mkb_2 loan listed");
+        c.set_transfer_status(c.transfer_status() | 2);
+        if age < 24 {
+            c.set_squad_status((c.squad_status() & 0xf) | 0x60);
+        }
+    } else {
+        let too_old: i8 = if p.player().goalkeeper() == 20 { 27 } else { 23 };
+        if age >= too_old {
+            return;
+        }
+        let j = exe::match_man_judge_player_ability(manager, p, club, 1, ftol(level as i16 as f64 * read_f64(rdata::F64_0_75)) as i16);
+        let status = if j as i32 > threshold as i32 + 20 { 0x50 } else { 0x60 };
+        c.set_squad_status((c.squad_status() & 0xf) | status);
+    }
+}
+
+/// The happiness of those picked for the slots of status 2 and 3 (0x83de85..0x83e185), with no manager on holiday:
+/// for a picked player of the club with a contract, his score for the slot's position `own` against the best score of
+/// the others (the other picks of that list, the picks of 4 and 5 and the rest) `best`: v = ftol((100 − min(best,
+/// own) / max(own, 1) × 100) × 0.5) as a byte, then v + 20 − v/5; with `reset` happiness + v (within −100..100),
+/// matches left out v/10 (at most 100) and the unhappy flag 0; above 20 the squad status 1 (v ≥ 30 and own above the
+/// target rating) or 2. The original calls `get_contract_for_club` with a null person too.
+pub(crate) unsafe fn assess_chosen_happiness(s: &mut SquadAssessment) {
+    if s.n_a <= 0 || s.on_holiday != 0 {
+        return;
+    }
+    let cm = read_usize(G_CONTRACT_MANAGER);
+    for i in 0..s.n_a as usize {
+        let p = Staff(s.chosen_a[i]);
+        if !p.is_null() && p.club_job() != s.club {
+            continue;
+        }
+        let c = Contract(exe::contract_manager_get_contract_for_club(cm, p, s.club));
+        if c.is_null() || p.is_null() {
+            continue;
+        }
+        let mut flags = s.flags | 0xc0;
+        if exe::human_manager_is_human_club(s.club, 1, 1, 0, 0) != 0 {
+            flags |= 0x810000;
+        }
+        let pos = s.pos_a[i] as u32;
+        let own = assess_score(s, p.addr(), pos, flags);
+        s.rating = own;
+        let mut best = 0i32;
+        let mut consider = |q: usize| {
+            if q != 0 {
+                let r = assess_score(s, q, pos, flags);
+                if best <= r {
+                    best = r;
+                }
+            }
+        };
+        for k in 0..s.n_a as usize {
+            if k != i {
+                consider(s.chosen_a[k]);
+            }
+        }
+        for k in 0..s.n_b.max(0) as usize {
+            consider(s.chosen_b[k]);
+        }
+        for k in 0..s.n_c.max(0) as usize {
+            consider(s.chosen_c[k]);
+        }
+        for k in 0..s.n_rest.max(0) as usize {
+            consider(s.rest[k]);
+        }
+        let m = if best > own { own } else { best };
+        let d = if own < 1 { 1 } else { own };
+        let x = ftol((read_f32(rdata::F32_100) as f64 - m as f64 / d as f64 * read_f64(rdata::F64_100)) * read_f32(rdata::F32_0_5) as f64) as i8;
+        let v = x.wrapping_add(20i8.wrapping_sub((x as i32 / 5) as i8));
+        if s.reset {
+            c.set_happiness(assess_happiness_plus(c.happiness(), v));
+            let q = (v as i32 / 10) as i8;
+            c.set_matches_left_out((if q > 100 { 100 } else { q }) as u8);
+            c.set_unhappy_flag(0);
+        }
+        if v > 20 {
+            let status = if v >= 30 && own > s.target { 0x10 } else { 0x20 };
+            c.set_squad_status((c.squad_status() & 0xf) | status);
+        }
+    }
+}
+
+/// From the date the picked player joined the club, if after the manager's, the slot's date is that + 120 days
+/// (only with `reset` and a manager).
+pub(crate) unsafe fn assess_slot_date(s: &SquadAssessment, slot: ShortlistSlot, p: Staff) {
+    let manager = s.club.manager();
+    if !s.reset || manager.is_null() {
+        return;
+    }
+    let (year, manager_year) = (p.date_joined_club_year(), manager.date_joined_club_year());
+    if year > manager_year || (year == manager_year && (p.date_joined_club() as i16) > (manager.date_joined_club() as i16)) {
+        let mut later = [0u32; 2];
+        let mut scratch = [0u32; 2];
+        let d = exe::date_add_days(p.addr() + staff::DATE_JOINED_CLUB, later.as_mut_ptr() as usize, 0x78);
+        exe::date_operator_3d(slot.date_addr(), scratch.as_mut_ptr() as usize, d);
+    }
+}
+
+/// The picks fill the free slots in order (0x83e185..0x83e66f); see `assess_club_squad`.
+pub(crate) unsafe fn assess_fill_slots(s: &mut SquadAssessment) {
+    let cm = read_usize(G_CONTRACT_MANAGER);
+    let club = s.club;
+    let mut k: usize = 0;
+    for list in 0..3u8 {
+        let (n, chosen) = match list {
+            0 => (s.n_a, s.chosen_a),
+            1 => (s.n_b, s.chosen_b),
+            _ => (s.n_c, s.chosen_c),
+        };
+        for &p in chosen.iter().take(n.max(0) as usize) {
+            while assess_slot(s.entry, k).target_staff_id() as i32 > -1 {
+                k += 1;
+            }
+            let slot = assess_slot(s.entry, k);
+            let p = Staff(p);
+            if p.is_null() {
+                slot.set_replacement_staff_id(0xffff_ffff);
+                slot.set_target_staff_id(usize::MAX);
+                k += 1;
+                continue;
+            }
+            slot.set_replacement_staff_id(read_u32(p.addr()));
+            let c = Contract(exe::contract_manager_get_contract_for_club(cm, p, club));
+            if s.on_holiday == 0 && !c.is_null() {
+                let st = c.squad_status() & 0xf0;
+                if list != 0 || (st != 0x10 && st != 0x20) {
+                    c.set_squad_status(((slot.flags() & 0xfe) << 3) | (c.squad_status() & 0xf));
+                }
+            }
+            assess_slot_date(s, slot, p);
+            k += 1;
+            match list {
+                0 => {}
+                1 => {
+                    if (s.partner != 0 || exe::human_manager_is_human_club(club, 0, 1, 0, 0) != 0) && k == 25 && p != club.manager() && !s.big_club {
+                        assess_move_to_reserves(p, club);
+                    }
+                    let fatigue = exe::injury_get_fatigue(read_usize(G_INJURY), read_u32(p.addr()));
+                    let sheet = p.player();
+                    // Defect of the original: WORK_RATE is a signed byte and 3250 is out of its range, so this test
+                    // is always true (probably WORLD_REPUTATION, a word, was meant); kept as the original does it.
+                    if fatigue < -1000 && sheet.current_reputation() < 4500 && (sheet.work_rate() as i32) < 3250 && !c.is_null() && c.happiness() < -50 {
+                        covered!("mkb_2 tired reserve loan listed");
+                        c.set_transfer_status(c.transfer_status() | 2);
+                    }
+                }
+                _ => {
+                    if s.partner == 0 && p != club.manager() {
+                        assess_move_to_reserves(p, club);
+                    }
+                    let r = exe::utils_random(300);
+                    let fatigue = exe::injury_get_fatigue(read_usize(G_INJURY), read_u32(p.addr())) as i32;
+                    if fatigue < -500 - r && !c.is_null() && c.happiness() < 0 {
+                        covered!("mkb_2 tired spare loan listed");
+                        c.set_transfer_status(c.transfer_status() | 2);
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// The player slots without a target are priced (0x83e66f..0x83ebfb); see `assess_club_squad`.
+pub(crate) unsafe fn assess_price_slots(s: &mut SquadAssessment) {
+    let cm = read_usize(G_CONTRACT_MANAGER);
+    let club = s.club;
+    for k in 0..40usize {
+        let slot = assess_slot(s.entry, k);
+        if slot.target_staff_id() as i32 > -1 || read_u8(slot.addr()) != 0xb {
+            continue;
+        }
+        let mut price = if s.target >= 36000 { 36000 } else { s.target };
+        if slot.position() == 1 && slot.replacement_staff_id() as i32 == -1 {
+            price = ftol(price as f64 * read_f64(rdata::F64_0_75));
+        }
+        let replacement = slot.replacement_staff_id() as i32;
+        if replacement <= -1 {
+            slot.set_valuation(price);
+            slot.set_target_staff_id(usize::MAX);
+            slot.set_max_price(0);
+            let (p, r) = (price as f64, club.reputation() as f64);
+            let v = match (slot.flags() >> 1) & 0xf {
+                1 => p * read_f64(rdata::F64_2_5) + r,
+                2 => (p + p) + r,
+                3 => p * read_f64(rdata::F64_1_8) + r,
+                4 | 5 => p * read_f64(rdata::F64_0_8),
+                _ => p * read_f64(rdata::F64_0_5),
+            };
+            slot.set_price(ftol(v));
+            if read_u8(slot.addr() + shortlist_slot::POSITION) & 1 != 0 {
+                slot.set_price(slot.price().wrapping_mul(3)); // a goalkeeper slot
+            }
+            continue;
+        }
+        let person = staff_at(replacement as isize);
+        let c = Contract(exe::contract_manager_get_contract_for_club(cm, person, club));
+        let pos = slot.position() as u16 as u32;
+        match (slot.flags() >> 1) & 0xf {
+            2 | 3 => {
+                if !c.is_null() && s.reset {
+                    c.set_happiness(assess_happiness_plus(c.happiness(), 50));
+                    c.set_matches_left_out(10);
+                    c.set_unhappy_flag(0);
+                }
+                assess_move_to_first_team(person, club);
+                let flags = if exe::human_manager_is_human_club(club, 1, 1, 0, 0) != 0 { s.flags | 0x8100c0 } else { s.flags | 0xc0 };
+                s.rating = assess_score(s, person.addr(), pos, flags);
+                if s.days_since_start < 200 {
+                    s.rating = ftol((read_f64(rdata::F64_1_25) - s.days_since_start as f64 * read_f64(rdata::F64_0_00125)) * s.rating as f64); // f64 0.00125
+                }
+            }
+            4 => {
+                assess_move_to_first_team(person, club);
+                s.rating = assess_score(s, person.addr(), pos, s.flags | 0x1c0);
+            }
+            5 => {
+                if person != club.manager() {
+                    assess_to_reserves_unless_star(s, person);
+                }
+                s.rating = assess_score(s, person.addr(), pos, s.flags | 0x100);
+            }
+            _ => {} // the score of the previous slot or player (stale +0x38 in the original)
+        }
+        if s.rating < -10000 {
+            s.rating = -10000;
+        } else if s.rating > 60000 {
+            s.rating = 60000;
+        }
+        let r = s.rating;
+        let unhappy = || !c.is_null() && c.grievances() != 0 && (c.grievances() & 0x100 != 0 || c.grievances() & 1 != 0 || exe::staff_contract_days_to_end_date(c) < 365);
+        if r >= price && !unhappy() {
+            slot.set_target_staff_id(read_u32(person.addr()) as usize); // he keeps the place
+            continue;
+        }
+        covered!("mkb_2 slot priced");
+        let delta = ftol((read_f64(rdata::F64_1) - r as f64 / price as f64) * read_f64(rdata::F64_NEG_100)) as i8; // f64 -100.0
+        let st = slot.flags() & 0x1e;
+        if !c.is_null() {
+            if s.reset {
+                c.set_happiness(assess_happiness_plus(c.happiness(), delta));
+            }
+            if st == 4 || st == 6 {
+                if c.happiness() < 25 && s.reset {
+                    c.set_happiness(25);
+                }
+                slot.set_target_staff_id(usize::MAX);
+            } else if c.happiness() < 0 && s.reset {
+                c.set_happiness(0);
+            }
+            if s.on_holiday == 0 && slot.flags() & 0x1e == 0xa {
+                c.set_squad_status((c.squad_status() & 0xf) | 0x60);
+            }
+        } else if st == 4 || st == 6 {
+            slot.set_target_staff_id(usize::MAX);
+        }
+        slot.set_valuation(price);
+        slot.set_max_price(0);
+        let v = if price > 1000 { price } else { 1000 };
+        let x = read_f64(rdata::F64_1_25) - r as f64 / v as f64;
+        let f = if x > read_f64(rdata::F64_1) {
+            read_f64(rdata::F64_1)
+        } else if x < read_f64(rdata::F64_0_5) {
+            read_f64(rdata::F64_0_5)
+        } else {
+            x
+        };
+        let (p, rf, rr) = (price as f64, r as f64, club.reputation() as f64);
+        let price_left = match (slot.flags() >> 1) & 0xf {
+            1 => (rr * f + p * read_f64(rdata::F64_2_5)) - rf * read_f64(rdata::F64_2_5),
+            2 => (rr * f + (p + p)) - (rf + rf),
+            3 => (rr * f + p * read_f64(rdata::F64_1_8)) - rf * read_f64(rdata::F64_1_8),
+            4 | 5 => p * read_f64(rdata::F64_0_8) - rf * read_f64(rdata::F64_0_8),
+            _ => p * read_f64(rdata::F64_0_5) - rf * read_f64(rdata::F64_0_5),
+        };
+        slot.set_price(ftol(price_left));
+    }
+}
+
+/// The staff slots (0x83ebfb..0x83f321); see `assess_club_squad`.
+pub(crate) unsafe fn assess_staff_slots(s: &mut SquadAssessment) {
+    let club = s.club;
+    let mut staff = [0usize; 16];
+    let mut n: i8 = 0;
+    let mut add = |q: usize| {
+        if q != 0 && exe::shortlist_manager_find_club_shortlist_entry(s.this, club, q, 1, 0) == 0 {
+            staff[n as usize] = q;
+            n += 1;
+        }
+    };
+    add(club.assistant_manager());
+    for k in 0..5 {
+        add(club.coaches(k));
+    }
+    for k in 0..3 {
+        add(club.physios(k));
+    }
+    for k in 0..7 {
+        add(club.scouts(k));
+    }
+    let threshold = if s.target / 5 >= 5000 { 5000 } else { s.target / 5 };
+    for k in 0..40usize {
+        let slot = assess_slot(s.entry, k);
+        if read_u8(slot.addr()) == 0xb {
+            continue;
+        }
+        slot.set_flags(slot.flags() & 0xfe);
+        slot.set_max_price(0);
+        slot.set_price(ftol(threshold as f64 * read_f64(rdata::F64_2_5)));
+        if slot.offer_ref() != -1 {
+            continue;
+        }
+        slot.set_valuation(threshold);
+        let jobs: [u8; 2] = match read_i8(slot.addr()) {
+            6 => [6, 0xd],
+            7 => [7, 0xe],
+            8 => [8, 0xf],
+            9 => [9, 9],
+            10 => [10, 10],
+            _ => continue,
+        };
+        let Some(i) = (0..n.max(0) as usize).find(|&i| jobs.contains(&Staff(staff[i]).job_for_club())) else {
+            continue;
+        };
+        let person = Staff(staff[i]);
+        slot.set_replacement_staff_id(read_u32(person.addr()));
+        let manager = if exe::human_manager_is_human_club(club, 1, 1, 0, 0) != 0 { s.stand_in } else { club.manager().addr() };
+        let score = exe::score_staff_for_job(read_usize(G_MANAGER_MANAGER), person, club, manager as u32, read_u8(slot.addr()) as u32);
+        if score >= threshold {
+            slot.set_target_staff_id(read_u32(person.addr()) as usize);
+            slot.set_price(0);
+        } else if s.may_sack && exe::contract_manager_find_contract_offer(read_usize(G_CONTRACT_MANAGER), read_u32(person.addr()), read_u32(club.addr())) == 0 {
+            covered!("mkb_2 staff sacked");
+            slot.set_replacement_staff_id(0xffff_ffff);
+            slot.set_target_staff_id(usize::MAX);
+            exe::manager_manager_remove_staff_from_club(read_usize(G_MANAGER_MANAGER), person, club);
+        } else {
+            slot.set_target_staff_id(usize::MAX);
+            slot.set_price(ftol((threshold - score) as f64 * read_f64(rdata::F64_2_5)));
+        }
+        n -= 1;
+        staff[i] = staff[n as usize];
+    }
+}
+
+/// Whether the club "knows" a candidate who passed the filters: the human's scout lists him; or (id + club id) % k = 0;
+/// or, for someone of another nation (`club.nation()` ≠ `.nation()`), without international caps (`.int_apps()`) and
+/// not at a club of the club's nation: not a youngster under 23 who is foreign for the club (`exe::database_is_staff_foreign`
+/// with 1) with a world reputation (`.world_reputation()`) below 3250; of the same region (`.region()`), or the club's
+/// reputation at least 2750 and (his club of no nation or of the club's region, or the club's reputation at least
+/// 4250, or the club's `league_standard()` at least 12); and then his reputation as the club's manager sees it
+/// (`exe::database_get_staff_reputation_for_viewer`) at least 2750 + random(2000) in status 5/6 slots (a player with
+/// world reputation 1750 or more) or 3250 + random(2000) in the others (world reputation 2750 or more). Of the same
+/// nation: a non-player, a loan slot, no sheet, home reputation (`.home_reputation()`) 3250 or more, his club's
+/// reputation 3250 or more or 20 years or more: known; a youngster only when (id + club id) % (25 − the manager's
+/// `.youngsters()`) = 0, or % 15 without a manager with a non-player sheet.
+pub(crate) unsafe fn fill_slot_club_knows(s: &FillSlotState, p: Staff) -> bool {
+    if s.scout_listed != 0 {
+        return true;
+    }
+    let club = s.club;
+    let sum = read_i32(p.addr()).wrapping_add(read_i32(club.addr()));
+    if sum.wrapping_rem(s.k as i32) == 0 {
+        // mkb3: the club knows one in k
+        covered!("mkb_3 known by the divisor");
+        return true;
+    }
+    let cn = club.nation();
+    let same = cn == p.nation() || p.int_apps() != 0 || (!p.club_job().is_null() && p.club_job().nation() == cn);
+    if !same {
+        if (p.age() as i8) < 23 && exe::database_is_staff_foreign(p, cn, 1) != 0 {
+            let sheet = p.player();
+            if !sheet.is_null() && sheet.world_reputation() < 3250 {
+                return false;
+            }
+        }
+        if !cn.is_null() && !p.nation().is_null() && cn.region() != p.nation().region() {
+            if club.reputation() < 2750 {
+                return false;
+            }
+            let job = p.club_job();
+            let near = !job.is_null() && (job.nation().is_null() || job.nation().region() == cn.region());
+            if !near && club.reputation() < 4250 && (cn.league_standard() as i8) < 12 {
+                return false;
+            }
+        }
+        let st = s.flags() & 0x1e;
+        let manager = club.manager();
+        if st == 0xa || st == 0xc {
+            if s.is_player && p.player().world_reputation() < 1750 {
+                return false;
+            }
+            let seen = exe::database_get_staff_reputation_for_viewer(p, manager, (!s.is_player) as u32) as i32;
+            return seen >= exe::utils_random(2000) + 2750;
+        }
+        if s.is_player && p.player().world_reputation() < 2750 {
+            return false;
+        }
+        let seen = exe::database_get_staff_reputation_for_viewer(p, manager, (!s.is_player) as u32) as i32;
+        covered!("mkb_3 foreigner seen");
+        return seen >= exe::utils_random(2000) + 3250; // mkb3: the reputation a foreigner needs
+    }
+    if !s.is_player || s.flags() & 1 != 0 {
+        return true;
+    }
+    let sheet = p.player();
+    if sheet.is_null() || sheet.home_reputation() >= 3250 {
+        return true;
+    }
+    let job = p.club_job();
+    if !job.is_null() && job.reputation() >= 3250 {
+        return true;
+    }
+    if p.age() as i8 >= 20 {
+        return true;
+    }
+    let manager = club.manager();
+    covered!("mkb_3 youngster");
+    if !manager.is_null() && !manager.non_player().is_null() {
+        sum.wrapping_rem(25 - manager.non_player().youngsters() as i32) == 0
+    } else {
+        sum.wrapping_rem(15) == 0
+    }
+}
+
+/// One candidate of the position lists (the 12-byte entry: +0 the person's id, +8 his price), in the original's order
+/// (0x83fa25..0x840a81); a `return` is the original's jump to the next candidate.
+pub(crate) unsafe fn fill_slot_candidate(s: &mut FillSlotState, entry: usize) {
+    let p = staff_at(read_i32(entry) as isize);
+    let club = s.club;
+    let cm = read_usize(G_CONTRACT_MANAGER);
+    let tm = read_usize(G_TRANSFER_MANAGER);
+    let mut contract_cache: usize = 0;
+    if p == s.excluded || read_i32(p.addr()) >= read_i32(G_STAFF_COUNT).wrapping_sub(16) || p.job_for_club() == 5 || p.job_for_nation() == 5 {
+        return;
+    }
+    if !p.non_player().is_null() && read_usize(G_MANAGER_MANAGER) != 0 && exe::manager_manager_is_vacancy_candidate(read_usize(G_MANAGER_MANAGER), p) != 0 {
+        return;
+    }
+    let price = read_i32(entry + 8);
+    if s.is_player {
+        if exe::human_manager_is_human_club(club, 1, 1, 0, 0) != 0 {
+            let hm = read_usize(G_HUMAN_MANAGER);
+            if exe::human_manager_is_on_holiday(hm, exe::database_get_club_manager(club)) != 0 {
+                let listed = exe::scout_manager_is_player_shortlisted(read_usize(G_SCOUT_MANAGER), p, exe::database_get_club_manager(club));
+                s.scout_listed = listed;
+                if exe::human_manager_get_holiday_option(hm, 4, exe::database_get_club_manager(club)) == 2 && listed == 0 {
+                    return;
+                }
+            }
+        }
+        if p.job_for_club() != 0xb || (!p.national_job().is_null() && p.job_for_nation() == 5) {
+            return;
+        }
+        if p.player().is_null() || staff_state_byte_0b(p) & 0x30 == 0x10 {
+            return;
+        }
+        if !p.nation().is_null() && read_u32(p.nation().addr()) == read_u32(KEY_NATION_SAUDI_ARABIA) {
+            return;
+        }
+        if s.flags() & 0x1e == 0xa && p.age() as i8 > 23 {
+            return;
+        }
+        if s.flags() & 1 == 0 {
+            if (read_i32(s.slot + shortlist_slot::MAX_PRICE) as f64) < price as f64 * read_f64(rdata::F64_1_3) { // mkb3: price × 1.3 within the ceiling
+                return;
+            }
+        } else if !(!p.club_job().is_null() && price <= 0) && exe::staff_is_loan_listed(p, 0) == 0 {
+            return;
+        }
+    } else {
+        if p.non_player().is_null() {
+            return;
+        }
+        let c = Contract(exe::contract_manager_get_contract(cm, p));
+        contract_cache = c.addr();
+        let left = if !c.is_null() && c.contract_type() & 0x3f == 2 {
+            (exe::staff_contract_days_to_end_date(c) as i32).wrapping_mul(c.wage()) / 7
+        } else {
+            0
+        };
+        if left >= read_i32(s.slot + shortlist_slot::MAX_PRICE) || left > (club.reputation() as i32 + 500) * 10 {
+            return;
+        }
+    }
+    if p.club_job() == club || club_of_staff_contract(p) == club.addr() || staff_state_byte_0b(p) & 0xf >= 10 {
+        return;
+    }
+    if s.is_player && !p.club_job().is_null() {
+        let mut d = [0u8; 8];
+        let q = exe::date_sub_days(G_CURRENT_DATE, d.as_mut_ptr() as usize, 200);
+        if fill_slot_date_before(q, p.addr() + staff::DATE_JOINED_CLUB) {
+            let c = Contract(exe::contract_manager_get_contract(cm, p));
+            contract_cache = c.addr();
+            if !c.is_null() && c.squad_status() & 0xf0 != 0x70 && c.grievances() == 0 && exe::staff_is_transfer_listed_or_requested(p, 0) == 0 {
+                return;
+            }
+        }
+    }
+    if staff_state_byte_0b(p) & 0xf != 0 && read_usize(s.this) != 0 && fill_slot_pair_listed(s.this, p, club) {
+        return;
+    }
+    if exe::shortlist_manager_passes_work_permit_check(s.this, p, p.club_job().addr(), club) == 0 {
+        return;
+    }
+    if exe::transfer_manager_player_needs_work_permit(tm, p, club, 1) != 0 {
+        let st = s.flags() & 0x1e;
+        if st != 2 && st != 4 && st != 6 {
+            return;
+        }
+    }
+    if s.flags() & 1 != 0 && (p.club_job().is_null() || exe::transfer_manager_can_loan_player(tm, club, p, 0) == 0) {
+        return;
+    }
+    if s.flags() & 1 != 0 {
+        let c = Contract(contract_of_staff_cached(p));
+        if !c.is_null() && !transfer_manager_club_by_id(c.club()).is_null()
+            && exe::human_manager_is_human_club(club_of_staff_contract(p), 0, 1, 0, 0) != 0
+            && Contract(exe::contract_manager_get_contract(cm, p)).transfer_status() & 2 == 0
+        {
+            return;
+        }
+    }
+    if exe::transfer_manager_get_future_transfer(tm, p, 0) != 0 {
+        return;
+    }
+    if !fill_slot_club_knows(s, p) {
+        return;
+    }
+    let mut value: i64;
+    if s.is_player {
+        let mut score = s.score;
+        value = exe::shortlist_manager_value_player_for_club(s.this, club, p, s.slot, &mut score, s.best_score, 1) as i64;
+        s.score = score;
+    } else {
+        s.score = exe::score_staff_for_job(read_usize(G_MANAGER_MANAGER), p, club, club.manager().addr() as u32, read_u8(s.slot) as u32);
+        value = p.value() as i32 as i64;
+    }
+    if s.score < s.valuation || s.score < s.best_score.wrapping_sub(10000) {
+        return;
+    }
+    if s.flags() & 1 == 0 {
+        let seller = club_of_staff_contract(p);
+        let ft = read_usize(G_FINANCE_TABLE);
+        if s.is_player && seller != 0 && exe::financetable_get_club_finance(ft, seller) != 0
+            && read_u8(exe::financetable_get_club_finance(ft, seller) + finance::CRISIS_STATE) == 1
+        {
+            covered!("mkb_3 seller in crisis");
+            if exe::human_manager_is_human_club(seller, 0, 1, 0, 0) != 0 {
+                if value >= exe::contract_manager_calc_player_value(cm, p, seller, 0, -1, 0) as i64 {
+                    value = exe::contract_manager_calc_player_value(cm, p, seller, 0, -1, 0) as i64;
+                }
+            } else if value >= p.value() as i32 as i64 {
+                value = p.value() as i32 as i64;
+            }
+        }
+        if contract_cache == 0 {
+            contract_cache = exe::contract_manager_get_contract(cm, p);
+        }
+        s.comp = s.is_player && fill_slot_is_compensation_deal(s.this, s.slot, contract_cache, club, &mut s.comp_fee) != 0;
+        let mut ask: i32 = if seller == 0 || s.comp {
+            0
+        } else if !s.is_player {
+            p.value() as i32
+        } else if exe::human_manager_is_human_club(seller, 0, 1, 0, 0) != 0 {
+            exe::contract_manager_get_human_asking_price(cm, seller, club, p)
+        } else {
+            exe::contract_manager_calc_asking_price(cm, seller, club, p, 0, 1, 1)
+        };
+        if s.comp_fee != 0 && s.comp && s.comp_fee < ask {
+            ask = s.comp_fee;
+        }
+        if s.is_player {
+            let c = Contract(contract_of_staff_cached(p));
+            if !c.is_null() && !transfer_manager_club_by_id(c.club()).is_null() && !s.comp {
+                let mut extra: i32 = 0;
+                let st = s.flags() & 0x1e;
+                if ask as i64 > value && (st == 0xa || (st == 8 && (p.age() as i8) < 28)) {
+                    let f = (club.reputation() as i32 as f64 * read_f64(rdata::F64_7_692307692ENEG_05) + read_f64(rdata::F64_0_5)) * value as f64; // f64 1/13000
+                    let cap = read_f64(rdata::F64_2500000); // f64 2,500,000
+                    let m = if cap < f { cap } else { f };
+                    let diff = (ask as i64).wrapping_sub(value) as f64;
+                    extra = ftol(if diff < m { diff } else { m });
+                }
+                let owner = club_of_staff_contract(p);
+                if exe::shortlist_manager_predict_selling_club_response(owner, p, (value as i32).wrapping_add(extra) as i64, club, ask as i64, 0) == 2 {
+                    covered!("mkb_3 seller would refuse");
+                    return;
+                }
+            }
+        }
+        if s.max_fee != -1 && ask > s.max_fee {
+            return;
+        }
+        if s.is_player {
+            let margin = (ask as i64).wrapping_sub(value) as f64 / (s.max_price as f64 * s.factor);
+            let mut y = read_f64(rdata::F64_1) - margin;
+            if y > read_f64(rdata::F64_1) {
+                y = y * read_f64(rdata::F64_0_3333333333) + read_f64(rdata::F64_0_67);
+            }
+            if read_f64(rdata::F64_0_01) > y {
+                y = read_f64(rdata::F64_0_01);
+            } else if !(read_f64(rdata::F64_3) >= y) {
+                y = read_f64(rdata::F64_3);
+            }
+            s.score = ftol(s.score as f64 * y);
+            let inj = exe::injury_get_player_injury(read_usize(G_INJURY), p);
+            if inj != 0 && read_i16(inj + injury_entry::DAYS_LEFT) > 15 {
+                let d = read_i16(inj + injury_entry::DAYS_LEFT) as i32 - 15;
+                s.score = s.score.wrapping_sub(d.wrapping_mul(d));
+            }
+        }
+    } else {
+        // the original pushes the loan flag with the upper bits of a scratch register; the prediction reads its byte
+        if exe::shortlist_manager_predict_selling_club_response(p.club_job(), p, value, club, -1, 1) == 2 {
+            covered!("mkb_3 lender would refuse");
+            return;
+        }
+        let inj = exe::injury_get_player_injury(read_usize(G_INJURY), p);
+        if inj != 0 && read_i16(inj + injury_entry::DAYS_LEFT) > 10 {
+            let d = read_i16(inj + injury_entry::DAYS_LEFT) as i32;
+            s.score = s.score.wrapping_add((10 - d).wrapping_mul(d - 10).wrapping_mul(200));
+        }
+    }
+    if s.is_player && exe::transfer_manager_can_club_bid_for_player(tm, p, club, core::ptr::null_mut(), 0) == 0 {
+        return;
+    }
+    let r = exe::utils_random(17) + 92;
+    s.score = ftol(r as f64 * read_f64(rdata::F64_0_01) * s.score as f64);
+    if s.score > s.best_score {
+        let f = s.flags();
+        let interest = if s.is_player {
+            exe::shortlist_manager_staff_interest_in_joining_club(s.this, p, club, 1, (f & 1) as u32, ((f >> 1) & 0xf) as u32, 0)
+        } else {
+            exe::staff_interest_in_job_at_club(s.this, p, club, 1, read_u8(s.slot) as u32, 0)
+        };
+        if s.flags() & 1 == 0 && s.is_player {
+            let r20 = exe::utils_random(20);
+            if !(read_f64(rdata::F64_3_15) - r20 as f64 * read_f64(rdata::F64_0_1) > interest) {
+                let cr = p.player().current_reputation() as i32;
+                if exe::utils_random(79 - cr / 150) == 0 {
+                    let tell = cr > exe::utils_random(2000) + 5000
+                        || (!p.club_job().is_null() && exe::human_manager_is_human_club(p.club_job(), 0, 1, 0, 0) != 0);
+                    if tell {
+                        if s.comp {
+                            value = 0;
+                        } else {
+                            let v = value as f64;
+                            let r = exe::utils_random(ftol(v * read_f64(rdata::F64_1_25)));
+                            value = ftol(r as f64 + v * read_f64(rdata::F64_0_75)) as i64;
+                        }
+                        covered!("mkb_3 interest news");
+                        fill_slot_add_transfer_interest(p, club, value as i32, interest);
+                    }
+                }
+            }
+        }
+        if interest >= read_f64(rdata::F64_3_15) { // mkb3: the willingness a target needs
+            let f = s.flags();
+            if f & 1 == 0 && s.is_player {
+                let rep = club.reputation() as i32;
+                let sheet = p.player();
+                let age = p.age() as i8;
+                let kind: u8 = if value > rep.wrapping_mul(1250) as i64 && f & 0x1e != 2 {
+                    1
+                } else if value > rep.wrapping_mul(750) as i64 && f & 0x1e < 4 {
+                    2
+                } else if f & 0x1e == 0xa && !sheet.is_null() && age > 20 && age < 24 && rep < 4250
+                    && sheet.current_reputation() as i32 - 750 > rep
+                {
+                    3
+                } else {
+                    (f >> 1) & 0xf
+                };
+                // the original writes the kind into the low byte of the stand-in manager's local and pushes the dword
+                let kind_arg = (s.stand_in as u32 & 0xffff_ff00) | kind as u32;
+                let wage = exe::staff_contract_default_staff_contract(s.wanted, p, club, 0, kind_arg, 0xb, 0) as f32;
+                let st = ((s.flags() >> 1) & 0xf) as u32;
+                let w0 = exe::shortlist_manager_staff_interest_in_joining_club(s.this, p, club, 0, 0, st, 0);
+                let d = if w0 < read_f64(rdata::F64_0_1) {
+                    read_f64(rdata::F64_0_1)
+                } else {
+                    exe::shortlist_manager_staff_interest_in_joining_club(s.this, p, club, 0, 0, st, 0)
+                };
+                let mut q = read_f64(rdata::F64_3_5) / d;
+                if q < read_f64(rdata::F64_0_9) {
+                    q = read_f32(rdata::F32_0_8999999762) as f64;
+                }
+                let wanted_wage = q * wage as f64;
+                let cap = exe::finance_get_max_wage(exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), club), p, kind_arg);
+                if (cap as f64 * read_f64(rdata::F64_1_2)) < wanted_wage { // mkb3: the wage within 1.2 × the cap
+                    covered!("mkb_3 wage too high");
+                    return;
+                }
+            }
+            covered!("mkb_3 new best");
+            s.best = p;
+            s.best_score = s.score;
+        }
+    }
+    if exe::utils_random(ftol(s.score as f64 * read_f64(rdata::F64_1_5))) <= s.best_score || !s.is_player {
+        return;
+    }
+    if p.age() as i8 as i32 >= 28 - exe::utils_random(6) {
+        return;
+    }
+    let c = Contract(contract_of_staff_cached(p));
+    if c.is_null() || transfer_manager_club_by_id(c.club()).is_null() || p.club_job().is_null() {
+        return;
+    }
+    let seller = Club(club_of_staff_contract(p));
+    if club.reputation() as i32 > exe::utils_random(1000) + seller.reputation() as i32 + 2000
+        && exe::news_club_has_human_manager(read_usize(G_NEWS), club_of_staff_contract(p)) != 0
+    {
+        covered!("mkb_3 scout watching story");
+        let story: unsafe extern "C" fn(usize, usize) = core::mem::transmute(FN_NEWS_CREATE_SCOUT_WATCHING_STORY); // news_create_scout_watching_story
+        story(p.addr(), club.addr());
+    }
+}
+
+/// The body of `fill_shortlist_slot` after the local STAFF_CONTRACT is built.
+pub(crate) unsafe fn fill_shortlist_slot_body(this: usize, slot: usize, club: Club, excluded: Staff, wanted: usize) {
+    let nation = club.nation();
+    if nation.is_null() {
+        return;
+    }
+    let row = exe::key_nation_index_of_nation(nation);
+    let job = read_u8(slot);
+    let mut in_season = true;
+    if job != 0xb {
+        in_season = false;
+    } else if (0..0x23).contains(&row) {
+        let off = row as usize * 0x48;
+        let mut d = [0u8; 8];
+        let start = exe::date_sub_days(G_LEAGUE_WORLD_CUP_START_DATE + off, d.as_mut_ptr() as usize, 0x1c);
+        let mut inside = false;
+        if fill_slot_date_before(start, G_CURRENT_DATE) {
+            let mut e = [0u8; 8];
+            let end = exe::date_sub_days(G_LEAGUE_WORLD_CUP_END_DATE + off, e.as_mut_ptr() as usize, 0x1c);
+            inside = fill_slot_date_before(G_CURRENT_DATE, end);
+        }
+        if !inside {
+            in_season = false;
+        }
+    }
+    let rep = club.reputation();
+    let mut k: i16 = 100;
+    if rep < 3500 {
+        k = 6025i16.wrapping_sub(rep).wrapping_mul(4);
+    } else {
+        let id = read_u32(nation.addr());
+        if [KEY_NATION_BELGIUM, KEY_NATION_HOLLAND, KEY_NATION_SWEDEN, KEY_NATION_DENMARK, KEY_NATION_NORWAY].iter().any(|&key| id == read_u32(key)) {
+            k = 50;
+        }
+    }
+    for i in 0..7 {
+        let scout = Staff(club.scouts(i));
+        if scout.is_null() {
+            let division = club.division();
+            let loaded = !division.is_null() && read_u32(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(division.addr()).wrapping_mul(4))) != 0;
+            k = k.wrapping_add(if loaded { 10 } else { 5 });
+        } else if !scout.non_player().is_null() {
+            // defect kept: the constants 6 and 5, not the scout's judging attributes
+            let a = exe::non_player_attribute_rating(scout.non_player(), 6) as i16;
+            let b = exe::non_player_attribute_rating(scout.non_player(), 5) as i16;
+            k = k.wrapping_add(30i16.wrapping_sub(a.wrapping_mul(2)).wrapping_sub(b));
+        }
+    }
+    k /= 10; // mkb3: the knowledge divisor
+    if k < 2 {
+        k = 2;
+    }
+    if exe::human_manager_is_human_club(club, 0, 1, 0, 0) != 0 {
+        return;
+    }
+    let mut stand_in: usize = 0;
+    if exe::human_manager_is_human_club(club, 1, 1, 0, 0) != 0 {
+        stand_in = exe::human_manager_get_stand_in_manager(club);
+        let hm = read_usize(G_HUMAN_MANAGER);
+        if exe::human_manager_is_on_holiday(hm, exe::database_get_club_manager(club)) != 0
+            && exe::human_manager_get_holiday_option(hm, 4, exe::database_get_club_manager(club)) == 1
+        {
+            return;
+        }
+    }
+    if read_i32(slot + shortlist_slot::OFFER_REF) != -1 || exe::database_is_national_team(club) != 0 {
+        return;
+    }
+    let mut valuation = read_i32(slot + shortlist_slot::VALUATION);
+    let status = (read_u8(slot + shortlist_slot::FLAGS) >> 1) & 0xf;
+    let max_fee = exe::shortlist_manager_max_fee_for_squad_status(this, club, read_u16(slot + shortlist_slot::POSITION) as u32, status as u32);
+    let rep_f = rep as i32 as f64;
+    let mut factor = rep_f * read_f64(rdata::F64_0_0008);
+    let ft = read_usize(G_FINANCE_TABLE);
+    let id = read_u32(nation.addr());
+    if ft != 0 && [KEY_NATION_ITALY, KEY_NATION_ENGLAND, KEY_NATION_GERMANY, KEY_NATION_FRANCE, KEY_NATION_SPAIN].iter().any(|&key| id == read_u32(key)) {
+        match exe::finance_get_wealth_band(exe::financetable_get_club_finance(ft, club)) as i8 {
+            1 => factor = rep_f * read_f64(if rep > 6250 { 0x96f8b0 } else { 0x96f8a8 }), // f64 1/1125, 1/1175
+            2 => factor = rep_f * read_f64(if rep > 4750 { 0x96f8b8 } else { 0x96f8b0 }), // f64 1/1050, 1/1125
+            _ => {}
+        }
+    }
+    if factor <= read_f64(rdata::F64_1) {
+        factor = read_f64(rdata::F64_1);
+    }
+    let rid = read_i32(slot + shortlist_slot::REPLACEMENT_STAFF_ID);
+    if rid > -1 {
+        let replaced = staff_at(rid as isize);
+        if job != 0xb {
+            return;
+        }
+        let selection = if status < 2 {
+            0x1902
+        } else if status <= 3 {
+            if exe::human_manager_is_human_club(club, 1, 1, 0, 0) != 0 { 0x8118c2 } else { 0x18c2 }
+        } else if status == 4 {
+            0x19c2
+        } else {
+            0x1902
+        };
+        let mut rating = exe::match_man_score_player_for_selection(replaced, read_u16(slot + shortlist_slot::POSITION) as u32, selection, club, -1, stand_in);
+        let c = Contract(exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), replaced, club));
+        let leaving = c.is_null() || {
+            let g = c.grievances();
+            g != 0 && (g & 0x100 != 0 || g & 1 != 0 || exe::staff_contract_days_to_end_date(c) < 365)
+        };
+        if leaving && rating >= valuation {
+            rating = valuation;
+        }
+        let r = rating as f64 * read_f64(rdata::F64_1_05);
+        if !(valuation as f64 > r) {
+            valuation = ftol(r);
+        }
+    }
+    let is_player = job == 0xb;
+    let code = if is_player { exe::shortlist_position_mask_to_index(this, read_u16(slot + shortlist_slot::POSITION) as u32) } else { 0xf };
+    let max_price = read_i32(slot + shortlist_slot::MAX_PRICE).max(1);
+    let loan_lists = read_u8(slot + shortlist_slot::FLAGS) & 1 != 0 && is_player;
+    if !excluded.is_null() && read_usize(this) != 0 && fill_slot_pair_listed(this, excluded, club) {
+        exe::shortlist_manager_update_staff_status(this, excluded, club, 3, (!is_player) as u32);
+    }
+    let (first, last): (i8, i8) = match code {
+        0x11 => (1, 4),
+        0x12 => (8, 0xd),
+        0x13 => (5, 7),
+        0x15 => (0xb, 0xd),
+        0x14 => (0xe, 0xe),
+        c => (c as i8, c as i8),
+    };
+    let mut s = FillSlotState {
+        this,
+        slot,
+        club,
+        excluded,
+        wanted,
+        stand_in,
+        k,
+        factor,
+        max_fee,
+        max_price,
+        is_player,
+        valuation,
+        best_score: valuation,
+        best: Staff(0),
+        score: 0,
+        scout_listed: 0,
+        comp: false,
+        comp_fee: 0,
+    };
+    let mut pos = first;
+    while pos <= last {
+        let index = (pos as isize as usize).wrapping_add(if loan_lists { 16 } else { 0 });
+        let list = read_usize(this + shortlist_manager_fields::POSITION_LISTS_BY_PERSON + index * 4);
+        if read_i32(list) == -1 {
+            break;
+        }
+        let count = read_i32(this + shortlist_manager_fields::POSITION_LIST_COUNTS + (pos as isize as usize) * 4);
+        let mut i = 0;
+        while i < count {
+            fill_slot_candidate(&mut s, list + (i as usize) * 12);
+            i += 1;
+        }
+        pos += 1;
+    }
+    let cm = read_usize(G_CONTRACT_MANAGER);
+    if !s.best.is_null() {
+        let best = s.best;
+        write_u32(slot + shortlist_slot::TARGET_STAFF_ID, read_u32(best.addr()));
+        let add_entry: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_SHORTLIST_MANAGER_ADD_SHORTLIST_ENTRY); // add_shortlist_entry
+        add_entry(this, best.addr(), club.addr());
+        covered!("mkb_3 target chosen");
+        if read_u8(slot + shortlist_slot::FLAGS) & 1 != 0 || !is_player {
+            return;
+        }
+        let cr = best.player().current_reputation() as i32;
+        if exe::utils_random(37 - cr / 300) != 0 {
+            return;
+        }
+        if !(best.player().current_reputation() as i32 > exe::utils_random(2000) + 5000)
+            && (best.club_job().is_null() || exe::human_manager_is_human_club(best.club_job(), 0, 1, 0, 0) == 0)
+        {
+            return;
+        }
+        let c = Contract(contract_of_staff_cached(best));
+        let seller = if !c.is_null() && c.contract_type() & 0x3f != 5 { transfer_manager_club_by_id(c.club()).addr() } else { 0 };
+        let comp = fill_slot_is_compensation_deal(this, slot, exe::contract_manager_get_contract(cm, best), club, &mut s.comp_fee) != 0;
+        let mut ask = if seller == 0 || comp {
+            0
+        } else if exe::human_manager_is_human_club(seller, 0, 1, 0, 0) != 0 {
+            exe::contract_manager_get_human_asking_price(cm, seller, club, best)
+        } else {
+            exe::contract_manager_calc_asking_price(cm, seller, club, best, 0, 1, 1)
+        };
+        if s.comp_fee != 0 && comp && s.comp_fee < ask {
+            ask = s.comp_fee;
+        }
+        let f = read_u8(slot + shortlist_slot::FLAGS);
+        let interest = exe::shortlist_manager_staff_interest_in_joining_club(this, best, club, 1, (f & 1) as u32, ((f >> 1) & 0xf) as u32, 0);
+        fill_slot_add_transfer_interest(best, club, ask, interest);
+        return;
+    }
+    let f = read_u8(slot + shortlist_slot::FLAGS);
+    if in_season && f & 1 == 0 && read_i32(slot + shortlist_slot::TARGET_STAFF_ID) == -1 && (f & 0x1e == 4 || f & 0x1e == 6) {
+        let r = club.reputation() as i32 as f64;
+        let a = (r * read_f64(rdata::F64_4ENEG_09) * r + read_f64(rdata::F64_0_6)) * read_i32(slot + shortlist_slot::VALUATION) as f64; // f64 4e-9
+        let convert = if a < read_i32(slot + shortlist_slot::PRICE) as f64 || read_i32(slot + shortlist_slot::MAX_PRICE) < 50000 {
+            true
+        } else if read_u32(club.nation().addr()) != read_u32(KEY_NATION_ITALY) || exe::utils_random(2) == 0 {
+            false
+        } else {
+            club.reputation() > 3000 && club.reputation() < 6000
+        };
+        if convert && (club.nation().league_selected() != 0 || exe::utils_random(club.reputation() as i32) > exe::utils_random(20000)) {
+            covered!("mkb_3 becomes a loan slot");
+            write_u8(slot + shortlist_slot::FLAGS, read_u8(slot + shortlist_slot::FLAGS) | 1);
+            exe::shortlist_manager_fill_shortlist_slot(this, slot, club, excluded); // itself through its address, as the original
+            return;
+        }
+    }
+    write_i32(slot + shortlist_slot::TARGET_STAFF_ID, -1);
+}
+
+/// The square of the state of development (1..3, otherwise 3) of a nation (3 without one), as a byte.
+pub(crate) unsafe fn job_interest_development_squared(n: Nation) -> i8 {
+    let d = if n.is_null() { 3 } else { n.state_of_development() as i8 };
+    let d = if !(1..=3).contains(&d) { 3 } else { d };
+    d.wrapping_mul(d)
+}
+
+/// The language factor: max(F × 0.1, (e + 5000)² × 1/15000 / (12000 − 200 F)) + 0.2, with F the person's fluency in the
+/// club nation's first language (`exe::playerstats_get_language_fluency`; 10 without a player sheet).
+pub(crate) unsafe fn job_interest_language_factor(p: Staff, club: Club, e: i16) -> f64 {
+    let q = (e as i32 + 0x1388) as f64;
+    let l = q * read_f64(rdata::F64_6_666666667ENEG_05) * q;
+    let f = if !p.player().is_null() {
+        exe::playerstats_get_language_fluency(read_usize(G_PLAYER_STATS), p, club, (club.nation().first_language() as u8) as u32, 1) as i8 as f64
+    } else {
+        read_f64(rdata::F64_10)
+    };
+    let a = f * read_f64(rdata::F64_0_1);
+    let b = l / (read_f64(rdata::F64_12000) - f * read_f64(rdata::F64_200));
+    max_f64(a, b) + read_f64(rdata::F64_0_2)
+}
+
+/// A club's weighted reputation on the person's scale (`e` = ftol(1.5 × r − 5000), the int-apps and status cuts
+/// included), from the stadium, the division, the competition, the manager, the finances and the shortlists.
+/// `current`: the club the person is at (no board view of a manager seen by the person, other wealth bands, ×1.35 for a
+/// national side, the Intertoto rule). Returns (e, by division, competition record).
+#[allow(clippy::too_many_arguments)]
+pub(crate) unsafe fn job_interest_club_scale(this: usize, p: Staff, club: Club, job: i8, w: (f32, f32, f32, f32, f32), current: bool) -> (i16, i16, usize) {
+    let (w60, w84, l74, w88, den) = w;
+    let stad = reputation_by_stadium(club) as i16;
+    let div = reputation_by_division(club);
+    let (comp, rec) = job_interest_by_competition(club, div, current);
+    let m = club.manager();
+    let mgr: i16 = if current {
+        if m.is_null() || m.non_player().is_null() {
+            ftol(div as f64 * read_f64(rdata::F64_0_75)) as i16
+        } else {
+            let r = m.non_player().current_reputation();
+            if read_usize(G_MANAGER_MANAGER) == 0 || job == 5 {
+                r
+            } else {
+                job_interest_by_board(club, r) as i16
+            }
+        }
+    } else if m.is_null() || m.non_player().is_null() {
+        0
+    } else {
+        let r = exe::database_get_staff_reputation_for_viewer(m, p, 1);
+        if read_usize(G_MANAGER_MANAGER) == 0 || job == 5 {
+            r
+        } else {
+            job_interest_by_board(club, r) as i16
+        }
+    };
+    // the reputation by the finances' wealth band
+    let mut si: i16 = club.reputation();
+    if exe::database_is_national_team(club) == 0 {
+        let fin = exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), club);
+        if fin != 0 {
+            let r = si as f64;
+            match exe::finance_get_wealth_band(fin) as i8 {
+                -2 => si = ftol(r * read_f64(if current { rdata::F64_0_75 } else { rdata::F64_0_7 })) as i16,
+                -1 => si = ftol(r * read_f64(if current { rdata::F64_0_9 } else { rdata::F64_0_85 })) as i16,
+                1 => {
+                    si = ftol(r * read_f64(rdata::F64_1_25)) as i16;
+                    let min = if current { 0x128e } else { 0x109a };
+                    if si < min {
+                        si = min;
+                    }
+                }
+                2 => {
+                    si = ftol(r * read_f64(rdata::F64_1_5)) as i16;
+                    if si < 0x1676 {
+                        si = 0x1676;
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+    let ax: i16 = if exe::database_is_national_team(club) != 0 && exe::club_is_national_team(club) == 0 {
+        ftol(si as f64 * read_f64(if current { rdata::F64_1_35 } else { job_interest_rdata::F64_1_45 })) as i16
+    } else {
+        let a = read_i16(read_usize(this + shortlist_manager_fields::CLUB_SHORTLISTS).wrapping_add((read_u32(club.addr()) as usize).wrapping_mul(9)) + 5);
+        ftol(a as f64 * read_f64(rdata::F64_0_4) + si as f64 * read_f64(rdata::F64_0_6)) as i16
+    };
+    let s = (((comp as f64 * w60 as f64 + div as f64 * w84 as f64) + mgr as f64 * l74 as f64) + stad as f64 * w88 as f64) + ax as i32 as f64;
+    let mut e = ftol(s / den as f64) as i16;
+    if !current && exe::database_is_national_team(club) != 0 && club.nation() == p.nation() {
+        e = ftol(e as f64 * read_f64(job_interest_rdata::F64_1_45)) as i16;
+    }
+    if exe::database_is_national_team(club) == 0 && club.professional_status() != 1 {
+        // the reputation is cut for a non-professional club: min(e / 2, e − 5 × (int apps² + 400)), status 3 again
+        let ia = p.int_apps() as i32;
+        let lim = (ia * ia + 400) * 5;
+        let a = e as i32;
+        let (h, x) = (a / 2, a - lim);
+        e = (if h < x { h } else { x }) as i16;
+        if club.professional_status() == 3 {
+            e = half_or_minus_2000(e);
+        }
+    }
+    (ftol(e as f64 * read_f64(rdata::F64_1_5) - read_f64(rdata::F64_5000)) as i16, div, rec)
+}
+
+/// Compares the C string `a` with the one at `b` in the exe.
+pub(crate) unsafe fn job_interest_name_is(a: &[u8], b: usize) -> bool {
+    let mut k = 0usize;
+    loop {
+        let x = a[k];
+        let y = read_u8(b + k);
+        if x != y {
+            return false;
+        }
+        if x == 0 {
+            return true;
+        }
+        k += 1;
+    }
+}
+
+/// The slot's status (bits 1-4 of `shortlist_slot::FLAGS`): the original's four masks (`& 0xe5 | 4`, `& 0xe7 | 6`,
+/// `& 0xe9 | 8`, `& 0xeb | 0xa`) all equal `& 0xe1 | status << 1`.
+pub(crate) unsafe fn assess_set_slot_status(slot: ShortlistSlot, status: u8) {
+    slot.set_flags((slot.flags() & 0xe1) | (status << 1));
+}
+
+/// Happiness plus `delta`, kept within −100..100 (the original adds in 32 bits and writes the byte).
+pub(crate) fn assess_happiness_plus(h: i8, delta: i8) -> i8 {
+    let e = h as i32 + delta as i32;
+    if e > 100 {
+        100
+    } else if e < -100 {
+        -100
+    } else {
+        h.wrapping_add(delta)
+    }
+}
+
+/// `CONTRACT_MANAGER::move_to_first_team` (0x4cc0b0, thiscall, ret 8) through the exe, so its hook applies.
+pub(crate) unsafe fn assess_move_to_first_team(person: Staff, club: Club) {
+    const MOVE_TO_FIRST_TEAM: usize = 0x4cc0b0;
+    let f: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(MOVE_TO_FIRST_TEAM);
+    f(read_usize(G_CONTRACT_MANAGER), person.addr(), club.addr());
+}
+
+/// `CONTRACT_MANAGER::move_to_reserves` for a person of the club.
+pub(crate) unsafe fn assess_move_to_reserves(person: Staff, club: Club) {
+    exe::contract_manager_move_to_reserves(read_usize(G_CONTRACT_MANAGER), person, club);
+}
+
+/// To the reserves, except a star (`player_sheet::WORLD_REPUTATION` ≥ 5000) at a club with a linked B team
+/// (0x83dc47, 0x83dca1, 0x83e82f).
+pub(crate) unsafe fn assess_to_reserves_unless_star(s: &SquadAssessment, p: Staff) {
+    if s.partner == 0 || p.player().world_reputation() < 5000 {
+        assess_move_to_reserves(p, s.club);
+    }
+}
+
+/// The selection score of `p` for the position mask `pos` (`match_man_score_player_for_selection`, cdecl; the
+/// original pushes the mask's word with whatever is in the upper half of the register, and the callee only tests the
+/// low bits).
+pub(crate) unsafe fn assess_score(s: &SquadAssessment, p: usize, pos: u32, flags: u32) -> i32 {
+    exe::match_man_score_player_for_selection(p, pos, flags, s.club, -1, s.stand_in)
+}
+
+/// `match_man_assign_players_to_positions` (0x6e2000, cdecl, 15 arguments): the people of `rest` (count `n_rest`, a
+/// byte) to the positions `pos` (count `n`, a byte), into `out`, with the manager `manager` (the stand-in at a human
+/// club).
+pub(crate) unsafe fn assess_pick_for(s: &mut SquadAssessment, which: u8, flags: u32) {
+    let human = exe::human_manager_is_human_club(s.club, 1, 1, 0, 0) != 0;
+    let manager = if human { s.stand_in } else { s.club.manager().addr() };
+    let flags = match which {
+        0 if human => flags | 0xc100c0,
+        0 => flags | 0xc0,
+        1 => flags | 0x1c0,
+        _ => flags | 0x100,
+    };
+    let (pos, n, out): (*const u16, i8, *mut usize) = match which {
+        0 => (s.pos_a.as_ptr(), s.n_a, s.chosen_a.as_mut_ptr()),
+        1 => (s.pos_b.as_ptr(), s.n_b, s.chosen_b.as_mut_ptr()),
+        _ => (s.pos_c.as_ptr(), s.n_c, s.chosen_c.as_mut_ptr()),
+    };
+    let pick: AssignPositionsFn = core::mem::transmute(FN_MATCH_MAN_ASSIGN_PLAYERS_TO_POSITIONS);
+    pick(s.rest.as_mut_ptr() as usize, s.n_rest as u8 as u32, pos as usize, n as u8 as u32, 0, out as usize, flags, s.club.addr(), 0, manager as u32, 1, 0, 0, 0, 0);
+    let chosen = match which {
+        0 => s.chosen_a,
+        1 => s.chosen_b,
+        _ => s.chosen_c,
+    };
+    // whoever was chosen leaves the rest: the last one takes his place (the one moved in is not compared again)
+    for &p in chosen.iter().take(n.max(0) as usize) {
+        if p == 0 {
+            continue;
+        }
+        let mut i: i8 = 0;
+        while i < s.n_rest {
+            if s.rest[i as usize] == p {
+                let last = (s.n_rest - 1) as usize;
+                s.rest[i as usize] = s.rest[last];
+                s.n_rest -= 1;
+                s.rest[last] = 0;
+            }
+            i += 1;
+        }
+    }
+}
+
+/// `Shortlist_Manager::is_compensation_deal` (0x84b6f0, Rust; thiscall, ret 0x10), called through its address.
+pub(crate) unsafe fn fill_slot_is_compensation_deal(this: usize, slot: usize, contract: usize, club: Club, fee: &mut i32) -> u32 {
+    exe::shortlist_manager_is_compensation_deal(this, slot, contract, club, fee)
+}
+
+/// `Media::add_transfer_interest` (0x754740, Rust; thiscall, ret 0x14), called through its address.
+pub(crate) unsafe fn fill_slot_add_transfer_interest(player: Staff, club: Club, fee: i32, interest: f64) {
+    exe::media_add_transfer_interest(read_usize(G_MEDIA), player, club, fee, interest)
+}
+
+/// Whether the shortlist manager's sorted (person, club) pairs hold `person` for `club`
+/// (`exe::crt_bsearch` with the comparer 0x757ea0 over `PAIRS_BY_PERSON_COUNT` pairs; no array, no pair).
+pub(crate) unsafe fn fill_slot_pair_listed(this: usize, person: Staff, club: Club) -> bool {
+    let key = [read_u32(person.addr()), if club.is_null() { u32::MAX } else { read_u32(club.addr()) }];
+    exe::crt_bsearch(key.as_ptr() as usize, read_usize(this), read_u32(this + shortlist_manager_fields::PAIRS_BY_PERSON_COUNT), 8, 0x757ea0usize) != 0
+}
+
+/// The reputation of a club's competition: the club's continental competition (`club::CONTINENTAL_COMP_ID`, or the one
+/// in `G_CLUB_STATE_TABLE` when it is −1 or, with `intertoto`, the Intertoto Cup of a club of reputation 5000), 600 ×
+/// its reputation in 16 bits; without one, 0.8 × the division's value, at most 7000. Returns (value, record).
+pub(crate) unsafe fn job_interest_by_competition(club: Club, by_division: i16, intertoto: bool) -> (i16, usize) {
+    let mut idx = club.continental_comp_id() as i32;
+    let mut has = true;
+    if idx <= -1 || (intertoto && idx == read_i32(KEY_CLUB_COMP_INTER_TOTO_CUP) && club.reputation() >= 0x1388) {
+        idx = read_i32(read_usize(G_CLUB_STATE_TABLE).wrapping_add((read_u32(club.addr()) as usize).wrapping_mul(6)));
+        if idx <= -1 {
+            has = false;
+        }
+    }
+    if has {
+        let reg = read_usize(G_CLUB_COMP_TABLE).wrapping_add((idx as usize).wrapping_mul(0x6b));
+        if reg != 0 {
+            return (read_i16(reg + competition::REPUTATION).wrapping_mul(600), reg);
+        }
+    }
+    (job_interest_by_division_cap(by_division), 0)
+}
+
+/// The manager's reputation `r` as the board sees it: v = 0.67 × the club's row +6 + 0.33 × +8 in the manager-manager
+/// table (0 without a club); below 5000, the greater of r / t and r − 1000 t with t = 5 − 0.0008 v; otherwise the lesser
+/// of r × t and r + 1000 t with t = 0.0001 v + 0.5.
+pub(crate) unsafe fn job_interest_by_board(club: Club, r: i16) -> i32 {
+    let (w6, w8) = if club.is_null() {
+        (0i16, 0i16)
+    } else {
+        let t = read_usize(read_usize(G_MANAGER_MANAGER)).wrapping_add((read_u32(club.addr()) as usize).wrapping_mul(0x49));
+        (read_i16(t + 6), read_i16(t + 8))
+    };
+    let v = ftol(w6 as f64 * read_f64(rdata::F64_0_67) + w8 as f64 * read_f64(rdata::F64_0_33)) as i16;
+    let d = r as f64;
+    if v < 0x1388 {
+        let t = read_f64(rdata::F64_5) - v as f64 * read_f64(rdata::F64_0_0008);
+        let q1 = d / t;
+        let m = d - t * read_f64(rdata::F64_1000);
+        ftol(if q1 > m { q1 } else { m })
+    } else {
+        let t = v as f64 * read_f64(rdata::F64_0_0001) + read_f64(rdata::F64_0_5);
+        let q1 = d * t;
+        let m = t * read_f64(rdata::F64_1000) + d;
+        ftol(if q1 < m { q1 } else { m })
+    }
+}
+
+/// 0.8 × the division's value, at most 7000 (truncated).
+pub(crate) unsafe fn job_interest_by_division_cap(by_division: i16) -> i16 {
+    let mut x = by_division as f64 * read_f64(rdata::F64_0_8);
+    if !(x < read_f64(rdata::F64_7000)) {
+        x = read_f64(rdata::F64_7000);
+    }
+    ftol(x) as i16
+}
+
+/// f64 0.01536 (`.rdata` 0x96f920): the valuation² factor of a raised shortlist ceiling.
+pub(crate) const TRY_ADD_F64_0_01536: usize = 0x96f920;
+
+/// The locals of `assess_club_squad` that live across its stages (the original keeps them in a 0x8a4-byte frame;
+/// the stack offsets are in the comments).
+pub(crate) struct SquadAssessment {
+    pub(crate) this: usize,
+    pub(crate) entry: usize,
+    pub(crate) club: Club,
+    pub(crate) reset: bool,
+    pub(crate) flags: u32,            // +0x44: 0x800 at a human club, 0x1802 at an AI club (the selection score's flags)
+    pub(crate) partner: u32,          // +0x3c: the linked club (B team) or 0
+    pub(crate) comp: usize,           // +0x18: the club's continental competition entry (only tested for null)
+    pub(crate) target: i32,           // +0x64: the club's target rating (player_search_get_club_target_rating)
+    pub(crate) target_base: i32,      // +0x74: its base, written by the same call
+    pub(crate) days_since_start: i32, // +0x68: days since the game started
+    pub(crate) stand_in: usize,       // +0x2c: the stand-in manager of a human club
+    pub(crate) on_holiday: u32,       // +0x30: the human manager is on holiday
+    pub(crate) may_sack: bool,        // +0x60: the shortlist was waiting (ACTIVE 2) at an AI club: idle staff may be sacked
+    pub(crate) big_club: bool,        // +0x78: the slots were set up for a big club (status 3 for the first 19)
+    pub(crate) rating: i32,           // +0x38: the last selection score (read again, stale, by the pricing of a slot of another status)
+    pub(crate) pos_a: [u16; 50],      // +0x80: positions of the free slots of status 2 and 3
+    pub(crate) n_a: i8,               // +0x40
+    pub(crate) pos_b: [u16; 50],      // +0x468: status 4
+    pub(crate) n_b: i8,               // +0x6c
+    pub(crate) pos_c: [u16; 50],      // +0x274: status 5
+    pub(crate) n_c: i8,               // +0x58
+    pub(crate) chosen_a: [usize; 50], // +0x4cc
+    pub(crate) chosen_b: [usize; 50], // +0x65c
+    pub(crate) chosen_c: [usize; 50], // +0x594
+    pub(crate) rest: [usize; 100],    // +0x2d8: the players not chosen yet
+    pub(crate) n_rest: i8,            // bl, copied to +0x14
+    pub(crate) elsewhere: [usize; 100], // +0xe4: players with a loan contract at another club
+    pub(crate) n_elsewhere: i8,       // +0x13
+    pub(crate) old: [usize; 50],      // +0x724: players too old for the slots of status 4
+    pub(crate) n_old: i8,             // +0x13 again
+}
+
+/// What `fill_shortlist_slot` carries from one candidate to the next (the original's frame).
+pub(crate) struct FillSlotState {
+    pub(crate) this: usize,
+    pub(crate) slot: usize,
+    pub(crate) club: Club,
+    pub(crate) excluded: Staff,
+    pub(crate) wanted: usize,       // the local STAFF_CONTRACT the desired contract is written to
+    pub(crate) stand_in: usize,     // the stand-in manager; its upper 24 bits ride in the kind argument (see below)
+    pub(crate) k: i16,              // the knowledge divisor
+    pub(crate) factor: f64,         // the reputation factor of the price margin
+    pub(crate) max_fee: i32,        // `exe::shortlist_manager_max_fee_for_squad_status`, −1 none
+    pub(crate) max_price: i32,      // `shortlist_slot::MAX_PRICE`, at least 1
+    pub(crate) is_player: bool,     // the slot's job is 11 (player)
+    pub(crate) valuation: i32,      // the slot's valuation, raised by the replacement's rating
+    pub(crate) best_score: i32,     // the score to beat (starts at the valuation)
+    pub(crate) best: Staff,         // the chosen candidate
+    pub(crate) score: i32,          // the candidate's score (the original keeps it in the frame across candidates)
+    pub(crate) scout_listed: u32,   // the human's scout has him on his list (kept across candidates, as the original)
+    pub(crate) comp: bool,          // compensation deal (kept across candidates, as the original)
+    pub(crate) comp_fee: i32,       // its fee
+}
+
+impl FillSlotState {
+    pub(crate) unsafe fn flags(&self) -> u8 {
+        read_u8(self.slot + shortlist_slot::FLAGS)
+    }
+}

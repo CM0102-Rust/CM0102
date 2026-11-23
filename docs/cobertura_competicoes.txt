@@ -24,7 +24,6 @@
 5ac060 81ec10020000 fix_man.cpp 4
 5acee0 81ec28020000 fix_man.cpp 1
 5c1f80 6aff686b9d95 friendly.cpp 1
-5c3040 6aff68249f95 friendly.cpp 2
 5c8a00 6aff683ba395 friendly.cpp 1
 5e18a0 6aff68bca895 goldcup.cpp 1
 5f97c0 81ece0040000 host_country.cpp 1

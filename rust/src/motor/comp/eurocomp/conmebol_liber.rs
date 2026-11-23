@@ -428,3 +428,189 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_create_knockout_stage(this
     build_knockout_stage(League(this), 0x10, 7, 7, 0x9a7de4, 0x24c, 0x26a, "cqs_10 classificados da libertadores");
 }
 
+/// The Libertadores predicted positions: by the rounds of stage 7 (the knockout) and in blocks of 8 for those who stay
+/// in the groups (box at line 0x30e); see `conmebol_set_predicted_positions`.
+/// Original: `ConmebolLiber::set_predicted_positions` (0x4c4210, conmebol_liber.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn conmebol_liber_set_predicted_positions(this: usize) {
+    conmebol_set_predicted_positions(this, 7, 8, 0x9a7de4, 0x30e)
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_conmebol_liber_set_predicted_positions(this: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CONMEBOL_LIBER_SET_PREDICTED_POSITIONS);
+    conmebol_compare_predicted_positions("conmebol_liber_set_predicted_positions", this, 7, 8, || o(this))
+}
+
+/// The Libertadores season turnover: the first half (`conmebol_free_season`), the next year (`conmebol_next_year`),
+/// the CONMEBOL seeding for the new season (ConmebolSeeding::update_for_new_season 0x4c61b0(`G_CONMEBOL_SEEDING`, 0):
+/// push 0; mov ecx -> thiscall, ret 4: the nations' places), `league::ACTIVE` = 0 (the draw still to be made) and the
+/// rules (`conmebol_set_up_rules_again`, the box for line 0x1e3).
+/// Original: `ConmebolLiber::start_new_season` (0x4c3980, conmebol_liber.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn conmebol_liber_start_new_season(this: usize) -> u32 {
+    let this = League(this);
+    let league = this;
+    let seed: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CONMEBOLSEEDING_UPDATE_FOR_NEW_SEASON); // return unused
+    conmebol_free_season(league);
+    covered!("cqv_12 libertadores turnover");
+    conmebol_next_year(league); // cqv12: the Libertadores of the next year
+    seed(read_usize(G_CONMEBOL_SEEDING), 0); // cqv12: the places of the new Libertadores
+    this.set_active((0) as usize); // cqv12: the new Libertadores not drawn yet
+    conmebol_set_up_rules_again(league, 0x9a7de4, 0x1e3)
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_conmebol_liber_start_new_season(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CONMEBOL_LIBER_START_NEW_SEASON);
+    conmebol_compare_new_season("conmebol_liber_start_new_season", this, true, || o(this))
+}
+
+/// The body of the predicted positions: without statistics (`league::COMP_STATS`), the box `row` of `file`; the list
+/// +0xee of +0xf2 invited clubs sorted by reputation (`exe::crt_qsort`(list, n, 4, 0x4b07d0): 4 pushes; add esp ->
+/// cdecl); the round table of stage `stage` by the virtual `comp_vtable::CREATE_SCHEDULE` (push 0; push &extra; push
+/// &rounds; push stage; mov ecx, this -> thiscall, ret 0x10); each club of the plan (`conmebol_predicted_positions_plan`)
+/// with its position (`exe::comp_stats_set_club_final_position`: push position; push club; mov ecx, stats -> thiscall,
+/// ret 8; the original pushes the byte with leftovers in the high bytes, 0x4a2540 reads the byte); the table freed
+/// (`exe::crt_free`).
+pub(crate) unsafe fn conmebol_set_predicted_positions(this: usize, stage: u32, block: u32, file: usize, row: u32) {
+    let this = League(this);
+    if this.comp_stats() == 0 {
+        return show_error_at(file, row);
+    }
+    exe::crt_qsort(read_usize(this.addr() + 0xee), read_usize(this.addr() + 0xf2) as u32, 4, 0x4b07d0);
+    let round_table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
+    let (mut rounds, mut extra) = (0i16, 0i16);
+    let table = round_table(this.addr(), stage, &mut rounds, &mut extra, 0);
+    for (c, p) in conmebol_predicted_positions_plan(this.addr(), table, rounds, block) {
+        exe::comp_stats_set_club_final_position(this.comp_stats(), c, p as u32);
+    }
+    exe::crt_free(table);
+}
+
+pub(crate) unsafe fn conmebol_compare_predicted_positions(name: &str, this: usize, _stage: u32, _block: u32, o: impl FnOnce()) {
+    let this = League(this);
+    o();
+    let stats = this.comp_stats();
+    let list = read_usize(this.addr() + 0xee);
+    let n = read_usize(this.addr() + 0xf2) as i32;
+    if stats == 0 || list == 0 || !(1..=256).contains(&n) {
+        return;
+    }
+    let mut read: Vec<i32> = Vec::new();
+    for k in 0..n as usize {
+        let c = read_usize(list + k * 4);
+        let e = if c != 0 { exe::comp_stats_find_club_entry(stats, c) } else { 0 };
+        read.push(if e != 0 { read_u8(e + comp_stats_club::FINAL_POSITION) as i32 } else { -1 });
+    }
+    let ok = read[0] == 1 && read.iter().all(|&x| x >= 1) && read.windows(2).all(|w| w[0] <= w[1]);
+    SCOREBOARD.record(ok, || format!("{}({:#x}): positions {:?}", name, this.addr(), read));
+}
+
+/// The first half of the three cups' season turnover (the same body): `league::SEASON_CLOSED` = 0 and the table freed
+/// (`exe::league_free_table`(this, 0): push 0; mov ecx -> thiscall, ret 4); the calendar `league::ROUND_DATES` freed
+/// (`exe::crt_free`: push; add esp, 4 -> cdecl) and zeroed; with statistics (`league::COMP_STATS`),
+/// `exe::comp_stats_archive_season_and_reset`(stats, 1) (push 1; mov ecx -> thiscall, ret 4); the invited clubs list
+/// +0xee freed (not zeroed); with the current stage (`league::CURRENT_STAGE`) >= 0, the existing stages 0..=current
+/// destroyed (the virtual `comp_vtable::SCALAR_DELETING_DESTRUCTOR` with 1: push 1; mov ecx -> thiscall).
+pub(crate) unsafe fn conmebol_free_season(this: League) {
+    this.set_season_closed((0) as usize);
+    exe::league_free_table(this, 0);
+    let l = this.round_dates();
+    if l != 0 {
+        exe::crt_free(l);
+        this.set_round_dates((0) as usize);
+    }
+    let stats = this.comp_stats();
+    if stats != 0 {
+        exe::comp_stats_archive_season_and_reset(stats, 1);
+    }
+    let c = read_usize(this.addr() + 0xee);
+    if c != 0 {
+        exe::crt_free(c);
+    }
+    if (this.current_stage() as i32) >= 0 {
+        let mut i = 0i32;
+        loop {
+            let f = read_usize(this.stages() + 4 * i as usize);
+            if f != 0 {
+                let destroy: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(f) + comp_vtable::SCALAR_DELETING_DESTRUCTOR));
+                destroy(f, 1);
+            }
+            i += 1;
+            if i > this.current_stage() as i32 {
+                break;
+            }
+        }
+    }
+}
+
+/// The year (`league::YEAR`, word) goes up by one and the current stage (`league::CURRENT_STAGE`) goes back to -1.
+pub(crate) unsafe fn conmebol_next_year(this: League) {
+    this.set_year(this.year().wrapping_add(1));
+    this.set_current_stage((u32::MAX) as usize);
+}
+
+/// The rules again (the virtual `comp_vtable::SET_UP_RULES`, thiscall, ret 0); 0: the box for line `row` of `file`
+/// and 0 (the original returns the box's eax; the caller does not read it). Returns what the rules returned.
+pub(crate) unsafe fn conmebol_set_up_rules_again(this: League, file: usize, row: u32) -> u32 {
+    let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::SET_UP_RULES));
+    let r = rules(this.addr());
+    if r == 0 {
+        show_error_at(file, row);
+    }
+    r
+}
+
+pub(crate) unsafe fn conmebol_compare_new_season(name: &str, this: usize, clears_active: bool, o: impl FnOnce() -> u32) -> u32 {
+    let this = League(this);
+    let league = this;
+    let year = league.year();
+    let r = o();
+    let new = league.year();
+    let ok = this.season_closed() == 0 && new == year.wrapping_add(1) && (!clears_active || league.active() == 0);
+    SCOREBOARD.record(ok, || format!("{}({:#x}): year {} -> {}, +0x4c {}, +0xba {:#x}, +0x45 {}", name, this.addr(), year, new, this.season_closed(), league.round_dates(), league.active()));
+    r
+}
+
+/// The predicted positions the CONMEBOL cups give (0x4c2a90, 0x4c4210 and 0x4c5a90, the same body), in order: the list
+/// of invited clubs (+0xee, +0xf2 clubs) already sorted; the rounds of the table `table` (`cup_round::SIZE`-byte
+/// records; the word `cup_round::TIES` of each, those who go out in it), from the last to the first: the last gives
+/// position 1 to those who go out in it and, like all of them, the current position (which goes up with each club) to
+/// as many more; those left over go in blocks of `block` with the position of the start of the block. Returns (club,
+/// position).
+pub(crate) unsafe fn conmebol_predicted_positions_plan(this: usize, table: usize, rounds: i16, block: u32) -> Vec<(usize, u8)> {
+    let mut v = Vec::new();
+    let list = read_usize(this + 0xee);
+    let mut i: i16 = 0;
+    let mut bl: u8 = 1;
+    let mut current: u8 = 1;
+    let mut r = rounds as i32 - 1;
+    while r >= 0 {
+        let p = table + r as usize * cup_round::SIZE + cup_round::TIES;
+        if r == rounds as i32 - 1 {
+            let mut j: i16 = 0;
+            while j < read_i16(p) {
+                v.push((read_usize(list + i as isize as usize * 4), current));
+                i = i.wrapping_add(1);
+                bl = bl.wrapping_add(1);
+                j += 1;
+            }
+        }
+        current = bl;
+        let mut j: i16 = 0;
+        while j < read_i16(p) {
+            v.push((read_usize(list + i as isize as usize * 4), current));
+            i = i.wrapping_add(1);
+            bl = bl.wrapping_add(1);
+            j += 1;
+        }
+        r -= 1;
+    }
+    let mut pos = bl;
+    while (i as i32) < read_usize(this + 0xf2) as i32 {
+        v.push((read_usize(list + i as isize as usize * 4), pos));
+        bl = bl.wrapping_add(1);
+        if bl as u32 == pos as u32 + block {
+            pos = bl;
+        }
+        i = i.wrapping_add(1);
+    }
+    v
+}

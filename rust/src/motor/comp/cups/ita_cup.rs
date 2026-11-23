@@ -981,3 +981,350 @@ pub(crate) unsafe extern "thiscall" fn ita_cup_set_up_rules(this: usize) -> u32 
 
 // simplification: virtual +0x3c allocates the rounds table: it does not run twice. Original only; the plan checks the rules.
 
+/// The season turnover of the Coppa Italia: as the Serie C cup's, with the 48 entrants (ItaCup::select_entrants), the
+/// first group of 4 (ItaCup::create_first_group_table) and 7 group stages (ItaCup::create_group_stage 0..6).
+///
+/// `ita_group_cup_start_new_season` with 0x63faf0, 0x63f250, 0x63f640, 7 groups and the ita_cup.cpp boxes at lines
+/// 0x210, 0x217, 0x21d and 0x224.
+/// Original: `ItaCup::start_new_season` (0x63f3e0, ita_cup.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn ita_cup_start_new_season(this: usize) -> u32 {
+    ita_group_cup_start_new_season(League(this), 0x63faf0, 0x63f250, 0x63f640, 7, 0x9ea23c, [0x210, 0x217, 0x21d, 0x224], 1, "mwf_9 coppa italia rollover") // mwf9: the Coppa Italia turnover
+}
+
+/// Comparer for `ita_cup_start_new_season` (original only; the year plus one).
+pub(crate) unsafe extern "thiscall" fn compare_ita_cup_start_new_season(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ITA_CUP_START_NEW_SEASON);
+    compare_state_league_new_season("ita_cup_start_new_season", League(this), || o(this))
+}
+
+/// The predicted positions of the Coppa Italia (at creation): the 48 entrants by reputation; the knockout of stage 7
+/// gives 1 and 2 to the final's pair, then a shared place to the losers of each round; the rest in bands of 8
+/// (`italian_cup_predicted_positions`; the boxes at lines 0x438 and 0x440).
+/// Original: `ItaCup::set_predicted_positions` (0x640210, ita_cup.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn ita_cup_set_predicted_positions(this: usize) {
+    italian_cup_predicted_positions(this, 0x9ea23c, (0x438, 0x440), 7, 8, "cqx_7 coppa italia predicted") // cqx7: the Coppa Italia bands of 8
+}
+
+/// Comparer for `ita_cup_set_predicted_positions` (`compare_italian_cup_predicted`, side by side).
+pub(crate) unsafe extern "thiscall" fn compare_ita_cup_set_predicted_positions(this: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ITA_CUP_SET_PREDICTED_POSITIONS);
+    compare_italian_cup_predicted("ita_cup_set_predicted_positions", this, ita_cup_set_predicted_positions, || o(this));
+}
+
+/// Rule: in the Coppa Italia, the clubs that get through the groups (stages below 7) get the qualified record (round
+/// 0xa, weight 0x28) and those that do not the failed record; in the knockout (stage 7) elimination and qualification
+/// weigh by round (50 to 100 over the 5 rounds), and the winner and runner-up get the final records
+/// (`italian_cup_staff_records`).
+/// Original: `ItaCup::update_staff_records_for_status` (0x63ff00, ita_cup.cpp, thiscall, ret 0x18).
+pub(crate) unsafe extern "thiscall" fn ita_cup_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, _a4: u32, game: usize, final_: u32) -> u32 {
+    italian_cup_staff_records(this, club, outcome, stage, game, final_, 7, 0xa, "cqx_7 coppa italia group qualified")
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_ita_cup_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, a4: u32, game: usize, final_: u32) -> u32 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_ITA_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, club, outcome, stage, a4, game, final_);
+    SCOREBOARD.record(r == 0, || format!("ita_cup_update_staff_records_for_status({:#x}, {}, {}) returned {}", club, outcome as u8, stage as u8, r));
+    r
+}
+
+/// Rule: the Coppa Italia news of a club's fate: in the groups (stages below 7) qualification (outcome 6) and
+/// elimination (0xfe) go through the generic cup news; a club going through with no news object gets the text
+/// "through to first round" with a link to the club; in the knockout (stage 7) the generic knockout news.
+///
+/// `ItaCup::build_fate_news_text(club_id, outcome, stage, a4, a5, a6, a7, a8, news, text)` (10 dwords, ret 0x28).
+/// Stage (signed byte) below 7: outcome 6 with `news`: cdecl 0x4b4590(club_id, a4, the competition +4, 6, news, text)
+/// (6 pushes; add esp, 0x18); outcome 6 without `news`: the club (`club_at`(club_id)) gives the text
+/// (`exe::langlib_sprintf`(0xde1f64, 0x9ea270 "{}<%s - Team Name(e.g.Ajax)>{} through to first round", its byte +0x52
+/// twice, its name +0x38): 5 pushes; add esp, 0x14 -> cdecl) set in `text` (Text::set_string 0x4ae660(text, 0xde1f64),
+/// thiscall, ret 4) with the link (Text::add_link 0x4ae8a0(text, name, 0x7d5, club), thiscall, ret 0xc); outcome 0xfe:
+/// 0x4b4590(club_id, a4, competition, −2, news, text); other outcomes nothing. Stage 7: with `news`, cdecl
+/// 0x4b0b80(club_id, a5, a8, outcome, a6, text); without, cdecl 0x4b4420(club_id, a5, outcome, text). Stages above 7:
+/// nothing.
+/// Original: `ItaCup::build_fate_news_text` (0x63f130, ita_cup.cpp, thiscall, ret 0x28).
+#[allow(clippy::too_many_arguments)]
+pub(crate) unsafe extern "thiscall" fn ita_cup_build_fate_news_text(this: usize, club_id: u32, outcome: u32, stage: u32, a4: u32, a5: u32, a6: u32, _a7: u32, a8: u32, news: u32, text: usize) {
+    let (d, f) = (outcome as u8, stage as u8 as i8);
+    let comp = read_usize(this + 4);
+    if f < 7 {
+        if d == 6 {
+            if news != 0 {
+                return exe::comp_util_write_group_qualify_news(club_id, a4, comp, 6, news, text);
+            }
+            covered!("cqx_7 coppa italia through to first round");
+            let club = read_usize(G_CLUB_TABLE).wrapping_add((club_id as usize).wrapping_mul(club::SIZE));
+            let b = read_u8(club + 0x52) as i8 as i32;
+            let sprintf: unsafe extern "C" fn(usize, usize, i32, i32, usize) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+            sprintf(0xde1f64, 0x9ea270, b, b, club + 0x38);
+            exe::text_set_string(text, (0xde1f64) as usize as *const u8);
+            exe::text_add_link(text, (club + 0x38) as usize as *const u8, 0x7d5, club); // cqx7: the club link
+        } else if d == 0xfe {
+            exe::comp_util_write_group_qualify_news(club_id, a4, comp, -2, news, text);
+        }
+    } else if f == 7 {
+        if news != 0 {
+            exe::comp_util_write_cup_tie_result_news(club_id, a5, a8, outcome, a6, text);
+        } else {
+            exe::comp_util_write_cup_win_or_defeat_news(club_id, a5, outcome, text);
+        }
+    }
+}
+
+/// Comparer for `ita_cup_build_fate_news_text`. On the paths that only write the text (a club going through the groups
+/// without a news object: the "through to first round" text and its link) side by side with `compare_text_writer`: the
+/// original into the caller's Text, the copy into a local one. On the paths that pass the news object to the generic
+/// cup news (0x4b4590, 0x4b0b80, 0x4b4420) only the original (they may also write the news object, which takes its
+/// text once).
+#[allow(clippy::too_many_arguments)]
+pub(crate) unsafe extern "thiscall" fn compare_ita_cup_build_fate_news_text(this: usize, club_id: u32, outcome: u32, stage: u32, a4: u32, a5: u32, a6: u32, a7: u32, a8: u32, news: u32, text: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32, u32, usize)>(IDX_ITA_CUP_BUILD_FATE_NEWS_TEXT);
+    if (stage as u8 as i8) < 7 && outcome as u8 == 6 && news == 0 && text != 0 {
+        return compare_text_writer(text, || o(this, club_id, outcome, stage, a4, a5, a6, a7, a8, news, text),
+            |t| ita_cup_build_fate_news_text(this, club_id, outcome, stage, a4, a5, a6, a7, a8, news, t),
+            || format!("ita_cup_build_fate_news_text(club {}, outcome {}, stage {})", club_id, outcome as u8, stage as u8 as i8));
+    }
+    o(this, club_id, outcome, stage, a4, a5, a6, a7, a8, news, text)
+}
+
+/// The Coppa Italia constructor: see `ita_cup_constructor_body`.
+/// Original: `ItaCup::ItaCup` (0x63e900, ita_cup.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn construct_ita_cup(this: usize, year: u32, owner: usize) -> usize {
+    ita_cup_constructor_body(this, year, owner) // cqv8: the Coppa Italia
+}
+
+/// Only the original (it allocates, draws and reads the save file), checking the plan (`ita_cups_check_constructor_plan`).
+pub(crate) unsafe extern "thiscall" fn compare_construct_ita_cup(this: usize, year: u32, owner: usize) -> usize {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_ITA_CUP)(this, year, owner);
+    let error = ita_cups_check_constructor_plan(this, r, year, owner, 0x96c318, &COPPA_ITALIA_FIELDS, false);
+    SCOREBOARD.record(error.is_none(), || format!("construct_ita_cup({:#x}, {}, {:#x}): {}", this, year as u16, owner, error.clone().unwrap_or_default()));
+    r
+}
+
+/// The season turnover of a cup played as a league with group stages (the Coppa Italia, the Serie C cup and the Korean
+/// League Cup: the same body, checked instruction by instruction for the two Italian ones and by reading for the Korean
+/// one, which only uses another register as zero; only the routines, the number of groups, the source file and the box
+/// lines change).
+///
+/// `league::SEASON_CLOSED` = 0; the table freed (League::free_table `exe::league_free_table`, thiscall(this, 0), ret 4);
+/// `.round_dates()` freed (`exe::crt_free`) and zeroed; with statistics, Comp_Stats::archive_season_and_reset
+/// (`exe::comp_stats_archive_season_and_reset`, thiscall(stats, 1), ret 4); the entrant list at `+0xee`
+/// (`ita_cup_fields::ENTRANT_CLUBS`; the ten selected clubs in the Korean League Cup) freed when there is one, but not
+/// zeroed (the entrants routine allocates a new one next); with a current stage ≥ 0, the stages 0..=`.current_stage()` destroyed (virtual 0 with 1); the year up by
+/// `year` and `league::CURRENT_STAGE` = −1.
+///
+/// Then the entrants (`entrants`, thiscall, ret 0; its result is not checked) and the predicted positions (virtual
+/// `comp_vtable::SET_PREDICTED_POSITIONS`); then, each with its own box (lines `rows`) when it returns 0: the rules
+/// (virtual `comp_vtable::SET_UP_RULES`), the first group's table (`first_group`, thiscall, ret 0: the cup itself is
+/// group 1), the fixtures (League::create_fixtures `exe::league_create_fixtures`) and the order (League::sort_table
+/// `exe::league_sort_table`, thiscall(this, 0), ret 4). Finally the group stages `group_stage`(g) for g = 0 to
+/// `groups` − 1 (thiscall, ret 4), the last one's eax returned. After a box the copy returns 0 (the original returns
+/// the box's eax; the turnover's caller does not read it).
+#[allow(clippy::too_many_arguments)]
+pub(crate) unsafe fn ita_group_cup_start_new_season(this: League, entrants: usize, first_group: usize, group_stage: usize, groups: u32, file: usize, rows: [u32; 4], year: i16, ramo: &'static str) -> u32 {
+    this.set_season_closed(0);
+    exe::league_free_table(this, 0);
+    let l = this.round_dates();
+    if l != 0 {
+        exe::crt_free(l);
+        this.set_round_dates(0);
+    }
+    let stats = this.comp_stats();
+    if stats != 0 {
+        exe::comp_stats_archive_season_and_reset(stats, 1);
+    }
+    let list = read_usize(this.addr() + ita_cup_fields::ENTRANT_CLUBS);
+    if list != 0 {
+        exe::crt_free(list);
+    }
+    if (this.current_stage() as i32) >= 0 {
+        let mut i = 0i32;
+        loop {
+            let f = read_usize(this.stages() + 4 * i as usize);
+            if f != 0 {
+                let destroy: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(f)));
+                destroy(f, 1);
+            }
+            i += 1;
+            if i > this.current_stage() as i32 {
+                break;
+            }
+        }
+    }
+    let a = this.year();
+    this.set_year(a.wrapping_add(year));
+    write_i32(this.addr() + league::CURRENT_STAGE, -1);
+    covered!(ramo);
+    let entrants: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(entrants);
+    entrants(this.addr());
+    bra_nat_first_call_virtual_no_args(this.addr(), comp_vtable::SET_PREDICTED_POSITIONS);
+    if bra_nat_first_call_virtual_no_args(this.addr(), comp_vtable::SET_UP_RULES) == 0 {
+        show_error_at(file, rows[0]);
+        return 0;
+    }
+    let first_group: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(first_group);
+    if first_group(this.addr()) == 0 {
+        show_error_at(file, rows[1]);
+        return 0;
+    }
+    if exe::league_create_fixtures(this) == 0 {
+        show_error_at(file, rows[2]);
+        return 0;
+    }
+    if exe::league_sort_table(this, 0) == 0 {
+        show_error_at(file, rows[3]);
+        return 0;
+    }
+    let group_stage: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(group_stage);
+    let mut r = 0;
+    for g in 0..groups {
+        r = group_stage(this.addr(), g);
+    }
+    r
+}
+
+/// The body of the two Italian cups' staff records (0x63ff00 and 0x63e270; only the knockout stage `limit` and the
+/// group qualification round change), `update_staff_records_for_status(club, outcome, stage, _, fixture, final)` (the
+/// virtual +0x44); returns 0. Stage (signed byte) below `limit`, the groups: outcome 6, the qualification
+/// (`european_cup_add_qualified_record`: stage 0, round `group_round`, weight 0x28); 0xfe, the failure
+/// (`european_cup_add_failed_to_qualify_record`: 0x41c, 0x28). Stage `limit`, the knockout, weight =
+/// `scale_by_round`(0x32, 0x64, the fixture's `round_number()`, 5): 0xff, the elimination
+/// (`european_cup_add_knocked_out_record`: the fixture's `round_prefix()` and `round_name()`, the weight); 0, the
+/// qualification with `round_prefix()` and the name word (+0x6f) of the fixture's round in the round table of the
+/// knockout stage ([`cup::STAGES`][`limit`] + `cup::ROUND_TABLE`; the high 16 bits the original pushes are the stage
+/// pointer's); 1, the winner (Staff_Records 0x86a800); 2, the runner-up (0x86b0b0). Anything else: nothing. The
+/// staff records are [`G_STAFF_RECORDS`] (thiscall: 0x86bdd0 ret 0x14, 0x86c1d0 ret 0x10, 0x86c000 ret 0x14,
+/// 0x86a800 and 0x86b0b0 ret 0xc); words pushed with garbage in the high bits are passed clean (the callees read the
+/// word).
+pub(crate) unsafe fn italian_cup_staff_records(this: usize, club: usize, outcome: u32, stage: u32, game: usize, final_: u32, limit: i8, group_round: u32, label: &'static str) -> u32 {
+    let game = Fixture(game);
+    let (d, f) = (outcome as u8, stage as u8 as i8);
+    let comp = read_usize(this + 4);
+    if f < limit {
+        if d == 6 {
+            covered!(label);
+            european_cup_add_qualified_record(club, comp, 0, group_round, 0x28);
+        } else if d == 0xfe {
+            european_cup_add_failed_to_qualify_record(club, comp, 0x41c, 0x28);
+        }
+    } else if f == limit {
+        match d {
+            0xff => {
+                let weight = scale_by_round(0x32, 0x64, game.round_number(), 5);
+                european_cup_add_knocked_out_record(club, comp, game.round_prefix() as u16 as u32, game.round_name() as u16 as u32, weight);
+            }
+            0 => {
+                let weight = scale_by_round(0x32, 0x64, game.round_number(), 5);
+                let knockout = read_usize(read_usize(this + cup::STAGES) + limit as usize * 4);
+                let r = game.round_number() as isize;
+                let name = read_u16(read_usize(knockout + cup::ROUND_TABLE).wrapping_add((r * cup_round::SIZE as isize) as usize) + 0x6f) as u32;
+                european_cup_add_qualified_record(club, comp, game.round_prefix() as u16 as u32, (knockout as u32 & 0xffff_0000) | name, weight);
+            }
+            1 => cup_record_final_result(0x86a800, club, game, final_),
+            2 => cup_record_final_result(0x86b0b0, club, game, final_),
+            _ => {}
+        }
+    }
+    0
+}
+
+/// The plan the comparer checks after the original: the return value (this), the vtable, the competition record
+/// (`league::COMPETITION`) and the year (`league::YEAR`); on a new cup (`league::STAGE_INDEX` = `stage_index::MAIN`),
+/// each fixed field the constructor writes (offset, width, value) and the rounds (`cup::ROUND_TABLE`, when `rounds`)
+/// and the statistics created.
+pub(crate) unsafe fn ita_cups_check_constructor_plan(this: usize, r: usize, year: u32, owner: usize, vt: usize, fields: &[(usize, u8, u32)], rounds: bool) -> Option<String> {
+    let this = League(this);
+    if r != this.addr() || read_usize(this.addr()) != vt || this.competition().addr() != owner || (this.year() as u16) != year as u16 {
+        return Some(format!("returned {:#x}, vtable {:#x}, +4 {:#x}, year {}", r, read_usize(this.addr()), this.competition().addr(), (this.year() as u16)));
+    }
+    if this.stage_index() != stage_index::MAIN || league_will_load_saved_state(owner) {
+        return None;
+    }
+    for &(o, t, v) in fields {
+        let x = match t {
+            1 => read_u8(this.addr() + o) as u32,
+            2 => read_u16(this.addr() + o) as u32,
+            _ => read_u32(this.addr() + o),
+        };
+        if x != v {
+            return Some(format!("+{:#x} = {:#x}, the constructor writes {:#x}", o, x, v));
+        }
+    }
+    if (rounds && read_usize(this.addr() + cup::ROUND_TABLE) == 0) || this.comp_stats() == 0 {
+        return Some(format!("rounds {:#x}, statistics {:#x}", read_usize(this.addr() + cup::ROUND_TABLE), this.comp_stats()));
+    }
+    None
+}
+
+/// The constructor of the Coppa Italia, on the League base (`exe::new_league`, thiscall, ret 0): the fixed fields (the
+/// vtable 0x96c318, the competition record in `league::COMPETITION`, the year in `league::YEAR`, 3 substitutions
+/// allowed, 7 substitutes named, discipline rule `ITALY_CUP` (18), importance 0xc); if the saved state loads
+/// (`exe::league_load_from_temp_file`(this, 1), thiscall, ret 4; returns != 0), returns this. On a new cup, in order:
+/// `league::LEAGUE_FLAGS` = 0x28, `league::STAGE_INDEX` = `stage_index::MAIN`, `league::CURRENT_STAGE` = -1,
+/// `league::STAGE_COUNT` = 8 and the stage array in `league::STAGES` (`exe::crt_malloc` of 0x20, cdecl, unchecked);
+/// the 48 entrants (`ita_cup_select_entrants`, 0x63faf0, thiscall, ret 0, unchecked); the statistics in
+/// `league::COMP_STATS` (the box for line 0x54 without them); the predicted positions (ItaCup::set_predicted_positions,
+/// 0x640210, thiscall, ret 0, unchecked); the rules (`ita_cup_set_up_rules`, 0x63f350, thiscall, ret 0; the box for
+/// line 0x5e if it returns 0); the first group table (`ita_cup_create_first_group_table`, 0x63f250, thiscall, ret 0;
+/// the box for line 0x65 if it returns 0); the fixtures (`exe::league_create_fixtures`, thiscall, ret 0; the box for
+/// line 0x6b if it returns 0); the table order (`exe::league_sort_table`(this, 0), thiscall, ret 4; the box for line
+/// 0x72 if it returns 0); the stage of each group (`ita_cup_create_group_stage`, 0x63f640, push i; mov ecx, this ->
+/// thiscall, ret 4) for groups 0 to 6. Every failing step shows its box (`show_error_at`) and returns this. Returns
+/// this. Rule: no prize fund (`league::PRIZE_FUND` stays as the base left it); 7 substitutes on the bench and 3
+/// substitutions; discipline rule 18 [`league::SUBSTITUTES_NAMED`/`SUBSTITUTIONS_ALLOWED`/`DISCIPLINE_RULE`/
+/// `CLUB_SIDES` from the competitions reference reading, section 2.1].
+/// Original: `ItaCup::ItaCup` (0x63e900, ita_cup.cpp, thiscall, ret 8).
+pub(crate) unsafe fn ita_cup_constructor_body(this: usize, year: u32, owner: usize) -> usize {
+    let this = League(this);
+    let league = this;
+    exe::new_league(league);
+    write_usize(this.addr() + league::COMPETITION, owner);
+    write_usize(this.addr(), 0x96c318);
+    this.set_year((year as u16) as i16);
+    league.set_substitutions_allowed(0x3);
+    league.set_substitutes_named(0x7);
+    league.set_discipline_rule(discipline_rule::ITALY_CUP);
+    league.set_importance(0xc);
+    if exe::league_load_from_temp_file(league, 1) != 0 {
+        return this.addr();
+    }
+    covered!("cqv_8 coppa italia new");
+    league.set_league_flags(0x28);
+    league.set_stage_index(stage_index::MAIN);
+    this.set_current_stage((0xffffffff) as usize);
+    this.set_stage_count((0x8) as usize);
+    league.set_stages(exe::crt_malloc(0x20));
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ITACUP_SELECT_ENTRANTS);
+    f(this.addr());
+    if !ita_cups_create_comp_stats(league) {
+        show_error_at(0x9ea23c, 0x54);
+        return this.addr();
+    }
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ITACUP_SET_PREDICTED_POSITIONS);
+    f(this.addr());
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ITACUP_SET_UP_RULES);
+    let r = f(this.addr());
+    if r == 0 {
+        show_error_at(0x9ea23c, 0x5e);
+        return this.addr();
+    }
+    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ITACUP_CREATE_FIRST_GROUP_TABLE);
+    let r = f(this.addr());
+    if r == 0 {
+        show_error_at(0x9ea23c, 0x65);
+        return this.addr();
+    }
+    if exe::league_create_fixtures(league) == 0 {
+        show_error_at(0x9ea23c, 0x6b);
+        return this.addr();
+    }
+    if exe::league_sort_table(league, 0) == 0 {
+        show_error_at(0x9ea23c, 0x72);
+        return this.addr();
+    }
+    let f: unsafe extern "thiscall" fn(usize, u32) -> i32 = core::mem::transmute(FN_ITACUP_CREATE_GROUP_STAGE);
+    for i in 0..7 {
+        f(this.addr(), i);
+    }
+    this.addr()
+}
+
+/// The fixed fields the Coppa Italia constructor writes on a new cup (offset, width, value).
+pub(crate) const COPPA_ITALIA_FIELDS: [(usize, u8, u32); 7] = [(league::STAGE_COUNT, 4, 0x8), (league::STAGE_INDEX, 1, 0xff), (league::SUBSTITUTES_NAMED, 1, 0x7), (league::SUBSTITUTIONS_ALLOWED, 1, 0x3), (league::DISCIPLINE_RULE, 1, 0x12), (league::IMPORTANCE, 1, 0xc), (league::LEAGUE_FLAGS, 2, 0x28)];

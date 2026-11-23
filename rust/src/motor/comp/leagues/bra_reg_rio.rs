@@ -714,3 +714,103 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_set_up_rules(this: usize) -> 
     1
 }
 
+/// The predicted positions of the Rio state league (at creation and at the season turnover): the clubs sorted by strength; the
+/// first ones get the knockout places, 1, 2, and the others their place in the order (`state_league_predicted_positions`
+/// with `RIO_PREDICTED`); it is the board and press expectation for each club [inference]. The error boxes at
+/// lines 0x33f (no statistics) and 0x347 (no memory).
+/// Original: `BraRegRio::set_predicted_positions` (0x43add0, bra_reg_rio.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn bra_reg_rio_set_predicted_positions(this: usize) {
+    state_league_predicted_positions(this, &RIO_PREDICTED)
+}
+
+/// Comparer for `bra_reg_rio_set_predicted_positions` (`compare_state_league_predicted`, side by side).
+pub(crate) unsafe extern "thiscall" fn compare_bra_reg_rio_set_predicted_positions(this: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_RIO_SET_PREDICTED_POSITIONS);
+    compare_state_league_predicted("bra_reg_rio_set_predicted_positions", this, &RIO_PREDICTED, || o(this));
+}
+
+/// The schedule of the Rio de Janeiro state league (Carioca): stage −1, the round-robin league stage: 22 rounds from 11 Jan to 3 May; stage 2, the knockout or final stage: 1 round from 4 May to 10 May; any other stage returns 0.
+///
+/// Virtual `comp_vtable::CREATE_SCHEDULE`, `create_schedule(stage, &rounds, &extra, &is_league)`, called by
+/// League::create_fixtures and the season turns. For a stage with a table (`rio_schedule_stage`) it writes the outputs (is_league
+/// when that pointer is not null, the rounds and the extra), allocates the round table (`exe::crt_malloc`, 0x41 bytes
+/// per round; out of memory, the error box and 0) and writes the date (day, month, years after the season year
+/// `year()`, weekday and code) and the matches of each round, in the original's order (`create_round_table`, the
+/// cqp_11 schedule machine); the rest of the table is left as allocated. Returns the table, or 0 without writing
+/// anything for a stage without one.
+/// Original: `BraRegRio::create_schedule` (0x439d40, bra_reg_rio.cpp, thiscall, ret 0x10).
+pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    create_round_table(Cup(this), rio_schedule_stage(stage), rounds, extra, league, 0x98b014)
+}
+
+/// Comparer for `bra_reg_rio_create_schedule`.
+pub(crate) unsafe extern "thiscall" fn compare_bra_reg_rio_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_BRA_REG_RIO_CREATE_SCHEDULE);
+    asia_club_champ_compare_round_table("bra_reg_rio_create_schedule", stage, rio_schedule_stage(stage), rounds, extra, league, || o(this, stage, rounds, extra, league),
+        |r, e, l| bra_reg_rio_create_schedule(this, stage, r, e, l))
+}
+
+/// Each game result of the Rio state league: the game goes into the overall table and, if it has no stage yet, gets its
+/// half's (the first up to round 10, the second from round 11); the half is built when its first game arrives
+/// (`bra_reg_rio_create_half_season_stage`, 0x43afa0), and the game also goes into the half table, without counting again
+/// in the league statistics; each half winner goes to the final (`bra_reg_minas_gerais_add_two_half_result`).
+/// Original: `BraRegRio::add_result` (0x43af20, bra_reg_rio.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn bra_reg_rio_add_result(this: usize, game: usize, stats: u32) -> u32 {
+    bra_reg_minas_gerais_add_two_half_result(League(this), game, stats, 0xb, 0x43afa0, "cqu_3 rio half") // cqu3: the Rio league
+}
+
+/// Comparer for `bra_reg_rio_add_result`.
+pub(crate) unsafe extern "thiscall" fn compare_bra_reg_rio_add_result(this: usize, game: usize, stats: u32) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_BRA_REG_RIO_ADD_RESULT);
+    bra_reg_minas_gerais_compare_two_half_result("bra_reg_rio_add_result", League(this), game, 0xb, || o(this, game, stats))
+}
+
+/// The stages of the round table of the Rio de Janeiro state league (Carioca) (virtual `comp_vtable::CREATE_SCHEDULE`): stage −1, the round-robin league stage: 22 rounds from 11 Jan to 3 May; stage 2, the knockout or final stage: 1 round from 4 May to 10 May; any other stage has no table (None).
+pub(crate) fn rio_schedule_stage(stage: u32) -> Option<ScheduleStage> {
+    match stage as u8 as i8 {
+        -1 => Some(ScheduleStage { league: 1, rounds: 22, extra: 0, extra_check: false, size: 0x596, row: 0xa6,
+            ops: &RIO_SCHEDULE_LEAGUE_OPS, name: "cqw_3 rio league" }),
+        2 => Some(ScheduleStage { league: 0, rounds: 1, extra: 0, extra_check: false, size: 0x68, row: 0x13a,
+            ops: &RIO_SCHEDULE_STAGE_2_OPS, name: "cqw_3 rio stage 2" }),
+        _ => None,
+    }
+}
+
+/// The Rio state league: the fixed places 1, 2 (the final between the top two).
+pub(crate) const RIO_PREDICTED: StateLeaguePredicted = StateLeaguePredicted { file: 0x98b014, lines: [0x33f, 0x347], places: &[1, 2], label: "cqx_6 rio predicted" }; // cqx6: the rio places
+
+/// The Rio de Janeiro state league (Carioca), the round-robin stage (−1): 22 rounds (11 Jan to 3 May), 1430 bytes, 78 operations.
+pub(crate) const RIO_SCHEDULE_LEAGUE_OPS: [AsiaClubChampScheduleOp; 78] = [
+    Cqp11D(0, 0xb, 1, 0, 6, 1, 0), Cqp11L(0, 0, 5, 1, 1, 0), Cqp11L(0, 1, 5, 1, 1, 0), Cqp11L(0, 2, -1, -1, -1, 0),
+    Cqp11D(1, 0x12, 1, 0, 6, 2, 0), Cqp11L(1, 0, 5, 1, 1, 0), Cqp11L(1, 1, 5, 1, 1, 0), Cqp11L(1, 2, -1, -1, -1, 0),
+    Cqp11D(2, 0x15, 1, 0, 2, 2, 0), Cqp11L(2, 0, -1, -1, -1, 0), Cqp11D(3, 0x19, 1, 0, 6, 1, 0),
+    Cqp11L(3, 0, 5, 1, 1, 0), Cqp11L(3, 1, 5, 1, 1, 0), Cqp11L(3, 2, -1, -1, -1, 0), Cqp11D(4, 4, 2, 0, 6, 1, 0),
+    Cqp11L(4, 0, 5, 1, 1, 0), Cqp11L(4, 1, 5, 1, 1, 0), Cqp11L(4, 2, -1, -1, -1, 0), Cqp11D(5, 0xb, 2, 0, 6, 1, 0),
+    Cqp11L(5, 0, 5, 1, 1, 0), Cqp11L(5, 1, 5, 1, 1, 0), Cqp11L(5, 2, -1, -1, -1, 0), Cqp11D(6, 0xe, 2, 0, 2, 2, 0),
+    Cqp11L(6, 0, -1, -1, -1, 0), Cqp11D(7, 0x12, 2, 0, 6, 1, 0), Cqp11L(7, 0, 5, 1, 1, 0), Cqp11L(7, 1, 5, 1, 1, 0),
+    Cqp11L(7, 2, -1, -1, -1, 0), Cqp11D(8, 0x19, 2, 0, 6, 1, 0), Cqp11L(8, 0, 5, 1, 1, 0), Cqp11L(8, 1, 5, 1, 1, 0),
+    Cqp11L(8, 2, -1, -1, -1, 0), Cqp11D(9, 1, 3, 0, 6, 1, 0), Cqp11L(9, 0, 5, 1, 1, 0), Cqp11L(9, 1, 5, 1, 1, 0),
+    Cqp11L(9, 2, -1, -1, -1, 0), Cqp11D(0xa, 4, 3, 0, 2, 2, 0), Cqp11L(0xa, 0, 5, 1, 1, 0),
+    Cqp11L(0xa, 1, 5, 1, 1, 0), Cqp11L(0xa, 2, -1, -1, -1, 0), Cqp11D(0xb, 8, 3, 0, 6, 1, 0),
+    Cqp11L(0xb, 0, 5, 1, 1, 0), Cqp11L(0xb, 1, 5, 1, 1, 0), Cqp11L(0xb, 2, -1, -1, -1, 0),
+    Cqp11D(0xc, 0xf, 3, 0, 6, 1, 0), Cqp11L(0xc, 0, 5, 1, 1, 0), Cqp11L(0xc, 1, 5, 1, 1, 0),
+    Cqp11L(0xc, 2, -1, -1, -1, 0), Cqp11D(0xd, 0x16, 3, 0, 6, 1, 0), Cqp11L(0xd, 0, 5, 1, 1, 0),
+    Cqp11L(0xd, 1, 5, 1, 1, 0), Cqp11L(0xd, 2, -1, -1, -1, 0), Cqp11D(0xe, 0x19, 3, 0, 2, 2, 0),
+    Cqp11L(0xe, 0, -1, -1, -1, 0), Cqp11D(0xf, 0x1d, 3, 0, 6, 1, 0), Cqp11L(0xf, 0, 5, 1, 1, 0),
+    Cqp11L(0xf, 1, 5, 1, 1, 0), Cqp11L(0xf, 2, -1, -1, -1, 0), Cqp11D(0x10, 6, 4, 0, 6, 1, 0),
+    Cqp11L(0x10, 0, 5, 1, 1, 0), Cqp11L(0x10, 1, 5, 1, 1, 0), Cqp11L(0x10, 2, -1, -1, -1, 0),
+    Cqp11D(0x11, 0xd, 4, 0, 6, 1, 0), Cqp11L(0x11, 0, 5, 1, 1, 0), Cqp11L(0x11, 1, 5, 1, 1, 0),
+    Cqp11L(0x11, 2, -1, -1, -1, 0), Cqp11D(0x12, 0x10, 4, 0, 2, 2, 0), Cqp11L(0x12, 0, -1, -1, -1, 0),
+    Cqp11D(0x13, 0x14, 4, 0, 6, 1, 0), Cqp11L(0x13, 0, 5, 1, 1, 0), Cqp11L(0x13, 1, 5, 1, 1, 0),
+    Cqp11L(0x13, 2, -1, -1, -1, 0), Cqp11D(0x14, 0x1b, 4, 0, 6, 1, 0), Cqp11L(0x14, 0, 5, 1, 1, 0),
+    Cqp11L(0x14, 1, 5, 1, 1, 0), Cqp11L(0x14, 2, -1, -1, -1, 0), Cqp11D(0x15, 3, 5, 0, 6, 1, 0),
+    Cqp11L(0x15, 0, -1, -1, -1, 0),
+];
+
+/// The Rio de Janeiro state league (Carioca), stage 2: 1 round (4 May to 10 May), 104 bytes, 18 operations.
+pub(crate) const RIO_SCHEDULE_STAGE_2_OPS: [AsiaClubChampScheduleOp; 18] = [
+    Cqp11S(0, 4, 5, 0, 0), Cqp11J(0, 0xa, 5, 0, 6, 1, 0), Cqp11W(0x18, 2), Cqp11W(0x1c, 2), Cqp11B(0x21, 2),
+    Cqp11W(0x7, 0x96), Cqp11W(0x9, 0), Cqp11W(0xb, 0), Cqp11W(0xd, 0x200), Cqp11B(0x17, 8), Cqp11W(0x1a, 1),
+    Cqp11W(0xf, 0x804), Cqp11W(0x1e, 0), Cqp11B(0x20, 0), Cqp11B(0x22, 7), Cqp11X(0x5c, 0), Cqp11X(0x60, 0xa4cb8),
+    Cqp11X(0x64, 0x3d090),
+];

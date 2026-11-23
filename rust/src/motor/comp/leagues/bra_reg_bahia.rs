@@ -330,3 +330,150 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_bahia_update_staff_records_for_st
     baiano_staff_records(League(this), club, status, stage, game, true).0
 }
 
+/// The predicted positions of the Bahia state league (at creation and at the season turnover): the clubs sorted by strength; the
+/// first ones get the knockout places, 1, 2, 3, 3, and the others their place in the order (`state_league_predicted_positions`
+/// with `BAHIA_PREDICTED`); it is the board and press expectation for each club [inference]. The error boxes at
+/// lines 0x307 (no statistics) and 0x30f (no memory).
+/// Original: `BraRegBahia::set_predicted_positions` (0x430340, bra_reg_bahia.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn bra_reg_bahia_set_predicted_positions(this: usize) {
+    state_league_predicted_positions(this, &BAHIA_PREDICTED)
+}
+
+/// Comparer for `bra_reg_bahia_set_predicted_positions` (`compare_state_league_predicted`, side by side).
+pub(crate) unsafe extern "thiscall" fn compare_bra_reg_bahia_set_predicted_positions(this: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_BAHIA_SET_PREDICTED_POSITIONS);
+    compare_state_league_predicted("bra_reg_bahia_set_predicted_positions", this, &BAHIA_PREDICTED, || o(this));
+}
+
+/// The Bahia state league schedule (the virtual `comp_vtable::CREATE_SCHEDULE`): the stage from
+/// `bra_reg_bahia_schedule_stage`, run by the schedule machine of cqp_11 (`create_round_table`: the outputs, the table of
+/// 0x41 bytes per round and, for each round, its date (day, month, years after the season's, weekday and code) and its
+/// fixtures; the rest of the table is left as allocated); a stage without a table returns 0 and writes nothing.
+/// Original: `BraRegBahia::create_schedule` (0x42f5d0, bra_reg_bahia.cpp, thiscall, ret 0x10).
+pub(crate) unsafe extern "thiscall" fn bra_reg_bahia_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    create_round_table(Cup(this), bra_reg_bahia_schedule_stage(stage), rounds, extra, league, 0x98acac)
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_bra_reg_bahia_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_BRA_REG_BAHIA_CREATE_SCHEDULE);
+    asia_club_champ_compare_round_table("bra_reg_bahia_create_schedule", stage, bra_reg_bahia_schedule_stage(stage), rounds, extra, league, || o(this, stage, rounds, extra, league),
+        |r, e, l| bra_reg_bahia_create_schedule(this, stage, r, e, l))
+}
+
+/// The predicted positions of a Brazilian state league (the same mould of 336 to 432 bytes in the twelve, checked
+/// instruction by instruction: only the source file, the box lines and the fixed knockout places change; the
+/// quarter-final ones (8 places) run the tail with an index and a position, the others with the position only: the
+/// same clubs and places).
+///
+/// `set_predicted_positions()` (virtual `comp_vtable::SET_PREDICTED_POSITIONS`, from the constructor and the season
+/// turnover). Without statistics (`league::COMP_STATS`): the box of the first line and return. The clubs of the
+/// `league::CLUB_COUNT` rows of the table (`league::TABLE`, `league_table_row::SIZE` bytes each) go to an array
+/// (`exe::crt_malloc`(4 × n): push; add esp, 4 -> cdecl; out of memory: the box of the second line and return),
+/// sorted by strength (`exe::comp_util_sort_clubs_by_strength`(array, n): push n; push array; add esp, 8 -> cdecl, the
+/// strongest first); the first ones get the fixed places without looking at how many clubs there are, and the next
+/// ones, while there is a club (k up to n), place k (Comp_Stats::set_club_final_position
+/// `exe::comp_stats_set_club_final_position`(stats, club, place): push place; push club; mov ecx, stats -> thiscall,
+/// ret 8); the array is freed (`exe::crt_free`).
+pub(crate) unsafe fn state_league_predicted_positions(this: usize, s: &StateLeaguePredicted) {
+    let l = League(this);
+    if l.comp_stats() == 0 {
+        return show_error_at(s.file, s.lines[0]);
+    }
+    let v = exe::crt_malloc(((l.club_count() as i32) << 2) as u32);
+    if v == 0 {
+        return show_error_at(s.file, s.lines[1]);
+    }
+    let mut i = 0i16;
+    while i < l.club_count() {
+        write_usize(v + 4 * i as usize, read_usize(l.table() + league_table_row::SIZE * i as usize));
+        i += 1;
+    }
+    exe::comp_util_sort_clubs_by_strength(v, l.club_count() as i32); // cqx3: the order by strength
+    for (k, &p) in s.places.iter().enumerate() {
+        exe::comp_stats_set_club_final_position(l.comp_stats(), read_usize(v + 4 * k), p);
+    }
+    covered!(s.label);
+    let mut k = s.places.len() as i32 + 1;
+    while k <= l.club_count() as i32 {
+        exe::comp_stats_set_club_final_position(l.comp_stats(), read_usize(v + 4 * (k - 1) as usize), k as u32);
+        k += 1;
+    }
+    exe::crt_free(v);
+}
+
+/// The comparer of the state leagues' predicted positions, side by side over the same entries: the original first
+/// (Comp_Stats::set_club_final_position adds the entry of a club that has none), then the copy, which finds the entries
+/// already there and only rewrites `comp_stats_club::FINAL_POSITION` (the same table, the same sort by strength: the
+/// same order, ties included); the position of each club of the table after the copy must equal the original's. With
+/// fewer clubs than fixed places (the original reads past the array), without statistics or table: only the original.
+pub(crate) unsafe fn compare_state_league_predicted(name: &str, this: usize, s: &StateLeaguePredicted, o: impl FnOnce()) {
+    let l = League(this);
+    let n = l.club_count() as i32;
+    if l.comp_stats() == 0 || l.table() == 0 || n < s.places.len() as i32 {
+        return o();
+    }
+    let clubs: Vec<usize> = (0..n as usize).map(|i| read_usize(l.table() + league_table_row::SIZE * i)).collect();
+    o();
+    let original = state_league_positions(l.comp_stats(), &clubs);
+    state_league_predicted_positions(this, s);
+    let copy = state_league_positions(l.comp_stats(), &clubs);
+    SCOREBOARD.record(copy == original, || format!("{}({:#x}): copy {:?} original {:?}", name, this, copy, original));
+}
+
+/// The stages of the Bahia round table: the round-robin stage (-1) (a league): 18 rounds, from 11 January to 20 April; stage 0
+/// (knockout or final stage): 2 rounds, from 21 April to 10 May.
+pub(crate) fn bra_reg_bahia_schedule_stage(stage: u32) -> Option<ScheduleStage> {
+    match stage as u8 as i8 {
+        -1 => Some(ScheduleStage { league: 1, rounds: 18, extra: 0, extra_check: false, size: 0x492, row: 0xa8,
+            ops: &BAHIA_LEAGUE_STAGE_OPS, name: "cqw_1 bahia league" }),
+        0 => Some(ScheduleStage { league: 0, rounds: 2, extra: 0, extra_check: false, size: 0xd0, row: 0x126,
+            ops: &BAHIA_STAGE_0_OPS, name: "cqw_1 bahia stage 0" }),
+        _ => None,
+    }
+}
+
+/// The predicted position (`comp_stats_club::FINAL_POSITION`) of each club in the statistics `stats`, 0 without
+/// entry (Comp_Stats::find_club_entry `exe::comp_stats_find_club_entry`).
+pub(crate) unsafe fn state_league_positions(stats: usize, clubs: &[usize]) -> Vec<u8> {
+    clubs.iter().map(|&c| {
+        let e = if c != 0 { exe::comp_stats_find_club_entry(stats, c) } else { 0 };
+        if e != 0 { read_u8(e + comp_stats_club::FINAL_POSITION) } else { 0 }
+    }).collect()
+}
+
+/// The Bahia state league: the fixed places 1, 2, 3, 3 (the semi-finals).
+pub(crate) const BAHIA_PREDICTED: StateLeaguePredicted = StateLeaguePredicted { file: 0x98acac, lines: [0x307, 0x30f], places: &[1, 2, 3, 3], label: "cqx_3 bahia predicted" }; // cqx3: the bahia places
+
+/// The Bahia state league, the round-robin stage: 18 rounds (from 11 January to 20 April), 1170 bytes, 64 operations.
+pub(crate) const BAHIA_LEAGUE_STAGE_OPS: [AsiaClubChampScheduleOp; 64] = [
+    Cqp11D(0, 0xb, 1, 0, 6, 1, 0), Cqp11L(0, 0, 5, 1, 1, 0), Cqp11L(0, 1, 5, 1, 1, 0), Cqp11L(0, 2, -1, -1, -1, 0),
+    Cqp11D(1, 0x12, 1, 0, 6, 2, 0), Cqp11L(1, 0, 5, 1, 1, 0), Cqp11L(1, 1, 5, 1, 1, 0), Cqp11L(1, 2, -1, -1, -1, 0),
+    Cqp11D(2, 0x15, 1, 0, 2, 2, 0), Cqp11L(2, 0, -1, -1, -1, 0), Cqp11D(3, 0x19, 1, 0, 6, 1, 0),
+    Cqp11L(3, 0, 5, 1, 1, 0), Cqp11L(3, 1, 5, 1, 1, 0), Cqp11L(3, 2, -1, -1, -1, 0), Cqp11D(4, 4, 2, 0, 6, 1, 0),
+    Cqp11L(4, 0, 5, 1, 1, 0), Cqp11L(4, 1, 5, 1, 1, 0), Cqp11L(4, 2, -1, -1, -1, 0), Cqp11D(5, 0xb, 2, 0, 6, 1, 0),
+    Cqp11L(5, 0, 5, 1, 1, 0), Cqp11L(5, 1, 5, 1, 1, 0), Cqp11L(5, 2, -1, -1, -1, 0), Cqp11D(6, 0xe, 2, 0, 2, 2, 0),
+    Cqp11L(6, 0, -1, -1, -1, 0), Cqp11D(7, 0x12, 2, 0, 6, 1, 0), Cqp11L(7, 0, 5, 1, 1, 0), Cqp11L(7, 1, 5, 1, 1, 0),
+    Cqp11L(7, 2, -1, -1, -1, 0), Cqp11D(8, 0x19, 2, 0, 6, 1, 0), Cqp11L(8, 0, 5, 1, 1, 0), Cqp11L(8, 1, 5, 1, 1, 0),
+    Cqp11L(8, 2, -1, -1, -1, 0), Cqp11D(9, 1, 3, 0, 6, 1, 0), Cqp11L(9, 0, 5, 1, 1, 0), Cqp11L(9, 1, 5, 1, 1, 0),
+    Cqp11L(9, 2, -1, -1, -1, 0), Cqp11D(0xa, 8, 3, 0, 6, 1, 0), Cqp11L(0xa, 0, 5, 1, 1, 0),
+    Cqp11L(0xa, 1, 5, 1, 1, 0), Cqp11L(0xa, 2, -1, -1, -1, 0), Cqp11D(0xb, 0xf, 3, 0, 6, 1, 0),
+    Cqp11L(0xb, 0, 5, 1, 1, 0), Cqp11L(0xb, 1, 5, 1, 1, 0), Cqp11L(0xb, 2, -1, -1, -1, 0),
+    Cqp11D(0xc, 0x16, 3, 0, 6, 1, 0), Cqp11L(0xc, 0, 5, 1, 1, 0), Cqp11L(0xc, 1, 5, 1, 1, 0),
+    Cqp11L(0xc, 2, -1, -1, -1, 0), Cqp11D(0xd, 0x1d, 3, 0, 6, 1, 0), Cqp11L(0xd, 0, 5, 1, 1, 0),
+    Cqp11L(0xd, 1, 5, 1, 1, 0), Cqp11L(0xd, 2, -1, -1, -1, 0), Cqp11D(0xe, 6, 4, 0, 6, 1, 0),
+    Cqp11L(0xe, 0, 5, 1, 1, 0), Cqp11L(0xe, 1, 5, 1, 1, 0), Cqp11L(0xe, 2, -1, -1, -1, 0),
+    Cqp11D(0xf, 0xd, 4, 0, 6, 1, 0), Cqp11L(0xf, 0, 5, 1, 1, 0), Cqp11L(0xf, 1, 5, 1, 1, 0),
+    Cqp11L(0xf, 2, -1, -1, -1, 0), Cqp11D(0x10, 0x10, 4, 0, 2, 2, 0), Cqp11L(0x10, 0, -1, -1, -1, 0),
+    Cqp11D(0x11, 0x14, 4, 0, 6, 1, 0), Cqp11L(0x11, 0, -1, -1, -1, 0),
+];
+
+/// The Bahia state league, stage 0: 2 rounds (from 21 April to 10 May), 208 bytes, 36 operations.
+pub(crate) const BAHIA_STAGE_0_OPS: [AsiaClubChampScheduleOp; 36] = [
+    Cqp11S(0, 0x15, 4, 0, 6), Cqp11J(0, 0x1b, 4, 0, 6, 1, 0), Cqp11W(0x7, 0x82), Cqp11W(0x9, 0), Cqp11W(0xb, 0),
+    Cqp11W(0xd, 0x200), Cqp11B(0x17, 8), Cqp11W(0x18, 4), Cqp11W(0x1a, 2), Cqp11W(0x1c, 4), Cqp11W(0xf, 0x804),
+    Cqp11W(0x1e, 0), Cqp11B(0x20, 0), Cqp11B(0x21, 2), Cqp11B(0x22, 7), Cqp11X(0x5c, 0), Cqp11X(0x60, 0),
+    Cqp11X(0x64, 0), Cqp11S(1, 4, 5, 0, 0), Cqp11J(1, 0xa, 5, 0, 6, 1, 0), Cqp11W(0x71, 1), Cqp11W(0x82, 1),
+    Cqp11W(0x6f, 0x96), Cqp11W(0x73, 0), Cqp11W(0x75, 0), Cqp11B(0x7f, 8), Cqp11W(0x80, 2), Cqp11W(0x84, 0),
+    Cqp11W(0x77, 0x804), Cqp11W(0x86, 0), Cqp11B(0x88, 0), Cqp11B(0x89, 2), Cqp11B(0x8a, 7), Cqp11X(0xc4, 0),
+    Cqp11X(0xc8, 0x249f0), Cqp11X(0xcc, 0x186a0),
+];

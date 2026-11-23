@@ -83,3 +83,152 @@ pub(crate) unsafe extern "thiscall" fn eur_super_cup_create_round_table(this: us
     eng_cc_cup_create_single_stage_round_table(Cup(this), stage, rounds, extra, out, &EUROPEAN_SUPER_CUP_ROUNDS, 0x9c45f8, 0x98, "cqp_10 tabela da supercopa europeia")
 }
 
+/// The season turnover of the European Super Cup: last season's tables freed, the season archived, the year moved on by
+/// one, the two clubs picked, the round table and the tie tree rebuilt, the first round set up and the predicted
+/// positions.
+///
+/// `european_cup_free_season` without the entrant book and the stages. Then, each with its own box (eur_super_cup.cpp,
+/// lines 0x118, 0x11f and 0x126) when it returns a negative value: the two clubs (`exe::eursupercup_select_teams`
+/// EurSuperCup::select_teams, thiscall, ret 0), the round table (virtual `comp_vtable::SET_UP_RULES`) and the tie tree
+/// (virtual `cup_vtable::MAP_FIXTURE_TREE`). Then the first round (`exe::cup_set_up_round` Cup::set_up_round(0), push
+/// 0; mov ecx -> thiscall, ret 4) and the predicted positions (virtual `comp_vtable::SET_PREDICTED_POSITIONS`), whose eax
+/// it returns. After a box the copy returns 0 (the original returns the box's eax; the turnover's caller does not read
+/// it).
+/// Original: `EurSuperCup::start_new_season` (0x57a6d0, eur_super_cup.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn eur_super_cup_start_new_season(this: usize) -> u32 {
+    use european_turnover_consts as et;
+    let this = Cup(this);
+    european_cup_free_season(this, false, false);
+    covered!("mwg_9 european super cup rollover");
+    if exe::eursupercup_select_teams(this) < 0 {
+        show_error_at(et::EUR_SUPER_CUP_CPP, 0x118);
+        return 0;
+    }
+    if call_cup_virtual(this, comp_vtable::SET_UP_RULES) < 0 {
+        show_error_at(et::EUR_SUPER_CUP_CPP, 0x11f);
+        return 0;
+    }
+    if call_cup_virtual(this, cup_vtable::MAP_FIXTURE_TREE) < 0 {
+        show_error_at(et::EUR_SUPER_CUP_CPP, 0x126);
+        return 0;
+    }
+    exe::cup_set_up_round(this, 0);
+    call_cup_virtual(this, comp_vtable::SET_PREDICTED_POSITIONS) as u32
+}
+
+/// Comparer for `eur_super_cup_start_new_season`: only the original runs (it frees and rebuilds the cup); the year must
+/// go up by one.
+pub(crate) unsafe extern "thiscall" fn compare_eur_super_cup_start_new_season(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_EUR_SUPER_CUP_START_NEW_SEASON);
+    compare_cup_new_season("eur_super_cup_start_new_season", Cup(this), || o(this))
+}
+
+/// The European Super Cup constructor `EurSuperCup::EurSuperCup(year, record)`, run once at career creation. On the
+/// Cup::Cup base (`exe::new_cup`): the year (`cup::YEAR`), the competition record at +4, the vtable (0x969f80),
+/// `current_round()` = 0, `stage_index()` = 0xff, `stage_count()` = 0, `current_stage()` = −1, `club_sides()` = 2
+/// (clubs of several nations), +0x52 = 3, 7 substitutes named, 3 substitutions allowed, discipline rule 1 and
+/// `run_by_stages()` = 0; no prize fund (`cup::PRIZE_FUND` stays as the base left it). If the saved state loads
+/// (Cup::load_from_disk 0x51fc00, thiscall(this, 1), ret 4; returns ≠ 0), it returns this. On a new cup, in order: the
+/// two clubs (EurSuperCup::select_teams 0x57a500, thiscall, ret 0; the error box of line 0x3f if it returns a negative
+/// value); the rounds (`comp_vtable::CREATE_SCHEDULE`, into `round_table()`); the tie tree (Cup::map_fixture_tree
+/// 0x518790, thiscall, ret 0; the error box of line 0x4d if it returns a negative value); the statistics at +8 (the
+/// error box of line 0x54 without them); the final ranking (Cup::rank_teams 0x5223a0, thiscall, ret 0, unchecked).
+/// Every failure returns this.
+/// Original: `EurSuperCup::EurSuperCup` (0x57a100, eur_super_cup.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn construct_eur_super_cup(this: usize, year: u32, record: usize) -> usize {
+    construct_eur_super_cup_body(this, year, record) // cqu9: the European Super Cup
+}
+
+/// Runs only the original (it allocates, draws and reads the save file), checking the plan (`uefa_cup_ctor_plan_error`).
+pub(crate) unsafe extern "thiscall" fn compare_construct_eur_super_cup(this: usize, year: u32, record: usize) -> usize {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_EUR_SUPER_CUP)(this, year, record);
+    let error = uefa_cup_ctor_plan_error(this, r, year, record, EUR_SUPER_CUP_VTABLE, &EUR_SUPER_CUP_CTOR_FIELDS, true);
+    SCOREBOARD.record(error.is_none(), || format!("construct_eur_super_cup({:#x}, {}, {:#x}): {}", this, year as u16, record, error.clone().unwrap_or_default()));
+    r
+}
+
+/// The plan the comparer checks after the original: the return value (this), the vtable, the competition record (+4)
+/// and the year (`cup::YEAR`); on a new cup (`stage_index()` = 0xff), each fixed field the constructor writes
+/// (offset, width in bytes, value) and the round table and statistics it created. Returns the first difference.
+pub(crate) unsafe fn uefa_cup_ctor_plan_error(this: usize, r: usize, year: u32, record: usize, vtable: usize, fields: &[(usize, u8, u32)], rounds: bool) -> Option<String> {
+    if r != this || read_usize(this) != vtable || read_usize(this + 4) != record || read_u16(this + cup::YEAR) != year as u16 {
+        return Some(format!("returned {:#x}, vtable {:#x}, +4 {:#x}, year {}", r, read_usize(this), read_usize(this + 4), read_u16(this + cup::YEAR)));
+    }
+    if read_u8(this + cup::STAGE_INDEX) != 0xff || league_will_load_saved_state(record) {
+        return None;
+    }
+    for &(o, t, v) in fields {
+        let x = match t {
+            1 => read_u8(this + o) as u32,
+            2 => read_u16(this + o) as u32,
+            _ => read_u32(this + o),
+        };
+        if x != v {
+            return Some(format!("+{:#x} = {:#x}, the constructor writes {:#x}", o, x, v));
+        }
+    }
+    if (rounds && read_usize(this + cup::ROUND_TABLE) == 0) || read_usize(this + 8) == 0 {
+        return Some(format!("rounds {:#x}, statistics {:#x}", read_usize(this + cup::ROUND_TABLE), read_usize(this + 8)));
+    }
+    None
+}
+
+/// The body of the European Super Cup constructor (see `construct_eur_super_cup`).
+pub(crate) unsafe fn construct_eur_super_cup_body(this: usize, year: u32, record: usize) -> usize {
+    let cup = Cup(this);
+    exe::new_cup(this);
+    cup.set_year(year as i16);
+    write_usize(this + 4, record);
+    write_usize(this, EUR_SUPER_CUP_VTABLE);
+    cup.set_current_round(0);
+    cup.set_stage_index(0xff);
+    cup.set_stage_count(0);
+    cup.set_current_stage(0xffff_ffff);
+    cup.set_club_sides(2);
+    write_u8(this + 0x52, 3);
+    cup.set_substitutes_named(7);
+    cup.set_substitutions_allowed(3);
+    cup.set_discipline_index(1);
+    cup.set_run_by_stages(0);
+    if exe::cup_load_from_disk(this, 1) != 0 {
+        return this;
+    }
+    covered!("cqu_9 european super cup new");
+    if exe::eursupercup_select_teams(this) < 0 {
+        show_error_at(0x9c45f8, 0x3f);
+        return this;
+    }
+    uefa_cup_ctor_create_rounds(this);
+    if exe::cup_map_fixture_tree(this) < 0 {
+        show_error_at(0x9c45f8, 0x4d);
+        return this;
+    }
+    if !uefa_cup_ctor_create_stats(this) {
+        show_error_at(0x9c45f8, 0x54);
+        return this;
+    }
+    exe::cup_rank_teams(this);
+    this
+}
+
+/// The cup's rounds through its `comp_vtable::CREATE_SCHEDULE` method (push 0; push &`cup::STAGE_LABEL`; push
+/// &`cup::ROUND_COUNT`; push −1; mov ecx, this -> thiscall, ret 0x10): the round table, stored in `round_table()`.
+pub(crate) unsafe fn uefa_cup_ctor_create_rounds(this: usize) {
+    let f: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + comp_vtable::CREATE_SCHEDULE));
+    let t = f(this, 0xffff_ffff, this + cup::ROUND_COUNT, this + cup::STAGE_LABEL, 0);
+    Cup(this).set_round_table(t);
+}
+
+/// The statistics (`exe::crt_operator_new`(0x5ce), cdecl; `exe::new_comp_stats`(new, this), thiscall, ret 4) at +8; the
+/// original's SEH frame covers only that new. Returns whether they were created.
+pub(crate) unsafe fn uefa_cup_ctor_create_stats(this: usize) -> bool {
+    let n = exe::crt_operator_new(0x5ce);
+    let s = if n != 0 { exe::new_comp_stats(n, this) } else { 0 };
+    write_usize(this + 8, s);
+    s != 0
+}
+
+pub(crate) const EUR_SUPER_CUP_VTABLE: usize = 0x969f80;
+
+/// The fixed fields the European Super Cup constructor writes on a new cup (offset, width, value).
+pub(crate) const EUR_SUPER_CUP_CTOR_FIELDS: [(usize, u8, u32); 10] = [(cup::STAGE_COUNT, 4, 0x0), (cup::CURRENT_STAGE, 4, 0xffffffff), (cup::CLUB_SIDES, 1, 0x2), (cup::STAGE_INDEX, 1, 0xff), (cup::SUBSTITUTES_NAMED, 1, 0x7), (cup::SUBSTITUTIONS_ALLOWED, 1, 0x3), (cup::DISCIPLINE_INDEX, 1, 0x1), (0x52, 1, 0x3), (cup::CURRENT_ROUND, 1, 0x0), (cup::RUN_BY_STAGES, 1, 0x0)];

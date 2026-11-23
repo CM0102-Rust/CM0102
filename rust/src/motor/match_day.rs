@@ -1770,3 +1770,12 @@ pub(crate) unsafe extern "C" fn competition_number(code: u32, second: u32) -> u3
     }
 }
 
+pub(crate) unsafe extern "C" fn compare_won_the_match(jogo: usize, clube: u32) -> u8 {
+    if is_recording_post_match() {
+        return call_recording(0x6b7cf0, 0, [jogo as u32, clube, 0, 0, 0], || original_fn::<unsafe extern "C" fn(usize, u32) -> u8>(IDX_WON_THE_MATCH)(jogo, clube) as u32) as u8;
+    }
+    let r = original_fn::<unsafe extern "C" fn(usize, u32) -> u8>(IDX_WON_THE_MATCH)(jogo, clube);
+    let n = won_the_match(jogo, clube);
+    SCOREBOARD.record(r == n, || format!("won_the_match original={} rust={}", r, n));
+    r
+}

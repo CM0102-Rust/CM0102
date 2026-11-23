@@ -349,3 +349,194 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_staff_records_for_st
 // simplification: the base writes the records (history, reputation, morale) and may give the UEFA place to the champion: does not run
 // times. Only the original runs; the plan checks the club’s +0x1db (−1 on outcomes 1, 2 and 0xff, untouched on the others).
 
+/// The season turnover of the Intertoto Cup: last season's tables freed, the season archived, the year moved on by one,
+/// the winners not yet sent to the UEFA Cup, the UEFA seeding's new season, the entrants collected, the round table and
+/// the tie tree rebuilt, the predicted positions and the first round set up.
+///
+/// The first half of the cup turnover (`cup_turnover_free_season`: the team, round and tie tables freed and zeroed, the
+/// season archived, the year up by one, `cup::CURRENT_ROUND` and `cup::RUN_BY_STAGES` = 0), then
+/// `intertoto_cup::WINNERS_SENT_TO_UEFA` = 0 (the original writes it between the two bytes) and, with the UEFA seeding
+/// object ([`G_UEFA_SEEDING`]), UefaSeeding::update_season(0) (`exe::uefaseeding_update_season`, thiscall, ret 4). Then, each
+/// with its own box (intertoto_cup.cpp, lines 0x1e9, 0x1f0 and 0x1f7) when it returns a negative value: the entrants
+/// (`exe::intertotocup_collect_entrants` IntertotoCup::collect_entrants, thiscall, ret 0), the round table (virtual
+/// `comp_vtable::SET_UP_RULES`) and the tie tree (virtual `cup_vtable::MAP_FIXTURE_TREE`). Then the predicted positions
+/// (virtual `comp_vtable::SET_PREDICTED_POSITIONS`) and the first round (`exe::cup_set_up_round` Cup::set_up_round(0),
+/// push 0; mov ecx -> thiscall, ret 4), whose eax it returns. After a box the copy returns 0 (the original returns the
+/// box's eax; the caller does not read it).
+/// Original: `IntertotoCup::start_new_season` (0x633920, intertoto_cup.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn intertoto_cup_start_new_season(this: usize) -> u32 {
+    let this = Cup(this);
+    cup_turnover_free_season(this);
+    write_u32(this.addr() + intertoto_cup::WINNERS_SENT_TO_UEFA, 0); // mwg10: the winners not yet sent on
+    let seeding = read_usize(G_UEFA_SEEDING);
+    if seeding != 0 {
+        exe::uefaseeding_update_season(seeding, 0);
+    }
+    covered!("mwg_10 intertoto rollover");
+    if exe::intertotocup_collect_entrants(this) < 0 {
+        show_error_at(INTERTOTO_CUP_CPP, 0x1e9);
+        return 0;
+    }
+    if call_cup_virtual(this, comp_vtable::SET_UP_RULES) < 0 {
+        show_error_at(INTERTOTO_CUP_CPP, 0x1f0);
+        return 0;
+    }
+    if call_cup_virtual(this, cup_vtable::MAP_FIXTURE_TREE) < 0 {
+        show_error_at(INTERTOTO_CUP_CPP, 0x1f7);
+        return 0;
+    }
+    call_cup_virtual(this, comp_vtable::SET_PREDICTED_POSITIONS);
+    exe::cup_set_up_round(this, 0) // mwg10: the first round set up
+}
+
+/// Comparer for `intertoto_cup_start_new_season`: only the original runs (it frees and rebuilds the cup); the year must
+/// go up by one.
+pub(crate) unsafe extern "thiscall" fn compare_intertoto_cup_start_new_season(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_INTERTOTO_CUP_START_NEW_SEASON);
+    compare_cup_new_season("intertoto_cup_start_new_season", Cup(this), || o(this))
+}
+
+/// Rule: each Intertoto match gives UEFA coefficient points to the clubs' nations: 2 to the winner's nation, 1 to each
+/// on a draw (by the score after extra time when there was extra time); then the match goes on as in any cup.
+///
+/// `IntertotoCup::process_fixture(fixture, a2)` (virtual). The score: `home_goals_extra_time()` and
+/// `away_goals_extra_time()` when the first is not 0xff, otherwise `home_goals()` and `away_goals()` (signed bytes).
+/// Home ahead: 2 points to the home club's nation (UefaSeeding::add_nation_points `add_uefa_coefficient`([club +
+/// `club::NATION`], 2): push 2; push nation; mov ecx, [`G_UEFA_SEEDING`] -> thiscall, ret 8); away ahead: 2 to the away
+/// club's; a draw: 1 to the home club's, then 1 to the away club's. Then the cup base (`exe::cup_process_fixture`(this,
+/// fixture, a2): push a2; push fixture; mov ecx, this -> thiscall, ret 8).
+/// Original: `IntertotoCup::process_fixture` (0x633290, intertoto_cup.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn intertoto_cup_process_fixture(this: usize, game: usize, arg: u32) {
+    let g = Fixture(game);
+    let (ga, gb) = if (g.home_goals_extra_time() as u8) != 0xff {
+        ((g.home_goals_extra_time() as u8) as i8, (g.away_goals_extra_time() as u8) as i8)
+    } else {
+        ((g.home_goals() as u8) as i8, (g.away_goals() as u8) as i8)
+    };
+    covered!("cqx_11 intertoto coefficient");
+    if ga > gb {
+        add_uefa_coefficient(g.home_club().nation().addr(), 2); // cqx11: the win's 2 points
+    } else if ga < gb {
+        add_uefa_coefficient(g.away_club().nation().addr(), 2);
+    } else {
+        add_uefa_coefficient(g.home_club().nation().addr(), 1);
+        add_uefa_coefficient(g.away_club().nation().addr(), 1);
+    }
+    if INTERTOTO_FIXTURE_DRY_RUN.load(Relaxed) {
+        return;
+    }
+    exe::cup_process_fixture(this, game, arg); // cqx11: the cup base plays the match out
+}
+
+/// Comparer for `intertoto_cup_process_fixture` (the `compare_process_fixture` mould of the Champions League): the copy
+/// first in a dry run (only the coefficient points, without counting draws), the two nations' coefficient words
+/// (`nation_coefficient_word`) read and put back; then the original; the words after the original must equal the
+/// copy's. When the stage advanced in the base (its draws add the qualified clubs' coefficient): no comparison. Without
+/// a club or a nation: only the original.
+pub(crate) unsafe extern "thiscall" fn compare_intertoto_cup_process_fixture(this: usize, game: usize, arg: u32) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_INTERTOTO_CUP_PROCESS_FIXTURE);
+    let g = Fixture(game);
+    let (a, b) = if !g.is_null() { (g.home_club(), g.away_club()) } else { (Club(0), Club(0)) };
+    if a.is_null() || b.is_null() {
+        return o(this, game, arg);
+    }
+    let (ca, cb) = (nation_coefficient_word(a), nation_coefficient_word(b));
+    if ca == 0 || cb == 0 {
+        return o(this, game, arg);
+    }
+    let check = [(ca, 2), (cb, 2)];
+    let before = crate::comparison::MemorySnapshot::read(&check);
+    let stage = Cup(this).current_stage() as i32;
+    INTERTOTO_FIXTURE_DRY_RUN.store(true, Relaxed);
+    crate::rng::pause_trace(|| crate::rng::without_counting(|| intertoto_cup_process_fixture(this, game, arg)));
+    INTERTOTO_FIXTURE_DRY_RUN.store(false, Relaxed);
+    let copy = crate::comparison::MemorySnapshot::read(&check);
+    before.write_back();
+    o(this, game, arg);
+    if Cup(this).current_stage() as i32 != stage {
+        return; // simplification: the stage advanced and its draw added coefficient: no comparison
+    }
+    let original = crate::comparison::MemorySnapshot::read(&check);
+    SCOREBOARD.record(original == copy, || format!("intertoto_cup_process_fixture(game {:x}) original={:x?} copy={:x?}", game, original, copy));
+}
+
+/// The Intertoto Cup constructor `IntertotoCup::IntertotoCup(year, record)`, run once at career creation. On the
+/// Cup::Cup base (`exe::new_cup`): the year (`cup::YEAR`), the competition record at +4, the vtable (0x96bb8c),
+/// `current_round()` = 0, `stage_index()` = 0xff, `current_stage()` = −1, `stage_count()` = 0, `club_sides()` = 2
+/// (clubs of several nations), +0x52 = 3, 7 substitutes named, 3 substitutions allowed,
+/// `intertoto_cup::WINNERS_SENT_TO_UEFA` = 0, discipline rule 1 and `run_by_stages()` = 0; no prize fund
+/// (`cup::PRIZE_FUND` stays as the base left it). If the saved state loads (Cup::load_from_disk 0x51fc00,
+/// thiscall(this, 1), ret 4; returns ≠ 0), it returns this. On a new cup, in order: the yearly European seeding
+/// (UefaSeeding::update_season 0x9035a0 on [`G_UEFA_SEEDING`], if any; thiscall, ret 4); the rounds
+/// (`comp_vtable::CREATE_SCHEDULE`, into `round_table()`); the 60 entrants (IntertotoCup::collect_entrants 0x6336c0,
+/// thiscall, ret 0; the error box of line 0x60 if it returns 0); the tie tree (Cup::map_fixture_tree 0x518790,
+/// thiscall, ret 0; the error box of line 0x67 if it returns 0); the statistics at +8 (the error box of line 0x6e
+/// without them); the final ranking (Cup::rank_teams 0x5223a0, thiscall, ret 0, unchecked). Every failure returns this.
+/// Original: `IntertotoCup::IntertotoCup` (0x632fb0, intertoto_cup.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn construct_intertoto_cup(this: usize, year: u32, record: usize) -> usize {
+    construct_intertoto_cup_body(this, year, record) // cqu9: the Intertoto Cup
+}
+
+/// Runs only the original (it allocates, draws and reads the save file), checking the plan (`uefa_cup_ctor_plan_error`).
+pub(crate) unsafe extern "thiscall" fn compare_construct_intertoto_cup(this: usize, year: u32, record: usize) -> usize {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_INTERTOTO_CUP)(this, year, record);
+    let error = uefa_cup_ctor_plan_error(this, r, year, record, INTERTOTO_CUP_VTABLE, &INTERTOTO_CUP_CTOR_FIELDS, true);
+    SCOREBOARD.record(error.is_none(), || format!("construct_intertoto_cup({:#x}, {}, {:#x}): {}", this, year as u16, record, error.clone().unwrap_or_default()));
+    r
+}
+
+/// The body of the Intertoto Cup constructor (see `construct_intertoto_cup`).
+pub(crate) unsafe fn construct_intertoto_cup_body(this: usize, year: u32, record: usize) -> usize {
+    let cup = Cup(this);
+    exe::new_cup(this);
+    cup.set_year(year as i16);
+    write_usize(this + 4, record);
+    write_usize(this, INTERTOTO_CUP_VTABLE);
+    cup.set_current_round(0);
+    cup.set_stage_index(0xff);
+    cup.set_current_stage(0xffff_ffff);
+    cup.set_stage_count(0);
+    cup.set_club_sides(2);
+    write_u8(this + 0x52, 3);
+    cup.set_substitutes_named(7);
+    cup.set_substitutions_allowed(3);
+    write_u32(this + intertoto_cup::WINNERS_SENT_TO_UEFA, 0);
+    cup.set_discipline_index(1);
+    cup.set_run_by_stages(0);
+    if exe::cup_load_from_disk(this, 1) != 0 {
+        return this;
+    }
+    covered!("cqu_9 intertoto cup new");
+    // the yearly European seeding (UefaSeeding::update_season 0x9035a0: push 0; mov ecx, [G_UEFA_SEEDING] -> thiscall, ret 4)
+    let seeding = read_usize(G_UEFA_SEEDING);
+    if seeding != 0 {
+        exe::uefaseeding_update_season(seeding, 0);
+    }
+    uefa_cup_ctor_create_rounds(this);
+    if exe::intertotocup_collect_entrants(this) == 0 {
+        show_error_at(0x9e9e14, 0x60);
+        return this;
+    }
+    if exe::cup_map_fixture_tree(this) == 0 {
+        show_error_at(0x9e9e14, 0x67);
+        return this;
+    }
+    if !uefa_cup_ctor_create_stats(this) {
+        show_error_at(0x9e9e14, 0x6e);
+        return this;
+    }
+    exe::cup_rank_teams(this);
+    this
+}
+
+/// "E:\dev\CM3\cm3 00-01\cm3\code\comp\eurocomp\intertoto_cup.cpp" (the error boxes).
+pub(crate) const INTERTOTO_CUP_CPP: usize = 0x9e9e14;
+
+/// The comparer's dry run of `intertoto_cup_process_fixture`: the copy gives the coefficient points without the cup
+/// base (Cup::process_fixture, which plays out the whole match and cannot run twice).
+pub(crate) static INTERTOTO_FIXTURE_DRY_RUN: AtomicBool = AtomicBool::new(false);
+
+pub(crate) const INTERTOTO_CUP_VTABLE: usize = 0x96bb8c;
+
+/// The fixed fields the Intertoto Cup constructor writes on a new cup (offset, width, value).
+pub(crate) const INTERTOTO_CUP_CTOR_FIELDS: [(usize, u8, u32); 11] = [(cup::STAGE_COUNT, 4, 0x0), (cup::CURRENT_STAGE, 4, 0xffffffff), (cup::CLUB_SIDES, 1, 0x2), (cup::STAGE_INDEX, 1, 0xff), (cup::SUBSTITUTES_NAMED, 1, 0x7), (cup::SUBSTITUTIONS_ALLOWED, 1, 0x3), (cup::DISCIPLINE_INDEX, 1, 0x1), (0x52, 1, 0x3), (cup::CURRENT_ROUND, 1, 0x0), (cup::RUN_BY_STAGES, 1, 0x0), (intertoto_cup::WINNERS_SENT_TO_UEFA, 4, 0x0)];

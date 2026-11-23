@@ -116,3 +116,80 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_set_up_rules(this: usize) 
     1
 }
 
+/// The predicted positions of the Rio Grande do Sul state league (at creation and at the season turnover): the clubs sorted by strength; the
+/// first ones get the knockout places, 1, 2, 3, 3, and the others their place in the order (`state_league_predicted_positions`
+/// with `GAUCHO_PREDICTED`); it is the board and press expectation for each club [inference]. The error boxes at
+/// lines 0x303 (no statistics) and 0x30b (no memory).
+/// Original: `BraRegGaucho::set_predicted_positions` (0x432980, bra_reg_gaucho.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_set_predicted_positions(this: usize) {
+    state_league_predicted_positions(this, &GAUCHO_PREDICTED)
+}
+
+/// Comparer for `bra_reg_gaucho_set_predicted_positions` (`compare_state_league_predicted`, side by side).
+pub(crate) unsafe extern "thiscall" fn compare_bra_reg_gaucho_set_predicted_positions(this: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_GAUCHO_SET_PREDICTED_POSITIONS);
+    compare_state_league_predicted("bra_reg_gaucho_set_predicted_positions", this, &GAUCHO_PREDICTED, || o(this));
+}
+
+/// The Rio Grande do Sul (Gaúcho) state league schedule (the virtual `comp_vtable::CREATE_SCHEDULE`): the stage from
+/// `bra_reg_gaucho_schedule_stage`, run by the schedule machine of cqp_11 (`create_round_table`: the outputs, the table of
+/// 0x41 bytes per round and, for each round, its date (day, month, years after the season's, weekday and code) and its
+/// fixtures; the rest of the table is left as allocated); a stage without a table returns 0 and writes nothing.
+/// Original: `BraRegGaucho::create_schedule` (0x431ac0, bra_reg_gaucho.cpp, thiscall, ret 0x10).
+pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    create_round_table(Cup(this), bra_reg_gaucho_schedule_stage(stage), rounds, extra, league, 0x98ae50)
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_bra_reg_gaucho_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_BRA_REG_GAUCHO_CREATE_SCHEDULE);
+    asia_club_champ_compare_round_table("bra_reg_gaucho_create_schedule", stage, bra_reg_gaucho_schedule_stage(stage), rounds, extra, league, || o(this, stage, rounds, extra, league),
+        |r, e, l| bra_reg_gaucho_create_schedule(this, stage, r, e, l))
+}
+
+/// The stages of the Rio Grande do Sul (Gaúcho) round table: the round-robin stage (-1) (a league): 17 rounds, from 11 January to 20 April; stage 0
+/// (knockout or final stage): 2 rounds, from 21 April to 10 May.
+pub(crate) fn bra_reg_gaucho_schedule_stage(stage: u32) -> Option<ScheduleStage> {
+    match stage as u8 as i8 {
+        -1 => Some(ScheduleStage { league: 1, rounds: 17, extra: 0, extra_check: false, size: 0x451, row: 0xa8,
+            ops: &GAUCHO_LEAGUE_STAGE_OPS, name: "cqw_1 gaucho league" }),
+        0 => Some(ScheduleStage { league: 0, rounds: 2, extra: 0, extra_check: false, size: 0xd0, row: 0x122,
+            ops: &GAUCHO_STAGE_0_OPS, name: "cqw_1 gaucho stage 0" }),
+        _ => None,
+    }
+}
+
+/// The Rio Grande do Sul state league: the fixed places 1, 2, 3, 3 (the semi-finals).
+pub(crate) const GAUCHO_PREDICTED: StateLeaguePredicted = StateLeaguePredicted { file: 0x98ae50, lines: [0x303, 0x30b], places: &[1, 2, 3, 3], label: "cqx_3 rio grande do sul predicted" }; // cqx3: the rio grande do sul places
+
+/// The Rio Grande do Sul (Gaúcho) state league, the round-robin stage: 17 rounds (from 11 January to 20 April), 1105 bytes, 62 operations.
+pub(crate) const GAUCHO_LEAGUE_STAGE_OPS: [AsiaClubChampScheduleOp; 62] = [
+    Cqp11D(0, 0xb, 1, 0, 6, 1, 0), Cqp11L(0, 0, 5, 1, 1, 0), Cqp11L(0, 1, 5, 1, 1, 0), Cqp11L(0, 2, -1, -1, -1, 0),
+    Cqp11D(1, 0x12, 1, 0, 6, 2, 0), Cqp11L(1, 0, 5, 1, 1, 0), Cqp11L(1, 1, 5, 1, 1, 0), Cqp11L(1, 2, -1, -1, -1, 0),
+    Cqp11D(2, 0x15, 1, 0, 2, 2, 0), Cqp11L(2, 0, -1, -1, -1, 0), Cqp11D(3, 0x19, 1, 0, 6, 1, 0),
+    Cqp11L(3, 0, 5, 1, 1, 0), Cqp11L(3, 1, 5, 1, 1, 0), Cqp11L(3, 2, -1, -1, -1, 0), Cqp11D(4, 4, 2, 0, 6, 1, 0),
+    Cqp11L(4, 0, 5, 1, 1, 0), Cqp11L(4, 1, 5, 1, 1, 0), Cqp11L(4, 2, -1, -1, -1, 0), Cqp11D(5, 0xb, 2, 0, 6, 1, 0),
+    Cqp11L(5, 0, 5, 1, 1, 0), Cqp11L(5, 1, 5, 1, 1, 0), Cqp11L(5, 2, -1, -1, -1, 0), Cqp11D(6, 0x12, 2, 0, 6, 1, 0),
+    Cqp11L(6, 0, 5, 1, 1, 0), Cqp11L(6, 1, 5, 1, 1, 0), Cqp11L(6, 2, -1, -1, -1, 0), Cqp11D(7, 0x19, 2, 0, 6, 1, 0),
+    Cqp11L(7, 0, 5, 1, 1, 0), Cqp11L(7, 1, 5, 1, 1, 0), Cqp11L(7, 2, -1, -1, -1, 0), Cqp11D(8, 1, 3, 0, 6, 1, 0),
+    Cqp11L(8, 0, 5, 1, 1, 0), Cqp11L(8, 1, 5, 1, 1, 0), Cqp11L(8, 2, -1, -1, -1, 0), Cqp11D(9, 8, 3, 0, 6, 1, 0),
+    Cqp11L(9, 0, 5, 1, 1, 0), Cqp11L(9, 1, 5, 1, 1, 0), Cqp11L(9, 2, -1, -1, -1, 0), Cqp11D(0xa, 0xf, 3, 0, 6, 1, 0),
+    Cqp11L(0xa, 0, 5, 1, 1, 0), Cqp11L(0xa, 1, 5, 1, 1, 0), Cqp11L(0xa, 2, -1, -1, -1, 0),
+    Cqp11D(0xb, 0x16, 3, 0, 6, 1, 0), Cqp11L(0xb, 0, 5, 1, 1, 0), Cqp11L(0xb, 1, 5, 1, 1, 0),
+    Cqp11L(0xb, 2, -1, -1, -1, 0), Cqp11D(0xc, 0x19, 3, 0, 6, 1, 0), Cqp11L(0xc, 0, -1, -1, -1, 0),
+    Cqp11D(0xd, 0x1d, 3, 0, 6, 1, 0), Cqp11L(0xd, 0, 5, 1, 1, 0), Cqp11L(0xd, 1, 5, 1, 1, 0),
+    Cqp11L(0xd, 2, -1, -1, -1, 0), Cqp11D(0xe, 6, 4, 0, 6, 1, 0), Cqp11L(0xe, 0, 5, 1, 1, 0),
+    Cqp11L(0xe, 1, 5, 1, 1, 0), Cqp11L(0xe, 2, -1, -1, -1, 0), Cqp11D(0xf, 0xd, 4, 0, 6, 1, 0),
+    Cqp11L(0xf, 0, 5, 1, 1, 0), Cqp11L(0xf, 1, 5, 1, 1, 0), Cqp11L(0xf, 2, -1, -1, -1, 0),
+    Cqp11D(0x10, 0x14, 4, 0, 6, 1, 0), Cqp11L(0x10, 0, -1, -1, -1, 0),
+];
+
+/// The Rio Grande do Sul (Gaúcho) state league, stage 0: 2 rounds (from 21 April to 10 May), 208 bytes, 36 operations.
+pub(crate) const GAUCHO_STAGE_0_OPS: [AsiaClubChampScheduleOp; 36] = [
+    Cqp11S(0, 0x15, 4, 0, 6), Cqp11J(0, 0x1b, 4, 0, 6, 1, 0), Cqp11W(0x7, 0x82), Cqp11W(0x9, 0), Cqp11W(0xb, 0),
+    Cqp11W(0xd, 0x200), Cqp11B(0x17, 8), Cqp11W(0x18, 4), Cqp11W(0x1a, 2), Cqp11W(0x1c, 4), Cqp11W(0xf, 0x804),
+    Cqp11W(0x1e, 0), Cqp11B(0x20, 0), Cqp11B(0x21, 2), Cqp11B(0x22, 7), Cqp11X(0x5c, 0), Cqp11X(0x60, 0),
+    Cqp11X(0x64, 0), Cqp11S(1, 4, 5, 0, 0), Cqp11J(1, 0xa, 5, 0, 6, 1, 0), Cqp11W(0x71, 1), Cqp11W(0x82, 1),
+    Cqp11W(0x6f, 0x96), Cqp11W(0x73, 0), Cqp11W(0x75, 0), Cqp11B(0x7f, 8), Cqp11W(0x80, 2), Cqp11W(0x84, 0),
+    Cqp11W(0x77, 0x804), Cqp11W(0x86, 0), Cqp11B(0x88, 0), Cqp11B(0x89, 2), Cqp11B(0x8a, 7), Cqp11X(0xc4, 0),
+    Cqp11X(0xc8, 0x3d090), Cqp11X(0xcc, 0x186a0),
+];

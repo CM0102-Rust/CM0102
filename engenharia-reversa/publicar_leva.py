@@ -70,6 +70,9 @@ def main():
         # the readability style for the code that came in (10/11/2026): typed records, read_T/write_T, English names
         # and messages, named constants; the batch's chain then tests it in that form
         rodar('bash', os.path.join('engenharia-reversa', 'padronizar.sh'))
+        # the routines and comparers integrar.py put in motor.rs go to their modules (23/11/2026: without this step
+        # motor.rs grew from 57k to 160k lines between 19/11 and 23/11; mover_rotinas.py only looks inside motor/)
+        rodar(sys.executable, os.path.join('engenharia-reversa', 'esvaziar_motor.py'), '--gravar')
         # each routine to the module of its source file (the header's Original: line); helpers stay (11/11/2026)
         rodar(sys.executable, os.path.join('engenharia-reversa', 'mover_rotinas.py'), '--gravar')
     # a tabela das assinaturas acompanha a PROLOGOS (a DLL não desvia rotina que não seja a do exe original/1080)

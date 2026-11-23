@@ -3145,6 +3145,11 @@ pub(crate) mod exe {
         f(a0.addr())
     }
     #[inline(always)]
+    pub(crate) unsafe fn formation_load_from_disk(a0: impl Addr, a1: impl Addr, a2: u32, a3: u32) -> u32 {
+        let f: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(FN_FORMATION_LOAD_FROM_DISK);
+        f(a0.addr(), a1.addr(), a2, a3)
+    }
+    #[inline(always)]
     pub(crate) unsafe fn formation_position_to_shape_bit(a0: i16) -> u32 {
         let f: unsafe extern "stdcall" fn(i16) -> u32 = core::mem::transmute(FN_FORMATION_POSITION_TO_SHAPE_BIT);
         f(a0)
@@ -3285,6 +3290,11 @@ pub(crate) mod exe {
         f(a0.addr(), a1.addr())
     }
     #[inline(always)]
+    pub(crate) unsafe fn friendly_create_ai_tournament(a0: impl Addr, a1: impl Addr, a2: u32, a3: u32) -> u32 {
+        let f: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(FN_FRIENDLY_CREATE_AI_TOURNAMENT);
+        f(a0.addr(), a1.addr(), a2, a3)
+    }
+    #[inline(always)]
     pub(crate) unsafe fn friendly_create_due_planned_friendlies(a0: impl Addr) {
         let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_FRIENDLY_CREATE_DUE_PLANNED_FRIENDLIES);
         f(a0.addr())
@@ -3308,6 +3318,11 @@ pub(crate) mod exe {
     pub(crate) unsafe fn friendly_find_scheduled_friendly_slot(a0: impl Addr, a1: u32, a2: u32, a3: impl Addr, a4: impl Addr) -> usize {
         let f: unsafe extern "thiscall" fn(usize, u32, u32, usize, usize) -> usize = core::mem::transmute(FN_FRIENDLY_FIND_SCHEDULED_FRIENDLY_SLOT);
         f(a0.addr(), a1, a2, a3.addr(), a4.addr())
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn friendly_find_tour_opponent(a0: impl Addr, a1: impl Addr, a2: impl Addr, a3: u32, a4: u32, a5: impl Addr) -> usize {
+        let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize) -> usize = core::mem::transmute(FN_FRIENDLY_FIND_TOUR_OPPONENT);
+        f(a0.addr(), a1.addr(), a2.addr(), a3, a4, a5.addr())
     }
     #[inline(always)]
     pub(crate) unsafe fn friendly_get_rest_days_for_kind(a0: impl Addr, a1: u32) -> i8 {
@@ -3360,6 +3375,11 @@ pub(crate) mod exe {
         f(a0.addr(), a1.addr(), a2)
     }
     #[inline(always)]
+    pub(crate) unsafe fn friendly_pick_tour_nation(a0: impl Addr, a1: impl Addr) -> usize {
+        let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_FRIENDLY_PICK_TOUR_NATION);
+        f(a0.addr(), a1.addr())
+    }
+    #[inline(always)]
     pub(crate) unsafe fn friendly_plan_ai_preseason_friendlies(a0: impl Addr) {
         let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_FRIENDLY_PLAN_AI_PRESEASON_FRIENDLIES);
         f(a0.addr())
@@ -3408,6 +3428,11 @@ pub(crate) mod exe {
     pub(crate) unsafe fn friendly_schedule_assign_opponent(a0: impl Addr, a1: impl Addr, a2: impl Addr) {
         let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_FRIENDLY_SCHEDULE_ASSIGN_OPPONENT);
         f(a0.addr(), a1.addr(), a2.addr())
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn friendly_schedule_tour_matches(a0: impl Addr, a1: impl Addr, a2: impl Addr, a3: u32) -> u32 {
+        let f: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_FRIENDLY_SCHEDULE_TOUR_MATCHES);
+        f(a0.addr(), a1.addr(), a2.addr(), a3)
     }
     #[inline(always)]
     pub(crate) unsafe fn friendly_send_friendly_request(a0: impl Addr, a1: impl Addr) {
@@ -8150,6 +8175,11 @@ pub(crate) mod exe {
         f(a0.addr(), a1.addr(), a2)
     }
     #[inline(always)]
+    pub(crate) unsafe fn tactics_read_from_save(a0: impl Addr, a1: impl Addr) -> u32 {
+        let f: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_TACTICS_READ_FROM_SAVE);
+        f(a0.addr(), a1.addr())
+    }
+    #[inline(always)]
     pub(crate) unsafe fn tactics_remove_player_from_selection(a0: impl Addr, a1: impl Addr, a2: impl Addr, a3: u32, a4: u32) -> u32 {
         let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(FN_TACTICS_REMOVE_PLAYER_FROM_SELECTION);
         f(a0.addr(), a1.addr(), a2.addr(), a3, a4)
@@ -9720,3 +9750,24 @@ pub(crate) mod exe {
         f(a0.addr(), a1, a2, a3.addr())
     }
 }
+
+/// `Plot::add_series` (0x7c7100, thiscall, ret 0xc): `n` points in a colour with a name.
+pub(crate) unsafe fn plot_add_series(plot: usize, n: i32, colour: u32, name: usize) {
+    exe::plot_add_series(plot, n, colour, name)
+}
+
+/// `Plot::add_point` (0x7c7240, thiscall, ret 0xc): point (x, y) of a series.
+pub(crate) unsafe fn plot_add_point(plot: usize, series: u32, x: i32, y: i32) {
+    exe::plot_add_point(plot, series, x, y)
+}
+
+/// Whether the club's stadium town is in Leinster (the exe's ire_club_is_in_leinster 0x6399c0, push club; add esp, 4 ->
+/// cdecl, a gap function of ire_pres_cup.cpp not yet ported: Dublin, Bray, Longford, Dundalk, Drogheda, Athlone or
+/// Kilkenny).
+pub(crate) unsafe fn ire_club_is_in_leinster(club: Club) -> bool {
+    exe::ire_club_is_in_leinster(club) != 0
+}
+
+/// `read_staff_name_ref_from_news(item, &slot, out)` (0x7e52c0, record_utils.cpp, cdecl): reads 0x18 bytes (four
+/// dwords and a date) from the item's slots from `slot` on, moving `slot`.
+pub(crate) const FN_READ_STAFF_NAME_REF_FROM_NEWS: usize = 0x7e52c0;

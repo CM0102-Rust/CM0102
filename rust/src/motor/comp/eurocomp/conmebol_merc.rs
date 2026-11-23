@@ -385,3 +385,242 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_advance_stage(this: usize) 
     con_merc_cup_advance_stage_cqs11_next_stage(League(this), 0x9a7e5c, 0x1d9, 4, 0x4c53d0, "cqs_11 quartas da mercosul");
 }
 
+/// Rule: the Mercosur records: in the groups (stages below 4) the qualified club gets the record of round 0x78 (weight
+/// 0x28); in the knockout (stage 4) elimination and qualification weigh by round (50 to 100 over the 2 rounds) and the
+/// winner and runner-up get the final records.
+///
+/// `ConmebolMerc::update_staff_records_for_status(club, outcome, stage, _, fixture, final)` (the virtual +0x44). Stage
+/// (signed byte) below 4: outcome 6, the qualification (`european_cup_add_qualified_record`: 0, 0x78, 0x28), returns 0;
+/// otherwise −1. Stage 4, weight = `scale_by_round`(0x32, 0x64, the fixture's `round_number()`, 2): 0xff, the
+/// elimination (`european_cup_add_knocked_out_record`: `round_prefix()`, `round_name()`, the weight); 0, the
+/// qualification with `round_prefix()` and the name word +0x6f of the fixture's round in the round table of stage 4
+/// ([`cup::STAGES`][4] + `cup::ROUND_TABLE`; the high 16 bits come from a small product of the round: zero); 1, the
+/// winner (0x86a800); 2, the runner-up (0x86b0b0); returns 0. Above 4: 0.
+/// Original: `ConmebolMerc::update_staff_records_for_status` (0x4c5960, conmebol_merc.cpp, thiscall, ret 0x18).
+pub(crate) unsafe extern "thiscall" fn conmebol_merc_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, _a4: u32, game: usize, final_: u32) -> u32 {
+    let g = Fixture(game);
+    let (d, f) = (outcome as u8, stage as u8 as i8);
+    let comp = read_usize(this + 4);
+    if f < 4 {
+        if d != 6 {
+            return u32::MAX;
+        }
+        covered!("cqx_12 mercosur group qualified");
+        european_cup_add_qualified_record(club, comp, 0, 0x78, 0x28);
+    } else if f == 4 {
+        match d {
+            0xff => {
+                let weight = scale_by_round(0x32, 0x64, g.round_number(), 2);
+                european_cup_add_knocked_out_record(club, comp, g.round_prefix() as u16 as u32, g.round_name() as u16 as u32, weight);
+            }
+            0 => {
+                let weight = scale_by_round(0x32, 0x64, g.round_number(), 2);
+                let knockout = read_usize(read_usize(this + cup::STAGES) + 0x10);
+                let name = read_u16(read_usize(knockout + cup::ROUND_TABLE).wrapping_add((g.round_number() as isize * cup_round::SIZE as isize) as usize) + 0x6f) as u32;
+                european_cup_add_qualified_record(club, comp, g.round_prefix() as u16 as u32, name, weight);
+            }
+            1 => cup_record_final_result(0x86a800, club, g, final_),
+            2 => cup_record_final_result(0x86b0b0, club, g, final_),
+            _ => {}
+        }
+    }
+    0
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_conmebol_merc_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, a4: u32, game: usize, final_: u32) -> u32 {
+    let (d, f) = (outcome as u8, stage as u8 as i8);
+    let plan = if f < 4 && d != 6 { u32::MAX } else { 0 };
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_CONMEBOL_MERC_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, club, outcome, stage, a4, game, final_);
+    SCOREBOARD.record(r == plan, || format!("conmebol_merc_update_staff_records_for_status({:#x}, {}, {}) returned {:#x}, plan {:#x}", club, d, f, r, plan));
+    r
+}
+
+/// The Mercosur Cup quarter-finals, at the end of the five groups (SEH frame only for the stage `new`s, no destructor
+/// on the normal path). A league stage of the runners-up (`exe::crt_operator_new`(0xee) and the League_Stage
+/// constructor `FN_LEAGUE_STAGE_LEAGUE_STAGE`, thiscall, ret 0x58, 22 arguments: the cup, 5, no teams, 0, the
+/// competition record (`league::COMPETITION`), no table, 0, `league::WIN_POINTS`, `league::DRAW_POINTS`, 0,
+/// &`league::TIEBREAKS`, &`league::PROMOTED_COUNT`, the year, -2, 0, 0, 1, 0, 2, -1, 0, 2; words and bytes clean), with
+/// row 1 (the runner-up) of each group copied (`league_table_row::SIZE` bytes) into its row and the dword
+/// `league_table_row::POSITION_HISTORY` zeroed (the points stay [inference]), and the table sorted
+/// (`exe::league_sort_table`(stage, 0)). An array of 8 clubs (`exe::crt_malloc`(0x20); out of memory, the box for line
+/// 0x248 and it returns without destroying the runners-up stage): the first `league::PROMOTED_COUNT` of group A
+/// (`league::TABLE`) and of each of the groups B..E (stages 0..3, `exe::league_get_table_row`), and the first three of
+/// the runners-up table. Each of those three gets one more place in its group (`league::PROMOTED_COUNT` of the group +
+/// 1), its row marked (`league_table_row::STATUS` = 6) and the status (the virtual `comp_vtable::ANNOUNCE_TEAM_STATUS`(club,
+/// 6, group, 0, 0): 5 pushes; mov ecx -> thiscall). Runners-up 4 and 5 stay out (the virtual
+/// `comp_vtable::SET_CLUB_PROGRESS`(club, -1, 3, 3, 3)). Whoever played the groups and is not among the 8 gets the
+/// failed-to-qualify record (`exe::staff_records_add_failed_to_qualify_record`(`G_STAFF_RECORDS`, club, competition
+/// record, 0x41c, 0x28): 4 pushes; mov ecx -> thiscall, ret 0x10). The runners-up stage is destroyed (the virtual
+/// `comp_vtable::SCALAR_DELETING_DESTRUCTOR` with 1). The quarter-finals: the round table of stage 4 (the virtual
+/// `comp_vtable::CREATE_SCHEDULE`), the stage (`exe::crt_operator_new`(0xb2) and the Cup_Stage constructor
+/// `FN_CUP_STAGE_CUP_STAGE`, ret 0x3c: the cup, 8, the array, the rounds, the competition record, the table, the year,
+/// 4, 2, the extra, 0x14, 0, 0, 0, 0) in `league::STAGES`[4]; the array and the table freed; without a stage, the box
+/// for line 0x2ab; with it, the draw of the first round (`exe::cup_draw_round`(stage, 0): push 0; mov ecx -> thiscall,
+/// ret 4).
+/// Original: `ConmebolMerc::create_quarter_final_stage` (0x4c53d0, conmebol_merc.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_quarter_final_stage(this: usize) {
+    let this = League(this);
+    #[allow(clippy::type_complexity)]
+    let league_stage: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, i32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
+        core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
+    #[allow(clippy::type_complexity)]
+    let cup_stage: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, u32) -> usize =
+        core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
+    let b = |d: usize| read_u8(this.addr() + d) as u32;
+    let p = exe::crt_operator_new(0xee);
+    let runners_up = League(if p != 0 {
+        league_stage(p, this.addr(), 5, 0, 0, this.competition().addr(), 0, 0, b(league::WIN_POINTS), b(league::DRAW_POINTS), 0, this.addr() + league::TIEBREAKS, this.addr() + league::PROMOTED_COUNT, this.year() as u16 as u32, -2, 0, 0, 1, 0, 2, -1, 0, 2)
+    } else {
+        0
+    });
+    for g in 0..5usize {
+        let source = read_usize(conmebol_merc_group(this.addr(), g as i8 - 1) + league::TABLE) + league_table_row::SIZE; // cqv11: the row of the group runner-up
+        let target = runners_up.table() + g * league_table_row::SIZE;
+        core::ptr::copy(source as *const u8, target as *mut u8, league_table_row::SIZE);
+        write_u32(runners_up.table() + g * league_table_row::SIZE + league_table_row::POSITION_HISTORY, 0);
+    }
+    exe::league_sort_table(runners_up, 0);
+    let v = exe::crt_malloc(0x20);
+    if v == 0 {
+        return show_error_at(0x9a7e5c, 0x248);
+    }
+    let mut k = 0usize;
+    for i in 0..(this.promoted_count() as i8).max(0) as usize {
+        write_usize(v + k * 4, read_usize(this.table() + i * league_table_row::SIZE));
+        k += 1;
+    }
+    for g in 0..4usize {
+        let stage = read_usize(this.stages() + g * 4);
+        for i in 0..(this.promoted_count() as i8).max(0) as i32 {
+            write_usize(v + k * 4, read_usize(exe::league_get_table_row(stage, i)));
+            k += 1;
+        }
+    }
+    for s in 0..3i32 {
+        covered!("cqv_11 best runners-up");
+        write_usize(v + (k + s as usize) * 4, read_usize(exe::league_get_table_row(runners_up, s))); // cqv11: runner-up s into the quarter-finals
+        for g in -1i8..4 {
+            let group = conmebol_merc_group(this.addr(), g);
+            let club = read_usize(exe::league_get_table_row(runners_up, s));
+            if read_usize(exe::league_get_table_row(group, 1)) == club {
+                let places = group + league::PROMOTED_COUNT;
+                write_u8(places, read_u8(places).wrapping_add(1));
+                write_u8(exe::league_get_table_row(group, 1) + league_table_row::STATUS, 6);
+                let status: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::ANNOUNCE_TEAM_STATUS));
+                // simplification: the original pushes the dword whose low byte is the group (the high ones are those of the count of 8, < 256: 0)
+                status(this.addr(), read_usize(exe::league_get_table_row(runners_up, s)), 6, g as u8 as u32, 0, 0);
+                break;
+            }
+        }
+    }
+    for s in 3..5i32 {
+        let out: unsafe extern "thiscall" fn(usize, usize, i32, u32, u32, u32) = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::SET_CLUB_PROGRESS));
+        out(this.addr(), read_usize(exe::league_get_table_row(runners_up, s)), -1, 3, 3, 3);
+    }
+    for g in -1i8..4 {
+        let group = conmebol_merc_group(this.addr(), g);
+        for r in 0..read_i16(group + league::CLUB_COUNT).max(0) as usize {
+            let club = read_usize(read_usize(group + league::TABLE) + r * league_table_row::SIZE);
+            if !(0..8).any(|j| read_usize(v + j * 4) == club) {
+                exe::staff_records_add_failed_to_qualify_record(read_usize(G_STAFF_RECORDS), club, this.competition().addr(), 0x41c, 0x28);
+            }
+        }
+    }
+    if !runners_up.is_null() {
+        let destroy: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(runners_up.addr()) + comp_vtable::SCALAR_DELETING_DESTRUCTOR));
+        destroy(runners_up.addr(), 1);
+    }
+    let round_table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
+    let (mut rounds, mut extra) = (0i16, 0i16);
+    let table = round_table(this.addr(), 4, &mut rounds, &mut extra, 0);
+    let eight = v; // cqv11: the 8 quarter-finalists in order
+    let p = exe::crt_operator_new(0xb2);
+    let quarter_finals = if p != 0 {
+        cup_stage(p, this.addr(), 8, eight, rounds as u16 as u32, this.competition().addr(), table, this.year() as u16 as u32, 4, 2, extra as u16 as u32, 0x14, 0, 0, 0, 0)
+    } else {
+        0
+    };
+    write_usize(this.stages() + 0x10, quarter_finals);
+    exe::crt_free(v);
+    exe::crt_free(table);
+    let f = read_usize(this.stages() + 0x10);
+    if f == 0 {
+        return show_error_at(0x9a7e5c, 0x2ab);
+    }
+    exe::cup_draw_round(f, 0);
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_conmebol_merc_create_quarter_final_stage(this: usize) {
+    let this = League(this);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CONMEBOL_MERC_CREATE_QUARTER_FINAL_STAGE);
+    let q = this.promoted_count() as i8;
+    let stages = this.stages();
+    if !(1..=2).contains(&q) || stages == 0 || (0..4).any(|g| read_usize(stages + g * 4) == 0) {
+        return o(this.addr());
+    }
+    let mut first: Vec<usize> = Vec::new();
+    let mut second: Vec<usize> = Vec::new();
+    for g in -1i8..4 {
+        let group = conmebol_merc_group(this.addr(), g);
+        for i in 0..q as i32 {
+            first.push(read_usize(exe::league_get_table_row(group, i)));
+        }
+        second.push(read_usize(exe::league_get_table_row(group, 1)));
+    }
+    o(this.addr());
+    let f = read_usize(this.stages() + 0x10);
+    if f == 0 {
+        return;
+    }
+    let t = read_usize(f + cup::TEAM_TABLE);
+    let mut read: Vec<usize> = if t != 0 { (0..8).map(|i| read_usize(t + i * 6)).collect() } else { Vec::new() };
+    let got_in: Vec<usize> = read.iter().copied().filter(|c| !first.contains(c)).collect();
+    let ok = read.len() == 8
+        && first.iter().all(|c| read.contains(c))
+        && got_in.len() + first.len() == 8
+        && got_in.iter().all(|c| second.contains(c))
+        && {
+            read.sort_unstable();
+            read.windows(2).all(|w| w[0] != w[1])
+        };
+    SCOREBOARD.record(ok, || format!("conmebol_merc_create_quarter_final_stage({:#x}): quarter-finals {:x?} group winners {:x?} runners-up {:x?}", this.addr(), read, first, second));
+}
+
+/// The Mercosur Cup predicted positions: by the rounds of stage 4 (the quarter-finals on) and in blocks of 5 for those
+/// who stay in the groups (box at line 0x338); see `conmebol_set_predicted_positions`.
+/// Original: `ConmebolMerc::set_predicted_positions` (0x4c5a90, conmebol_merc.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn conmebol_merc_set_predicted_positions(this: usize) {
+    conmebol_set_predicted_positions(this, 4, 5, 0x9a7e5c, 0x338)
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_conmebol_merc_set_predicted_positions(this: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CONMEBOL_MERC_SET_PREDICTED_POSITIONS);
+    conmebol_compare_predicted_positions("conmebol_merc_set_predicted_positions", this, 4, 5, || o(this))
+}
+
+/// The Mercosur Cup season turnover: the first half (`conmebol_free_season`), the next year, `league::ACTIVE` = 0 and
+/// the rules (the box for line 0x1c6).
+/// Original: `ConmebolMerc::start_new_season` (0x4c5040, conmebol_merc.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn conmebol_merc_start_new_season(this: usize) -> u32 {
+    let this = League(this);
+    let league = this;
+    conmebol_free_season(league);
+    conmebol_next_year(league);
+    this.set_active((0) as usize);
+    conmebol_set_up_rules_again(league, 0x9a7e5c, 0x1c6)
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_conmebol_merc_start_new_season(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CONMEBOL_MERC_START_NEW_SEASON);
+    conmebol_compare_new_season("conmebol_merc_start_new_season", this, true, || o(this))
+}
+
+/// Group `g` of the Mercosur Cup: -1 is the cup itself (group A), the others the stages `league::STAGES`[g].
+pub(crate) unsafe fn conmebol_merc_group(this: usize, g: i8) -> usize {
+    let this = League(this);
+    if g == -1 {
+        this.addr()
+    } else {
+        read_usize(this.stages() + g as isize as usize * 4)
+    }
+}
