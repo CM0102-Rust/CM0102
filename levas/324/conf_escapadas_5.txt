@@ -1,0 +1,3 @@
+mutacao gra12_acerto_comum 5450s engine: 10000000000 comparisons, 0 divergences
+mutacao gra14_proposta_por_taxa 5574s engine: 10000000000 comparisons, 0 divergences
+mutacao gra1_sorteio_vinculo 2632s engine: DIVERGENCE newsitem_write_text(category 2, type 0x14, body 1, flag 0, piece cup_draw): original "O Man City jogar? com o Middlesbrough para a 

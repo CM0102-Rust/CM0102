@@ -1,0 +1,3 @@
+mutacao gra18_vinculo_do_clube 2176s engine: DIVERGENCE write_record_news_text(type 18, full 0): original "Man City: novo recorde do clube" [("Man City", 7d5, 1be477a5)] rust "Man City: n
+restaurado e recompilado
+FIM
