@@ -2,7 +2,7 @@
 MUTACOES = [
     ('tel01_1_mesmo_dia_posterior', '(day < read_i16(this)) as u32', '(day <= read_i16(this)) as u32'),
     ('tel01_1_item_sem_marca', 'f(screens_current_display(sm), 0x2002, 0, 0, 0, 0, 0, 0, 0x10', 'f(screens_current_display(sm), 0x0002, 0, 0, 0, 0, 0, 0, 0x10'),
-    ('tel01_2_aba_tatica', 'set_tab(&mut tabs, 5, 3, 0);', 'set_tab(&mut tabs, 5, 4, 0);'),
+    ('tel01_2_aba_tatica', 'set_table(&mut tabs, 5, 3, 0);', 'set_table(&mut tabs, 5, 4, 0);'),
     ('tel01_2_saldo_futuro', 'total = total.wrapping_sub(read_i32(rec + 0x14));', 'total = total.wrapping_add(0);'),
     ('tel01_3_link_do_nome', '(if starred { squad_colour(0xae31a2) } else { squad_colour(0xae3184) }, 0x7d7)', '(if starred { squad_colour(0xae31a2) } else { squad_colour(0xae3184) }, 0x7dc)'),
     ('tel01_3_linhas_da_lista', 'let rows_word = (t.filter & 0xffff_ff00) | rows.wrapping_sub(1) as u32;', 'let rows_word = (t.filter & 0xffff_ff00) | rows as u32;'),
@@ -73,7 +73,7 @@ MUTACOES = [
     ('tel14_1_record_param', 'set_screen_param(7, record as usize);', 'set_screen_param(7, 0);'),
     ('tel14_2_penalty_colour', 'let colour = if n < 5 { JOB_COLOUR_BDEC } else { JOB_COLOUR_317E };', 'let colour = if n < 4 { JOB_COLOUR_BDEC } else { JOB_COLOUR_317E };'),
     ('tel14_2_zone_value', '0x1f, (zy + 100 * zx) as u32, u32::MAX]);', '0x1f, (zx + 100 * zy) as u32, u32::MAX]);'),
-    ('tel14_3_tab_previous', 'write_u8(ts + f::PREVIOUS_VIEW, view);', 'write_u8(ts + f::PREVIOUS_VIEW, tab);'),
+    ('tel14_3_tab_previous', 'write_u8(ts + f::PREVIOUS_VIEW, view);', 'write_u8(ts + f::PREVIOUS_VIEW, table);'),
     ('tel14_3_zone_hover', 'write_u32(ts + t::HOVER_ZONE, old);', 'write_u32(ts + t::HOVER_ZONE, read_u32(ts + t::ZONE));'),
     ('tel15_1_reserve_title', '        0xa8c530\n', '        0xa8c510\n'),
     ('tel15_1_captain_tie', '        if best == -1 || v > top {', '        if best == -1 || v >= top {'),

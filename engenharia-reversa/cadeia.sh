@@ -26,6 +26,8 @@
 # Saida completa em levas/N/cadeia.txt. Com a base divergindo, o mutacoes.py sai com erro e o resto
 # nao roda. Testes pesados passam pela trava do laboratorio (laboratorio.py).
 RAIZ="$(cd "$(dirname "$0")/.." && pwd)"
+# a game message with a character outside cp1252 (the console's code page) must not stop the tools (23/11/2026)
+export PYTHONIOENCODING=utf-8
 N=$1
 DATA=${2:-2001-08-20}
 mkdir -p "$RAIZ/levas/$N"

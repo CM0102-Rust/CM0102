@@ -19,7 +19,7 @@ MUTACOES = [
     ('mwg7_ano_civil_na_tabela_1', 'hall_of_fame_try_add(this, 0, staff, score) // mwg7: the calendar year table', 'hall_of_fame_try_add(this, 1, staff, score) // mutation: table 1', 'mwg_7 calendar year entry'),
     ('mwg7_tabela_seguinte', ".map_or(0xffff_ffff, |i| i as u32 + 1); // mwg7: the league's table", '.map_or(0xffff_ffff, |i| i as u32 + 2); // mutation: the next table', 'mwg_7 league entry'),
     ('mwg7_ponto_a_mais', "write_u32(last + hf::SCORE, score); // mwg7: the entry's score", 'write_u32(last + hf::SCORE, score + 1); // mutation: one point more', 'mwg_7 entry beats the last one'),
-    ('mwg8_mais_gols_com_empate', '(a_total > b_total) as u32 // mwg8: more goals', '(a_total >= b_total) as u32 // mutation: a draw counts', 'mwg_8 goals compared'),
+    ('mwg8_mais_gols_com_empate', '(total > b_total) as u32 // mwg8: more goals', '(total >= b_total) as u32 // mutation: a draw counts', 'mwg_8 goals compared'),
     ('mwg8_semanas_para_cima', 'write(out, ru::ABOUT_N_WEEKS, days / 7), // mwg8: about N weeks', 'write(out, ru::ABOUT_N_WEEKS, (days + 3) / 7), // mutation: rounded up', 'mwg_8 approximate duration'),
     ('mwg8_clausula_11_jogos', "write_u8(this + offer::APPEARANCE_GAMES, 10); // mwg8: the appearance clause's games", 'write_u8(this + offer::APPEARANCE_GAMES, 11); // mutation: 11 games', 'mwg_8 loan offer'),
 ]
