@@ -3514,7 +3514,11 @@ pub(crate) unsafe extern "thiscall" fn compare_write_player_media_story_news_tex
 /// Defect of the original: the match link's text is the frame byte +0x4c, zeroed only in the headline; in the body it is
 /// whatever the stack held (the copy writes an empty text in both, and the comparer does not compare that text).
 /// Original: `Media::write_player_praise_news_text` (0x744f80, media.cpp, thiscall, ret 0xc).
+/// Set when the text used the great player's job gender that the original leaves uninitialised (`legend_job_name`).
+pub(crate) static PRAISE_JOB_GENDER_UNSET: AtomicBool = AtomicBool::new(false);
+
 pub(crate) unsafe extern "thiscall" fn write_player_praise_news_text(_this: usize, news: usize, body: u32, out: usize) {
+    PRAISE_JOB_GENDER_UNSET.store(false, Relaxed);
     let mut frame = [0u8; praise_frame::SIZE];
     let mut p = praise_read_slots(news, frame.as_mut_ptr() as usize);
     praise_setup(&mut p);
@@ -3559,7 +3563,14 @@ pub(crate) unsafe extern "thiscall" fn compare_write_player_praise_news_text(thi
     let loose = body != 0 && kind != 0x34;
     let links_same = lo.len() == lr.len()
         && lo.iter().zip(lr.iter()).all(|(a, b)| a.1 == b.1 && a.2 == b.2 && (a.0 == b.0 || (loose && a.1 == 0x7d3)));
-    SCOREBOARD.record(same && so == sr && links_same, || format!(
+    // the great player's job gender outside language 4 is the original's uninitialised stack byte: a "{}" left
+    // after the job is the only difference accepted (and the text buffer then differs by it)
+    let sem_marca = |t: &[u8]| t.windows(2).fold((Vec::new(), false), |(mut v, pular), w| {
+        if pular { (v, false) } else if w == b"{}" { (v, true) } else { v.push(w[0]); (v, false) }
+    }).0;
+    let unset = PRAISE_JOB_GENDER_UNSET.load(Relaxed);
+    let text_same = so == sr || (unset && sem_marca(&[so.as_slice(), b"\0"].concat()) == sem_marca(&[sr.as_slice(), b"\0"].concat()));
+    SCOREBOARD.record((same || (unset && text_same)) && text_same && links_same, || format!(
         "write_player_praise_news_text(kind {:#x}, body {}, piece {}) text {} links {} ({} x {}) memory {}\n original: {}\n rust:     {}\n links original {:x?}\n links rust {:x?}\n {:x?} x {:x?}",
         kind, body, piece, so == sr, links_same, lo.len(), lr.len(), same, String::from_utf8_lossy(&so), String::from_utf8_lossy(&sr),
         lo.iter().map(|l| (String::from_utf8_lossy(&l.0).into_owned(), l.1, l.2)).collect::<Vec<_>>(),
@@ -7873,6 +7884,11 @@ impl Praise {
     /// `database_get_job_name(job, 0, 0, &gender)` of the great player's job (0x53ad00, cdecl)
     pub(crate) unsafe fn legend_job_name(&mut self) -> usize {
         let f: unsafe extern "C" fn(i32, u32, u32, *mut u8) -> usize = core::mem::transmute(FN_DATABASE_GET_JOB_NAME);
+        // 0x53ad00 writes the gender only when the game language is 4 (0x53b33f, 0x53b36f); otherwise the original
+        // formats with an uninitialised stack byte and the "{}" after the job may stay in the text (DEFEITOS_DO_ORIGINAL)
+        if exe::langlib_get_language() != 4 {
+            PRAISE_JOB_GENDER_UNSET.store(true, Relaxed);
+        }
         f(self.legend_job, 0, 0, &mut self.job_gender)
     }
     pub(crate) fn jg(&self) -> i32 {

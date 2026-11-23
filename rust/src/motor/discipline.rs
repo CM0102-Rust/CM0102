@@ -1203,7 +1203,10 @@ pub(crate) unsafe extern "thiscall" fn write_ban_news_text(this: usize, news: us
         }
         let v = a.v;
         fmt(tp, template as usize, v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8], v[9], v[10], v[11], v[12], v[13], v[14], v[15]);
-        if competition_form && has_match {
+        // only the match forms name the competition and add how the match ended (the plain forms never do: the
+        // original builds the sentence in the assault branch and the three match kinds, 0x557d19, 0x5584df, 0x559413,
+        // 0x55a123; caught by the 8-league audit, 23/11/2026)
+        if match_forms.is_some() && competition_form && has_match {
             covered!("gra_16 ban match result");
             let mut result = [0u8; 0x3e8];
             ban_result_sentence(result.as_mut_ptr() as usize, &m, sp);
