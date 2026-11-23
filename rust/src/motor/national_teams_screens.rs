@@ -690,7 +690,9 @@ pub(crate) unsafe extern "thiscall" fn network_receive_packet(this: usize, out: 
     let p = buffer.as_mut_ptr() as usize;
     let mut from = [0u8; 0x10];
     let mut text = [0u8; 0x34];
-    let (mut a, mut b) = (0u32, 0u32);
+    // a: the sender address length that recvfrom reads and writes (it must be at least sizeof(sockaddr_in) = 16);
+    // the original passes an uninitialised stack dword (0x77af8c, 0x77b096: DEFEITOS_DO_ORIGINAL); b: the socket slot
+    let (mut a, mut b) = (0x10u32, 0u32);
     let receive: unsafe extern "thiscall" fn(usize, usize, u32, usize, *mut u32, *mut u32) -> i32 = tcpip_fn(0x8aed80);
     let format: unsafe extern "thiscall" fn(usize, usize, usize) = tcpip_fn(0x8ae140);
     let callback = |field: usize, k: usize| {
