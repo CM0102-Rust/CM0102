@@ -9,6 +9,7 @@
 pub(crate) mod rdata {
     pub(crate) const F32_0: usize = 0x968970; // f32 = 0.0
     pub(crate) const F32_0_0001999999949: usize = 0x96f968; // f32 = 0.00019999999494757503
+    pub(crate) const F32_0_001000000047: usize = 0x9690c0; // f32 = 0.0010000000474974513
     pub(crate) const F32_0_002499999944: usize = 0x96d758; // f32 = 0.0024999999441206455
     pub(crate) const F32_0_003333333414: usize = 0x96d6e8; // f32 = 0.0033333334140479565
     pub(crate) const F32_0_00800000038: usize = 0x96d5d8; // f32 = 0.00800000037997961
