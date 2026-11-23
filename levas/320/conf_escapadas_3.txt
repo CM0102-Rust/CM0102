@@ -1,0 +1,4 @@
+mutacao tel41_2_trailing_zeros 6253s engine: 10000000000 comparisons, 0 divergences
+mutacao tel41_4_instances  6341s engine: 10000000000 comparisons, 0 divergences
+restaurado e recompilado
+FIM

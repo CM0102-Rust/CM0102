@@ -1,0 +1,5 @@
+mutacao tel39_8_uma_linha  6415s engine: 10000000000 comparisons, 0 divergences
+mutacao tel41_3_flag_cleared 6582s engine: 10000000000 comparisons, 0 divergences
+mutacao tel42_2_posicao    5981s engine: DIVERGENCE club_history_record_comp_season(comp 0x20148690) original=1 rust=1 20 appends planned: club offsets 0x1fe18a10: planned [[07, 00, 0
+restaurado e recompilado
+FIM
