@@ -270,9 +270,9 @@ pub(crate) unsafe extern "thiscall" fn oceania_nations_select_and_draw_teams(thi
     let mut i = 0i16;
     while (i as i32) < read_usize(G_NATION_COUNT) as i32 {
         let rec = read_usize(G_NATION_TABLE).wrapping_add((i as isize as usize).wrapping_mul(nation::SIZE));
-        let cont = Nation(rec).continent();
+        let count = Nation(rec).continent();
         let k = i as i32;
-        if cont != 0 && read_usize(cont) == oceania && k != read_usize(KEY_NATION_AUSTRALIA) as i32 && k != read_usize(KEY_NATION_NEW_ZEALAND) as i32 {
+        if count != 0 && read_usize(count) == oceania && k != read_usize(KEY_NATION_AUSTRALIA) as i32 && k != read_usize(KEY_NATION_NEW_ZEALAND) as i32 {
             if exe::database_is_melanesian_nation(rec) != 0 && nm < 10 {
                 mel[nm as usize] = exe::database_get_national_team(rec);
                 nm += 1;

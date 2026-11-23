@@ -3115,7 +3115,7 @@ pub(crate) unsafe extern "thiscall" fn plan_preseason_tournaments_and_tours(this
             if read_i8(cand + 4) > 4 || friendly_random(3) == 0 { // gra21: one in three stays home
                 continue;
             }
-            let tour_nation = exe::friendly_pick_tour_nation(this, club.addr());
+            let tour_nation = exe::friendly_pick_tour_nation(this, club);
             if tour_nation == 0 {
                 continue;
             }

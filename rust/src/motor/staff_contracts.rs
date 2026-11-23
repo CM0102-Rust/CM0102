@@ -2324,15 +2324,15 @@ pub(crate) unsafe extern "thiscall" fn staff_contract_set_to_desired_contract(th
             l = f(rdata::F32_1);
         }
         let kind_bits = |or: u8, and: u8| ct.set_contract_type(ct.contract_type() & and | or);
-        let no_job_low = person.club_job().addr() == 0 && (level as i8) < 2;
+        let in_the_job_low = person.club_job().addr() == 0 && (level as i8) < 2;
         let mut add_years = true;
         if rep48 > (level as i8 as i16).wrapping_mul(500).wrapping_add(1250) {
-            if no_job_low && ftol(fr * d(rdata::F64_4)) as u8 == 0 {
+            if in_the_job_low && ftol(fr * d(rdata::F64_4)) as u8 == 0 {
                 kind_bits(0x82, 0xc2);
             } else {
                 kind_bits(2, 0xc2);
             }
-        } else if no_job_low && ftol(fr * d(rdata::F64_5)) as u8 == 0 {
+        } else if in_the_job_low && ftol(fr * d(rdata::F64_5)) as u8 == 0 {
             if age > 20 {
                 kind_bits(0x82, 0xc2);
             } else {

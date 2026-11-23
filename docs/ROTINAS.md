@@ -6174,3 +6174,11 @@ Mutações: `mutacoes/leva324.py` (21, pela carreira até 2002-06-01, confirmand
 | `construct_tactics()` | 0x893dc0 | thiscall, ret 4 | tactics.cpp: Confere o CD (o primeiro drive de CD com cm0102.exe; sem ele, a caixa "Insert CD" e de novo); zera os 16 espaços de desfazer; com o save, as táticas vêm dele. Num jogo novo: as 28 formações da IA e as 17 pré-definidas vêm dos arquivos de CM3_TACTICS, na ordem (442_wide.pct duas vezes), cada uma no próximo espaço enquanto houver espaço (o arquivo que falha não conta; sem espaço, a caixa de erro da linha dele; faltando formação no fim, a caixa 0x92 ou 0xb4), e as pré-definidas ganham o nome de exibição ("4-4-2", "3-5-2 Defensive"...); uma linha de escalação vazia por clube e mais 32 (0x91 bytes, tudo −1 depois dos 2 primeiros); as estatísticas por tática (45 de 0x28 bytes, zeradas com o índice) e 9 constantes em +0xc..+0x2c |
 
 Mutações: `mutacoes/leva325.py` (5, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 5 acusadas.  Jogo real comparando até 2002-01-01: 0 divergências (5828e965). Carreiras até 2002-06-01: Rust ×2 ac155f01, original 96da1fba (registrada; não barra a leva desde 31/10/2026). Detector de lixo: igual.
+
+### Simulação, 326ª leva — o sorteio das eliminatórias da Eurocopa (oficial em 23/11/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `euro_champ_qual_draw_groups()` | 0x57dab0 | thiscall, ret 0 | euro_champ_qual.cpp: O sorteio dos grupos das eliminatórias da Eurocopa: em 1998, a tabela fixa (49 seleções em 9 grupos, os grupos 1, 3, 6 e 8 com seis); nos outros anos, 9 grupos (+0xff + 2) e até seis potes: a ordem dos grupos é embaralhada com 20 trocas sorteadas e cada grupo, na ordem, recebe a próxima seleção enquanto tiver vaga; defeito: a vaga de cada grupo é a do grupo anterior (g − 1), então no formato 1 os grupos de seis ficam 1, 3 e 6 |
+
+Mutações: `mutacoes/leva326.py` (2, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 2 acusadas.  Jogo real comparando 8 ligas até 2002-06-01: adiado para a comparação acumulada da auditoria (decisão de 05/11/2026). Carreiras até 2002-06-01: Rust ×2 5e6914ad, original 2c08aef5 (registrada; não barra a leva desde 31/10/2026). Detector de lixo: igual.

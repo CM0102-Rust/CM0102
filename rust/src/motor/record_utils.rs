@@ -351,8 +351,8 @@ pub(crate) unsafe extern "C" fn match_record_has_more_goals(a: usize, b: usize) 
     }
     covered!("mwg_8 goals compared");
     let b_total = read_i8(b + ru::HOME_GOALS) as i32 + b_away;
-    let a_total = read_i8(a + ru::AWAY_GOALS) as i32 + a_home;
-    (a_total > b_total) as u32 // mwg8: more goals
+    let total = read_i8(a + ru::AWAY_GOALS) as i32 + a_home;
+    (total > b_total) as u32 // mwg8: more goals
 }
 
 /// Comparer for `match_record_has_more_goals`.

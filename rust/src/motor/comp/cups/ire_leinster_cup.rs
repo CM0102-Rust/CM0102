@@ -125,3 +125,10 @@ pub(crate) const LEINSTER_SENIOR_CUP_ROUNDS: [EngCcCupCupRound; 4] = [
 /// 0x59 of ire_leinster_cup.cpp.
 pub(crate) const LEINSTER_SENIOR_CUP_CONSTRUCTOR: IrishCupConstructor = IrishCupConstructor { vtable: 0x96bd80, bench: Some((5, 3)), discipline: discipline_rule::IRELAND,
     entrants: 0x636a80, fails_when_negative: false, prize: Some(0x186a0), rank: true, file: 0x9e9f0c, rows: [0x44, 0x52, 0x59] };
+
+/// Whether the club's stadium town is in Leinster (the exe's ire_club_is_in_leinster 0x6399c0, push club; add esp, 4 ->
+/// cdecl, a gap function of ire_pres_cup.cpp not yet ported: Dublin, Bray, Longford, Dundalk, Drogheda, Athlone or
+/// Kilkenny).
+pub(crate) unsafe fn ire_club_is_in_leinster(club: Club) -> bool {
+    exe::ire_club_is_in_leinster(club) != 0
+}

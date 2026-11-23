@@ -2953,11 +2953,11 @@ pub(crate) unsafe extern "C" fn draw_pitch(left: i32, top: i32, right: i32, bott
         write_u8(s::GUARD, guard | 2);
         write_u16(s::GREEN_38, rgb(0x38) as u16);
     }
-    let no_area = area as u16 == 0xffff;
-    let line = rgb(if no_area { 0x80 } else { 0x50 });
+    let in_the_area = area as u16 == 0xffff;
+    let line = rgb(if in_the_area { 0x80 } else { 0x50 });
     let dark = || read_u16(s::GREEN_40) as u32;
     let stripe = || read_u16(s::GREEN_38) as u32;
-    let (first_style, first_area) = if no_area { (0x30, u32::MAX) } else { (0x70, area) };
+    let (first_style, first_area) = if in_the_area { (0x30, u32::MAX) } else { (0x70, area) };
     pitch_item(left, top, right, bottom, first_style, dark(), 0, first_area);
     let scaled = |k: usize| scale as f64 * read_f64(k);
     let two = scale as f64 + scale as f64;
@@ -3447,7 +3447,7 @@ pub(crate) unsafe fn tactics_build_header(ts: usize, view: u8, widths: &mut [u8;
     } else {
         tel26_area_button([tabs, 0, 0, 0x30, c(TACTICS_COLOUR_BDD6), 0xc, 1, c(JOB_COLOUR_3184), JOB_TEXT as u32, 0x15, 1]);
     }
-    let tab = |col: u32, view_k: u8, text: usize, current_font: u32| {
+    let table = |col: u32, view_k: u8, text: usize, current_font: u32| {
         tactics_text(text);
         if read_u8(ts + t::VIEW) == view_k {
             tel26_area_text([tabs, col, 0, 0x830, c(TACTICS_COLOUR_BDD6), 0xc, current_font, c(JOB_COLOUR_3184), JOB_TEXT as u32]);
@@ -3457,8 +3457,8 @@ pub(crate) unsafe fn tactics_build_header(ts: usize, view: u8, widths: &mut [u8;
             tel26_area_text([tabs, col, 0, 0x30, c(TACTICS_COLOUR_BDD6), 0x2c, 1, c(JOB_COLOUR_3184), JOB_TEXT as u32]);
         }
     };
-    tab(1, 2, 0xa8be00, core::ptr::read(0x89c69e as *const u8) as u32);
-    tab(2, 3, 0xa8bdf0, core::ptr::read(0x89c73c as *const u8) as u32);
+    table(1, 2, 0xa8be00, core::ptr::read(0x89c69e as *const u8) as u32);
+    table(2, 3, 0xa8bdf0, core::ptr::read(0x89c73c as *const u8) as u32);
     // the column widths: the extra columns merge into the one the view shows
     match view {
         1 | 3 | 4 | 5 => {
@@ -4175,10 +4175,10 @@ pub(crate) unsafe fn tactics_event_edit(ts: usize, id: u16, item: i16) -> Option
         }
         0x15 => {
             covered!("tel14_3 tab");
-            let tab = tel26_item_value(item) as u8;
-            if item != -1 && (tab == 1 || tab == 2 || tab == 3) {
+            let table = tel26_item_value(item) as u8;
+            if item != -1 && (table == 1 || table == 2 || table == 3) {
                 write_u8(ts + f::PREVIOUS_VIEW, view);
-                write_u8(ts + t::VIEW, tab);
+                write_u8(ts + t::VIEW, table);
                 write_u32(ts + t::HOVER_ZONE, read_u32(ts + t::ZONE));
             } else {
                 tel26_error_box(TACTICS_SCREENS_CPP, 0x147a);

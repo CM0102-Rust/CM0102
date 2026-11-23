@@ -96,8 +96,8 @@ pub(crate) unsafe extern "thiscall" fn year_add_player_rating(this: usize, row: 
             e
         }
     };
-    let grade = read_u8(row + match_record_row::MATCH_GRADE) as i32;
-    let (a, b, c) = year_rating_sums(fixture.addr(), Club(club), comp_obj, grade);
+    let grid = read_u8(row + match_record_row::MATCH_GRADE) as i32;
+    let (a, b, c) = year_rating_sums(fixture.addr(), Club(club), comp_obj, grid);
     let add16 = |k: usize, v: u16| write_u16(e + k, read_u16(e + k).wrapping_add(v));
     add16(8, a as i16 as u16);
     add16(0xa, b as i16 as u16);
@@ -135,7 +135,7 @@ pub(crate) unsafe extern "thiscall" fn compare_year_add_player_rating(this: usiz
 /// nation's reputation is above 7000, × 8 above 4000, × 4 otherwise, / 20, as a byte) gives /20, /60 and /80; with
 /// one, the grade × the weight gives /20, /20, /40 for competition type 2, /20 three times for type 4, and /20, /60,
 /// /80 otherwise.
-pub(crate) unsafe fn year_rating_sums(fixture: usize, club: Club, comp_obj: usize, grade: i32) -> (i8, i8, i8) {
+pub(crate) unsafe fn year_rating_sums(fixture: usize, club: Club, comp_obj: usize, grid: i32) -> (i8, i8, i8) {
     let fixture = Fixture(fixture);
     use year_ratings_consts as yr;
     let mut weight = 0i8;
@@ -154,9 +154,9 @@ pub(crate) unsafe fn year_rating_sums(fixture: usize, club: Club, comp_obj: usiz
         let by_rep = (rep / 500) as i8 as i32;
         let nation_rep = club.nation().reputation();
         let scaled = if nation_rep > 7000 { by_rep << 4 } else if nation_rep > 4000 { by_rep << 3 } else { by_rep << 2 };
-        return wide(grade * (scaled / 20) as i8 as i32);
+        return wide(grid * (scaled / 20) as i8 as i32);
     }
-    let v = grade * weight as i32;
+    let v = grid * weight as i32;
     match read_i8(comp_obj + yr::COMP_TYPE) {
         2 => ((v / 20) as i8, (v / 20) as i8, (v / 40) as i8),
         4 => ((v / 20) as i8, (v / 20) as i8, (v / 20) as i8),

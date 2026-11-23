@@ -2887,9 +2887,9 @@ pub(crate) unsafe extern "thiscall" fn injury_write_recovery_news_text(this: usi
             format(buf, 0x9e9648, g, g, nm, inj);
         }
         exe::text_set_string(out, buf as *const u8);
-        let mut time = [0u8; 0x34];
-        format_duration_text(days as u16 as i16 as i32, time.as_mut_ptr() as usize, 0x32, 1); // sma9: the approximate time
-        format(buf, 0x9e95f0, time.as_ptr() as usize);
+        let mut team = [0u8; 0x34];
+        format_duration_text(days as u16 as i16 as i32, team.as_mut_ptr() as usize, 0x32, 1); // sma9: the approximate time
+        format(buf, 0x9e95f0, team.as_ptr() as usize);
         exe::text_append_string(out, buf);
     } else {
         covered!("sma_9 full training body");

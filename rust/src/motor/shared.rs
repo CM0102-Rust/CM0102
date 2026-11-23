@@ -557,11 +557,11 @@ pub(crate) unsafe extern "C" fn compare_game_settings_box_build() {
 }
 
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn compare_search_on_side_recording(this: usize, lado: i8, grupo: usize, a3: u32, a4: u32, a5: u32, a6: u32, modo: i8) -> u8 {
-    let r = compare_procurar(this, lado, grupo, a3, a4, a5, a6, modo);
+pub(crate) unsafe extern "thiscall" fn compare_search_on_side_recording(this: usize, side: i8, group: usize, a3: u32, a4: u32, a5: u32, a6: u32, mode: i8) -> u8 {
+    let r = compare_procurar(this, side, group, a3, a4, a5, a6, mode);
     if RECORDING_6CD330.load(std::sync::atomic::Ordering::Relaxed) {
-        let depois = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
-        TAPE_6CD330.lock().unwrap_or_else(|e| e.into_inner()).push(((lado, grupo, a3, a4, a5, a6, modo), r, depois));
+        let after = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
+        TAPE_6CD330.lock().unwrap_or_else(|e| e.into_inner()).push(((side, group, a3, a4, a5, a6, mode), r, after));
     }
     r
 }

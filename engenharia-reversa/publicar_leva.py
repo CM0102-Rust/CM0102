@@ -75,6 +75,8 @@ def main():
         rodar(sys.executable, os.path.join('engenharia-reversa', 'esvaziar_motor.py'), '--gravar')
         # each routine to the module of its source file (the header's Original: line); helpers stay (11/11/2026)
         rodar(sys.executable, os.path.join('engenharia-reversa', 'mover_rotinas.py'), '--gravar')
+        # a module the move created is declared in motor.rs
+        rodar(sys.executable, os.path.join('engenharia-reversa', 'modulos_motor.py'), '--gravar')
     # a tabela das assinaturas acompanha a PROLOGOS (a DLL não desvia rotina que não seja a do exe original/1080)
     rodar(sys.executable, os.path.join('engenharia-reversa', 'assinaturas.py'))
     # every exe function the copies call, checked against the original machine code (stack, ecx, return width)

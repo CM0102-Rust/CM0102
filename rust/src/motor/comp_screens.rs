@@ -581,9 +581,9 @@ pub(crate) unsafe extern "thiscall" fn comp_stats_update_season_end_records(stat
             write_u16(stats + comp_stats_obj::SEASON_MOST_POINTS_EXTRA, 0);
         }
         let season = read_i32(stats + comp_stats_obj::SEASON_MOST_POINTS);
-        let all_time = read_i32(stats + f::ALL_TIME_MOST_POINTS);
+        let all_team = read_i32(stats + f::ALL_TIME_MOST_POINTS);
         // tel41_3: the season's most points beats the all-time record
-        if season > -1 && (all_time == -1 || season > all_time) {
+        if season > -1 && (all_team == -1 || season > all_team) {
             write_i32(stats + f::ALL_TIME_MOST_POINTS, season);
             write_u32(stats + f::ALL_TIME_MOST_POINTS_CLUB, read_u32(stats + comp_stats_obj::SEASON_MOST_POINTS_CLUB));
             write_u16(stats + f::ALL_TIME_MOST_POINTS_YEAR, read_u16(stats + comp_stats_obj::SEASON_MOST_POINTS_EXTRA));
@@ -602,8 +602,8 @@ pub(crate) unsafe extern "thiscall" fn comp_stats_update_season_end_records(stat
         }
         let season = read_f32(stats + comp_stats_obj::SEASON_RATING) as f64;
         if season > minus_one {
-            let all_time = read_f32(stats + f::ALL_TIME_RATING) as f64;
-            if comp_stats_c3(all_time, minus_one) || season > all_time {
+            let all_team = read_f32(stats + f::ALL_TIME_RATING) as f64;
+            if comp_stats_c3(all_team, minus_one) || season > all_team {
                 write_u32(stats + f::ALL_TIME_RATING, read_u32(stats + comp_stats_obj::SEASON_RATING));
                 exe::record_holder_assign(stats + f::ALL_TIME_RATING_HOLDER, stats + comp_stats_obj::SEASON_RATING_HOLDER);
                 write_u8(stats + f::ALL_TIME_RATING_GAMES, read_u8(stats + comp_stats_obj::SEASON_RATING_GAMES));
@@ -927,13 +927,13 @@ pub(crate) unsafe extern "thiscall" fn compare_comp_stats_construct(stats: usize
     core::ptr::copy_nonoverlapping((stats + comp_stats_obj::SEASON_RECORDS) as *const u8, cleared.as_mut_ptr(), cleared.len());
     comp_season_records_clear(cleared.as_mut_ptr() as usize);
     let season_ok = core::slice::from_raw_parts((stats + comp_stats_obj::SEASON_RECORDS) as *const u8, cleared.len()) == &cleared[..];
-    let mut all_time = [0u8; comp_stats_obj::SEASON_RECORDS_SIZE];
-    core::ptr::copy_nonoverlapping((stats + comp_stats_obj::ALL_TIME_RECORDS) as *const u8, all_time.as_mut_ptr(), all_time.len());
-    let mut all_time_cleared = all_time;
-    comp_season_records_clear(all_time_cleared.as_mut_ptr() as usize);
-    all_time_cleared[..5].copy_from_slice(&all_time[..5]); // the most titles (byte, club) of the count
+    let mut all_team = [0u8; comp_stats_obj::SEASON_RECORDS_SIZE];
+    core::ptr::copy_nonoverlapping((stats + comp_stats_obj::ALL_TIME_RECORDS) as *const u8, all_team.as_mut_ptr(), all_team.len());
+    let mut all_team_cleared = all_team;
+    comp_season_records_clear(all_team_cleared.as_mut_ptr() as usize);
+    all_team_cleared[..5].copy_from_slice(&all_team[..5]); // the most titles (byte, club) of the count
     let zero = |o: usize, n: usize| core::slice::from_raw_parts((stats + o) as *const u8, n).iter().all(|&b| b == 0);
-    let ok = r == stats && season_ok && all_time == all_time_cleared
+    let ok = r == stats && season_ok && all_team == all_team_cleared
         && zero(0, 0xc) && zero(comp_stats_obj::CLUBS, 0xc) && zero(comp_stats_obj::PLAYERS, 0xc)
         && read_u8(stats + comp_stats_obj::CLUB_SORT) == 0xfe && read_u8(stats + comp_stats_obj::PLAYER_SORT) == 0xfe
         && read_i32(stats + comp_stats_obj::ARCHIVE_KEY1) == -1 && read_i32(stats + comp_stats_obj::ARCHIVE_KEY2) == -1
@@ -1045,7 +1045,7 @@ pub(crate) unsafe extern "C" fn comp_screens_draw_comp_screen() {
         return;
     }
     covered!("tel22_1 build comp screen");
-    let mut tab = get_screen_param(1) as u8 as i8;
+    let mut table = get_screen_param(1) as u8 as i8;
     let record = comp.competition().addr();
     exe::background_set_comp_picture(record, 0, 0);
     let (mut colour_44, mut colour_40) = (0u32, 0u32);
@@ -1088,30 +1088,30 @@ pub(crate) unsafe extern "C" fn comp_screens_draw_comp_screen() {
     comp_lang_format()(text(&mut items, 3), 0x99c104, 0xad9c64usize); // "Schedule"
     set_kind(&mut items, 3, 2, 4);
     let mut n = 4usize;
-    let back_to_tab_1 = |tab: &mut i8| {
-        *tab = 1;
+    let back_to_table_1 = |table: &mut i8| {
+        *table = 1;
         set_screen_param(1, 1);
     };
     if comp.entrants_are_qualifiers() == 1 && comp.entrant_book() != 0 {
         comp_lang_format()(text(&mut items, 4), 0x99c0f8); // "Qualifiers"
         set_kind(&mut items, 4, 2, 5);
         n = 5;
-    } else if tab == 5 {
-        back_to_tab_1(&mut tab);
+    } else if table == 5 {
+        back_to_table_1(&mut table);
     }
     if comp.entrants_are_qualifiers() == 0 && comp.entrant_book() != 0 {
         comp_lang_format()(text(&mut items, n), 0x99c0ec); // "Seedings"
         set_kind(&mut items, n, 2, 6);
         n += 1;
-    } else if tab == 6 {
-        back_to_tab_1(&mut tab);
+    } else if table == 6 {
+        back_to_table_1(&mut table);
     }
     if read_usize(comp.addr() + COMP_SCREEN_AVERAGE_POINTS) != 0 {
         comp_lang_format()(text(&mut items, n), 0x99c0dc); // "Average Points"
         set_kind(&mut items, n, 2, 9);
         n += 1;
-    } else if tab == 9 {
-        back_to_tab_1(&mut tab);
+    } else if table == 9 {
+        back_to_table_1(&mut table);
     }
     if comp.comp_stats() != 0 {
         comp_lang_format()(text(&mut items, n), 0x99c0d0); // "Team Stats"
@@ -1120,8 +1120,8 @@ pub(crate) unsafe extern "C" fn comp_screens_draw_comp_screen() {
         comp_lang_format()(text(&mut items, n), 0x99c0c0); // "Player Stats"
         set_kind(&mut items, n, 2, 8);
         n += 1;
-    } else if tab == 7 || tab == 8 {
-        back_to_tab_1(&mut tab);
+    } else if table == 7 || table == 8 {
+        back_to_table_1(&mut table);
     }
     if exe::comp_util_is_league_division(read_i32(comp.competition().addr())) != 0 {
         comp_lang_format()(text(&mut items, n), 0x99c0b0); // "Referee Stats"
@@ -1162,12 +1162,12 @@ pub(crate) unsafe extern "C" fn comp_screens_draw_comp_screen() {
         popup_item(comp.comp_stats() != 0, 0x1f);
     }
     let (mut top, mut bottom) = (0x50i32, 0x221i32);
-    exe::gui_add_tab_bar(items.as_mut_ptr() as usize, n as u32, tab as i32, &mut top, &mut bottom, (n < 8) as u32);
-    let tab_routine = |address: usize, object: usize| {
+    exe::gui_add_tab_bar(items.as_mut_ptr() as usize, n as u32, table as i32, &mut top, &mut bottom, (n < 8) as u32);
+    let table_routine = |address: usize, object: usize| {
         let f: unsafe extern "C" fn(usize, i32, i32) = core::mem::transmute(address);
         f(object, top, bottom);
     };
-    match tab {
+    match table {
         1 => {
             let mut s = get_screen_param(2) as i32;
             if s == -2 {
@@ -1176,20 +1176,20 @@ pub(crate) unsafe extern "C" fn comp_screens_draw_comp_screen() {
             }
             let stage = exe::comp_get_stage(comp, s);
             if read_u8(stage + league::COMP_TYPE) == 2 {
-                tab_routine(0x491380, stage);
+                table_routine(0x491380, stage);
             } else {
-                tab_routine(0x492980, stage);
+                table_routine(0x492980, stage);
             }
         }
         2 => comp_screen_results_tab(comp.addr(), top, bottom),
-        3 => tab_routine(0x493ee0, comp.addr()),
-        4 => tab_routine(0x4947a0, comp.addr()),
+        3 => table_routine(0x493ee0, comp.addr()),
+        4 => table_routine(0x4947a0, comp.addr()),
         5 => comp_screen_qualifiers_tab(comp.addr(), top, bottom),
-        6 => tab_routine(0x494c60, comp.addr()),
-        7 => tab_routine(0x4956e0, comp.addr()),
-        8 => tab_routine(0x495bc0, comp.addr()),
-        9 => tab_routine(0x495050, comp.addr()),
-        10 => tab_routine(0x79a530, comp.competition().addr()),
+        6 => table_routine(0x494c60, comp.addr()),
+        7 => table_routine(0x4956e0, comp.addr()),
+        8 => table_routine(0x495bc0, comp.addr()),
+        9 => table_routine(0x495050, comp.addr()),
+        10 => table_routine(0x79a530, comp.competition().addr()),
         _ => {}
     }
     exe::comp_screens_add_related_comps_menu(comp, colour_40, colour_44, 1, 0x18);
@@ -1204,7 +1204,7 @@ pub(crate) unsafe extern "C" fn compare_comp_screens_draw_comp_screen() {
     // simplification: the tabs that build and keep a list in the params on their first build (1: a small league's
     // fixtures, param 5; 2: the day's matches, 0xe; 3: 0x17; 4: 0x1a; 7: 0x24; 8: 0x1f), the referee stats (10, not
     // in this file) and the error box (no object) run the original only; the tabs have their own comparers
-    let ready = |tab: u8| match tab {
+    let ready = |table: u8| match table {
         1 => get_screen_param(5) != 0,
         2 => get_screen_param(0xe) != 0,
         3 => get_screen_param(0x17) != 0,
@@ -1214,8 +1214,8 @@ pub(crate) unsafe extern "C" fn compare_comp_screens_draw_comp_screen() {
         8 => get_screen_param(0x1f) != 0,
         _ => false,
     };
-    let tab = get_screen_param(1) as u8;
-    if comp == 0 || !ready(tab) || ((5..=9).contains(&tab) && !ready(1)) {
+    let table = get_screen_param(1) as u8;
+    if comp == 0 || !ready(table) || ((5..=9).contains(&table) && !ready(1)) {
         return o();
     }
     compare_match_screen_build("competition screen", &[(COMP_SCREEN_BUILT_FLAG, 4), (COMP_SCREEN_DATE_BUTTONS_FLAG, 4)], || o(),
@@ -2987,7 +2987,7 @@ pub(crate) unsafe extern "C" fn comp_screens_draw_history_screen() {
         return;
     }
     covered!("tel22_5 build comp history");
-    let tab = get_screen_param(1) as u8 as i8;
+    let table = get_screen_param(1) as u8 as i8;
     exe::background_set_section_picture(8, 0);
     let comp = read_usize(object + 4);
     let (mut c28, mut c2c) = (0u32, 0u32);
@@ -3014,12 +3014,12 @@ pub(crate) unsafe extern "C" fn comp_screens_draw_history_screen() {
     add(&mut items, 0x99c75c, 6); // "Teams"
     add(&mut items, 0x990a80, 7); // "Players"
     let (mut top, mut bottom) = (0x50i32, 0x221i32);
-    exe::gui_add_tab_bar(items.as_mut_ptr() as usize, n as u32, tab as i32, &mut top, &mut bottom, 1);
-    match tab {
+    exe::gui_add_tab_bar(items.as_mut_ptr() as usize, n as u32, table as i32, &mut top, &mut bottom, 1);
+    match table {
         1 => comp_screens_draw_history_winners_tab(object, top, bottom),
         2 => comp_history_records_tab(object, top, bottom),
         3..=7 => {
-            let f: unsafe extern "C" fn(usize, i32, i32) = core::mem::transmute(COMP_HISTORY_TEL23_TABS[tab as usize - 3]);
+            let f: unsafe extern "C" fn(usize, i32, i32) = core::mem::transmute(COMP_HISTORY_TEL23_TABS[table as usize - 3]);
             f(object, top, bottom);
         }
         _ => {}
@@ -3168,11 +3168,11 @@ pub(crate) unsafe extern "C" fn compare_comp_screens_open_history_screen(comp: u
 /// plus the two flags, for the Records tab and for the Winners tab once its rows are known (param 2 ≠ −1).
 pub(crate) unsafe extern "C" fn compare_comp_screens_draw_history_screen() {
     let o = original_fn::<unsafe extern "C" fn()>(IDX_COMP_SCREENS_DRAW_HISTORY_SCREEN);
-    let tab = get_screen_param(1) as u8;
+    let table = get_screen_param(1) as u8;
     // simplification: without the object (the error box), the first Winners build (it sorts the global club history
     // table and writes params 2 and 3) and the tel23 tabs (their lists are built and kept in the params on the first
     // build; they have their own comparers) only the original runs
-    if get_screen_param(0) == 0 || !(tab == 2 || (tab == 1 && get_screen_param(2) as i32 != -1)) {
+    if get_screen_param(0) == 0 || !(table == 2 || (table == 1 && get_screen_param(2) as i32 != -1)) {
         return o();
     }
     compare_match_screen_build("comp history screen", &[(COMP_HISTORY_BUILT_FLAG, 4), (COMP_HISTORY_POPUP_FLAG, 4)], || o(),
@@ -3241,9 +3241,9 @@ pub(crate) unsafe extern "C" fn comp_history_draw_players_tab(object: usize, top
 /// Original: `comp_history_screen_handle_event` (0x49b250, comp_screens.cpp, cdecl).
 pub(crate) unsafe extern "C" fn comp_history_screen_handle_event(widget: u32) -> i32 {
     let object = League(get_screen_param(0));
-    let tab = get_screen_param(1) as u8 as i8;
+    let table = get_screen_param(1) as u8 as i8;
     let w = widget as i16;
-    match tab {
+    match table {
         1 => {
             if w != -1 {
                 comp_click_keep_scroll(4, 5);
@@ -3272,11 +3272,11 @@ pub(crate) unsafe extern "C" fn comp_history_screen_handle_event(widget: u32) ->
             }
         }
         3..=6 => {
-            let view = history_view_param(tab);
+            let view = history_view_param(table);
             if w != -1 {
                 comp_click_keep_scroll(view + 1, view + 2);
             }
-            if comp_click_action_id(widget) == tab as i32 + 2 && exe::screenmanager_get_widget_action_data(G_SCREEN_MANAGER, widget) != get_screen_param(view) {
+            if comp_click_action_id(widget) == table as i32 + 2 && exe::screenmanager_get_widget_action_data(G_SCREEN_MANAGER, widget) != get_screen_param(view) {
                 covered!("tel23_1 history list view");
                 set_screen_param(view, exe::screenmanager_get_widget_action_data(G_SCREEN_MANAGER, widget));
                 return -11;
@@ -6107,9 +6107,9 @@ pub(crate) unsafe fn comp_stats_sorted_table_regions(stats: usize) -> [(usize, u
 }
 
 /// The two blocks (and counts) of a sorted table side by side: equal counts and bytes; the copy's block is freed.
-pub(crate) unsafe fn comp_stats_sorted_blocks_equal(ro: usize, rr: usize, no: i32, nr: i32, size: usize) -> bool {
-    let equal = no == nr && (ro == 0) == (rr == 0)
-        && (ro == 0 || core::slice::from_raw_parts(ro as *const u8, no as usize * size) == core::slice::from_raw_parts(rr as *const u8, nr as usize * size));
+pub(crate) unsafe fn comp_stats_sorted_blocks_equal(ro: usize, rr: usize, in_the: i32, nr: i32, size: usize) -> bool {
+    let equal = in_the == nr && (ro == 0) == (rr == 0)
+        && (ro == 0 || core::slice::from_raw_parts(ro as *const u8, in_the as usize * size) == core::slice::from_raw_parts(rr as *const u8, nr as usize * size));
     if rr != 0 {
         exe::crt_free(rr);
     }
@@ -6981,9 +6981,9 @@ pub(crate) unsafe fn comp_history_records_tab(object: usize, top: i32, bottom: i
 /// empty yellow cells; the scroll row comes back and the area goes to its param.
 /// Kept from the original: with no type ticked the heading is stack garbage there (empty here); the row count goes
 /// as its byte (the original's dword carries the popup area's high bytes; Display keeps the byte).
-pub(crate) unsafe fn history_list_tab(object: usize, top: i32, bottom: i32, tab: u32) {
+pub(crate) unsafe fn history_list_tab(object: usize, top: i32, bottom: i32, table: u32) {
     let object = League(object);
-    let view_param = 0xb + 3 * (tab - 3);
+    let view_param = 0xb + 3 * (table - 3);
     let mut text = [0usize; 2];
     let t = text.as_mut_ptr();
     exe::new_text(t, 0usize);
@@ -6999,7 +6999,7 @@ pub(crate) unsafe fn history_list_tab(object: usize, top: i32, bottom: i32, tab:
     let mut heading = [0u8; 0x7d0];
     let mut title = [0u8; 0xc8];
     for kind in 1..=HISTORY_LAST_RECORD_TYPE {
-        if comp_history_tab_for_record(kind, core::ptr::null_mut()) as u32 != tab {
+        if comp_history_tab_for_record(kind, core::ptr::null_mut()) as u32 != table {
             continue;
         }
         let (c31aa, yellow, black) = (job_colour(JOB_COLOUR_31AA), job_colour(G_GUI_COLOUR_YELLOW), job_colour(G_GUI_COLOUR_BLACK));
@@ -7008,7 +7008,7 @@ pub(crate) unsafe fn history_list_tab(object: usize, top: i32, bottom: i32, tab:
             comp_crt_format()(JOB_TEXT, 0x98ed14, title.as_ptr()); // " %s"
             let ticked = kind as u8 == view;
             let flags = if ticked { 0x2002 } else { 2 };
-            tel26_add_item(current_human_display(), [flags, 0, 0, 0, 0, 0, 0, 0x10, c31aa, yellow, 1, 1, black, JOB_TEXT as u32, 0, tab + 2, kind, popup]);
+            tel26_add_item(current_human_display(), [flags, 0, 0, 0, 0, 0, 0, 0x10, c31aa, yellow, 1, 1, black, JOB_TEXT as u32, 0, table + 2, kind, popup]);
             if ticked {
                 tel26_copy_text(heading.as_mut_ptr(), (JOB_TEXT + 1) as *const u8);
             }
@@ -7061,8 +7061,8 @@ pub(crate) unsafe fn history_screen_open_by_name(name: usize) {
 }
 
 /// The view param a list tab's popup id picks (ids 5..8: tabs 3..6, params 0xb, 0xe, 0x11, 0x14).
-pub(crate) fn history_view_param(tab: i8) -> u32 {
-    0xb + 3 * (tab as u32 - 3)
+pub(crate) fn history_view_param(table: i8) -> u32 {
+    0xb + 3 * (table as u32 - 3)
 }
 
 /// The comparer of a history list tab: side by side over the display list (plus [0xadae0c]) once the season records
@@ -7079,10 +7079,10 @@ pub(crate) unsafe fn compare_history_list_tab(name: &str, object: usize, origina
 /// screen, not the error box of a type without a tab, not the menu bar.
 pub(crate) unsafe fn history_click_is_pure(widget: u32) -> bool {
     let w = widget as i16;
-    let tab = get_screen_param(1) as u8 as i8;
+    let table = get_screen_param(1) as u8 as i8;
     let id = comp_click_action_id(widget);
     let data = exe::screenmanager_get_widget_action_data(G_SCREEN_MANAGER, widget);
-    match tab {
+    match table {
         2 => {
             if id == 3 && exe::display_get_widget_data(current_human_display(), widget) != get_screen_param(6) {
                 return true;
@@ -7097,7 +7097,7 @@ pub(crate) unsafe fn history_click_is_pure(widget: u32) -> bool {
                 }
             }
         }
-        3..=6 if id == tab as i32 + 2 && data != get_screen_param(history_view_param(tab)) => return true,
+        3..=6 if id == table as i32 + 2 && data != get_screen_param(history_view_param(table)) => return true,
         7 if tel26_item_id(w) == 9 && tel26_item_value(w) as usize != get_screen_param(0x17) => return true,
         _ => {}
     }
@@ -8243,3 +8243,13 @@ pub(crate) const COMP_CLICK_PRINTOUT_DIALOG: u32 = 0x39;
 
 /// A season record of that list (0x26b bytes) [inference].
 pub(crate) const HISTORY_SEASON_RECORD_SIZE: usize = 0x26b;
+
+/// `Plot::add_series` (0x7c7100, thiscall, ret 0xc): `n` points in a colour with a name.
+pub(crate) unsafe fn plot_add_series(plot: usize, n: i32, colour: u32, name: usize) {
+    exe::plot_add_series(plot, n, colour, name)
+}
+
+/// `Plot::add_point` (0x7c7240, thiscall, ret 0xc): point (x, y) of a series.
+pub(crate) unsafe fn plot_add_point(plot: usize, series: u32, x: i32, y: i32) {
+    exe::plot_add_point(plot, series, x, y)
+}

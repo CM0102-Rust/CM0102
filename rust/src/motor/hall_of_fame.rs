@@ -80,7 +80,7 @@ pub(crate) unsafe extern "thiscall" fn try_add_entry(this: usize, table: u32, st
     }
     covered!("mwg_7 entry beats the last one");
     let strncpy: unsafe extern "C" fn(*mut u8, *const u8, u32) -> usize = core::mem::transmute(hf::STRNCPY);
-    let time: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(hf::TIME_FN);
+    let team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(hf::TIME_FN);
     let mut text = [0u8; 200];
     let mut name = [0u8; hf::NAME_LEN];
     let mut club_text = [0u8; hf::NAME_LEN];
@@ -116,7 +116,7 @@ pub(crate) unsafe extern "thiscall" fn try_add_entry(this: usize, table: u32, st
     }
     strncpy(club_text.as_mut_ptr(), text.as_ptr(), hf::NAME_LEN as u32);
     club_text[hf::NAME_LEN - 1] = 0;
-    let stamp = time(0);
+    let stamp = team(0);
     let seed = read_u32(G_GAME_RANDOM_SEED);
     let mut tmp = [0u8; 8];
     exe::date_operator_3d(today.as_mut_ptr() as usize, tmp.as_mut_ptr() as usize, G_CURRENT_DATE);

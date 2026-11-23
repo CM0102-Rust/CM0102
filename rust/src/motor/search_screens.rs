@@ -1615,9 +1615,9 @@ pub(crate) unsafe fn finder_build_menu(b: &mut FinderBuild) {
         tabs[k * FINDER_TAB_SIZE..k * FINDER_TAB_SIZE + 2].copy_from_slice(&0xffffu16.to_le_bytes());
         tabs[k * FINDER_TAB_SIZE + 2..k * FINDER_TAB_SIZE + 4].copy_from_slice(&0u16.to_le_bytes());
     }
-    let tab = |k: usize| tabs.as_ptr() as usize + k * FINDER_TAB_SIZE;
+    let table = |k: usize| tabs.as_ptr() as usize + k * FINDER_TAB_SIZE;
     for k in 0..10i8 {
-        let t = tab(k as usize);
+        let t = table(k as usize);
         scout_manager_write_list_name(k as u32, t + 4, 0xc8);
         let list = finder_list_at(s, k);
         if read_u8(list + finder_list::TYPE) == 4 && get_scout(list + finder_list::SEARCH) == 0 {
@@ -4855,3 +4855,23 @@ pub(crate) const FINDER_SET_SCOPE: usize = 0x8048e0;
 pub(crate) const FINDER_HEADER_CREATOR: usize = 0x6b;
 
 pub(crate) const FINDER_HEADER_PASSWORD: usize = 0x134;
+
+/// Item `k` of the current slot's Display.
+pub(crate) unsafe fn finder_item_at(k: i16) -> usize {
+    display_item_at(finder_display(), k)
+}
+
+/// The two C strings are equal (strcmp).
+pub(crate) unsafe fn finder_same_text(a: usize, b: usize) -> bool {
+    let mut i = 0;
+    loop {
+        let (x, y) = (read_u8(a + i), read_u8(b + i));
+        if x != y {
+            return false;
+        }
+        if x == 0 {
+            return true;
+        }
+        i += 1;
+    }
+}

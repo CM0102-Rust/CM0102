@@ -1571,8 +1571,8 @@ pub(crate) unsafe fn printout_club_season(year: u32, club: usize, out: usize, si
 
 /// `Date::get_short_date_string` (0x54a650, thiscall, ret 0xc): the date, the buffer, its size and the time of day
 /// (0xff: none).
-pub(crate) unsafe fn printout_short_date(date: usize, out: usize, size: u32, time: u32) {
-    (exe::date_get_short_date_string(date, out, size, time) as u32);
+pub(crate) unsafe fn printout_short_date(date: usize, out: usize, size: u32, team: u32) {
+    (exe::date_get_short_date_string(date, out, size, team) as u32);
 }
 
 /// `LLIST` (14 bytes): its constructor, the item under the cursor without moving it (0x68d2e0) and the rewind (the
@@ -1788,7 +1788,7 @@ pub(crate) unsafe fn pundit_parse_line(this: usize, line: usize, serial: u16) ->
     let mut token = [0u8; 0x64];
     let mut id = 0i16;
     let mut name = [0u8; 0x64];
-    let mut media_name = [0u8; 0x64];
+    let mut average_name = [0u8; 0x64];
     let mut place = [0u8; 0x64];
     let mut country = [0u8; 0x64];
     let mut p = pundit_list_parse_quoted_token(this, line, token.as_mut_ptr() as usize);
@@ -1798,9 +1798,9 @@ pub(crate) unsafe fn pundit_parse_line(this: usize, line: usize, serial: u16) ->
     p = pundit_list_parse_quoted_token(this, p, token.as_mut_ptr() as usize);
     exe::at_9466d0(name.as_mut_ptr() as usize, (token.as_ptr() as usize) as usize as *const u8, 0x64);
     name[0x63] = 0;
-    p = pundit_list_parse_quoted_token(this, p, media_name.as_mut_ptr() as usize);
-    let media = parse_media_type_name(this, media_name.as_ptr() as usize);
-    let local = media == 2 || media == 4;
+    p = pundit_list_parse_quoted_token(this, p, average_name.as_mut_ptr() as usize);
+    let average = parse_media_type_name(this, average_name.as_ptr() as usize);
+    let local = average == 2 || average == 4;
     let mut city = -1i32;
     if local {
         covered!("tel36_13 local pundit");
@@ -1843,7 +1843,7 @@ pub(crate) unsafe fn pundit_parse_line(this: usize, line: usize, serial: u16) ->
     exe::at_9466d0(r + PUNDIT_NAME, (name.as_ptr() as usize) as usize as *const u8, 0x64);
     write_u16(r, serial);
     write_u8(r + PUNDIT_NAME + 0x63, 0);
-    write_u8(r + PUNDIT_MEDIA, media as u8);
+    write_u8(r + PUNDIT_MEDIA, average as u8);
     write_i32(r + PUNDIT_CITY, city);
     write_i32(r + PUNDIT_NATION, nation);
     write_u8(r + PUNDIT_ID, id as u8);

@@ -597,7 +597,7 @@ pub(crate) unsafe extern "C" fn compare_save_game_info_input(widget: u32) -> i32
 /// parameters 0..2 the three strings (copied), 3 yes/no, 4 and 5 the colours' low words sign-extended, 6 no Text, 7
 /// the command.
 /// Original: `confirm_push` (0x591840, file_screens.cpp, cdecl).
-pub(crate) unsafe extern "C" fn confirm_push(title: usize, heading: usize, message: usize, yes_no: u32, colour_1: u32, colour_2: u32, command: u32) {
+pub(crate) unsafe extern "C" fn confirm_push(title: usize, heading: usize, message: usize, yes_in_the: u32, colour_1: u32, colour_2: u32, command: u32) {
     if title == 0 || heading == 0 || message == 0 {
         file_screens_error_box(0x5e2);
         return;
@@ -610,7 +610,7 @@ pub(crate) unsafe extern "C" fn confirm_push(title: usize, heading: usize, messa
     set(CONFIRM_TITLE, title, 1);
     set(CONFIRM_HEADING, heading, 1);
     set(CONFIRM_MESSAGE, message, 1);
-    set(CONFIRM_YES_NO, yes_no as usize, 0);
+    set(CONFIRM_YES_NO, yes_in_the as usize, 0);
     set(CONFIRM_COLOUR_1, colour_1 as i16 as isize as usize, 0);
     set(CONFIRM_COLOUR_2, colour_2 as i16 as isize as usize, 0);
     set(CONFIRM_TEXT, 0, 0);
@@ -619,12 +619,12 @@ pub(crate) unsafe extern "C" fn confirm_push(title: usize, heading: usize, messa
 
 /// Comparer for `confirm_push`: only the original runs (it opens a screen); when a new box opened, its parameters
 /// against the plan.
-pub(crate) unsafe extern "C" fn compare_confirm_push(title: usize, heading: usize, message: usize, yes_no: u32, colour_1: u32, colour_2: u32, command: u32) {
+pub(crate) unsafe extern "C" fn compare_confirm_push(title: usize, heading: usize, message: usize, yes_in_the: u32, colour_1: u32, colour_2: u32, command: u32) {
     let before = screen_nodes_built_by(0x591b70);
     let strings = [file_c_string(title), file_c_string(heading), file_c_string(message)];
-    original_fn::<unsafe extern "C" fn(usize, usize, usize, u32, u32, u32, u32)>(IDX_CONFIRM_PUSH)(title, heading, message, yes_no, colour_1, colour_2, command);
+    original_fn::<unsafe extern "C" fn(usize, usize, usize, u32, u32, u32, u32)>(IDX_CONFIRM_PUSH)(title, heading, message, yes_in_the, colour_1, colour_2, command);
     if title != 0 && heading != 0 && message != 0 && screen_newly_opened(&before, 0x591b70) {
-        compare_confirm_opened("confirmation box (open)", &strings, yes_no, colour_1, colour_2, Some(0), command);
+        compare_confirm_opened("confirmation box (open)", &strings, yes_in_the, colour_1, colour_2, Some(0), command);
     }
 }
 
@@ -635,7 +635,7 @@ pub(crate) unsafe extern "C" fn compare_confirm_push(title: usize, heading: usiz
 /// `confirm_push`; when it opens the parameters as there with no message (2 = 0) and the copy in 6.
 /// Defect of the original: when the screen does not open, the copy is never freed.
 /// Original: `confirm_push_text_object` (0x5919b0, file_screens.cpp, cdecl).
-pub(crate) unsafe extern "C" fn confirm_push_text_object(title: usize, heading: usize, text: usize, yes_no: u32, colour_1: u32, colour_2: u32, command: u32) {
+pub(crate) unsafe extern "C" fn confirm_push_text_object(title: usize, heading: usize, text: usize, yes_in_the: u32, colour_1: u32, colour_2: u32, command: u32) {
     if title == 0 || heading == 0 || text == 0 {
         file_screens_error_box(0x611);
         return;
@@ -654,7 +654,7 @@ pub(crate) unsafe extern "C" fn confirm_push_text_object(title: usize, heading: 
     set(CONFIRM_TITLE, title, 1);
     set(CONFIRM_HEADING, heading, 1);
     set(CONFIRM_MESSAGE, 0, 0);
-    set(CONFIRM_YES_NO, yes_no as usize, 0);
+    set(CONFIRM_YES_NO, yes_in_the as usize, 0);
     set(CONFIRM_COLOUR_1, colour_1 as i16 as isize as usize, 0);
     set(CONFIRM_COLOUR_2, colour_2 as i16 as isize as usize, 0);
     set(CONFIRM_TEXT, copy, 0);
@@ -663,12 +663,12 @@ pub(crate) unsafe extern "C" fn confirm_push_text_object(title: usize, heading: 
 
 /// Comparer for `confirm_push_text_object`: only the original runs (it opens a screen and allocates the copy); when a
 /// new box opened, its parameters against the plan (the copy any non-null one).
-pub(crate) unsafe extern "C" fn compare_confirm_push_text_object(title: usize, heading: usize, text: usize, yes_no: u32, colour_1: u32, colour_2: u32, command: u32) {
+pub(crate) unsafe extern "C" fn compare_confirm_push_text_object(title: usize, heading: usize, text: usize, yes_in_the: u32, colour_1: u32, colour_2: u32, command: u32) {
     let before = screen_nodes_built_by(0x591b70);
     let strings = [file_c_string(title), file_c_string(heading), Vec::new()];
-    original_fn::<unsafe extern "C" fn(usize, usize, usize, u32, u32, u32, u32)>(IDX_CONFIRM_PUSH_TEXT_OBJECT)(title, heading, text, yes_no, colour_1, colour_2, command);
+    original_fn::<unsafe extern "C" fn(usize, usize, usize, u32, u32, u32, u32)>(IDX_CONFIRM_PUSH_TEXT_OBJECT)(title, heading, text, yes_in_the, colour_1, colour_2, command);
     if title != 0 && heading != 0 && text != 0 && screen_newly_opened(&before, 0x591b70) {
-        compare_confirm_opened("confirmation box with a text (open)", &strings, yes_no, colour_1, colour_2, None, command);
+        compare_confirm_opened("confirmation box with a text (open)", &strings, yes_in_the, colour_1, colour_2, None, command);
     }
 }
 
@@ -686,7 +686,7 @@ pub(crate) unsafe extern "C" fn confirm_build() {
     let title = get_screen_param(CONFIRM_TITLE);
     let heading = get_screen_param(CONFIRM_HEADING);
     let message = get_screen_param(CONFIRM_MESSAGE);
-    let yes_no = get_screen_param(CONFIRM_YES_NO);
+    let yes_in_the = get_screen_param(CONFIRM_YES_NO);
     let colour_1 = get_screen_param(CONFIRM_COLOUR_1);
     let colour_2 = get_screen_param(CONFIRM_COLOUR_2);
     let text = get_screen_param(CONFIRM_TEXT);
@@ -699,14 +699,14 @@ pub(crate) unsafe extern "C" fn confirm_build() {
     } else {
         exe::gui_add_text_area_from_text(0x6e, 0x91, 0x30c, 0x217, 2, 0, (0x10) as u32 as i32, 4, job_colour(JOB_COLOUR_3184), text);
     }
-    if yes_no == 0 {
+    if yes_in_the == 0 {
         comp_lang_format()(JOB_TEXT, 0x990f7c);
         tel26_add_item(current_human_display(), [2, 0x64, 0x22b, 0x316, 0x24e, 0, 0, 0x30, job_colour(JOB_COLOUR_317E), job_colour(JOB_COLOUR_317E),
             0xc, 4, job_colour(JOB_COLOUR_3184), JOB_TEXT as u32, 0, 3, 0, u32::MAX]);
         return;
     }
     covered!("tel27_2 confirmation yes and no");
-    let rect: [u32; 4] = if yes_no == 1 { [0x64, 0x22b, 0x316, 0x24e] } else { [0, 0, 3, 1] };
+    let rect: [u32; 4] = if yes_in_the == 1 { [0x64, 0x22b, 0x316, 0x24e] } else { [0, 0, 3, 1] };
     let area = tel26_add_area(current_human_display(), [rect[0], rect[1], rect[2], rect[3], 2, weights.as_ptr() as u32, 1, 0, 1, 0, u32::MAX]);
     comp_lang_format()(JOB_TEXT, 0x98e8cc);
     tel26_area_button([area, 0, 0, 0x30, job_colour(JOB_COLOUR_317E), 0xc, 3, job_colour(JOB_COLOUR_3184), JOB_TEXT as u32, 1, 0]);
@@ -735,9 +735,9 @@ pub(crate) unsafe extern "C" fn confirm_input(widget: u32) -> i32 {
     if answer == 0 {
         match read_i8(DISPLAY_KEY_CHAR) {
             10 | 13 | 89 | 121 => {
-                let yes_no = get_screen_param(CONFIRM_YES_NO);
+                let yes_in_the = get_screen_param(CONFIRM_YES_NO);
                 write_u8(DISPLAY_KEY_CHAR, 0);
-                answer = if yes_no != 0 { 2 } else { 3 };
+                answer = if yes_in_the != 0 { 2 } else { 3 };
             }
             27 | 78 | 110 => {
                 answer = 1;
@@ -837,11 +837,11 @@ pub(crate) unsafe fn file_is_directory(path: usize) -> i32 {
 /// A confirmation box of the file box: the message (`langlib_sprintf` of the format with up to one string argument)
 /// into [`JOB_TEXT`], the heading (the heading's format, the message as an unused argument) into a local, and
 /// `confirm_push(title, heading, message, yes/no, colour 1, colour 2, 0)`.
-pub(crate) unsafe fn file_dialog_confirm(title: usize, heading: usize, format: usize, argument: usize, yes_no: u32, colour_1: usize, colour_2: usize) {
+pub(crate) unsafe fn file_dialog_confirm(title: usize, heading: usize, format: usize, argument: usize, yes_in_the: u32, colour_1: usize, colour_2: usize) {
     let message = comp_lang_format()(JOB_TEXT, format, argument) as usize;
     let mut buffer = [0u8; 0xc8];
     let head = comp_lang_format()(buffer.as_mut_ptr() as usize, heading, message) as usize;
-    confirm_push(title, head, message, yes_no, colour_1 as u32, colour_2 as u32, 0);
+    confirm_push(title, head, message, yes_in_the, colour_1 as u32, colour_2 as u32, 0);
 }
 
 /// The path of the file box's file into the result buffer: `_makepath(result, 0, directory, name, extension)`, the
@@ -1031,8 +1031,8 @@ pub(crate) fn file_addictedness(days: i32, hours: i32) -> usize {
 
 /// "Last Saved" of the save game info screen into [`JOB_TEXT`]: `localtime` of the time of the save (at `time`), the
 /// weekday from Monday (`date_get_weekday_name`), the month name and the year (+1900).
-pub(crate) unsafe fn file_last_saved(time: usize) {
-    let tm = exe::at_946c40(time);
+pub(crate) unsafe fn file_last_saved(team: usize) {
+    let tm = exe::at_946c40(team);
     let mut weekday = (read_u8(tm + 0x18) as i8).wrapping_sub(1);
     if weekday < 0 {
         weekday = weekday.wrapping_add(7);
@@ -1045,9 +1045,9 @@ pub(crate) unsafe fn file_last_saved(time: usize) {
 
 /// The plan check of a confirmation box opener: the strings by content, the plain parameters by value (`text` the
 /// expected Text parameter: 0, or `None` for any non-null one).
-pub(crate) unsafe fn compare_confirm_opened(name: &str, strings: &[Vec<u8>], yes_no: u32, colour_1: u32, colour_2: u32, text: Option<usize>, command: u32) {
+pub(crate) unsafe fn compare_confirm_opened(name: &str, strings: &[Vec<u8>], yes_in_the: u32, colour_1: u32, colour_2: u32, text: Option<usize>, command: u32) {
     let got_strings: Vec<Vec<u8>> = (0..strings.len() as u32).map(|k| file_c_string(get_screen_param(k))).collect();
-    let plain = get_screen_param(CONFIRM_YES_NO) == yes_no as usize && get_screen_param(CONFIRM_COLOUR_1) == colour_1 as i16 as isize as usize
+    let plain = get_screen_param(CONFIRM_YES_NO) == yes_in_the as usize && get_screen_param(CONFIRM_COLOUR_1) == colour_1 as i16 as isize as usize
         && get_screen_param(CONFIRM_COLOUR_2) == colour_2 as i16 as isize as usize && get_screen_param(CONFIRM_COMMAND) == command as usize;
     let text_ok = match text {
         Some(v) => get_screen_param(CONFIRM_TEXT) == v,

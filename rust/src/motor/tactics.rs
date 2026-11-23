@@ -1534,11 +1534,11 @@ pub(crate) unsafe fn table_row(t: usize, linha: i32) -> usize {
 
 /// The regions the three can touch: the club's row in the table (if any) and the pending
 /// instructions with the counter (+0x30..+0x5f1).
-pub(crate) unsafe fn table_regions(t: usize, clube: usize, humano: u32) -> Vec<(usize, usize)> {
+pub(crate) unsafe fn table_regions(t: usize, clube: usize, human: u32) -> Vec<(usize, usize)> {
     let mut r = vec![(t + tactics_fields::UNDO_SLOTS, 0x5c1)];
     if clube != 0 {
         let tactics_row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
-        let l = tactics_row(clube, humano);
+        let l = tactics_row(clube, human);
         if l != -1 {
             r.push((table_row(t, l), 0x91));
         }

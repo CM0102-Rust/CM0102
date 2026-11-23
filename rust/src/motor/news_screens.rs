@@ -85,7 +85,7 @@ pub(crate) unsafe extern "C" fn news_screens_build_news_screen() {
     exe::new_text(text_b.as_mut_ptr(), 0usize);
     let manager = tel26_slot_manager();
     let refresh = get_screen_param(0);
-    let tab = get_screen_param(1) as u8;
+    let table = get_screen_param(1) as u8;
     let mut list = get_screen_param(2);
     let mut count = get_screen_param(3) as i32;
     let reset = get_screen_param(4) as u32;
@@ -93,7 +93,7 @@ pub(crate) unsafe extern "C" fn news_screens_build_news_screen() {
     if exe::crt_strstr(filter, NEWS_FILTER_PLACEHOLDER) != 0 {
         tel28_crt()(filter, 0xad9c64usize);
     }
-    let k = (tab as i8 as i32 * 3 + 9) as u32;
+    let k = (table as i8 as i32 * 3 + 9) as u32;
     let mut sel = get_screen_param(k) as u32;
     if refresh != 0 {
         if exe::news_has_urgent_items(read_usize(G_NEWS), manager, 1) == 0 && exe::screenmanager_is_manager_done(G_SCREEN_MANAGER, manager.addr() as u32) == 0 {
@@ -116,7 +116,7 @@ pub(crate) unsafe extern "C" fn news_screens_build_news_screen() {
         set_screen_param(4, 0);
     }
     if list == 0 {
-        list = exe::news_get_inbox_items(read_usize(G_NEWS), manager, &mut count, tab as u32);
+        list = exe::news_get_inbox_items(read_usize(G_NEWS), manager, &mut count, table as u32);
         set_screen_param(2, list);
         set_screen_param(3, count as isize as usize);
     }
@@ -157,7 +157,7 @@ pub(crate) unsafe extern "C" fn news_screens_build_news_screen() {
         set_kind(&mut items[j + 1], *value);
     }
     let (mut top, mut bottom) = (0x50i32, 0x221i32);
-    exe::gui_add_tab_bar(items.as_mut_ptr() as usize, 8, tab as i8 as i32, &mut top, &mut bottom, 1);
+    exe::gui_add_tab_bar(items.as_mut_ptr() as usize, 8, table as i8 as i32, &mut top, &mut bottom, 1);
     let visible = (0x5a / exe::font_get_height(2)) as u8;
     // the original stores the row count over the reset parameter's slot: the dword carries its upper bytes
     let rows = (reset & 0xffff_ff00) | visible as u32;

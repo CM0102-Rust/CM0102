@@ -280,8 +280,8 @@ pub(crate) unsafe fn spa_cup_collect_entrants_body(this: Cup) -> i32 {
         let c = Club(base + i as usize * club::SIZE);
         let nation = c.nation();
         if !nation.is_null() && read_usize(nation.addr()) == read_usize(KEY_NATION_SPAIN) && !spa_cup_is_linked_b_team(c) {
-            let cont = c.continental_comp_id() as i32;
-            if cont != -1 && cont != read_usize(KEY_CLUB_COMP_INTER_TOTO_CUP) as i32 && nc < 0x14 && nc < 7 {
+            let count = c.continental_comp_id() as i32;
+            if count != -1 && count != read_usize(KEY_CLUB_COMP_INTER_TOTO_CUP) as i32 && nc < 0x14 && nc < 7 {
                 continental[nc as usize] = c.addr();
                 nc += 1;
             } else if !c.last_division().is_null() {

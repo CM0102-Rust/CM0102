@@ -4189,8 +4189,8 @@ pub(crate) unsafe fn media_log_response(person: usize, club: usize, code: u32, k
     write_u8(k + 0x10, 0);
     write_u16(k + 0x11, code as u8 as i8 as i16 as u16);
     write_u32(k + 0x13, kind);
-    let media = read_usize(G_MEDIA);
-    let found = exe::crt_bsearch(k, read_usize(media), read_u32(media + 8), 0x17, 0x757ee0usize);
+    let average = read_usize(G_MEDIA);
+    let found = exe::crt_bsearch(k, read_usize(average), read_u32(average + 8), 0x17, 0x757ee0usize);
     if found != 0 {
         write_u8(found + 0x10, response as u8);
     }
@@ -8020,3 +8020,21 @@ pub(crate) const PLAYER_STORY_FIXTURE_ENTRY_MATCHES: usize = 0x729500; // Match_
 pub(crate) const PLAYER_STORY_READ_FIXTURE: usize = 0x7e4fa0;
 
 pub(crate) type PraiseFormat = unsafe extern "C" fn(usize, usize, ...) -> i32;
+
+/// strcat: appends `src` to the string at `dst`.
+pub(crate) unsafe fn story_strcat(dst: usize, src: usize) {
+    let mut d = dst;
+    while read_u8(d) != 0 {
+        d += 1;
+    }
+    let mut s = src;
+    loop {
+        let c = read_u8(s);
+        write_u8(d, c);
+        if c == 0 {
+            break;
+        }
+        d += 1;
+        s += 1;
+    }
+}

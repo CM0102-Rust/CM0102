@@ -60,7 +60,7 @@ pub(crate) unsafe extern "C" fn transfer_rules_info_screen_display() {
     let mut tabs = [0u8; TRANSFER_RULES_TAB_SIZE * 4];
     let t = tabs.as_mut_ptr() as usize;
     exe::crt_vector_constructor_iterator(t, TRANSFER_RULES_TAB_SIZE as u32, 4, 0x4568f0usize, 0x5a53c0usize);
-    let tab = get_screen_param(0) as u8 as i8;
+    let table = get_screen_param(0) as u8 as i8;
     let current = get_screen_param(1);
     let slot = read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize;
     let human = Staff(read_usize((G_SCREEN_RECORDS_MANAGER as isize + slot * 0x300) as usize));
@@ -85,8 +85,8 @@ pub(crate) unsafe extern "C" fn transfer_rules_info_screen_display() {
         write_u32(item + TRANSFER_RULES_TAB_LINK, 1);
         write_u32(item + TRANSFER_RULES_TAB_VALUE, k as u32 + 1);
     }
-    exe::gui_add_tab_bar(t, 4, tab as i32, &mut top, &mut bottom, 1);
-    let explanation = match tab {
+    exe::gui_add_tab_bar(t, 4, table as i32, &mut top, &mut bottom, 1);
+    let explanation = match table {
         1 => Some(if current != 0 { 0xa65188 } else { 0xa65020 }),
         3 => Some(0xa64e30),
         4 => Some(0xa64c24),

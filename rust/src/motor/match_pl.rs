@@ -9591,32 +9591,32 @@ pub(crate) unsafe extern "stdcall" fn compare_set_piece_code(c: i16) -> u8 {
 }
 
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn compare_goalkeeper_save(this: usize, a: i8, b: i8, a3: u8, codigo: i8, saida: *mut u8, rebote: *mut u8) -> u16 {
+pub(crate) unsafe extern "thiscall" fn compare_goalkeeper_save(this: usize, a: i8, b: i8, a3: u8, code: i8, out: *mut u8, rebote: *mut u8) -> u16 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, u8, i8, *mut u8, *mut u8) -> u16>(IDX_GOALKEEPER_SAVE);
-    let mut reg = vec![(saida as usize, 1), (rebote as usize, 1)];
+    let mut reg = vec![(out as usize, 1), (rebote as usize, 1)];
     reg.extend(crate::rng::STATE_REGIONS);
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, a, b, a3, codigo, saida, rebote), || crate::rng::without_counting(|| goalkeeper_save(this, a, b, a3, codigo, saida, rebote)));
-    SCOREBOARD.record(igual && r == n, || format!("goalkeeper_save({}, {}, {}, {}) original={} {:x?} rust={} {:x?}", a, b, a3, codigo, r as i16, mo, n as i16, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, a, b, a3, code, out, rebote), || crate::rng::without_counting(|| goalkeeper_save(this, a, b, a3, code, out, rebote)));
+    SCOREBOARD.record(igual && r == n, || format!("goalkeeper_save({}, {}, {}, {}) original={} {:x?} rust={} {:x?}", a, b, a3, code, r as i16, mo, n as i16, mr));
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn compare_control_of_move(this: usize, codigo: *mut i8, a: *mut u8, b: *mut u8) -> u16 {
+pub(crate) unsafe extern "thiscall" fn compare_control_of_move(this: usize, code: *mut i8, a: *mut u8, b: *mut u8) -> u16 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut i8, *mut u8, *mut u8) -> u16>(IDX_CONTROL_OF_MOVE);
-    let mut reg = vec![(codigo as usize, 1), (a as usize, 1), (b as usize, 1)];
+    let mut reg = vec![(code as usize, 1), (a as usize, 1), (b as usize, 1)];
     reg.extend(crate::rng::STATE_REGIONS);
-    let c0 = *codigo;
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, codigo, a, b), || crate::rng::without_counting(|| control_of_move(this, codigo, a, b)));
+    let c0 = *code;
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, code, a, b), || crate::rng::without_counting(|| control_of_move(this, code, a, b)));
     SCOREBOARD.record(igual && r == n, || format!("control_of_move({}) original={} {:x?} rust={} {:x?}", c0, r as i16, mo, n as i16, mr));
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn compare_shot_value(this: usize, tipo: *mut i8, som: *mut u16) -> u16 {
+pub(crate) unsafe extern "thiscall" fn compare_shot_value(this: usize, tipo: *mut i8, sound: *mut u16) -> u16 {
     let this = MatchPlayer(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut i8, *mut u16) -> u16>(IDX_SHOT_VALUE);
-    let mut reg = vec![(tipo as usize, 1), (som as usize, 2), (this.addr() + match_player::SHOT_QUALITY, 2)];
+    let mut reg = vec![(tipo as usize, 1), (sound as usize, 2), (this.addr() + match_player::SHOT_QUALITY, 2)];
     reg.extend(crate::rng::STATE_REGIONS);
     let t0 = *tipo;
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this.addr(), tipo, som), || crate::rng::without_counting(|| shot_value(this.addr(), tipo, som)));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this.addr(), tipo, sound), || crate::rng::without_counting(|| shot_value(this.addr(), tipo, sound)));
     SCOREBOARD.record(igual && r == n, || format!("shot_value(kind {}) original={} {:x?} rust={} {:x?}", t0, r as i16, mo, n as i16, mr));
     r
 }

@@ -1432,8 +1432,8 @@ pub(crate) unsafe fn scout_day_shortlisted(r: usize, club: usize) -> bool {
     if p.is_null() || p.player().is_null() {
         return false;
     }
-    let grade = read_i8(r + 0x29);
-    let good = (read_i16(p.player().addr() + player_sheet::CURRENT_REPUTATION) > 0x1a5e && grade == 3) || grade > 3;
+    let grid = read_i8(r + 0x29);
+    let good = (read_i16(p.player().addr() + player_sheet::CURRENT_REPUTATION) > 0x1a5e && grid == 3) || grid > 3;
     good && exe::transfer_manager_player_needs_work_permit(read_usize(G_TRANSFER_MANAGER), p, club, 0) == 0
 }
 

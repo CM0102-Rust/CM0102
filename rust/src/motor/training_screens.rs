@@ -1118,19 +1118,19 @@ pub(crate) unsafe fn training_schedule_tabs(session: usize, view_index: i32, tab
     for k in 0..10i8 {
         let schedule = training_schedule(session, k);
         exe::training_schedule_set_default_name(schedule);
-        let tab = tabs + k as usize * TRAINING_TAB_SIZE;
+        let table = tabs + k as usize * TRAINING_TAB_SIZE;
         let kind = read_u8(schedule + TRAINING_SCHEDULE_KIND);
         if kind == 0xff || kind == 7 {
-            tel26_copy_text((tab + 4) as *mut u8, (schedule + TRAINING_SCHEDULE_NAME) as *const u8);
+            tel26_copy_text((table + 4) as *mut u8, (schedule + TRAINING_SCHEDULE_NAME) as *const u8);
         } else {
             let n = exe::training_edit_session_count_schedule_players(session, k as u8 as u32) as i8;
-            format(tab + 4, 0xa8d164, schedule + TRAINING_SCHEDULE_NAME, n as i32); // "%s (%d)"
+            format(table + 4, 0xa8d164, schedule + TRAINING_SCHEDULE_NAME, n as i32); // "%s (%d)"
         }
         if read_u8(schedule + TRAINING_SCHEDULE_KIND) == 7 {
-            write_u16(tab + 2, read_u16(G_GUI_COLOUR_GREY));
+            write_u16(table + 2, read_u16(G_GUI_COLOUR_GREY));
         }
-        write_u32(tab + 0xcc, 1);
-        write_i32(tab + 0xd0, k as i32);
+        write_u32(table + 0xcc, 1);
+        write_i32(table + 0xd0, k as i32);
     }
     let (mut top, mut bottom) = (0x50i32, 0x221i32);
     exe::gui_add_tab_bar(tabs, 10, view_index, &mut top, &mut bottom, 1);

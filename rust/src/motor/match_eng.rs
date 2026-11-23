@@ -10901,11 +10901,11 @@ pub(crate) unsafe extern "thiscall" fn compare_compute_percentages(this: usize, 
     SCOREBOARD.record(igual, || format!("compute_percentages({}) original={:x?} rust={:x?}", i, mo, mr));
 }
 
-pub(crate) unsafe extern "thiscall" fn compare_choose_by_role_c(this: usize, arg: u32, modo: u32) -> u8 {
+pub(crate) unsafe extern "thiscall" fn compare_choose_by_role_c(this: usize, arg: u32, mode: u32) -> u8 {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> u8>(IDX_CHOOSE_BY_ROLE_C);
     let reg = crate::rng::STATE_REGIONS;
-    let (r, n, igual, _, _) = crate::comparison::side_by_side(&reg, || f(this, arg, modo), || crate::rng::without_counting(|| choose_by_role_c(this, arg, modo)));
-    SCOREBOARD.record(igual && r == n, || format!("choose_by_role_c({:#x}, {}) original={} rust={}", arg, modo as u8, r as i8, n as i8));
+    let (r, n, igual, _, _) = crate::comparison::side_by_side(&reg, || f(this, arg, mode), || crate::rng::without_counting(|| choose_by_role_c(this, arg, mode)));
+    SCOREBOARD.record(igual && r == n, || format!("choose_by_role_c({:#x}, {}) original={} rust={}", arg, mode as u8, r as i8, n as i8));
     r
 }
 
@@ -10923,61 +10923,61 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_to_side(this: usize, l: i8,
     SCOREBOARD.record(igual, || format!("apply_to_side({}, {}) original={:x?} rust={:x?}", l, f, mo, mr));
 }
 
-pub(crate) unsafe extern "thiscall" fn compare_choose_by_condition(this: usize, l: i8, modo: u32) -> u8 {
+pub(crate) unsafe extern "thiscall" fn compare_choose_by_condition(this: usize, l: i8, mode: u32) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, u32) -> u8>(IDX_CHOOSE_BY_CONDITION);
     let reg = crate::rng::STATE_REGIONS;
-    let (r, n, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this, l, modo), || crate::rng::without_counting(|| choose_by_condition(this, l, modo)));
-    SCOREBOARD.record(igual && r == n, || format!("choose_by_condition({}, {}) original={} rust={}", l, modo as u8, r as i8, n as i8));
+    let (r, n, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this, l, mode), || crate::rng::without_counting(|| choose_by_condition(this, l, mode)));
+    SCOREBOARD.record(igual && r == n, || format!("choose_by_condition({}, {}) original={} rust={}", l, mode as u8, r as i8, n as i8));
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn compare_engine_decide_foul(this: usize, j: usize, codigo: u16, tipo: *mut u8, valor: *mut u8) -> u8 {
+pub(crate) unsafe extern "thiscall" fn compare_engine_decide_foul(this: usize, j: usize, code: u16, tipo: *mut u8, valor: *mut u8) -> u8 {
     let this = Engine(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u16, *mut u8, *mut u8) -> u8>(IDX_ENGINE_DECIDE_FOUL);
     let mut reg = vec![(this.addr() + engine::REFEREE + 8, 2), (tipo as usize, 1), (valor as usize, 1), (this.addr() + engine::PENDING_PLAY_KIND, 16)];
     reg.extend(crate::rng::STATE_REGIONS);
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this.addr(), j, codigo, tipo, valor), || crate::rng::without_counting(|| engine_decide_foul(this.addr(), j, codigo, tipo, valor)));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this.addr(), j, code, tipo, valor), || crate::rng::without_counting(|| engine_decide_foul(this.addr(), j, code, tipo, valor)));
     SCOREBOARD.record(igual && r == n, || format!("engine_decide_foul original={} {:x?} rust={} {:x?}", r, mo, n, mr));
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn compare_choose_by_role_e(this: usize, arg: u32, modo: u32) -> u8 {
+pub(crate) unsafe extern "thiscall" fn compare_choose_by_role_e(this: usize, arg: u32, mode: u32) -> u8 {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> u8>(IDX_CHOOSE_BY_ROLE_E);
     let reg = crate::rng::STATE_REGIONS;
-    let (r, n, igual, _, _) = crate::comparison::side_by_side(&reg, || f(this, arg, modo), || crate::rng::without_counting(|| choose_by_role_e(this, arg, modo)));
-    SCOREBOARD.record(igual && r == n, || format!("choose_by_role_e({:#x}, {}) original={} rust={}", arg, modo as u8, r as i8, n as i8));
+    let (r, n, igual, _, _) = crate::comparison::side_by_side(&reg, || f(this, arg, mode), || crate::rng::without_counting(|| choose_by_role_e(this, arg, mode)));
+    SCOREBOARD.record(igual && r == n, || format!("choose_by_role_e({:#x}, {}) original={} rust={}", arg, mode as u8, r as i8, n as i8));
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn compare_possession_statistic(this: usize, l: i8, janela: u8) {
+pub(crate) unsafe extern "thiscall" fn compare_possession_statistic(this: usize, l: i8, window: u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, u8)>(IDX_POSSESSION_STATISTIC);
     let reg = [(this, 0x230), (this + 0x8d40, 0x260)];
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, l, janela), || possession_statistic(this, l, janela));
-    SCOREBOARD.record(igual, || format!("possession_statistic({}, {}) original={:x?} rust={:x?}", l, janela, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, l, window), || possession_statistic(this, l, window));
+    SCOREBOARD.record(igual, || format!("possession_statistic({}, {}) original={:x?} rust={:x?}", l, window, mo, mr));
 }
 
-pub(crate) unsafe extern "thiscall" fn compare_match_summary(this: usize, momento: i16) {
+pub(crate) unsafe extern "thiscall" fn compare_match_summary(this: usize, moment: i16) {
     let this = Engine(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i16)>(IDX_MATCH_SUMMARY);
     if is_recording_top_level() {
-        call_recording(0x6ce460, this.addr(), [momento as u16 as u32, 0, 0, 0, 0], || {
-            o(this.addr(), momento);
+        call_recording(0x6ce460, this.addr(), [moment as u16 as u32, 0, 0, 0, 0], || {
+            o(this.addr(), moment);
             0
         });
         return;
     }
     let mut reg = vec![(this.addr() + engine::PLAYERS, 40 * 0x1be), (this.addr() + 0xf5b0, 0x90)];
     reg.extend(crate::rng::STATE_REGIONS);
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this.addr(), momento), || crate::rng::without_counting(|| match_summary(this.addr(), momento)));
-    SCOREBOARD.record(igual, || format!("match_summary({}) original={:x?} rust={:x?}", momento, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this.addr(), moment), || crate::rng::without_counting(|| match_summary(this.addr(), moment)));
+    SCOREBOARD.record(igual, || format!("match_summary({}) original={:x?} rust={:x?}", moment, mo, mr));
 }
 
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn compare_trace_move(this: usize, x0: i8, y0: i8, x1: i8, y1: i8, codigo: i8, a6: u32, a7: u32) -> u8 {
+pub(crate) unsafe extern "thiscall" fn compare_trace_move(this: usize, x0: i8, y0: i8, x1: i8, y1: i8, code: i8, a6: u32, a7: u32) -> u8 {
     if is_recording_top_level() {
         // unit of the tape of the pass execution (the only one that calls it); inside, the comparison itself
         let xy = x0 as u8 as u32 | (y0 as u8 as u32) << 8 | (x1 as u8 as u32) << 16 | (y1 as u8 as u32) << 24;
-        return call_recording(0x6ccb60, this, [xy, codigo as u8 as u32, a6, a7, 0], || compare_trace_move(this, x0, y0, x1, y1, codigo, a6, a7) as u32) as u8;
+        return call_recording(0x6ccb60, this, [xy, code as u8 as u32, a6, a7, 0], || compare_trace_move(this, x0, y0, x1, y1, code, a6, a7) as u32) as u8;
     }
     use std::sync::atomic::Ordering::Relaxed;
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, i8, i8, i8, u32, u32) -> u8>(IDX_TRACE_MOVE);
@@ -10989,7 +10989,7 @@ pub(crate) unsafe extern "thiscall" fn compare_trace_move(this: usize, x0: i8, y
         &reg,
         || {
             RECORDING_6CD330.store(true, Relaxed);
-            let r = o(this, x0, y0, x1, y1, codigo, a6, a7);
+            let r = o(this, x0, y0, x1, y1, code, a6, a7);
             RECORDING_6CD330.store(false, Relaxed);
             *tape_lock.borrow_mut() = core::mem::take(&mut *TAPE_6CD330.lock().unwrap_or_else(|e| e.into_inner()));
             r
@@ -10998,7 +10998,7 @@ pub(crate) unsafe extern "thiscall" fn compare_trace_move(this: usize, x0: i8, y
             let gravadas = tape_lock.borrow();
             let mut prox = gravadas.iter();
             let n = crate::rng::without_counting(|| {
-                trace_line_interception_with(this, x0, y0, x1, y1, codigo, a6, a7, &mut |l, c, dd, a, t, b| match prox.next() {
+                trace_line_interception_with(this, x0, y0, x1, y1, code, a6, a7, &mut |l, c, dd, a, t, b| match prox.next() {
                     // the type and a6/a7 only have the low byte (the rest is stack garbage in the original)
                     Some(((gl, gc, gd, ga, gt, gb, 1), gr, depois)) if *gl == l && *gc == c && *gd == dd && *ga as u16 == a as u16 && *gt as u8 == t as u8 && *gb as u8 == b as u8 => {
                         depois.write_back();
@@ -11016,7 +11016,7 @@ pub(crate) unsafe extern "thiscall" fn compare_trace_move(this: usize, x0: i8, y
             n
         },
     );
-    SCOREBOARD.record(igual && r == n && sequencia.get(), || format!("trace_move({} {} -> {} {}, code {}) original={} rust={} seq={} {:x?} {:x?}", x0, y0, x1, y1, codigo, r, n, sequencia.get(), mo, mr));
+    SCOREBOARD.record(igual && r == n && sequencia.get(), || format!("trace_move({} {} -> {} {}, code {}) original={} rust={} seq={} {:x?} {:x?}", x0, y0, x1, y1, code, r, n, sequencia.get(), mo, mr));
     r
 }
 
@@ -11028,18 +11028,18 @@ pub(crate) unsafe extern "C" fn compare_round_below_1000(v: i32) -> i32 {
 }
 
 /// The player's value in a table of 11 words (one per side), by the player's position (0..=10).
-pub(crate) unsafe fn table_by_position(this: usize, jogador: MatchPlayer, campo: usize) -> u16 {
+pub(crate) unsafe fn table_by_position(this: usize, jogador: MatchPlayer, field: usize) -> u16 {
     let posicao = jogador.position();
     if !(0..=10).contains(&posicao) {
         return 0;
     }
     let lado = jogador.side() as isize;
-    let tabela = *((this as isize + campo as isize + lado * 4) as *const usize) as *const u16;
-    *tabela.add(posicao as usize)
+    let table = *((this as isize + field as isize + lado * 4) as *const usize) as *const u16;
+    *table.add(posicao as usize)
 }
 
-pub(crate) unsafe fn card_regions(motor: usize, j: usize, tipo: *mut u8, peso: *mut f32) -> Vec<(usize, usize)> {
-    let mut reg = vec![(j, 0x40), (tipo as usize, 1), (peso as usize, 4), ((motor as isize + 0xf5c9 + 54 * side_of_player(MatchPlayer(j)) as isize) as usize, 1)];
+pub(crate) unsafe fn card_regions(engine: usize, j: usize, tipo: *mut u8, weight: *mut f32) -> Vec<(usize, usize)> {
+    let mut reg = vec![(j, 0x40), (tipo as usize, 1), (weight as usize, 4), ((engine as isize + 0xf5c9 + 54 * side_of_player(MatchPlayer(j)) as isize) as usize, 1)];
     reg.extend(crate::rng::STATE_REGIONS);
     reg
 }

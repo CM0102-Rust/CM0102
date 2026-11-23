@@ -3947,8 +3947,9 @@ routines! {
     Prologue { address: 0x7b3e20, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] } => run_scout_day, compare_run_scout_day;
     Prologue { address: 0x5c3040, bytes: &[0x6a, 0xff, 0x68, 0x24, 0x9f, 0x95, 0x00] } => plan_preseason_tournaments_and_tours, compare_plan_preseason_tournaments_and_tours;
     Prologue { address: 0x893dc0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => construct_tactics, compare_construct_tactics;
+    Prologue { address: 0x57dab0, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] } => euro_champ_qual_draw_groups, compare_euro_champ_qual_draw_groups;
 }
-const N: usize = 3789;
+const N: usize = 3790;
 include!(concat!(env!("OUT_DIR"), "/indices.rs")); // IDX_<NAME>: the position of each routine (build.rs)
 
 /// Size of the engine object (the game allocates it with new(0xf63b)): side 1's block (+0xf5f2, 0x36
@@ -6006,22 +6007,15 @@ compare_value!(compare_staff_screens_board_confidence, staff_screens_board_confi
 
 // The exe functions these Setup screens call that have no wrapper yet (cdecl unless noted; checked at the call sites).
 const FN_UTILS_IS_DIRECTORY: usize = 0x90bf90; // utils_is_directory(path) -> int
-const FN_OPEN_GAME_SETTINGS_BOX: usize = 0x823890; // open_game_settings_box(origin)
 const FN_COUNT_HUMAN_MANAGERS: usize = 0x838d10; // count_human_managers(connected_only) -> int
-const FN_SETUP_ASSIGN_RESTORED_NETWORK_MANAGERS: usize = 0x8387e0; // -> 1 when Manager Status must open
 const FN_SETUP_ADD_HUMAN_MANAGER: usize = 0x820d40; // setup_add_human_manager()
-const FN_SETUP_START_NEW_GAME: usize = 0x81ce00; // setup_start_new_game()
 const FN_CONFIRM_PUSH: usize = 0x591840; // confirm_push(title, heading, text, buttons, text_colour, colour, code)
 const FN_OPEN_FILE_DIALOG: usize = 0x58f500; // open_file_dialog(title, heading, mode, dir, ext, name, on_ok, colour_a, colour_b, a10..a14)
 const FN_KEY_NATION_SORTED_ORDER: usize = 0x66a0c0; // key_nation_sorted_order(by_second_name) -> u8 * (the static 35 indices at 0xb63d38)
 
 // The Setup screens' globals that have no name yet (community data map names in the comments).
-const G_COMMAND_LINE_TEXT: usize = 0xae2c98; // g_command_line_text
 const G_SETUP_SCREEN_TITLE: usize = 0xdd70a8; // g_setup_screen_title ("Championship Manager 2001/02")
 const G_NETWORK_SETUP_HOST_FLAG: usize = 0xdd7128; // g_network_setup_host_flag
-const G_QUICK_START_FILE_PATH: usize = 0xdd6f9c; // g_quick_start_file_path
-const G_PENDING_COMMAND_DISPATCH_FLAG: usize = 0xb77c84; // g_pending_command_dispatch_flag
-const CONFIG_SAVE_FOLDER: usize = 0xf; // the Config's save folder text [inference: passed as the folder of the restore and delete dialogs]
 const KEY_NATION_RECORD_SETUP_FUNC: usize = 0x8; // the setup function of a league entry (null: the league cannot be selected)
 const SETUP_TEXT: usize = 0xde1f64; // the shared text buffer
 
@@ -6640,25 +6634,6 @@ mod finder_text {
     pub(crate) const SELECT_FILE: usize = 0xa7fc84;
     pub(crate) const ENTER_FILE_NAME: usize = 0x9907f4;
     pub(crate) const EXTENSION: usize = 0xa7fc90; // ".pls"
-}
-
-/// Item `k` of the current slot's Display.
-unsafe fn finder_item_at(k: i16) -> usize {
-    display_item_at(finder_display(), k)
-}
-/// The two C strings are equal (strcmp).
-unsafe fn finder_same_text(a: usize, b: usize) -> bool {
-    let mut i = 0;
-    loop {
-        let (x, y) = (read_u8(a + i), read_u8(b + i));
-        if x != y {
-            return false;
-        }
-        if x == 0 {
-            return true;
-        }
-        i += 1;
-    }
 }
 
 // ---------- batch 318: the search screens (1): the sort orders of the search results (search_screens.cpp) ----------
@@ -8476,24 +8451,6 @@ pub(crate) mod season_pass {
 std::thread_local! {
     /// The pieces of `write_player_media_story_news_text` its last call ran, in order (the comparer names them).
     static PLAYER_STORY_TRAIL: core::cell::RefCell<Vec<&'static str>> = core::cell::RefCell::new(Vec::new());
-}
-
-/// strcat: appends `src` to the string at `dst`.
-unsafe fn story_strcat(dst: usize, src: usize) {
-    let mut d = dst;
-    while read_u8(d) != 0 {
-        d += 1;
-    }
-    let mut s = src;
-    loop {
-        let c = read_u8(s);
-        write_u8(d, c);
-        if c == 0 {
-            break;
-        }
-        d += 1;
-        s += 1;
-    }
 }
 
 // ---------- batch 294: the player praise story (media.cpp) ----------
@@ -11829,3 +11786,7 @@ pub unsafe fn autoteste(casos: u64) {
     });
     SYNTHETIC.store(false, std::sync::atomic::Ordering::Relaxed);
 }
+
+/// `read_staff_name_ref_from_news(item, &slot, out)` (0x7e52c0, record_utils.cpp, cdecl): reads 0x18 bytes (four
+/// dwords and a date) from the item's slots from `slot` on, moving `slot`.
+pub(crate) const FN_READ_STAFF_NAME_REF_FROM_NEWS: usize = 0x7e52c0;

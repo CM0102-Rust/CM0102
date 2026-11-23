@@ -217,11 +217,11 @@ pub(crate) unsafe extern "C" fn gui_add_tab_bar(tabs: usize, n: i32, selected_id
         }
         let rec = list + k as usize * gui_blocks_button::SIZE;
         let colour = read_u16(rec + gui_blocks_button::COLOUR);
-        let tab_group = read_u32(rec + gui_blocks_button::GROUP);
+        let table_group = read_u32(rec + gui_blocks_button::GROUP);
         let flags = if read_u32(rec + gui_blocks_button::ID) == selected_id {
             colour_word = if colour != 0 { gui_blocks_low_word(selected_id, colour) } else { gui_blocks_low_word(colour_word, read_u16(G_GUI_COLOUR_YELLOW)) };
             0x800
-        } else if tab_group == group {
+        } else if table_group == group {
             colour_word = if colour != 0 { gui_blocks_low_word(group, colour) } else { gui_blocks_low_word(colour_word, read_u16(G_GUI_COLOUR_PALE_GREY)) };
             0
         } else {
@@ -230,10 +230,10 @@ pub(crate) unsafe extern "C" fn gui_add_tab_bar(tabs: usize, n: i32, selected_id
         };
         let font_word = read_u16(rec + gui_blocks_button::FONT);
         let font = if font_word == 0xffff { 1 } else { gui_blocks_low_word(bottom_y as u32, font_word) };
-        let kind = if tab_group != 0 && tab_group != group { 0x4002 } else { 2 };
-        let tab_colour = read_u16(GUI_TAB_BAR_COLOUR);
-        tel26_add_item(gui_blocks_display(), [kind, 0, 0, 0, 0, column, 0, flags | 0x30, gui_blocks_low_word(colour_word, tab_colour),
-            gui_blocks_low_word(tab_group, tab_colour), 0xc, font, colour_word, (rec + gui_blocks_button::TEXT) as u32, 0, tab_group,
+        let kind = if table_group != 0 && table_group != group { 0x4002 } else { 2 };
+        let table_colour = read_u16(GUI_TAB_BAR_COLOUR);
+        tel26_add_item(gui_blocks_display(), [kind, 0, 0, 0, 0, column, 0, flags | 0x30, gui_blocks_low_word(colour_word, table_colour),
+            gui_blocks_low_word(table_group, table_colour), 0xc, font, colour_word, (rec + gui_blocks_button::TEXT) as u32, 0, table_group,
             read_u32(rec + gui_blocks_button::ID), area]);
         column += 1;
     }

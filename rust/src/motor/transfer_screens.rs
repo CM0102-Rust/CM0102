@@ -5045,7 +5045,7 @@ pub(crate) unsafe fn ts_open_must_accept(live: usize, action: u32, why: u32) -> 
 /// player's picture, the title (the slot manager's name, in the colours of his club job, else his national job, else
 /// blue on pale grey), the subtitle `subtitle`, the text `text` with the player's name as a link (0x7d7), the menu bar
 /// and the bar No (`no_id`) / Yes (`yes_id`).
-pub(crate) unsafe fn ts_player_yes_no_dialog(subtitle: usize, text: usize, no_id: u32, yes_id: u32) {
+pub(crate) unsafe fn ts_player_yes_no_dialog(subtitle: usize, text: usize, in_the_id: u32, yes_id: u32) {
     let lang: TsLang = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let picture: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(TS_FN_STAFF_PICTURE);
     let text_area: TsTextAreaLinks = core::mem::transmute(FN_GUI_ADD_TEXT_AREA);
@@ -5074,7 +5074,7 @@ pub(crate) unsafe fn ts_player_yes_no_dialog(subtitle: usize, text: usize, no_id
     exe::menubar_build(4, 0);
     let weights: [u8; 2] = [3, 1];
     let bar = ts_button_bar(2, weights.as_ptr());
-    ts_bar_button(bar, 0, TS_NO, no_id);
+    ts_bar_button(bar, 0, TS_NO, in_the_id);
     ts_bar_button(bar, 1, TS_YES, yes_id);
 }
 
@@ -5125,10 +5125,10 @@ pub(crate) unsafe fn ts_asking_price_widgets(price: i32, plus_on: bool, plus_off
 }
 
 /// The bar No (`no`) / Yes (`yes`) of a dialog, columns weighted 3:1.
-pub(crate) unsafe fn ts_no_yes_bar(no: u32, yes: u32) {
+pub(crate) unsafe fn ts_no_yes_bar(in_the: u32, yes: u32) {
     let weights: [u8; 2] = [3, 1];
     let bar = ts_button_bar(2, weights.as_ptr());
-    ts_bar_button(bar, 0, TS_NO, no);
+    ts_bar_button(bar, 0, TS_NO, in_the);
     ts_bar_button(bar, 1, TS_YES, yes);
 }
 

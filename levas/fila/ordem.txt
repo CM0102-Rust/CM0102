@@ -1,4 +1,3 @@
 # ordem da fila (fila.py); um item por linha
-gra_22
 gra_28
 gra_29

@@ -1179,8 +1179,8 @@ pub(crate) unsafe fn link_open_comp(comp: usize, stage: i32, round: i32) {
 }
 
 /// `staff_screens_open_staff_profile(person, tab, kind, 0, extra)` (0x8702a0, cdecl).
-pub(crate) unsafe fn link_open_profile(person: u32, tab: u32, kind: u32, extra: u32) {
-    exe::staff_screens_open_staff_profile(person, tab, kind, 0, extra);
+pub(crate) unsafe fn link_open_profile(person: u32, table: u32, kind: u32, extra: u32) {
+    exe::staff_screens_open_staff_profile(person, table, kind, 0, extra);
 }
 
 /// `open_club_squad_screen(club, reserves, 0, 0, 0)` (0x453d60, cdecl).

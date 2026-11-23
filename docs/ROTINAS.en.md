@@ -6176,3 +6176,11 @@ Mutations: `mutacoes/leva324.py` (21, by the career to 2002-06-01, confirming th
 | `construct_tactics()` | 0x893dc0 | thiscall, ret 4 | tactics.cpp: Checks the CD (the first CD drive holding cm0102.exe; without it, the "Insert CD" box and again); zeroes the 16 undo slots; with the save, the tactics come from it. In a new game: the 28 AI formations and the 17 preset ones come from the CM3_TACTICS files, in order (442_wide.pct twice), each into the next slot while there is room (a file that fails does not count; without room, the box of its line; formations missing at the end, the box at 0x92 or 0xb4), and the presets get their display name ("4-4-2", "3-5-2 Defensive"...); an empty selection row per club plus 32 (0x91 bytes, all −1 after the first 2); the per-tactic statistics (45 of 0x28 bytes, zeroed with the index) and 9 constants at +0xc..+0x2c |
 
 Mutations: `mutacoes/leva325.py` (5, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 5 caught.  Real game comparing to 2002-01-01: 0 divergences (5828e965). Careers to 2002-06-01: Rust ×2 ac155f01, original 96da1fba (recorded; does not block the batch since 31/10/2026). Garbage detector: equal.
+
+### Simulation, 326th batch — the European Championship qualifying draw (official on 2026-11-23)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `euro_champ_qual_draw_groups()` | 0x57dab0 | thiscall, ret 0 | euro_champ_qual.cpp: The groups draw of the European Championship qualifiers: in 1998, the fixed table (49 national teams in 9 groups, groups 1, 3, 6 and 8 with six); in other years, 9 groups (+0xff + 2) and up to six pots: the group order is shuffled by 20 drawn swaps and each group in turn takes the next national team while it has room; defect: each group room is that of the previous group (g − 1), so in format 1 the groups of six are 1, 3 and 6 |
+
+Mutations: `mutacoes/leva326.py` (2, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 2 caught.  Real game comparing 8 leagues to 2002-06-01: deferred to the audit's accumulated comparison (decision of 5 Nov 2026). Careers to 2002-06-01: Rust ×2 5e6914ad, original 2c08aef5 (recorded; does not block the batch since 31/10/2026). Garbage detector: equal.

@@ -9750,24 +9750,3 @@ pub(crate) mod exe {
         f(a0.addr(), a1, a2, a3.addr())
     }
 }
-
-/// `Plot::add_series` (0x7c7100, thiscall, ret 0xc): `n` points in a colour with a name.
-pub(crate) unsafe fn plot_add_series(plot: usize, n: i32, colour: u32, name: usize) {
-    exe::plot_add_series(plot, n, colour, name)
-}
-
-/// `Plot::add_point` (0x7c7240, thiscall, ret 0xc): point (x, y) of a series.
-pub(crate) unsafe fn plot_add_point(plot: usize, series: u32, x: i32, y: i32) {
-    exe::plot_add_point(plot, series, x, y)
-}
-
-/// Whether the club's stadium town is in Leinster (the exe's ire_club_is_in_leinster 0x6399c0, push club; add esp, 4 ->
-/// cdecl, a gap function of ire_pres_cup.cpp not yet ported: Dublin, Bray, Longford, Dundalk, Drogheda, Athlone or
-/// Kilkenny).
-pub(crate) unsafe fn ire_club_is_in_leinster(club: Club) -> bool {
-    exe::ire_club_is_in_leinster(club) != 0
-}
-
-/// `read_staff_name_ref_from_news(item, &slot, out)` (0x7e52c0, record_utils.cpp, cdecl): reads 0x18 bytes (four
-/// dwords and a date) from the item's slots from `slot` on, moving `slot`.
-pub(crate) const FN_READ_STAFF_NAME_REF_FROM_NEWS: usize = 0x7e52c0;

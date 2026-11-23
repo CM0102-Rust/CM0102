@@ -11,7 +11,7 @@ use super::*;
 /// (the byte, sign-extended: 0 the Find screen, 1 the friendly clubs, 2 the friendly nations only); the rest (the
 /// scroll rows and the areas of each tab) 0.
 /// Original: `open_choose_friendly_teams_screen` (0x5a0650, find_screens.cpp, cdecl).
-pub(crate) unsafe extern "C" fn open_choose_friendly_teams_screen(tab: u32, continent: usize, nation: usize, mode: u32) {
+pub(crate) unsafe extern "C" fn open_choose_friendly_teams_screen(table: u32, continent: usize, nation: usize, mode: u32) {
     if exe::screenmanager_open_screen(G_SCREEN_MANAGER, 0x5a0840usize, 0x5a2780usize, 0, 0usize, 0) == 0 {
         return;
     }
@@ -19,22 +19,22 @@ pub(crate) unsafe extern "C" fn open_choose_friendly_teams_screen(tab: u32, cont
     if continent == 0 {
         tel26_error_box(FIND_SCREENS_CPP, 0x7a);
     }
-    for (k, v) in find_screen_planned_params(tab, continent, nation, mode).iter().enumerate() {
+    for (k, v) in find_screen_planned_params(table, continent, nation, mode).iter().enumerate() {
         set_screen_param(k as u32, *v);
     }
 }
 
 /// Comparer for `open_choose_friendly_teams_screen`: only the original runs (it opens a screen), and the parameters
 /// are checked against the plan afterwards.
-pub(crate) unsafe extern "C" fn compare_open_choose_friendly_teams_screen(tab: u32, continent: usize, nation: usize, mode: u32) {
-    let plan = find_screen_planned_params(tab, continent, nation, mode);
-    original_fn::<unsafe extern "C" fn(u32, usize, usize, u32)>(IDX_OPEN_CHOOSE_FRIENDLY_TEAMS_SCREEN)(tab, continent, nation, mode);
+pub(crate) unsafe extern "C" fn compare_open_choose_friendly_teams_screen(table: u32, continent: usize, nation: usize, mode: u32) {
+    let plan = find_screen_planned_params(table, continent, nation, mode);
+    original_fn::<unsafe extern "C" fn(u32, usize, usize, u32)>(IDX_OPEN_CHOOSE_FRIENDLY_TEAMS_SCREEN)(table, continent, nation, mode);
     if continent != 0 && get_screen_param(1) == continent && get_screen_param(0x13) == plan[0x13] {
         let mut got = [0usize; 0x14];
         for (k, v) in got.iter_mut().enumerate() {
             *v = get_screen_param(k as u32);
         }
-        SCOREBOARD.record(got == plan, || format!("choose friendly teams screen (open, table {}): params {:x?} x plan {:x?}", tab as i8, got, plan));
+        SCOREBOARD.record(got == plan, || format!("choose friendly teams screen (open, table {}): params {:x?} x plan {:x?}", table as i8, got, plan));
     }
 }
 
@@ -56,7 +56,7 @@ pub(crate) unsafe extern "C" fn draw_choose_friendly_teams_screen() {
         it[1] = 0xff;
     }
     let (mut top, mut bottom) = (0x50i32, 0x221i32);
-    let mut tab = get_screen_param(0) as u8 as i8;
+    let mut table = get_screen_param(0) as u8 as i8;
     let mode = get_screen_param(0x13) as u8;
     if mode != 0 {
         tel28_lang()(JOB_TEXT, 0x9c9f6c); // "Choose Friendly Teams"
@@ -70,7 +70,7 @@ pub(crate) unsafe extern "C" fn draw_choose_friendly_teams_screen() {
     exe::menubar_build(4, 0);
     if mode == 2 {
         set_screen_param(0, 1);
-        tab = 1;
+        table = 1;
     } else {
         fn set_kind(items: &mut [[u8; FIND_SCREEN_MENU_ITEM]; 0x19], k: usize, value: u32) {
             items[k][0xcc..0xd0].copy_from_slice(&1u32.to_le_bytes());
@@ -93,22 +93,22 @@ pub(crate) unsafe extern "C" fn draw_choose_friendly_teams_screen() {
         tel28_lang()(text(&mut items, k), 0x9c9f1c, 0xad9c64usize); // "Other<%s - COMMENT - other clubs>"
         set_kind(&mut items, k, 6);
         k += 1;
-        exe::gui_add_tab_bar(items.as_mut_ptr() as usize, k as u32, tab as i32, &mut top, &mut bottom, 1);
+        exe::gui_add_tab_bar(items.as_mut_ptr() as usize, k as u32, table as i32, &mut top, &mut bottom, 1);
     }
-    let tab_routine = |address: usize| {
+    let table_routine = |address: usize| {
         let f: unsafe extern "C" fn(i32, i32) = core::mem::transmute(address);
         f(top, bottom);
     };
-    match tab {
+    match table {
         1 => find_nations_tab(top, bottom),
         2 => {
             let picture: unsafe extern "C" fn(u32, u32, u32) = core::mem::transmute(FN_BACKGROUND_SET_NATION_PICTURE);
             picture(0, 0, 0);
-            tab_routine(0x5a1030);
+            table_routine(0x5a1030);
         }
         3..=6 => {
             exe::background_set_club_picture(0usize, 0, 0);
-            tab_routine([0x5a1480usize, 0x5a1990, 0x5a1e10, 0x5a2250][(tab - 3) as usize]);
+            table_routine([0x5a1480usize, 0x5a1990, 0x5a1e10, 0x5a2250][(table - 3) as usize]);
         }
         _ => {
             exe::background_set_random_picture();
@@ -427,13 +427,13 @@ pub(crate) unsafe extern "C" fn compare_draw_choose_friendly_other_clubs_tab(top
 /// Original: `choose_friendly_teams_screen_input` (0x5a2780, find_screens.cpp, cdecl).
 pub(crate) unsafe extern "C" fn choose_friendly_teams_screen_input(widget: u32) -> i32 {
     let w = widget as i16;
-    let tab = get_screen_param(0) as u8 as i8;
-    if tab == 6 {
+    let table = get_screen_param(0) as u8 as i8;
+    if table == 6 {
         let r = exe::choose_friendly_teams_other_clubs_input(widget);
         if r != 0 {
             return r;
         }
-    } else if let Some((row_param, area_param, pick_param, id, by_action)) = find_tab_pick(tab) {
+    } else if let Some((row_param, area_param, pick_param, id, by_action)) = find_tab_pick(table) {
         if w != -1 {
             set_screen_param(row_param, exe::screenmanager_get_area_scroll_row(G_SCREEN_MANAGER, get_screen_param(area_param)));
         }
@@ -461,13 +461,13 @@ pub(crate) unsafe extern "C" fn choose_friendly_teams_screen_input(widget: u32) 
 pub(crate) unsafe extern "C" fn compare_choose_friendly_teams_screen_input(widget: u32) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(u32) -> i32>(IDX_CHOOSE_FRIENDLY_TEAMS_SCREEN_INPUT);
     let w = widget as i16;
-    let tab = get_screen_param(0) as u8 as i8;
+    let table = get_screen_param(0) as u8 as i8;
     let data = exe::screenmanager_get_widget_action_data(G_SCREEN_MANAGER, widget);
-    let tab_pick = find_tab_pick(tab).is_some_and(|(_, _, pick_param, id, by_action)| {
+    let table_pick = find_tab_pick(table).is_some_and(|(_, _, pick_param, id, by_action)| {
         let hit = if by_action { find_action_id(widget) == id } else { tel26_item_id(w) as i32 == id };
         hit && data != get_screen_param(pick_param)
     });
-    let pure = tab != 6 && (tab_pick || (tel26_item_id(w) == 1 && data != get_screen_param(0)));
+    let pure = table != 6 && (table_pick || (tel26_item_id(w) == 1 && data != get_screen_param(0)));
     tel28_click_compare("choose friendly teams screen input", widget, pure, || o(widget), || choose_friendly_teams_screen_input(widget))
 }
 
@@ -498,12 +498,12 @@ pub(crate) unsafe extern "C" fn choose_friendly_teams_other_clubs_input(raw: u32
 /// = a copy of 25 spaces (`set_screen_param` with copy) emptied at once (its first byte 0), no engine, "search again"
 /// 1, first row, scroll and area 0; then parameter 0x19 = 1.
 /// Original: `open_find_screen` (0x5a2c30, find_screens.cpp, cdecl).
-pub(crate) unsafe extern "C" fn open_find_screen(tab: u32) {
+pub(crate) unsafe extern "C" fn open_find_screen(table: u32) {
     if exe::screenmanager_open_screen(G_SCREEN_MANAGER, 0x5a2e60usize, 0x5a45c0usize, 0, 0x5a4eb0usize, 0) == 0 {
         return;
     }
     covered!("tel34_6 open find screen");
-    set_screen_param(0, tab as u8 as i8 as isize as usize);
+    set_screen_param(0, table as u8 as i8 as isize as usize);
     let mut spaces = [0x20u8; 26];
     spaces[25] = 0;
     for base in [0u32, 6, 0xc, 0x12] {
@@ -535,7 +535,7 @@ pub(crate) unsafe extern "C" fn draw_find_screen() {
         e[1] = 0xff;
     }
     covered!("tel34_6 find screen");
-    let tab = get_screen_param(0) as u8 as i8;
+    let table = get_screen_param(0) as u8 as i8;
     tel34_game_title();
     exe::menubar_build(4, 0);
     let lang: Tel34FormatFn = core::mem::transmute(FN_LANGLIB_SPRINTF);
@@ -546,7 +546,7 @@ pub(crate) unsafe extern "C" fn draw_find_screen() {
         entries[k][0xd0..0xd4].copy_from_slice(&(k as u32 + 1).to_le_bytes());
     }
     let (mut top, mut bottom) = (0x50i32, 0x221i32);
-    exe::gui_add_tab_bar(entries.as_mut_ptr() as usize, 4, tab as i32, &mut top, &mut bottom, 1);
+    exe::gui_add_tab_bar(entries.as_mut_ptr() as usize, 4, table as i32, &mut top, &mut bottom, 1);
     let picture = |address: usize| {
         let f: unsafe extern "C" fn(usize, u32, u32) -> u32 = core::mem::transmute(address);
         f(0, 0, 0);
@@ -556,7 +556,7 @@ pub(crate) unsafe extern "C" fn draw_find_screen() {
         let f: unsafe extern "C" fn(i32, i32) = core::mem::transmute(address);
         f(top, bottom);
     };
-    match tab {
+    match table {
         1 => {
             picture(0x41c100);
             results(0x5a30f0);
@@ -728,9 +728,9 @@ pub(crate) unsafe extern "C" fn compare_choose_friendly_teams_other_clubs_input(
 }
 
 /// Comparer for `open_find_screen`.
-pub(crate) unsafe extern "C" fn compare_open_find_screen(tab: u32) {
+pub(crate) unsafe extern "C" fn compare_open_find_screen(table: u32) {
     // simplification: opening a screen does not run twice; proven in Rust mode
-    original_fn::<unsafe extern "C" fn(u32)>(IDX_OPEN_FIND_SCREEN)(tab)
+    original_fn::<unsafe extern "C" fn(u32)>(IDX_OPEN_FIND_SCREEN)(table)
 }
 
 /// Comparer for `draw_find_screen`: the Search For screen side by side over the display list, when every tab already
@@ -738,8 +738,8 @@ pub(crate) unsafe extern "C" fn compare_open_find_screen(tab: u32) {
 /// original runs).
 pub(crate) unsafe extern "C" fn compare_draw_find_screen() {
     let o = original_fn::<unsafe extern "C" fn()>(IDX_DRAW_FIND_SCREEN);
-    let tab = get_screen_param(0) as u8 as i8;
-    let base = match tab {
+    let table = get_screen_param(0) as u8 as i8;
+    let base = match table {
         1 => FIND_NATIONS.base,
         2 => FIND_CLUBS.base,
         3 => FIND_NON_PLAYERS.base,
@@ -809,9 +809,9 @@ pub(crate) unsafe extern "C" fn compare_release_find_screen() {
 }
 
 /// The 20 parameters of the Choose Friendly Teams screen as `open_choose_friendly_teams_screen` leaves them.
-pub(crate) fn find_screen_planned_params(tab: u32, continent: usize, nation: usize, mode: u32) -> [usize; 0x14] {
+pub(crate) fn find_screen_planned_params(table: u32, continent: usize, nation: usize, mode: u32) -> [usize; 0x14] {
     let mut p = [0usize; 0x14];
-    p[0] = tab as u8 as i8 as isize as usize;
+    p[0] = table as u8 as i8 as isize as usize;
     p[1] = continent;
     p[4] = continent;
     p[7] = continent;
@@ -954,8 +954,8 @@ pub(crate) unsafe fn find_nations_tab(top: i32, bottom: i32) {
 /// Whether building the Choose Friendly Teams screen would show an error box (the open tab's continent or nation
 /// missing): those builds run the original only.
 pub(crate) unsafe fn find_screen_build_has_box() -> bool {
-    let tab = if get_screen_param(0x13) as u8 == 2 { 1 } else { get_screen_param(0) as u8 };
-    match tab {
+    let table = if get_screen_param(0x13) as u8 == 2 { 1 } else { get_screen_param(0) as u8 };
+    match table {
         1 => get_screen_param(1) == 0,
         2 => get_screen_param(4) == 0,
         3 => get_screen_param(7) == 0,
@@ -973,8 +973,8 @@ pub(crate) unsafe fn find_best_quarter(n: i32) -> i32 {
 
 /// The pick of the Choose Friendly Teams tabs 1 to 5: the scroll row and area parameters, the parameter the pick
 /// goes to, the widget id and whether the id is the action id (0x468b40) rather than the widget id.
-pub(crate) fn find_tab_pick(tab: i8) -> Option<(u32, u32, u32, i32, bool)> {
-    match tab {
+pub(crate) fn find_tab_pick(table: i8) -> Option<(u32, u32, u32, i32, bool)> {
+    match table {
         1 => Some((2, 3, 1, 2, false)),
         2 => Some((5, 6, 4, 3, false)),
         3 => Some((8, 9, 7, 4, false)),
@@ -1014,10 +1014,10 @@ pub(crate) unsafe fn tel34_find_cell_link(area: u32, column: u32, row: u32, font
 /// ids 2..5) and at most 16 rows. The heading at `top` + 0x19: "<things> Matching <text>" or, with an empty text, "All
 /// <things>". The list area from `top` + 0x41 to `bottom` (3 columns, weights 3/2/2, as many rows as fit in font 3 with
 /// 16 pixels to spare), the rows from the first shown; the area scrolled to + 5, + 6 = the area.
-pub(crate) unsafe fn tel34_find_results(tab: &Tel34FindTab, top: i32, bottom: i32, mut row: impl FnMut(u32, u32, usize)) {
+pub(crate) unsafe fn tel34_find_results(table: &Tel34FindTab, top: i32, bottom: i32, mut row: impl FnMut(u32, u32, usize)) {
     let weights: [u8; 3] = [3, 2, 2];
-    let text = get_screen_param(tab.base + 1);
-    let mut engine = get_screen_param(tab.base + 2);
+    let text = get_screen_param(table.base + 1);
+    let mut engine = get_screen_param(table.base + 2);
     get_screen_param(0x19);
     set_screen_param(0x19, 0);
     if engine == 0 {
@@ -1027,20 +1027,20 @@ pub(crate) unsafe fn tel34_find_results(tab: &Tel34FindTab, top: i32, bottom: i3
         } else {
             0
         };
-        set_screen_param(tab.base + 2, engine);
-        set_screen_param(tab.base + 3, 1);
+        set_screen_param(table.base + 2, engine);
+        set_screen_param(table.base + 3, 1);
     }
-    let start = get_screen_param(tab.base + 4) as i32;
+    let start = get_screen_param(table.base + 4) as i32;
     let edit_area = tel26_add_area(current_human_display(), [0x6e, top as u32, 0x168, top.wrapping_add(0x14) as u32, 2, 0, 1, 0, 1, 0, u32::MAX]);
     tel34_lang_text(0x9ca0f0); // "Search For"
     tel26_area_text([edit_area, 0, 0, 2, 0, 0xc, 1, job_colour(JOB_COLOUR_3184), JOB_TEXT as u32]);
-    tel26_add_item(current_human_display(), [tab.edit_kind, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0xc, 1, job_colour(JOB_COLOUR_BDE8), text as u32, 0x19,
-        tab.edit_id, 0, edit_area]);
-    if get_screen_param(tab.base + 3) != 0 {
+    tel26_add_item(current_human_display(), [table.edit_kind, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0xc, 1, job_colour(JOB_COLOUR_BDE8), text as u32, 0x19,
+        table.edit_id, 0, edit_area]);
+    if get_screen_param(table.base + 3) != 0 {
         covered!("tel34_6 search");
-        let search: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(tab.search);
-        search(engine, text, tab.mode);
-        set_screen_param(tab.base + 3, 0);
+        let search: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(table.search);
+        search(engine, text, table.mode);
+        set_screen_param(table.base + 3, 0);
     }
     let count = read_i32(engine + SEARCH_ENGINE_COUNT);
     let paged = count > 100;
@@ -1052,9 +1052,9 @@ pub(crate) unsafe fn tel34_find_results(tab: &Tel34FindTab, top: i32, bottom: i3
     }
     let lang: Tel34FormatFn = core::mem::transmute(FN_LANGLIB_SPRINTF);
     if read_u8(text) != 0 {
-        lang(JOB_TEXT, tab.matching, text);
+        lang(JOB_TEXT, table.matching, text);
     } else {
-        lang(JOB_TEXT, tab.all);
+        lang(JOB_TEXT, table.all);
     }
     let heading = top.wrapping_add(0x19);
     tel34_text_item([0x6e, heading as u32, 0x30c, heading.wrapping_add(0x23) as u32, 2, 0, 0xc, 3, job_colour(JOB_COLOUR_BDEC), JOB_TEXT as u32, 0]);
@@ -1071,11 +1071,11 @@ pub(crate) unsafe fn tel34_find_results(tab: &Tel34FindTab, top: i32, bottom: i3
         row(area, k as u32, record);
         k += 1;
     }
-    let scroll = get_screen_param(tab.base + 5);
+    let scroll = get_screen_param(table.base + 5);
     if area as i16 != -1 {
         exe::area_set_scroll_row(display_area_at(current_human_display(), area as i16), scroll);
     }
-    set_screen_param(tab.base + 6, area as i16 as isize as usize);
+    set_screen_param(table.base + 6, area as i16 as isize as usize);
 }
 
 /// The first cell of a club result row: the club's short name ("  %s") linked to the club (id 0x7d5) in the
@@ -1188,8 +1188,8 @@ pub(crate) unsafe fn tel34_find_params() -> [usize; 0x1a] {
 
 /// A result tab's comparer: side by side over the display list when the tab has its engine and no search pending;
 /// otherwise only the original runs (allocation and search).
-pub(crate) unsafe fn tel34_compare_find_results(tab: &Tel34FindTab, name: &str, original: impl FnOnce(), rust: impl FnOnce()) {
-    if get_screen_param(tab.base + 2) == 0 || get_screen_param(tab.base + 3) != 0 {
+pub(crate) unsafe fn tel34_compare_find_results(table: &Tel34FindTab, name: &str, original: impl FnOnce(), rust: impl FnOnce()) {
+    if get_screen_param(table.base + 2) == 0 || get_screen_param(table.base + 3) != 0 {
         // simplification: making the engine and searching do not run twice; proven in Rust mode
         return original();
     }

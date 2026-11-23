@@ -300,7 +300,7 @@ pub(crate) unsafe extern "C" fn compare_staff_screens_handle_scout_request_actio
 /// 0x12 the pale grey colour, 0x13 zero, 0x14 and 0x15 one. With `keep_view`, params 1, 2, 5 and 0x13 come back from
 /// the old screen, and 4 becomes 2 when it was 2.
 /// Original: `staff_screens_open_staff_profile` (0x8702a0, staff_screens.cpp, cdecl).
-pub(crate) unsafe extern "C" fn staff_screens_open_staff_profile(staff: usize, tab: u32, slot2: u32, keep_view: u32, attribute_mode: u32) {
+pub(crate) unsafe extern "C" fn staff_screens_open_staff_profile(staff: usize, table: u32, slot2: u32, keep_view: u32, attribute_mode: u32) {
     let staff = Staff(staff);
     if staff.is_null() {
         covered!("tel07_1 staff profile without a person");
@@ -321,13 +321,13 @@ pub(crate) unsafe extern "C" fn staff_screens_open_staff_profile(staff: usize, t
             *v = get_screen_param(k as u32);
         }
     }
-    let tab = if last_records { 5 } else { tab as u8 };
+    let table = if last_records { 5 } else { table as u8 };
     if exe::screenmanager_open_screen(SCREEN_MANAGER, 0x870700, 0x888260, 0, 0x88b8a0, 0) == 0 {
         return;
     }
     covered!("tel07_1 open the staff profile");
     set_screen_param(0, staff.addr());
-    set_screen_param(1, tab as i8 as isize as usize);
+    set_screen_param(1, table as i8 as isize as usize);
     set_screen_param(2, slot2 as u8 as i8 as isize as usize);
     set_screen_param(3, 0);
     let mode = attribute_mode as u8;
@@ -383,9 +383,9 @@ pub(crate) unsafe extern "C" fn staff_screens_open_compare_players_screen(manage
 /// Comparer for `staff_screens_open_staff_profile`: opening a screen does not run twice (the screen stack, the
 /// network), so only the original runs and its 22 params are checked afterwards against the plan
 /// (`staff_profile_planned_params`), when the new screen holds the person in param 0.
-pub(crate) unsafe extern "C" fn compare_staff_screens_open_staff_profile(staff: usize, tab: u32, slot2: u32, keep_view: u32, attribute_mode: u32) {
-    let plan = if staff == 0 { None } else { staff_profile_planned_params(staff, tab, slot2, keep_view, attribute_mode) };
-    original_fn::<unsafe extern "C" fn(usize, u32, u32, u32, u32)>(IDX_STAFF_SCREENS_OPEN_STAFF_PROFILE)(staff, tab, slot2, keep_view, attribute_mode);
+pub(crate) unsafe extern "C" fn compare_staff_screens_open_staff_profile(staff: usize, table: u32, slot2: u32, keep_view: u32, attribute_mode: u32) {
+    let plan = if staff == 0 { None } else { staff_profile_planned_params(staff, table, slot2, keep_view, attribute_mode) };
+    original_fn::<unsafe extern "C" fn(usize, u32, u32, u32, u32)>(IDX_STAFF_SCREENS_OPEN_STAFF_PROFILE)(staff, table, slot2, keep_view, attribute_mode);
     if let Some(plan) = plan {
         if get_screen_param(0) == staff {
             let mut got = [0usize; 0x16];
@@ -2182,7 +2182,7 @@ pub(crate) unsafe fn nickname_call(f: usize, person: usize, nickname: usize) {
 /// The params the staff profile screen of `staff` should get (read before it opens: with `keep_view` the current
 /// screen's params come back), or `None` when the person is not viewable. Written apart from the routine, from the
 /// same disassembly, to check the original afterwards.
-pub(crate) unsafe fn staff_profile_planned_params(staff: usize, tab: u32, slot2: u32, keep_view: u32, attribute_mode: u32) -> Option<[usize; 0x16]> {
+pub(crate) unsafe fn staff_profile_planned_params(staff: usize, table: u32, slot2: u32, keep_view: u32, attribute_mode: u32) -> Option<[usize; 0x16]> {
     let staff = Staff(staff);
     let job = staff.job_for_club();
     let n = read_i32(G_STAFF_COUNT);
@@ -2194,7 +2194,7 @@ pub(crate) unsafe fn staff_profile_planned_params(staff: usize, tab: u32, slot2:
     }
     let mut p = [0usize; 0x16];
     p[0] = staff.addr();
-    p[1] = if last { 5 } else { tab as u8 as i8 as isize as usize };
+    p[1] = if last { 5 } else { table as u8 as i8 as isize as usize };
     p[2] = slot2 as u8 as i8 as isize as usize;
     let mode = attribute_mode as u8;
     if id < n && staff.non_player().addr() != 0 && (!player || !matches!(job, 0xb | 0xc | 0xd | 0xf) || mode == 1) {
@@ -4041,8 +4041,8 @@ pub(crate) unsafe fn staff_action4(f: usize, a: usize, b: usize, c: usize, d: us
 }
 
 /// `confirm_push(title, heading, message, yes/no, colour, colour, dialog code)` (0x591840, cdecl): a message box.
-pub(crate) unsafe fn staff_confirm_push(title: usize, heading: usize, message: usize, yes_no: u32, a: u32, b: u32, code: u32) {
-    exe::confirm_push(title, heading, message, yes_no, a, b, code)
+pub(crate) unsafe fn staff_confirm_push(title: usize, heading: usize, message: usize, yes_in_the: u32, a: u32, b: u32, code: u32) {
+    exe::confirm_push(title, heading, message, yes_in_the, a, b, code)
 }
 
 /// The message box of a profile action that cannot be done: the message (already in the screens' text buffer, `message`

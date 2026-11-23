@@ -687,12 +687,12 @@ pub(crate) unsafe extern "C" fn history_screen_free() {
 /// `history_written_screen_open(tab)`: `open_screen` with the builder 0x5f2c00, the handler 0x5f31c0, not single, the
 /// leave routine 0x5f33d0 and 0; parameter 0 = the tab, 1..4 = 0.
 /// Original: `history_written_screen_open` (0x5f2b80, History.cpp, cdecl).
-pub(crate) unsafe extern "C" fn history_written_screen_open(tab: usize) {
+pub(crate) unsafe extern "C" fn history_written_screen_open(table: usize) {
     covered!("tel35_2 open written history");
     if exe::screenmanager_open_screen(G_SCREEN_MANAGER, 0x5f2c00usize, 0x5f31c0usize, 0, 0x5f33d0usize, 0) == 0 {
         return;
     }
-    set_screen_param(0, tab);
+    set_screen_param(0, table);
     for k in 1..5 {
         set_screen_param(k, 0);
     }
@@ -722,7 +722,7 @@ pub(crate) unsafe extern "C" fn history_written_screen_draw() {
     exe::crt_vector_constructor_iterator(t, 0xd4, 0xa, 0x4568f0usize, 0x5a53c0usize);
     let mut folder = [0u8; 0x104];
     tel26_copy_text(folder.as_mut_ptr(), exe::utils_build_file_path(0x9cedb8usize, HISTORY_EMPTY) as *const u8);
-    let tab = get_screen_param(0);
+    let table = get_screen_param(0);
     let mut list = get_screen_param(1);
     let mut count = get_screen_param(2) as i32;
     exe::background_set_random_picture();
@@ -736,7 +736,7 @@ pub(crate) unsafe extern "C" fn history_written_screen_draw() {
         write_u32(entry + 0xd0, link);
     }
     let (mut top, mut bottom) = (0x50i32, 0x221i32);
-    exe::gui_add_tab_bar(t, 5, tab as i32, &mut top, &mut bottom, 1);
+    exe::gui_add_tab_bar(t, 5, table as i32, &mut top, &mut bottom, 1);
     if list == 0 {
         covered!("tel35_2 written history file search");
         let block = exe::crt_operator_new(0xdac0);
@@ -761,7 +761,7 @@ pub(crate) unsafe extern "C" fn history_written_screen_draw() {
                     }
                     i -= 1;
                 }
-                if tel35_cdecl1(0x5f2580, pattern.as_ptr() as usize) as u32 == tab as u32 {
+                if tel35_cdecl1(0x5f2580, pattern.as_ptr() as usize) as u32 == table as u32 {
                     let title = tel35_cdecl1(0x5f2700, pattern.as_ptr() as usize);
                     if title != 0 {
                         if count >= 0x64 {
@@ -817,14 +817,14 @@ pub(crate) unsafe extern "C" fn history_written_screen_draw() {
 /// command, then its object link.
 /// Original: `history_written_screen_handle_click` (0x5f31c0, History.cpp, cdecl).
 pub(crate) unsafe extern "C" fn history_written_screen_handle_click(raw: u32) -> i32 {
-    let tab = get_screen_param(0) as u32;
+    let table = get_screen_param(0) as u32;
     let list = get_screen_param(1);
     let item = raw as i16;
     if item != -1 {
         set_screen_param(3, exe::screenmanager_get_area_scroll_row(G_SCREEN_MANAGER, get_screen_param(4)));
     }
     let id = tel26_item_id(item);
-    if id == 1 && tel26_item_value(item) != tab {
+    if id == 1 && tel26_item_value(item) != table {
         covered!("tel35_2 written history tab");
         set_screen_param(0, tel26_item_value(item) as usize);
         if list != 0 {
@@ -889,9 +889,9 @@ pub(crate) unsafe extern "C" fn compare_history_screen_free() {
 }
 
 /// Comparer for `history_written_screen_open`.
-pub(crate) unsafe extern "C" fn compare_history_written_screen_open(tab: usize) {
+pub(crate) unsafe extern "C" fn compare_history_written_screen_open(table: usize) {
     // simplification: opening a screen does not run twice; proven in Rust mode
-    original_fn::<unsafe extern "C" fn(usize)>(IDX_HISTORY_WRITTEN_SCREEN_OPEN)(tab)
+    original_fn::<unsafe extern "C" fn(usize)>(IDX_HISTORY_WRITTEN_SCREEN_OPEN)(table)
 }
 
 /// Comparer for `history_written_screen_draw`: side by side over the display list when the list exists (the file

@@ -283,13 +283,13 @@ pub(crate) unsafe extern "thiscall" fn compare_screenmanager_set_area_scroll_row
 /// (`player_sheet::WORLD_REPUTATION` for a national team, `exe::database_is_national_team`, otherwise
 /// `player_sheet::CURRENT_REPUTATION`; signed words from -10000); -1 for the places not filled.
 /// Original: `open_manager_club_screen` (0x4542f0, club_screens.cpp, cdecl).
-pub(crate) unsafe extern "C" fn open_manager_club_screen(manager: Staff, squad_param: u32, restore_params: u32, open_tab_5: u32, set_flag_0x800: u32) {
+pub(crate) unsafe extern "C" fn open_manager_club_screen(manager: Staff, squad_param: u32, restore_params: u32, open_table_5: u32, set_flag_0x800: u32) {
     if manager.is_null() {
         club_screens_error_box(0x32b);
         return;
     }
     covered!("tel01_2 open the club screen");
-    let p = open_manager_club_screen_plan(manager, squad_param, restore_params, open_tab_5);
+    let p = open_manager_club_screen_plan(manager, squad_param, restore_params, open_table_5);
     let sm = G_SCREEN_MANAGER;
     // the view block is read again for the 0x800 flag (the plan has already read it)
     let club = p[0] as usize;
@@ -324,13 +324,13 @@ pub(crate) unsafe extern "C" fn open_manager_club_screen(manager: Staff, squad_p
 /// `exe::screenmanager_find_manager_channel`, parameter n at +0x14 + 8n of the block `screen_manager::PARAM_BLOCK`) are
 /// checked against the plan worked out before (`open_manager_club_screen_plan`). Without a manager, or when the screen
 /// did not open (parameter 0 is not the planned club), nothing is checked.
-pub(crate) unsafe extern "C" fn compare_open_manager_club_screen(manager: Staff, squad_param: u32, restore_params: u32, open_tab_5: u32, set_flag_0x800: u32) {
+pub(crate) unsafe extern "C" fn compare_open_manager_club_screen(manager: Staff, squad_param: u32, restore_params: u32, open_table_5: u32, set_flag_0x800: u32) {
     let o = original_fn::<unsafe extern "C" fn(Staff, u32, u32, u32, u32)>(IDX_OPEN_MANAGER_CLUB_SCREEN);
     if manager.is_null() {
-        return o(manager, squad_param, restore_params, open_tab_5, set_flag_0x800);
+        return o(manager, squad_param, restore_params, open_table_5, set_flag_0x800);
     }
-    let plan = crate::rng::without_counting(|| open_manager_club_screen_plan(manager, squad_param, restore_params, open_tab_5));
-    o(manager, squad_param, restore_params, open_tab_5, set_flag_0x800);
+    let plan = crate::rng::without_counting(|| open_manager_club_screen_plan(manager, squad_param, restore_params, open_table_5));
+    o(manager, squad_param, restore_params, open_table_5, set_flag_0x800);
     let slot = exe::screenmanager_find_manager_channel(G_SCREEN_MANAGER, manager) as i16;
     if !(0..64).contains(&slot) {
         return;
@@ -389,14 +389,14 @@ pub(crate) unsafe extern "C" fn club_screen_build() {
         tabs[k * CLUB_TAB_SIZE..k * CLUB_TAB_SIZE + 2].copy_from_slice(&0xffffu16.to_le_bytes());
         tabs[k * CLUB_TAB_SIZE + 2..k * CLUB_TAB_SIZE + 4].copy_from_slice(&0u16.to_le_bytes());
     }
-    let tab_at = |tabs: &mut [u8; CLUB_TAB_SIZE * 0x19], k: usize| tabs.as_mut_ptr() as usize + k * CLUB_TAB_SIZE;
+    let table_at = |tabs: &mut [u8; CLUB_TAB_SIZE * 0x19], k: usize| tabs.as_mut_ptr() as usize + k * CLUB_TAB_SIZE;
     let mut stage = 0usize;
     write_u32(0x98ded8, 1);
     let mut club = get_screen_param(0);
     let mut reserves = get_screen_param(1);
     let last_match = get_screen_param(2);
     let next_match = get_screen_param(3);
-    let mut tab = get_screen_param(4) as u8;
+    let mut table = get_screen_param(4) as u8;
     let mut colour_text = get_screen_param(5) as u32;
     let mut colour = get_screen_param(6) as u32;
     let mut view = get_screen_param(7) as u32;
@@ -480,7 +480,7 @@ pub(crate) unsafe extern "C" fn club_screen_build() {
     let (mut name, mut short_name) = ([0u8; 0x12c], [0u8; 0x12c]);
     exe::club_get_national_team_name(club, reserves, name.as_mut_ptr() as usize, 0x12c, 3, 1);
     exe::club_get_national_team_name(club, reserves, short_name.as_mut_ptr() as usize, 0x12c, 1, 1);
-    if view & 0x800 != 0 && tab == 1 && exe::human_manager_current_controls_club(club, 0, 1) != 0 {
+    if view & 0x800 != 0 && table == 1 && exe::human_manager_current_controls_club(club, 0, 1) != 0 {
         let g = read_i8(club + club::SHORT_GENDER_NAME) as i32;
         text(0xde1f64, 0x98e894, g, g, short_name.as_ptr());
     } else {
@@ -488,51 +488,51 @@ pub(crate) unsafe extern "C" fn club_screen_build() {
     }
     exe::screenmanager_add_screen_title(sm, colour, colour_text, 0xde1f64usize);
     exe::menubar_build(4, 0);
-    let set_tab = |tabs: &mut [u8; CLUB_TAB_SIZE * 0x19], k: usize, kind: u32, link: u32| {
-        write_u32(tab_at(tabs, k) + 0xcc, kind);
-        write_u32(tab_at(tabs, k) + 0xd0, link);
+    let set_table = |tabs: &mut [u8; CLUB_TAB_SIZE * 0x19], k: usize, kind: u32, link: u32| {
+        write_u32(table_at(tabs, k) + 0xcc, kind);
+        write_u32(table_at(tabs, k) + 0xd0, link);
     };
-    let grey = |tabs: &mut [u8; CLUB_TAB_SIZE * 0x19], k: usize| write_u16(tab_at(tabs, k) + 2, read_u16(0xae317e));
-    text(tab_at(&mut tabs, 0) + 4, 0x98e88c); // "Squad"
-    set_tab(&mut tabs, 0, 2, 1);
-    text(tab_at(&mut tabs, 1) + 4, 0x98e880); // "Transfers"
+    let grey = |tabs: &mut [u8; CLUB_TAB_SIZE * 0x19], k: usize| write_u16(table_at(tabs, k) + 2, read_u16(0xae317e));
+    text(table_at(&mut tabs, 0) + 4, 0x98e88c); // "Squad"
+    set_table(&mut tabs, 0, 2, 1);
+    text(table_at(&mut tabs, 1) + 4, 0x98e880); // "Transfers"
     if exe::database_is_national_team(club) == 0 {
-        set_tab(&mut tabs, 1, 2, 2);
+        set_table(&mut tabs, 1, 2, 2);
     } else {
-        if tab == 2 {
+        if table == 2 {
             set_screen_param(4, 1);
-            tab = 1;
+            table = 1;
         }
         grey(&mut tabs, 1);
-        set_tab(&mut tabs, 1, 0, 0);
+        set_table(&mut tabs, 1, 0, 0);
     }
-    text(tab_at(&mut tabs, 2) + 4, 0x98e874); // "Next Match"
-    set_tab(&mut tabs, 2, 2, 3);
-    text(tab_at(&mut tabs, 3) + 4, 0x98e868); // "Fixtures"
-    set_tab(&mut tabs, 3, 2, 4);
+    text(table_at(&mut tabs, 2) + 4, 0x98e874); // "Next Match"
+    set_table(&mut tabs, 2, 2, 3);
+    text(table_at(&mut tabs, 3) + 4, 0x98e868); // "Fixtures"
+    set_table(&mut tabs, 3, 2, 4);
     if exe::human_manager_current_controls_club(club, 0, 1) != 0 && exe::database_is_national_team(club) == 0 {
-        text(tab_at(&mut tabs, 4) + 4, 0x98e858); // "Finances & Info"
+        text(table_at(&mut tabs, 4) + 4, 0x98e858); // "Finances & Info"
     } else {
-        text(tab_at(&mut tabs, 4) + 4, 0x98e848); // "General Info"
+        text(table_at(&mut tabs, 4) + 4, 0x98e848); // "General Info"
     }
-    set_tab(&mut tabs, 4, 2, 5);
-    text(tab_at(&mut tabs, 5) + 4, 0x98e840); // "Tactics"
-    set_tab(&mut tabs, 5, 3, 0);
-    text(tab_at(&mut tabs, 6) + 4, 0x98e834); // "Training"
+    set_table(&mut tabs, 4, 2, 5);
+    text(table_at(&mut tabs, 5) + 4, 0x98e840); // "Tactics"
+    set_table(&mut tabs, 5, 3, 0);
+    text(table_at(&mut tabs, 6) + 4, 0x98e834); // "Training"
     if exe::human_manager_current_controls_club(club, 0, 1) != 0 && exe::database_is_national_team(club) == 0 {
-        write_u32(tab_at(&mut tabs, 6) + 0xcc, 4);
+        write_u32(table_at(&mut tabs, 6) + 0xcc, 4);
     } else {
         grey(&mut tabs, 6);
-        write_u32(tab_at(&mut tabs, 6) + 0xcc, 0);
+        write_u32(table_at(&mut tabs, 6) + 0xcc, 0);
     }
-    write_u32(tab_at(&mut tabs, 6) + 0xd0, 0);
-    text(tab_at(&mut tabs, 7) + 4, 0x98e828); // "Last Match"
-    set_tab(&mut tabs, 7, 5, 0);
+    write_u32(table_at(&mut tabs, 6) + 0xd0, 0);
+    text(table_at(&mut tabs, 7) + 4, 0x98e828); // "Last Match"
+    set_table(&mut tabs, 7, 5, 0);
     let mut record = [0u8; 0x20];
     let mut complete = 0i32;
     if exe::club_history_get_current_league_record(club, record.as_mut_ptr(), &mut complete, &mut stage, 1) != 0 {
         let comp = read_usize(G_CLUB_COMP_TABLE) + read_u32(record.as_ptr() as usize) as usize * 0x6b;
-        let division = tab_at(&mut tabs, 8) + 4;
+        let division = table_at(&mut tabs, 8) + 4;
         if (record[0xb] as i8) > 0 {
             let g = read_i8(comp + 0x52) as i32;
             let ordinal = exe::utils_format_ordinal(read_i8(record.as_ptr() as usize + 6) as i32 + 1, -1);
@@ -545,24 +545,24 @@ pub(crate) unsafe extern "C" fn club_screen_build() {
         }
         if stage != 0 {
             let link = ((read_u32(comp) << 0xb) | (read_u16(stage + 0x3a) as u32 & 0x7ff)) << 0xb;
-            set_tab(&mut tabs, 8, 0x7e5, link);
+            set_table(&mut tabs, 8, 0x7e5, link);
         } else {
-            set_tab(&mut tabs, 8, 0x7d0, 0);
+            set_table(&mut tabs, 8, 0x7d0, 0);
         }
     } else {
-        text(tab_at(&mut tabs, 8) + 4, 0x98e7f4); // "Division"
+        text(table_at(&mut tabs, 8) + 4, 0x98e7f4); // "Division"
         grey(&mut tabs, 8);
-        set_tab(&mut tabs, 8, 0, 0);
+        set_table(&mut tabs, 8, 0, 0);
     }
-    text(tab_at(&mut tabs, 9) + 4, 0x98e7c8, 0xad9c64usize); // "History<..>"
-    set_tab(&mut tabs, 9, 6, 0);
+    text(table_at(&mut tabs, 9) + 4, 0x98e7c8, 0xad9c64usize); // "History<..>"
+    set_table(&mut tabs, 9, 6, 0);
     let (mut top, mut bottom) = (0x50i32, 0x221i32);
-    exe::gui_add_tab_bar(tabs.as_mut_ptr() as usize, 0xa, tab as i8 as i32, &mut top, &mut bottom, 1);
+    exe::gui_add_tab_bar(tabs.as_mut_ptr() as usize, 0xa, table as i8 as i32, &mut top, &mut bottom, 1);
     let draw = |f: usize, top: i32, bottom: i32| {
         let g: unsafe extern "C" fn(i32, i32) = core::mem::transmute(f);
         g(top, bottom)
     };
-    match tab as i8 {
+    match table as i8 {
         1 => draw(0x456900, top, bottom),
         2 => club_screen_draw_transfers_tab(top, bottom),
         3 => draw(0x45ccf0, top, bottom),
@@ -618,9 +618,9 @@ pub(crate) unsafe extern "C" fn club_screen_build() {
 /// params 0x15 and 0x16 grows) and an unknown tab (the error box).
 pub(crate) unsafe extern "C" fn compare_club_screen_build() {
     let o = original_fn::<unsafe extern "C" fn()>(IDX_CLUB_SCREEN_BUILD);
-    let tab = get_screen_param(4) as u8;
-    if get_screen_param(0) == 0 || get_screen_param(2) == 0 || get_screen_param(3) == 0 || !matches!(tab, 1 | 2 | 3 | 5)
-        || (tab == 2 && get_screen_param(0x12) & 4 == 0) {
+    let table = get_screen_param(4) as u8;
+    if get_screen_param(0) == 0 || get_screen_param(2) == 0 || get_screen_param(3) == 0 || !matches!(table, 1 | 2 | 3 | 5)
+        || (table == 2 && get_screen_param(0x12) & 4 == 0) {
         // simplification: allocating and reallocating do not run twice; these cases are proven in Rust mode
         return o();
     }
@@ -2014,7 +2014,7 @@ pub(crate) unsafe extern "thiscall" fn compare_display_set_area_scroll_row(this:
 /// With `restore`, params 1, 2, 7, 0xa, 0xd, 0x10, 0x13 and 0x16 come back from the previous screen (its 60 params read
 /// before opening).
 /// Original: `open_club_history_screen` (0x469e70, club_screens.cpp, cdecl).
-pub(crate) unsafe extern "C" fn open_club_history_screen(club: usize, restore: u32, players_tab: u32) {
+pub(crate) unsafe extern "C" fn open_club_history_screen(club: usize, restore: u32, players_table: u32) {
     covered!("tel03_2 open club history");
     let mut prev = [0usize; 0x3c];
     if restore != 0 {
@@ -2025,7 +2025,7 @@ pub(crate) unsafe extern "C" fn open_club_history_screen(club: usize, restore: u
     if exe::screenmanager_open_screen(G_SCREEN_MANAGER, 0x46a1e0, 0x46dd20, 0, 0x46e560, 0) == 0 {
         return;
     }
-    let p = club_history_planned_params(club, 0, players_tab, &prev);
+    let p = club_history_planned_params(club, 0, players_table, &prev);
     // the original's order of writes
     for k in [0usize, 1, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 2, 3, 4, 5, 6, 7, 8, 9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x20, 0x21, 0x22, 0x23] {
         set_screen_param(k as u32, p[k]);
@@ -2052,7 +2052,7 @@ pub(crate) unsafe extern "C" fn open_club_history_screen(club: usize, restore: u
 /// Original: `club_history_screen_build` (0x46a1e0, club_screens.cpp, cdecl).
 pub(crate) unsafe extern "C" fn club_history_screen_build() {
     let lang: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-    let tab_panel = |f: usize, top: i32, bottom: i32| {
+    let table_panel = |f: usize, top: i32, bottom: i32| {
         let g: unsafe extern "C" fn(i32, i32) = core::mem::transmute(f);
         g(top, bottom)
     };
@@ -2067,7 +2067,7 @@ pub(crate) unsafe extern "C" fn club_history_screen_build() {
         return;
     }
     covered!("tel03_2 club history build");
-    let mut tab = get_screen_param(1) as u8;
+    let mut table = get_screen_param(1) as u8;
     exe::background_set_section_picture(8, 0);
     let (mut fore, mut back) = (0u32, 0u32);
     exe::database_get_club_kit_colours(club, 1, &mut fore, &mut back);
@@ -2082,9 +2082,9 @@ pub(crate) unsafe extern "C" fn club_history_screen_build() {
         lang(match_tab_title(&mut tabs, k), title);
         // the national teams have no positions and no transfers: greyed out (the word at +2), no mark and no value
         if (k == 3 || k == 8) && exe::database_is_national_team(club) != 0 {
-            if tab == k as u8 + 1 {
+            if table == k as u8 + 1 {
                 set_screen_param(1, 1);
-                tab = 1;
+                table = 1;
             }
             let base = tabs.as_mut_ptr() as usize + k * 0xd4;
             write_u16(base + 2, read_u16(G_GUI_COLOUR_GREY));
@@ -2094,17 +2094,17 @@ pub(crate) unsafe extern "C" fn club_history_screen_build() {
         }
     }
     let (mut top, mut bottom) = (0x50i32, 0x221i32);
-    exe::gui_add_tab_bar(tabs.as_mut_ptr() as usize, 9, tab as i8 as i32, &mut top, &mut bottom, 1);
-    match tab {
-        1 => tab_panel(0x46adc0, top, bottom),
+    exe::gui_add_tab_bar(tabs.as_mut_ptr() as usize, 9, table as i8 as i32, &mut top, &mut bottom, 1);
+    match table {
+        1 => table_panel(0x46adc0, top, bottom),
         2 => club_history_landmarks_tab(top, bottom),
         3 => club_history_records_tab(top, bottom),
-        4 => tab_panel(0x46c030, top, bottom),
-        5 => tab_panel(0x46c510, top, bottom),
-        6 => tab_panel(0x46c9e0, top, bottom),
-        7 => tab_panel(0x46ceb0, top, bottom),
-        8 => tab_panel(0x46d370, top, bottom),
-        9 => tab_panel(0x46d860, top, bottom),
+        4 => table_panel(0x46c030, top, bottom),
+        5 => table_panel(0x46c510, top, bottom),
+        6 => table_panel(0x46c9e0, top, bottom),
+        7 => table_panel(0x46ceb0, top, bottom),
+        8 => table_panel(0x46d370, top, bottom),
+        9 => table_panel(0x46d860, top, bottom),
         _ => {
             let add_area: DisplayListFn = core::mem::transmute(FN_DISPLAY_ADD_AREA);
             add_area(current_human_display(), 0x6e, top as usize, 0x30c, bottom as usize, 1, 0, 1, 0, 2, 0, usize::MAX);
@@ -2152,13 +2152,13 @@ pub(crate) unsafe extern "C" fn club_history_transfers_tab_input(widget: u32) ->
 pub(crate) unsafe extern "C" fn club_history_screen_input(widget: u32) -> i32 {
     let w = widget as i16;
     let club = get_screen_param(0);
-    let tab = get_screen_param(1) as u8 as i8;
+    let table = get_screen_param(1) as u8 as i8;
     let scroll = |save: u32, area: u32| {
         if w != -1 {
             set_screen_param(save, exe::screenmanager_get_area_scroll_row(G_SCREEN_MANAGER, get_screen_param(area)));
         }
     };
-    let answer = match tab {
+    let answer = match table {
         1 => {
             scroll(0x1e, 0x1f);
             let mut id = exe::display_get_widget_id(current_human_display(), widget);
@@ -2218,7 +2218,7 @@ pub(crate) unsafe extern "C" fn club_history_screen_input(widget: u32) -> i32 {
             club_history_pick(widget, club_history_action(widget), 8, 0xd)
         }
         7 | 8 | 9 => {
-            let f: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(match tab {
+            let f: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(match table {
                 7 => 0x46e260usize,
                 8 => 0x46e360usize,
                 _ => 0x46e460usize,
@@ -2283,15 +2283,15 @@ pub(crate) unsafe extern "C" fn club_history_screen_leave() {
 
 /// Comparer for `open_club_history_screen`: opening a screen does not run twice; only the original runs and the new
 /// screen's 36 params are checked against the plan (`club_history_planned_params`), when it holds the club in param 0.
-pub(crate) unsafe extern "C" fn compare_open_club_history_screen(club: usize, restore: u32, players_tab: u32) {
+pub(crate) unsafe extern "C" fn compare_open_club_history_screen(club: usize, restore: u32, players_table: u32) {
     let mut prev = [0usize; 0x3c];
     if restore != 0 {
         for (k, v) in prev.iter_mut().enumerate() {
             *v = get_screen_param(k as u32);
         }
     }
-    let plan = club_history_planned_params(club, restore, players_tab, &prev);
-    original_fn::<unsafe extern "C" fn(usize, u32, u32)>(IDX_OPEN_CLUB_HISTORY_SCREEN)(club, restore, players_tab);
+    let plan = club_history_planned_params(club, restore, players_table, &prev);
+    original_fn::<unsafe extern "C" fn(usize, u32, u32)>(IDX_OPEN_CLUB_HISTORY_SCREEN)(club, restore, players_table);
     if get_screen_param(0) == club && club != 0 {
         let mut got = [0usize; 0x24];
         for (k, v) in got.iter_mut().enumerate() {
@@ -2308,12 +2308,12 @@ pub(crate) unsafe extern "C" fn compare_open_club_history_screen(club: usize, re
 pub(crate) unsafe extern "C" fn compare_club_history_screen_build() {
     let o = original_fn::<unsafe extern "C" fn()>(IDX_CLUB_HISTORY_SCREEN_BUILD);
     let club = get_screen_param(0);
-    let mut tab = get_screen_param(1) as u8;
-    if club != 0 && (tab == 4 || tab == 9) && exe::database_is_national_team(club) != 0 {
-        tab = 1;
+    let mut table = get_screen_param(1) as u8;
+    if club != 0 && (table == 4 || table == 9) && exe::database_is_national_team(club) != 0 {
+        table = 1;
     }
     let missing = |ks: &[u32]| ks.iter().any(|&k| get_screen_param(k) == 0);
-    if club == 0 || (tab == 1 && missing(&[0x19, 0x1a, 0x1b, 0x1c])) || ((4..=9).contains(&tab) && missing(&[5])) {
+    if club == 0 || (table == 1 && missing(&[0x19, 0x1a, 0x1b, 0x1c])) || ((4..=9).contains(&table) && missing(&[5])) {
         return o();
     }
     compare_match_screen_build("club history screen", &[(CLUB_HISTORY_BUILT_FLAG, 4)], || o(), || club_history_screen_build());
@@ -6729,9 +6729,9 @@ pub(crate) unsafe extern "C" fn compare_players_by_contract_expiry_then_name(pa:
         return -1;
     }
     let db = exe::staff_contract_days_to_end_date(cb) as i32;
-    let da = exe::staff_contract_days_to_end_date(ca) as i32;
-    if da - db != 0 {
-        return da - db;
+    let of_the = exe::staff_contract_days_to_end_date(ca) as i32;
+    if of_the - db != 0 {
+        return of_the - db;
     }
     let (a, b) = player_sort_pair(pa, pb);
     player_sort_by_name(a, b)
@@ -7073,13 +7073,13 @@ pub(crate) unsafe extern "C" fn open_club_squad_screen(club: usize, reserve: u32
     }
     covered!("tel30_8 club squad screen opened");
     let year = read_u16(G_CURRENT_DATE_YEAR) as usize;
-    let tab = |a: usize, b: usize| if tab5 != 0 { a } else { b };
+    let table = |a: usize, b: usize| if tab5 != 0 { a } else { b };
     let params: [(u32, usize); 32] = [
-        (0, club), (1, reserve as usize), (2, 0), (3, 0), (4, tab(5, 1)), (5, 0), (6, 0), (7, read_usize(view)),
+        (0, club), (1, reserve as usize), (2, 0), (3, 0), (4, table(5, 1)), (5, 0), (6, 0), (7, read_usize(view)),
         (8, read_usize(view + 4)), (9, read_i8(view + 0xc) as i32 as usize), (0xa, 0), (0xb, 0), (0xc, year), (0xd, 0),
         (0xe, 0), (0xf, 1), (0x10, 0), (0x11, 0), (0x12, 1), (0x13, 0), (0x14, 0), (0x15, 0), (0x16, 0), (0x17, year),
         (0x18, read_usize(view + 8)), (0x19, read_i8(view + 0xd) as i32 as usize), (0x1a, read_i8(view + 0xe) as i32 as usize),
-        (0x1b, tab(2, 1)), (0x1c, 0), (0x1d, 0), (0x1e, 0), (0x1f, 0),
+        (0x1b, table(2, 1)), (0x1c, 0), (0x1d, 0), (0x1e, 0), (0x1f, 0),
     ];
     for (k, v) in params {
         set_screen_param(k, v);
@@ -7369,7 +7369,7 @@ pub(crate) unsafe fn club_screens_squad_view_settings() -> usize {
 
 /// The club screen's parameters (0..0x22, 0 = not written) that `open_manager_club_screen` gives the new screen: the
 /// plan, worked out before the screen opens (it reads the current screen's parameters to restore them).
-pub(crate) unsafe fn open_manager_club_screen_plan(manager: Staff, squad_param: u32, restore_params: u32, open_tab_5: u32) -> [u32; 0x23] {
+pub(crate) unsafe fn open_manager_club_screen_plan(manager: Staff, squad_param: u32, restore_params: u32, open_table_5: u32) -> [u32; 0x23] {
     let rec = exe::get_human_manager_record(manager);
     let club = Club(if rec != 0 && read_u32(rec + human_manager_sheet::LIVE_MATCH) != 0 {
         read_usize(rec + human_manager_sheet::CLUB)
@@ -7401,7 +7401,7 @@ pub(crate) unsafe fn open_manager_club_screen_plan(manager: Staff, squad_param: 
     let mut p = [0u32; 0x23];
     p[0] = club.addr() as u32;
     p[1] = squad_param;
-    p[4] = if open_tab_5 != 0 { 5 } else { 1 };
+    p[4] = if open_table_5 != 0 { 5 } else { 1 };
     p[7] = read_u32(view);
     p[8] = read_u32(view + 4);
     p[9] = read_i8(view + 0xc) as i32 as u32;
@@ -7412,7 +7412,7 @@ pub(crate) unsafe fn open_manager_club_screen_plan(manager: Staff, squad_param: 
     p[0x18] = read_u32(view + 8);
     p[0x19] = read_i8(view + 0xd) as i32 as u32;
     p[0x1a] = read_i8(view + 0xe) as i32 as u32;
-    p[0x1b] = if open_tab_5 != 0 { 2 } else { 1 };
+    p[0x1b] = if open_table_5 != 0 { 2 } else { 1 };
     if restore_params != 0 {
         for k in [4usize, 7, 8, 9, 0x10, 0x11, 0x12, 0x18, 0x19, 0x1a, 0x1b] {
             p[k] = saved[k];
@@ -8919,17 +8919,17 @@ pub(crate) unsafe fn club_history_error_box(line: u32) {
 
 /// The 36 parameters of the club history screen as `open_club_history_screen` leaves them (`prev` = the previous
 /// screen's 60 params, read before opening, used with `restore`).
-pub(crate) unsafe fn club_history_planned_params(club: usize, restore: u32, players_tab: u32, prev: &[usize; 0x3c]) -> [usize; 0x24] {
+pub(crate) unsafe fn club_history_planned_params(club: usize, restore: u32, players_table: u32, prev: &[usize; 0x3c]) -> [usize; 0x24] {
     let mut p = [0usize; 0x24];
     p[0] = club;
-    p[1] = if players_tab != 0 { 8 } else { 3 };
+    p[1] = if players_table != 0 { 8 } else { 3 };
     p[0x1d] = usize::MAX;
     p[2] = 1;
     p[7] = 1;
     p[0xa] = 3;
     p[0xd] = 7;
     p[0x10] = 0xc;
-    p[0x13] = if players_tab != 0 { 0x20 } else { 0x10 };
+    p[0x13] = if players_table != 0 { 0x20 } else { 0x10 };
     p[0x16] = 0x1c;
     p[0x20] = 1;
     p[0x23] = 1;
@@ -9131,7 +9131,7 @@ pub(crate) unsafe fn club_history_click_stays(widget: u32) -> bool {
     let action = club_history_action(widget);
     let data = exe::screenmanager_get_widget_action_data(G_SCREEN_MANAGER, widget);
     let differs = |p: u32| data != get_screen_param(p);
-    let by_tab = match get_screen_param(1) as u8 {
+    let by_table = match get_screen_param(1) as u8 {
         1 => {
             let mut id = exe::display_get_widget_id(current_human_display(), widget);
             if id == 0 {
@@ -9149,7 +9149,7 @@ pub(crate) unsafe fn club_history_click_stays(widget: u32) -> bool {
         9 => action == 0xb && differs(0x16),
         _ => false,
     };
-    by_tab || (action == 2 && differs(1))
+    by_table || (action == 2 && differs(1))
 }
 
 /// `Display::add_item` (0x55f990, thiscall, ret 0x48) of one entry of a View popup (`popup`): the text in `HISTORY_TAB_TEXT`, the
@@ -9752,8 +9752,8 @@ pub(crate) unsafe fn club_pages_date(date: *mut u32, day: u16, year: u16) -> usi
 }
 
 /// `Date::get_short_date_string(this, out, size, time)` (0x54a650, thiscall).
-pub(crate) unsafe fn club_pages_short_date(date: usize, out: usize, size: u32, time: u32) {
-    exe::date_get_short_date_string(date, out, size, time);
+pub(crate) unsafe fn club_pages_short_date(date: usize, out: usize, size: u32, team: u32) {
+    exe::date_get_short_date_string(date, out, size, team);
 }
 
 /// `Date::add_days(this, out, days)` (0x54c5b0, thiscall): returns `out`.
@@ -11900,8 +11900,8 @@ pub(crate) unsafe fn club_screens_format_cash(amount: i32, out: usize, size: u32
 }
 
 /// `Date::get_short_date_string(this, out, size, time_of_day)` (0x54a650, thiscall, ret 0xc).
-pub(crate) unsafe fn club_screens_short_date(date: usize, out: usize, size: u32, time_of_day: u32) {
-    (exe::date_get_short_date_string(date, out, size, time_of_day) as u32);
+pub(crate) unsafe fn club_screens_short_date(date: usize, out: usize, size: u32, team_of_day: u32) {
+    (exe::date_get_short_date_string(date, out, size, team_of_day) as u32);
 }
 
 /// A transfer line's kind word when it has no fee: "Exch" (1), "Loan" (2, only `with_loan`), "Bos" (4), else "Free".

@@ -878,7 +878,7 @@ pub(crate) unsafe extern "C" fn contract_screens_build_offer_contract_screen() {
         set_screen_param(0xb, exe::date_get_month(edited + contract::CONTRACT_EXPIRES) as i8 as i32 as usize);
         set_screen_param(0xc, read_u16(edited + contract::CONTRACT_EXPIRES_YEAR) as usize);
     }
-    let tab = get_screen_param(1) as u8 as i8;
+    let table = get_screen_param(1) as u8 as i8;
     picture(staff.addr(), 0, 0);
     let mut a = read_u16(G_GUI_COLOUR_BLUE) as u32;
     let mut b = read_u16(G_GUI_COLOUR_PALE_GREY) as u32;
@@ -945,9 +945,9 @@ pub(crate) unsafe extern "C" fn contract_screens_build_offer_contract_screen() {
             write_u32(item + 0xcc, 0xc);
             write_u32(item + 0xd0, id);
         }
-        exe::gui_add_tab_bar(tabs.as_mut_ptr() as usize, 3, tab as i32, &mut top, &mut bottom, 1);
+        exe::gui_add_tab_bar(tabs.as_mut_ptr() as usize, 3, table as i32, &mut top, &mut bottom, 1);
     }
-    match tab {
+    match table {
         1 => {
             let f: unsafe extern "C" fn(usize, usize, usize, i32, i32) = core::mem::transmute(CS_FN_BUILD_BASIC_TERMS_TAB);
             f(terms, edited, staff.addr(), top, bottom);

@@ -637,8 +637,8 @@ pub(crate) unsafe extern "thiscall" fn construct_referee(a: usize) -> usize {
 
 pub(crate) unsafe extern "thiscall" fn compare_look_for_offside(this: usize, l: i8, linha: i8, y: i8, passador: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, i8, usize) -> usize>(IDX_LOOK_FOR_OFFSIDE);
-    let motor = Engine(read_usize(this));
-    let mut reg = vec![(this + 8, 2), (motor.addr() + engine::PENDING_PLAY_KIND, 16)];
+    let engine = Engine(read_usize(this));
+    let mut reg = vec![(this + 8, 2), (engine.addr() + engine::PENDING_PLAY_KIND, 16)];
     reg.extend(crate::rng::STATE_REGIONS);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, l, linha, y, passador), || crate::rng::without_counting(|| look_for_offside(this, l, linha, y, passador)));
     SCOREBOARD.record(igual && r == n, || format!("look_for_offside({}, {}, {}, {}) original={:#x} {:x?} rust={:#x} {:x?}", l, linha, y, passador != 0, r, mo, n, mr));

@@ -5793,7 +5793,7 @@ pub(crate) unsafe fn club_screen_answer(widget: u32) -> i32 {
     let club = get_screen_param(0);
     let reserves = get_screen_param(1);
     let last_match = get_screen_param(2);
-    let tab = get_screen_param(4) as u8 as i8;
+    let table = get_screen_param(4) as u8 as i8;
     let colours = (get_screen_param(5), get_screen_param(6));
     if let Some(r) = club_screen_printout_answer(club, reserves, colours) {
         return r;
@@ -5801,11 +5801,11 @@ pub(crate) unsafe fn club_screen_answer(widget: u32) -> i32 {
     if let Some(r) = club_screen_common_actions(w, club, reserves, last_match, colours) {
         return r;
     }
-    let by_tab = match tab {
+    let by_table = match table {
         1 => club_screen_squad_tab_input(widget),
         2 => club_screen_transfers_tab_input(widget),
         3 | 4 => {
-            let f: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(if tab == 3 { 0x468c10usize } else { 0x4691d0usize });
+            let f: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(if table == 3 { 0x468c10usize } else { 0x4691d0usize });
             let r = f(widget);
             if r != 0 { Some(r) } else { None }
         }
@@ -5816,7 +5816,7 @@ pub(crate) unsafe fn club_screen_answer(widget: u32) -> i32 {
             None
         }
     };
-    if let Some(r) = by_tab {
+    if let Some(r) = by_table {
         return r;
     }
     let r = exe::handle_club_screen_action(widget);

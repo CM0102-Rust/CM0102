@@ -9789,7 +9789,7 @@ pub(crate) unsafe extern "thiscall" fn write_transfer_completed_news_text(_this:
         exe::date_get_long_date_string(date.as_ptr() as usize, when.as_mut_ptr() as usize, 0xc8, 0xff);
     };
     // the "no year" texts of a player with no fee, shared with the done move without swaps
-    let free_no_year = |kind: i8| {
+    let free_in_the_year = |kind: i8| {
         if has_seller {
             match kind {
                 0 => { fmt(NEWS_TEXT_BUFFER, 0xa983d4, g4, g4, n, n, g5, g5, sn4, kt, np, sn5); }
@@ -9837,7 +9837,7 @@ pub(crate) unsafe extern "thiscall" fn write_transfer_completed_news_text(_this:
                 }
             }
         } else {
-            free_no_year(kind);
+            free_in_the_year(kind);
         }
     } else {
         news_text_money(fee as u32, &mut money);
@@ -9849,7 +9849,7 @@ pub(crate) unsafe extern "thiscall" fn write_transfer_completed_news_text(_this:
                     _ => { fmt(NEWS_TEXT_BUFFER, 0xa981a4, g4, g4, g5, g5, sn4, np, sn5, mp); } // gra13: signed for a fee
                 }
             } else {
-                free_no_year(kind);
+                free_in_the_year(kind);
             }
         } else if fee > 0 {
             match kind {
@@ -10478,8 +10478,8 @@ pub(crate) unsafe extern "thiscall" fn compare_review_ai_club_bid(this: usize, s
 
 /// `Date::get_date_string_no_weekday` (0x54c3b0; thiscall(date, out, size, time of day), ret 0xc): the date as
 /// ordinal day, month name and year (time of day 0xff: none).
-pub(crate) unsafe fn date_string_no_weekday(date: usize, out: usize, size: u32, time_of_day: u32) -> i32 {
-    exe::date_get_date_string_no_weekday(date, out, size, time_of_day)
+pub(crate) unsafe fn date_string_no_weekday(date: usize, out: usize, size: u32, team_of_day: u32) -> i32 {
+    exe::date_get_date_string_no_weekday(date, out, size, team_of_day)
 }
 
 /// The cash amount `value` as display text (`exe::cash_get_display_amount` and `exe::cash_format_money`, unit 6) into

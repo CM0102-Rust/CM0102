@@ -11,7 +11,7 @@ use super::*;
 /// `no_check`, a side left with fewer than 15 players in its squad shows the game's error box (line 0xc3), the
 /// fixture is released (`release_fixture`) and filled again with the same slot and no check.
 /// Original: `VIRTUAL_STAFF::fill_fixture_squads` (0x90d2f0, virtual_staff.cpp, thiscall, ret 0xc).
-pub(crate) unsafe extern "thiscall" fn fill_fixture_squads(this: usize, fixture: usize, slot: u32, no_check: u8) {
+pub(crate) unsafe extern "thiscall" fn fill_fixture_squads(this: usize, fixture: usize, slot: u32, in_the_check: u8) {
     let fixture = Fixture(fixture);
     use virtual_fixture_fns as vf;
     if virtual_fixture_node(this, fixture.addr()) != 0 {
@@ -45,7 +45,7 @@ pub(crate) unsafe extern "thiscall" fn fill_fixture_squads(this: usize, fixture:
     node[..4].copy_from_slice(&(fixture.addr() as u32).to_le_bytes());
     node[4..].copy_from_slice(&(slot as u16).to_le_bytes());
     exe::llist_add_tail(this + vf::FIXTURE_LIST, node.as_mut_ptr() as usize, 6);
-    if no_check != 0 {
+    if in_the_check != 0 {
         return;
     }
     let filled = |club: Club| (0..50).filter(|&i| club.squad(i) != 0).count() as u8;
@@ -61,10 +61,10 @@ pub(crate) unsafe extern "thiscall" fn fill_fixture_squads(this: usize, fixture:
 ///
 /// The fixture goes on a list (a new node) and the virtual players are created with the generator: it cannot run
 /// twice. Only the original runs, and what it guarantees is checked: the fixture is on the list afterwards.
-pub(crate) unsafe extern "thiscall" fn compare_fill_fixture_squads(this: usize, fixture: usize, slot: u32, no_check: u8) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u8)>(IDX_FILL_FIXTURE_SQUADS)(this, fixture, slot, no_check);
+pub(crate) unsafe extern "thiscall" fn compare_fill_fixture_squads(this: usize, fixture: usize, slot: u32, in_the_check: u8) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u8)>(IDX_FILL_FIXTURE_SQUADS)(this, fixture, slot, in_the_check);
     let listed = virtual_fixture_node(this, fixture) != 0;
-    SCOREBOARD.record(listed, || format!("fill_fixture_squads(fixture {:x}, slot {:#x}, no_check {}): the fixture is not on the list", fixture, slot, no_check));
+    SCOREBOARD.record(listed, || format!("fill_fixture_squads(fixture {:x}, slot {:#x}, no_check {}): the fixture is not on the list", fixture, slot, in_the_check));
 }
 
 /// Takes a finished fixture's virtual players away and the fixture off the virtual staff list.

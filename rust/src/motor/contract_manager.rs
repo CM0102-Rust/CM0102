@@ -4413,7 +4413,7 @@ pub(crate) unsafe extern "thiscall" fn calc_asking_price(this: usize, seller: us
         price = 1000;
     }
     // the work permit, the listed player and the B team (0x4d24aa..0x4d2585)
-    let at_value_times_d = |price: i32| -> i32 {
+    let at_value_teams_d = |price: i32| -> i32 {
         let a = p.value() as i32 as f64 * dfac;
         if a < price as f64 { ftol(a) } else { price }
     };
@@ -4426,14 +4426,14 @@ pub(crate) unsafe extern "thiscall" fn calc_asking_price(this: usize, seller: us
         if !reasons.is_null() {
             write_u16(reasons as usize, read_u16(reasons as usize) & 0x800);
         }
-        price = at_value_times_d(price);
+        price = at_value_teams_d(price);
     } else if !p.club_job().is_null() {
         let mut b_side: u32 = 0; // the original's slot is not initialized: the callee writes it whenever it returns a club
         if exe::club_get_linked_b_team(p.club_job(), &mut b_side, 1) != 0 && b_side == 0 && !matches!(status, 0x10 | 0x50 | 0x20 | 0x30) {
             if !reasons.is_null() {
                 write_u16(reasons as usize, read_u16(reasons as usize) & 0x800);
             }
-            price = at_value_times_d(price);
+            price = at_value_teams_d(price);
         }
     }
     // the rich club's floor (0x4d2585..0x4d261f)
@@ -5565,9 +5565,9 @@ pub(crate) fn asking_step(price: i32, add: i32, factor: f64) -> i32 {
 }
 
 /// The lesser of `price` + `add` and `price` × `times`, in integers (0x4d2d3e: lea, add edi, edi; cmp; jge).
-pub(crate) fn asking_step_int(price: i32, add: i32, times: i32) -> i32 {
+pub(crate) fn asking_step_int(price: i32, add: i32, teams: i32) -> i32 {
     let a = price.wrapping_add(add);
-    let b = price.wrapping_mul(times);
+    let b = price.wrapping_mul(teams);
     if a >= b { b } else { a }
 }
 

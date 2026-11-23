@@ -2375,8 +2375,8 @@ pub(crate) unsafe extern "C" fn setup_run_front_end() -> i32 {
         write_u32(G_NETWORK_SETUP_HOST_FLAG, 0);
         write_u32(G_NETWORK_GAME_NAMED_FLAG, 0);
         if exe::screenmanager_open_screen_for_each_record(SCREEN_MANAGER, 0, 0x81bab0usize, 0x81bd70usize, 0, 0usize, 0) != 0 {
-            let first_time = (read_u32(read_usize(G_CONFIG) + CONFIG_SETTINGS_SEEN) == 0) as usize;
-            exe::screenmanager_set_screen_param(SCREEN_MANAGER, 0, first_time, 0);
+            let first_team = (read_u32(read_usize(G_CONFIG) + CONFIG_SETTINGS_SEEN) == 0) as usize;
+            exe::screenmanager_set_screen_param(SCREEN_MANAGER, 0, first_team, 0);
         }
         exe::screenmanager_monitor(SCREEN_MANAGER);
         if read_u32(G_GAME_IN_PROGRESS_FLAG) == 0 && read_u32(G_GAME_SESSION_STARTED_FLAG) == 0 {
@@ -2524,13 +2524,13 @@ pub(crate) unsafe extern "C" fn setup_build_select_leagues_screen() {
     let orange = setup_colour(G_GUI_COLOUR_ORANGE);
     let yellow = setup_colour(G_GUI_COLOUR_YELLOW);
     // a Yes/No pair: the chosen one orange (style 0x801), the other grey; `ids` = (yes, no), none in the read-only view
-    let yes_no = |a: usize, on: bool, yes_col: usize, no_col: usize, ids: (usize, usize)| {
+    let yes_in_the = |a: usize, on: bool, yes_col: usize, in_the_col: usize, ids: (usize, usize)| {
         text(SETUP_TEXT, 0x98e8d0); // "Yes"
         let (style, tc) = if on { (0x801, orange) } else { (1, grey) };
         button(sm, a, yes_col, 0, style, grey, 0xc, 1, tc, SETUP_TEXT, ids.0, 0);
         text(SETUP_TEXT, 0x98e8cc); // "No"
         let (style, tc) = if on { (1, grey) } else { (0x801, orange) };
-        button(sm, a, no_col, 0, style, grey, 0xc, 1, tc, SETUP_TEXT, ids.1, 0);
+        button(sm, a, in_the_col, 0, style, grey, 0xc, 1, tc, SETUP_TEXT, ids.1, 0);
     };
     let mut options = 0usize;
     let german = read_u8(G_PLAYER_SETUP_GERMAN_FLAG) != 0;
@@ -2539,7 +2539,7 @@ pub(crate) unsafe extern "C" fn setup_build_select_leagues_screen() {
         text(SETUP_TEXT, 0xa80404); // "  Use Real Players:"
         button(sm, options, 0, 0, 1, grey, 1, 1, pale, SETUP_TEXT, 0, 0);
         let real = read_u8(G_USE_REAL_PLAYERS) != 0;
-        yes_no(options, real, 1, 3, if read_only { (0, 0) } else { (0x39, 0x3a) });
+        yes_in_the(options, real, 1, 3, if read_only { (0, 0) } else { (0x39, 0x3a) });
     }
     if german || options as i16 == 0 {
         options = area(current_human_display(), 0x6e, 0x91, 0x20d, 0xa5, 9, masking_columns.as_mut_ptr() as usize, 1, 0, 2, 0, usize::MAX);
@@ -2548,9 +2548,9 @@ pub(crate) unsafe extern "C" fn setup_build_select_leagues_screen() {
     button(sm, options, 5, 0, 1, grey, 1, 1, pale, SETUP_TEXT, 0, 0);
     let masking = read_u8(G_ATTRIBUTE_MASKING_ENABLED) != 0;
     if read_only {
-        yes_no(options, masking, 6, 7, (0, 0)); // tel11_1 the read-only No in the spacer column
+        yes_in_the(options, masking, 6, 7, (0, 0)); // tel11_1 the read-only No in the spacer column
     } else {
-        yes_no(options, masking, 6, 8, (0x3b, 0x3c));
+        yes_in_the(options, masking, 6, 8, (0x3b, 0x3c));
     }
     let all = area(current_human_display(), 0x212, 0x91, 0x30c, 0xa5, 2, 0, 1, 0, 1, 0, usize::MAX);
     text(SETUP_TEXT, 0x99b4c8); // "Select All"
@@ -8242,3 +8242,17 @@ pub(crate) unsafe extern "C" fn setup_handle_setup_game_input(item: u32) -> i32 
 pub(crate) unsafe extern "C" fn compare_setup_handle_setup_game_input(item: u32) -> i32 {
     original_fn::<unsafe extern "C" fn(u32) -> i32>(IDX_SETUP_HANDLE_SETUP_GAME_INPUT)(item)
 }
+
+pub(crate) const FN_OPEN_GAME_SETTINGS_BOX: usize = 0x823890; // open_game_settings_box(origin)
+
+pub(crate) const FN_SETUP_ASSIGN_RESTORED_NETWORK_MANAGERS: usize = 0x8387e0; // -> 1 when Manager Status must open
+
+pub(crate) const FN_SETUP_START_NEW_GAME: usize = 0x81ce00; // setup_start_new_game()
+
+pub(crate) const G_COMMAND_LINE_TEXT: usize = 0xae2c98; // g_command_line_text
+
+pub(crate) const G_QUICK_START_FILE_PATH: usize = 0xdd6f9c; // g_quick_start_file_path
+
+pub(crate) const G_PENDING_COMMAND_DISPATCH_FLAG: usize = 0xb77c84; // g_pending_command_dispatch_flag
+
+pub(crate) const CONFIG_SAVE_FOLDER: usize = 0xf; // the Config's save folder text [inference: passed as the folder of the restore and delete dialogs]
