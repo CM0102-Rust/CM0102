@@ -27,6 +27,11 @@ def publicar(t):
     def campos(m):
         return re.sub(r'^(    )(?!pub\b)(\w+\s*:)', r'\1pub(crate) \2', m.group(0), flags=re.M)
     t = re.sub(r'^pub\(crate\) struct \w+(?:<[^>]*>)? \{\n.*?^\}', campos, t, flags=re.M | re.S)
+    # the methods of an inherent impl (not a trait's: those take no visibility), 23/11/2026: an impl moved out of
+    # motor.rs is used by sibling modules
+    def metodos(m):
+        return re.sub(r'^(    )(?!pub\b)((?:const |unsafe |extern "\w+" )*fn )', r'\1pub(crate) \2', m.group(0), flags=re.M)
+    t = re.sub(r'^(?:pub\(crate\) )?(?:unsafe )?impl\b(?![^{\n]* for )[^{\n]*\{\n.*?^\}', metodos, t, flags=re.M | re.S)
     # structs de tupla: `struct X(A, B);`
     def tupla(m):
         dentro = ', '.join(x if x.strip().startswith('pub') else 'pub(crate) ' + x.strip() for x in m.group(2).split(','))
@@ -56,7 +61,13 @@ def main():
             open(p, 'w', encoding='utf-8').write(novo)
     m = os.path.join(SRC, 'motor.rs')
     s = open(m, encoding='utf-8').read()
-    decl = ''.join('#[path = "motor/%s"]\npub(crate) mod %s;\npub(crate) use self::%s::*;\n' % (rel, nome_mod(rel), nome_mod(rel)) for rel in mods)
+    # a source file whose name is already an inline name module (fields.rs's `mod display { .. }`, the field names of
+    # the Display object) gets the _cpp suffix: the file module would shadow it (23/11/2026, display.cpp and guio.cpp)
+    inline = set(re.findall(r'^(?:pub\(crate\) )?mod (\w+) \{', s, re.M))
+    for rel in mods:
+        inline |= set(re.findall(r'^(?:pub\(crate\) )?mod (\w+) \{', open(os.path.join(base, rel), encoding='utf-8').read(), re.M))
+    nome = {rel: nome_mod(rel) + ('_cpp' if nome_mod(rel) in inline else '') for rel in mods}
+    decl = ''.join('#[path = "motor/%s"]\npub(crate) mod %s;\npub(crate) use self::%s::*;\n' % (rel, nome[rel], nome[rel]) for rel in mods)
     s2 = re.sub(r'^include!\("motor/(?!macros\.rs)[^"]+"\);\n', '', s, flags=re.M)
     # de novo: as declarações antigas saem (a lista é refeita pelos arquivos que existem)
     s2 = re.sub(r'^#\[path = "motor/[^"]+"\]\npub\(crate\) mod \w+;\npub\(crate\) use self::\w+::\*;\n', '', s2, flags=re.M)

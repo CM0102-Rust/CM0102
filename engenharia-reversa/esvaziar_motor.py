@@ -20,10 +20,12 @@ import partir_motor  # noqa: E402
 def main():
     m = os.path.join(SRC, 'motor.rs')
     s = open(m, encoding='utf-8').read()
-    i = s.index('let rust: [usize; N] = [')
-    nomes = re.findall(r'^\s+(\w+) as \*const \(\) as usize,$', s[i:s.index('];', i)], re.M)
-    pro = re.findall(r'Prologue \{ address: (0x[0-9a-f]+)', s[:s.index('const N')])
-    end = {n: int(a, 16) for n, a in zip(nomes, pro)}
+    # the table since 08/11/2026: `Prologue { address: 0x.., bytes: .. } => rust_fn, comparer_fn;` (the comparer's
+    # name is not always compare_<rust_fn>, so both come from the line)
+    end, comp_de = {}, {}
+    for a, n, c in re.findall(r'^\s*Prologue \{ address: (0x[0-9a-f]+),[^}]*\} => (\w+), (\w+);', s, re.M):
+        end[n] = int(a, 16)
+        comp_de[c] = n
     mapa = partir_motor.mapa()
     onde = {}
     base = os.path.join(SRC, 'motor')
@@ -39,7 +41,9 @@ def main():
         if n in end and end[n] in mapa:
             plano[n] = partir_motor.destino(mapa[end[n]])
     for n, a, b in blocos:
-        if n.startswith('compare_'):
+        if n in comp_de and n not in plano and comp_de[n] in plano:
+            plano[n] = plano[comp_de[n]]
+        elif n.startswith('compare_') and n not in plano:
             x = n[len('compare_'):]
             if x in plano:
                 plano[n] = plano[x]
@@ -63,10 +67,238 @@ def main():
         os.makedirs(os.path.dirname(p), exist_ok=True)
         antes = open(p, encoding='utf-8').read() if os.path.exists(p) else 'use super::*;\n'
         open(p, 'w', encoding='utf-8').write(antes.rstrip('\n') + '\n\n' + '\n'.join(ls))
+    auxiliares(m, base)
+    itens(m, base)
+    limpar(m)
     import modulos_motor
     sys.argv.append('--gravar')
     modulos_motor.main()
     print('gravado')
+
+
+IDENT = re.compile(r'\b[A-Za-z_]\w*\b')
+
+
+def auxiliares(m, base):
+    """The second pass (23/11/2026): the helpers left in motor.rs (pieces of the routines, the screens' builders, the
+    comparers of the routines outside the map) have no `Original:` line of their own; each goes to the module that
+    uses it most, or, when no module uses it, to the module whose functions it calls most (a comparer goes where the
+    routine it compares is). Repeated until nothing moves: a helper used only by another helper follows it. What only
+    motor.rs itself uses (the installation, the tables' helpers) stays."""
+    from collections import Counter
+    mods = {}
+    for d, _, fs in os.walk(base):
+        for f in fs:
+            if f.endswith('.rs') and f != 'macros.rs':
+                p = os.path.join(d, f)
+                mods[os.path.relpath(p, base).replace(os.sep, '/')] = open(p, encoding='utf-8').read()
+    total = 0
+    while True:
+        s = open(m, encoding='utf-8').read()
+        blocos = mover_rotinas.blocos(s)
+        nomes = {n for n, _, _ in blocos}
+        # who uses each name, per module (the comparers' folder counts as the module it mirrors)
+        usos = {}
+        defs = {}
+        for rel, t in mods.items():
+            dono = rel[len('compare/'):] if rel.startswith('compare/') else rel
+            for n, _, _ in mover_rotinas.blocos(t):
+                defs.setdefault(n, dono)
+            for k, v in Counter(IDENT.findall(t)).items():
+                if k in nomes:
+                    usos.setdefault(k, Counter())[dono] += v
+        corpos = {n: s[a:b] for n, a, b in blocos}
+        usados_aqui = Counter()  # how many of motor.rs's other functions use each name
+        for x, c in corpos.items():
+            for k in set(IDENT.findall(c)) - {x}:
+                usados_aqui[k] += 1
+        # motor.rs outside its functions (the tables, the installation): a name used there and by no module stays
+        fora = s
+        for n, a, b in sorted(blocos, key=lambda x: -x[1]):
+            fora = fora[:a] + fora[b:]
+        no_motor = Counter(IDENT.findall(fora))
+        plano = {}
+        for n in nomes:
+            u = usos.get(n, Counter())
+            if u:
+                plano[n] = u.most_common(1)[0][0]
+                continue
+            # used by no module: by another helper still here (wait for it), or by motor.rs itself
+            if usados_aqui.get(n):
+                continue
+            chamadas = Counter(defs[k] for k in IDENT.findall(corpos[n]) if k in defs and k != n)
+            if chamadas and not no_motor.get(n):
+                plano[n] = chamadas.most_common(1)[0][0]
+            elif chamadas and n.startswith('compare_'):
+                plano[n] = chamadas.most_common(1)[0][0]
+        if not plano:
+            break
+        partes, pos = [], 0
+        for n, a, b in blocos:
+            if n in plano:
+                alvo = plano[n]
+                mods[alvo] = mods.get(alvo, 'use super::*;\n').rstrip('\n') + '\n\n' + s[a:b].rstrip('\n') + '\n'
+                partes.append(s[pos:a])
+                pos = b
+        partes.append(s[pos:])
+        open(m, 'w', encoding='utf-8').write(''.join(partes))
+        total += len(plano)
+    for rel, t in mods.items():
+        p = os.path.join(base, rel)
+        if not os.path.exists(p) or open(p, encoding='utf-8').read() != t:
+            open(p, 'w', encoding='utf-8').write(t)
+    print('%d auxiliares saem do motor.rs' % total)
+
+
+ITEM_INI = re.compile(r'^(?:pub\(crate\) )?(?:unsafe )?(const|static|struct|enum|impl|type|union)\b', re.M)
+CHAR = re.compile(r"'(?:\\u\{[0-9a-fA-F]+\}|\\x[0-9a-fA-F]{2}|\\.|[^\\'])'")
+
+
+def _fim(s, i, chave):
+    """End of the item whose header starts before i: the `;` at depth 0, or the `}` closing the body of a braced
+    struct/enum/impl/union."""
+    prof, k, n = 0, i, len(s)
+    while k < n:
+        c = s[k]
+        if c == '"' or (c in 'br' and s[k + 1:k + 2] in ('"', '#', 'r') and not s[k - 1:k].isalnum() and s[k - 1:k] != '_'):
+            j = k
+            while j < n and s[j] in 'br#':
+                j += 1
+            if j >= n or s[j] != '"':
+                k += 1
+                continue
+            cru = 'r' in s[k:j]
+            hashes = s[k:j].count('#')
+            j += 1
+            while True:
+                if not cru and s[j] == '\\':
+                    j += 2
+                    continue
+                if s[j] == '"' and s[j + 1:j + 1 + hashes] == '#' * hashes:
+                    break
+                j += 1
+            k = j + 1 + hashes
+            continue
+        if c == "'":
+            mm = CHAR.match(s, k)  # a char literal; otherwise a lifetime
+            k += len(mm.group(0)) if mm else 1
+            continue
+        if c == '/' and s[k + 1:k + 2] == '/':
+            k = s.index('\n', k)
+            continue
+        if c in '([{':
+            prof += 1
+        elif c in ')]}':
+            prof -= 1
+            if prof == 0 and c == '}' and chave in ('struct', 'enum', 'impl', 'union'):
+                return k + 1
+        elif c == ';' and prof == 0:
+            return k + 1
+        k += 1
+    return n
+
+
+def _itens(s):
+    """[(name, kind, start with docs and attributes, end)] of motor.rs's top-level non-function items."""
+    r = []
+    for m in ITEM_INI.finditer(s):
+        chave = m.group(1)
+        cab = s[m.start():s.find('\n', m.start())]
+        if chave == 'impl':
+            alvo = cab.split(' for ')[-1] if ' for ' in cab else cab[cab.index('impl') + 4:]
+            alvo = re.sub(r'^<[^>]*>', '', alvo.strip())
+            mm = re.match(r'(?:\w+::)*(\w+)', alvo.strip())
+            if not mm:
+                continue
+            nome = mm.group(1)
+        else:
+            mm = re.match(r'(?:pub\(crate\) )?(?:unsafe )?\w+ (?:mut )?(\w+)', cab)
+            if not mm or mm.group(1) == 'fn':  # a `const fn` is a function, not an item here
+                continue
+            nome = mm.group(1)
+        ini = m.start()
+        while ini > 0:  # the doc comments and attributes above
+            k = s.rfind('\n', 0, ini - 1) + 1
+            linha = s[k:ini].strip()
+            if linha.startswith('///') or linha.startswith('#['):
+                ini = k
+            else:
+                break
+        fim = _fim(s, m.end(), chave)
+        resto = re.match(r'[ \t]*//[^\n]*', s[fim:])  # a comment closing the item's line goes with it
+        if resto:
+            fim += resto.end()
+        if s[fim:fim + 1] == '\n':
+            fim += 1
+        r.append((nome, chave, ini, fim))
+    return r
+
+
+def itens(m, base):
+    """The third pass (23/11/2026): the constants, statics, structs, enums and impls left in motor.rs (the routines'
+    data tables, the screens' objects) go to the only module that uses them; an impl goes with its type. What two or
+    more modules share, or motor.rs itself uses, stays here (the shared core). Repeated until nothing moves."""
+    from collections import Counter
+    mods = {}
+    for d, _, fs in os.walk(base):
+        for f in fs:
+            if f.endswith('.rs') and f != 'macros.rs':
+                p = os.path.join(d, f)
+                mods[os.path.relpath(p, base).replace(os.sep, '/')] = open(p, encoding='utf-8').read()
+    total = 0
+    while True:
+        s = open(m, encoding='utf-8').read()
+        its = _itens(s)
+        nomes = {n for n, _, _, _ in its}
+        usos = {}
+        for rel, t in mods.items():
+            dono = rel[len('compare/'):] if rel.startswith('compare/') else rel
+            for k in set(IDENT.findall(t)) & nomes:
+                usos.setdefault(k, set()).add(dono)
+        # uses inside motor.rs outside the item (a type's impl blocks count as the type itself)
+        dentro = Counter()
+        for n, ch, a, b in its:
+            for k in set(IDENT.findall(s[a:b])) - {n}:
+                dentro[k] += 1
+        resto = s
+        for n, ch, a, b in sorted(its, key=lambda x: -x[2]):
+            resto = resto[:a] + resto[b:]
+        for k in set(IDENT.findall(resto)):
+            dentro[k] += 1
+        plano = {}
+        for n in nomes:
+            u = usos.get(n, set())
+            if len(u) == 1 and not dentro.get(n):
+                plano[n] = next(iter(u))
+        if not plano:
+            break
+        partes, pos = [], 0
+        for n, ch, a, b in its:
+            if n in plano and a >= pos:
+                alvo = plano[n]
+                mods[alvo] = mods[alvo].rstrip('\n') + '\n\n' + s[a:b].rstrip('\n') + '\n'
+                partes.append(s[pos:a])
+                pos = b
+                total += 1
+        partes.append(s[pos:])
+        open(m, 'w', encoding='utf-8').write(''.join(partes))
+    for rel, t in mods.items():
+        p = os.path.join(base, rel)
+        if open(p, encoding='utf-8').read() != t:
+            open(p, 'w', encoding='utf-8').write(t)
+    print('%d itens (constantes, tipos, impl) saem do motor.rs' % total)
+
+
+def limpar(m):
+    """The batch separators left without content and the runs of blank lines the moves leave behind."""
+    s = open(m, encoding='utf-8').read()
+    s = re.sub(r'\n{3,}', '\n\n', s)
+    while True:  # a section separator with nothing left under it (up to the next separator or the end)
+        t = re.sub(r'(?m)^// -{5,} [^\n]*\n\n?(?=// -{5,} |\Z)', '', s)
+        if t == s:
+            break
+        s = t
+    open(m, 'w', encoding='utf-8').write(s)
 
 
 if __name__ == '__main__':
