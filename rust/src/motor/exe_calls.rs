@@ -6860,6 +6860,11 @@ pub(crate) mod exe {
         f(a0.addr(), a1, a2, a3, a4, a5, a6.addr(), a7, a8, a9.addr(), a10.addr(), a11, a12)
     }
     #[inline(always)]
+    pub(crate) unsafe fn screenmanager_add_manager_record(a0: impl Addr, a1: impl Addr, a2: impl Addr, a3: impl Addr) {
+        let f: unsafe extern "thiscall" fn(usize, usize, usize, usize) = core::mem::transmute(FN_SCREENMANAGER_ADD_MANAGER_RECORD);
+        f(a0.addr(), a1.addr(), a2.addr(), a3.addr())
+    }
+    #[inline(always)]
     pub(crate) unsafe fn screenmanager_add_menu_item(a0: impl Addr, a1: u32, a2: u32, a3: u32, a4: u32) -> u32 {
         let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_SCREENMANAGER_ADD_MENU_ITEM);
         f(a0.addr(), a1, a2, a3, a4)

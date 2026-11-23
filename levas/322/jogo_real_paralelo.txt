@@ -1,0 +1,3 @@
+    pool nao paginado 1.23 -> 1.26 GB, paginado 1.93 -> 2.09 GB
+execucao 1: tempo esgotado (3600 s) antes de chegar em 2002-01-01 (3604 s)
+game.cfg restaurado; auto_setup.cfg removido

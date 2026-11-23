@@ -1,0 +1,20 @@
+# Mutações da 322a leva (itens tel39_1, tel39_2, tel40_1, tel40_2, tel40_3, tel40_5, tel42_3, tel42_4). Uso: python mutacoes.py mutacoes\leva322.py --carreira 2002-06-01
+MUTACOES = [
+    ('tel39_1_menu_nomes', 'let max: i32 = if history { 0x1a } else { 0x1c };', 'let max: i32 = if history { 0x1a } else { 0x1a };'),
+    ('tel39_1_apelido_vazio', 'let empty = read_u8(nickname) == 0;', 'let empty = false;'),
+    ('tel39_2_foto_fixa', 'write_u32(BACKGROUND_FIXED_FLAG, (on == 0) as u32);', 'write_u32(BACKGROUND_FIXED_FLAG, (on != 0) as u32);'),
+    ('tel39_2_filtro', 'write_u32(this, 0x81);', 'write_u32(this, 0x80);'),
+    ('tel40_1_registro_na_frente', '    exe::utils_swap_bytes(r as *mut i32, channel_record_at(sm, c, 1) as *mut i32, 0x30); // tel40_1: behind the current record\n', '    // mutation: the new record stays in front\n'),
+    ('tel40_1_linha_mais_um', '        write_u32(network_buffer_cursor(NET_SEND_BUFFER), row); // tel40_1: the first visible row', '        write_u32(network_buffer_cursor(NET_SEND_BUFFER), row.wrapping_add(1)); // mutation: one row more'),
+    ('tel40_1_comando_de_estado', '    scrman_command_packet(sm, 7); // tel40_1: the status command', '    scrman_command_packet(sm, 8); // mutation: the widget command'),
+    ('tel40_2_despedida_curta', '        send(this, p, (n + 0x64) as u32, NETWORK_PORT, 0, 0, 0); // tel40_2: the goodbye datagram', '        send(this, p, n as u32, NETWORK_PORT, 0, 0, 0); // mutation: the text only'),
+    ('tel40_2_conexao_presa', '            write_u16(this + g::SOCKETS + 2 * k, 0xffff); // tel40_2: the closed connection freed', '            // mutation: the closed connection stays in use'),
+    ('tel40_3_texto_nao_volta', "        tel26_copy_text(target as *mut u8, (item + display_item::TEXT) as *const u8); // tel40_3: the entry's text back", '        let _ = target; // mutation: the text does not come back'),
+    ('tel40_3_comando_errado', '    send_buffer_put(6, 1, 0x85); // tel40_3: the click command', '    send_buffer_put(8, 1, 0x85); // mutation: the widget command'),
+    ('tel40_5_sem_registro_proprio', '                exe::screenmanager_add_manager_record(sm, NETWORK_JOIN_CALLBACK, NETWORK_LEAVE_CALLBACK, person.addr()); // tel40_5: a record of his own', '                let _ = add; // mutation: no record of his own'),
+    ('tel40_5_sem_chave', '                write_usize(key, person.addr());\n                write_usize(sm + SCRMAN_JOIN_HOOK, NETWORK_JOIN_CALLBACK);', '                write_usize(sm + SCRMAN_JOIN_HOOK, NETWORK_JOIN_CALLBACK); // mutation: no key'),
+    ('tel42_3_temporada_acabada', '        && complete == 0 // tel42_3: the season not over', '        && complete >= 0 // tel42_3: the season not over (mutation)', 'tel42_3 current league season'),
+    ('tel42_3_posicao', 'write_u8(rec as usize + 6, read_u8(row + league_table_row::POSITION)); // tel42_3: the position', 'write_u8(rec as usize + 6, read_u8(row + league_table_row::POSITION).wrapping_add(1)); // tel42_3: the position (mutation)', 'tel42_3 current league row'),
+    ('tel42_4_paragrafo', '                            if !line_break {\n                                line_break = true;', '                            if false && !line_break { // tel42_4 mutation\n                                line_break = true;', 'tel42_4 .his paragraph'),
+    ('tel42_4_categoria', '        .map_or(-1, |k| k as i32)', '        .map_or(-1, |k| k as i32 + 1) // tel42_4 mutation', 'tel42_4 .his category'),
+]

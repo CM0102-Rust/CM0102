@@ -61,7 +61,9 @@ def main():
     from fila import texto_do_motor
     ja = texto_do_motor(RAIZ)
     primeira = re.search(r"ROTINAS = \[\('(\w+)'", open(os.path.join(RAIZ, 'levas', str(prox), 'integrar.py'), encoding='utf-8').read())
-    if primeira and f'fn {primeira.group(1)}(' in ja:
+    # a ported routine is declared `extern "..." fn name(`; the `exe::` wrapper of the same name (exe_calls.rs) does not
+    # count (the 322nd was skipped by it, 22/11/2026)
+    if primeira and re.search(r'extern "[^"]+" fn %s\(' % re.escape(primeira.group(1)), ja):
         print(f'a {prox}a já está integrada; pulando o integrar.py', flush=True)
     else:
         rodar(sys.executable, os.path.join('levas', str(prox), 'integrar.py'))

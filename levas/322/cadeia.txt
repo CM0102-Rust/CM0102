@@ -1,0 +1,23 @@
+=== MUTACOES: leva das telas, provada pelo Lucas jogando comparando
+pool nao paginado 1.23 GB, paginado 1.93 GB, RAM livre 13.5 GB, comprometida 31.8/79.1 GB
+=== JOGO REAL
+(refeito na bancada 2 com limite de 7200 s: a primeira tentativa esgotou os 3600 s em 2001-348, sem divergencias)
+execucao 1: parou em 2002-000, 1355701347 sorteios, impressao 881a6c2ea891674c, partidas 10275/3a1c3ccfb267441f, banco 3d96e5b879a0d5ff, 3826 s
+    date: 1000000000 comparacoes, 0 divergencias
+    engine: 10000000000 comparacoes, 0 divergencias
+    random: 1000000000 comparacoes, 0 divergencias
+game.cfg restaurado; auto_setup.cfg removido
+=== CARREIRA
+    pool nao paginado 1.26 -> 1.26 GB, paginado 2.09 -> 2.10 GB
+execucao 1: parou em 2002-151, 2345988007 sorteios, impressao 6edd502b4ce639b9, partidas 19472/2438b1b847d9ca91, banco c3d311beafd0028b, 222 s
+    pool nao paginado 1.26 -> 1.27 GB, paginado 2.10 -> 2.11 GB
+execucao 2: parou em 2002-151, 2345988007 sorteios, impressao 6edd502b4ce639b9, partidas 19472/2438b1b847d9ca91, banco c3d311beafd0028b, 225 s
+detector: parou em 2002-151, 2345988007 sorteios, impressao 6edd502b4ce639b9, partidas 19472/2438b1b847d9ca91, banco c3d311beafd0028b, 298 s
+detector de lixo: igual
+game.cfg restaurado; auto_setup.cfg removido
+determinismo: OK, todas as execucoes iguais
+    pool nao paginado 1.27 -> 1.27 GB, paginado 2.13 -> 2.14 GB
+execucao 1: parou em 2002-151, 2360020650 sorteios, impressao 388c7666d65c52d4, partidas 19277/83da5fae010a5053, banco 5e008a1c3165e63e, 194 s
+game.cfg restaurado; auto_setup.cfg removido
+pool nao paginado 1.28 GB, paginado 2.14 GB, RAM livre 14.7 GB, comprometida 28.3/79.1 GB
+=== FIM
