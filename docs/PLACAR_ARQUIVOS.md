@@ -2,7 +2,7 @@
 
 Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os arquivos-fonte do mapa de [maxevans60](https://github.com/maxevans60/cm0102-function-map) (CC BY 4.0). Uma função conta quando o início dela é desviado para Rust (`Prologue` em `rust/src/motor.rs`). O placar do motor de partidas, pelas nossas fronteiras, fica em `PLACAR.md`.
 
-**Exe inteiro:** 3760 de 6709 funções, 3513.4 de 5528.0 KB (**63.56%**) · 291 de 393 arquivos com rotinas em Rust
+**Exe inteiro:** 3770 de 6709 funções, 3519.8 de 5528.0 KB (**63.67%**) · 291 de 393 arquivos com rotinas em Rust
 
 | Arquivo | Funções | KB | Progresso |
 |---|---|---|---|
@@ -177,6 +177,7 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `nir_first.cpp` | 7/12 | 4.5/5.9 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **77.1%** |
 | `scrman.cpp` | 67/69 | 22.5/29.7 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **75.8%** |
 | `ger_first.cpp` | 6/12 | 7.3/9.8 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **74.8%** |
+| `wel_prm_cup.cpp` | 10/16 | 4.7/6.3 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **74.3%** |
 | `spa_first.cpp` | 8/15 | 8.7/11.7 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **74.2%** |
 | `scotland_rules.cpp` | 3/5 | 0.7/0.9 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **74.1%** |
 | `bra_nat_first.cpp` | 11/16 | 7.0/9.5 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **74.0%** |
@@ -187,6 +188,7 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `swe_first.cpp` | 7/12 | 3.8/5.3 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **72.0%** |
 | `virtual_staff.cpp` | 6/12 | 4.5/6.4 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **70.9%** |
 | `training_manager.cpp` | 20/34 | 11.5/16.3 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **70.5%** |
+| `wel_lge_cup.cpp` | 11/17 | 4.5/6.3 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **70.4%** |
 | `russia_rules.cpp` | 2/4 | 0.4/0.5 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **69.7%** |
 | `uefa_seeding.cpp` | 12/26 | 8.5/12.3 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **69.4%** |
 | `jap_j1.cpp` | 9/15 | 4.4/6.4 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **68.9%** |
@@ -258,8 +260,6 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `bel_second.cpp` | 6/18 | 1.7/7.7 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **22.6%** |
 | `world_club_champ.cpp` | 3/18 | 2.0/8.9 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **22.0%** |
 | `fifa_rankings.cpp` | 9/20 | 2.1/9.6 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **22.0%** |
-| `wel_lge_cup.cpp` | 6/17 | 1.4/6.3 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **21.7%** |
-| `wel_prm_cup.cpp` | 5/16 | 1.4/6.3 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **21.5%** |
 | `hall_of_fame.cpp` | 3/20 | 1.8/8.3 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **21.2%** |
 | `hol_first.cpp` | 6/18 | 1.8/8.4 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **20.9%** |
 | `ruling_body.cpp` | 4/19 | 1.4/6.7 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **20.6%** |

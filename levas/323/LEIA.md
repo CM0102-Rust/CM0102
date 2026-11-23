@@ -1,0 +1,25 @@
+# 323ª leva — a Copa da Liga galesa: os inscritos, as posições previstas e a virada da temporada; as copas galesas em grupos: os calendários e a virada da Copa Premier; os construtores das copas galesas em grupos; a Copa Premier galesa: os inscritos e as posições previstas
+
+**Rotinas:**
+- `wel_lge_cup_collect_entrants()` = 0x927010 (wel_lge_cup.cpp, thiscall, ret 0): regra: os 18 clubes da Liga de Gales, pela reputação e embaralhados dentro de cada faixa de 3 (os potes do sorteio: cada um dos seis grupos leva um clube de cada pote [inferência]); com menos de 18 na liga, a caixa de erro;
+- `wel_lge_cup_set_predicted_positions()` = 0x9274f0 (wel_lge_cup.cpp, thiscall, ret 0): regra: as posições previstas dos 18 inscritos, pela reputação: o mata-mata (fase 5) dá 1 ao campeão e 2 ao vice, depois uma posição a cada leva de eliminados; os outros em faixas de 6 (a expectativa da diretoria e da imprensa [inferência]);
+- `wel_lge_cup_start_new_season()` = 0x9268a0 (wel_lge_cup.cpp, thiscall, ret 0): regra: na virada, a Copa da Liga galesa é refeita: a tabela, as rodadas, os inscritos e as fases da edição passada liberados, as estatísticas arquivadas, o ano sobe; depois os 18 inscritos, as posições previstas, as regras, a tabela do primeiro grupo, os seus jogos e ordem e as fases dos outros 5 grupos;
+- `wel_lge_cup_create_schedule()` = 0x9261e0 (wel_lge_cup.cpp, thiscall, ret 0x10): regra: os grupos da Copa da Liga galesa (fases até 4 e a tabela da copa) jogam 6 rodadas semanais de 23 de agosto a 27 de setembro, cada grupo uma fase de liga (rótulo 0x3e9 + fase); o mata-mata (fase 5) de 8 clubes: quartas em 11 de outubro (jogo único, categoria 4), semifinais em ida e volta com 14 dias a partir de 25 de outubro e a final em 10 de janeiro do ano seguinte (categoria 6);
+- `wel_prm_cup_create_schedule()` = 0x927b30 (wel_prm_cup.cpp, thiscall, ret 0x10): regra: os dois grupos de 4 da Copa Premier galesa jogam 6 rodadas de 5 de setembro a 9 de janeiro (5/9, 3/10, 10/10, 14/11, 12/12 e 9/1), cada grupo uma fase de liga (rótulo 0x420 + fase); o mata-mata (fase 1) de 8 clubes no ano seguinte: quartas em 13 de fevereiro (15.000 a cada clube [inferência]), semifinais em ida e volta a partir de 10 de abril (10.000) e a final em 13 de maio (100.000 ao campeão e 50.000 ao vice);
+- `wel_prm_cup_start_new_season()` = 0x9281f0 (wel_prm_cup.cpp, thiscall, ret 0): regra: na virada, a Copa Premier galesa é refeita: a tabela, as rodadas, os inscritos e as fases da edição passada liberados, as estatísticas arquivadas, o ano sobe; depois os 12 inscritos, as posições previstas, as regras, a tabela do primeiro grupo, os seus jogos e ordem e a fase do segundo grupo;
+- `construct_wel_lge_cup()` = 0x925e90 (wel_lge_cup.cpp, thiscall, ret 8): regra: a Copa da Liga galesa na criação da carreira: o ano e a competição do banco de dados, 5 reservas no banco e 3 substituições, a regra de disciplina de Gales, importância 12; sem nada salvo, 6 fases (5 grupos e o mata-mata), os 18 inscritos, as estatísticas, as posições previstas, as regras, a tabela do primeiro grupo (a copa é a própria liga do primeiro grupo), os seus jogos e ordem e as fases dos outros 5 grupos;
+- `construct_wel_prm_cup()` = 0x9277f0 (wel_prm_cup.cpp, thiscall, ret 8): regra: a Copa Premier galesa na criação da carreira: o ano e a competição do banco de dados, 5 reservas no banco e 3 substituições, sem regra de disciplina própria, importância 12; sem nada salvo, 2 fases (o segundo grupo e o mata-mata), os 12 inscritos, as estatísticas, as posições previstas, as regras, a tabela do primeiro grupo, os seus jogos e ordem e a fase do segundo grupo;
+- `wel_prm_cup_build_entrant_list()` = 0x928860 (wel_prm_cup.cpp, thiscall, ret 0): regra: 12 clubes: o detentor da Copa de Gales, depois clubes da Liga de Gales pela colocação da temporada passada (até o 8o, ou até o 7o quando o próprio detentor ficou do 9o para baixo ou não há detentor; depois os outros; depois os da Liga de Gales desta temporada) até serem 8, embaralhados; e os 4 clubes galeses da liga inglesa (Cardiff City, Swansea City, Wrexham e Merthyr Tydfil), embaralhados entre si;
+- `wel_prm_cup_set_predicted_positions()` = 0x928e00 (wel_prm_cup.cpp, thiscall, ret 0): regra: as posições previstas dos 12 inscritos, pela reputação: o mata-mata (fase 1) dá 1 ao campeão e 2 ao vice, depois uma posição a cada leva de eliminados; os outros em faixas de 2 (a expectativa da diretoria e da imprensa [inferência]);
+
+**Como foi comparada:** comparação de verdade em cada rotina (o original e o Rust a partir do mesmo estado, com as regiões que a rotina toca).
+
+**Resultado** (`cadeia.txt`):
+- **Mutações (7):** 7 acusadas.
+- **Jogo real comparando até 2002-01-01:** 0 divergências (186e99a6).
+- **Carreiras Rust ×2 e original até 2002-06-01:** Rust ×2 30a12b9d, original a29dcaff (registrada; não barra a leva desde 31/10/2026). Detector de lixo: igual.
+
+**Refazer**, sobre o commit da 322ª:
+1. `python integrar.py`
+2. `cargo build --release` e copiar a DLL para `jogo_testes/`
+3. `bash engenharia-reversa/cadeia.sh 323`

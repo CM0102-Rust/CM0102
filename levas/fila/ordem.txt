@@ -1,8 +1,4 @@
 # ordem da fila (fila.py); um item por linha
-mwb_22
-mwb_23
-mwb_24
-mwb_25
 gra_11
 gra_12
 gra_13

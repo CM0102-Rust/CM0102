@@ -1,0 +1,25 @@
+# Batch 323 — the Welsh League Cup: the entrants, the predicted positions and the season turnover; the Welsh group cups: the schedules and the Premier Cup's season turnover; the Welsh group cups' constructors; the Welsh Premier Cup: the entrants and the predicted positions
+
+**Routines:**
+- `wel_lge_cup_collect_entrants()` = 0x927010 (wel_lge_cup.cpp, thiscall, ret 0): rule: the 18 clubs of the League of Wales, by reputation and shuffled within each band of 3 (the draw pots: each of the six groups takes one club from each pot [inference]); with fewer than 18 in the league, the error box;
+- `wel_lge_cup_set_predicted_positions()` = 0x9274f0 (wel_lge_cup.cpp, thiscall, ret 0): rule: the 18 entrants' predicted positions, by reputation: the knockout (stage 5) gives 1 to the winner and 2 to the runner-up, then one place to each round's losers; the rest in bands of 6 (the board and press expectation [inference]);
+- `wel_lge_cup_start_new_season()` = 0x9268a0 (wel_lge_cup.cpp, thiscall, ret 0): rule: at the turnover the Welsh League Cup is rebuilt: last edition's table, rounds, entrants and stages freed, the statistics archived, the year moves on; then the 18 entrants, the predicted positions, the rules, the first group's table, its fixtures and order and the stages of the other 5 groups;
+- `wel_lge_cup_create_schedule()` = 0x9261e0 (wel_lge_cup.cpp, thiscall, ret 0x10): rule: the Welsh League Cup groups (stages up to 4 and the cup's table) play 6 weekly matchdays from 23 August to 27 September, each group a league stage (label 0x3e9 + stage); the 8-club knockout (stage 5): quarter-finals on 11 October (single matches, category 4), two-legged semi-finals 14 days apart from 25 October and the final on 10 January of the next year (category 6);
+- `wel_prm_cup_create_schedule()` = 0x927b30 (wel_prm_cup.cpp, thiscall, ret 0x10): rule: the Welsh Premier Cup's two groups of 4 play 6 matchdays from 5 September to 9 January (5/9, 3/10, 10/10, 14/11, 12/12 and 9/1), each group a league stage (label 0x420 + stage); the 8-club knockout (stage 1) in the next year: quarter-finals on 13 February (15,000 to each club [inference]), two-legged semi-finals from 10 April (10,000) and the final on 13 May (100,000 to the winner and 50,000 to the loser);
+- `wel_prm_cup_start_new_season()` = 0x9281f0 (wel_prm_cup.cpp, thiscall, ret 0): rule: at the turnover the Welsh Premier Cup is rebuilt: last edition's table, rounds, entrants and stages freed, the statistics archived, the year moves on; then the 12 entrants, the predicted positions, the rules, the first group's table, its fixtures and order and the second group's stage;
+- `construct_wel_lge_cup()` = 0x925e90 (wel_lge_cup.cpp, thiscall, ret 8): rule: the Welsh League Cup at career creation: the year and the database competition, 5 substitutes on the bench and 3 substitutions, the Welsh discipline rule, importance 12; with nothing saved, 6 stages (5 groups and the knockout), the 18 entrants, the statistics, the predicted positions, the rules, the first group's table (the cup is itself the league of the first group), its fixtures and order and the stages of the other 5 groups;
+- `construct_wel_prm_cup()` = 0x9277f0 (wel_prm_cup.cpp, thiscall, ret 8): rule: the Welsh Premier Cup at career creation: the year and the database competition, 5 substitutes on the bench and 3 substitutions, no discipline rule of its own, importance 12; with nothing saved, 2 stages (the second group and the knockout), the 12 entrants, the statistics, the predicted positions, the rules, the first group's table, its fixtures and order and the second group's stage;
+- `wel_prm_cup_build_entrant_list()` = 0x928860 (wel_prm_cup.cpp, thiscall, ret 0): rule: 12 clubs: the Welsh Cup holder, then League of Wales clubs by last season's place (up to 8th, or up to 7th when the holder itself finished 9th or lower or there is no holder; then the rest; then this season's League of Wales clubs) until there are 8, shuffled; and the 4 Welsh clubs of the English league (Cardiff City, Swansea City, Wrexham and Merthyr Tydfil), shuffled among themselves;
+- `wel_prm_cup_set_predicted_positions()` = 0x928e00 (wel_prm_cup.cpp, thiscall, ret 0): rule: the 12 entrants' predicted positions, by reputation: the knockout (stage 1) gives 1 to the winner and 2 to the runner-up, then one place to each round's losers; the rest in bands of 2 (the board and press expectation [inference]);
+
+**How it was compared:** real comparison on every routine (original and Rust from the same state, with the regions the routine touches).
+
+**Result** (`cadeia.txt`):
+- **Mutations (7):** 7 caught.
+- **Real game comparing to 2002-01-01:** 0 divergences (186e99a6).
+- **Rust ×2 and original careers to 2002-06-01:** Rust ×2 30a12b9d, original a29dcaff (recorded; does not block the batch since 31/10/2026). Garbage detector: equal.
+
+**Redo**, on top of batch 322's commit:
+1. `python integrar.py`
+2. `cargo build --release` and copy the DLL to `jogo_testes/`
+3. `bash engenharia-reversa/cadeia.sh 323`
