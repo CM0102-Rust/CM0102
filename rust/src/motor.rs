@@ -3948,8 +3948,10 @@ routines! {
     Prologue { address: 0x5c3040, bytes: &[0x6a, 0xff, 0x68, 0x24, 0x9f, 0x95, 0x00] } => plan_preseason_tournaments_and_tours, compare_plan_preseason_tournaments_and_tours;
     Prologue { address: 0x893dc0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => construct_tactics, compare_construct_tactics;
     Prologue { address: 0x57dab0, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] } => euro_champ_qual_draw_groups, compare_euro_champ_qual_draw_groups;
+    Prologue { address: 0x51fc00, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => cup_load_from_disk, compare_cup_load_from_disk;
+    Prologue { address: 0x687b10, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => league_load_from_temp_file, compare_league_load_from_temp_file;
 }
-const N: usize = 3790;
+const N: usize = 3792;
 include!(concat!(env!("OUT_DIR"), "/indices.rs")); // IDX_<NAME>: the position of each routine (build.rs)
 
 /// Size of the engine object (the game allocates it with new(0xf63b)): side 1's block (+0xf5f2, 0x36

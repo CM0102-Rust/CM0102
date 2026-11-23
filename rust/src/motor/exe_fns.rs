@@ -2131,3 +2131,9 @@ pub(crate) unsafe fn add_print_line(d: usize, fr: &mut CommandFrame, command: i8
         write_u32(list + print_list::COUNT, read_u32(list + print_list::COUNT).wrapping_add(1));
     }
 }
+pub const FN_COMP_STATS_DESTRUCTOR_COMP_STATS: usize = 0x49f450; // Comp_Stats::~Comp_Stats
+pub const FN_COMP_STATS_LOAD: usize = 0x4ab890; // Comp_Stats::load
+pub const FN_CUP_STAGE_CUP_STAGE_5230E0: usize = 0x5230e0; // Cup_Stage::Cup_Stage
+pub const FN_CUP_STAGE_LOAD_FROM_FILE: usize = 0x523380; // Cup_Stage::load_from_file
+pub const FN_LEAGUE_STAGE_LEAGUE_STAGE_68B4F0: usize = 0x68b4f0; // League_Stage::League_Stage
+pub const FN_LEAGUE_STAGE_LOAD_FROM_FILE: usize = 0x68b720; // League_Stage::load_from_file

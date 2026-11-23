@@ -2,7 +2,7 @@
 
 Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os arquivos-fonte do mapa de [maxevans60](https://github.com/maxevans60/cm0102-function-map) (CC BY 4.0). Uma função conta quando o início dela é desviado para Rust (`Prologue` em `rust/src/motor.rs`). O placar do motor de partidas, pelas nossas fronteiras, fica em `PLACAR.md`.
 
-**Exe inteiro:** 3786 de 6709 funções, 3671.3 de 5528.0 KB (**66.41%**) · 291 de 393 arquivos com rotinas em Rust
+**Exe inteiro:** 3788 de 6709 funções, 3682.2 de 5528.0 KB (**66.61%**) · 291 de 393 arquivos com rotinas em Rust
 
 | Arquivo | Funções | KB | Progresso |
 |---|---|---|---|
@@ -84,6 +84,7 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `eng_third.cpp` | 8/11 | 6.0/6.4 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **93.9%** |
 | `fra_third.cpp` | 5/7 | 3.3/3.6 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **93.9%** |
 | `bra_reg_goias.cpp` | 8/11 | 4.2/4.5 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **93.1%** |
+| `Cup.cpp` | 38/47 | 39.0/41.9 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **93.0%** |
 | `ita_ser_b.cpp` | 8/14 | 19.1/20.6 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **92.9%** |
 | `australia_rules.cpp` | 2/3 | 0.4/0.4 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **92.9%** |
 | `nor_cup.cpp` | 4/6 | 3.0/3.3 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **92.9%** |
@@ -120,6 +121,7 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `ger_cup.cpp` | 4/7 | 3.0/3.4 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **89.4%** |
 | `nir_cup.cpp` | 4/7 | 2.3/2.6 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **89.2%** |
 | `eng_auto_cup.cpp` | 11/15 | 5.4/6.1 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **89.0%** |
+| `league.cpp` | 52/61 | 31.8/35.8 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **88.9%** |
 | `wel_first.cpp` | 4/7 | 3.6/4.1 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **88.9%** |
 | `wel_cup.cpp` | 4/7 | 2.2/2.5 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **88.8%** |
 | `african_nations.cpp` | 12/20 | 5.9/6.7 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **88.6%** |
@@ -164,7 +166,6 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `korea_rules.cpp` | 1/3 | 0.3/0.3 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **81.8%** |
 | `ire_lge_cup.cpp` | 12/17 | 5.2/6.5 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **80.9%** |
 | `turkey_rules.cpp` | 2/3 | 0.5/0.6 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **80.6%** |
-| `Cup.cpp` | 37/47 | 33.8/41.9 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **80.5%** |
 | `fix_man.cpp` | 31/37 | 17.9/22.4 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **79.9%** |
 | `nir_lge_cup.cpp` | 11/16 | 5.0/6.2 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **79.7%** |
 | `northern_ireland_rules.cpp` | 3/4 | 0.5/0.6 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **79.5%** |
@@ -187,7 +188,6 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `staff_records.cpp` | 29/37 | 23.5/31.8 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **73.9%** |
 | `cro_a2a.cpp` | 5/10 | 3.2/4.3 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **73.7%** |
 | `display.cpp` | 31/36 | 27.6/37.5 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **73.4%** |
-| `league.cpp` | 51/61 | 26.1/35.8 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **73.1%** |
 | `swe_first.cpp` | 7/12 | 3.8/5.3 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **72.0%** |
 | `virtual_staff.cpp` | 6/12 | 4.5/6.4 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **70.9%** |
 | `discipline.cpp` | 26/38 | 27.3/38.6 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **70.9%** |

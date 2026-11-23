@@ -168,6 +168,7 @@ EN = {
  'texto_do_evento': 'event_text', 'confirmar_partida_em_rede': 'confirm_network_match',
  'narrar_no_painel': 'commentate_on_panel',
  'abrir_no_conteiner': 'open_in_container', 'buscar_no_conteiner': 'seek_in_container', 'posicao_no_conteiner': 'position_in_container',
+ 'cup_load_from_disk': 'Cup::load_from_disk', 'league_load_from_temp_file': 'League::load_from_temp_file',
  'euro_champ_qual_draw_groups': 'EuroChampQual::draw_groups',
  'plan_preseason_tournaments_and_tours': 'Friendly::plan_preseason_tournaments_and_tours', 'construct_tactics': 'Tactics::Tactics',
  'write_transfer_finalised_news_text': 'TRANSFER_MANAGER::write_transfer_finalised_news_text', 'write_contract_response_news_text': 'TRANSFER_MANAGER::write_contract_response_news_text', 'write_transfer_completed_news_text': 'TRANSFER_MANAGER::write_transfer_completed_news_text', 'write_offer_made_news_text': 'TRANSFER_MANAGER::write_offer_made_news_text', 'newsitem_write_text': 'newsitem_write_text', 'update_records_for_match': 'Club_Records::update_records_for_match', 'write_ban_news_text': 'Discipline::write_ban_news_text', 'comp_util_write_cup_tie_result_news': 'comp_util_write_cup_tie_result_news', 'write_record_news_text': 'club_records_write_record_news_text', 'weekly_board_confidence_update': 'MANAGER_MANAGER::weekly_board_confidence_update', 'cup_process_fixture': 'Cup::process_fixture', 'construct_player_stats': 'PlayerStats::PlayerStats', 'run_scout_day': 'PLAYER_SEARCH::run_scout_day',

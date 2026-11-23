@@ -1,0 +1,9 @@
+# Mutações da 327a leva (itens gra_28, gra_29). Uso: python mutacoes.py mutacoes\leva327.py --prova-save 327
+MUTACOES = [
+    ('gra28_clube_do_time', 'cup_load_club_from_id(read_usize(this.addr() + cup::TEAM_TABLE) + 6 * i as usize); // gra28: the club of a cup team', '{ let p = read_usize(this.addr() + cup::TEAM_TABLE) + 6 * i as usize; cup_load_club_from_id(p); if read_usize(p) != 0 { write_usize(p, read_usize(p) + club::SIZE); } } // mutation: the next club'),
+    ('gra28_clube_do_livro', 'cup_load_club_from_id(read_usize(this.addr() + cup::ENTRANT_BOOK) + 6 * i as usize); // gra28: the club of an entrant book place', '{ let p = read_usize(this.addr() + cup::ENTRANT_BOOK) + 6 * i as usize; cup_load_club_from_id(p); if read_usize(p) != 0 { write_usize(p, read_usize(p) + club::SIZE); } } // mutation: the next club'),
+    ('gra28_competicao_adiante', 'wrapping_mul(0x6b)) }); // gra28: the competition record', 'wrapping_mul(0x6b)).wrapping_add(0x6b) }); // mutation: the next competition record'),
+    ('gra29_competicao_adiante', 'wrapping_mul(0x6b)) }); // gra29: the competition record', 'wrapping_mul(0x6b)).wrapping_add(0x6b) }); // mutation: the next competition record'),
+    ('gra29_adversario_adiante', 'league_load_club_from_id(read_usize(row(k) + league_table_row::H2H_ENTRIES) + 0xe * j as usize); // gra29: the opponent of a head-to-head entry', '{ let p = read_usize(row(k) + league_table_row::H2H_ENTRIES) + 0xe * j as usize; league_load_club_from_id(p); if read_usize(p) != 0 { write_usize(p, read_usize(p) + club::SIZE); } } // mutation: the next club'),
+    ('gra29_clube_do_livro', 'league_load_club_from_id(this.entrant_book() + 6 * i as usize); // gra29: the club of an entrant book place', '{ let p = this.entrant_book() + 6 * i as usize; league_load_club_from_id(p); if read_usize(p) != 0 { write_usize(p, read_usize(p) + club::SIZE); } } // mutation: the next club'),
+]
