@@ -2,7 +2,7 @@
 # (o escritor original 0x770d20 le um dword de pilha nunca iniciado; o comparador agora roda so a original para ela).
 # Refeitas depois da correcao (levas/329/reconf.txt e reconf_pt.txt): a sx07_valor_sem_assinatura foi acusada. A
 # comparacao longa (ate 2002-06-01, bancada 3: levas/329/conf_escapadas_3.txt) acusou sx07_codigo_365 e
-# sx05_1_uma_decimal e mediu as outras tres; a sx07_nunca_em_casa roda a dela em levas/329/conf_escapadas_3b.txt.
+# sx05_1_uma_decimal e mediu as outras tres; a sx07_nunca_em_casa foi acusada na dela (levas/329/conf_escapadas_3b.txt).
 
 _MED_PT = (' Medido: comparacao ate 2002-06-01 (levas/329/conf_escapadas_3.txt) com 0 divergencias em 10^10 comparacoes '
            'do motor.')
@@ -27,11 +27,4 @@ ESCAPADAS = {
         'nenhuma recusa com motivos chegou ao clube humano nessa carreira.' + _MED_PT,
         'MEASURED GAP. The refusal without the reasons: the text is only written when the item reaches a human manager, '
         'and no refusal with reasons reached the human club in this career.' + _MED_EN),
-    'sx07_nunca_em_casa': (
-        'EM CONFIRMACAO. O jogo nunca em casa: na carga em portugues a divergencia era o erro do sx02_2 (o vendedor no '
-        'lugar do comprador), corrigido; sem ele a carga curta nao diverge. A comparacao longa decide '
-        '(levas/329/conf_escapadas_3b.txt).',
-        'BEING CONFIRMED. The match never at home: in the Portuguese load the divergence was the sx02_2 error (the '
-        'seller in place of the buyer), now fixed; without it the short load does not diverge. The long comparison '
-        'decides (levas/329/conf_escapadas_3b.txt).'),
 }  # nome: (explicacao pt, explicacao en)

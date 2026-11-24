@@ -1,0 +1,1 @@
+mutacao sx07_nunca_em_casa 2918s engine: DIVERGENCE contract_manager_write_offer_response_news_text(news 0xffff294, full 0): original "Griffin rejeita contrato proposto" [("Cheltenham
