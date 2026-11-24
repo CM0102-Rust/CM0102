@@ -1,0 +1,6 @@
+mutacao tel44_2_name_order 5270s engine: DIVERGENCE award_shortlist_compare_by_name original=1 rust=-1
+mutacao tel44_2_score_order 5302s engine: 10000000000 comparisons, 0 divergences
+mutacao tel44_2_votes_order 5374s engine: 10000000000 comparisons, 0 divergences
+mutacao tel44_3_votes_cleared 5610s engine: DIVERGENCE AWARD_SHORTLIST::clear(0x1f5824b0): differences in ["0x1f5824b4+0x4 o=[ff, ff, ff, ff, ff, ff, ff, ff] r=[00, 00, 00, 00, 00, 00, 0
+restaurado e recompilado
+FIM

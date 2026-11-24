@@ -69,6 +69,7 @@ def main():
         open(p, 'w', encoding='utf-8').write(antes.rstrip('\n') + '\n\n' + '\n'.join(ls))
     auxiliares(m, base)
     itens(m, base)
+    macros(m, base)
     limpar(m)
     import modulos_motor
     sys.argv.append('--gravar')
@@ -297,6 +298,41 @@ def itens(m, base):
         if open(p, encoding='utf-8').read() != t:
             open(p, 'w', encoding='utf-8').write(t)
     print('%d itens (constantes, tipos, impl) saem do motor.rs' % total)
+
+
+def macros(m, base):
+    """The macro_rules a batch leaves in motor.rs below the module declarations (24/11/2026: batch 330's team_text!
+    and team_second!, 201 build errors): a macro is only visible to the text after it, so one used by a single module
+    goes to the top of that module. One used by several, or by motor.rs itself, stays (and must go above the mods)."""
+    s = open(m, encoding='utf-8').read()
+    inicio = re.search(r'^(?:pub(?:\(crate\))? )?mod \w+;', s, re.M)
+    if not inicio:
+        return
+    achados = []
+    for x in re.finditer(r'^(?:///[^\n]*\n)*(?:#\[[^\n]*\]\n)*macro_rules! (\w+) \{\n.*?^\}\n', s, re.M | re.S):
+        if x.start() > inicio.start():
+            achados.append((x.group(1), x.start(), x.end()))
+    if not achados:
+        return
+    mods = {}
+    for d, _, fs in os.walk(base):
+        for f in fs:
+            if f.endswith('.rs') and f != 'macros.rs':
+                q = os.path.join(d, f)
+                mods[q] = open(q, encoding='utf-8').read()
+    for nome, a, b in reversed(achados):
+        resto = s[:a] + s[b:]
+        donos = [q for q, t in mods.items() if nome + '!' in t]
+        if len(donos) != 1 or nome + '!' in resto:
+            print('macro %s fica no motor.rs (%d modulos): precisa estar antes dos mod' % (nome, len(donos)))
+            continue
+        t = mods[donos[0]]
+        k = t.index('\n', t.index('use super::*;')) + 1 if 'use super::*;' in t else 0
+        mods[donos[0]] = t[:k] + '\n' + s[a:b] + t[k:]
+        open(donos[0], 'w', encoding='utf-8').write(mods[donos[0]])
+        s = resto
+        print('macro %s -> %s' % (nome, os.path.relpath(donos[0], base)))
+    open(m, 'w', encoding='utf-8').write(s)
 
 
 def limpar(m):
