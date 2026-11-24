@@ -1,0 +1,1 @@
+Antes de integrar: acrescentar 0x547af0 e 0x547d90 a condicao do instalar() no motor.rs que pula 0x6f5c30, 0x70dfd0 e 0x867560 quando compara (sao portas do pos-jogo nas POS_PROLOGUES).

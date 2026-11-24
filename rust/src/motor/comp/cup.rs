@@ -3927,9 +3927,9 @@ pub(crate) unsafe extern "thiscall" fn cup_load_from_disk(this: usize, by_id: u3
     let class_data: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x20));
     class_data(this.addr(), f);
     read(this.addr() + cup::PRIZE_FUND, 4);
-    read(this.addr() + 0x52, 1);
+    read(this.addr() + league::SQUAD_FLAGS, 1);
     read(this.addr() + cup::IMPORTANCE_BIAS, 1);
-    read(this.addr() + 0x4b, 1);
+    read(this.addr() + league::ENTRANTS_ARE_QUALIFIERS, 1);
     let mut byte = 0u8;
     let b = &mut byte as *mut u8 as usize;
     if game_data_version() < 0x3e013 {

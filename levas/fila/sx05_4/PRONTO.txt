@@ -1,0 +1,3 @@
+sx05_4 (simulacao, LIGAS = 'ENG', ATE = '2002-08-01'): compilado sobre o HEAD e9661948e com os itens sx05_1..6.
+Depende do sx05_2 (YearEntry). Os coletores rodam no fim da temporada (premios de jogador do ano); reset_if_year na
+virada do ano do AWARD_MANAGER (0x413588), talvez fora da janela: sem mutacao propria, o comparador confere o plano.

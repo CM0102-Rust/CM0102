@@ -1,0 +1,5 @@
+NAO PROVADO NO JOGO (leitor sx14b, rodada 5, 24/11/2026): 12 rotinas, compila sobre o HEAD e9661948e junto com sx14_1..5 e sx14b_1..3 (0 avisos no codigo do item; ancoras das mutacoes unicas). Prologos conferidos no cm0102.exe e no cm0102-1080.exe (ver rotinas.py).
+TELAS: 0 chamadas na carreira de teste (acoes do tecnico humano). Prova: o Lucas jogando com o JOGAR_COMPARANDO.bat pelos caminhos do rotinas.py (demissao, pedidos a diretoria e a federacao, liberar jogador valorizado, candidatura, apelacao de suspensao; a 0x6a4f80 so com o humano 90 dias sem clube).
+Comparadores: lado a lado em is_board_request_available, nos dois rotulos e em check_board_blocks_release (registro de 0x49 bytes do clube); so a original nas que abrem tela ou postam noticia.
+Mutacoes 2 (rotulo trocado; bloqueio sem o humor dos favoritos), so para provar o comparador numa sessao do Lucas.
+Defeitos do original: judge_player_release nao confere se ha contrato (le um contrato nulo) e, no caso feliz com elenco pequeno, posta as marcas 0x32 mas devolve 0x800.

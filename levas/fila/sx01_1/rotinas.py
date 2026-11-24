@@ -1,0 +1,35 @@
+# O texto da historia da midia sobre um clube ou selecao (Media::write_team_media_story_news_text 0x74bbd0,
+# media.cpp; leitor sx01, rodada 5, 23/11/2026). A rotina inteira (0x74bbd0..0x754720, 35.664 bytes; ret 0xc em
+# 0x75471f, depois a tabela de saltos 0x754724 de 6 entradas, o tipo de veiculo) desviada num item so, partida em
+# pedacos com nome: a leitura das vagas e o ponto de vista (team_text_read, team_text_names), o veiculo
+# (team_text_outlet), um pedaco por tipo de historia (22 tipos, team_text_<assunto>), a resposta do tecnico humano na
+# tela ou do computador (team_text_reply_yours / _manager), os vinculos (team_text_links) e a manchete
+# (team_text_headline). O mapa dava 35.696 bytes ate a proxima fronteira: a rotina termina no ret 0xc de 0x75471f.
+# Chamada so pelo despacho das noticias (NewsItem::write_text 0x77bc80, tipo 0xbdf, tabela NEWS_WRITERS).
+# Convencoes conferidas na desmontagem (um script segue cada push e cada [esp+k] ate cada chamada, inclusive os
+# trechos de chamada compartilhados para onde o compilador salta com os argumentos ja empilhados):
+# - a rotina: thiscall(Media, noticia, corpo, Text), ret 0xc; o ecx (Media) nao e lido;
+# - 0x785830 NewsItem::get_slot thiscall(noticia, k) ret 4 (le so o byte de k); 0x7e4fa0 read_match_record_from_news
+#   cdecl(noticia, &k, registro); 0x54a110 Date::Date thiscall(registro);
+# - 0x53e140 cdecl(n1, n2, n3, buf, 0x78, estilo, id); 0x53e990 cdecl(pessoa, n1, n2, n3, 0); 0x53ad00
+#   database_get_job_name cdecl(cargo, 0, 0, &genero); 0x6181d0 cdecl(nacao, buf, 0x78, forma); 0x53b3d0 cdecl(nacao);
+#   0x53b900 cdecl(clube); 0x66f4d0 cdecl(); 0x7dad20 thiscall([0xb74430], tom, comentarista, buf, &genero) ret 0x10;
+# - 0x43f460 thiscall(&valor, 6) -> edx:eax e 0x441c10 cdecl(buf, 0x32, i64, 6) (o primeiro push 6 e do segundo);
+# - 0x4bfa30 cdecl(competicao, dword +0xc, dword +0xe do registro, 1, buf, 0xc8); 0x4bff70 cdecl(0, +0xc, +0xe, 1);
+# - 0x729500 thiscall([0xb6b7c0], +0x1b, +0x11, +0x15, +0, +2 do registro) ret 0x14;
+# - 0x4ae660 Text::set_string thiscall ret 4; 0x4ae8a0 Text::add_link thiscall(texto, tipo, dado) ret 0xc;
+# - 0x66f4e0 langlib_sprintf e 0x944c9f sprintf cdecl: os argumentos dos 209 formatos conferidos push a push (os
+#   generos dos nomes sao movsx, passados como dword; o genero do veiculo e o byte [esp+0x27] ou o cl que vem dele).
+# Comparador proprio (o molde do compare_text_writer): texto, vinculos e gerador; nos tipos 0x50, 0x51 e 0x3d sem
+# partida o original junta o texto da historia nunca escrito (lixo da pilha) a resposta: a copia escreve vazio e o
+# comparador aceita qualquer prefixo (TEAM_TEXT_UNSET).
+SAVE = False
+# 23/11/2026: o texto so e escrito quando a noticia e aberta: a prova e o Lucas abrindo historias da midia sobre clubes
+# e selecoes jogando comparando, como as telas.
+TELAS = True
+ROTINAS = [('write_team_media_story_news_text', 0x74bbd0, [0x6a, 0xff, 0x64, 0xa1, 0x00, 0x00, 0x00, 0x00])]
+DOCS = ('o texto da historia da midia sobre um clube ou selecao',
+        'the text of a media story about a club or national team',
+        [('write_team_media_story_news_text', 'Media::write_team_media_story_news_text', '0x74bbd0', 'media.cpp', 'thiscall, ret 0xc',
+          'escreve a manchete ou o corpo da historia da midia sobre um clube ou selecao (noticia 0xbdf): le das vagas o sorteio, o tom, o clube, a competicao, o tipo, a resposta, o tecnico e a pessoa com os nomes, a partida (do registro), a variante, se foi o ultimo campeao, as sedes, a palavra extra, o clube e o cargo da pessoa, as convocacoes, a disputa de penaltis e o comentarista; decide se e "em casa" (o tecnico humano da tela e da nacao do clube) e se e a Inglaterra; o veiculo (o comentarista com o seu nome, ou jornal, radio, revista, jornal esportivo ou site, nacional ou local, simples em casa ou "{nacionalidade} ..." fora). O corpo: o primeiro paragrafo por tipo (22 assuntos: fim da serie invicta ou sem vitorias com o placar, luta contra o rebaixamento, acesso, fuga do rebaixamento, sem chances, time chato, selecao azarona ou favorita no torneio com as sedes, favorito na competicao continental com a frase da vitoria, gastanca, atacante sem bolas, queda livre, serie de vitorias, torcida impaciente ou furiosa com a fase e os penaltis, credenciais, azarao e favorito ao titulo, folego, acesso ou titulo vacilando), cada um pelo sorteio, por "em casa", pelo ultimo campeao, pela pessoa (figura de clube com cargo, ex-jogador ou a midia) e pelo placar (goleada acima de 3 de saldo, emocao acima de 5 gols); depois a resposta ("Voce ..." para o tecnico na tela, "O tecnico ..." para o computador, pela resposta 1 ou 2 e o tipo, a 3 ignora ou traz o porta-voz da torcida), juntados com "%s\\n\\n%s"; os vinculos (pessoa, tecnico, partida e adversario, competicao, clube, selecao da nacao e os dez adjetivos). A manchete por tipo, com o vinculo do clube. Defeito do original: nos tipos 0x50, 0x51 e 0x3d sem partida o texto da historia nao e escrito (zera o buffer compartilhado 0xde1f64 no lugar) e o corpo junta o lixo da pilha a resposta',
+          'writes the headline or body of the media story about a club or national team (news 0xbdf): reads from the slots the draw, the tone, the club, the competition, the kind, the reply, the manager and the person with their names, the match (from the record), the variant, whether the club was the last champion, the hosts, the extra word, the person\'s club and job, the caps, the shoot-out and the pundit; decides whether it is "at home" (the human manager on screen is of the club\'s nation) and whether that is England; the outlet (the pundit by name, or a national or local newspaper, radio station, magazine, sports paper or website, plain at home or "{nationality} ..." abroad). The body: the first paragraph by kind (22 subjects: the end of an unbeaten or winless run with the score, the relegation battle, promotion, escaping relegation, not contenders, a boring side, the national team as tournament outsiders or favourites with the hosts, continental favourites with the sentence on the win, big spenders, a starved striker, a slump, winning ways, impatient or furious supporters with the round and the shoot-out, title credentials, outsiders and favourites, lasting the pace, a stuttering promotion or title bid), each by the draw, "at home", the last champion, the person (a club figure with a job, a former player or the media) and the score (a hammering above a 3-goal margin, a thriller above 5 goals); then the reply ("You have ..." for the manager on screen, "Manager ..." for the computer, by reply 1 or 2 and the kind, reply 3 ignores it or brings the supporters\' spokesman), joined with "%s\\n\\n%s"; the links (the person, the manager, the match and opponent, the competition, the club, the nation\'s national team and its ten adjectives). The headline by kind, with the club\'s link. Defect of the original: for kinds 0x50, 0x51 and 0x3d without a match the story text is never written (the shared buffer 0xde1f64 is cleared instead) and the body joins the stack garbage with the reply')])

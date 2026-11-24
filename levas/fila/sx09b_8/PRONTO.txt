@@ -1,0 +1,2 @@
+NAO PROVADO NO JOGO (leitor sx09b, rodada 5, 23/11/2026): compila sobre o HEAD e9661948e (copia propria de rust/ e cm0102-base/ com sx09b_1..8 aplicados pela ancora, sem avisos no codigo dos itens); a mutacao compila; a rotina igual no cm0102.exe e no cm0102-1080.exe.
+Roda so pelo texto da noticia 0x1784 (a diretoria avisa o tecnico humano que multa demais): na carreira de ferias ninguem multa, entao provavelmente nao roda ate 2002-06-01 e a mutacao escapa. Sem LIGAS.

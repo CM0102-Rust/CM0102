@@ -1,0 +1,4 @@
+NAO PROVADO NO JOGO (leitor sx14, rodada 5, 23/11/2026): compila sobre o HEAD e9661948e (junto com sx14_1, sx14_3..sx14_5, sem avisos no codigo do item; mutacoes compilam; ancoras unicas com a fila). Prologo conferido nos dois exes (push -1; push 0x95cf2b; 7 bytes). Ordem das leituras dos campos (contador em byte de 0 a 17 no corpo, 0/1/2 direto na manchete), argumentos dos formatos e dos vinculos conferidos push a push.
+Simulacao: o texto da noticia 0x138c e pedido 115 vezes na carreira ENG ate 2002-06-01 (noticias que chegam ao tecnico humano). Chama a 0x6a69c0 pelo endereco: independe do sx14_1 (com ele integrado, a 0x6a69c0 passa tambem pelo comparador dela).
+Comparador compare_text_writer; as 2 mutacoes sao de texto (placar invertido, manchete de furia): acusadas pelo comparador, nao pela carreira.
+Falta: comparacao ENG ate 2002-06-01 (0 divergencias), Rust x2 com detector, mutacoes 2 (pelo comparador).

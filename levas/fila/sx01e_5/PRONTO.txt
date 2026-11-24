@@ -1,0 +1,8 @@
+NAO PROVADO NO JOGO (leitor sx01e, rodada 5, 23-24/11/2026): escritores de texto da midia inteiros, um desvio cada,
+em pedacos com nome. Noticias: 0xbe5 festa pela contratacao (0x75b9c0), (2, 0x2e) elogio pelo titulo ou taca
+(0x75c5a0), 0xbda agradecimento do jogador (0x733000, no buffer 0xde1f64). Depende do sx01e_3 e do sx01e_4
+(media_story_outlet).
+Compila sobre o HEAD e9661948e com os sx01* e os sx01e anteriores (0 avisos nas linhas do item); com as mutacoes,
+compila.
+Item de TELAS: provas como no sx01e_3; as mutacoes so sao acusadas pelo comparador. O texto da tia do cafe e o da
+diretoria sem segundo paragrafo sao caminhos comuns; os da torcida com a pessoa nomeada e do assistente sao raros.

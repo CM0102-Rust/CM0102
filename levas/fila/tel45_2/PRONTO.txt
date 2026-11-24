@@ -1,0 +1,2 @@
+NAO PROVADO NO JOGO (leitor tel45, rodada 5, 23/11/2026): compila sobre o HEAD de 23/11 (git archive) junto com tel45_1 e tel45_3, sem avisos; compila com a mutacao; ancora 1 vez. Prologo de 10 bytes em fronteira de instrucao. Igual no cm0102-1080.exe.
+Como chegar: tela do clube > Treino > editar um programa de treino (o construtor do programa 0x8b4e10 chama o cabecalho). Comparador lado a lado sobre os 0x11 bytes e o retorno. Mutacao: tel45_2_cabecalho_0x22.

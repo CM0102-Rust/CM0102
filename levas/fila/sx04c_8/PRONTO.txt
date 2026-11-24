@@ -1,0 +1,2 @@
+sx04c_8 (simulacao, LIGAS = 'ENG SWE FIN NOR POR'): compilado sobre o HEAD e9661948e com os sx03_*, sx04_*, sx05_*, sx05b_*, sx04b_* e os sx04c_1..24 aplicados pela ancora (cargo build --release, 0 erros); nao rodado no jogo.
+Prova: os premios do mes noruegueses de abril e maio de 2002.

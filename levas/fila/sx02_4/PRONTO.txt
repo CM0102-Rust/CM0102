@@ -1,0 +1,3 @@
+NAO PROVADO NO JOGO (leitor sx02, rodada 5, 23/11/2026): compila sobre o HEAD 0f776b971 (copia propria de rust/ e cm0102-base/, sx02_1..sx02_4 juntos, sem erros nem avisos no codigo dos itens; as 10 mutacoes aplicadas juntas tambem compilam); prologos conferidos no cm0102.exe; convencoes e ordem dos push conferidas na desmontagem (ver rotinas.py). Sem LIGAS: carreira ENG ate 2002-06-01.
+Comparador: a copia num vetor proprio, a original no real; conta e registros. As 2 mutacoes acusadas pelo comparador (227 chamadas). O ramo dos arquivos anuais (transfers_<ano>.tmp) so roda depois da clear_old_past_transfers (1 chamada ate 2002-06-01): o covered! "sx02_4 yearly file" diz se rodou.
+Falta: comparacao ENG ate 2002-06-01, Rust x2 com detector, mutacoes 2.

@@ -3950,8 +3950,13 @@ routines! {
     Prologue { address: 0x57dab0, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] } => euro_champ_qual_draw_groups, compare_euro_champ_qual_draw_groups;
     Prologue { address: 0x51fc00, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => cup_load_from_disk, compare_cup_load_from_disk;
     Prologue { address: 0x687b10, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => league_load_from_temp_file, compare_league_load_from_temp_file;
+    Prologue { address: 0x4a7f50, bytes: &[0x6a, 0xff, 0x68, 0x5e, 0x68, 0x95, 0x00] } => comp_stats_write_record_news_text, compare_comp_stats_write_record_news_text;
+    Prologue { address: 0x418340, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x15, 0xbc, 0x23, 0xae, 0x00] } => award_shortlist_compare_by_name, compare_award_shortlist_compare_by_name;
+    Prologue { address: 0x4183f0, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] } => award_shortlist_compare_by_score, compare_award_shortlist_compare_by_score;
+    Prologue { address: 0x418420, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] } => award_shortlist_compare_by_votes, compare_award_shortlist_compare_by_votes;
+    Prologue { address: 0x418320, bytes: &[0x8b, 0xd1, 0x57, 0xb9, 0x08, 0x00, 0x00, 0x00] } => award_shortlist_clear, compare_award_shortlist_clear;
 }
-const N: usize = 3792;
+const N: usize = 3797;
 include!(concat!(env!("OUT_DIR"), "/indices.rs")); // IDX_<NAME>: the position of each routine (build.rs)
 
 /// Size of the engine object (the game allocates it with new(0xf63b)): side 1's block (+0xf5f2, 0x36
@@ -5400,6 +5405,23 @@ pub(crate) use self::zipdir::*;
 // ---------- 161st batch: watch list, position code and staff criterion ----------
 
 compare_value!(compare_staff_criterion, staff_criterion, IDX_STAFF_CRITERION, () -> u32);
+
+// ---------- batch 328: the news text of a broken competition record (comp_screens.cpp) ----------
+
+/// The round label of a record's match `m` (`exe::comp_util_format_stage_round_name` of the round and stage words at
+/// +0xc and +0xe, 200 bytes, mode 0) and its gender (`exe::comp_util_get_label_gender` with no competition, the two
+/// dwords at +0xc and +0xe and `form`).
+unsafe fn comp_record_round_label(m: usize, form: u32, label: &mut [u8; 0xc8]) -> i32 {
+    exe::comp_util_format_stage_round_name(read_i16(m + club_match_record::ROUND_PREFIX) as i32, read_i16(m + club_match_record::ROUND_NAME) as i32,
+        label.as_mut_ptr() as usize, 0xc8, 0);
+    exe::comp_util_get_label_gender(0, read_u32(m + club_match_record::ROUND_PREFIX), read_u32(m + club_match_record::ROUND_NAME), form) as i8 as i32
+}
+
+// ---------- batch 328: the sort orders of an award shortlist (award_shortlist.cpp) ----------
+
+compare_order!(compare_award_shortlist_compare_by_name, award_shortlist_compare_by_name, IDX_AWARD_SHORTLIST_COMPARE_BY_NAME);
+compare_order!(compare_award_shortlist_compare_by_score, award_shortlist_compare_by_score, IDX_AWARD_SHORTLIST_COMPARE_BY_SCORE);
+compare_order!(compare_award_shortlist_compare_by_votes, award_shortlist_compare_by_votes, IDX_AWARD_SHORTLIST_COMPARE_BY_VOTES);
 
 // ---------- batch 324: the club records after a match (club_records.cpp) ----------
 

@@ -1,0 +1,2 @@
+sx04c_4 (simulacao, LIGAS = 'ENG KOR ARG ITA FRA ESP AUS'): compilado sobre o HEAD e9661948e com os sx03_*, sx04_*, sx05_*, sx05b_*, sx04b_* e os sx04c_1..24 aplicados pela ancora (cargo build --release, 0 erros); nao rodado no jogo.
+Prova: o jogador do mes coreano de marco a maio de 2002.

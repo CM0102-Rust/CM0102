@@ -1,0 +1,3 @@
+NAO PROVADO NO JOGO (leitor sx08, rodada 5, 23/11/2026): compila sobre o HEAD e9661948e (copia propria de rust/ e cm0102-base/, sx08_1..sx08_3 juntos, sem avisos no codigo dos itens; as 5 mutacoes aplicadas juntas tambem compilam); prologos conferidos no cm0102.exe; convencoes e ordem dos push conferidas na desmontagem (ver rotinas.py). Sem LIGAS: carreira ENG ate 2002-06-01.
+0x540130: comparador de valor (cada chamada do qsort dos numeros de camisa); 0x524cd0: roda uma vez no _initterm do CRT (antes do WinMain), comparador = a original e a data da copia num local, comparada com a global.
+Falta: comparacao ENG ate 2002-06-01 (conferir no ddraw.log que o desvio da 0x524cd0 foi posto antes do CRT e que a comparacao dela aparece), Rust x2 com detector, mutacoes 2.

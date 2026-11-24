@@ -1,0 +1,6 @@
+NAO PROVADO NO JOGO (leitor sx01e, rodada 5, 23-24/11/2026): escritores de texto da midia inteiros, um desvio cada,
+em pedacos com nome. Noticias: 0xbcb gesto obsceno (0x7572a0, no buffer 0xde1f64), 0xbe4 insatisfacao com uma venda
+(0x75d210), 0xbe6 expulsao (0x759a10). Depende do sx01e_3.
+Compila sobre o HEAD e9661948e com os sx01* e o sx01e_3 (0 avisos nas linhas do item); com as mutacoes, compila.
+Item de TELAS: provas como no sx01e_3 (CM_TEXTO_NOTICIAS ou o Lucas abrindo as noticias jogando comparando); as
+mutacoes so sao acusadas pelo comparador. Defeitos em DEFEITOS_PENDENTES.txt.

@@ -1,0 +1,7 @@
+NAO PROVADO NO JOGO (leitor sx10, rodada 5, 23/11/2026): compilado junto com os itens sx10 pelo leitor (o pai). Prologos conferidos no cm0102.exe; mesmos bytes no cm0102-1080.exe.
+RELATIVAS: (0x5b0b40, 3) em rust/src/detours.rs (o FONT::~FONT tem o call ao unload no quarto byte do prologo; prologo de 8 bytes).
+TELAS. Caminho no jogo: qualquer tela (todo texto da interface no modo de fonte -2 Futuristic, o padrao, usa as quatro fontes T2K do SI_DATA); trocar a fonte nas Opcoes (uma .ttf da pasta FONTS) recarrega os arquivos (load_font_file) e refaz os glifos; textos com sombra (flag 0x80 do draw_text) usam o glifo borrado (0x10); negrito e inclinado pelos bits 1/2 e 4/8.
+Comparadores: get_text_width lado a lado (o retorno, a palavra baixa); construtor, destrutor, carga, descarga, estilo e cache de glifos so a original (alocam, leem arquivo, mexem no T2K): provados em modo Rust (o texto aparece igual).
+O FONT::FONT roda no construtor estatico do vetor global 0xaebdf4, antes do main: pode rodar antes dos desvios (fica a original).
+Mutacoes: sx10_13_last_advance (o ultimo caractere soma o avanco; acusada pelo comparador da largura em qualquer texto centralizado ou alinhado a direita) e sx10_13_blur (sombra mais escura; so em modo Rust, a vista: os textos com sombra ficam mais pesados).
+Depende do sx10_12; o sx10_14 depende deste.

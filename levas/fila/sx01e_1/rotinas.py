@@ -1,0 +1,36 @@
+# A historia de elogio a um jogador (Media::post_player_praise_story 0x744240, media.cpp; leitor sx01e, rodada 5,
+# 23/11/2026). A rotina inteira (0x744240..0x744f72, ret 0x10 em 0x744f6f; o resto e enchimento), em pedacos com nome:
+# praise_story_kind (o tipo e o sorteio da vaga 8: praise_kind_young, praise_kind_senior), praise_story_match_and_transfer
+# (a partida e a transferencia futura) e a rotina (vagas, entrega, efeitos).
+# Chamada pelo laco diario (0x5d02ab e 0x5d0e1a com 0x2b, 0x5d05f7 com 0x33) e pelo dia de partida (0x6b715b com 0x34;
+# em Rust shared.rs/match_pl.rs pelo despacho dispatch_post_match_call, tipo T4). Atras da porta de gravacao do
+# pos-jogo (POS_PROLOGUES em match_day.rs): no modo comparar a porta e instalada antes e o desvio deste item e recusado
+# (a porta chama a original, como na 0x759610 do sx01c_2 e na 0x733a60 do sx01d_5); o porte so roda no modo Rust.
+# Depende do sx01d_2 (news_shootout_result, set_person_name_slots_or_none) e do sx01d_5 (NewsSlots).
+# Convencoes conferidas na desmontagem (cada push seguido ate a chamada):
+# - a rotina: thiscall(midia, jogador, clube, tipo (char empurrado como dword), partida), ret 0x10;
+# - 0x53b900 cdecl(clube); 0x4cf5f0 thiscall([0xae1050], jogador, clube) ret 8; 0x90cfc0 cdecl(n);
+#   0x77bbe0 NewsItem::NewsItem(local, 0xbdd, 0); 0x785790 set_slot(k, v) ret 8; 0x54c5b0 Date::add_days
+#   thiscall(jogador+0x3e, &saida, dias) -> &saida; 0x8c5cf0 thiscall([0xde1f54], jogador, 0, 0); 0x76e070
+#   thiscall([0xb74318], jogador) ret 4 -> al; 0x54cdb0 thiscall(0xae2c90, data +0x3e, +0x42); 0x757da0
+#   thiscall(midia, jogador, clube, 0xbdd, tipo (bx com o resto do ebx), 0) ret 0x14; 0x735870 thiscall(midia,
+#   tecnico, jogador, tipo (ebx)) ret 0xc; 0x546ab0 cdecl(jogador, clube); 0x5b7d20 cdecl(ficha) -> ax (movsx);
+#   0x7751e0 thiscall([0xb74318], nacao do clube) (chamada duas vezes); 0x54a110 Date::Date; 0x7e4750 cdecl(partida,
+#   clube, registro); 0x7e4de0 cdecl(registro, noticia, &k); 0x8cca10 thiscall([0xde1f54], jogador, &saida ou 0);
+#   0x8c61e0 thiscall([0xde1f54], [saida+8]); 0x72b810 thiscall(midia, clube, jogador); 0x5fa7d0 thiscall([0xb5e134],
+#   competicao, &a (0), &b (-1)); 0x757fa0 cdecl(jogador); 0x7dab90 thiscall([0xb74430], clube, veiculo, nacao ou -1);
+#   0x8d1da0 thiscall([0xde1f54], jogador, 0x25a, buf, 0x1e) -> al; 0x786780 thiscall([0xb7431c], noticia);
+#   0x786640 thiscall([0xb7431c], noticia, continente); 0x7861e0 thiscall([0xb7431c], noticia, clube);
+#   0x757a50 thiscall(midia, jogador, clube, 0xbdd, tipo (o dword do argumento), resposta) ret 0x14;
+#   0x842c00 thiscall([[0xde1f54]+0x856], jogador, 1); 0x547a10 cdecl(presidente, jogador, 1);
+#   0x600a50 cdecl(clube, 0, 1, 0, 0); 0x741020 thiscall(midia, jogador, clube, tipo ([esp+0x2c]: a palavra baixa e o
+#   tipo, a alta o lixo do quadro), resposta) ret 0x10.
+# A copia passa o tipo estendido sem sinal onde o original deixa lixo na palavra alta (has_logged_story,
+# pick_ai_manager_response, apply_player_story_response leem a palavra).
+SAVE = False
+ROTINAS = [('post_player_praise_story', 0x744240, [0x6a, 0xff, 0x68, 0x06, 0xd8, 0x95, 0x00])]
+DOCS = ('a historia de elogio a um jogador',
+        'the story praising a player',
+        [('post_player_praise_story', 'Media::post_player_praise_story', '0x744240', 'media.cpp', 'thiscall, ret 0x10',
+          'posta a historia 0xbdd de elogio a um jogador: nada sem o jogador, a ficha, id diferente de 0, reputacao atual de pelo menos 3500, a nacao, o clube, o tecnico e a nacao do clube; fora de selecao, a divisao diferente de 0x9cf764 e o contrato com o clube. O tipo: a vitrine mundial (0x33) e a competicao (0x34) ficam (sorteio 4); senao, com sorteio(3) e hoje antes da chegada ao clube mais 30 + sorteio(150) dias, impressiona (0x32); abaixo de 22 anos sem convocacoes, a grande transferencia (0x2e: reputacao acima de 1,3 x a do clube com sorteio(ambicao) > sorteio(20) e sem propostas, ou a queixa 1 do contrato sem propostas e o estado >= sorteio(ambicao/2)), o futuro internacional (0x29: na selecao, reputacao local acima de 4250 e de 30 x a da nacao) ou o jovem (0x2a); acima de 30, lideranca e profissionalismo acima de 15, mais de 400 dias no clube, reputacao acima de 7250 e sorteio(3) = 0, a atitude (0x2f, que guarda o primeiro sorteio(2)); depois a convocacao (0x2c), em ascensao (0x2d: abaixo de 24 e reputacao abaixo de 6000), classe mundial (0x30, 0x31) e o elogio (0x2b, sorteio 8). Nada se a historia ja foi registrada. Vagas: jogador e nomes, clube, tipo, confianca da diretoria abaixo de 4000, nacao, sorteio, tecnico e nomes, resposta do tecnico do computador, pontos fortes, posicoes, a competicao, a partida, a transferencia futura, o estado, o comentarista ex-internacional e o seu cargo, as proximas sedes, os penaltis, o veiculo, o comentarista do veiculo, a idade e se e goleiro. A vitrine vai para todos (reputacao mundial + do clube acima de 13750) ou para o continente; a competicao para todos; os outros para os clubes humanos que acompanham o jogador. Depois registra a historia, sobe as reputacoes atual e local em 200 e a mundial em 100 (ate 10000), poe o jogador nas listas dos clubes, o presidente de um clube sorteado da mesma nacao passa a gostar dele e, em clube nao humano, aplica a resposta do tecnico do computador',
+          "posts news item 0xbdd praising a player: nothing without the player, his sheet, an id other than 0, a current reputation of at least 3500, his nation, the club, its manager and nation; outside a national team, a division other than 0x9cf764 and his contract with the club. The kind: the world stage (0x33) and the competition (0x34) stay (draw 4); otherwise, with draw(3) and today before he joined the club plus 30 + draw(150) days, he impresses (0x32); under 22 without caps, the big move (0x2e: a reputation above 1.3 x the club's with draw(ambition) > draw(20) and no offer, or the contract's grievance 1 with no offer and the state at least draw(ambition/2)), the future international (0x29: in the squad, a home reputation above 4250 and 30 x the nation's) or the youngster (0x2a); over 30, leadership and professionalism above 15, more than 400 days at the club, a reputation above 7250 and draw(3) = 0, his attitude (0x2f, which keeps the first draw(2)); then the call-up (0x2c), on the rise (0x2d: under 24 with a reputation below 6000), world class (0x30, 0x31) and the praise (0x2b, draw 8). Nothing when the story is already logged. Slots: the player and names, the club, the kind, the board confidence below 4000, the nation, the draw, the manager and names, the computer manager's response, the strengths, the positions, the competition, the match, the future transfer, the state, the former international pundit and his job, the next hosts, the shoot-out, the outlet, the outlet's pundit, the age and whether he is a goalkeeper. The world stage goes to everyone (world plus club reputation above 13750) or to the continent; the competition to everyone; the others to the human clubs following the player. Then it logs the story, raises the current and home reputations by 200 and the world one by 100 (up to 10000), puts the player on the clubs' shortlists, the chairman of a random club of the same nation favours him and, for a club that is not human, applies the computer manager's response")])

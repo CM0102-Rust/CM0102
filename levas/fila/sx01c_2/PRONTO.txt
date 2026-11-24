@@ -1,0 +1,12 @@
+NAO PROVADO NO JOGO (leitor sx01c, rodada 5, 23/11/2026): Media::queue_player_sent_off_story (0x759610..0x759a0b,
+ret 0xc em 0x759a08) portada inteira, um desvio (prologo 6a ff 68 83 d9 95 00, o mesmo da porta do pos-jogo).
+Compila sobre o HEAD e9661948e junto com o sx01c_1 (cargo build --release ok, 0 avisos nas linhas do item; com as
+mutacoes aplicadas, ok). Ancoras das 2 mutacoes com 1 ocorrencia cada em rust/src. Igual no cm0102-1080.exe.
+
+Convivencia com a porta do pos-jogo (POS_PROLOGUES, match_day.rs): no modo comparar a porta e instalada primeiro e o
+desvio deste item e recusado (linha "detour ... refused" no registro): a porta chama a original, como ja acontece com a
+0x5afe00 e a 0x7daf50 (os precedentes). Logo o comparador (so a original) nao roda no jogo real; a prova e o modo Rust:
+- Rust x2 com detector ate 2002-06-01 (a rotina roda em toda expulsao, pelo despacho do pos-jogo em Rust);
+- as 2 mutacoes mudam a sequencia do gerador: sem o sorteio da vaga 8; e a resposta do tecnico do computador
+  (pick_ai_manager_response tipo 0x82, que sorteia) nunca pedida.
+Sem LIGAS.

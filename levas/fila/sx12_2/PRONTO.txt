@@ -1,0 +1,4 @@
+Simulacao (ENG ate 2002-06-01): a barra de menus e montada todo dia. Falta: comparacao, Rust x2, mutacoes 3/3 (so
+pelos comparadores: o menu nao volta para a simulacao). Na carreira ENG ha uma nacao escolhida: o ramo das nacoes
+do compare_entries roda pelas linhas de nacao nao escolhidas da tabela (as 35 tem nacao ou continente).
+Compila sobre o HEAD e9661948e (copia propria de rust/ e cm0102-base/ com os itens sx12_1..sx12_9 aplicados pela ancora, cargo build --release ok, 0 avisos nas linhas dos itens); com todas as mutacoes dos itens 1 a 8 aplicadas juntas, cargo build --release ok. Ancoras das mutacoes com 1 ocorrencia cada no motor + itens (e 0 nos outros itens da fila). NAO PROVADO NO JOGO (leitor sx12, rodada 5, 23/11/2026).

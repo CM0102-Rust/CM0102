@@ -1,0 +1,4 @@
+NÃO PROVADO NO JOGO (leitor sx11, rodada 5, 23/11/2026): compila sobre o HEAD e9661948e (cópia própria de rust/ e cm0102-base/ por git archive, sx11_1..sx11_6 aplicados juntos pela âncora, nessa ordem; sem avisos no código dos itens; as 9 mutações aplicadas juntas também compilam e cada âncora aparece 1 vez no motor e na fila). Prólogos conferidos no cm0102.exe (instruções inteiras); convenções e ordem dos push conferidas na desmontagem (rotinas.py). Não rodado no jogo.
+Rotina: game_run_to_start_date 0x5cc850 (cdecl). Simulação, sem LIGAS: roda na criação do jogo da carreira ENG (a create_game em Rust a chama, já na pilha particular).
+Comparador: só a original roda (joga os dias até a data de início) e o plano é conferido: data = data de início, fatia 0, última data processada = véspera, sem dia de partidas, fase 0xae2cfc = 2.
+Falta: comparação ENG até 2002-06-01, Rust x2 com detector, mutações 2 (sem a avaliação dos elencos, sem a forma física inicial).

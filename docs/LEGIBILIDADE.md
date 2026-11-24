@@ -8,20 +8,20 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 
 | Medida | Quantidade |
 |---|---:|
-| deslocamentos crus | 3706 |
+| deslocamentos crus | 3713 |
 | chaves fixas cruas | 1120 |
 | chamadas por endereço | 0 |
 | cópias de acesso à memória | 0 |
 | rotinas sem cabeçalho | 0 |
 | locais/parâmetros em português | 222 |
-| linhas | 377260 |
+| linhas | 377803 |
 
 ## Por arquivo (os 40 piores, pelos deslocamentos crus)
 
 | Arquivo | deslocamentos crus | chaves fixas cruas | chamadas por endereço | cópias de acesso à memória | rotinas sem cabeçalho | locais/parâmetros em português | linhas |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| `motor.rs` | 583 | 0 | 0 | 0 | 0 | 72 | 11794 |
-| `motor/comp_screens.rs` | 330 | 11 | 0 | 0 | 0 | 0 | 8255 |
+| `motor.rs` | 583 | 0 | 0 | 0 | 0 | 72 | 11816 |
+| `motor/comp_screens.rs` | 339 | 11 | 0 | 0 | 0 | 0 | 8707 |
 | `motor/club_screens.rs` | 321 | 2 | 0 | 0 | 0 | 0 | 13774 |
 | `motor/news.rs` | 164 | 0 | 0 | 0 | 0 | 0 | 3510 |
 | `motor/match_pl.rs` | 129 | 0 | 0 | 0 | 0 | 8 | 9641 |
@@ -32,14 +32,14 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 | `motor/manager_screens.rs` | 65 | 0 | 0 | 0 | 0 | 0 | 1811 |
 | `motor/search_screens.rs` | 61 | 1 | 0 | 0 | 0 | 0 | 4877 |
 | `motor/national_teams.rs` | 54 | 1 | 0 | 0 | 0 | 2 | 3230 |
-| `motor/fields.rs` | 51 | 0 | 0 | 0 | 0 | 0 | 3388 |
+| `motor/fields.rs` | 51 | 0 | 0 | 0 | 0 | 0 | 3389 |
 | `motor/media.rs` | 47 | 0 | 0 | 0 | 0 | 0 | 8056 |
 | `motor/transfer_manager.rs` | 44 | 0 | 0 | 0 | 0 | 3 | 11152 |
 | `motor/award_screens.rs` | 41 | 0 | 0 | 0 | 0 | 0 | 1110 |
 | `motor/club_records.rs` | 40 | 3 | 0 | 0 | 0 | 0 | 2436 |
 | `motor/menubar.rs` | 40 | 0 | 0 | 0 | 0 | 0 | 2904 |
 | `motor/player_search.rs` | 40 | 0 | 0 | 0 | 0 | 0 | 1599 |
-| `motor/comp/cup.rs` | 39 | 3 | 0 | 0 | 0 | 2 | 4261 |
+| `motor/comp/cup.rs` | 37 | 3 | 0 | 0 | 0 | 2 | 4261 |
 | `motor/tactics.rs` | 36 | 0 | 0 | 0 | 0 | 4 | 1605 |
 | `motor/player_stats.rs` | 35 | 0 | 0 | 0 | 0 | 1 | 1911 |
 | `motor/manager_manager.rs` | 34 | 0 | 0 | 0 | 0 | 0 | 7289 |

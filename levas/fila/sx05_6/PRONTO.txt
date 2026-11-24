@@ -1,0 +1,3 @@
+sx05_6 (simulacao, LIGAS = 'ENG', ATE = '2002-08-01'): compilado sobre o HEAD e9661948e com os itens sx05_1..6.
+A prova: a selecao da semana/temporada inglesa (add_candidate por jogador, clear_selection a cada selecao) e as
+mascaras no construtor (inicio do jogo); comparadores lado a lado nas vagas.

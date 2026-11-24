@@ -1,0 +1,1 @@
+Depende do modo de textos de noticias (--textos) ligado na cadeia para as mutacoes serem acusadas.

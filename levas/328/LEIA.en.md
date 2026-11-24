@@ -1,0 +1,20 @@
+# Batch 328 — the news text of a competition's broken record; the sort orders of an award shortlist; emptying an award shortlist
+
+**Routines:**
+- `comp_stats_write_record_news_text()` = 0x4a7f50 (comp_screens.cpp, thiscall, ret 8): the body of the news of a competition's broken record, read from the news item's fields (the competition id, unused, the kind and the kind's fields): most titles (or trophies, outside a league division), points, goals scored and conceded, yellow and red cards and average attendance of a team; highest attendance at a match (two kinds, with both clubs and the round); record win (the score, the wording by the venue: at home, away, against) and highest scoring game (the higher count first, the winner named first, win or draw), with the score's link when the fixture still matches; runs of wins and defeats (between two dates) and unbeaten and without winning (from a date), only above one game; for a player: goals, assists, average rating (above -1, with the games), man of the match awards and cards in the season, most goals in a match and the youngest and oldest to play (the age on the match date), with both clubs and the round. Each only when its record holds (otherwise an empty text); the links of the clubs, the round (the match's competition, when there is a label) and the player (when his names still match). Without the Text or the news item or with an unknown kind: the error box and 0;
+- `award_shortlist_compare_by_name()` = 0x418340 (award_shortlist.cpp, cdecl): the order of the candidates by the player's name (the name in style 4; without a player, empty), by the game's string comparison;
+- `award_shortlist_compare_by_score()` = 0x4183f0 (award_shortlist.cpp, cdecl): the order of the candidates by score, the highest first (equal or unordered: 0);
+- `award_shortlist_compare_by_votes()` = 0x418420 (award_shortlist.cpp, cdecl): the order of the candidates by votes, the most voted first;
+- `award_shortlist_clear()` = 0x418320 (award_shortlist.cpp, thiscall): empties the shortlist: no entries and the 16 managers' votes at -1;
+
+**How it was compared:** real comparison on every routine (original and Rust from the same state, with the regions the routine touches).
+
+**Result** (`cadeia.txt`):
+- **Mutations (4):** 0 caught. `tel44_2_name_order` escaped: BEING CONFIRMED. The shortlist's order by name is inverted. The orders and the votes of the shortlist only act at the announcement (by name) and at picking the winners (by score and by votes), near the season's end; up to 2001-08-20 there is no list with more than one candidate. The long comparison decides. `tel44_2_score_order` escaped: BEING CONFIRMED. The shortlist's order by score is inverted. The orders and the votes of the shortlist only act at the announcement (by name) and at picking the winners (by score and by votes), near the season's end; up to 2001-08-20 there is no list with more than one candidate. The long comparison decides. `tel44_2_votes_order` escaped: BEING CONFIRMED. The shortlist's order by votes is inverted. The orders and the votes of the shortlist only act at the announcement (by name) and at picking the winners (by score and by votes), near the season's end; up to 2001-08-20 there is no list with more than one candidate. The long comparison decides. `tel44_3_votes_cleared` escaped: BEING CONFIRMED. Clearing the list leaves the votes at 0 instead of -1. The orders and the votes of the shortlist only act at the announcement (by name) and at picking the winners (by score and by votes), near the season's end; up to 2001-08-20 there is no list with more than one candidate. The long comparison decides. (gap in `PENDENCIAS.en.md`)
+- **Real game comparing to 2002-01-01:** 0 divergences (f6740b3f).
+- **Rust ×2 and original careers to 2002-06-01:** Rust ×2 ac155f01, original 96da1fba (recorded; does not block the batch since 31/10/2026). Garbage detector: equal.
+
+**Redo**, on top of batch 327's commit:
+1. `python integrar.py`
+2. `cargo build --release` and copy the DLL to `jogo_testes/`
+3. `bash engenharia-reversa/cadeia.sh 328`

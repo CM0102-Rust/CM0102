@@ -1,0 +1,5 @@
+sx03_1 (simulacao, carreira ENG ate 2002-06-01, sem LIGAS): compilado sobre o HEAD 0f776b971 junto com sx03_2..4
+(cargo build --release limpo, sem avisos no codigo do item; ancoras das mutacoes unicas). Nao rodado no jogo.
+Prova: process_fixture/process_date so a original na comparacao (alocam, noticia, reputacao); AWARD::AWARD lado a
+lado (roda na criacao da carreira). Mutacoes 4: tres pela carreira (premios do mes e o internacional de 6/5/2002),
+uma pelo comparador e pela carreira.

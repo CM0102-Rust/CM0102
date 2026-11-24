@@ -1,0 +1,1 @@
+Antes de integrar: pôr (0x54d130, 0) em RELATIVAS no rust/src/detours.rs (a rotina começa com call 0x66f4d0).

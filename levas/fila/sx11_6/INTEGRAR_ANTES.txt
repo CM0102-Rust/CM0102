@@ -1,0 +1,1 @@
+Antes de integrar: pôr (0x5d7b70, 3) e (0x5d7bc0, 4) em RELATIVAS no rust/src/detours.rs. Depende do sx11_3 e do sx11_4.

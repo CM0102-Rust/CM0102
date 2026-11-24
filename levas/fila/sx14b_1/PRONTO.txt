@@ -1,0 +1,6 @@
+NAO PROVADO NO JOGO (leitor sx14b, rodada 5, 23-24/11/2026): compila sobre o HEAD e9661948e (copia propria de rust/ e cm0102-base/, junto com sx14_1..sx14_5, 0 avisos no codigo do item). Prologos conferidos no cm0102.exe e no cm0102-1080.exe (7, 6 e 6 bytes, fronteira de instrucao, sem relativo). As tres rotinas inteiras lidas na desmontagem (ordem dos sorteios, das chamadas e dos argumentos push a push).
+Simulacao: handle_fa_request roda 7 vezes na carreira ENG ate 2002-06-01 (pedido 1 dos clubes da maquina, chamado pela update_board_confidence_after_match, Rust); com todas as nacoes 120 vezes e a resposta 0x6aaa90 6 vezes. A reclamacao do arbitro e o adiamento (e a 0x6aa7d0) so rodam para clube humano: na carreira de teste nao rodam (prova: o Lucas, menu do tecnico > pedidos a federacao).
+Comparadores: so a original nas tres.
+Mutacoes 2 pela carreira: a contagem de pedidos parada (o registro da diretoria muda); limite 0 (a primeira reclamacao ja e punida: historia, multa, confianca, exame da demissao). As noticias a clube da maquina nao sao entregues: sem mutacao propria.
+Defeitos do original: as faixas de reputacao testadas da menor (limites 4 e 7 nunca valem); a noticia da remarcacao le a partida ja tirada do calendario pelo remove_fixture.
+Falta: Rust x2 com detector ate 2002-06-01, mutacoes 2 pela carreira, comparacao (so a original roda).

@@ -1,0 +1,40 @@
+NAO PROVADO NO JOGO (leitor sx01b, rodada 5, 23/11/2026): Media::write_board_fans_reaction_news_text (0x738d50..0x73e471,
+ret 0xc em 0x73e46e; 21 tabelas de salto indexadas por byte ate 0x73e864, enchimento ate 0x73e870 = os 23.328 bytes do
+mapa) portada inteira, um desvio so (prologo 81 ec 30 03 00 00, sub esp 0x330, sem relativas), em pedacos com nome e
+covered! proprio: reaction_text_read, reaction_text_names, reaction_headline_board / _fans, reaction_body (despacho),
+reaction_board_outburst / _unsettled / _praise / _surprised / _distressed / _disappointed / _delighted / _pleased,
+reaction_fans_future / _outburst / _performances / _praise / _surprised / _distressed / _disappointed / _delighted /
+_pleased, reaction_follow_up e reaction_links. Comparador: compare_text_writer (texto, vinculos, gerador).
+Compila sobre o HEAD 0f776b971 junto com o sx01_1 (copia propria de rust/ e cm0102-base/ com os dois itens pela ancora,
+cargo build --release ok, 0 avisos nas linhas do item); com as 4 mutacoes aplicadas juntas, cargo build --release ok.
+Ancoras das mutacoes com 1 ocorrencia cada no motor + item.
+Conferencia: um script (sym3, derivado do sym2 do sx01) seguiu cada push e cada [esp+k] da desmontagem ate as 326
+chamadas a langlib_sprintf, inclusive os trechos de chamada compartilhados; outro script comparou os 388 pares
+(modelo, argumentos) distintos da listagem com os do codigo Rust: iguais (a pesquisa por telefone, confianca % 20 + 65,
+e os modelos escolhidos por variavel conferidos a mao). As tabelas de salto: todas iguais (tipo de historia de time
+0x3c..0x44, 0x5a..0x63 => caso 0), a primeira morta (sob 0x28 <= assunto <= 0x3b).
+
+Falta a sessao principal:
+- ATENCAO: a rotina NAO roda na carreira de teste: docs/cobertura_mundo.txt da 0 chamadas para 0x738d50 (mundo ate
+  2002-08-01) e ela nao aparece na cobertura ENG ate 2002-06-01; as noticias 0xbe0 sao postadas (0x738340 367 vezes,
+  0x7386f0 339) mas o texto so e escrito quando a noticia e aberta (NewsItem::write_text). A comparacao e as 4 mutacoes
+  so pegam se alguma noticia 0xbe0 tiver o texto pedido (ex.: o Lucas abrindo a noticia, ou uma carreira que leia a
+  caixa de noticias); na cadeia automatica as mutacoes escapam por nao rodar. Decidir se o item entra assim (como
+  texto, provado pela conferencia de pares) ou espera uma prova com a caixa de noticias aberta.
+- Rust x2 com detector ate 2002-06-01 (a rotina so escreve texto).
+- mutacoes: vinculo do nome curto do tecnico (toda chamada), resposta lida da vaga do sorteio (toda chamada), vinculo do
+  nome do clube (toda chamada), presidente pelo nome com a regra invertida (noticias da diretoria com presidente).
+Ramos raros mesmo quando rodar: manchete e corpo de elogio com grau fora de 2..5 e 9 (inalcancavel: nao escreve nada),
+a torcida no futuro do sujeito (assunto 3), os assuntos 60/61, a pesquisa por telefone (torcida satisfeita, resposta 2,
+assunto de atitudes), as expectativas 0x400 (gloria continental) e fora da Europa.
+Defeitos do original (para o DEFEITOS):
+- 0x738d50 assunto de elogio (0x28..0x3b) com grau fora de 2..5 e 9: manchete e corpo da diretoria nao escrevem nada e o
+  Text recebe o que o buffer compartilhado 0xde1f64 tinha (inalcancavel: os postadores so usam 2, 3, 4, 5, 9). A copia
+  tambem nao escreve (mesmo buffer).
+- 0x73a28a: sem o nome do presidente, o corpo "words of wisdom" da diretoria passa "Marc Vaughan" (0x99adf0, o nome de
+  um desenvolvedor) como nome do presidente.
+- 0x73cbab/0x73cbe0/0x73cccf: o elogio da torcida le a ficha de jogador (+0x61) do sujeito sem conferir se existe (cai
+  se o sujeito nao for jogador); em 0x73cbae compara o ritmo de trabalho com 10 e ignora o resultado (a copia nao faz
+  essa leitura morta).
+- a vaga 14 (afeicao do presidente pelo sujeito) e a marca de valor sao lidas e nao usadas.
+Sem LIGAS.

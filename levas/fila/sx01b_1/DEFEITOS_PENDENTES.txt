@@ -1,0 +1,1 @@
+Para o DEFEITOS (leitor sx01b): 0x73a28a sem o nome do presidente o corpo 'words of wisdom' cita 'Marc Vaughan' (0x99adf0); 0x73cbab/0x73cbe0/0x73cccf o elogio da torcida le a ficha de jogador (+0x61) sem conferir e cai se o sujeito nao for jogador.

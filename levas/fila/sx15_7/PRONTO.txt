@@ -1,0 +1,19 @@
+NAO PROVADO NO JOGO (leitor sx15, rodada 5, 23/11/2026). Item de TELAS (a prova e o Lucas jogando com o JOGAR_COMPARANDO.bat).
+Compila sobre o HEAD e9661948e (copia propria, so o item): ver a ultima linha.
+Prologos conferidos no cm0102.exe (fronteiras de instrucao). Formatos (0x66f4e0) conferidos push a push na desmontagem.
+Nenhuma das cinco roda na carreira automatica (cobertura ENG ate 2002-06-01: 0 chamadas).
+
+Como chegar no jogo:
+- 0x76f1a0 (postador) e 0x76f370 (texto do pedido): ser tecnico de uma selecao (aceitar o convite ou comecar como tecnico de
+  selecao) sem o assistente escolher o elenco; no dia da convocacao (5 a 7 dias antes da data FIFA) chega a noticia
+  "<Selecao> squad to be decided" / "You have been requested to select a <selecao> squad for ...". Abrir a noticia na caixa
+  (manchete e corpo). Nas finais (Copa do Mundo de 2002, a partir de maio/2002) o corpo cita a competicao.
+- 0x76ff40 (convocado) e 0x76fa40 (cortado por lesao/doenca): treinar um clube com jogadores de selecao (ex.: Arsenal,
+  Man Utd); na convocacao chegam "<jogador> brought in to <selecao> squad" e, se um convocado se machuca antes do jogo,
+  "<jogador> removed from <selecao> squad". Abrir as noticias.
+- 0x7703f0 (substituto): como tecnico de selecao, um convocado se machuca/adoece antes do jogo: "... A replacement player
+  must be called up instead." Abrir a noticia.
+O comparador acusa na abertura de cada noticia (compare_text_writer: texto, vinculos e gerador); o postador so roda a original.
+Mutacoes (para provar o comparador numa sessao do Lucas): sx15_7_doenca_lesao (corpo do cortado), sx15_7_vinculo_adversario
+(so com pedido de segundo time / sub-21).
+Compilacao: cargo build --release na copia do HEAD e9661948e com o item: EXIT 0, 0 erros e 0 avisos no codigo do item; ancoras das 2 mutacoes aparecem 1 vez (nao compiladas a parte).

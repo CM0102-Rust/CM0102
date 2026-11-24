@@ -1,0 +1,3 @@
+NAO PROVADO NO JOGO (leitor sx15, rodada 5, 23-24/11/2026): compila sobre o HEAD e9661948e com sx15_4..6 juntos (0 erros e 0 avisos no codigo dos itens); prologos conferidos (sub esp,8; mov eax,[esp+0xc] = 7 bytes; push -1; push imm32 = 7 bytes).
+Comparadores: so a original nas duas, com o plano conferido depois (nenhuma selecao da competicao com competicao atual; a tabela de marcas existe).
+Falta: comparacao ENG ate 2002-06-01, Rust x2 e mutacoes pela carreira. 0x775420 tem 1 chamada ate 2002-06-01: a mutacao sx15_6_competicao_mantida pode escapar (explicacao no mutacoes.py). 0x7777e0 roda todo dia das selecoes com marcas; a mutacao do limiar (> 1) deve mudar jogos remarcados nas datas FIFA.

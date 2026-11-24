@@ -1,0 +1,1 @@
+Para o DEFEITOS (leitor sx04): 0x768940 (tecnico do ano): o dword de nota (+0x10 de cada entrada do registro) nunca e escrito; o historico guarda 12 bytes de lixo de pilha por premio. A copia escreve 0 e o comparador ignora esses bytes.

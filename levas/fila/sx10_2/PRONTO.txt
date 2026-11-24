@@ -1,0 +1,5 @@
+compilado em 23/11/2026 (leitor sx10, rodada 5) junto com os outros itens sx10 (ver sx10_1/PRONTO.txt); sem jogo rodado.
+Item do save (SAVE, gravacao). Depende do sx10_1 (FOG_OF_WAR_CPP, FOG_DAT, FOG_MAP_SLOTS, fog_free_maps): vem depois dele na ordem.
+Prova: prova_save.py --leva N e mutacoes.py --prova-save N (o item fog.dat do .qst). A carreira de teste tem a mascara de atributos desligada: o fog.dat so tem o byte da mascara; o FOG_OF_WAR_MAP::save e o ramo dos mapas so rodam num jogo com a mascara ligada (Lucas: salvar um jogo assim). O destrutor roda quando o jogo e liberado (sair, carregar outro save).
+Mutacoes: sx10_2_masking_byte (o byte gravado como 1) e sx10_2_presence_words (as 16 palavras gravadas com a mascara desligada): as duas mudam o fog.dat.
+Comparadores: so a original.

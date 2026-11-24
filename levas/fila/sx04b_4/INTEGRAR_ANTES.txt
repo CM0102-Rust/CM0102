@@ -1,0 +1,1 @@
+Antes de provar: corrigir o retorno do award_shortlist_pick_winners (rust/src/motor/award/award_shortlist.rs): o original devolve em ax quantos vencedores escreveu e a 0x768b20 le esse valor.

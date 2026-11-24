@@ -1,0 +1,3 @@
+compilado em 23/11/2026 (leitor sx04, rodada 5) junto com sx04_2, sobre o HEAD e9661948e: sem aviso no código do item; as 4 mutações compilam (cargo check); prólogos conferidos no original e no cm0102-1080.exe (iguais). Sem jogo rodado.
+Prova: simulação, carreira ENG até 2002-06-01 (sem LIGAS). A 0x768310 e a 0x768200 rodam todo mês; a 0x7672e0 só no dia de início da temporada inglesa e, se as vagas do mês já estiverem no ano, sai cedo: a mutação sx04_1_temporada_dois_anos só roda (e é acusada) se o ramo das vagas andar dentro da janela; senão é pulada pelo covered!.
+Comparadores: 0x768310 só a original (prêmios do mês e reset não repetem), conferindo o plano da cópia (mês/ano das notas depois); 0x7672e0 lado a lado nas 12 vagas; 0x768200 compare_order!.

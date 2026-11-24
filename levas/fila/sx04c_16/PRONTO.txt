@@ -1,0 +1,2 @@
+sx04c_16 (simulacao, LIGAS = 'ENG ESP ITA FRA BRA JPN AUS USA', ATE = '2002-08-01'): compilado sobre o HEAD e9661948e com os sx03_*, sx04_*, sx05_*, sx05b_*, sx04b_* e os sx04c_1..24 aplicados pela ancora (cargo build --release, 0 erros); nao rodado no jogo.
+Prova: comparacao e mutacoes com as 8 ligas ate 2002-08-01 (premios em 2002-06-16).

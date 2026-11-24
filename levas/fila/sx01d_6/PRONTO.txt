@@ -1,0 +1,10 @@
+NAO PROVADO NO JOGO (leitor sx01d, rodada 5, 23/11/2026): Media::apply_sent_off_story_response (0x75a340, ret 0x10) e
+Media::apply_wants_first_team_response (0x75b440, ret 0xc), inteiras, um desvio cada (83 ec 08 53 55; 53 55 56 57 8b 7c
+24 14). Item de TELAS: so a tela da resposta a midia as chama (0x742de0, Rust).
+Compila sobre o HEAD e9661948e junto com os outros sx01* (ok, 0 avisos nas linhas do item; com as mutacoes, ok).
+
+Prova: o Lucas jogando comparando. Caminho: Caixa de entrada -> a noticia de um jogador seu expulso (0xbe6) ou de um
+jogador seu que quer ser titular (0xbe8) -> responder a midia -> escolher cada uma das 3 respostas. Os comparadores so
+rodam a original (sorteiam e mexem no carater, nas relacoes e no contrato; a 0x75a340 pode postar a gratidao e a
+0x75b440 a reacao): a comparacao so confere que nada quebra; o efeito so se ve no modo Rust.
+Defeito do original: a 0x75b440 olha so o primeiro registro do log de historias (0x75b597).

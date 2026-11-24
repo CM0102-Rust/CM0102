@@ -1,0 +1,2 @@
+sx05b_21 (simulacao, sem LIGAS): compilado sobre o HEAD e9661948e com o sx03_2, os sx05_1..6 e os sx05b_1..25 aplicados pela ancora (cargo build --release, 0 erros, nenhum aviso no codigo do sx05b); nao rodado no jogo.
+Integrar depois do sx05_1. A prova: comparacao ENG ate 2002-06-01 (a moeda na carga das preferencias); as mutacoes sao de comparador (a moeda nao volta a simulacao).

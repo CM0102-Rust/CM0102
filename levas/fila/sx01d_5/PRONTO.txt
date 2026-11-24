@@ -1,0 +1,16 @@
+NAO PROVADO NO JOGO (leitor sx01d, rodada 5, 23/11/2026): Media::create_player_outburst_story (0x733a60..0x733fb6,
+ret 8), inteira, um desvio (6a ff 68 e6 d6 95 00, o mesmo da porta do pos-jogo). Depende do sx01d_2
+(news_shootout_result).
+Compila sobre o HEAD e9661948e junto com os outros sx01* (ok, 0 avisos nas linhas do item; com as mutacoes, ok).
+
+Convivencia com a porta do pos-jogo (POS_PROLOGUES, match_day.rs): como a 0x759610 (sx01c_2), no modo comparar a porta
+e instalada primeiro e o desvio deste item e recusado; o comparador (so a original) nao roda no jogo real. A prova e o
+modo Rust:
+- Rust x2 com detector ate 2002-06-01 (a rotina roda nos desabafos depois das partidas, pelo despacho do pos-jogo);
+- as 2 mutacoes: a historia nao registrada (o desabafo se repete) e a resposta 1 do tecnico do computador.
+A copia passa o tipo (palavra +0x13 do registro) estendido sem sinal onde o original deixa lixo na palavra alta do
+registro (has_logged_story, pick_ai_manager_response, apply_squad_reaction_to_player_story,
+apply_player_story_response: as Rust leem a palavra; conferir se a pick_ai_manager_response le so a palavra no caminho
+da 0x736720).
+Defeito do original: o indice do clube passa ate a contagem de clubes inclusive (jg em 0x733aef).
+Sem LIGAS.

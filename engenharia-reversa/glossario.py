@@ -168,6 +168,7 @@ EN = {
  'texto_do_evento': 'event_text', 'confirmar_partida_em_rede': 'confirm_network_match',
  'narrar_no_painel': 'commentate_on_panel',
  'abrir_no_conteiner': 'open_in_container', 'buscar_no_conteiner': 'seek_in_container', 'posicao_no_conteiner': 'position_in_container',
+ 'comp_stats_write_record_news_text': 'comp_stats_write_record_news_text', 'award_shortlist_compare_by_name': 'award_shortlist_compare_by_name', 'award_shortlist_compare_by_score': 'award_shortlist_compare_by_score', 'award_shortlist_compare_by_votes': 'award_shortlist_compare_by_votes', 'award_shortlist_clear': 'AWARD_SHORTLIST::clear',
  'cup_load_from_disk': 'Cup::load_from_disk', 'league_load_from_temp_file': 'League::load_from_temp_file',
  'euro_champ_qual_draw_groups': 'EuroChampQual::draw_groups',
  'plan_preseason_tournaments_and_tours': 'Friendly::plan_preseason_tournaments_and_tours', 'construct_tactics': 'Tactics::Tactics',

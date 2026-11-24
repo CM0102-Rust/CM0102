@@ -1,0 +1,6 @@
+Simulacao (ENG ate 2002-06-01), na criacao do jogo. reset_human_record: comparador lado a lado sobre o registro
+inteiro (com proposta pendente, so a original). create_all_comps: so a original (cria as competicoes), as datas de
+cada linha conferidas depois. Mutacoes 2: a 1a pelo comparador; a 2a (temporada comecando no fim) pela carreira.
+Duvida: o 0x54a2d0 (chamado pelo Date::Date com o dia da semana) recebe o eax inteiro; a original empilha a palavra
+com a metade alta que sobrou e a copia com zero; se ele ler 32 bits, o comparador da criacao acusa.
+Compila sobre o HEAD e9661948e (copia propria de rust/ e cm0102-base/ com os itens sx12_1..sx12_9 aplicados pela ancora, cargo build --release ok, 0 avisos nas linhas dos itens); com todas as mutacoes dos itens 1 a 8 aplicadas juntas, cargo build --release ok. Ancoras das mutacoes com 1 ocorrencia cada no motor + itens (e 0 nos outros itens da fila). NAO PROVADO NO JOGO (leitor sx12, rodada 5, 23/11/2026).

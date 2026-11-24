@@ -1,0 +1,12 @@
+NAO PROVADO NO JOGO (leitor sx01e, rodada 5, 23-24/11/2026): Media::post_player_praise_story (0x744240..0x744f72,
+ret 0x10), inteira, um desvio (6a ff 68 06 d8 95 00, o mesmo da porta do pos-jogo), em pedacos com nome.
+Depende do sx01d_2 e do sx01d_5. Compila sobre o HEAD e9661948e com os sx01* (0 avisos nas linhas do item); com as
+mutacoes de todos os sx01e aplicadas juntas, compila.
+Convivencia com a porta do pos-jogo (POS_PROLOGUES): como a 0x733a60 (sx01d_5), no modo comparar o desvio e recusado e
+o comparador (so a original) nao roda; a prova e o modo Rust:
+- Rust x2 com detector ate 2002-06-01 (elogios do laco diario, 0x2b/0x33, e do dia de partida, 0x34);
+- as 2 mutacoes (reputacao atual que nao sobe; resposta do tecnico do computador nao aplicada).
+Defeitos do original: o jogador de id 0 nunca e elogiado (cmp [esi], 0); num clube que e selecao a 0x744492 le o
+contrato de um local nunca iniciado (a copia trata como sem a queixa 1). A copia passa o tipo sem o lixo da palavra
+alta (has_logged_story, pick_ai_manager_response e apply_player_story_response leem a palavra).
+Sem LIGAS.

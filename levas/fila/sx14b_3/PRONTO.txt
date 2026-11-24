@@ -1,0 +1,2 @@
+NAO PROVADO NO JOGO (leitor sx14b, rodada 5, 23-24/11/2026): MANAGER_MANAGER::save_man_conf (0x68e920, ret 4) inteira, prologo de 10 bytes sem relativa (igual no 1080). Item SAVE. Compila sobre o HEAD e9661948e junto com os demais sx14/sx14b (0 avisos no codigo do item).
+Falta a sessao principal: prova do save (prova_save.py --leva N: o .qst gravado com e sem a rotina, item a item); mutacoes 2 pela prova do save (registros de 0x48 bytes; itens das saidas com 0xe bytes). A caixa de erro so aparece em falha de gravacao (nao esperada na prova).

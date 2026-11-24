@@ -1,0 +1,8 @@
+compilado junto com os itens sx10 pelo leitor (rodada 5, 23/11/2026); sem jogo rodado.
+Item de simulacao (sem TELAS/SAVE/LIGAS): o construtor roda em toda partida da carreira ENG (2 formacoes por lado no
+estado da partida), nas taticas dos clubes (antes do load_from_disk dos .pct) e na formacao do tecnico humano.
+Prova: comparacao ate 2001-10-01 (o comparador e lado a lado sobre os 0x18e3 bytes do registro), Rust x2, mutacoes.
+Mutacoes: sx10_6_designado_zero (o load_from_disk nao regrava DESIGNATED_PEOPLE, entao as taticas da IA ficam com a
+pessoa 0 designada: e a que mais provavelmente muda a partida); sx10_6_instrucoes_do_time (as instrucoes do time do
+construtor quase sempre sao regravadas pelo .pct). Se escaparem da carreira, ficam acusadas so pelo comparador (quase
+tudo o que o construtor escreve e regravado pela carga da tatica): nesse caso o item vai com essa explicacao.

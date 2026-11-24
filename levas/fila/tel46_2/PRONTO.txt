@@ -1,0 +1,8 @@
+NAO PROVADO NO JOGO (leitor tel46, rodada 5, 23/11/2026): compila sobre o HEAD 0f776b971 junto com tel46_1/3 e com as mutacoes. Iguais no cm0102-1080.exe.
+Tipo TELAS. Todas so a original no comparador, com o plano conferido depois (constroi, libera, roda funcoes de saida de tela, manda pacote).
+- construtor: roda uma vez, antes do WinMain (o desvio e instalado no DllMain); no exe com patch so o destrutor passa pelo Rust.
+- destrutor e close_all_screens: ao fechar o jogo (exit) e ao voltar ao menu principal (0x82ff5a).
+- remove_manager_record: num jogo de uma maquina com varios tecnicos humanos, quando um sai (demitido, aposentado, "remover tecnico"); com o gancho de saida ligado (rede) so a original sem plano.
+- disconnect_network: so em rede.
+Fora: 0x7fc350 (inicializador estatico do CRT) e 0x7fc370 (thunk do atexit): ver o relatorio.
+Mutacoes (modo Rust: o comparador so roda a original): tel46_2_display_errado (a tela local some no inicio), tel46_2_registros_parados (o registro do tecnico que saiu fica).

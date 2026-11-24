@@ -1,0 +1,4 @@
+sx03_3 (simulacao, carreira ENG ate 2002-06-01, sem LIGAS): compilado sobre o HEAD 0f776b971. Nao rodado no jogo.
+Construtor pelo compare_transfer_rules_ctor (uma vez, na montagem das regras); limites lado a lado nos 42 bytes e a
+regra pelo codigo (al): rodam nas partidas europeias dos clubes ingleses (o comparador as ve na carreira comparando).
+Mutacoes 4: a da regra sempre 0 pela carreira e pelo comparador; as outras pelo comparador.

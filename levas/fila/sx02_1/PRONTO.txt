@@ -1,0 +1,3 @@
+NAO PROVADO NO JOGO (leitor sx02, rodada 5, 23/11/2026): compila sobre o HEAD 0f776b971 (copia propria de rust/ e cm0102-base/, sx02_1..sx02_4 juntos, sem erros nem avisos no codigo dos itens; as 10 mutacoes aplicadas juntas tambem compilam); prologos conferidos no cm0102.exe; convencoes e ordem dos push conferidas na desmontagem (ver rotinas.py). Sem LIGAS: carreira ENG ate 2002-06-01.
+Comparador lado a lado (G_CONTRACT_LOOKUP_RESULT e o vetor de saida); as 3 mutacoes mudam a lista e sao acusadas pelo comparador (8.456 chamadas; a carreira de ferias tem tecnico humano ingles), nao necessariamente pela carreira (a lista so decide a quem vai a noticia).
+Falta: comparacao ENG ate 2002-06-01, Rust x2 com detector, mutacoes 3.

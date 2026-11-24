@@ -1,0 +1,10 @@
+NAO PROVADO NO JOGO (leitor sx01e, rodada 5, 23-24/11/2026): escritores de texto da midia inteiros, um desvio cada,
+em pedacos com nome. Noticias: 0xbdb desculpas (0x72bd50), 0xbcf pedido de apoio (0x7435a0), 0xbdc resposta as
+criticas (0x743d30), (6, 0x178e) tecnico contra a FA (0x758fe0). Os auxiliares comuns dos sx01e_3..5 (MediaText,
+NewsName, compare_media_text_writer, MEDIA_TEXT_UNSET) estao neste item.
+Compila sobre o HEAD e9661948e com os sx01* (0 avisos nas linhas do item); com as mutacoes de todos os sx01e aplicadas
+juntas, compila; ancoras com 1 ocorrencia.
+Item de TELAS: so rodam quando a noticia e aberta. Provas: comparacao com o modo CM_TEXTO_NOTICIAS na carreira ENG ate
+2002-06-01, ou o Lucas abrindo as noticias jogando comparando (caixa de entrada: a manchete na lista, o corpo ao
+abrir). O comparador compara texto, vinculos e gerador; o texto nao e comparado quando a copia marca MEDIA_TEXT_UNSET
+(o original entrega um buffer nunca escrito). As mutacoes so sao acusadas pelo comparador.

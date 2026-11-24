@@ -1,0 +1,3 @@
+NAO PROVADO NO JOGO (leitor sx08, rodada 5, 23/11/2026): compila sobre o HEAD e9661948e (junto com sx08_1 e sx08_2; mutacao compila). Prologo conferido; sem SEH (o quadro e dos chamadores).
+Roda uma vez na carreira (cobertura 1). Comparador lado a lado: a original no objeto do jogo, a copia num objeto local de 0x40, comparando resposta, cabecalho e as 8 tabelas; as da copia sao liberadas (eng_lng_free_tables). A mutacao so e acusada pelo comparador (os nomes ingleses nao voltam a simulacao).
+Falta: comparacao ENG ate 2002-06-01 (conferir que a linha da comparacao aparece: 1 caso), Rust x2 com detector, mutacao 1 (pelo comparador).

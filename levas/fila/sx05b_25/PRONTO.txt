@@ -1,0 +1,2 @@
+sx05b_25 (telas, sem LIGAS): compilado sobre o HEAD e9661948e com o sx03_2, os sx05_1..6 e os sx05b_1..25 aplicados pela ancora (cargo build --release, 0 erros, nenhum aviso no codigo do sx05b); nao rodado no jogo.
+Integrar depois do sx05_6 e do sx05b_5. A prova: o Lucas jogando comparando (Nacao -> Premios: um premio do ano e uma equipe).

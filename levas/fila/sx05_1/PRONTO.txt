@@ -1,0 +1,4 @@
+sx05_1 (simulacao, sem LIGAS): compilado sobre o HEAD e9661948e com os itens sx05_1..6 (cargo build --release, 0 erros).
+A prova: comparacao ENG ate 2002-06-01 (as noticias de contrato e transferencia chamam o valor da tela e o texto; o
+comparador do valor e o do texto acusam as mutacoes); as tres mutacoes sao de comparador (o texto nao volta a simulacao).
+O passo da escada sem bandeira 4/8 e o caso de milhoes inteiros (moeda sem bilhoes) quase nao rodam.

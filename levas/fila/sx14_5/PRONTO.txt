@@ -1,0 +1,3 @@
+NAO PROVADO NO JOGO (leitor sx14, rodada 5, 23/11/2026): compila sobre o HEAD e9661948e (junto com sx14_1..sx14_4, sem avisos no codigo do item; mutacoes compilam; ancoras unicas com a fila). Prologos conferidos nos dois exes (10 bytes). Ordem das leituras dos campos, argumentos de cada formato e dos vinculos conferidos push a push.
+TELAS: 0 chamadas na carreira de teste. Prova: o Lucas jogando com o JOGAR_COMPARANDO.bat e abrindo as noticias (caminhos no rotinas.py). Comparador compare_text_writer.
+Mutacoes 2 (texto), so para provar o comparador numa sessao do Lucas.

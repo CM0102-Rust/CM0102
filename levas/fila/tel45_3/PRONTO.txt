@@ -1,0 +1,3 @@
+NAO PROVADO NO JOGO (leitor tel45, rodada 5, 23/11/2026): compila sobre o HEAD de 23/11 (git archive) junto com tel45_1 e tel45_2, sem avisos; compila com a mutacao; ancora 1 vez. Igual no cm0102-1080.exe.
+ANTES DE INTEGRAR: (0x8ba920, 3) em RELATIVAS do rust/src/detours.rs (o prologo tem call rel32 na posicao 3). Sem isso, tirar este item da leva.
+Como chegar: tela do clube > Treino > editar um programa > Ok ou Cancelar (o tratador do editor apaga a copia do programa com flags 1). Comparador: so a original (libera memoria); o plano: o retorno e this (a copia com flags 0). Mutacao: tel45_3_retorno_nulo.

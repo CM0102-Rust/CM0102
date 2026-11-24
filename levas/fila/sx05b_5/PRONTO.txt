@@ -1,0 +1,2 @@
+sx05b_5 (simulacao, sem LIGAS): compilado sobre o HEAD e9661948e com o sx03_2, os sx05_1..6 e os sx05b_1..25 aplicados pela ancora (cargo build --release, 0 erros, nenhum aviso no codigo do sx05b); nao rodado no jogo.
+Integrar depois do sx05_6 e do sx03_2 e antes dos outros sx05b. A prova: comparacao ENG ate 2002-06-01 (a criacao do jogo constroi todos os premios e as notas do ano); as mutacoes pelo comparador (o plano do objeto) e pela carreira.

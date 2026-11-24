@@ -1,0 +1,3 @@
+sx05_3 (simulacao, LIGAS = 'ENG', ATE = '2002-08-01'): compilado sobre o HEAD e9661948e com os itens sx05_1..6.
+Depende do sx05_2. Uma mutacao por modo: so as dos modos que os premios ingleses usam rodam (as outras saem pelo
+rotulo do covered! que nao conta).

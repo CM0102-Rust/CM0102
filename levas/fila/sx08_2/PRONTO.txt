@@ -1,0 +1,3 @@
+NAO PROVADO NO JOGO (leitor sx08, rodada 5, 23/11/2026): compila sobre o HEAD e9661948e (junto com sx08_1 e sx08_3; mutacoes compilam). Prologos conferidos.
+PRECISA de uma linha no motor.rs ao integrar (ver rotinas.py): 0x547af0 e 0x547d90 sao portas do pos-jogo (POS_PROLOGUES) no modo de comparacao; acrescentar as duas a condicao do instalar() que ja pula 0x6f5c30/0x70dfd0/0x867560 em comparando. Sem isso o desvio da rotina e recusado na comparacao (bytes ja trocados pela porta) e o log acusa 'detour refused'.
+Prova: so carreira Rust (x2 com detector) e mutacoes 2 pela carreira ENG ate 2002-06-01 (as duas mudam o consumo do sorteador quando a lista esta cheia); a comparacao nao exercita as copias (a original roda pela porta).

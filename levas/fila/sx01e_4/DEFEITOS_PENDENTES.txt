@@ -1,0 +1,5 @@
+Para o DEFEITOS (leitor sx01e): 0x759a10 (texto da expulsao) a derrota do clube do jogador como segundo clube do
+registro vira empate (resultado 0); a resposta em segunda pessoa compara o proprio jogador, nao o tecnico dele, com o
+tecnico humano da tela; resposta acima de 3 junta um buffer nunca escrito. 0x743d30 e 0x758fe0 entregam o buffer nunca
+escrito em casos sem modelo. 0x72c1f0: contrato de local nao iniciado sem cargo; lesionados perguntados 50x sobre o
+proprio jogador. 0x744240: o id 0 nunca e elogiado; contrato nao iniciado em clube que e selecao.

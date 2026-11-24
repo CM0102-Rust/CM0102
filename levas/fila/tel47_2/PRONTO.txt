@@ -1,0 +1,7 @@
+NAO PROVADO NO JOGO (leitor tel47, rodada 5, 23/11/2026): compila sobre o HEAD 0f776b971 junto com o tel47_1 (depende dele), sem avisos novos, e com as mutacoes aplicadas.
+Rede: so roda numa partida em rede (duas maquinas na mesma rede local para conectar, aceitar, mandar e receber; uma so ja roda a varredura, os soquetes de difusao e os datagramas da lista de servidores). Caminho: menu inicial > Iniciar jogo > Jogo em rede.
+Comparadores: so a original (soquetes, processo e arquivo); prova = partida em rede em modo Rust.
+A varredura roda ipconfig (Windows 2000 em diante) e grava ~net.out na pasta do jogo; em tela cheia ela volta para janela antes (no teste, sempre -windowed).
+cm0102-1080.exe: os bytes trocados 0x8aeed4..0x8aef02 (tamanho do graphics_init_display) sao lidos do exe em execucao.
+Mutacoes (so numa partida em rede em modo Rust): tel47_2_difusao_errada, tel47_2_sem_difusao (a lista de servidores fica vazia na outra maquina), tel47_2_conexao_recusada (o anfitriao recusa todos).
+Sem RELATIVAS; sem EXE.

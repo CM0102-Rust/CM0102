@@ -1,0 +1,2 @@
+sx04c_23 (telas): compilado sobre o HEAD e9661948e com os sx03_*, sx04_*, sx05_*, sx05b_*, sx04b_* e os sx04c_1..24 aplicados pela ancora (cargo build --release, 0 erros); nao rodado no jogo.
+TELAS: integrar com ou depois do sx04c_24 (o contador). Prova: o Lucas, jogando comparando, abre a equipe da semana dos premios de cada nacao carregada.

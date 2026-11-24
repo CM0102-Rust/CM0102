@@ -1,0 +1,20 @@
+# 328ª leva — o texto da notícia de recorde quebrado de uma competição; as ordens da lista de candidatos de um prêmio; esvaziar a lista de candidatos de um prêmio
+
+**Rotinas:**
+- `comp_stats_write_record_news_text()` = 0x4a7f50 (comp_screens.cpp, thiscall, ret 8): o corpo da notícia de recorde quebrado de uma competição, lido dos campos da notícia (o id da competição, sem uso, o tipo e os campos do tipo): mais títulos (ou troféus, fora de uma divisão de liga), pontos, gols marcados e sofridos, cartões amarelos e vermelhos e média de público do time; maior público de um jogo (dois tipos, com os dois clubes e a rodada); maior vitória (o placar, a forma pelo mando: em casa, fora, contra) e jogo com mais gols (o maior número primeiro, o vencedor nomeado primeiro, vitória ou empate), com o vínculo do placar quando o jogo ainda confere; séries de vitórias e derrotas (de uma data a outra) e invencibilidade e sem vencer (desde uma data), só acima de um jogo; do jogador: gols, assistências, média de nota (acima de −1, com os jogos), prêmios de melhor em campo e cartões na temporada, mais gols num jogo e o mais novo e o mais velho a jogar (a idade na data do jogo), com os dois clubes e a rodada. Cada um só quando o recorde vale (senão o texto vazio); os vínculos dos clubes, da rodada (a competição do jogo, quando há rótulo) e do jogador (quando os nomes ainda conferem). Sem Text, sem notícia ou tipo desconhecido: a caixa de erro e 0;
+- `award_shortlist_compare_by_name()` = 0x418340 (award_shortlist.cpp, cdecl): a ordem dos candidatos pelo nome do jogador (o nome no estilo 4; sem jogador, vazio), na comparação de textos do jogo;
+- `award_shortlist_compare_by_score()` = 0x4183f0 (award_shortlist.cpp, cdecl): a ordem dos candidatos pela nota, a maior primeiro (iguais ou sem ordem: 0);
+- `award_shortlist_compare_by_votes()` = 0x418420 (award_shortlist.cpp, cdecl): a ordem dos candidatos pelos votos, o mais votado primeiro;
+- `award_shortlist_clear()` = 0x418320 (award_shortlist.cpp, thiscall): esvazia a lista de candidatos: nenhuma entrada e os 16 votos dos treinadores em −1;
+
+**Como foi comparada:** comparação de verdade em cada rotina (o original e o Rust a partir do mesmo estado, com as regiões que a rotina toca).
+
+**Resultado** (`cadeia.txt`):
+- **Mutações (4):** 0 acusadas. `tel44_2_name_order` escapou: EM CONFIRMACAO. A ordem por nome da lista de candidatos fica invertida. As ordens e os votos da lista de candidatos so agem no anuncio (por nome) e na escolha dos vencedores (por nota e por votos), perto do fim da temporada; ate 2001-08-20 nao ha lista com mais de um candidato. A comparacao longa decide. `tel44_2_score_order` escapou: EM CONFIRMACAO. A ordem por nota da lista de candidatos fica invertida. As ordens e os votos da lista de candidatos so agem no anuncio (por nome) e na escolha dos vencedores (por nota e por votos), perto do fim da temporada; ate 2001-08-20 nao ha lista com mais de um candidato. A comparacao longa decide. `tel44_2_votes_order` escapou: EM CONFIRMACAO. A ordem por votos da lista de candidatos fica invertida. As ordens e os votos da lista de candidatos so agem no anuncio (por nome) e na escolha dos vencedores (por nota e por votos), perto do fim da temporada; ate 2001-08-20 nao ha lista com mais de um candidato. A comparacao longa decide. `tel44_3_votes_cleared` escapou: EM CONFIRMACAO. A limpeza da lista deixa os votos em 0 em vez de -1. As ordens e os votos da lista de candidatos so agem no anuncio (por nome) e na escolha dos vencedores (por nota e por votos), perto do fim da temporada; ate 2001-08-20 nao ha lista com mais de um candidato. A comparacao longa decide. (lacuna em `PENDENCIAS.md`)
+- **Jogo real comparando até 2002-01-01:** 0 divergências (f6740b3f).
+- **Carreiras Rust ×2 e original até 2002-06-01:** Rust ×2 ac155f01, original 96da1fba (registrada; não barra a leva desde 31/10/2026). Detector de lixo: igual.
+
+**Refazer**, sobre o commit da 327ª:
+1. `python integrar.py`
+2. `cargo build --release` e copiar a DLL para `jogo_testes/`
+3. `bash engenharia-reversa/cadeia.sh 328`

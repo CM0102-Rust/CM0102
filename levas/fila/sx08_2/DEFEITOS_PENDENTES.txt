@@ -1,0 +1,1 @@
+Para o DEFEITOS (leitor sx08): 0x547d90 nao confere se o clube ja e favorito: com vaga livre entra de novo (mesmo defeito da 0x547e70).

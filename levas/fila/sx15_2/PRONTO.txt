@@ -1,0 +1,10 @@
+NAO PROVADO NO JOGO (leitor sx15, rodada 5, 24/11/2026): compila sobre o HEAD e9661948e sozinho e junto com o sx15_1
+(copia propria, 0 erros e 0 avisos nas linhas do item); prologos de 5 bytes conferidos (os mesmos dos PROLOGUE_716*
+dos portoes); argumentos, mascaras de fita e x87 conferidos na desmontagem; tabelas de salto 0x716df0, 0x7172b0,
+0x716c70/0x716c78 decodificadas. Ancoras das 3 mutacoes aparecem 1 vez no motor com o item.
+ANTES: INTEGRAR_ANTES.txt (tirar os portoes gate_716630/716e10/716c90 do instalar()).
+Comparadores: compare_com_fita com RECORD_716 (narracao 0x6d6f70, ida a casa 0x6f46b0, a briga seguinte 0x716630 e
+as do player_left_pitch_with como unidades); dentro de fita de outra rotina com RECORD_716 = unidade comparada por
+dentro; fita sem RECORD_716 = a original passa (como o portao).
+Falta: comparacao ENG ate 2002-06-01, Rust x2 com detector, mutacoes 3 (a da reclamacao deve pegar; a da simulacao e a
+da briga sao raras e podem escapar da carreira: o comparador acusa).

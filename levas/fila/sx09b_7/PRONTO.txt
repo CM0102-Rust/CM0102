@@ -1,0 +1,2 @@
+NAO PROVADO NO JOGO (leitor sx09b, rodada 5, 23/11/2026): compila sobre o HEAD e9661948e (copia propria de rust/ e cm0102-base/ com sx09b_1..8 aplicados pela ancora, sem avisos no codigo dos itens); a mutacao compila; a rotina e as tabelas iguais no cm0102.exe e no cm0102-1080.exe. TELAS: a prova e o Lucas jogando comparando.
+Caminho: o perfil de um jogador do proprio clube, a acao Disciplina (a tela lista os cinco motivos da multa). Tambem roda no texto da noticia da reacao a multa (0x5a76e0, original), so quando o tecnico humano multa.

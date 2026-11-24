@@ -1,0 +1,22 @@
+NAO PROVADO NO JOGO (leitor sx06, rodada 5, 23/11/2026): club_records_record_type_applies (0x449590) e
+Club_Records::end_season_for_nation (0x447880), item de simulacao. Prologos iguais no cm0102.exe e no cm0102-1080.exe.
+Compila sobre o HEAD e9661948e (copia propria de rust/ e cm0102-base/ com o item pela ancora, cargo build --release ok,
+0 avisos nas linhas do item); com as 6 mutacoes aplicadas juntas, cargo build --release ok; ancoras com 1 ocorrencia
+cada no motor + item, cada rotulo com o seu covered!.
+
+Falta a sessao principal:
+- comparacao ENG ate 2002-06-01 (ATE no rotinas.py): a 0x449590 roda a cada partida (recordes de jogo, posicoes,
+  transferencias); a 0x447880 roda 40 vezes ate 2002-06-01 (docs/cobertura_simulacao.txt), no fim da temporada de
+  cada nacao-chave pelo laco da temporada (0x5d5ae0); a data exata da primeira chamada nao se sabe (talvez depois de
+  2002-01-01, por isso o ATE). Ramos raros: a noticia de recorde (so clube humano ou selecao com 5 temporadas: na
+  carreira de ferias talvez so a selecao), a noticia do jogador da torcida (so clube de tecnico humano), a criacao do
+  registro de todos os tempos (nunca roda, ver o defeito);
+- Rust x2 com detector ate 2002-06-01;
+- mutacoes: as 2 da 0x449590 o comparador dela acusa na primeira chamada do tipo (a de clube muda tambem os recordes);
+  as 4 da 0x447880 (temporada nao zerada, temporada nao contada, ano errado no arquivo do historico, ano da nota de
+  todos os tempos) dificilmente mudam a carreira ate junho (registros e historico nao voltam para a simulacao): so o
+  comparador da 0x447880 as acusa (memoria lado a lado + plano da fila de noticias e do arquivo), como as de
+  registro aceitas em 12/11/2026 (sma_3). Se o ATE sair, o comparador da 0x447880 pode nao rodar na cadeia.
+Defeito do original (0x4479e0 e 0x447ad2): o publico medio e a nota leem o registro de todos os tempos antes de testar
+se e nulo (so depois o criam); com registro da temporada e sem o de todos os tempos o jogo cairia. A partida cria os
+dois juntos, entao a criacao nunca roda (a copia reproduz a leitura). Sem LIGAS.

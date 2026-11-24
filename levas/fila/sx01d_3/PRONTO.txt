@@ -1,0 +1,12 @@
+NAO PROVADO NO JOGO (leitor sx01d, rodada 5, 23/11/2026): Media::Media (0x72b1d0, ret 4), Media::~Media (0x72b200, ret)
+e Media::load_media_dat (0x72b240, ret 4), inteiras, um desvio cada (prologos de 7, 6 e 10 bytes, sem relativas). Item
+SAVE com CARGA. A caixa de erro usa show_error_box (transfer_manager.rs), que passa ao sprintf o nome, a extensao e a
+linha como o original (o show_error_at de match_man.rs passa so a versao: o texto dele sai com lixo; ver o relatorio).
+Compila sobre o HEAD e9661948e junto com os outros sx01* (ok, 0 avisos nas linhas do item; com a mutacao, ok).
+
+Falta a sessao principal:
+- prova do save (prova_save.py --leva N, CARGA): o construtor roda na criacao do jogo (sem save) e na carga; a carga do
+  FeriasTesteSave com e sem as rotinas;
+- a mutacao (registro de historias esvaziado na carga) so a carga acusa (as historias ja registradas voltam a sair).
+O ramo das versoes antigas (registro de 22 bytes, versao dos dados abaixo de 0x3e037) nao roda no save de ferias.
+Defeito do original: nos erros de leitura o item fica aberto (sem zclose).

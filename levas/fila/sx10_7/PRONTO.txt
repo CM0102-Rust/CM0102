@@ -1,0 +1,17 @@
+compilado junto com os itens sx10 pelo leitor (rodada 5, 23/11/2026); sem jogo rodado. NAO PROVADO NO JOGO.
+Item de telas (TELAS = True): nenhuma rotina roda na carreira automatica. Prologos em fronteira de instrucao (6 ou 10
+bytes, sem call/jmp relativo). Depende so do que ja esta no motor (formation_error_box, copy de taticas ja Rust); nao
+depende do sx10_6 (o fim do construtor por partida repete as 8 linhas do padrao, de proposito: itens de tipos
+diferentes entram em levas diferentes).
+Caminho no jogo (JOGAR_COMPARANDO.bat):
+- swap_slots: Taticas, arrastar um jogador sobre a posicao de outro (ou trocar dois jogadores no campinho);
+- set/get_zone_coordinates, set/get_phase_coordinates, find_slot_at_coordinate, swap_slot_coordinates,
+  mirror_zone_coordinates, is_slot_customised, is_slot_coordinate_customised: Taticas > editar formacao (a tela das
+  posicoes com e sem bola por zona: mover uma marca, trocar duas, espelhar/copiar uma zona, voltar ao padrao);
+- formation_new_vs_club: antes de uma partida, Taticas > a formacao do adversario (Opposition);
+- get_slots_in_position_order: as telas do clube que listam a formacao por posicao (Clube > elenco/formacao).
+Mutacoes: sx10_7_troca_sem_posicao (trocar dois jogadores de posicoes diferentes), sx10_7_ordem_invertida (a tela do
+clube), sx10_7_espelho_sem_troca (espelhar uma zona com dois na mesma linha), sx10_7_fase_sem_bola (abrir a edicao
+com uma marca mexida).
+Defeitos do original: Formation(registro, lado) sem registro deixa o registro sem iniciar (so a caixa);
+is_slot_coordinate_customised aceita zona ate 8 x 0xb (le coordenadas de outra vaga), mais larga que os 3 x 4.

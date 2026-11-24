@@ -1,0 +1,16 @@
+NAO PROVADO NO JOGO (leitor sx01d, rodada 5, 23/11/2026): Media::queue_obscene_gesture_story (0x7570b0..0x75729f,
+ret 0xc) e Media::queue_wants_first_team_story (0x75a640..0x75a93e, ret 8), inteiras, um desvio cada (6a ff 68 06 d9 95
+00; 6a ff 68 bb d9 95 00). Ajudantes novos usados pelos itens seguintes: set_person_name_slots_or_none e
+news_shootout_result (o sx01d_5 depende deste item).
+Compila sobre o HEAD e9661948e junto com os outros sx01* (cargo build --release ok, 0 avisos nas linhas do item; com as
+mutacoes, ok). Ancoras com 1 ocorrencia cada.
+
+Falta a sessao principal:
+- comparacao: so a original (sorteiam e postam noticias);
+- Rust x2 com detector ate 2002-06-01;
+- ATENCAO: nenhuma das duas aparece na cobertura ENG ate 2002-06-01 (docs/cobertura_simulacao.txt): a 0x7570b0 so roda
+  com um gesto obsceno filmado (apply_obscene_gesture_ban, Rust); a 0x75a640 pela revisao do elenco (0x5d24a2) e pela
+  resposta humana ao jogador que quer ser titular. As 2 mutacoes (sem o sorteio da vaga 5; sem a resposta do tecnico
+  do computador) so sao acusadas se rodarem: se escaparem por nao rodar, o item entra pela conferencia ou espera uma
+  carreira mais longa.
+Sem LIGAS.

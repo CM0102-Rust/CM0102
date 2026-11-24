@@ -1,0 +1,13 @@
+NAO PROVADO NO JOGO (leitor sx01e, rodada 5, 23-24/11/2026): Media::create_player_media_story (0x72c1f0..0x72d20d,
+ret 0x14; tabelas de salto 0x72d210/0x72d244 depois), inteira, um desvio (6a ff 68 86 d6 95 00, o mesmo da porta do
+pos-jogo), em pedacos com nome. Depende do sx01d_2 e do sx01d_5. Compila sobre o HEAD com os sx01* (0 avisos nas
+linhas do item); com as mutacoes, compila.
+Convivencia com a porta do pos-jogo: como a 0x733a60, no modo comparar o desvio e recusado; a prova e o modo Rust:
+- Rust x2 com detector ate 2002-06-01 (historias de jogador depois das partidas e no laco diario);
+- as 2 mutacoes (moral do contrato que nao muda; resposta do tecnico do computador nao aplicada).
+O desabafo (0x1e, 0x52) e a historia do time (0x52) sao chamados pelo endereco do exe (0x733a60, 0x74b060): no modo
+Rust rodam os portes deles.
+Defeitos do original: sem cargo de clube o contrato e lido de um local nunca iniciado (0x72c329; a copia usa o do
+clube); a contagem de lesionados pergunta 50 vezes o estado do proprio jogador (0x72cf7f), nao o de cada membro do
+elenco (vale 0 ou o numero de vagas cheias).
+Sem LIGAS.

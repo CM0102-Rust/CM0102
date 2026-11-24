@@ -1,0 +1,6 @@
+NAO PROVADO NO JOGO (leitor sx15, rodada 5, 23-24/11/2026): compila sobre o HEAD e9661948e (copia propria em sx15\copia do rascunho, so com este item): cargo build --release EXIT 0, sem erros nem avisos no codigo do item.
+Prologo 6a ff 68 bb de 95 00 (push -1; push 0x95debb) em fronteira de instrucao; fim real 0x774f30 (ret 0xc em 0x774f2d), sem tabela de salto.
+Os 81 formatos: os modelos de cada folha conferidos contra o proprio texto do modelo (contagem de chaves {} = inteiros, ordem dos rotulos <%s - Club Name>, Nation(e.g.England), Score line...): 0 divergencias; o conjunto de modelos do codigo = o conjunto empilhado na desmontagem (nenhum a mais nem a menos). Ordem dos inteiros conferida push a push em amostras (0xa5cb4c, 0xa5eea4, manchetes).
+Comparador compare_text_writer (texto, vinculos, gerador); o corpo com jogador em destaque e mais de 4 jogadores do clube roda so a original (sorteio nao iniciado no original, ver DEFEITOS no cabecalho).
+Mutacoes (2): de texto, acusadas pela comparacao, nao pela carreira. Ancoras aparecem 1 vez.
+Falta: comparacao ENG ate 2002-06-01 (57 chamadas na cobertura da carreira; noticia 0x24 dos jogos de selecao) e Rust x2 com detector. Sem LIGAS.

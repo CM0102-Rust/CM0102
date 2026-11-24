@@ -1,0 +1,5 @@
+sx03_2 (simulacao, carreira ENG ate 2002-06-01, sem LIGAS): compilado sobre o HEAD 0f776b971 junto com sx03_1,3,4.
+Nao rodado no jogo. Comparadores so a original. Datas na janela: viradas de mes (tecnico e jogadores do mes),
+5/4/2002 (jogador e jovem do ano, equipes da temporada), 30/5/2002 (tecnicos do ano), o dia de fim de temporada.
+Mutacoes 5; a da equipe da semana (so Premier) pode escapar da carreira (as indicacoes da equipe da semana talvez
+nao cheguem ao banco): se escapar, tirar a mutacao, nao o item. Os itens sx03_4 em diante usam os auxiliares daqui.

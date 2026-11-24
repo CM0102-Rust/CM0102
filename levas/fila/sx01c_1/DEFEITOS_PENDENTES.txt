@@ -1,0 +1,1 @@
+Para o DEFEITOS (leitor sx01c): 0x737c55 a contagem de lesionados pergunta 50x o estado do proprio jogador; 0x737ee1/0x7380c9 a comparacao da marca 0x13 com 0xa nunca e verdadeira (a queixa 0x4000000 nunca e apagada ali); sem jogador a marca 0x20 le como expectativa bits do argumento da resposta.

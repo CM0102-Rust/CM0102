@@ -1,0 +1,4 @@
+Simulacao (ENG ate 2002-06-01). get_player_injury roda o tempo todo (54 chamadores); continent_has_selected_nation
+nos premios/disciplina/copas; number_active_entries uma vez na criacao do jogo. Falta: comparacao ENG, Rust x2 com
+detector, mutacoes 3/3 (todas acusadas pelos comparadores na primeira chamada; a 3a so pelo comparador).
+Compila sobre o HEAD e9661948e (copia propria de rust/ e cm0102-base/ com os itens sx12_1..sx12_9 aplicados pela ancora, cargo build --release ok, 0 avisos nas linhas dos itens); com todas as mutacoes dos itens 1 a 8 aplicadas juntas, cargo build --release ok. Ancoras das mutacoes com 1 ocorrencia cada no motor + itens (e 0 nos outros itens da fila). NAO PROVADO NO JOGO (leitor sx12, rodada 5, 23/11/2026).

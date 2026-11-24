@@ -1,0 +1,3 @@
+NAO PROVADO NO JOGO (leitor sx15, rodada 5, 23-24/11/2026): compila sobre o HEAD e9661948e com sx15_4..6 juntos (cargo build --release, 0 erros e 0 avisos no codigo dos itens); prologo conferido no cm0102.exe (sub esp, 0x478, 6 bytes); argumentos de cada formato conferidos push a push. Ancoras das mutacoes 1 vez no motor com a fila.
+Comparador compare_text_writer; o corpo com adversarios e nenhum a ler (slot 6 <= 0) fica so com a original (defeito: buffer de 300 bytes nunca escrito). Mutacoes de texto/vinculo: acusadas pela comparacao, nao pela carreira.
+Falta: comparacao ENG ate 2002-06-01 (157 chamadas: as noticias de convocacao chegam ao tecnico humano nas datas FIFA de set/out/nov 2001) e Rust x2 com detector. Sem LIGAS.

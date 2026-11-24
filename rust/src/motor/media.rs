@@ -3565,11 +3565,11 @@ pub(crate) unsafe extern "thiscall" fn compare_write_player_praise_news_text(thi
         && lo.iter().zip(lr.iter()).all(|(a, b)| a.1 == b.1 && a.2 == b.2 && (a.0 == b.0 || (loose && a.1 == 0x7d3)));
     // the great player's job gender outside language 4 is the original's uninitialised stack byte: a "{}" left
     // after the job is the only difference accepted (and the text buffer then differs by it)
-    let sem_marca = |t: &[u8]| t.windows(2).fold((Vec::new(), false), |(mut v, pular), w| {
+    let without_mark = |t: &[u8]| t.windows(2).fold((Vec::new(), false), |(mut v, pular), w| {
         if pular { (v, false) } else if w == b"{}" { (v, true) } else { v.push(w[0]); (v, false) }
     }).0;
     let unset = PRAISE_JOB_GENDER_UNSET.load(Relaxed);
-    let text_same = so == sr || (unset && sem_marca(&[so.as_slice(), b"\0"].concat()) == sem_marca(&[sr.as_slice(), b"\0"].concat()));
+    let text_same = so == sr || (unset && without_mark(&[so.as_slice(), b"\0"].concat()) == without_mark(&[sr.as_slice(), b"\0"].concat()));
     SCOREBOARD.record((same || (unset && text_same)) && text_same && links_same, || format!(
         "write_player_praise_news_text(kind {:#x}, body {}, piece {}) text {} links {} ({} x {}) memory {}\n original: {}\n rust:     {}\n links original {:x?}\n links rust {:x?}\n {:x?} x {:x?}",
         kind, body, piece, so == sr, links_same, lo.len(), lr.len(), same, String::from_utf8_lossy(&so), String::from_utf8_lossy(&sr),

@@ -1,0 +1,34 @@
+NAO PROVADO NO JOGO (leitor sx01c, rodada 5, 23/11/2026): Media::apply_story_effect_flags (0x736c00..0x738336, 5.939
+bytes; ret 0x1c em 0x738333, sem tabela de saltos) portada inteira, um desvio so (prologo 83 ec 20 53 55), em pedacos com
+nome: story_staff_confidence_after, story_effects_expectation, story_effects_confidence (0x400),
+story_effects_member_morale (1/2/4/8/0x10/0x20/0x200 e 0x40), story_effects_player_criticised e
+story_effects_team_mate_criticised (0x80), story_effects_player_backed e story_effects_team_mate_backed (0x100).
+Compila sobre o HEAD e9661948e (copia propria de rust/ e cm0102-base/ com sx01c_1 e sx01c_2 pela ancora, cargo build
+--release ok, 0 avisos nas linhas dos itens); com as 4 mutacoes deste item e as 2 do sx01c_2 aplicadas juntas, cargo
+build --release ok. Ancoras das mutacoes com 1 ocorrencia cada em rust/src. Os 0x1740 bytes iguais no cm0102-1080.exe.
+Conferencia: cada push e cada [esp+k] seguidos na desmontagem (os slots dos argumentos sao reaproveitados: o da
+resposta vira a expectativa f32, o da mudanca vira temporario, o do jogador vira o contrato dele; dentro do laco
+[esp+0x48] e o contrato do colega e [esp+0x4c] o do jogador).
+
+Falta a sessao principal:
+- comparacao ENG ate 2002-06-01: o comparador roda so a original e confere a confianca da comissao
+  (board_record::STAFF_CONFIDENCE) que ela deixa contra story_staff_confidence_after; o resto se prova pela carreira e
+  pelas mutacoes (a rotina sorteia, posta noticias e mexe em confiancas, relacoes e humor: nao roda duas vezes);
+- Rust x2 com detector ate 2002-06-01;
+- as 4 mutacoes: quem reage (felicidade + 50; muda os sorteios), a marca 4 com a soma (humor do elenco nas historias de
+  time), a confianca da comissao subtraindo (acusada pelo comparador sempre que a mudanca nao e zero; a 0x73e870 passa
+  _ftol de valores nas marcas 8) e a confianca da torcida e da diretoria x 1000 (marca 0x400: respostas 0x500/0x404/
+  0x480 das historias de jogador; as confiancas postam noticia acima de 500, com sorteios).
+Chamadas: a 0x73e870 (apply_team_story_response, original, 44 na carreira) e a apply_player_story_response (Rust,
+nma_6; o ensaio do comparador dela para antes desta rotina). Marcas vistas empurradas como constante nos 50 pontos de
+chamada: 4, 8, 0x50, 0x44, 0x41, 0x300, 0x10, 2, 0x80, 0x100 e as tres das historias de jogador; a 0x20 nao aparece como
+constante (o ramo dela, e o de 1 sozinha, podem nao rodar ate 2002-06-01); os covered! "sx01c_1 ..." dizem.
+Defeitos do original (para o DEFEITOS):
+- 0x737c55: a contagem de lesionados da historia 0x13 apoiada (com a queixa 0x2000000) pergunta 50 vezes o estado do
+  proprio jogador (push esi), nao o de cada vaga: da 0 ou o numero de vagas ocupadas;
+- 0x737ee1/0x7380c9: o agradecimento compara [esp+0x18] (0 ou 0x13) com 0xa: a queixa 0x4000000 nunca e apagada ali;
+- 0x736c26/0x73730f: o peso do presidente e um qword local cuja metade baixa a marca 0x20 sobrescreve com a ambicao do
+  colega (so depois do ultimo uso: sem efeito);
+- sem jogador, a marca 0x20 le como expectativa os bits do argumento da resposta (o slot nunca e escrito): a copia faz o
+  mesmo (f32::from_bits).
+Sem LIGAS.

@@ -1,0 +1,2 @@
+sx04c_12 (simulacao, LIGAS = 'ENG POL TUR GRE HRV RUS'): compilado sobre o HEAD e9661948e com os sx03_*, sx04_*, sx05_*, sx05b_*, sx04b_* e os sx04c_1..24 aplicados pela ancora (cargo build --release, 0 erros); nao rodado no jogo.
+Prova: LIGAS 'ENG POL TUR GRE HRV RUS' ate 2002-06-01 (premios em 2001-11-30).

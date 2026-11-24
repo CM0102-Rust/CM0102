@@ -1,0 +1,7 @@
+NAO PROVADO NO JOGO (leitor sx01d, rodada 5, 23/11/2026): Media::save_media_dat (0x72b5f0..0x72b806, ret 4), inteira,
+um desvio (8b 44 24 04 81 ec 04 02 00 00). Item SAVE. Caixa de erro por show_error_box (como no sx01d_3).
+Compila sobre o HEAD e9661948e junto com os outros sx01* (ok, 0 avisos nas linhas do item; com as mutacoes, ok).
+
+Falta a sessao principal: a prova do save (o .qst gravado pela original e pela copia, item a item) e as 2 mutacoes
+(registros do log com 22 bytes; a capacidade gravada como contagem, que so muda o media.dat quando as duas diferem).
+Defeito do original: nos erros de escrita o item fica aberto (sem zclose).

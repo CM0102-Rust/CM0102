@@ -1,0 +1,1 @@
+Antes de integrar: pôr (0x5b0b40, 3) em RELATIVAS no rust/src/detours.rs (call a partir do 4o byte do prólogo de FONT::~FONT). Depende do sx10_12.

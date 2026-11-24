@@ -1,0 +1,2 @@
+sx05b_10 (telas, sem LIGAS): compilado sobre o HEAD e9661948e com o sx03_2, os sx05_1..6 e os sx05b_1..25 aplicados pela ancora (cargo build --release, 0 erros, nenhum aviso no codigo do sx05b); nao rodado no jogo.
+Integrar depois do sx05b_5 e do sx05b_8. RELATIVAS em rust/src/detours.rs: (0x8af630, 3) e (0x92ff60, 3) (call rel32 no prologo dos destrutores que apagam). A prova: o Lucas jogando comparando, com um jogo em andamento carregar outro (Arquivo -> Carregar) ou voltar ao menu principal e comecar outro.

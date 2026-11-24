@@ -1,0 +1,5 @@
+NAO PROVADO NO JOGO (leitor sx10, rodada 5, 23/11/2026): compilado junto com os itens sx10 pelo leitor (o pai). Prologo conferido no cm0102.exe; mesmos bytes no cm0102-1080.exe.
+TELAS. Caminho no jogo: qualquer tela (o draw_text desenha todo texto da interface no modo de fonte -2, o padrao, e com uma fonte .ttf escolhida nas Opcoes); um chamador usa flags 0x280 (sombra e | como espaco); relevo (0x20) e espelhado (0x100) so onde o jogo os pede.
+Comparador: lado a lado sobre a superficie inteira (pixels x pitch x altura, copiada tres vezes por texto: pode deixar o jogo comparando mais lento nas telas cheias de texto); com callback, so a original. A copia chama o estilo e o cache de glifos pelo exe (o original ja deixou cada glifo no cache, na mesma ordem final).
+Mutacoes: sx10_14_colour (vermelho e azul trocados) e sx10_14_spacing (um pixel a mais entre letras): acusadas pelo comparador em qualquer texto desenhado comparando.
+Depende do sx10_13 (e do sx10_12).

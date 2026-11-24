@@ -1,0 +1,18 @@
+compilado junto com os itens sx10 pelo leitor (rodada 5, 23/11/2026); sem jogo rodado. NAO PROVADO NO JOGO.
+Item de telas (TELAS = True): nenhuma rotina roda na carreira automatica. Prologos em fronteira de instrucao (6 ou 10
+bytes, sem call/jmp relativo). Depende so do que ja esta no motor (formation_error_box, fail_read, c_string_len,
+copy_c_string, exe_strcmp, EMPTY_STRING); independente do sx10_6 e do sx10_7.
+Caminho no jogo (JOGAR_COMPARANDO.bat):
+- save_to_disk: Taticas > Salvar (gravar a tatica com nome; com senha para ver a senha invertida e restaurada);
+- read_file_password, check_file_password(_obfuscated): Taticas > Carregar (a lista dos .pct filtra pela senha;
+  uma tatica gravada com senha por outro tecnico);
+- check_duplicate_coordinate: Taticas > editar formacao, pondo duas marcas no mesmo ponto;
+- position_name: Taticas, o nome longo da posicao da vaga escolhida;
+- position_abbreviation: as telas do clube com as posicoes da formacao (e Taticas);
+- position_flag_name: Treino, os treinos por linha/lado.
+Comparadores: save_to_disk so a original (o plano depois: alterada 1, tem senha = senha nao vazia, gravada 1); as
+de senha rodam as duas (so leem o arquivo); os nomes lado a lado sobre o texto escrito.
+Mutacoes: as 6 do mutacoes.py, cada uma no caminho acima (a sx10_8_senha_sem_inverter so aparece no modo Rust).
+Defeitos do original: save_to_disk nao grava os designados; formata uma mensagem de erro especifica num local que
+nunca e mostrado; check_duplicate_coordinate aceita zona ate 8 x 0xb; position_abbreviation pode transbordar a linha
+traduzida (local de 8 bytes) para o local do lado.

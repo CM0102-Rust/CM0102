@@ -1,0 +1,3 @@
+NAO PROVADO NO JOGO (leitor sx09b, rodada 5, 23/11/2026): compila sobre o HEAD e9661948e (copia propria de rust/ e cm0102-base/ com sx09b_1..8 aplicados pela ancora, sem avisos no codigo dos itens); as 2 mutacoes compilam; a rotina e as tabelas do salto iguais no cm0102.exe e no cm0102-1080.exe; o metodo +0x10 da vtable das regras confere ret 0xc (0x7db2a0, 0x7e8da0).
+Roda pelo texto da noticia de suspensao (write_ban_news_text, ja Rust, chama pelo endereco) quando a noticia e de jogador do tecnico humano: desde ago/2001 na carreira ENG. Sem LIGAS.
+Mutacoes: pelo comparador (lado a lado sobre a saida e a forma), nao pela carreira (o texto nao volta para a simulacao).

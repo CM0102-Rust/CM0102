@@ -1,0 +1,5 @@
+NAO PROVADO NO JOGO (leitor tel46, rodada 5, 23/11/2026): compila sobre o HEAD 0f776b971 junto com tel46_2/3 (sem avisos no codigo do item) e com as mutacoes aplicadas. Iguais no cm0102-1080.exe.
+Tipo TELAS. put_sized_block roda num jogo de uma maquina (Display::add_area: os pesos das linhas de cada area, em toda tela); put_long so em rede (send_widget_click). Lado a lado os dois.
+animate_widgets: so a original no comparador, com o plano (os relogios que mudaram dizem o que venceu; o letreiro girado e as cores trocadas); roda a cada consulta da entrada (Display::poll_input) em qualquer tela com widgets 0x800/0x1000 (letreiros e itens que piscam, ex. a barra de menu no dia de jogo).
+Convive com o simulation.rs (CLOCK_CALLERS): a copia le o relogio da rotina sem avancar (clock_peek); na carreira automatica a copia nao anima.
+Mutacoes: tel46_1_long_trocado e tel46_1_bloco_curto (comparador, lado a lado), tel46_1_cores_iguais (modo Rust: nada pisca).

@@ -1,0 +1,4 @@
+sx05_5 (simulacao, sem LIGAS): compilado sobre o HEAD e9661948e com os itens sx05_1..6.
+A prova: comparacao ENG ate 2002-06-01 (as noticias de treino perdido e de forma fisica postadas pelo awol.rs, os
+textos escritos pelo despacho NEWS_WRITERS); mutacoes de texto acusadas pelo compare_text_writer. O AWOL (0xbc5) e
+raro: a mutacao dele pode sair por nao rodar.

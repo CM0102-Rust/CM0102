@@ -1,0 +1,6 @@
+NÃO PROVADO NO JOGO (leitor sx11, rodada 5, 23/11/2026): compila sobre o HEAD e9661948e (cópia própria de rust/ e cm0102-base/ por git archive, sx11_1..sx11_6 aplicados juntos pela âncora, nessa ordem; sem avisos no código dos itens; as 9 mutações aplicadas juntas também compilam e cada âncora aparece 1 vez no motor e na fila). Prólogos conferidos no cm0102.exe (instruções inteiras); convenções e ordem dos push conferidas na desmontagem (rotinas.py). Não rodado no jogo.
+Telas. Rotinas: Config::~Config 0x5d7b70 e Config::set_defaults 0x5d7bc0. Depende do sx11_3 e do sx11_4.
+PRECISA DE RELATIVAS antes de integrar (rust/src/detours.rs): (0x5d7b70, 3) e (0x5d7bc0, 4); o prologos.py confere. Sem isso o item fica fora.
+Comparadores: destrutor só a original (fecha tela e idioma; a viva não deixa tocador); set_defaults lado a lado sobre a Config.
+Como chegar no jogo: a partida do programa (set_defaults pelo Config::Config); Game Settings -> Reset; Cancel/Ok destroem a cópia (destrutor sem efeito); a saída por erro fatal destrói a viva.
+Mutação: as opções padrão com outro bit (lado a lado acusa na partida do programa).

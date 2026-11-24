@@ -1,0 +1,1 @@
+Para o DEFEITOS (leitor sx01): 0x74bbd0 tipos 0x50, 0x51 e 0x3d sem partida: o original zera o buffer 0xde1f64 em vez do texto da historia (nunca escrito); o corpo junta lixo de pilha a resposta. A copia escreve vazio e o comparador aceita qualquer prefixo (TEAM_TEXT_UNSET).

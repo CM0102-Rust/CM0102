@@ -1,0 +1,27 @@
+NAO PROVADO NO JOGO (leitor sx01, rodada 5, 23/11/2026): Media::write_team_media_story_news_text (0x74bbd0..0x754720,
+35.664 bytes; o mapa dava 35.696 ate a proxima fronteira) portada inteira, um desvio so (prologo 6a ff 64 a1 00 00 00 00),
+em pedacos com nome e covered! proprio: team_text_read / team_text_names / team_text_outlet (cabecalho), um pedaco por tipo
+(0x50, 0x51, 0x3f, 0x5f, 0x60, 0x42, 0x43, 0x44, 0x5a, 0x5c com team_text_continental_match, 0x5b, 0x52, 0x3e, 0x5e, 0x3c,
+0x3d com team_text_shootout, 0x63, 0x61, 0x5d, 0x62, 0x40, 0x41, e o tipo desconhecido), team_text_reply_yours (tecnico na
+tela) e team_text_reply_manager (computador), team_text_links e team_text_headline.
+Compila sobre o HEAD 0f776b971 (copia propria de rust/ e cm0102-base/ com o item pela ancora, cargo build --release ok,
+0 avisos nas linhas do item); com as 4 mutacoes aplicadas juntas, cargo build --release ok. Ancoras das
+mutacoes com 1 ocorrencia cada no motor + item.
+Conferencia: um script (sym2) seguiu cada push e cada [esp+k] da desmontagem ate as 209 chamadas a langlib_sprintf e
+as 7 do sprintf, inclusive os trechos de chamada compartilhados (o compilador salta para um call com os argumentos ja
+empilhados), e as tabelas de salto; os casos de registro duvidoso conferidos na desmontagem crua.
+
+Falta a sessao principal:
+- comparacao ENG ate 2002-06-01: a rotina so roda quando a noticia 0xbdf (post_team_media_story) vai para o tecnico humano
+  da carreira de ferias e o texto e pedido (NewsItem::write_text). Quais tipos rodam nao se sabe (os covered!
+  "sx01_1 team text <assunto>" dizem); o comparador nomeia o pedaco na mensagem (piece ...). Ramos raros: os das
+  selecoes (0x44, 0x5a: so com torneio de selecoes em fase final), o continental com partida ganha, a disputa de penaltis
+  (0x3d), o tipo desconhecido;
+- Rust x2 com detector ate 2002-06-01 (a rotina so escreve texto);
+- as 4 mutacoes (vinculo da manchete, resposta antes da historia, "em casa" nunca marcado, vinculo da competicao) so
+  sao acusadas pelo comparador da rotina (o texto nao volta para a simulacao), como as de texto aceitas em 12/11/2026;
+  as quatro rodam em toda manchete ou todo corpo.
+Defeitos do original: nos tipos 0x50, 0x51 e 0x3d sem partida o texto da historia nunca e escrito (o original zera o
+buffer compartilhado 0xde1f64 no lugar) e o corpo junta o lixo da pilha a resposta; a copia escreve vazio e o comparador
+aceita qualquer prefixo nesse caso. Varios pedacos buscam o adjetivo da nacionalidade e nao o usam (mantido).
+Sem LIGAS.

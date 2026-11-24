@@ -1,0 +1,2 @@
+NAO PROVADO NO JOGO (leitor sx09b, rodada 5, 23/11/2026): compila sobre o HEAD e9661948e (copia propria de rust/ e cm0102-base/ com sx09b_1..8 aplicados pela ancora, sem avisos no codigo dos itens); a mutacao compila; a rotina igual no cm0102.exe e no cm0102-1080.exe. Depende do sx09b_1 (auxiliares de caixa): integrar junto ou depois.
+Roda so com disputa (process_hearings, file_complaint, o dia do jogo), que provavelmente nao acontece na carreira de ferias ENG ate 2002-06-01; a mutacao, entao, provavelmente escapa. Sem LIGAS.

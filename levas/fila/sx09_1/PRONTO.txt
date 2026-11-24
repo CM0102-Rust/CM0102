@@ -1,0 +1,7 @@
+NAO PROVADO NO JOGO (leitor sx09, rodada 5, 23/11/2026): Date::set (0x54a130), Date::sub_weeks (0x54cab0) e Date::get_difference (0x54cc30), item de simulacao. Item de base do grupo sx09 (GameDate, DATE_CPP, as tabelas de dias, date_month_index, date_local_static, write_date_name): os sx09_2..sx09_7 dependem dele (integrar junto ou depois).
+Compila sobre o HEAD e9661948e (copia propria de rust/ e cm0102-base/ com os 7 itens sx09 pela ancora, cargo build --release ok, 0 avisos nas linhas dos itens); com as 18 mutacoes aplicadas juntas, cargo build --release ok; ancoras com 1 ocorrencia cada no motor + itens, cada rotulo com o seu covered!. Prologos iguais no cm0102.exe e no cm0102-1080.exe.
+Falta a sessao principal:
+- comparacao ENG ate 2002-06-01: as tres rodam na carreira (set: banco, amistosos, sede, Setup; sub_weeks: amistosos 0x5c2521, contratos 0x4cfa54, banco 0x535d1f, multas; get_difference: lesoes 0x62c4c8/0x62e2b9/0x630bd6, recordes). O ramo com troca de datas da get_difference passa pelo desvio (a original chama a si mesma pelo endereco).
+- Rust x2 com detector ate 2002-06-01;
+- mutacoes: dia do ano uma semana adiante (set), seis dias por semana (sub_weeks), ano incompleto contado (get_difference): mudam datas que a carreira usa; os comparadores acusam as tres.
+Curiosidade do original: o resultado da get_difference guarda a marca de bissexto da estatica (1, nunca acertada). Sem LIGAS.

@@ -1,0 +1,5 @@
+NAO PROVADO NO JOGO (leitor tel47, rodada 5, 23/11/2026): compila sobre o HEAD 0f776b971 junto com o tel47_2 (sem avisos novos), e com as 6 mutacoes dos dois itens aplicadas.
+Rede: so roda numa partida em rede. Caminho: menu inicial > Iniciar jogo > Jogo em rede (hospedar ou entrar; a tela mostra os enderecos locais e a lista de servidores). O TcpIp::TcpIp e o start_winsock rodam ao abrir a tela de rede (Network::Network).
+Comparadores: parse_ipv4_address e format_ipv4_address lado a lado (entrar num servidor por endereco; a lista de servidores; os enderecos locais); o construtor e os tres fechamentos so a original com o plano conferido; start_winsock, can_resolve_address e o loopback so a original (a prova delas e a partida em rede em modo Rust).
+Mutacoes: tel47_1_endereco_invertido e tel47_1_formato_sem_ultimo (o comparador acusa numa sessao comparando com a tela de rede aberta); tel47_1_loopback_falha (so em modo Rust: "sem TCP/IP").
+Sem RELATIVAS; sem EXE (iguais no cm0102-1080.exe).

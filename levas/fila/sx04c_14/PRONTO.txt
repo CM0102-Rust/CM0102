@@ -1,0 +1,2 @@
+sx04c_14 (simulacao, LIGAS = 'ENG SCO WAL'): compilado sobre o HEAD e9661948e com os sx03_*, sx04_*, sx05_*, sx05b_*, sx04b_* e os sx04c_1..24 aplicados pela ancora (cargo build --release, 0 erros); nao rodado no jogo.
+Prova: LIGAS 'ENG SCO WAL' ate 2002-06-01 (premios no sabado de 23 de maio de 2002).

@@ -1,0 +1,2 @@
+sx05b_16 (simulacao, LIGAS = 'ENG ESP ITA FRA BRA JPN AUS USA'): compilado sobre o HEAD e9661948e com o sx03_2, os sx05_1..6 e os sx05b_1..25 aplicados pela ancora (cargo build --release, 0 erros, nenhum aviso no codigo do sx05b); nao rodado no jogo.
+Integrar depois do sx05b_5 e do sx03_2. A prova: comparacao e mutacoes com as 8 ligas ate 2002-06-01 (os premios da MLS em 2001-11-25; o premio do mes passa a temporada no fim da temporada dos EUA).

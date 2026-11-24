@@ -1,0 +1,2 @@
+sx05b_13 (simulacao, LIGAS = 'ENG SWE FIN NOR POR'): compilado sobre o HEAD e9661948e com o sx03_2, os sx05_1..6 e os sx05b_1..25 aplicados pela ancora (cargo build --release, 0 erros, nenhum aviso no codigo do sx05b); nao rodado no jogo.
+Integrar depois do sx05b_5 e do sx03_2. A prova: comparacao e mutacoes com LIGAS ate 2002-06-01 (a equipe da semana sueca; as regras na criacao do jogo).

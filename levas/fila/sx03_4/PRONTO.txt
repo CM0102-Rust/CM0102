@@ -1,0 +1,4 @@
+sx03_4 (simulacao, carreira ENG ate 2002-06-01, sem LIGAS): compilado sobre o HEAD 0f776b971 junto com sx03_2 (usa
+nation_award e awards_day_is de la: integrar na mesma leva ou depois). Nao rodado no jogo. Diaria internacional e
+notas da liga so a original; Dinamarca pelo compare_transfer_rules_ctor. Na janela, a diaria internacional so da o
+jogador do ano mundial em 6/5/2002 (6 e 16 de junho ficam depois de 2002-06-01). Mutacoes 3.

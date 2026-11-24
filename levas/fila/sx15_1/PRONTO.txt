@@ -1,0 +1,9 @@
+NAO PROVADO NO JOGO (leitor sx15, rodada 5, 24/11/2026): compila sobre o HEAD e9661948e junto com o sx15_2 (copia propria,
+0 erros e 0 avisos nas linhas do item); prologo de 7 bytes conferido (o mesmo do PROLOGUE_6EAEA0 do portao); argumentos
+e x87 conferidos na desmontagem (0x6eaea0..0x6ebd5a). Ancoras das 3 mutacoes aparecem 1 vez no motor com o item.
+ANTES: INTEGRAR_ANTES.txt (tirar o portao gate_6eaea0/init_player_hook; sem isso o routines! e recusado na comparacao).
+Comparador: dentro de fita = unidade (como o portao) com a comparacao lado a lado por dentro; fora = side_by_side
+(jogador, cabeca do jogo, buffer 0xde1f64, sorteio, regioes do treino); pessoa que o comparador do treino deixa a
+original (sem agenda, treino de posicao...) roda so a original.
+Falta: comparacao ENG ate 2002-06-01 (roda em toda partida), Rust x2 com detector, mutacoes 3 (a do classico e a da
+frustracao calma podem escapar da carreira se nenhum ramo delas mudar resultado; a da confianca pega todo jogador).

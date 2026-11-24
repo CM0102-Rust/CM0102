@@ -1,0 +1,5 @@
+Para o DEFEITOS_DO_ORIGINAL na publicacao (leitor tel43, 23/11/2026):
+1. 0x4a08a8 Comp_Stats::record_match_result: o nivel da multa da federacao sao 3 bits com sinal e o aumento testa "< 4" (sempre verdadeiro): do nivel 3 vai a 4 = -4 e o clube nunca mais e multado.
+2. 0x4a085f: no nivel 3 o nivel vai a 0x58a4d0 num dword com bytes altos nao escritos (so o byte e lido: sem efeito).
+3. a variante da historia da midia vai num dword com o indice da busca nos bytes altos (post_team_media_story le so o byte: sem efeito).
+4. a idade dos recordes de mais novo/mais velho e a de hoje, comparada com a do recordista no dia da partida dele.

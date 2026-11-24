@@ -1,0 +1,4 @@
+  aguardando: so 0.9 GB de RAM livre (minimo 2.0)
+    pool nao paginado 2.35 -> 2.42 GB, paginado 5.93 -> 6.21 GB
+execucao 1: tempo esgotado (3600 s) antes de chegar em 2002-01-01 (3603 s)
+game.cfg restaurado; auto_setup.cfg removido

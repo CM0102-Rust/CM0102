@@ -2,7 +2,7 @@
 
 Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os arquivos-fonte do mapa de [maxevans60](https://github.com/maxevans60/cm0102-function-map) (CC BY 4.0). Uma função conta quando o início dela é desviado para Rust (`Prologue` em `rust/src/motor.rs`). O placar do motor de partidas, pelas nossas fronteiras, fica em `PLACAR.md`.
 
-**Exe inteiro:** 3788 de 6709 funções, 3682.2 de 5528.0 KB (**66.61%**) · 291 de 393 arquivos com rotinas em Rust
+**Exe inteiro:** 3793 de 6709 funções, 3694.9 de 5528.0 KB (**66.84%**) · 291 de 393 arquivos com rotinas em Rust
 
 | Arquivo | Funções | KB | Progresso |
 |---|---|---|---|
@@ -47,6 +47,7 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `fra_lower.cpp` | 4/5 | 3.3/3.3 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **99.1%** |
 | `ita_ser_c1b.cpp` | 10/12 | 16.4/16.6 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **98.7%** |
 | `ita_ser_c1a.cpp` | 9/11 | 16.2/16.4 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **98.7%** |
+| `award_shortlist.cpp` | 12/13 | 3.9/4.0 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **98.4%** |
 | `fra_cfa.cpp` | 5/8 | 3.8/3.9 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **98.4%** |
 | `spa_lower.cpp` | 5/7 | 10.2/10.4 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **98.0%** |
 | `spa_second.cpp` | 5/7 | 9.2/9.4 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **97.7%** |
@@ -89,6 +90,7 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `australia_rules.cpp` | 2/3 | 0.4/0.4 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **92.9%** |
 | `nor_cup.cpp` | 4/6 | 3.0/3.3 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **92.9%** |
 | `bel_fa_cup.cpp` | 4/6 | 3.0/3.2 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **92.8%** |
+| `comp_screens.cpp` | 104/106 | 115.1/124.2 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **92.6%** |
 | `sco_fa_cup.cpp` | 4/6 | 2.9/3.2 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **92.6%** |
 | `sco_prm.cpp` | 7/13 | 9.0/9.7 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **92.4%** |
 | `fin_cup.cpp` | 4/6 | 2.9/3.1 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **92.4%** |
@@ -96,7 +98,6 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `tur_cup.cpp` | 4/6 | 2.7/2.9 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **92.0%** |
 | `jap_emp_cup.cpp` | 4/7 | 3.2/3.5 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **92.0%** |
 | `por_cup.cpp` | 4/7 | 3.1/3.4 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **91.7%** |
-| `award_shortlist.cpp` | 8/13 | 3.7/4.0 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **91.4%** |
 | `ire_munster_cup.cpp` | 4/6 | 2.5/2.7 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **91.4%** |
 | `pol_cup.cpp` | 4/7 | 3.0/3.2 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **91.3%** |
 | `con_champ.cpp` | 6/8 | 2.4/2.7 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **91.2%** |
@@ -159,7 +160,6 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `asia_super_cup.cpp` | 4/7 | 1.7/2.1 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **83.3%** |
 | `ita_cup.cpp` | 12/17 | 6.2/7.5 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **83.0%** |
 | `ita_c_cup.cpp` | 12/17 | 6.0/7.2 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **82.8%** |
-| `comp_screens.cpp` | 103/106 | 102.7/124.2 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **82.7%** |
 | `aus_nsl.cpp` | 10/16 | 4.7/5.7 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **82.6%** |
 | `host_country.cpp` | 8/12 | 5.9/7.1 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **82.4%** |
 | `conmebol_liber.cpp` | 11/16 | 4.8/5.9 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **81.9%** |

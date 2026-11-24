@@ -1,0 +1,2 @@
+sx05b_4 (simulacao, LIGAS = 'ENG', ATE = '2002-08-01'): compilado sobre o HEAD e9661948e com o sx03_2, os sx05_1..6 e os sx05b_1..25 aplicados pela ancora (cargo build --release, 0 erros, nenhum aviso no codigo do sx05b); nao rodado no jogo.
+Integrar depois do sx05b_5. A prova: comparacao ENG ate 2002-08-01 (o texto das noticias dos premios do ano); as mutacoes sao de comparador. Os modelos especiais dependem do sorteio e do id do primeiro nome (nao multiplo de 10): poucos casos por temporada.

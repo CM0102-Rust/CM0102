@@ -1,0 +1,10 @@
+Antes de integrar (vale para o sx15_1 e o sx15_2, que entram juntos ou um depois do outro): no instalar() do
+rust/src/motor.rs, tirar do bloco `if comparando` os hooks de portão destas rotinas (gate_716630, gate_716e10 e
+gate_716c90 para o sx15_2; gate_6eaea0 para o sx15_1); senão o routines! acha os prólogos já desviados e recusa as
+rotinas na comparação. Ficam mortos e saem junto: em rust/src/motor/match_eng.rs, START_FIGHT_TRAMPOLINE,
+PROLOGUE_716630, REACT_TO_FOUL_DECISION_TRAMPOLINE, PROLOGUE_716E10, HANDLE_SUSPECTED_DIVE_TRAMPOLINE,
+PROLOGUE_716C90, gate_match_player_call, gate_start_fight, gate_react_to_foul_decision e gate_handle_suspected_dive
+(RECORD_716 fica: os comparadores usam); em rust/src/motor/match_man.rs, INIT_MATCH_PLAYER_TRAMPOLINE,
+PROLOGUE_6EAEA0 e init_player_hook. Ninguém mais usa esses nomes (grep em rust/src e engenharia-reversa,
+24/11/2026). Os comparadores dos itens fazem o papel dos portões: dentro da fita de outra rotina viram unidade
+(call_recording), como antes.

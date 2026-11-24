@@ -1,0 +1,4 @@
+NAO PROVADO NO JOGO (leitor tel46, rodada 5, 23/11/2026): compila sobre o HEAD 0f776b971 junto com tel46_1/2 e com as mutacoes. Iguais no cm0102-1080.exe.
+Tipo TELAS (rede). Depende do tel46_1 (network_buffer_put_long): entram na mesma leva ou o tel46_1 antes.
+So numa partida em rede (o servidor mandando as telas a um cliente: Display::log_screen_sent e o comando 5). Comparador: so a original; o plano e o pacote da copia montado antes num buffer de rascunho de 1 MB (secoes 0 e 1, byte a byte, e o retorno), o retorno das secoes 2 e 3.
+Mutacoes (acusadas pelo comparador em rede): tel46_3_sempre_tudo (do 2o envio em diante), tel46_3_formato_de_cor.

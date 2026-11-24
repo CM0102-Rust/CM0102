@@ -1,0 +1,28 @@
+NAO PROVADO NO JOGO (leitor sx01d, rodada 5, 23/11/2026): Media::apply_team_story_response (0x73e870..0x74101b, 10.160
+bytes; ret 0x10 em 0x741018, sem tabela de saltos) portada inteira, um desvio so (prologo 83 ec 20 53 55), em pedacos com
+nome: apply_team_story_response (cabeca e despacho), team_story_standard + team_story_raise (0x63/0x5b/0x61, 0x62/0x5d,
+0x5f, 0x5c), team_story_relegation (0x3f, 0x60), team_story_minus_thousand + team_story_minus_thousand_low +
+team_story_promotion_reply + team_story_promotion_board (0x40/0x41), team_story_injuries (0x43), team_story_fixed (0x42),
+team_story_subject (0x52), team_story_supporters_only (0x44/0x5a) e team_story_crowd (0x3c/0x3d).
+Compila sobre o HEAD e9661948e (copia propria de rust/ e cm0102-base/ com sx01_1, sx01b_1, sx01c_1, sx01c_2 e sx01d_1..6
+pela ancora; cargo build --release ok, 0 avisos nas linhas dos itens); com as 13 mutacoes dos sx01d aplicadas juntas, ok.
+Ancoras das mutacoes com 1 ocorrencia cada em rust/src.
+Depende do sx01c_1 (STORY_F32_30); as tres chamadas (0x738340, 0x7386f0, 0x736c00) vao pelo endereco (player_story_fns).
+Conferencia: cada push, cada [esp+k] e cada par x87 seguidos na desmontagem, ramo a ramo (o pseudo-C do Ghidra erra os
+argumentos do _ftol: ex. o +500 da diretoria na resposta 1 do 0x5f nao aparece nele).
+
+Falta a sessao principal:
+- comparacao: o comparador so roda a original (a rotina sorteia, posta noticias pelas confiancas e passa a reacao ao
+  elenco); a prova e a carreira;
+- Rust x2 com detector ate 2002-06-01 (44 chamadas na carreira ENG, docs/cobertura_simulacao.txt);
+- as 4 mutacoes: base x30 em vez de x67 (quase todos os tipos), o peso dos efeitos dobrado (todos os ramos que chamam
+  os efeitos), as marcas 4 em vez de 8 na resposta 2 do molde comum, a soma dos sorteios na resposta 3 de 0x3c/0x3d.
+Quais tipos rodam nao se sabe: os covered! "sx01d_1 team story ..." dizem. Ramos raros: 0x52 (pessoa), 0x44/0x5a
+(selecoes), o 0x40/0x41 com o objeto da divisao (+0x1c, +0xbf sem nome).
+Defeitos do original (para o DEFEITOS):
+- 0x73fa1a: 0x43 resposta 2 com as expectativas 6 passa aos efeitos a conta das marcas 9 (-500 - stat x 30), nao a
+  propria (-1500 - stat x 40);
+- 0x73f735: 0x60 resposta 1 passa aos efeitos trunc(-x/mult) e as confiancas +x/mult (o 0x3f usa -x/mult nos dois);
+- 0x73fac6/0x73fbc3/0x73fcd0/0x73fe91: os alvos sao o dword do slot do tipo ou da base com a palavra baixa trocada (a
+  copia reproduz; as confiancas so usam a palavra).
+Sem LIGAS.
