@@ -1,0 +1,4 @@
+sx18_5 (simulacao ENG): read_staff_name_ref_from_news (0x7e52c0), write_date_span_record_to_news (0x7e5420), read_date_span_record_from_news (0x7e5570).
+Compilado sobre o HEAD 589af8252 (e antes sobre o e9661948e) (copia propria de rust/ e cm0102-base/, os sx18_1..29 aplicados pela ancora, cargo build --release ok, 0 avisos nas linhas dos itens; com todas as mutacoes aplicadas juntas, ok). Prologos conferidos (nenhum com call/salto relativo) e as rotinas iguais no cm0102-1080.exe. Nao rodado no jogo.
+Depende do sx18_4 (integrar depois).
+Prova: comparacao ENG ate 2002-06-01 (ler a referencia de nome); o registro de periodo nao rodou no mundo ate 2002-08-01: as 2 mutacoes dele podem escapar (so o comparador as ve quando rodar).

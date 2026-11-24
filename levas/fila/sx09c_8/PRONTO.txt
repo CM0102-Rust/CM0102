@@ -1,0 +1,2 @@
+sx09c_8 compilado sobre o HEAD c269cb610 junto com sxA_1 e sx09c_7/8 (cópia própria, cargo build --release, sem aviso novo). Não rodado no jogo.
+Prova: simulação ENG até 2002-06-01 (sem LIGAS). A multa roda pela AWOL na carreira de férias (motivo 5); as mutações pela carreira (modo Rust) e, no sx09c_8, também pelo comparador lado a lado.

@@ -1,0 +1,1 @@
+Depende do cx04_5 (group_championship_fate_text, group_championship_progress e os comparadores).

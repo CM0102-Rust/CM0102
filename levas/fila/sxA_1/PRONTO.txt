@@ -1,0 +1,6 @@
+sxA_1 (NewsItem::auto_respond 0x784100): compilado sobre o HEAD c269cb610 (cópia própria, cargo build --release, sem
+aviso novo). Não rodado no jogo.
+Prova: simulação ENG até 2002-06-01 (sem LIGAS). Comparador só a original (tipo e id da notícia inalterados); a cópia é
+provada pelas 3 mutações na carreira Rust (amistoso recusado, empréstimo recusado, pedido de lista sempre recusado).
+Ramos de seleção (0x1e, 0x22) só com o humano técnico de seleção; o caso "clube fora dos convidados do torneio" roda a
+original (byte de pilha sem valor no original).

@@ -1,0 +1,1 @@
+Depende do sx20_3 (sx20_compare_pure).

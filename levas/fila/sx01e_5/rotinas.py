@@ -18,7 +18,7 @@
 # - o agradecimento escreve no buffer compartilhado 0xde1f64; o assistente (vagas 13..16) so com a vaga 12 = 0x420e9,
 #   senao o nome vazio (o byte 0xad9c64).
 SAVE = False
-TELAS = True
+# 24/11/2026: provado pela carreira automatica com o modo de textos (CM_TEXTOS=1 na cadeia); deixou de ser TELAS.
 ROTINAS = [('write_signing_celebration_news_text', 0x75b9c0, [0xb8, 0x50, 0x20, 0x00, 0x00]),
            ('write_trophy_praise_news_text', 0x75c5a0, [0xb8, 0xd4, 0x41, 0x00, 0x00]),
            ('write_player_gratitude_news_text', 0x733000, [0x8b, 0x44, 0x24, 0x08, 0x81, 0xec, 0x08, 0x08, 0x00, 0x00])]

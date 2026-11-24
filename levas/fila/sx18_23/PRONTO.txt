@@ -1,0 +1,4 @@
+sx18_23 (LIGAS = 'ENG KOR ARG ITA FRA ESP AUS', ATE = '2002-08-01'): rb_korea_process_match_cards (0x7e0780), rb_asia_process_match_cards (0x7db3b0).
+Compilado sobre o HEAD 589af8252 (e antes sobre o e9661948e) (copia propria de rust/ e cm0102-base/, os sx18_1..29 aplicados pela ancora, cargo build --release ok, 0 avisos nas linhas dos itens; com todas as mutacoes aplicadas juntas, ok). Prologos conferidos (nenhum com call/salto relativo) e as rotinas iguais no cm0102-1080.exe. Nao rodado no jogo.
+Depende do sx18_1, sx18_2 e sx18_22 (integrar depois).
+Prova: comparacao com LIGAS 'ENG KOR ARG ITA FRA ESP AUS' ate 2002-08-01 (construtores na criacao do jogo, regras a cada partida com cartao das competicoes do pais); Rust x2 + detector; as mutacoes do mutacoes.py (as de escala so pelo comparador do construtor).

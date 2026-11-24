@@ -1,0 +1,1 @@
+Depende do sx20_2 (SIMULATED_STATS_SOURCE) e do sx20_6 (STAFF_RECORDS_SOURCE, MANAGER_RECORD_SIZE); estes dependem do sx20_1.

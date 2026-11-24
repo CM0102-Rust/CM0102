@@ -1,0 +1,7 @@
+NAO PROVADO NO JOGO (leitor sxB, rodada 5, 24/11/2026): MANAGER_MANAGER::build_board_squad_opinion_text 0x693850,
+inteira, um desvio, em pedacos com nome. Item de SIMULACAO: roda pelo modo CM_TEXTO_NOTICIAS quando sai a noticia da
+confianca da diretoria (6, 0x1772) (news_board_confidence_update_text, ja em Rust, a chama pelo endereco do exe) e
+na tela da confianca da diretoria.
+Compila sobre o HEAD c269cb610 (0 avisos nas linhas do item); com as mutacoes, compila; ancoras com 1 ocorrencia.
+Comparador proprio: a original no buffer e nos ids do chamador, a copia num buffer e numa lista locais, lado a lado
+sobre G_CONTRACT_LOOKUP_RESULT; texto, contagem e ids conferidos.

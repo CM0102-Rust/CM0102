@@ -23,7 +23,7 @@
 # entregam ao Text o buffer de texto nunca escrito (lixo da pilha); a copia escreve vazio e o comparador aceita
 # qualquer texto nesse caso (MEDIA_TEXT_UNSET). A 0x758fe0 busca o adjetivo de nacionalidade da vaga 12 e nao o usa.
 SAVE = False
-TELAS = True
+# 24/11/2026: provado pela carreira automatica com o modo de textos (CM_TEXTOS=1 na cadeia); deixou de ser TELAS.
 ROTINAS = [('write_player_apology_news_text', 0x72bd50, [0xb8, 0x28, 0x15, 0x00, 0x00]),
            ('write_player_backing_request_news_text', 0x7435a0, [0xb8, 0x34, 0x15, 0x00, 0x00]),
            ('write_player_criticism_reaction_news_text', 0x743d30, [0xb8, 0x88, 0x15, 0x00, 0x00]),

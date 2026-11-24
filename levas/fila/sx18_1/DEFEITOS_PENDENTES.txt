@@ -1,0 +1,23 @@
+Defeitos achados pelo leitor sx18 (rodada 5, 24/11/2026), para o DEFEITOS_DO_ORIGINAL.md e para a sessao principal:
+
+1. NO PORTE (Rust ja publicado, nao no original): Discipline::create_rule_sets (rust/src/motor/discipline.rs,
+   discipline_create_rule_sets, leva 290, sma_5) aloca 0x23 bytes para todos os orgaos, mas o original aloca 0x2b para o
+   ingles (0x55d733: push 0x2b antes de 0x7dcf90), porque RbEngland::RbEngland constroi uma data em +0x23..+0x2a. No modo
+   Rust o construtor ingles escreve 8 bytes alem do bloco (estouro de heap). Correcao: crt_operator_new(0x2b) na vaga
+   0x24 (KEY_NATION_ENGLAND). Nao mexi em rust/src.
+2. Original, todas as regras de cartoes (rb_*::process_match_cards): o byte de marcas da suspensao (+0x13 do BanRecord)
+   sai com os bits 0 e 3..7 do lixo da pilha (so o bit 2 e calculado; o bit 0 o add_ban grava). A copia grava 0.
+3. Original, a suspensao por pontos pendente (make_points_ban num no de 0x70 bytes na pilha): +0x11..+0x13 (quantidade e
+   marcas) nunca sao gravados (lixo da pilha); viram a suspensao no dia. A copia grava 0.
+4. Original, RbFrance::process_match_cards: o no pendente da terceira partida com cartao sai com +0x13 e +0x6f do lixo
+   da pilha (ou do no do vermelho na mesma chamada). A copia grava 0.
+5. Original, RbKorea::is_one_booking_from_ban avisa com 2, 5, 8... amarelos (de 3 em 3), mas a regra coreana suspende no
+   3o e em cada impar depois (3, 5, 7...): o aviso nao bate com a regra.
+6. Original, RbEngland::is_one_booking_from_ban so dispensa o 4o amarelo entre os dias 101 e 170 do ano, mas a regra so
+   conta o 5o em partida antes de 1o de marco do segundo ano da temporada: de marco ao dia 100 o aviso aparece e o 5o
+   amarelo nao suspende. (Pode ser intencional; registrado.)
+7. Diferencas entre irmaos que podem ser intencionais: o vermelho sem codigo de falta da 1 jogo na liga japonesa e nada
+   na copa; o vermelho direto belga (liga) nao suspende na hora (so a suspensao por pontos pendente); na Grecia a
+   suspensao por amarelos cresce (conta/3 jogos), nao e "um jogo a cada terceiro" como diz o mapa.
+8. Nome duplicado a unificar: o sx18_1 declara FN_POST_BAN_NEWS (0x557280); o sx09c_5 declara FN_DISCIPLINE_POST_BAN_NEWS
+   e o sx09b_1 porta a rotina (post_ban_news). Quando os tres estiverem integrados, chamar a do sx09b_1.

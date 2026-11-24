@@ -1,0 +1,4 @@
+sx18_2 (simulacao ENG): rb_europe_construct (0x7dd400), rb_international_construct (0x7df180), rb_asia_construct (0x7db360).
+Compilado sobre o HEAD 589af8252 (e antes sobre o e9661948e) (copia propria de rust/ e cm0102-base/, os sx18_1..29 aplicados pela ancora, cargo build --release ok, 0 avisos nas linhas dos itens; com todas as mutacoes aplicadas juntas, ok). Prologos conferidos (nenhum com call/salto relativo) e as rotinas iguais no cm0102-1080.exe. Nao rodado no jogo.
+Depende do sx18_1 (integrar depois).
+Prova: comparacao ENG (os tres construtores na criacao do jogo, conferidos contra a classe); as 3 mutacoes de escala/regra sao do comparador.

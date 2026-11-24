@@ -25,7 +25,7 @@
 # -1) o original usa um registrador velho (a copia usa nulo; a 0x759610 nunca grava -1 ali). Na 0x75d210 o veiculo
 # (pundit ou jornal) e escrito e nenhum modelo o usa.
 SAVE = False
-TELAS = True
+# 24/11/2026: provado pela carreira automatica com o modo de textos (CM_TEXTOS=1 na cadeia); deixou de ser TELAS.
 ROTINAS = [('write_obscene_gesture_news_text', 0x7572a0, [0x6a, 0xff, 0x68, 0x1b, 0xd9, 0x95, 0x00]),
            ('media_write_sale_unrest_news_text', 0x75d210, [0xb8, 0x10, 0x21, 0x00, 0x00]),
            ('write_player_sent_off_news_text', 0x759a10, [0x6a, 0xff, 0x64, 0xa1, 0x00, 0x00, 0x00, 0x00])]

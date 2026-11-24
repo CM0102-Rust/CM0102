@@ -1,0 +1,2 @@
+sx21_3 (simulacao, carreira ENG ate 2002-06-01): compilado sobre o HEAD c269cb610 com os itens sx21_1..sx21_37 aplicados pela ancora (cargo build --release sem erro e sem aviso no codigo do item). Nao rodado no jogo.
+Prova: carreira ENG comparando; o texto so e escrito quando a noticia de prazo chega ao tecnico humano (uma semana antes, na vespera e no dia do fim de cada janela inglesa); mutacoes 2 pelo compare_text_writer. A noticia: so a original no comparador, sem mutacao.

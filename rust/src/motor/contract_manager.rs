@@ -6118,3 +6118,724 @@ pub(crate) struct ContractOfferChoice {
     /// how many stale offers were taken out of the list
     pub(crate) removed: u32,
 }
+
+/// Posts news item 3000 (0xbb8) that a person accepted or rejected a contract offer, with the offer's terms, and picks
+/// the clubs that receive it.
+///
+/// `post_offer_response_news(offer, refused)` (the contract manager in ecx; SEH frame for the local list and news
+/// item). The offer is a `ContractOffer` (the `Contract` terms and the offer fields); the person is `staff_at` of its
+/// id, the club `club_at` of `contract_offer::CLUB_ID`, and his contract with the club
+/// (`exe::contract_manager_get_contract_for_club`, possibly none). The slots: 0 the person's id, 1-3 his name ids, 4 the
+/// club's id, 5 `.state()` (signed), 6-7 the contract end (`contract::CONTRACT_EXPIRES`, signed day and year), 8 the
+/// linked transfer offer slot (`.transfer_offer_slot()`), 10 the low 6 bits of `.contract_type()` (signed), 11 1 when
+/// the offer's `.mark()` is not a player job (`exe::database_is_player_job`). With a linked transfer offer (slot ≠ −1):
+/// its record (`exe::transfer_manager_get_offer_slot`); an empty slot gives the "Error" box (line 0x20c3) and nothing
+/// is sent; otherwise slot 9 is its `offer::SERIAL`. Slot 12 the reasons the shortlist interest returns
+/// (`exe::shortlist_manager_staff_interest_in_joining_club` with wage 0, the 6-bit contract type and the squad status
+/// `.squad_status()` >> 4; the value itself is dropped). Slots 13-16 the club manager's id and name ids (−1 without
+/// one). Slot 17 by `offer_response_contract_end_code` (only with `refused`, which it may clear). Slot 18 0x420e9,
+/// slot 19 random(3), slot 20 1 when there is a contract with the club and the offer is agreed (state 2), 21 the
+/// mark (signed), 22 the wage (`contract::WAGE`), 23 `contract::UNKNOWN`, 24-25 the start date
+/// (`contract::DATE_STARTED`), 26 `offer_response_veteran`, 27 bit 7 of the person's `staff_state::STATUS_FLAGS`.
+/// Who gets it: when `refused` is still set, or the agreed renewal of a contract with fewer than 180 days left
+/// (`exe::staff_contract_days_to_end_date`), the clubs the transfer manager picks for the player's news
+/// (`exe::transfer_manager_collect_player_news_recipients`, 0x21a, up to 30; none without a player sheet);
+/// otherwise the club, and for an agreed player contract (type 2) also the clubs interested in him
+/// (`exe::shortlist_manager_collect_interested_clubs` with 1, 1, 0), each but the club itself.
+/// Original: `contract_manager_post_offer_response_news` (0x4d49a0, contract_manager.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn contract_manager_post_offer_response_news(this: usize, offer: usize, refused: u32) {
+    let offer = Contract(offer);
+    let mut refused = refused;
+    let mut list = [0u8; 0xe];
+    let l = Llist(list.as_mut_ptr() as usize);
+    exe::new_llist(l);
+    let terms = Contract(offer.addr());
+    let o = ContractOffer(offer.addr());
+    let p = staff_at(read_i32(offer.addr()) as isize);
+    let club = club_at(o.club_id() as i32 as isize);
+    let contract = Contract(exe::contract_manager_get_contract_for_club(this, p, club));
+    let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
+    let n = local.as_mut_ptr() as usize;
+    exe::new_newsitem(n, 0xbb8, 0);
+    let set = |k: i8, v: u32| {
+        exe::newsitem_set_slot(n, k, v);
+    };
+    set(0, read_u32(p.addr()));
+    set(1, read_u32(p.first_name() + names::ID));
+    set(2, read_u32(p.second_name() + names::ID));
+    set(3, read_u32(p.common_name() + names::ID));
+    set(4, o.club_id() as u32);
+    set(5, o.state() as i8 as i32 as u32);
+    set(6, terms.contract_expires() as i32 as u32);
+    set(7, terms.contract_expires_year() as u16 as u32);
+    set(8, o.transfer_offer_slot() as u32);
+    let kind = ((terms.contract_type() << 2) as i8 >> 2) as i32; // sx07_1: the 6-bit contract type
+    set(0xa, kind as u32);
+    set(0xb, (exe::database_is_player_job(o.mark() as i8) == 0) as u32);
+    if o.transfer_offer_slot() as i32 != -1 {
+        let slot = Offer(read_usize(exe::transfer_manager_get_offer_slot(read_usize(G_TRANSFER_MANAGER), o.transfer_offer_slot() as i32)));
+        if slot.is_null() {
+            show_error_at(0x9a8190, 0x20c3);
+            exe::drop_llist(l);
+            return;
+        }
+        set(9, slot.serial() as u32);
+    }
+    let mut reasons = 0u32;
+    let shortlists = read_usize(read_usize(G_TRANSFER_MANAGER) + transfer_manager_fields::SHORTLIST_MANAGER);
+    exe::shortlist_manager_staff_interest_in_joining_club(shortlists, p, club, 0, kind as u8 as u32, (terms.squad_status() >> 4) as u32, (&mut reasons) as *mut u32 as u32);
+    set(0xc, reasons);
+    let manager = club.manager();
+    if !manager.is_null() {
+        set(0xd, read_u32(manager.addr()));
+        set(0xe, read_u32(manager.first_name() + names::ID));
+        set(0xf, read_u32(manager.second_name() + names::ID));
+        set(0x10, read_u32(manager.common_name() + names::ID));
+    } else {
+        for k in 0xd..=0x10 {
+            set(k, u32::MAX);
+        }
+    }
+    let code = offer_response_contract_end_code(contract, &mut refused); // sx07_1: the contract end code
+    set(0x11, code);
+    set(0x12, 0x420e9);
+    set(0x13, exe::utils_random(3) as u32); // sx07_1: the headline's draw
+    let agreed = o.state() == 2;
+    set(0x14, (!club.is_null() && !contract.is_null() && agreed) as u32);
+    set(0x15, o.mark() as i8 as i32 as u32);
+    set(0x16, terms.wage() as u32);
+    set(0x17, terms.unknown());
+    set(0x18, (offer.date_started() as i16) as i32 as u32);
+    set(0x19, terms.date_started_year() as u16 as u32);
+    set(0x1a, offer_response_veteran(p, terms));
+    set(0x1b, (read_u8(contract_manager_staff_state_record(read_usize(p.addr())) + staff_state::STATUS_FLAGS) >> 7) as u32);
+    if refused != 0 || (!club.is_null() && !contract.is_null() && exe::staff_contract_days_to_end_date(contract) < 0xb4 && agreed) {
+        covered!("sx07_1 offer response to the transfer recipients");
+        let tm = read_usize(G_TRANSFER_MANAGER);
+        let mut clubs = [0usize; 0x1e];
+        let k = if tm != 0 && !p.player().is_null() {
+            exe::transfer_manager_collect_player_news_recipients(tm, p, 0x21a, clubs.as_mut_ptr(), 0x1e) as i8
+        } else {
+            0
+        };
+        for &c in clubs.iter().take(k.max(0) as usize) {
+            offer_response_send(n, Club(c));
+        }
+    } else {
+        covered!("sx07_1 offer response to the club");
+        offer_response_send(n, club_at(o.club_id() as i32 as isize)); // sx07_1: the club gets it
+        if agreed && terms.contract_type() & 0x3f == 2 {
+            exe::shortlist_manager_collect_interested_clubs(shortlists, p, l, 1, 1, 0);
+            l.set_cursor(l.head());
+            let mut x = exe::llist_get_next(l);
+            while x != 0 {
+                let id = read_usize(x + 4);
+                if id != o.club_id() {
+                    offer_response_send(n, club_at(id as i32 as isize));
+                }
+                x = exe::llist_get_next(l);
+            }
+        }
+    }
+    exe::drop_llist(l);
+}
+
+/// Comparer for `contract_manager_post_offer_response_news`, as a dry run: the copy runs first without sending (it
+/// keeps each send), then the original from the same random generator state. Compares the generator's state and the
+/// news items that reached the human managers' inboxes (the only thing the delivery keeps:
+/// `send_to_club_manager` only delivers to a human manager) with the copy's sends to clubs with a human manager. The
+/// empty linked transfer offer (the "Error" box) runs the original only.
+pub(crate) unsafe extern "thiscall" fn compare_contract_manager_post_offer_response_news(this: usize, offer: usize, refused: u32) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_CONTRACT_MANAGER_POST_OFFER_RESPONSE_NEWS);
+    let slot = ContractOffer(offer).transfer_offer_slot() as i32;
+    if slot != -1 && read_usize(exe::transfer_manager_get_offer_slot(read_usize(G_TRANSFER_MANAGER), slot)) == 0 {
+        return o(this, offer, refused);
+    }
+    let inboxes = human_inbox_positions();
+    let rng = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
+    OFFER_RESPONSE_NEWS_SENT.lock().unwrap_or_else(|e| e.into_inner()).clear();
+    OFFER_RESPONSE_NEWS_DRY_RUN.store(true, Relaxed);
+    crate::rng::pause_trace(|| crate::rng::without_counting(|| contract_manager_post_offer_response_news(this, offer, refused)));
+    OFFER_RESPONSE_NEWS_DRY_RUN.store(false, Relaxed);
+    let rng_rust = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
+    let sent = core::mem::take(&mut *OFFER_RESPONSE_NEWS_SENT.lock().unwrap_or_else(|e| e.into_inner()));
+    rng.write_back();
+    o(this, offer, refused);
+    let rng_original = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
+    let staff_count = read_i32(G_STAFF_COUNT);
+    let mut expected: Vec<Vec<u8>> = sent
+        .iter()
+        .filter(|(c, _)| {
+            let m = Club(*c).manager();
+            !m.is_null() && read_i32(m.addr()) >= staff_count.wrapping_sub(0x10)
+        })
+        .map(|(_, b)| {
+            let mut b = b.clone();
+            b[news_item::IMPORTANT] = 0;
+            b
+        })
+        .collect();
+    expected.sort();
+    let delivered = offer_response_delivered(&inboxes);
+    let same = rng_original == rng_rust && (inboxes.is_empty() || delivered == expected);
+    SCOREBOARD.record(same, || {
+        format!(
+            "contract_manager_post_offer_response_news(offer {:#x}, refused {}) rng same {}; {} sends, human items original {:x?} rust {:x?}",
+            offer,
+            refused,
+            rng_original == rng_rust,
+            sent.len(),
+            delivered,
+            expected
+        )
+    });
+}
+
+/// Writes the headline or the body of news item 0xbb8, that a person accepted or rejected a contract or trial offer.
+///
+/// `write_offer_response_news_text(news, full, out)` (the contract manager in ecx, not read): reads the item
+/// (`offer_text_read`). The headline (`full` = 0) by `offer_text_headline`; another state than 1, 2 or 3 gives the
+/// "Error" box and writes nothing. The body: agreed (state 2) `offer_text_accepted_body`, rejected (state 1)
+/// `offer_text_rejected_body`, state 3 0x9a841c (willing to negotiate, with the club's short name); another state
+/// leaves the shared text buffer as it was. Then the text (`exe::text_set_string`) and the links (`offer_text_links`).
+/// Defect of the original: the manager's name is formatted with slot 17 (the contract end code) as the person id and
+/// only when that is not negative; the body of another state shows whatever the shared buffer had.
+/// Original: `contract_manager_write_offer_response_news_text` (0x4d4fb0, contract_manager.cpp, thiscall, ret 0xc).
+pub(crate) unsafe extern "thiscall" fn contract_manager_write_offer_response_news_text(_this: usize, news: usize, full: u32, out: usize) {
+    covered!("sx07_2 offer response text");
+    let mut t = offer_text_read(news);
+    if full == 0 {
+        if !offer_text_headline(&t) {
+            return;
+        }
+    } else {
+        match t.state {
+            2 => offer_text_accepted_body(&mut t),
+            1 => offer_text_rejected_body(&mut t),
+            3 => {
+                let (g, short) = t.short();
+                news_text_format()(NEWS_TEXT_BUFFER, 0x9a841c, g, g, OfferText::ptr(&t.name), short);
+            }
+            _ => {}
+        }
+    }
+    exe::text_set_string(out, NEWS_TEXT_BUFFER as *const u8);
+    offer_text_links(&t, out);
+}
+
+/// Comparer for `contract_manager_write_offer_response_news_text`: the text side by side (`compare_text_writer`).
+pub(crate) unsafe extern "thiscall" fn compare_contract_manager_write_offer_response_news_text(this: usize, news: usize, full: u32, out: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_CONTRACT_MANAGER_WRITE_OFFER_RESPONSE_NEWS_TEXT);
+    compare_text_writer(
+        out,
+        || o(this, news, full, out),
+        |t| contract_manager_write_offer_response_news_text(this, news, full, t),
+        || format!("contract_manager_write_offer_response_news_text(news {:#x}, full {})", news, full),
+    );
+}
+
+/// Sends the offer response news item to a club's manager (`exe::news_send_to_club_manager`), or keeps it in the dry
+/// run.
+pub(crate) unsafe fn offer_response_send(n: usize, club: Club) {
+    if OFFER_RESPONSE_NEWS_DRY_RUN.load(Relaxed) {
+        let bytes = (0..news_item::ID).map(|k| read_u8(n + k)).collect();
+        OFFER_RESPONSE_NEWS_SENT.lock().unwrap_or_else(|e| e.into_inner()).push((club.addr(), bytes));
+        return;
+    }
+    exe::news_send_to_club_manager(read_usize(G_NEWS), n, club);
+}
+
+/// Slot 0x11 of the offer response: with `refused` set, 0x3e7 when the current contract with the club ends before
+/// `G_CONTRACT_DATE_PLUS_91_DAYS`, 0x3e8 when it ends before `G_CONTRACT_DATE_PLUS_365_DAYS`, otherwise 0 and `refused`
+/// is cleared; without it, 0. The contract is read without a null check, as the original does.
+pub(crate) unsafe fn offer_response_contract_end_code(contract: Contract, refused: &mut u32) -> u32 {
+    if *refused == 0 {
+        return 0;
+    }
+    let end = contract.addr() + contract::CONTRACT_EXPIRES;
+    if !contract_manager_date_is_before(G_CONTRACT_DATE_PLUS_91_DAYS, end) {
+        return 0x3e7;
+    }
+    if !contract_manager_date_is_before(G_CONTRACT_DATE_PLUS_365_DAYS, end) {
+        return 0x3e8;
+    }
+    *refused = 0;
+    0
+}
+
+/// Slot 0x1a of the offer response: an agreed player contract (type 2) of a player near the end of his career, by the
+/// age he will have when the offer's contract ends (`exe::database_get_staff_age` on the offer's end date): a top
+/// goalkeeper (`.goalkeeper()` = 20) over 37, or a defender, midfielder or attacker rated 15 or more over 36, 35 or 34.
+pub(crate) unsafe fn offer_response_veteran(p: Staff, offer: Contract) -> u32 {
+    let sheet = p.player();
+    if sheet.is_null() || offer.contract_type() & 0x3f != 2 {
+        return 0;
+    }
+    let end = (offer.addr() + contract::CONTRACT_EXPIRES) as *const u16;
+    let age = || exe::database_get_staff_age(p, end);
+    let veteran = (sheet.goalkeeper() == 0x14 && age() > 0x25)
+        || (sheet.defender() >= 0xf && age() > 0x24)
+        || (sheet.midfielder() >= 0xf && age() > 0x23)
+        || (sheet.attacker() >= 0xf && age() > 0x22);
+    veteran as u32
+}
+
+/// The news items that reached the human managers' inboxes since `before` (`human_inbox_positions`): the first
+/// `news_item::ID` bytes of each, without `news_item::IMPORTANT`, which the delivery sets.
+pub(crate) unsafe fn offer_response_delivered(before: &[(usize, i32, i32)]) -> Vec<Vec<u8>> {
+    let news = read_usize(G_NEWS);
+    let mut out = Vec::new();
+    for &(e, start, next) in before {
+        let (start_now, next_now) = (read_i32(e), read_i32(e + 4));
+        if start_now == -1 || (start_now == start && next_now == next) {
+            continue;
+        }
+        let mut k = if start_now == start { next } else { start_now };
+        while k != next_now {
+            let r = read_usize(news).wrapping_add((k as usize).wrapping_mul(NEWS_NEWS_RECORD_SIZE));
+            let mut bytes: Vec<u8> = (0..news_item::ID).map(|j| read_u8(r + j)).collect();
+            bytes[news_item::IMPORTANT] = 0;
+            out.push(bytes);
+            k += 1;
+            if k == start_now + 0x64 {
+                k = start_now;
+            }
+        }
+    }
+    out.sort();
+    out
+}
+
+/// The 16 human inboxes (entry address, ring start, next slot), or none without the news object.
+pub(crate) unsafe fn human_inbox_positions() -> Vec<(usize, i32, i32)> {
+    let news = read_usize(G_NEWS);
+    if news == 0 || read_usize(news + news_fields::HUMAN_INBOXES) == 0 {
+        return Vec::new();
+    }
+    (0..0x10).map(|i| read_usize(news + news_fields::HUMAN_INBOXES) + i * 12).map(|e| (e, read_i32(e), read_i32(e + 4))).collect()
+}
+
+/// Reads the slots of news item 0xbb8 and prepares the names, the contract end date, the contract value and its years.
+///
+/// The slots: 0 the person, 1-3 his name ids, 4 the club, 5 the offer state, 6-7 the contract end, 10 the contract type
+/// (5 a trial), 12 the reasons, 13 the club manager and 14-16 his name ids, 17 the contract end code, 18 0x420e9 for
+/// the plain offer, 19 the draw, 20 the renewal, 21 the job, 22 the wage, 23 the signing value, 24-25 the contract
+/// start, 26 the veteran, 27 the contract rebel. The days from the start to the end (365 per year, the days of the year
+/// apart) give the value (whole weeks × the wage + slot 23; from 3,000,000 down to the million, above 1,000,000 down to
+/// the half million, as money with `exe::cash_format_money`) and the years (days ÷ 365, rounded). "At home": the club
+/// is the human manager's on screen. The names: the person's in modes 1 and 5, the manager's in mode 1 when slot 17 is
+/// not negative (with slot 17 as the id, as the original passes it), the end date as a long date.
+pub(crate) unsafe fn offer_text_read(news: usize) -> OfferText {
+    let slot = |k: u32| exe::newsitem_get_slot(news, k);
+    let person = slot(0);
+    let names = [slot(1), slot(2), slot(3)];
+    let club = club_at(slot(4) as i32 as isize);
+    let state = slot(5) as u8;
+    let age = read_i8(staff_at(person as i32 as isize).addr() + staff::AGE);
+    let mut end = [0u16; 4];
+    let (end_year, end_day) = (slot(7), slot(6));
+    exe::new_date(end.as_mut_ptr() as usize, end_day, end_year);
+    let trial = slot(0xa) as u8 == 5;
+    let reasons = slot(0xc);
+    let manager = slot(0xd) as i32;
+    let manager_names = [slot(0xe), slot(0xf), slot(0x10)];
+    let end_code = slot(0x11);
+    let custom = slot(0x12) != 0x420e9;
+    let draw = slot(0x13) as i32;
+    let renewal = slot(0x14) != 0;
+    let job = slot(0x15);
+    let wage = slot(0x16) as i32;
+    let signing = slot(0x17) as i32;
+    let mut start = [0u16; 4];
+    let (start_year, start_day) = (slot(0x19), slot(0x18));
+    exe::new_date(start.as_mut_ptr() as usize, start_day, start_year);
+    let days = ((end[1] as i32).wrapping_sub(start[1] as i32)).wrapping_mul(365).wrapping_sub(start[0] as i16 as i32).wrapping_add(end[0] as i16 as i32);
+    let mut value = (days / 7).wrapping_mul(wage).wrapping_add(signing); // sx07_2: the contract value
+    if value >= 3_000_000 {
+        value = value / 1_000_000 * 1_000_000;
+    } else if value > 1_000_000 {
+        value = value / 500_000 * 500_000;
+    }
+    let mut t = OfferText {
+        person,
+        names,
+        club,
+        state,
+        trial,
+        reasons,
+        manager,
+        manager_names,
+        end_code,
+        custom,
+        draw,
+        renewal,
+        job,
+        wage,
+        veteran: false,
+        rebel: false,
+        age,
+        home: false,
+        years: 0,
+        value,
+        name: [0; 0x190],
+        surname: [0; 0x190],
+        manager_name: [0; 0x190],
+        end_date: [0; 0x12c],
+        money: [0; 0x64],
+        reason: [[0; 0xfa]; 5],
+        joined: [0; 0x400],
+        count: 0,
+    };
+    let amount = exe::cash_get_display_amount((&value) as *const i32 as *const u32, 6);
+    exe::cash_format_money(t.money.as_mut_ptr() as usize, 0x64, amount, 6);
+    t.years = ftol(days as f64 * read_f64(rdata::F64_0_002739726027) + read_f64(rdata::F64_0_5));
+    t.veteran = slot(0x1a) != 0;
+    t.rebel = slot(0x1b) != 0;
+    let hm = read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize as usize);
+    t.home = hm != 0 && read_usize(hm + 0x39) != 0 && read_u32(read_usize(hm + 0x39)) == slot(4); // sx07_2: at home
+    let [n1, n2, n3] = t.names;
+    exe::database_format_name_from_ids(n1, n2, n3, t.name.as_mut_ptr(), 0x190, 1, person);
+    exe::database_format_name_from_ids(n1, n2, n3, t.surname.as_mut_ptr(), 0x190, 5, person);
+    if end_code as i32 > -1 {
+        let [m1, m2, m3] = t.manager_names;
+        exe::database_format_name_from_ids(m1, m2, m3, t.manager_name.as_mut_ptr(), 0x190, 1, end_code);
+    }
+    exe::date_get_long_date_string(end.as_mut_ptr() as usize, t.end_date.as_mut_ptr() as usize, 0x12c, 0xff);
+    t
+}
+
+/// The headline. Agreed (state 2): a trial 0x9aa414; a custom offer 0x9aa2a0; the renewal of a job 11 contract by the
+/// draw (0 0x9aa320, 1 0x9aa368 with the years, otherwise 0x9aa3cc); away 0x9aa2d8 with the club; at home 0x9aa2a0.
+/// Rejected (state 1 or 3): a trial 0x9aa26c; a custom offer 0x9aa234; the renewal of a job 11 contract: a contract
+/// rebel 0x9aa1ec, otherwise by the draw (0 0x9aa104, 1 0x9aa154 with the years, otherwise 0x9aa1bc); away 0x9aa0bc with
+/// the club; at home 0x9aa234. Another state: the "Error" box (line 0x223b) and nothing written (false).
+pub(crate) unsafe fn offer_text_headline(t: &OfferText) -> bool {
+    let fmt = news_text_format();
+    let s = OfferText::ptr(&t.surname);
+    let (g, short) = t.short();
+    match t.state {
+        2 => {
+            if t.trial {
+                fmt(NEWS_TEXT_BUFFER, 0x9aa414, s);
+            } else if t.custom {
+                fmt(NEWS_TEXT_BUFFER, 0x9aa2a0, s);
+            } else if t.job == 0xb && t.renewal {
+                match t.draw {
+                    0 => fmt(NEWS_TEXT_BUFFER, 0x9aa320, g, g, s, short),
+                    1 => fmt(NEWS_TEXT_BUFFER, 0x9aa368, g, g, s, t.years, short),
+                    _ => fmt(NEWS_TEXT_BUFFER, 0x9aa3cc, g, g, short, s),
+                };
+            } else if !t.home {
+                fmt(NEWS_TEXT_BUFFER, 0x9aa2d8, g, g, s, short); // sx07_2: accepts the club's offer
+            } else {
+                fmt(NEWS_TEXT_BUFFER, 0x9aa2a0, s);
+            }
+        }
+        1 | 3 => {
+            if t.trial {
+                fmt(NEWS_TEXT_BUFFER, 0x9aa26c, s);
+            } else if t.custom {
+                fmt(NEWS_TEXT_BUFFER, 0x9aa234, s);
+            } else if t.job == 0xb && t.renewal {
+                if t.rebel {
+                    fmt(NEWS_TEXT_BUFFER, 0x9aa1ec, s);
+                } else {
+                    match t.draw {
+                        0 => fmt(NEWS_TEXT_BUFFER, 0x9aa104, g, g, s, short),
+                        1 => fmt(NEWS_TEXT_BUFFER, 0x9aa154, g, g, s, t.years, short),
+                        _ => fmt(NEWS_TEXT_BUFFER, 0x9aa1bc, s),
+                    };
+                }
+            } else if !t.home {
+                fmt(NEWS_TEXT_BUFFER, 0x9aa0bc, g, g, s, short);
+            } else {
+                fmt(NEWS_TEXT_BUFFER, 0x9aa234, s);
+            }
+        }
+        _ => {
+            show_error_at(0x9a8190, 0x223b);
+            return false;
+        }
+    }
+    true
+}
+
+/// The body of an agreed offer: a trial 0x9aa010 (end date); otherwise the reasons (`offer_text_accept_reasons`), then a
+/// custom offer 0x9a8b64 (end date), with reasons `offer_text_accept_with_reasons`, without them
+/// `offer_text_accept_plain`.
+pub(crate) unsafe fn offer_text_accepted_body(t: &mut OfferText) {
+    let fmt = news_text_format();
+    let (g, short) = t.short();
+    if t.trial {
+        fmt(NEWS_TEXT_BUFFER, 0x9aa010, g, g, 100, OfferText::ptr(&t.name), short, OfferText::ptr(&t.end_date));
+        return;
+    }
+    offer_text_accept_reasons(t);
+    if t.custom {
+        fmt(NEWS_TEXT_BUFFER, 0x9a8b64, g, g, 100, OfferText::ptr(&t.name), short, OfferText::ptr(&t.end_date));
+    } else if t.count != 0 {
+        offer_text_accept_with_reasons(t, t.reasons & 0x40 != 0);
+    } else {
+        offer_text_accept_plain(t);
+    }
+}
+
+/// The body of a rejected offer (state 1): a trial 0x9a88e8 with the club's short name. Otherwise the
+/// reasons: unhappy with the manager (reason bit 0x100, with a manager) and wanting to get away (bit 4), joined; the
+/// person's name again (300 bytes). Away: with slot 17 = 0x3e7 0x9a87a0 / 0x9a8704, with 0x3e8 0x9a8650 / 0x9a85c0 (with
+/// / without the reasons); otherwise (or at home) 0x9a852c / 0x9a84bc, all with the club's full name.
+pub(crate) unsafe fn offer_text_rejected_body(t: &mut OfferText) {
+    let fmt = news_text_format();
+    if t.trial {
+        let (g, short) = t.short();
+        fmt(NEWS_TEXT_BUFFER, 0x9a88e8, g, g, OfferText::ptr(&t.name), short);
+        return;
+    }
+    if t.reasons & 0x100 != 0 && t.manager > -1 {
+        fmt(OfferText::ptr(&t.reason[0]), 0x9a8898, OfferText::ptr(&t.manager_name));
+        t.count = 1;
+    }
+    if t.reasons & 4 != 0 {
+        fmt(OfferText::ptr(&t.reason[t.count as usize]), 0x9a8860);
+        t.count += 1;
+    }
+    offer_text_join_reasons(t);
+    let [n1, n2, n3] = t.names;
+    exe::database_format_name_from_ids(n1, n2, n3, t.name.as_mut_ptr(), 0x12c, 1, t.person);
+    let (n, j) = (OfferText::ptr(&t.name), OfferText::ptr(&t.joined));
+    let (gl, long) = t.long();
+    let with = t.count != 0;
+    match (t.home, t.end_code) {
+        (false, 0x3e7) => {
+            if with {
+                fmt(NEWS_TEXT_BUFFER, 0x9a87a0, gl, gl, n, long, j)
+            } else {
+                fmt(NEWS_TEXT_BUFFER, 0x9a8704, gl, gl, n, long)
+            }
+        }
+        (false, 0x3e8) => {
+            if with {
+                fmt(NEWS_TEXT_BUFFER, 0x9a8650, 100, gl, gl, n, long, j)
+            } else {
+                fmt(NEWS_TEXT_BUFFER, 0x9a85c0, 100, gl, gl, n, long)
+            }
+        }
+        _ => {
+            if with {
+                fmt(NEWS_TEXT_BUFFER, 0x9a852c, gl, gl, n, long, j) // sx07_2: rejected with reasons
+            } else {
+                fmt(NEWS_TEXT_BUFFER, 0x9a84bc, gl, gl, n, long)
+            }
+        }
+    };
+}
+
+/// The links: the club's short name (0x7d5); the person's two names (0x7d7) when the news item's names still match him
+/// (`exe::database_staff_matches_names`); the manager's name (0x7d7) when there is one and his names still match.
+pub(crate) unsafe fn offer_text_links(t: &OfferText, out: usize) {
+    exe::text_add_link(out, (t.club.addr() + club::SHORT_NAME) as *const u8, 0x7d5, t.club);
+    let p = staff_at(t.person as i32 as isize);
+    let [n1, n2, n3] = t.names;
+    if exe::database_staff_matches_names(p, n1, n2, n3, 0usize) != 0 {
+        exe::text_add_link(out, t.name.as_ptr(), 0x7d7, p);
+        exe::text_add_link(out, t.surname.as_ptr(), 0x7d7, p);
+    }
+    if t.manager > -1 {
+        let m = staff_at(t.manager as isize);
+        let [m1, m2, m3] = t.manager_names;
+        if exe::database_staff_matches_names(m, m1, m2, m3, 0usize) != 0 {
+            exe::text_add_link(out, t.manager_name.as_ptr(), 0x7d7, m);
+        }
+    }
+}
+
+/// Joins the reasons gathered so far into `joined`: one is copied (`"%s"`), two go into 0x9a9f28 ("... and ...").
+pub(crate) unsafe fn offer_text_join_reasons(t: &mut OfferText) {
+    let fmt = news_text_format();
+    match t.count {
+        1 => {
+            let sprintf: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
+            sprintf(OfferText::ptr(&t.joined), 0x991944, OfferText::ptr(&t.reason[0]));
+        }
+        2 => {
+            fmt(OfferText::ptr(&t.joined), 0x9a9f28, OfferText::ptr(&t.reason[0]), OfferText::ptr(&t.reason[1]));
+        }
+        _ => {}
+    }
+}
+
+/// The reasons of an agreed offer: the love for the club (reason bit 8; with bit 0x40 and a manager, also the
+/// admiration for him), or, without bit 8, a player under 24 with bit 0x40 and a manager: the belief in him; joined.
+pub(crate) unsafe fn offer_text_accept_reasons(t: &mut OfferText) {
+    let fmt = news_text_format();
+    let mn = OfferText::ptr(&t.manager_name);
+    if t.reasons & 8 != 0 {
+        fmt(OfferText::ptr(&t.reason[0]), 0x9a9ff0);
+        t.count = 1;
+        if t.reasons & 0x40 != 0 && t.manager > -1 {
+            fmt(OfferText::ptr(&t.reason[1]), 0x9a9fa8, mn);
+            t.count = 2;
+        }
+    } else if t.reasons & 0x40 != 0 && t.age < 0x18 && t.manager > -1 {
+        fmt(OfferText::ptr(&t.reason[0]), 0x9a9f4c, mn);
+        t.count = 1;
+    }
+    offer_text_join_reasons(t);
+}
+
+/// The body of an agreed offer with reasons. With the admiration bit (0x40) and the veteran: with a manager, above
+/// (draw + 1) million 0x9a9e2c (years, money, reasons), otherwise 0x9a9d3c (end date, reasons); without a manager, above
+/// that 0x9a9c48 for a contract rebel or 0x9a9b6c (years, money), otherwise 0x9a9aac (end date). Then (not a veteran,
+/// or without bit 0x40 and not a veteran) with the love bit (8) and one reason, by the draw: 0 the renewal 0x9a9044 or
+/// 0x9a8f8c (end date); 1 above 1,000,000 the renewal 0x9a948c (rebel) or 0x9a936c, else 0x9a9274, and up to 1,000,000
+/// the renewal 0x9a9190 else 0x9a90fc (years); otherwise the renewal by the years (one: 0x9a998c for a rebel, 0x9a97bc;
+/// more: 0x9a9858 for a rebel, 0x9a9710) or, a new contract, 0x9a9664 when the person's id ends in 0 and the wage is
+/// 8,000 or more, else 0x9a95d4. Otherwise a rebel with a wage of 5,000 or more 0x9a8edc, else 0x9a8e50 (reasons).
+pub(crate) unsafe fn offer_text_accept_with_reasons(t: &OfferText, admiration: bool) {
+    let fmt = news_text_format();
+    let (n, s, mo, j, d) = (OfferText::ptr(&t.name), OfferText::ptr(&t.surname), OfferText::ptr(&t.money), OfferText::ptr(&t.joined), OfferText::ptr(&t.end_date));
+    let (g, short) = t.short();
+    let (gl, long) = t.long();
+    let threshold = t.draw.wrapping_mul(5).wrapping_add(5).wrapping_mul(200_000);
+    if t.veteran {
+        if admiration && t.manager > -1 {
+            if t.value > threshold {
+                fmt(NEWS_TEXT_BUFFER, 0x9a9e2c, g, g, n, short, t.years, mo, j);
+            } else {
+                fmt(NEWS_TEXT_BUFFER, 0x9a9d3c, g, g, 100, n, short, d, j);
+            }
+        } else if t.value > threshold {
+            if t.rebel {
+                fmt(NEWS_TEXT_BUFFER, 0x9a9c48, g, g, n, short, t.years, mo);
+            } else {
+                fmt(NEWS_TEXT_BUFFER, 0x9a9b6c, g, g, n, short, t.years, mo);
+            }
+        } else {
+            fmt(NEWS_TEXT_BUFFER, 0x9a9aac, g, g, 100, n, short, d);
+        }
+        return;
+    }
+    if t.reasons & 8 != 0 && t.count == 1 {
+        covered!("sx07_2 love for the club");
+        match t.draw {
+            0 => {
+                let tpl = if t.renewal { 0x9a9044 } else { 0x9a8f8c };
+                fmt(NEWS_TEXT_BUFFER, tpl, gl, gl, 100, n, long, d);
+            }
+            1 => {
+                if t.value > 1_000_000 {
+                    if t.renewal {
+                        let tpl = if t.rebel { 0x9a948c } else { 0x9a936c };
+                        fmt(NEWS_TEXT_BUFFER, tpl, gl, gl, long, n, t.years, mo, s);
+                    } else {
+                        fmt(NEWS_TEXT_BUFFER, 0x9a9274, gl, gl, n, t.years, long, mo);
+                    }
+                } else if t.renewal {
+                    fmt(NEWS_TEXT_BUFFER, 0x9a9190, gl, gl, long, n, t.years);
+                } else {
+                    fmt(NEWS_TEXT_BUFFER, 0x9a90fc, gl, gl, n, t.years, long);
+                }
+            }
+            _ => {
+                if t.renewal {
+                    match (t.rebel, t.years == 1) {
+                        (true, true) => fmt(NEWS_TEXT_BUFFER, 0x9a998c, gl, gl, 100, gl, gl, long, n, s, long),
+                        (true, false) => fmt(NEWS_TEXT_BUFFER, 0x9a9858, gl, gl, 100, gl, gl, long, n, t.years, s, long),
+                        (false, true) => fmt(NEWS_TEXT_BUFFER, 0x9a97bc, gl, gl, long, n),
+                        (false, false) => fmt(NEWS_TEXT_BUFFER, 0x9a9710, gl, gl, long, n, t.years),
+                    };
+                } else if (t.person as i32) % 10 == 0 && t.wage >= 0x1f40 {
+                    fmt(NEWS_TEXT_BUFFER, 0x9a9664, 100, gl, gl, n, t.years, long);
+                } else {
+                    fmt(NEWS_TEXT_BUFFER, 0x9a95d4, gl, gl, n, t.years, long);
+                }
+            }
+        }
+    } else if t.rebel && t.wage >= 0x1388 {
+        fmt(NEWS_TEXT_BUFFER, 0x9a8edc, gl, gl, n, t.years, long, j);
+    } else {
+        fmt(NEWS_TEXT_BUFFER, 0x9a8e50, gl, gl, n, long, j);
+    }
+}
+
+/// The body of an agreed offer without reasons. A veteran's renewal 0x9a8d90 (end date). Otherwise a renewal or a new
+/// contract above (draw + 1) million: when the draw is at least the person's id modulo 3 0x9a8cd0 or 0x9a8ab8
+/// (years, money), else 0x9a8c1c or 0x9a8a04; up to that, the renewal 0x9a8b64 or the new contract 0x9a895c (end date).
+/// A veteran's new contract takes the new contract's texts.
+pub(crate) unsafe fn offer_text_accept_plain(t: &OfferText) {
+    let fmt = news_text_format();
+    let (n, mo, d) = (OfferText::ptr(&t.name), OfferText::ptr(&t.money), OfferText::ptr(&t.end_date));
+    let (g, short) = t.short();
+    if t.veteran && t.renewal {
+        fmt(NEWS_TEXT_BUFFER, 0x9a8d90, g, g, 100, n, short, d);
+        return;
+    }
+    let renewal = !t.veteran && t.renewal;
+    let threshold = t.draw.wrapping_mul(5).wrapping_add(5).wrapping_mul(200_000);
+    if t.value > threshold {
+        if t.draw >= (t.person as i32) % 3 {
+            let tpl = if renewal { 0x9a8cd0 } else { 0x9a8ab8 };
+            fmt(NEWS_TEXT_BUFFER, tpl, g, g, n, short, t.years, mo);
+        } else if renewal {
+            fmt(NEWS_TEXT_BUFFER, 0x9a8c1c, g, g, short, n, t.years, mo);
+        } else {
+            fmt(NEWS_TEXT_BUFFER, 0x9a8a04, g, g, n, t.years, short, mo);
+        }
+    } else {
+        let tpl = if renewal { 0x9a8b64 } else { 0x9a895c }; // sx07_2: the plain agreement
+        fmt(NEWS_TEXT_BUFFER, tpl, g, g, 100, n, short, d);
+    }
+}
+
+/// The comparer's dry run of `contract_manager_post_offer_response_news`: the copy builds the news item and keeps, for
+/// every club it would send it to, the club and the item's bytes, instead of sending it.
+pub(crate) static OFFER_RESPONSE_NEWS_DRY_RUN: AtomicBool = AtomicBool::new(false);
+
+/// The sends the dry run kept: (club, the news item's first `news_item::ID` bytes).
+pub(crate) static OFFER_RESPONSE_NEWS_SENT: std::sync::Mutex<Vec<(usize, Vec<u8>)>> = std::sync::Mutex::new(Vec::new());
+
+/// What `write_offer_response_news_text` reads from news item 0xbb8 and prepares before writing (the original's frame).
+pub(crate) struct OfferText {
+    pub(crate) person: u32,
+    pub(crate) names: [u32; 3],
+    pub(crate) club: Club,
+    pub(crate) state: u8,
+    pub(crate) trial: bool,
+    pub(crate) reasons: u32,
+    pub(crate) manager: i32,
+    pub(crate) manager_names: [u32; 3],
+    pub(crate) end_code: u32,
+    pub(crate) custom: bool,
+    pub(crate) draw: i32,
+    pub(crate) renewal: bool,
+    pub(crate) job: u32,
+    pub(crate) wage: i32,
+    pub(crate) veteran: bool,
+    pub(crate) rebel: bool,
+    pub(crate) age: i8,
+    pub(crate) home: bool,
+    pub(crate) years: i32,
+    pub(crate) value: i32,
+    pub(crate) name: [u8; 0x190],
+    pub(crate) surname: [u8; 0x190],
+    pub(crate) manager_name: [u8; 0x190],
+    pub(crate) end_date: [u8; 0x12c],
+    pub(crate) money: [u8; 0x64],
+    pub(crate) reason: [[u8; 0xfa]; 5],
+    pub(crate) joined: [u8; 0x400],
+    pub(crate) count: i8,
+}
+
+impl OfferText {
+    pub(crate) fn ptr(b: &[u8]) -> usize {
+        b.as_ptr() as usize
+    }
+    /// The club's short name and its gender (pushed twice).
+    pub(crate) unsafe fn short(&self) -> (i32, usize) {
+        (self.club.short_gender_name() as i8 as i32, self.club.addr() + club::SHORT_NAME)
+    }
+    /// The club's full name and its gender (pushed twice).
+    pub(crate) unsafe fn long(&self) -> (i32, usize) {
+        (self.club.gender_name() as i32, self.club.addr() + club::NAME)
+    }
+}

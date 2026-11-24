@@ -1,0 +1,1 @@
+Depende do cx04_7 (post_story, compare_story_post) e do cx04_9 (club_player_story_ready, club_player_story).

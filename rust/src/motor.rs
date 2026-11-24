@@ -3955,8 +3955,34 @@ routines! {
     Prologue { address: 0x4183f0, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] } => award_shortlist_compare_by_score, compare_award_shortlist_compare_by_score;
     Prologue { address: 0x418420, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] } => award_shortlist_compare_by_votes, compare_award_shortlist_compare_by_votes;
     Prologue { address: 0x418320, bytes: &[0x8b, 0xd1, 0x57, 0xb9, 0x08, 0x00, 0x00, 0x00] } => award_shortlist_clear, compare_award_shortlist_clear;
+    Prologue { address: 0x49f570, bytes: &[0x6a, 0xff, 0x68, 0xe7, 0x66, 0x95, 0x00] } => comp_stats_record_match_result, compare_comp_stats_record_match_result;
+    Prologue { address: 0x4134c0, bytes: &[0x53, 0x55, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x14] } => award_manager_process_fixture, compare_award_manager_process_fixture;
+    Prologue { address: 0x413540, bytes: &[0x53, 0x55, 0x8b, 0x6c, 0x24, 0x0c] } => award_manager_process_date, compare_award_manager_process_date;
+    Prologue { address: 0x412e40, bytes: &[0x8b, 0xc1, 0x56, 0x8b, 0x4c, 0x24, 0x10] } => construct_award, compare_construct_award;
+    Prologue { address: 0x579610, bytes: &[0x83, 0xec, 0x10, 0x56, 0x57] } => england_awards_daily_update, compare_england_awards_daily_update;
+    Prologue { address: 0x579900, bytes: &[0xa1, 0xbc, 0xf5, 0x9c, 0x00] } => england_awards_on_month_change, compare_england_awards_on_month_change;
+    Prologue { address: 0x579af0, bytes: &[0x8b, 0x51, 0x04, 0x8b, 0x44, 0x24, 0x04] } => england_awards_update_team_of_the_week, compare_england_awards_update_team_of_the_week;
+    Prologue { address: 0x583280, bytes: &[0x8b, 0x44, 0x24, 0x14, 0x8b, 0x54, 0x24, 0x0c] } => construct_europe_rules, compare_construct_europe_rules;
+    Prologue { address: 0x5832c0, bytes: &[0x57, 0x8b, 0x7c, 0x24, 0x0c] } => default_squad_restrictions, compare_default_squad_restrictions;
+    Prologue { address: 0x5832e0, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => europe_rules_get_ineligibility_code, compare_europe_rules_get_ineligibility_code;
+    Prologue { address: 0x632e20, bytes: &[0x83, 0xec, 0x10, 0x53, 0x56] } => international_awards_daily_update, compare_international_awards_daily_update;
+    Prologue { address: 0x5a96b0, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] } => nation_awards_record_league_match_ratings, compare_nation_awards_record_league_match_ratings;
+    Prologue { address: 0x555460, bytes: &[0x8b, 0x44, 0x24, 0x14, 0x8b, 0x54, 0x24, 0x0c] } => construct_denmark_rules, compare_construct_denmark_rules;
+    Prologue { address: 0x8d1da0, bytes: &[0x6a, 0xff, 0x68, 0xfb, 0x40, 0x96, 0x00] } => collect_player_news_recipients, compare_collect_player_news_recipients;
+    Prologue { address: 0x8d1130, bytes: &[0x6a, 0xff, 0x68, 0xe2, 0x40, 0x96, 0x00] } => collect_offer_news_recipients, compare_collect_offer_news_recipients;
+    Prologue { address: 0x8df9b0, bytes: &[0x6a, 0xff, 0x68, 0x5c, 0x46, 0x96, 0x00] } => cancel_offers_for_released_player, compare_cancel_offers_for_released_player;
+    Prologue { address: 0x8d8e90, bytes: &[0x6a, 0xff, 0x68, 0x4b, 0x44, 0x96, 0x00] } => post_contract_response_news, compare_post_contract_response_news;
+    Prologue { address: 0x8cc030, bytes: &[0x6a, 0xff, 0x68, 0x7b, 0x3e, 0x96, 0x00] } => get_past_transfers, compare_get_past_transfers;
+    Prologue { address: 0x4d49a0, bytes: &[0x6a, 0xff, 0x68, 0x66, 0x6e, 0x95, 0x00] } => contract_manager_post_offer_response_news, compare_contract_manager_post_offer_response_news;
+    Prologue { address: 0x4d4fb0, bytes: &[0x6a, 0xff, 0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => contract_manager_write_offer_response_news_text, compare_contract_manager_write_offer_response_news_text;
+    Prologue { address: 0x4426e0, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x83, 0xec, 0x18] } => cash_get_rounding_step, compare_cash_get_rounding_step;
+    Prologue { address: 0x43f460, bytes: &[0xdb, 0x01, 0x53, 0x55, 0xdc, 0x0d, 0xb8, 0x9c, 0xad, 0x00] } => cash_get_display_amount, compare_cash_get_display_amount;
+    Prologue { address: 0x441c10, bytes: &[0x81, 0xec, 0x24, 0x02, 0x00, 0x00] } => cash_format_money, compare_cash_format_money;
+    Prologue { address: 0x419c60, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x81, 0xec, 0xa8, 0x01, 0x00, 0x00] } => write_awol_news_text, compare_write_awol_news_text;
+    Prologue { address: 0x41a8e0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x81, 0xec, 0x3c, 0x03, 0x00, 0x00] } => write_missed_training_news_text, compare_write_missed_training_news_text;
+    Prologue { address: 0x41b030, bytes: &[0xb8, 0x74, 0x1b, 0x00, 0x00] } => write_fitness_worry_news_text, compare_write_fitness_worry_news_text;
 }
-const N: usize = 3797;
+const N: usize = 3823;
 include!(concat!(env!("OUT_DIR"), "/indices.rs")); // IDX_<NAME>: the position of each routine (build.rs)
 
 /// Size of the engine object (the game allocates it with new(0xf63b)): side 1's block (+0xf5f2, 0x36
@@ -3976,6 +4002,21 @@ pub(crate) use self::award_award_manager::*;
 #[path = "motor/award/award_shortlist.rs"]
 pub(crate) mod award_award_shortlist;
 pub(crate) use self::award_award_shortlist::*;
+#[path = "motor/award/denmark_awards.rs"]
+pub(crate) mod award_denmark_awards;
+pub(crate) use self::award_denmark_awards::*;
+#[path = "motor/award/england_awards.rs"]
+pub(crate) mod award_england_awards;
+pub(crate) use self::award_england_awards::*;
+#[path = "motor/award/european_awards.rs"]
+pub(crate) mod award_european_awards;
+pub(crate) use self::award_european_awards::*;
+#[path = "motor/award/finland_awards.rs"]
+pub(crate) mod award_finland_awards;
+pub(crate) use self::award_finland_awards::*;
+#[path = "motor/award/international_awards.rs"]
+pub(crate) mod award_international_awards;
+pub(crate) use self::award_international_awards::*;
 #[path = "motor/award/month_award.rs"]
 pub(crate) mod award_month_award;
 pub(crate) use self::award_month_award::*;
@@ -5406,16 +5447,176 @@ pub(crate) use self::zipdir::*;
 
 compare_value!(compare_staff_criterion, staff_criterion, IDX_STAFF_CRITERION, () -> u32);
 
-// ---------- batch 328: the news text of a broken competition record (comp_screens.cpp) ----------
+// ---------- tel43_1: the competition statistics: recording a played match (comp_screens.cpp) ----------
 
-/// The round label of a record's match `m` (`exe::comp_util_format_stage_round_name` of the round and stage words at
-/// +0xc and +0xe, 200 bytes, mode 0) and its gender (`exe::comp_util_get_label_gender` with no competition, the two
-/// dwords at +0xc and +0xe and `form`).
-unsafe fn comp_record_round_label(m: usize, form: u32, label: &mut [u8; 0xc8]) -> i32 {
-    exe::comp_util_format_stage_round_name(read_i16(m + club_match_record::ROUND_PREFIX) as i32, read_i16(m + club_match_record::ROUND_NAME) as i32,
-        label.as_mut_ptr() as usize, 0xc8, 0);
-    exe::comp_util_get_label_gender(0, read_u32(m + club_match_record::ROUND_PREFIX), read_u32(m + club_match_record::ROUND_NAME), form) as i8 as i32
+/// Offsets inside a competition records block (the all-time block at `comp_stats_obj::ALL_TIME_RECORDS`, the
+/// season's at `comp_stats_obj::SEASON_RECORDS`), by the record kind of `comp_stats_format_record_text`.
+#[allow(dead_code)]
+pub(crate) mod comp_records {
+    /// Kind 2, a team value: i16 points (what `League::add_result` passes), the club id at `VALUE_CLUB`, the year
+    /// word at `VALUE_YEAR`.
+    pub(crate) const POINTS: usize = 0x5;
+    /// Kinds 3 and 4, team values: the goals scored and conceded in the competition.
+    pub(crate) const GOALS_FOR: usize = 0xd;
+    pub(crate) const GOALS_AGAINST: usize = 0x15;
+    pub(crate) const VALUE_CLUB: usize = 0x2;
+    pub(crate) const VALUE_YEAR: usize = 0x6;
+    /// Kind 5, the team's cards: u8 yellow, +1 red, the club id at `VALUE_CLUB`, the year word at `VALUE_YEAR`.
+    pub(crate) const CARDS: usize = 0x1d;
+    /// Kinds 6 and 7, attendance records: the attendance (i32), then the match record at `ATTENDANCE_GAME`.
+    pub(crate) const HIGHEST_ATTENDANCE: usize = 0x25;
+    pub(crate) const LOWEST_ATTENDANCE: usize = 0x48;
+    pub(crate) const ATTENDANCE_GAME: usize = 0x4;
+    /// Kinds 9 and 10, match records (`club_match_record`, 0x1f bytes).
+    pub(crate) const BIGGEST_WIN: usize = 0x75;
+    pub(crate) const HIGHEST_SCORING: usize = 0x94;
+    /// Kinds 11 to 14, runs: the run (`run_record`: game count and dates) and the club id at `RUN_CLUB`.
+    pub(crate) const WINNING_RUN: usize = 0xb3;
+    pub(crate) const LOSING_RUN: usize = 0xcb;
+    pub(crate) const UNBEATEN_RUN: usize = 0xe3;
+    pub(crate) const WINLESS_RUN: usize = 0xfb;
+    pub(crate) const RUN_CLUB: usize = 0x14;
+    /// Kinds 15, 17 and 19, player tallies: u8 count, the holder (`record_holder`) at `TALLY_HOLDER`, the club id at
+    /// `TALLY_CLUB`, the year word at `TALLY_YEAR`.
+    pub(crate) const TOP_SCORER: usize = 0x113;
+    pub(crate) const ASSISTS: usize = 0x16a;
+    pub(crate) const MAN_OF_THE_MATCH: usize = 0x1ac;
+    pub(crate) const TALLY_HOLDER: usize = 0x1;
+    pub(crate) const TALLY_CLUB: usize = 0x19;
+    pub(crate) const TALLY_YEAR: usize = 0x1d;
+    /// Kind 16, the most goals in a match: u8 goals, the holder at `TALLY_HOLDER`, the match record at
+    /// `GOALS_IN_A_MATCH_GAME`.
+    pub(crate) const GOALS_IN_A_MATCH: usize = 0x132;
+    pub(crate) const GOALS_IN_A_MATCH_GAME: usize = 0x19;
+    /// Kind 20, a player's cards: u8 yellow, +1 red, the holder at `PLAYER_CARDS_HOLDER`, the club id at
+    /// `PLAYER_CARDS_CLUB`, the year word at `PLAYER_CARDS_YEAR`.
+    pub(crate) const PLAYER_CARDS: usize = 0x1cb;
+    pub(crate) const PLAYER_CARDS_HOLDER: usize = 0x2;
+    pub(crate) const PLAYER_CARDS_CLUB: usize = 0x1a;
+    pub(crate) const PLAYER_CARDS_YEAR: usize = 0x1e;
+    /// Kinds 21 and 22, age records (`player_age_record_assign`): the holder's birth date, the holder at
+    /// `AGE_HOLDER`, the match record at `AGE_GAME`.
+    pub(crate) const YOUNGEST: usize = 0x1eb;
+    pub(crate) const OLDEST: usize = 0x22a;
+    pub(crate) const AGE_HOLDER: usize = 0x8;
+    pub(crate) const AGE_GAME: usize = 0x20;
 }
+
+/// The record kinds (the flag of kind k is `comp_stats_record_flag(k)`).
+#[allow(dead_code)]
+pub(crate) mod comp_record_kind {
+    pub(crate) const POINTS: usize = 2;
+    pub(crate) const GOALS_FOR: usize = 3;
+    pub(crate) const GOALS_AGAINST: usize = 4;
+    pub(crate) const CARDS: usize = 5;
+    pub(crate) const HIGHEST_ATTENDANCE: usize = 6;
+    pub(crate) const LOWEST_ATTENDANCE: usize = 7;
+    pub(crate) const BIGGEST_WIN: usize = 9;
+    pub(crate) const HIGHEST_SCORING: usize = 10;
+    pub(crate) const WINNING_RUN: usize = 11;
+    pub(crate) const LOSING_RUN: usize = 12;
+    pub(crate) const UNBEATEN_RUN: usize = 13;
+    pub(crate) const WINLESS_RUN: usize = 14;
+    pub(crate) const TOP_SCORER: usize = 15;
+    pub(crate) const GOALS_IN_A_MATCH: usize = 16;
+    pub(crate) const ASSISTS: usize = 17;
+    pub(crate) const MAN_OF_THE_MATCH: usize = 19;
+    pub(crate) const PLAYER_CARDS: usize = 20;
+    pub(crate) const YOUNGEST: usize = 21;
+    pub(crate) const OLDEST: usize = 22;
+}
+
+/// The figures of a club entry (0x76 bytes) that `record_match_result` keeps besides `comp_stats_club`
+/// (`comp_stats_get_team_entry_value` reads them).
+#[allow(dead_code)]
+pub(crate) mod comp_club_figures {
+    /// The last five result codes (`match_record_result_code`), newest first: all, home and away matches.
+    pub(crate) const FORM: usize = 0xa;
+    pub(crate) const HOME_FORM: usize = 0xf;
+    pub(crate) const AWAY_FORM: usize = 0x14;
+    pub(crate) const FORM_LENGTH: usize = 5;
+    /// u8 goals scored and conceded in the competition.
+    pub(crate) const GOALS_FOR: usize = 0x69;
+    pub(crate) const GOALS_AGAINST: usize = 0x6a;
+    /// Five u8 totals of the side block's bytes +3..+7 of each match record [inference: unnamed team counts].
+    pub(crate) const TEAM_TOTALS: usize = 0x6b;
+    /// u8 yellow and red cards in the competition.
+    pub(crate) const YELLOW_CARDS: usize = 0x70;
+    pub(crate) const RED_CARDS: usize = 0x71;
+}
+
+/// The figures of a player entry (0x2d bytes) that `record_match_result` keeps (`Comp_Stats::get_player_entry_value`
+/// reads them).
+#[allow(dead_code)]
+pub(crate) mod comp_player_figures {
+    pub(crate) const GAMES: usize = 0xc;
+    pub(crate) const GAMES_AS_SUBSTITUTE: usize = 0xd;
+    pub(crate) const GOALS: usize = 0xe;
+    pub(crate) const GOALS_CONCEDED: usize = 0xf;
+    pub(crate) const PENALTIES_TAKEN: usize = 0x10;
+    pub(crate) const PENALTIES_SCORED: usize = 0x11;
+    pub(crate) const ASSISTS: usize = 0x12;
+    /// u8 goals the player's team scored and conceded while he played, and its wins and defeats.
+    pub(crate) const TEAM_GOALS_FOR: usize = 0x13;
+    pub(crate) const TEAM_GOALS_AGAINST: usize = 0x14;
+    pub(crate) const WINS: usize = 0x15;
+    pub(crate) const DEFEATS: usize = 0x16;
+    pub(crate) const YELLOW_CARDS: usize = 0x17;
+    pub(crate) const RED_CARDS: usize = 0x18;
+    pub(crate) const MAN_OF_THE_MATCH: usize = 0x19;
+    /// u16 sum of the match ratings.
+    pub(crate) const RATING_TOTAL: usize = 0x1a;
+    /// u16 counts: passes, passes completed, tackles won, dribbles, shots, shots on target.
+    pub(crate) const PASSES: usize = 0x1d;
+    pub(crate) const PASSES_COMPLETED: usize = 0x1f;
+    pub(crate) const TACKLES_WON: usize = 0x21;
+    pub(crate) const DRIBBLES: usize = 0x23;
+    pub(crate) const SHOTS: usize = 0x25;
+    pub(crate) const SHOTS_ON_TARGET: usize = 0x27;
+    /// i32 minutes played (the same offset as `comp_stats_player::APPEARANCES`).
+    pub(crate) const MINUTES: usize = 0x29;
+}
+
+// ---------- sx03_1: the award manager's daily and per-match passes and the award base constructor (award_manager.cpp) ----------
+
+// simplification: the nation awards and the year ratings add entries (they may allocate) and give the month awards:
+// the routine cannot run twice. Original only; the copy is proven by the career.
+
+// simplification: the daily slots give the awards (news, history records, reputations): the routine cannot run twice.
+// Original only; the copy is proven by the career.
+
+// ---------- sx03_2: England's awards: the yearly awards, the month awards and the team of the week (england_awards.cpp) ----------
+
+/// A nation's awards object (`NationAwards`): the award table (+4, pointers), the month ratings (+0xa) and the nation
+/// record (+0xe, 0 for the international and European awards).
+const NATION_AWARDS_TABLE: usize = 0x4;
+const NATION_AWARDS_NATION: usize = 0xe;
+
+// simplification: the awards post news, write history records and raise reputations: the routine cannot run twice.
+// Original only; the copy is proven by the career.
+
+// simplification: the month winners get news, history records and reputation: the routine cannot run twice. Original
+// only; the copy is proven by the career.
+
+// simplification: the team of the week allocates its candidate lists and writes the nominations: it cannot run twice.
+// Original only; the copy is proven by the career.
+
+// ---------- sx03_4: the international player awards, the league matches in the month ratings and Denmark's transfer rules (international_awards.cpp, finland_awards.cpp, denmark_awards.cpp) ----------
+
+// simplification: the awards post news, write history records and raise reputations: the routine cannot run twice.
+// Original only; the copy is proven by the career (6 May 2002).
+
+// simplification: the month ratings add entries (they may allocate): it cannot run twice. Original only; the copy is
+// proven by the career (the player of the month).
+
+// The transfer offer method that drops an exchange player from the offer's exchange list (transfer_offer.cpp,
+// thiscall(offer, person), ret 4).
+
+// --- sx07_1: the news item that a person answered a contract offer (contract_manager.cpp) ---
+
+// --- sx07_2: the text of the contract offer answer news (contract_manager.cpp, 5,424 bytes), in named pieces ---
+
+compare_value!(compare_cash_get_display_amount, cash_get_display_amount, IDX_CASH_GET_DISPLAY_AMOUNT, (flags: u32) -> i64);
 
 // ---------- batch 328: the sort orders of an award shortlist (award_shortlist.cpp) ----------
 

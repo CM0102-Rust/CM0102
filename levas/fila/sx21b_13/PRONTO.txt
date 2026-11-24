@@ -1,0 +1,2 @@
+sx21b_13 (simulacao, carreira ENG ate 2002-06-01): compilado sobre o HEAD c269cb610 com os itens sx21_1..sx21_37 e sx21b_1..sx21b_16 aplicados pela ancora, e de novo so com os sx21b (cargo build --release sem erro e sem aviso no codigo dos itens; as ancoras das mutacoes aparecem uma vez so no motor com a fila inteira). Nao rodado no jogo.
+Prova: carreira ENG comparando (a partida do jogo); sem mutacao: decidem se o jogo acha os seus arquivos e pastas, e uma mutacao trava a partida no modo Rust da triagem.

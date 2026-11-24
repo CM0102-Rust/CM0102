@@ -12,7 +12,7 @@
 #   jogador veterano dele); aparece em Noticias;
 # - 0x1778 reacao a liberacao: liberar um jogador valorizado (perfil do jogador > "Release"/"Free transfer"), com a
 #   diretoria contrariada ou bloqueando.
-TELAS = True
+# 24/11/2026: provado pela carreira automatica com o modo de textos (CM_TEXTOS=1 na cadeia); deixou de ser TELAS.
 ROTINAS = [('news_job_offer_text', 0x6a0690, [0x8b, 0x44, 0x24, 0x08, 0x81, 0xec, 0x9c, 0x01, 0x00, 0x00]),
            ('news_board_release_reaction_text', 0x6a0ad0, [0x8b, 0x44, 0x24, 0x08, 0x81, 0xec, 0x9c, 0x01, 0x00, 0x00])]
 DOCS = ('os textos das notícias da oferta de cargo e da reação da diretoria a uma liberação',

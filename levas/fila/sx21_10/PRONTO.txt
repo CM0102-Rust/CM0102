@@ -1,0 +1,2 @@
+sx21_10 (simulacao, LIGAS ENG POL TUR GRE HRV RUS): compilado sobre o HEAD c269cb610 com os itens sx21_1..sx21_37 aplicados pela ancora (cargo build --release sem erro e sem aviso no codigo do item). Nao rodado no jogo.
+Prova: carreira com LIGAS (ENG POL TUR GRE HRV RUS) ate 2002-06-01 comparando: as partidas gregas, croatas e polonesas; mutacoes 3 pelo comparador. Depende da sx21_5.

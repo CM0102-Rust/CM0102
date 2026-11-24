@@ -1,0 +1,1 @@
+Antes de integrar: pôr (0x58e330, 4) em RELATIVAS no rust/src/detours.rs. Depende do cx01_14 (drop_national_cup, delete_comp_stats).

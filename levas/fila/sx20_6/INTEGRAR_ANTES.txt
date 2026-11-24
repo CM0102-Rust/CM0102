@@ -1,0 +1,1 @@
+Depende do sx20_2 (wait_for_game_cd), que depende do sx20_1.

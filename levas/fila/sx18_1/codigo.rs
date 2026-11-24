@@ -73,41 +73,87 @@ pub(crate) unsafe fn cm_date_after(a: usize, b: usize) -> bool {
     ya > yb || (ya == yb && read_i16(a) > read_i16(b))
 }
 
-/// The ban a ruling body hands out on the spot: the matches, the reason (1 bookings, 2 red card) and its amount, the
-/// four rules it applies under and the start date.
+/// The ban a ruling body hands out on the spot: the matches, the reason (0 points, 1 bookings, 2 red card) and its
+/// amount, the four rules it applies under and the start date.
 pub(crate) struct ImmediateBan {
     pub(crate) matches: u8,
     pub(crate) reason: u8,
-    pub(crate) amount: i8,
+    pub(crate) amount: i16,
     pub(crate) rules: [u8; 4],
     pub(crate) start: [u8; 8],
 }
 
-/// What a ruling body's card rules decide for one player after a match: the 0x70-byte pending ban queued on the
-/// body's list (a points ban that starts on a later date) and the ban handed out on the spot.
+/// What a ruling body's card rules decide for one player after a match: the 0x70-byte pending bans queued on the
+/// body's list, in order (bans that start on a later date), and the ban handed out on the spot.
 pub(crate) struct CardVerdict {
-    pub(crate) pending: Option<[u8; 0x70]>,
+    pub(crate) pending: Vec<[u8; 0x70]>,
     pub(crate) ban: Option<ImmediateBan>,
+}
+
+/// A copy of a date.
+pub(crate) unsafe fn date_copy(source: usize) -> [u8; 8] {
+    let mut d = [0u8; 8];
+    copy_record_date(d.as_mut_ptr() as usize, source);
+    d
 }
 
 /// Today's date, as the start of a ban.
 pub(crate) unsafe fn ban_start_today() -> [u8; 8] {
-    let mut d = [0u8; 8];
-    copy_record_date(d.as_mut_ptr() as usize, G_CURRENT_DATE);
+    date_copy(G_CURRENT_DATE)
+}
+
+/// Today plus `days` (`Date::add_days`).
+pub(crate) unsafe fn ban_start_in(days: u32) -> [u8; 8] {
+    let mut t = [0u8; 8];
+    date_copy(exe::date_add_days(G_CURRENT_DATE, t.as_mut_ptr() as usize, days))
+}
+
+/// Today plus `weeks` (`Date::add_weeks`).
+pub(crate) unsafe fn ban_start_in_weeks(weeks: u32) -> [u8; 8] {
+    let mut t = [0u8; 8];
+    date_copy(exe::date_add_weeks(G_CURRENT_DATE, &mut t, weeks))
+}
+
+/// The date one day later (`Date::add_days` into `d`).
+pub(crate) unsafe fn date_next_day(d: &mut [u8; 8]) {
+    let mut t = [0u8; 8];
+    let p = exe::date_add_days(d.as_ptr() as usize, t.as_mut_ptr() as usize, 1);
+    copy_record_date(d.as_mut_ptr() as usize, p);
+}
+
+/// The first day from `d` on (`d` itself included) whose `Date::get_weekday` is `weekday`.
+pub(crate) unsafe fn date_on_weekday(mut d: [u8; 8], weekday: u16) -> [u8; 8] {
+    while exe::date_get_weekday(d.as_ptr() as usize) as u16 != weekday {
+        date_next_day(&mut d);
+    }
     d
 }
 
-/// Today plus `days`, as the start of a ban (`Date::add_days`).
-pub(crate) unsafe fn ban_start_in(days: u32) -> [u8; 8] {
-    let (mut t, mut d) = ([0u8; 8], [0u8; 8]);
-    let p = exe::date_add_days(G_CURRENT_DATE, t.as_mut_ptr() as usize, days);
-    copy_record_date(d.as_mut_ptr() as usize, p);
+/// The first day after today whose `Date::get_weekday` is `weekday` (tomorrow, then day by day).
+pub(crate) unsafe fn first_weekday_after_today(weekday: u16) -> [u8; 8] {
+    date_on_weekday(ban_start_in(1), weekday)
+}
+
+/// Day `day` of the current month (`Date::set` with today's month and year); when today is past it, day `day` of the
+/// next month (January of the next year after December).
+pub(crate) unsafe fn day_of_this_or_next_month(day: u32) -> [u8; 8] {
+    let year = read_u16(G_CURRENT_DATE_YEAR) as u32;
+    let mut d = [0u8; 8];
+    exe::date_set(d.as_mut_ptr() as usize, day, exe::date_get_month(G_CURRENT_DATE) as u32, year, -1);
+    if cm_date_after(G_CURRENT_DATE, d.as_ptr() as usize) {
+        let month = exe::date_get_month(G_CURRENT_DATE).wrapping_add(1);
+        if (month as i8) < 0xc {
+            exe::date_set(d.as_mut_ptr() as usize, day, month as u32, year, -1);
+        } else {
+            exe::date_set(d.as_mut_ptr() as usize, day, 0, (year as u16).wrapping_add(1) as u32, -1);
+        }
+    }
     d
 }
 
 /// The 20-byte ban record of an immediate ban: matches, none served, no days, the start date, the rules, the reason
-/// and its amount (sign-extended), and the flags with bit 2 = (the row's byte +0x48 == 0). The original leaves the other
-/// flag bits as stack garbage (bit 0 is then set or cleared by `Discipline::add_ban`); here they are 0.
+/// and its amount, and the flags with bit 2 = (the row's byte +0x48 == 0). The original leaves the other flag bits as
+/// stack garbage (bit 0 is then set or cleared by `Discipline::add_ban`); here they are 0.
 pub(crate) unsafe fn immediate_ban_record(b: &ImmediateBan, row: MatchRecordRow) -> [u8; 0x14] {
     let mut r = [0u8; 0x14];
     let p = r.as_mut_ptr() as usize;
@@ -119,16 +165,35 @@ pub(crate) unsafe fn immediate_ban_record(b: &ImmediateBan, row: MatchRecordRow)
         write_u8(p + ban_record::RULES + k, b.rules[k]);
     }
     write_u8(p + ban_record::REASON, b.reason);
-    write_u16(p + ban_record::REASON_AMOUNT, b.amount as i16 as u16);
+    write_u16(p + ban_record::REASON_AMOUNT, b.amount as u16);
     write_u8(p + ban_record::FLAGS, ((read_u8(row.addr() + 0x48) == 0) as u8) << 2); // row +0x48: a per-player byte of the match
     r
 }
 
-/// Carries out a verdict: the pending ban goes to the end of the body's list (`LLIST::add_tail`, 0x70 bytes); the
+/// The pending ban of a red card: `RulingBody::make_points_ban` (by matches) into a 0x70-byte node; None when the
+/// offence brings none. Otherwise the node's start date (+0x14) is `start()`, its rules are `rules` and the fixture's
+/// first 0x4f bytes go to +0x20 (the match, for the news). The original leaves the node's amount and flags (+0x11 to
+/// +0x13) as stack garbage; here they are 0.
+pub(crate) unsafe fn pending_points_ban(this: usize, row: MatchRecordRow, fixture: usize, rules: [u8; 4], start: impl FnOnce() -> [u8; 8]) -> Option<[u8; 0x70]> {
+    let mut node = [0u8; 0x70];
+    let p = node.as_mut_ptr() as usize;
+    if make_points_ban(this, p, row.addr(), 1) == 0 {
+        return None;
+    }
+    let d = start();
+    copy_record_date(p + 0x14, d.as_ptr() as usize); // the pending ban's start date
+    for k in 0..4 {
+        write_u8(p + ban_record::RULES + k, rules[k]);
+    }
+    core::ptr::copy_nonoverlapping(fixture as *const u8, (p + 0x20) as *mut u8, 0x4f); // the match, for the news
+    Some(node)
+}
+
+/// Carries out a verdict: the pending bans go to the end of the body's list (`LLIST::add_tail`, 0x70 bytes); the
 /// immediate ban goes to the discipline (`Discipline::add_ban` with the player's id) and its news is posted
 /// (`Discipline::post_ban_news` with the player, the ban and the fixture).
 pub(crate) unsafe fn apply_card_verdict(this: usize, row: MatchRecordRow, fixture: usize, v: &CardVerdict) {
-    if let Some(node) = &v.pending {
+    for node in &v.pending {
         exe::llist_add_tail(read_usize(this + RULING_BODY_LIST), node.as_ptr() as usize, 0x70);
     }
     if let Some(b) = &v.ban {
@@ -139,29 +204,44 @@ pub(crate) unsafe fn apply_card_verdict(this: usize, row: MatchRecordRow, fixtur
     }
 }
 
-/// Runs a body's card rules for one player: nothing without a booking or a red card; otherwise the player's entry in
-/// the body (`RulingBody::find_or_add_discipline_entry`, created when missing), the verdict and its effects.
-pub(crate) unsafe fn run_card_rules(this: usize, row: usize, fixture: usize, verdict: impl FnOnce(usize) -> CardVerdict) {
-    let row = MatchRecordRow(row);
-    if row.yellow_cards() == 0 && row.red_card() == 0 {
-        return;
+/// The offence code of a player's red card: the first card's with no booking, the second card's with one booking, −1
+/// otherwise.
+pub(crate) unsafe fn red_card_offence(row: MatchRecordRow) -> i8 {
+    match row.yellow_cards() {
+        0 => row.first_card_offence(),
+        1 => row.second_card_offence(),
+        _ => -1,
     }
+}
+
+/// Whether the row has a booking or a red card (the card rules do nothing otherwise).
+pub(crate) unsafe fn row_has_cards(row: MatchRecordRow) -> bool {
+    row.yellow_cards() != 0 || row.red_card() != 0
+}
+
+/// Runs a body's card rules for one player: the player's entry in the body (`RulingBody::find_or_add_discipline_entry`,
+/// created when missing), the verdict and its effects.
+pub(crate) unsafe fn run_entry_card_rules(this: usize, row: usize, fixture: usize, verdict: impl FnOnce(usize) -> CardVerdict) {
+    let row = MatchRecordRow(row);
     let e = exe::rulingbody_find_or_add_discipline_entry(this, row.staff_id() as u32, 1);
     let v = verdict(e);
     apply_card_verdict(this, row, fixture, &v);
 }
 
-/// Comparer of the card rules: the bans cannot be handed out twice, so the copy's verdict is taken first on a copy of
-/// the player's entry (the entry is found or created as the original does first), then only the original runs. Checked
-/// afterwards: the entry's bookings, red cards and points; one more pending ban on the body's list when the verdict has
-/// one; and, when the player had no ban in the body before, the new ban the entry points to (matches, days, start,
-/// rules, reason, amount and flag bit 2).
-pub(crate) unsafe fn compare_card_rules(this: usize, row: usize, original: impl FnOnce(), verdict: impl FnOnce(usize) -> CardVerdict, name: &str) {
-    let row = MatchRecordRow(row);
-    if row.yellow_cards() == 0 && row.red_card() == 0 {
-        original();
-        return;
+/// Runs a body's card rules for one player (`run_entry_card_rules`), nothing without a booking or a red card.
+pub(crate) unsafe fn run_card_rules(this: usize, row: usize, fixture: usize, verdict: impl FnOnce(usize) -> CardVerdict) {
+    if row_has_cards(MatchRecordRow(row)) {
+        run_entry_card_rules(this, row, fixture, verdict);
     }
+}
+
+/// Comparer of the card rules on the player's entry: the bans cannot be handed out twice, so the copy's verdict is taken
+/// first on a copy of the entry (found or created as the original does first), then only the original runs. Checked
+/// afterwards: the entry's bookings, red cards, points and history bytes (+4, +5, +8 to +0xd); the verdict's pending
+/// bans more on the body's list; and, when the player had no ban in the body before, the new ban the entry
+/// points to (matches, days, start, rules, reason, amount and flag bit 2).
+pub(crate) unsafe fn compare_entry_card_rules(this: usize, row: usize, original: impl FnOnce(), verdict: impl FnOnce(usize) -> CardVerdict, name: &str) {
+    let row = MatchRecordRow(row);
     let id = row.staff_id() as u32;
     let e = exe::rulingbody_find_or_add_discipline_entry(this, id, 1);
     let mut local = [0u8; 0xe];
@@ -171,12 +251,10 @@ pub(crate) unsafe fn compare_card_rules(this: usize, row: usize, original: impl 
     let queued = read_u16(list + llist::COUNT);
     let v = verdict(local.as_mut_ptr() as usize);
     original();
-    let l = local.as_ptr() as usize;
     let e = ruling_body_entry(this, id);
-    let mut ok = e != 0 && read_u8(e + ruling_body_entry::YELLOW_CARDS) == read_u8(l + ruling_body_entry::YELLOW_CARDS)
-        && read_u8(e + ruling_body_entry::RED_CARDS) == read_u8(l + ruling_body_entry::RED_CARDS)
-        && read_u16(e + ruling_body_entry::DISCIPLINE_POINTS) == read_u16(l + ruling_body_entry::DISCIPLINE_POINTS)
-        && read_u16(list + llist::COUNT) == queued.wrapping_add(v.pending.is_some() as u16);
+    let counts = |p: usize| [read_u16(p + ruling_body_entry::YELLOW_CARDS), read_u16(p + 8), read_u16(p + 0xa), read_u16(p + 0xc)];
+    let (got, expected) = (if e != 0 { counts(e) } else { [0; 4] }, counts(local.as_ptr() as usize));
+    let mut ok = e != 0 && got == expected && read_u16(list + llist::COUNT) == queued.wrapping_add(v.pending.len() as u16);
     if let (Some(b), false, true) = (&v.ban, had_ban, ok) {
         let s = read_i16(e + ruling_body_entry::BAN_INDEX);
         let r = immediate_ban_record(b, row);
@@ -188,10 +266,17 @@ pub(crate) unsafe fn compare_card_rules(this: usize, row: usize, original: impl 
             && read_u16(ban + ban_record::REASON_AMOUNT) == read_u16(p + ban_record::REASON_AMOUNT)
             && read_u8(ban + ban_record::FLAGS) & 4 == read_u8(p + ban_record::FLAGS) & 4;
     }
-    SCOREBOARD.record(ok, || format!("{}(player {}): bookings {} red {} points {} (expected {} {} {}), queued {} (before {}), ban expected {:?}",
-        name, id, read_u8(e + ruling_body_entry::YELLOW_CARDS), read_u8(e + ruling_body_entry::RED_CARDS), read_u16(e + ruling_body_entry::DISCIPLINE_POINTS),
-        read_u8(l + ruling_body_entry::YELLOW_CARDS), read_u8(l + ruling_body_entry::RED_CARDS), read_u16(l + ruling_body_entry::DISCIPLINE_POINTS),
-        read_u16(list + llist::COUNT), queued, v.ban.as_ref().map(|b| (b.matches, b.reason, b.amount))));
+    SCOREBOARD.record(ok, || format!("{}(player {}): entry {:x?} (expected {:x?}), queued {} (before {}), ban expected {:?}",
+        name, id, got, expected, read_u16(list + llist::COUNT), queued, v.ban.as_ref().map(|b| (b.matches, b.reason, b.amount))));
+}
+
+/// Comparer of the card rules (`compare_entry_card_rules`); without a booking or a red card only the original runs.
+pub(crate) unsafe fn compare_card_rules(this: usize, row: usize, original: impl FnOnce(), verdict: impl FnOnce(usize) -> CardVerdict, name: &str) {
+    if row_has_cards(MatchRecordRow(row)) {
+        compare_entry_card_rules(this, row, original, verdict, name);
+    } else {
+        original();
+    }
 }
 
 /// The English ruling body: vtable 0x96eb14, record slot 0, rule set 9, ban scale 5, England in Europe, league rule 9,
@@ -239,7 +324,7 @@ pub(crate) unsafe fn england_card_verdict(row: MatchRecordRow, fixture: Fixture,
     }
     let mut march = [0u16; 4];
     exe::date_date_549f70(&mut march, 1, 2, next_year, u32::MAX);
-    let (mut matches, mut reason, mut amount) = (0u8, 0xffu8, 0i8);
+    let (mut matches, mut reason, mut amount) = (0u8, 0xffu8, 0i16);
     let bookings = row.yellow_cards();
     if bookings != 0 {
         let before = read_u8(entry + ruling_body_entry::YELLOW_CARDS);
@@ -261,17 +346,13 @@ pub(crate) unsafe fn england_card_verdict(row: MatchRecordRow, fixture: Fixture,
                 covered!("sx18_1 english booking ban");
                 reason = 1;
                 matches = (threshold as i8 / 5) as u8;
-                amount = total as i8;
+                amount = total as i8 as i16;
             }
         }
     }
     if row.red_card() != 0 {
         covered!("sx18_1 english red card");
-        let offence = match row.yellow_cards() {
-            0 => row.first_card_offence(),
-            1 => row.second_card_offence(),
-            _ => -1,
-        };
+        let offence = red_card_offence(row);
         matches = matches.wrapping_add(1);
         if offence == 0xc {
             matches = matches.wrapping_add(3);
@@ -286,7 +367,7 @@ pub(crate) unsafe fn england_card_verdict(row: MatchRecordRow, fixture: Fixture,
     }
     let ban = (matches != 0).then(|| ImmediateBan { matches, reason, amount, rules: [ENGLAND_RULING_BODY.rule_set, 0xff, 0xff, 0xff],
         start: ban_start_in(14) }); // sx18_1: the English ban starts in two weeks
-    CardVerdict { pending: None, ban }
+    CardVerdict { pending: Vec::new(), ban }
 }
 
 /// Applies a player's cards of one match under the English rules (`england_card_verdict`): nothing without a booking or
@@ -311,7 +392,7 @@ pub(crate) unsafe extern "thiscall" fn compare_rb_england_process_match_cards(th
 /// one) and every `every`-th booking bans for one more match (reason 1, amount `every`). The ban starts today, under
 /// `rules`.
 pub(crate) unsafe fn plain_card_verdict(row: MatchRecordRow, entry: usize, add_all: bool, every: u8, rules: [u8; 4]) -> CardVerdict {
-    let (mut matches, mut reason, mut amount) = (0u8, 0xffu8, 0i8);
+    let (mut matches, mut reason, mut amount) = (0u8, 0xffu8, 0i16);
     if row.red_card() == 1 {
         matches = 1;
         reason = 2;
@@ -324,11 +405,11 @@ pub(crate) unsafe fn plain_card_verdict(row: MatchRecordRow, entry: usize, add_a
         if count % every == 0 {
             matches += 1;
             reason = 1;
-            amount = every as i8;
+            amount = every as i16;
         }
     }
     let ban = (matches != 0).then(|| ImmediateBan { matches, reason, amount, rules, start: ban_start_today() });
-    CardVerdict { pending: None, ban }
+    CardVerdict { pending: Vec::new(), ban }
 }
 
 /// Europe's card rules (`plain_card_verdict`): one match for a red card and one for every third booking (counted one

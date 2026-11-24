@@ -14,3 +14,5 @@ Parado pelo tamanho (rodada interrompida pelo limite de uso). Notas para quem pe
   2 e 3 a mesma busca com regras proprias; 4 a forma em [0xb74350] + 0x30 + player*0x27, byte +0x26 & 0xf; depois
   random(0x32) contra temperamento + pressao e random(100).
 - Devolve 1 (aceita) ou 0 (contesta).
+
+**24/11/2026:** escrito pelo leitor sxA (codigo.rs, rotinas.py, mutacoes.py, PRONTO.txt nesta pasta); estas notas ficam como histórico.

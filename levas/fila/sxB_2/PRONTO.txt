@@ -1,0 +1,9 @@
+NAO PROVADO NO JOGO (leitor sxB, rodada 5, 24/11/2026): Media::write_wants_first_team_news_text 0x75a940 (0xbe8) e
+Media::write_player_outburst_news_text 0x733fc0 (0xbd9), inteiras, um desvio cada, em pedacos com nome. Item de
+SIMULACAO (sem TELAS): rodam pelo modo CM_TEXTO_NOTICIAS quando essas historias da midia saem (a 0x733fc0 sorteia
+utils_random(2) no tipo 0x52; a copia sorteia igual).
+DEPENDE do sx01e_3 (MediaText, NewsName, club_long_name, club_short_name, compare_media_text_writer,
+MEDIA_TEXT_UNSET): na mesma leva ou depois dele (o sx01e_3 esta como TELAS; se a sessao principal o passar a
+simulacao, podem ir juntos). Nao usa a macro media_text! (macro nao atravessa modulo depois do esvaziar_motor).
+Compila sobre o HEAD c269cb610 com o sx01e_3 (0 avisos nas linhas do item); com as mutacoes, compila.
+Comparador: compare_media_text_writer (o texto fica de fora quando a copia marca MEDIA_TEXT_UNSET).

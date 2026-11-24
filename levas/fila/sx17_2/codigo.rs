@@ -8,7 +8,7 @@ unsafe fn player_search_result_at(this: usize, k: i32) -> usize {
 }
 
 /// Sorts the result array by person (`player_search_compare_results_by_person`), as every list routine does after a change.
-unsafe fn player_search_sort_results(this: usize) {
+pub(crate) unsafe fn player_search_sort_results(this: usize) {
     exe::crt_qsort(read_usize(this + player_search_fields::RESULTS), read_u32(this + player_search_fields::RESULT_COUNT),
                    SCOUT_DAY_RESULT_SIZE as u32, player_search_compare_results_by_person as *const () as usize);
 }
@@ -123,7 +123,7 @@ pub(crate) unsafe extern "thiscall" fn compare_player_search_add_player(this: us
         return o(this, person);
     }
     player_search_compare_results(this, || format!("player_search_add_player({:#x}, person {:#x})", this, person.addr()),
-        &[], Some(read_i32(person.addr())), || o(this, person), || player_search_add_player(this, person),
+        &[], |e| player_search_entry_person(e) == read_i32(person.addr()), || o(this, person), || player_search_add_player(this, person),
         |(_, capacity, count)| read_i32(this + SCOUT_DAY_RESULT_CAPACITY) == capacity + 250 && read_i32(this + player_search_fields::RESULT_COUNT) == count + 1)
 }
 
@@ -183,7 +183,7 @@ pub(crate) unsafe extern "thiscall" fn compare_player_search_add_result(this: us
         return o(this, entry);
     }
     player_search_compare_results(this, || format!("player_search_add_result({:#x}, person {})", this, read_i32(entry + 0xc)),
-        &[(entry, SCOUT_DAY_RESULT_SIZE)], None, || o(this, entry), || player_search_add_result(this, entry),
+        &[(entry, SCOUT_DAY_RESULT_SIZE)], |_| false, || o(this, entry), || player_search_add_result(this, entry),
         |(_, capacity, count)| read_i32(this + SCOUT_DAY_RESULT_CAPACITY) == capacity + 250 && read_i32(this + player_search_fields::RESULT_COUNT) == count + 1)
 }
 
@@ -211,7 +211,7 @@ pub(crate) unsafe extern "thiscall" fn player_search_remove_own_squad(this: usiz
 /// squad the array is freed, so only the original runs and the plan (no array, capacity and count 0) is checked.
 pub(crate) unsafe extern "thiscall" fn compare_player_search_remove_own_squad(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I4%%);
-    player_search_compare_results(this, || format!("player_search_remove_own_squad({:#x})", this), &[], None,
+    player_search_compare_results(this, || format!("player_search_remove_own_squad({:#x})", this), &[], |_| false,
         || o(this), || player_search_remove_own_squad(this), |_| player_search_results_freed(this))
 }
 
@@ -264,7 +264,7 @@ pub(crate) unsafe extern "thiscall" fn compare_player_search_remove_player(this:
     if player_search_find_result(this, person).is_err() {
         return o(this, person);
     }
-    player_search_compare_results(this, || format!("player_search_remove_player({:#x}, person {:#x})", this, person.addr()), &[], None,
+    player_search_compare_results(this, || format!("player_search_remove_player({:#x}, person {:#x})", this, person.addr()), &[], |_| false,
         || o(this, person), || player_search_remove_player(this, person), |_| player_search_results_freed(this))
 }
 
@@ -368,7 +368,7 @@ unsafe fn player_search_relink_result(this: usize, entry: usize) -> bool {
 /// array is freed, so only the original's outcome is checked (no array, capacity and count 0).
 pub(crate) unsafe extern "thiscall" fn compare_player_search_purge_invalid_results(this: usize, relink: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I7%%);
-    player_search_compare_results(this, || format!("player_search_purge_invalid_results({:#x}, {})", this, relink), &[], None,
+    player_search_compare_results(this, || format!("player_search_purge_invalid_results({:#x}, {})", this, relink), &[], |_| false,
         || o(this, relink), || player_search_purge_invalid_results(this, relink), |_| player_search_results_freed(this))
 }
 
@@ -393,9 +393,14 @@ pub(crate) unsafe extern "C" fn compare_player_search_compare_results_by_person(
 }
 
 /// The result list has no array, no capacity and no entries (what a routine that empties it leaves).
-unsafe fn player_search_results_freed(this: usize) -> bool {
+pub(crate) unsafe fn player_search_results_freed(this: usize) -> bool {
     read_usize(this + player_search_fields::RESULTS) == 0 && read_u32(this + SCOUT_DAY_RESULT_CAPACITY) == 0
         && read_u32(this + player_search_fields::RESULT_COUNT) == 0
+}
+
+/// The person index (+0xc) of a search result read from a memory copy.
+pub(crate) fn player_search_entry_person(entry: &[u8]) -> i32 {
+    i32::from_le_bytes([entry[0xc], entry[0xd], entry[0xe], entry[0xf]])
 }
 
 /// The memory a result list routine changes: the array header (pointer, capacity, count), the report mark, the assigned
@@ -413,9 +418,10 @@ unsafe fn player_search_result_regions(this: usize, extra: &[(usize, usize)]) ->
 
 /// Runs a result list routine side by side over `player_search_result_regions`, the original first. When the original
 /// moved or freed the array (realloc, free), the copy cannot run on the same memory: only `plan` (given the array,
-/// capacity and count before) is checked. `mask_person`: the byte +0x2b of that person's entry is ignored.
-unsafe fn player_search_compare_results<R: PartialEq + core::fmt::Debug>(this: usize, label: impl FnOnce() -> String, extra: &[(usize, usize)],
-        mask_person: Option<i32>, original: impl FnOnce() -> R, copy: impl FnOnce() -> R, plan: impl FnOnce((usize, i32, i32)) -> bool) -> R {
+/// capacity and count before) is checked. `unset_2b`: the entries whose byte +0x2b the original leaves unset (its
+/// stack leftover), ignored on both sides.
+pub(crate) unsafe fn player_search_compare_results<R: PartialEq + core::fmt::Debug>(this: usize, label: impl FnOnce() -> String,
+        extra: &[(usize, usize)], unset_2b: impl Fn(&[u8]) -> bool, original: impl FnOnce() -> R, copy: impl FnOnce() -> R, plan: impl FnOnce((usize, i32, i32)) -> bool) -> R {
     let regions = player_search_result_regions(this, extra);
     let before = crate::comparison::MemorySnapshot::read(&regions);
     let header = (read_usize(this + player_search_fields::RESULTS), read_i32(this + SCOUT_DAY_RESULT_CAPACITY),
@@ -431,16 +437,14 @@ unsafe fn player_search_compare_results<R: PartialEq + core::fmt::Debug>(this: u
     let n = crate::rng::pause_trace(copy);
     let mut after_copy = crate::comparison::MemorySnapshot::read(&regions);
     after_original.write_back();
-    if let Some(person) = mask_person {
-        for snapshot in [&mut after_original, &mut after_copy] {
-            if let Some((address, array)) = snapshot.0.last_mut() {
-                if *address != header.0 {
-                    continue;
-                }
-                for entry in array.chunks_exact_mut(SCOUT_DAY_RESULT_SIZE) {
-                    if i32::from_le_bytes([entry[0xc], entry[0xd], entry[0xe], entry[0xf]]) == person {
-                        entry[0x2b] = 0;
-                    }
+    for snapshot in [&mut after_original, &mut after_copy] {
+        if let Some((address, array)) = snapshot.0.last_mut() {
+            if *address != header.0 {
+                continue;
+            }
+            for entry in array.chunks_exact_mut(SCOUT_DAY_RESULT_SIZE) {
+                if unset_2b(entry) {
+                    entry[0x2b] = 0;
                 }
             }
         }

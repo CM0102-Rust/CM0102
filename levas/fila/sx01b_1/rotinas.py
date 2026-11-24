@@ -21,7 +21,7 @@
 SAVE = False
 # 23/11/2026: o texto so e escrito quando a noticia e aberta (0 chamadas na carreira automatica): a prova e o Lucas abrindo
 # noticias de reacao da diretoria e da torcida jogando comparando, como as telas.
-TELAS = True
+# 24/11/2026: provado pela carreira automatica com o modo de textos (CM_TEXTOS=1 na cadeia); deixou de ser TELAS.
 ROTINAS = [('write_board_fans_reaction_news_text', 0x738d50, [0x81, 0xec, 0x30, 0x03, 0x00, 0x00])]
 DOCS = ('o texto da noticia da reacao da diretoria ou da torcida a resposta do tecnico',
         "the text of the news where the board or the supporters react to the manager's answer",

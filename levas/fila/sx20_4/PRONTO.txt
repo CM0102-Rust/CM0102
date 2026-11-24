@@ -1,0 +1,2 @@
+NAO PROVADO NO JOGO (leitor sx20, rodada 5, 24/11/2026): compila sobre o HEAD 589af8252 junto com os outros sx20 (copia propria; cargo build --release sem erros e sem avisos nas linhas dos itens; as mutacoes dos 15 itens aplicadas juntas tambem compilam; ancoras 1 vez no motor com os itens). Prologos conferidos em fronteira de instrucao, sem relativas.
+Simulacao; DEPENDE DO sx20_3. Prova: carreira ENG (a limpeza na aposentadoria de jogador-tecnico, rara; a ordem no qsort da criacao das listas). Comparadores: lado a lado (contrato +0x10..+0x4e; a resposta da ordem).

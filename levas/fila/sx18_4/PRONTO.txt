@@ -1,0 +1,3 @@
+sx18_4 (simulacao ENG): write_match_record_to_news (0x7e4de0), read_match_record_from_news (0x7e4fa0), write_staff_name_ref_to_news (0x7e5160).
+Compilado sobre o HEAD 589af8252 (e antes sobre o e9661948e) (copia propria de rust/ e cm0102-base/, os sx18_1..29 aplicados pela ancora, cargo build --release ok, 0 avisos nas linhas dos itens; com todas as mutacoes aplicadas juntas, ok). Prologos conferidos (nenhum com call/salto relativo) e as rotinas iguais no cm0102-1080.exe. Nao rodado no jogo.
+Prova: comparacao ENG ate 2002-06-01 (as vagas das noticias de partida, recordes, suspensao e midia; muito usadas); as 3 mutacoes sao do comparador (o texto nao volta a simulacao).

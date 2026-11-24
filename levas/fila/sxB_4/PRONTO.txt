@@ -1,0 +1,7 @@
+NAO PROVADO NO JOGO (leitor sxB, rodada 5, 24/11/2026): news_job_rumour_text 0x69fef0 ((6, 0x1776)),
+news_fa_expectations_text 0x6a4550 ((6, 0x177e)) e MANAGER_MANAGER::news_job_offer_to_human_text 0x6a5120
+((6, 0x1774)), inteiras, um desvio cada. Item de SIMULACAO (sem TELAS): rodam pelo modo CM_TEXTO_NOTICIAS quando
+saem o boato de cargo, as expectativas da federacao (so com selecao) e a oferta de emprego ao humano (so quando um
+clube oferece o cargo ao humano: pode nao acontecer na carreira de teste ate 2002-06-01).
+Compila sobre o HEAD c269cb610 (0 avisos nas linhas do item); com as mutacoes, compila; ancoras com 1 ocorrencia.
+Comparador: compare_text_writer.

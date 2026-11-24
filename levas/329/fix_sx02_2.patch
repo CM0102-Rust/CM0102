@@ -1,0 +1,24 @@
+--- a/rust/src/motor/transfer_manager.rs	2026-11-24 09:23:34.134787200 -0300
++++ b/rust/src/motor/transfer_manager.rs	2026-11-24 09:23:34.202853500 -0300
+@@ -11265,7 +11265,7 @@
+ /// (not a type-5 contract; the lookup stored in `G_CONTRACT_LOOKUP_RESULT`).
+ /// - Flag 2: the seller when a human manages it (`exe::news_club_has_human_manager` on `G_NEWS`) goes first.
+ /// - Flag 1: the buyer when a human manages it.
+-/// - Flag 4: with a loan contract (`exe::contract_manager_get_loan_contract`) at a club other than the seller, the club
++/// - Flag 4: with a loan contract (`exe::contract_manager_get_loan_contract`) at a club other than the buyer, the club
+ /// linked to the target's club job (`exe::club_get_linked_b_team` with 1, when its flag comes back 0) or the club job
+ /// itself, human or not; then the buyers of the rival offers (the slot list at the offer's +0) that are not closed
+ /// (`offer_is_closed`) and not this offer's slot, when a human manages them; past `max`, the "Error" box (line
+@@ -11313,10 +11313,10 @@
+         *out.add(n as usize) = buyer.addr();
+         n += 1;
+     }
+-    // a loan contract at a club other than the seller
++    // a loan contract at a club other than the buyer (0x8d1269/0x8d1434: the loan's club id against the buyer's)
+     let loan_elsewhere = || {
+         exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), target) != 0
+-            && (seller == 0 || Contract(exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), target)).club() != read_usize(seller))
++            && (buyer.is_null() || Contract(exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), target)).club() != read_usize(buyer.addr()))
+     };
+     if flags & 4 != 0 {
+         if loan_elsewhere() {

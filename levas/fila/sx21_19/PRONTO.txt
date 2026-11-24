@@ -1,0 +1,2 @@
+sx21_19 (simulacao, LIGAS ENG BEL HOL GER DEN): compilado sobre o HEAD c269cb610 com os itens sx21_1..sx21_37 aplicados pela ancora (cargo build --release sem erro e sem aviso no codigo do item). Nao rodado no jogo.
+Prova: carreira com LIGAS (ENG BEL HOL GER DEN) comparando (a segunda janela alema em janeiro); mutacoes 3 pelo comparador e pela carreira. Depende da sx21_1 e da sx21_5.

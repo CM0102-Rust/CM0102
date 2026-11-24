@@ -1,0 +1,2 @@
+sx21_37 (simulacao, carreira ENG ate 2002-06-01): compilado sobre o HEAD c269cb610 com os itens sx21_1..sx21_37 aplicados pela ancora (cargo build --release sem erro e sem aviso no codigo do item). Nao rodado no jogo.
+Prova: carreira ENG comparando, se as rotinas rodarem nela (textos das noticias do tecnico humano, listas ordenadas); mutacoes 3 pelos comparadores. Se a cadeia mostrar que nao rodam, mudar o item para TELAS (as listas ordenadas das telas).

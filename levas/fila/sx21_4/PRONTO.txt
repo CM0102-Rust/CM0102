@@ -1,0 +1,2 @@
+sx21_4 (simulacao, carreira ENG ate 2002-06-01): compilado sobre o HEAD c269cb610 com os itens sx21_1..sx21_37 aplicados pela ancora (cargo build --release sem erro e sem aviso no codigo do item). Nao rodado no jogo.
+Prova: carreira ENG comparando (o fim de emprestimo ingles usa o 0x40a610); mutacoes 3 pelos comparadores; a do slot 5 e a do emprestimo de base so caem se esses slots forem chamados na carreira.

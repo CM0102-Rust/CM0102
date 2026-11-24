@@ -1,0 +1,2 @@
+sx21_24 (simulacao, carreira ENG ate 2002-06-01): compilado sobre o HEAD c269cb610 com os itens sx21_1..sx21_37 aplicados pela ancora (cargo build --release sem erro e sem aviso no codigo do item). Nao rodado no jogo.
+Prova: carreira ENG comparando (as noticias de janela de todas as nacoes passam pelo gestor de transferencias); comparador so a original; sem mutacao (a noticia nao volta a simulacao e o comparador nao ve a copia). As carreiras Rust x2 rodam a copia.

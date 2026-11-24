@@ -1,0 +1,5 @@
+Compilado em 24/11/2026 sobre o HEAD c269cb610 (copia propria no rascunho, cargo build --release sem erros) junto
+com cx01_14, sx16_7 e cx01_7 (dependencias) e os outros itens cx02; ancoras das mutacoes unicas no motor inteiro.
+Nao rodou o jogo (a prova e da sessao principal).
+LIGAS 8 ligas (sem ATE): os grupos das copas italianas sao no segundo semestre de 2001. Depende do cx02_4, cx02_10 e
+cx02_11.

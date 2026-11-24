@@ -1,0 +1,1 @@
+Antes de integrar: pôr (0x57d080, 3) e (0x58b480, 3) em RELATIVAS no rust/src/detours.rs (prólogo push esi; mov esi, ecx; call rel32 ~X). Depende do cx01_14 (delete_comp_stats), cx02_3 (delete_stages_and_vector), cx03_3 (delete_through) e cx04_1 (drop_stats_league).

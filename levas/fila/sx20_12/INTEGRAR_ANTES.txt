@@ -1,0 +1,1 @@
+Depende do sx20_11 (langlib_text, contract_status_bits, contract_compare, staff_contract_format_end_date_text, as constantes).

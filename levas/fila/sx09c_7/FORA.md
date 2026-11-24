@@ -18,3 +18,5 @@ Notas para quem pegar:
 - Sempre no fim: o registro de 14 bytes na lista [fine]: +0 jogador, +4 motivo, +5 resposta da is_fine_justified, +6 a
   data de 0x54c770(hoje, periodo).
 - Comparador: so a original, com o plano (contagem, listas) conferido depois; mutacoes pela carreira ENG.
+
+**24/11/2026:** escrito pelo leitor sxA (codigo.rs, rotinas.py, mutacoes.py, PRONTO.txt nesta pasta); estas notas ficam como histórico.

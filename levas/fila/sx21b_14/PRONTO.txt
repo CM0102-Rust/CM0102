@@ -1,0 +1,2 @@
+sx21b_14 (simulacao, carreira ENG ate 2002-06-01): compilado sobre o HEAD c269cb610 com os itens sx21_1..sx21_37 e sx21b_1..sx21b_16 aplicados pela ancora, e de novo so com os sx21b (cargo build --release sem erro e sem aviso no codigo dos itens; as ancoras das mutacoes aparecem uma vez so no motor com a fila inteira). Nao rodado no jogo.
+Prova: carreira ENG comparando (as ordenacoes da carreira; a copia de arquivo na carga do banco de dados); mutacao 1 pelo comparador lado a lado. A versao so roda nas caixas de erro.

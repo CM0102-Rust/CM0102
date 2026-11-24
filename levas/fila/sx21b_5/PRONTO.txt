@@ -1,0 +1,2 @@
+sx21b_5 (SAVE): compilado sobre o HEAD c269cb610 com os itens sx21_1..sx21_37 e sx21b_1..sx21b_16 aplicados pela ancora, e de novo so com os sx21b (cargo build --release sem erro e sem aviso no codigo dos itens; as ancoras das mutacoes aparecem uma vez so no motor com a fila inteira). Nao rodado no jogo.
+SAVE (CARGA): prova do save (o .qst gravado com e sem a leva; a carga do FeriasTesteSave); mutacoes 2 pela prova do save (sem contador).

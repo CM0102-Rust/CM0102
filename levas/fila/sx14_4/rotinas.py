@@ -19,7 +19,7 @@
 #   adiar partida ou reclamar do arbitro);
 # - 0x2b reacao a reclamacao do arbitro: a reclamacao aceita (a federacao troca o arbitro);
 # - 0x178a resultado da apelacao: apelar de uma suspensao (perfil do jogador suspenso > "Appeal ban").
-TELAS = True
+# 24/11/2026: provado pela carreira automatica com o modo de textos (CM_TEXTOS=1 na cadeia); deixou de ser TELAS.
 ROTINAS = [('news_job_application_reply_text', 0x69c6b0, [0xb8, 0x88, 0x13, 0x00, 0x00]),
            ('news_board_interest_memo_text', 0x69c910, [0x53, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x10]),
            ('news_fa_performance_assessment_text', 0x6a5b40, [0x81, 0xec, 0x58, 0x02, 0x00, 0x00]),

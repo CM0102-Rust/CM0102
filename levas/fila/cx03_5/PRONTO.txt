@@ -1,0 +1,3 @@
+NAO PROVADO NO JOGO (leitor cx03, rodada 5, 24/11/2026): compila sobre o HEAD c269cb610 junto com cx01_14, cx02_3, cx02_4, cx02_13 e cx03_1..24 (git archive de rust/ e cm0102-base/, cargo build --release sem erro e sem aviso novo; de novo com todas as mutacoes do cx03 aplicadas de uma vez: compila; ancoras das mutacoes unicas no motor e na fila inteira). Prologos conferidos contra o cm0102.exe (fronteira de instrucao) e as rotinas inteiras iguais no cm0102-1080.exe; nenhum endereco repetido no motor.rs nem na fila. Nao rodei o conferir_assinaturas.py --fila (escreve no tsv compartilhado): rodar antes de integrar.
+Depende do cx03_3 (delete_through). INTEGRAR_ANTES.txt: as entradas RELATIVAS.
+TELAS (sem mutacoes): como o cx03_3.

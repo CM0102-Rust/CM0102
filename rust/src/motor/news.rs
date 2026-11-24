@@ -1039,8 +1039,13 @@ pub(crate) unsafe extern "thiscall" fn compare_newsitem_write_text(news: usize, 
     if manager == 0 || out == 0 {
         return o(news, manager, out, body, flag);
     }
-    let (ro, rr) = (core::cell::Cell::new(0u32), core::cell::Cell::new(0u32));
     let (cat, ty) = (exe::newsitem_get_category(news), read_u32(news));
+    if cat == 2 && ty == 0x24 {
+        // the original writer of this item (0x770d20) picks its template, with more than 4 players of one club, by a
+        // stack dword it never sets: the two calls read different leftovers. Only the original runs until it is Rust
+        return o(news, manager, out, body, flag);
+    }
+    let (ro, rr) = (core::cell::Cell::new(0u32), core::cell::Cell::new(0u32));
     compare_text_writer(out, || ro.set(o(news, manager, out, body, flag)), |t| rr.set(newsitem_write_text(news, manager, t, body, flag)),
         || format!("newsitem_write_text(category {}, type {:#x}, body {}, flag {}, piece {})", cat, ty, body, flag, NEWS_LAST_PIECE));
     SCOREBOARD.record(ro.get() == rr.get(), || format!("newsitem_write_text(type {:#x}) returned {} x {}", ty, ro.get(), rr.get()));

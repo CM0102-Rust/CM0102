@@ -1,0 +1,1 @@
+Depende do sx21b_3 (simulacao): integrar depois dele.

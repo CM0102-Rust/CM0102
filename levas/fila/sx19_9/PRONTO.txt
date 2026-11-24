@@ -1,0 +1,1 @@
+compilado sobre o HEAD 589af8252 com sx18_1..29 e sx19_1..19 aplicados (cargo build --release, 0 erros, 0 avisos nas linhas sx19; ancoras das mutacoes unicas). Nao rodado no jogo. Simulacao, LIGAS ENG POL TUR GRE HRV RUS ate 2002-08-01. Depende do sx18_1, sx19_1 e sx19_8. A mutacao do ciclo russo so o comparador acusa (o ciclo nao suspende).

@@ -1,0 +1,8 @@
+NAO PROVADO NO JOGO (leitor sxB, rodada 5, 24/11/2026): Discipline::write_further_ban_news_text 0x55b8b0 (noticia
+0x7d3), inteira, um desvio, em pedacos com nome (FurtherBan, further_ban_sentence). Item de SIMULACAO (sem TELAS):
+roda na carreira automatica pelo modo CM_TEXTO_NOTICIAS quando sai uma suspensao a mais. Com recurso pendente (vaga
+12) so a original roda no comparador (ela chama a write_ban_news_text, cujo comparador confere).
+Compila sobre o HEAD c269cb610 (0 avisos nas linhas do item); com as mutacoes aplicadas, compila; ancoras com 1
+ocorrencia. Comparador: compare_text_writer; no corpo de uma suspensao em dias ou de tipo acima de 4 so os vinculos e
+o gerador (a original formata lixo da pilha). Se a carreira de teste nao tiver suspensao a mais ate 2002-06-01, as
+mutacoes escapam por falta de chamada (tipo raro).

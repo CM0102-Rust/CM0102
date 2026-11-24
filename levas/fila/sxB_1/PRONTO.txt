@@ -1,0 +1,7 @@
+NAO PROVADO NO JOGO (leitor sxB, rodada 5, 24/11/2026): o texto da noticia de aposentadoria (4, 0xbba), 0x7a9650,
+inteiro, um desvio, em pedacos com nome pelos ramos do corpo. Item de SIMULACAO (sem TELAS): roda na carreira
+automatica pelo modo CM_TEXTO_NOTICIAS (ligado na cadeia em todo jogo comparando) quando sai a noticia de
+aposentadoria (anunciadas, imediatas e por lesao; ENG ate 2002-06-01, mais perto do fim da temporada).
+Compila sobre o HEAD c269cb610 (0 avisos nas linhas do item); com as mutacoes aplicadas, compila; ancoras com 1
+ocorrencia. Comparador: compare_text_writer (texto, vinculos e gerador; a copia sorteia o mesmo utils_random(2)).
+As mutacoes so sao acusadas pela comparacao do escritor (o texto nao volta para a simulacao).

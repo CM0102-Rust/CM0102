@@ -1,0 +1,2 @@
+NAO PROVADO NO JOGO (leitor sx17, rodada 5, 24/11/2026): compila sobre o HEAD e9661948e junto com os outros sx17 (copia propria, 0 erros e 0 avisos nas linhas do item; os sx17_1/3/4/6/7/8 tambem sem os sx17_2/5). Prologos conferidos em fronteira de instrucao, sem relativas; ancoras das mutacoes 1 vez no motor com o item.
+Item TELAS. Prova: o relatorio do treinador na tela de um jogador e os relatorios de olheiro. Comparadores: os tres rodam os dois (so leem; o texto e escrito pela original, depois pela copia, comparado e devolvido).

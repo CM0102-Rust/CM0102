@@ -1,0 +1,1 @@
+Depende do cx04_7 (StoryTo, post_story, compare_story_post, new_local_news, LOCAL_NEWS_WORDS).

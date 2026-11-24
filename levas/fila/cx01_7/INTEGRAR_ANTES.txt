@@ -1,0 +1,1 @@
+Depende do sx16_7 (game_cd_check).

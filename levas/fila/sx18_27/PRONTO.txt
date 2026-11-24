@@ -1,0 +1,4 @@
+sx18_27 (TELAS): rb_japan_cup_is_one_booking_from_ban (0x7e0450), rb_korea_is_one_booking_from_ban (0x7e0aa0), rb_northern_ireland_is_one_booking_from_ban (0x7e0e20), rb_norway_cup_is_one_booking_from_ban (0x7e1120).
+Compilado sobre o HEAD 589af8252 (e antes sobre o e9661948e) (copia propria de rust/ e cm0102-base/, os sx18_1..29 aplicados pela ancora, cargo build --release ok, 0 avisos nas linhas dos itens; com todas as mutacoes aplicadas juntas, ok). Prologos conferidos (nenhum com call/salto relativo) e as rotinas iguais no cm0102-1080.exe. Nao rodado no jogo.
+Depende do sx18_26 (integrar depois).
+Prova: o Lucas jogando comparando, pelos caminhos do cabecalho do rotinas.py (ficha de jogador suspenso ou com cartoes, elenco do clube com o aviso "a um amarelo da suspensao", historico de partidas do clube; carregar outro jogo para os destrutores), com a liga de cada orgao carregada.

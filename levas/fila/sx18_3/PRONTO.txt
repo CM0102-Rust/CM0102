@@ -1,0 +1,4 @@
+sx18_3 (simulacao ENG): rb_international_process_match_cards (0x7df1c0), rb_international_start_new_season (0x7df3c0).
+Compilado sobre o HEAD 589af8252 (e antes sobre o e9661948e) (copia propria de rust/ e cm0102-base/, os sx18_1..29 aplicados pela ancora, cargo build --release ok, 0 avisos nas linhas dos itens; com todas as mutacoes aplicadas juntas, ok). Prologos conferidos (nenhum com call/salto relativo) e as rotinas iguais no cm0102-1080.exe. Nao rodado no jogo.
+Depende do sx18_1 (integrar depois).
+Prova: comparacao ENG ate 2002-06-01 (partidas das selecoes); mutacao do terceiro amarelo internacional. A virada (0x7df3c0) e passageira: so roda na virada de uma competicao da regra 0.

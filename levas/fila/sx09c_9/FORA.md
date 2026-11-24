@@ -6,3 +6,5 @@ write_ban_news_text ja portada (motor/discipline.rs, 0x5576e0: news_text_format,
 read_match_record_from_news, format_duration_text, a get_scope_text 0x55ce40 do sx09b_3 pelo endereco,
 ban_result_sentence) e a regra das frases so nos ramos em que a original as monta (auditoria de 23/11). Nos tipos que
 nao sao a suspensao a mais, a original cai na write_ban_news_text.
+
+24/11/2026 (leitor sxB, rodada 5): escrito como item de SIMULACAO (modo CM_TEXTO_NOTICIAS); ver PRONTO.txt.

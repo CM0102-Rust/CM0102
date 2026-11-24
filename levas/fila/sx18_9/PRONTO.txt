@@ -1,0 +1,4 @@
+sx18_9 (LIGAS = 'ENG ESP ITA FRA BRA JPN AUS USA'): rb_brazil_national_process_match_cards (0x7dc0d0), rb_brazil_regional_construct (0x7dc3c0), rb_brazil_regional_process_match_cards (0x7dc410).
+Compilado sobre o HEAD 589af8252 (e antes sobre o e9661948e) (copia propria de rust/ e cm0102-base/, os sx18_1..29 aplicados pela ancora, cargo build --release ok, 0 avisos nas linhas dos itens; com todas as mutacoes aplicadas juntas, ok). Prologos conferidos (nenhum com call/salto relativo) e as rotinas iguais no cm0102-1080.exe. Nao rodado no jogo.
+Depende do sx18_1 e sx18_7 (integrar depois).
+Prova: comparacao com LIGAS 'ENG ESP ITA FRA BRA JPN AUS USA' ate 2002-06-01 (construtores na criacao do jogo, regras a cada partida com cartao das competicoes do pais); Rust x2 + detector; as mutacoes do mutacoes.py (as de escala so pelo comparador do construtor).

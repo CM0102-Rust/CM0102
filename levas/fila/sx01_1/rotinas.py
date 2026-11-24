@@ -26,7 +26,7 @@
 SAVE = False
 # 23/11/2026: o texto so e escrito quando a noticia e aberta: a prova e o Lucas abrindo historias da midia sobre clubes
 # e selecoes jogando comparando, como as telas.
-TELAS = True
+# 24/11/2026: provado pela carreira automatica com o modo de textos (CM_TEXTOS=1 na cadeia); deixou de ser TELAS.
 ROTINAS = [('write_team_media_story_news_text', 0x74bbd0, [0x6a, 0xff, 0x64, 0xa1, 0x00, 0x00, 0x00, 0x00])]
 DOCS = ('o texto da historia da midia sobre um clube ou selecao',
         'the text of a media story about a club or national team',

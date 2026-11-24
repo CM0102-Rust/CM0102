@@ -11150,3 +11150,965 @@ pub(crate) unsafe fn review_bid_copy_offer(local: Offer, src: usize) {
     write_u32(l.addr(), 0);
     l.set_negotiation_index((0xffff_ffff) as usize);
 }
+
+/// Lists the human-managed clubs that should receive news about a player, into `out` (up to `max`), and returns how
+/// many.
+///
+/// - Flag 2: the club of the player's contract (any contract type, `contract_club_any_type`, which stores the lookup in
+/// `G_CONTRACT_LOOKUP_RESULT`) when a human manages it (`exe::news_club_has_human_manager` on `G_NEWS`) goes first.
+/// - Flag 8: the clubs shortlisting him (`exe::shortlist_manager_collect_interested_clubs` of the manager's
+/// `shortlist_manager()`, with 1, 1, 0, into a local list) managed by a human; past `max`, the "Error" box (line 0x3aa4)
+/// for each one left out.
+/// - Flag 0x10: each of the 16 human manager slots (the last 16 people of the table, from the last one) with a
+/// `classification()` and a `club_job()`, when the player's reach (`player_news_reach`) takes him. From his
+/// reputations (the player sheet's, otherwise the non-player's; flag 0x200 raises the thresholds): world reputation
+/// above 9500 (0x200) or 9200: everyone; above 9000 or 8300: the managers whose nation or club nation is on the
+/// continent of the player's nation or of his club job's nation; home or current reputation above 8300 or 7200: the
+/// managers whose nation or club nation is the player's nation (by home reputation) or his contract club's nation (by
+/// current reputation), England and Scotland reaching each other; otherwise, a player in form (average rating above 9.25
+/// - current reputation x 0.00015, or x 0.00025 without 0x200) with current reputation above 3000 and flag 0x80: the
+/// contract club's nation; otherwise with flag 0x40: the managers whose club is in the player's contract club's division,
+/// when his current reputation is above the division's reputation x 750 (at least 5000; with 0x200) or above the
+/// division's reputation x 350 and 2500 (without), or he is in form against 9.0. A full list: the "Error" box (line
+/// 0x3b43) and the slots stop.
+/// - Then the duplicates are dropped: each later copy of an entry is replaced by the last entry.
+///
+/// Defect of the original: after a duplicate is replaced by the last entry, the next slot is checked, not the moved
+/// entry, so a club listed three times (by flags 2, 8 and 0x10) can stay twice.
+/// Original: `transfer_manager_collect_player_news_recipients` (0x8d1da0, transfer_manager.cpp, thiscall, ret 0x10).
+pub(crate) unsafe extern "thiscall" fn collect_player_news_recipients(this: usize, player: usize, flags: u32, out: *mut usize, max: u32) -> u8 {
+    let this = TransferManagerFields(this);
+    let player = Staff(player);
+    let max = max as u8 as i8;
+    let mut n: i8 = 0;
+    let mut list = [0u8; 0x10];
+    let l = Llist(list.as_mut_ptr() as usize);
+    exe::new_llist(l);
+    if flags & 2 != 0 && contract_club_any_type(player) != 0
+        && exe::news_club_has_human_manager(read_usize(G_NEWS), contract_club_any_type(player)) != 0 {
+        *out = contract_club_any_type(player);
+        n = 1;
+    }
+    if flags & 8 != 0 {
+        exe::shortlist_manager_collect_interested_clubs(this.shortlist_manager(), player, l, 1, 1, 0);
+        l.set_cursor(l.head());
+        loop {
+            let e = exe::llist_get_next(l);
+            if e == 0 {
+                break;
+            }
+            let club = transfer_manager_club_by_id(read_usize(e + 4)); // list entry +4: the club id
+            if exe::news_club_has_human_manager(read_usize(G_NEWS), club) != 0 {
+                if n < max {
+                    covered!("sx02_1 shortlisting human club");
+                    push_recipient(out, &mut n, club.addr()); // sx02_1: a shortlisting human club
+                } else {
+                    show_error_box(0xa8d514, 0x3aa4);
+                }
+            }
+        }
+    }
+    if flags & 0x10 != 0 {
+        let reach = player_news_reach(player, flags);
+        for k in 0..16 {
+            if n == max {
+                show_error_box(0xa8d514, 0x3b43);
+                break;
+            }
+            let manager = staff_at((read_i32(G_STAFF_COUNT) - k - 1) as isize);
+            if manager.classification() == 0 || manager.club_job().is_null() {
+                continue;
+            }
+            if player_news_reach_takes(&reach, manager, manager.club_job()) {
+                push_recipient(out, &mut n, manager.club_job().addr());
+            }
+        }
+    }
+    // duplicates: a later copy is replaced by the last entry (the moved entry is not checked again)
+    let mut i: i8 = 0;
+    if n - 1 > 0 {
+        loop {
+            let mut j = i + 1;
+            while j < n {
+                if *out.add(i as usize) == *out.add(j as usize) {
+                    n -= 1;
+                    *out.add(j as usize) = *out.add(n as usize);
+                }
+                j += 1;
+            }
+            i += 1;
+            if i >= n - 1 {
+                break;
+            }
+        }
+    }
+    exe::drop_llist(l);
+    n as u8
+}
+
+/// Comparer for `collect_player_news_recipients`: side by side from the same state of `G_CONTRACT_LOOKUP_RESULT` and of
+/// the output array (`max` entries); checks the count and the list.
+pub(crate) unsafe extern "thiscall" fn compare_collect_player_news_recipients(this: usize, player: usize, flags: u32, out: *mut usize, max: u32) -> u8 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, *mut usize, u32) -> u8>(IDX_COLLECT_PLAYER_NEWS_RECIPIENTS);
+    let slots = (max as u8 as i8).max(0) as usize;
+    let regions = [(G_CONTRACT_LOOKUP_RESULT, 4usize), (out as usize, 4 * slots)];
+    let (r, n, equal, mo, mr) = crate::comparison::side_by_side_light(&regions, || o(this, player, flags, out, max),
+        || collect_player_news_recipients(this, player, flags, out, max));
+    SCOREBOARD.record(equal && r == n, || format!(
+        "collect_player_news_recipients(player {:#x}, flags {:#x}): original {} rust {} {:x?} x {:x?}", player, flags, r, n, mo, mr));
+    r
+}
+
+/// Lists the human-managed clubs that should receive news of an offer, into `out` (up to `max`), and returns how many.
+///
+/// The target is `target_staff_id()`, the buyer `buyer_club_id()` and the seller the club of the target's contract
+/// (not a type-5 contract; the lookup stored in `G_CONTRACT_LOOKUP_RESULT`).
+/// - Flag 2: the seller when a human manages it (`exe::news_club_has_human_manager` on `G_NEWS`) goes first.
+/// - Flag 1: the buyer when a human manages it.
+/// - Flag 4: with a loan contract (`exe::contract_manager_get_loan_contract`) at a club other than the buyer, the club
+/// linked to the target's club job (`exe::club_get_linked_b_team` with 1, when its flag comes back 0) or the club job
+/// itself, human or not; then the buyers of the rival offers (the slot list at the offer's +0) that are not closed
+/// (`offer_is_closed`) and not this offer's slot, when a human manages them; past `max`, the "Error" box (line
+/// 0x3936).
+/// - Flag 8: with such a loan, the target's club job, human or not; then the human clubs shortlisting the target
+/// (`exe::shortlist_manager_collect_interested_clubs` with 1, 1, 1) other than the buyer; past `max`, the box (line
+/// 0x3959).
+/// - Flag 0x10 (with 0x20, only when `player_aware()`): each of the 16 human manager slots (the last 16 people of the
+/// table) with a `classification()` and a `club_job()`, not the buyer without flag 1 nor the seller without flag 2,
+/// when the offer's reach (`offer_news_reach`) takes him. The target's reputations (the player sheet's, otherwise the
+/// non-player's, a quarter for jobs 8 to 10) against thresholds raised by 3000 - the offer's weighted value
+/// (`exe::transfer_offer_get_weighted_value` with 0, 0, 0, 0, 1) x 0.0006 (500 for a `pre_contract()`), each at most
+/// 9750: world above 9200 + bonus, everyone; above 8300 + bonus, the managers whose nation or club nation is on the
+/// continent of the target's, the seller's or the buyer's nation; home or current above 7200 + bonus, those of the
+/// target's nation (home) or the seller's (current), England and Scotland reaching each other, and the buyer's nation
+/// unless it is one of those, for a world reputation above the same threshold, a value of at least (the nation's
+/// league standard - 10) x 500000 or a target with more than 20 caps for a national side above 5500 reputation;
+/// otherwise a target in form (average rating above 9.25 - current reputation x 0.00025) above 3000 with flag 0x80:
+/// the seller's nation; otherwise with flag 0x40: the managers in the division of the target's club job (current
+/// reputation above its reputation x 350 and 2500, or in form against 9.0) and in the buyer's division (a player job
+/// shortlisted by the buyer in a slot of type below 3 for a fee of a million or more, or the reputation a person of the
+/// buying club sees, `reputation_seen_by_club`, above the division's reputation x 350 with current reputation above
+/// 1500). A full list: the box (line 0x39f3) and the slots stop.
+/// - Then the later copies of each entry are zeroed and the zeroes squeezed out, keeping the order.
+///
+/// Defects of the original: the loan clubs of flags 4 and 8 go in without the human check and without the `max` check.
+/// Original: `TRANSFER_MANAGER::collect_offer_news_recipients` (0x8d1130, transfer_manager.cpp, thiscall, ret 0x10).
+pub(crate) unsafe extern "thiscall" fn collect_offer_news_recipients(this: usize, o: usize, flags: u32, out: *mut usize, max: u32) -> u8 {
+    let this = TransferManagerFields(this);
+    let o = Offer(o);
+    let max = max as u8 as i8;
+    let target = transfer_manager_staff_by_id(o.target_staff_id());
+    let seller = contract_club_excluding_type5(target.addr());
+    let buyer = transfer_manager_club_by_id(o.buyer_club_id());
+    let mut n: i8 = 0;
+    let mut list = [0u8; 0x10];
+    let l = Llist(list.as_mut_ptr() as usize);
+    exe::new_llist(l);
+    let human = |club: usize| exe::news_club_has_human_manager(read_usize(G_NEWS), club) != 0;
+    if flags & 2 != 0 && seller != 0 && human(seller) {
+        *out = seller;
+        n = 1;
+    }
+    if flags & 1 != 0 && human(buyer.addr()) {
+        *out.add(n as usize) = buyer.addr();
+        n += 1;
+    }
+    // a loan contract at a club other than the buyer (0x8d1269/0x8d1434: the loan's club id against the buyer's)
+    let loan_elsewhere = || {
+        exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), target) != 0
+            && (buyer.is_null() || Contract(exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), target)).club() != read_usize(buyer.addr()))
+    };
+    if flags & 4 != 0 {
+        if loan_elsewhere() {
+            let mut flag = 0u32;
+            let linked = exe::club_get_linked_b_team(target.club_job(), &mut flag, 1);
+            *out.add(n as usize) = if linked != 0 && flag == 0 { linked } else { target.club_job().addr() };
+            n += 1;
+        }
+        let rivals = Llist(read_usize(o.addr())); // offer +0: the slot list of the rival offers
+        if !rivals.is_null() {
+            rivals.set_cursor(rivals.head());
+            loop {
+                let e = exe::llist_get_next(rivals);
+                if e == 0 {
+                    break;
+                }
+                let other = Offer(offer_at(this.addr(), read_usize(e)));
+                if offer_is_closed(other) || read_usize(e) == o.slot_index() {
+                    continue;
+                }
+                let club = transfer_manager_club_by_id(other.buyer_club_id());
+                if human(club.addr()) {
+                    if n < max {
+                        covered!("sx02_2 rival bidder");
+                        *out.add(n as usize) = club.addr(); // sx02_2: a rival human bidder
+                        n += 1;
+                    } else {
+                        show_error_box(0xa8d514, 0x3936);
+                    }
+                }
+            }
+        }
+    }
+    if flags & 8 != 0 {
+        if !target.club_job().is_null() && loan_elsewhere() {
+            *out.add(n as usize) = target.club_job().addr();
+            n += 1;
+        }
+        exe::shortlist_manager_collect_interested_clubs(this.shortlist_manager(), target, l, 1, 1, 1);
+        l.set_cursor(l.head());
+        loop {
+            let e = exe::llist_get_next(l);
+            if e == 0 {
+                break;
+            }
+            let id = read_usize(e + 4); // list entry +4: the club id
+            if id == read_usize(buyer.addr()) {
+                continue;
+            }
+            let club = transfer_manager_club_by_id(id);
+            if human(club.addr()) {
+                if n < max {
+                    covered!("sx02_2 shortlisting human club");
+                    *out.add(n as usize) = club.addr(); // sx02_2: a shortlisting human club
+                    n += 1;
+                } else {
+                    show_error_box(0xa8d514, 0x3959);
+                }
+            }
+        }
+    }
+    if flags & 0x10 != 0 && (flags & 0x20 == 0 || o.player_aware() != 0) {
+        let reach = offer_news_reach(this, o, target, seller, buyer, flags);
+        for k in 0..16 {
+            if n == max {
+                show_error_box(0xa8d514, 0x39f3);
+                break;
+            }
+            let manager = staff_at((read_i32(G_STAFF_COUNT) - k - 1) as isize);
+            let club = manager.club_job();
+            if manager.classification() == 0 || club.is_null()
+                || flags & 1 == 0 && club == buyer || flags & 2 == 0 && club.addr() == seller {
+                continue;
+            }
+            if offer_news_reach_takes(&reach, manager, club) {
+                *out.add(n as usize) = club.addr();
+                n += 1;
+            }
+        }
+    }
+    // duplicates: the later copies are zeroed, then the zeroes squeezed out
+    let count = n as i32;
+    let mut i = 0i32;
+    while i < count - 1 {
+        if *out.add(i as usize) != 0 {
+            for j in i + 1..count {
+                if *out.add(j as usize) == *out.add(i as usize) {
+                    *out.add(j as usize) = 0;
+                }
+            }
+        }
+        i += 1;
+    }
+    let mut kept: i8 = 0;
+    for j in 0..count.max(0) {
+        let club = *out.add(j as usize);
+        if club != 0 {
+            *out.add(kept as usize) = club;
+            kept += 1;
+        }
+    }
+    exe::drop_llist(l);
+    kept as u8
+}
+
+/// Comparer for `collect_offer_news_recipients`: side by side from the same state of `G_CONTRACT_LOOKUP_RESULT` and of
+/// the output array (`max` entries); checks the count and the list.
+pub(crate) unsafe extern "thiscall" fn compare_collect_offer_news_recipients(this: usize, o: usize, flags: u32, out: *mut usize, max: u32) -> u8 {
+    let f = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, *mut usize, u32) -> u8>(IDX_COLLECT_OFFER_NEWS_RECIPIENTS);
+    let slots = (max as u8 as i8).max(0) as usize;
+    let regions = [(G_CONTRACT_LOOKUP_RESULT, 4usize), (out as usize, 4 * slots)];
+    let (r, n, equal, mo, mr) = crate::comparison::side_by_side_light(&regions, || f(this, o, flags, out, max),
+        || collect_offer_news_recipients(this, o, flags, out, max));
+    SCOREBOARD.record(equal && r == n, || format!(
+        "collect_offer_news_recipients(offer {:#x}, flags {:#x}): original {} rust {} {:x?} x {:x?}", o, flags, r, n, mo, mr));
+    r
+}
+
+/// Cancels every offer and every exchange offer for a released player, removes their contract offers and posts the
+/// release news (0xfb1) to the clubs involved.
+///
+/// - The offers for him (`exe::transfer_manager_get_offers_for_player` with 0, into a local list): a future transfer
+/// (`offer_status::FUTURE_TRANSFER`) loses its record (`exe::transfer_manager_remove_future_transfer`); each one becomes
+/// `offer_status::CANCELLED`, is due again in 10 days (`exe::transfer_manager_schedule_offer` with 10, 0), loses its
+/// contract offers (`exe::transfer_manager_close_offer_contract_offers` and `exe::contract_manager_remove_contract_offer`
+/// for the target and the buyer), `terms_state()` = 0, and each exchange player loses the contract offer of the offer's
+/// slot (`exe::contract_manager_remove_contract_offer_for_transfer`) and his "terms offered" byte (+4 of the list item).
+/// A human buyer (`exe::news_club_has_human_manager` on `G_NEWS`) gets news 0xfb1: 0..3 the player and his names, 4 the
+/// buyer, 5 the club of his contract (not type 5; 0 without one), 0xc = 0.
+/// - The offers he is an exchange player in (`exe::transfer_manager_get_exchange_offers_for_player`, into the same list
+/// cleared): a human seller (the club of the target's contract) gets news 0xfb1: 0..3 the player, 4 the seller, 5 the
+/// club of the player's contract, 6 the fee, 7 the player's `value()` + the fee, 8..0xb the target and his names, 0xc =
+/// 1; then he leaves the offer's exchange (`FN_TRANSFER_OFFER_REMOVE_EXCHANGE_PLAYER`).
+/// - The human clubs with news of him (`collect_player_news_recipients` with 0xa, up to 20) not already told get news
+/// 0xfb1: 0..3 the player, 5 the club of his contract, 0xc = 2.
+///
+/// Defect of the original: news slot 5 reads the id of the contract club through a null pointer when the second
+/// contract lookup finds none (the exchange and the last news read it with no check at all); a released player always
+/// still has his contract here, so it never shows.
+/// Original: `TRANSFER_MANAGER::cancel_offers_for_released_player` (0x8df9b0, transfer_manager.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn cancel_offers_for_released_player(this: usize, player: usize) {
+    let this = TransferManagerFields(this);
+    let player = Staff(player);
+    let mut list = [0u8; 0x10];
+    let l = Llist(list.as_mut_ptr() as usize);
+    exe::new_llist(l);
+    let mut told = [0usize; 0x28]; // the original's stack array (0x158..0x1f8)
+    let mut k = 0usize;
+    let mut news = [0u32; 0x38];
+    let n = news.as_mut_ptr() as usize;
+    // the id of the club of the player's contract (not type 5), as the original reads it
+    let contract_club_id = || read_usize(contract_club_excluding_type5(player.addr())) as u32;
+    if exe::transfer_manager_get_offers_for_player(this, player, l, 0) != 0 {
+        l.set_cursor(l.head());
+        loop {
+            let e = exe::llist_get_next(l);
+            if e == 0 {
+                break;
+            }
+            let o = Offer(offer_at(this.addr(), read_usize(e)));
+            covered!("sx02_3 released player offers");
+            if o.status() == offer_status::FUTURE_TRANSFER {
+                exe::transfer_manager_remove_future_transfer(this, o);
+            }
+            o.set_status(offer_status::CANCELLED); // sx02_3: the offer cancelled
+            exe::transfer_manager_schedule_offer(this, o, 10, 0);
+            exe::transfer_manager_close_offer_contract_offers(this, o);
+            let buyer = transfer_manager_club_by_id(o.buyer_club_id());
+            exe::contract_manager_remove_contract_offer(read_usize(G_CONTRACT_MANAGER), transfer_manager_staff_by_id(o.target_staff_id()), buyer);
+            o.set_terms_state(0);
+            let exchange = o.exchange_players();
+            if !exchange.is_null() {
+                exchange.set_cursor(exchange.head());
+                loop {
+                    let x = exe::llist_get_next(exchange);
+                    if x == 0 {
+                        break;
+                    }
+                    exe::contract_manager_remove_contract_offer_for_transfer(read_usize(G_CONTRACT_MANAGER), transfer_manager_staff_by_id(read_usize(x)), o.slot_index());
+                    write_u8(x + 4, 0); // exchange item +4: terms offered
+                }
+            }
+            if exe::news_club_has_human_manager(read_usize(G_NEWS), buyer) != 0 {
+                exe::new_newsitem(n, 0xfb1, 0);
+                set_news_person_slots(n, 0, player);
+                set_news_slot(n, 4, o.buyer_club_id() as u32);
+                let club = if contract_club_excluding_type5(player.addr()) != 0 { contract_club_id() } else { 0 };
+                set_news_slot(n, 5, club);
+                set_news_slot(n, 0xc, 0);
+                exe::news_send_to_club_manager(read_usize(G_NEWS), n, buyer);
+                told[k] = buyer.addr();
+                k += 1;
+            }
+        }
+    }
+    exe::llist_clear(l);
+    if exe::transfer_manager_get_exchange_offers_for_player(this, player, l) != 0 {
+        l.set_cursor(l.head());
+        loop {
+            let e = exe::llist_get_next(l);
+            if e == 0 {
+                break;
+            }
+            let o = Offer(offer_at(this.addr(), read_usize(e)));
+            let target = transfer_manager_staff_by_id(o.target_staff_id());
+            let seller = contract_club_excluding_type5(target.addr());
+            if exe::news_club_has_human_manager(read_usize(G_NEWS), seller) != 0 {
+                exe::new_newsitem(n, 0xfb1, 0);
+                set_news_person_slots(n, 0, player);
+                set_news_slot(n, 4, read_u32(seller));
+                set_news_slot(n, 5, contract_club_id());
+                set_news_slot(n, 6, o.fee() as u32);
+                set_news_slot(n, 7, (player.value() as u32).wrapping_add(o.fee() as u32));
+                set_news_person_slots(n, 8, target);
+                set_news_slot(n, 0xc, 1);
+                exe::news_send_to_club_manager(read_usize(G_NEWS), n, seller);
+                told[k] = seller;
+                k += 1;
+            }
+            let remove: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_TRANSFER_OFFER_REMOVE_EXCHANGE_PLAYER);
+            remove(o.addr(), player.addr()); // sx02_3: the player leaves the exchange
+        }
+    }
+    let mut clubs = [0usize; 0x14];
+    let count = exe::transfer_manager_collect_player_news_recipients(this, player, 0xa, clubs.as_mut_ptr(), 0x14) as i8;
+    if count != 0 {
+        exe::new_newsitem(n, 0xfb1, 0);
+        set_news_person_slots(n, 0, player);
+        set_news_slot(n, 5, contract_club_id());
+        set_news_slot(n, 0xc, 2);
+        for &club in clubs.iter().take(count.max(0) as usize) {
+            if !told[..k].contains(&club) {
+                exe::news_send_to_club_manager(read_usize(G_NEWS), n, club);
+            }
+        }
+    }
+    exe::drop_llist(l);
+}
+
+/// Comparer for `cancel_offers_for_released_player`: only the original runs (it schedules, removes contract offers
+/// and posts news, none of which can run twice).
+pub(crate) unsafe extern "thiscall" fn compare_cancel_offers_for_released_player(this: usize, player: usize) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_CANCEL_OFFERS_FOR_RELEASED_PLAYER)(this, player) // simplification: original only
+}
+
+/// Posts news 0xfa4, a player's answer to a contract offer from `club`, to the human clubs of the offer and, on a
+/// refusal of all of them (`answer` 2), to the best-known clubs he turned down.
+///
+/// The recipients (`exe::transfer_manager_collect_offer_news_recipients`, up to 30): flags 0x2f; with a `contract`,
+/// 0x2d; for answer 3 without one, 0x2d if `club` is the buyer, otherwise 0x2e. None: nothing. With answer 2, the
+/// `refused` list (club ids) gives up to three clubs (`keep_three_refused_clubs`). News 0xfa4: 0..3 the person and his
+/// names, 4 `other` (-1 without), 5 `club`, 6 the answer, 7 `slot_index()`, 8 `serial()`, 9 `offer_type()`, 0xa
+/// `value`, 0xb `fee()`, 0xc..0xf the target and his names, 0x10 the contract's club (-1) and 0x11 its type (6 signed
+/// bits; 0), 0x12..0x15 the manager of `other` and his names (-1 each), 0x16..0x19 the manager of `club`, 0x1a and 0x1b
+/// the interest flags and the interest x 1000 (`interest_slots`, by the `contract` or the contract offer of the person
+/// at `club`, `exe::contract_manager_find_contract_offer`; neither: 0, 0), 0x1c the length of `refused` (0), 0x1d.. the
+/// kept clubs. Sent to each recipient (a recipient on answer 2 is struck from the kept clubs) and then to each kept club
+/// left.
+/// Original: `TRANSFER_MANAGER::post_contract_response_news` (0x8d8e90, transfer_manager.cpp, thiscall, ret 0x20).
+#[allow(clippy::too_many_arguments)]
+pub(crate) unsafe extern "thiscall" fn post_contract_response_news(this: usize, person: usize, club: usize, other: usize, answer: u32, o: usize,
+                                                                   contract: usize, refused: usize, value: u32) {
+    let this = TransferManagerFields(this);
+    let (person, club, other, o, contract, refused) = (Staff(person), Club(club), Club(other), Offer(o), Contract(contract), Llist(refused));
+    let answer = answer as u8;
+    let target = transfer_manager_staff_by_id(o.target_staff_id());
+    let mut kept = [0usize; 3];
+    let mut k = 0usize;
+    let mut flags = 0x2f;
+    if answer == 2 {
+        k = keep_three_refused_clubs(refused, &mut kept);
+    } else if !contract.is_null() {
+        flags = 0x2d;
+    } else if answer == 3 {
+        flags = 0x2d + (read_usize(club.addr()) != o.buyer_club_id()) as u32; // sx02_3: an answer to the buyer
+    }
+    let mut recipients = [0usize; 0x1e];
+    let count = exe::transfer_manager_collect_offer_news_recipients(this, o, flags, recipients.as_mut_ptr(), 0x1e) as i8;
+    if count == 0 {
+        return;
+    }
+    covered!("sx02_3 contract response news");
+    let mut news = [0u32; 0x38];
+    let n = news.as_mut_ptr() as usize;
+    exe::new_newsitem(n, 0xfa4, 0);
+    set_news_person_slots(n, 0, person);
+    set_news_slot(n, 4, if other.is_null() { u32::MAX } else { read_u32(other.addr()) });
+    set_news_slot(n, 5, read_u32(club.addr()));
+    set_news_slot(n, 6, answer as i8 as i32 as u32);
+    set_news_slot(n, 7, o.slot_index() as u32);
+    set_news_slot(n, 8, o.serial() as u32);
+    set_news_slot(n, 9, o.offer_type() as i8 as i32 as u32);
+    set_news_slot(n, 0xa, value);
+    set_news_slot(n, 0xb, o.fee() as u32);
+    set_news_person_slots(n, 0xc, target);
+    if !contract.is_null() {
+        set_news_slot(n, 0x10, contract.club() as u32);
+        set_news_slot(n, 0x11, (((contract.contract_type() << 2) as i8) >> 2) as i32 as u32);
+    } else {
+        set_news_slot(n, 0x10, u32::MAX);
+        set_news_slot(n, 0x11, 0);
+    }
+    // the managers of the other club and of the club
+    for (base, c) in [(0x12i8, other), (0x16, club)] {
+        let manager = if c.is_null() { Staff(0) } else { c.manager() };
+        if manager.is_null() {
+            for i in 0..4 {
+                set_news_slot(n, base + i, u32::MAX);
+            }
+        } else {
+            set_news_person_slots(n, base, manager);
+        }
+    }
+    let (interest_flags, interest) = if !contract.is_null() {
+        interest_slots(this, person, club, o, contract)
+    } else {
+        let offered = Contract(exe::contract_manager_find_contract_offer(read_usize(G_CONTRACT_MANAGER), read_u32(person.addr()), read_u32(club.addr())));
+        if offered.is_null() { (0, 0) } else { interest_slots(this, person, club, o, offered) }
+    };
+    set_news_slot(n, 0x1a, interest_flags);
+    set_news_slot(n, 0x1b, interest);
+    set_news_slot(n, 0x1c, if refused.is_null() { 0 } else { refused.count() as i32 as u32 });
+    for (i, &c) in kept.iter().take(k).enumerate() {
+        set_news_slot(n, 0x1d + i as i8, read_u32(c));
+    }
+    for &r in recipients.iter().take(count.max(0) as usize) {
+        exe::news_send_to_club_manager(read_usize(G_NEWS), n, r);
+        if answer == 2 {
+            if let Some(i) = kept[..k].iter().position(|&c| c == r) {
+                kept[i] = 0;
+            }
+        }
+    }
+    for &c in kept.iter().take(k) {
+        if c != 0 {
+            exe::news_send_to_club_manager(read_usize(G_NEWS), n, c);
+        }
+    }
+}
+
+/// Comparer for `post_contract_response_news`: only the original runs (the news goes to the managers' inboxes).
+#[allow(clippy::too_many_arguments)]
+pub(crate) unsafe extern "thiscall" fn compare_post_contract_response_news(this: usize, person: usize, club: usize, other: usize, answer: u32, o: usize,
+                                                                           contract: usize, refused: usize, value: u32) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, usize, usize, usize, u32)>(IDX_POST_CONTRACT_RESPONSE_NEWS)(this, person, club, other, answer, o, contract, refused, value) // simplification: original only
+}
+
+/// Collects the past transfers from the first day of `start_month`/`start_year` to `end_month`/`end_year` into the
+/// caller's growable array `*list`, whose `*count` is the capacity on entry and the number collected on exit.
+///
+/// - The caller's array already covering the range (start after its first record's date and the 28th of the end month
+/// before its last one, the dates through `exe::date_date_549f70`): nothing, `*count` unchanged. With no array,
+/// `*count` = 0.
+/// - The records in memory (`past_transfers()`, `past_transfer_count()`, 37 bytes each, in date order): up to the first
+/// one past the end month; those from the start month on are copied (`append_past_transfer`, box line 0x291f).
+/// - Then each year from the start year to the end year: the file `transfers_<year>.tmp` in CM3_TEMP
+/// (`exe::utils_build_file_path`, the name written into 0xde1f64), read record by record (`exe::crt_fread` of 37
+/// bytes) up to the first one past the end month, copying those from the start month on (box line 0x295f); closed.
+/// Original: `TRANSFER_MANAGER::get_past_transfers` (0x8cc030, transfer_manager.cpp, thiscall, ret 0x18).
+pub(crate) unsafe extern "thiscall" fn get_past_transfers(this: usize, start_month: u32, start_year: u32, end_month: u32, end_year: u32,
+                                                          list: *mut usize, count: *mut i32) {
+    let this = TransferManagerFields(this);
+    let (start, end) = ((start_month, start_year), (end_month, end_year));
+    let mut n = 0i32;
+    if *list == 0 {
+        *count = 0;
+    }
+    if *list != 0 && *count > 0 {
+        // the dates compared by year (unsigned) and day of the year (signed)
+        let after = |d: usize, r: usize| {
+            let (y, ry) = (read_u16(d + cm_date::YEAR), read_u16(r + cm_date::YEAR));
+            y > ry || y == ry && read_i16(d) > read_i16(r)
+        };
+        let mut date = [0u16; 4];
+        let first = *list + past_transfer::DATE;
+        if after(exe::date_date_549f70(&mut date, 1, start_month, start_year, u32::MAX), first) {
+            let last = *list + (*count as usize - 1) * PAST_TRANSFER_SIZE + past_transfer::DATE;
+            if after(last, exe::date_date_549f70(&mut date, 0x1c, end_month, end_year, u32::MAX)) {
+                covered!("sx02_4 already covered");
+                return;
+            }
+        }
+    }
+    for i in 0..this.past_transfer_count() as i32 {
+        let r = this.past_transfers() + i as usize * PAST_TRANSFER_SIZE;
+        let (past_end, inside) = past_transfer_in_range(r, start, end);
+        if past_end {
+            break;
+        }
+        if inside {
+            append_past_transfer(list, count, &mut n, r, 0x291f); // sx02_4: a record in memory
+        }
+    }
+    if start_year as u16 <= end_year as u16 {
+        let mut record = [0u8; PAST_TRANSFER_SIZE];
+        let r = record.as_mut_ptr() as usize;
+        exe::date_date_54a110(r + past_transfer::DATE);
+        let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
+        for year in start_year as u16..=end_year as u16 {
+            format(0xde1f64, 0xa8ea38, year as u32); // "transfers_%d.tmp"
+            let file = exe::crt_fopen(exe::utils_build_file_path(0x987da0, 0xde1f64), 0x98f928); // "CM3_TEMP", "rb"
+            if file == 0 {
+                continue;
+            }
+            covered!("sx02_4 yearly file");
+            while exe::crt_fread(r, PAST_TRANSFER_SIZE as u32, 1, file) == 1 {
+                let (past_end, inside) = past_transfer_in_range(r, start, end);
+                if past_end {
+                    break;
+                }
+                if inside {
+                    append_past_transfer(list, count, &mut n, r, 0x295f); // sx02_4: a record from the file
+                }
+            }
+            exe::crt_fclose(file);
+        }
+    }
+    *count = n;
+}
+
+/// Comparer for `get_past_transfers`: the copy runs first on a copy of the caller's array (allocated with the game's
+/// `exe::crt_malloc`, freed afterwards), then the original on the real one; checks the count and the records.
+#[allow(clippy::too_many_arguments)]
+pub(crate) unsafe extern "thiscall" fn compare_get_past_transfers(this: usize, start_month: u32, start_year: u32, end_month: u32, end_year: u32,
+                                                                  list: *mut usize, count: *mut i32) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, *mut usize, *mut i32)>(IDX_GET_PAST_TRANSFERS);
+    let (mut copy, mut copy_count) = (0usize, *count);
+    if *list != 0 {
+        let bytes = (*count).max(0) as usize * PAST_TRANSFER_SIZE;
+        copy = exe::crt_malloc(bytes.max(1) as u32);
+        core::ptr::copy_nonoverlapping(*list as *const u8, copy as *mut u8, bytes);
+    }
+    crate::rng::pause_trace(|| get_past_transfers(this, start_month, start_year, end_month, end_year, &mut copy, &mut copy_count));
+    o(this, start_month, start_year, end_month, end_year, list, count);
+    let n = (*count).max(0) as usize * PAST_TRANSFER_SIZE;
+    let same = copy_count == *count && (n == 0 || core::slice::from_raw_parts(*list as *const u8, n) == core::slice::from_raw_parts(copy as *const u8, n));
+    SCOREBOARD.record(same, || format!("get_past_transfers({}/{} .. {}/{}): original {} rust {}", start_month, start_year, end_month, end_year, *count, copy_count));
+    if copy != 0 {
+        exe::crt_free(copy);
+    }
+}
+
+/// The reach of news about `player` (see `collect_player_news_recipients`, flag 0x10).
+pub(crate) unsafe fn player_news_reach(player: Staff, flags: u32) -> PlayerNewsReach {
+    let mut r = PlayerNewsReach::default();
+    if contract_club_excluding_type5(player.addr()) != 0 {
+        r.league = Club(contract_club_excluding_type5(player.addr())).division().addr();
+    }
+    let sheet = player.player();
+    let non_player = player.non_player();
+    let (current, home, world) = if !sheet.is_null() {
+        (sheet.current_reputation(), sheet.home_reputation(), sheet.world_reputation())
+    } else if !non_player.is_null() {
+        (non_player.current_reputation(), non_player.home_reputation(), non_player.world_reputation())
+    } else {
+        (0, 0, 0)
+    };
+    // flag 0x200: the higher thresholds (everyone, continent, nation) and the gentler form slope
+    let wide = flags & 0x200 != 0;
+    let (everyone, continent, nation, slope) = if wide {
+        (0x251c, 0x2328, 0x206c, read_f64(rdata::F64_0_00015)) // f64 0.00015
+    } else {
+        (0x23f0, 0x206c, 0x1c20, read_f64(rdata::F64_0_00025))
+    };
+    // in form: the average rating (PlayerStats category 2, field 0x12) above `base` - current reputation x slope
+    let in_form = |base: f64| {
+        !sheet.is_null() && exe::playerstats_get_stat(read_usize(G_PLAYER_STATS), sheet, 2, 0x12, 6.5) > base - current as i32 as f64 * slope
+    };
+    if world > everyone {
+        r.everyone = true;
+    } else if world > continent {
+        r.continental = true;
+        let n = player.nation();
+        if !n.is_null() {
+            r.continents[0] = n.continent();
+        }
+        let club = player.club_job();
+        if !club.is_null() && !club.nation().is_null() {
+            r.continents[1] = club.nation().continent();
+        }
+    } else if home > nation || current > nation {
+        covered!("sx02_1 national reach");
+        r.national = true; // sx02_1: national by reputation
+        if home > nation {
+            r.nations[0] = player.nation().addr();
+        }
+        if current > nation {
+            r.nations[1] = player_contract_club_nation(player);
+        }
+    } else if in_form(read_f64(rdata::F64_9_25)) && sheet.current_reputation() > 3000 && flags & 0x80 != 0 {
+        // f64 9.25: a player in form with some reputation reaches his club's nation
+        r.national = true;
+        r.nations[1] = player_contract_club_nation(player);
+    } else if flags & 0x40 != 0 && r.league != 0 {
+        let reputation = Competition(r.league).reputation() as i32;
+        let current = current as i32;
+        // f64 9.0 for the form
+        r.division = if wide {
+            current > (reputation * 750).max(5000) || in_form(read_f64(rdata::F64_9)) // sx02_1: division by reputation
+        } else {
+            (current > reputation * 350 && current > 2500) || in_form(read_f64(rdata::F64_9)) // sx02_1: division form
+        };
+    }
+    r
+}
+
+/// Whether the reach takes the human `manager` of `club`.
+pub(crate) unsafe fn player_news_reach_takes(r: &PlayerNewsReach, manager: Staff, club: Club) -> bool {
+    let (nation, club_nation) = (manager.nation(), club.nation());
+    if r.everyone {
+        return true;
+    }
+    if r.continental {
+        let a = if nation.is_null() { 0 } else { nation.continent() };
+        let b = if club_nation.is_null() { 0 } else { club_nation.continent() };
+        return a != 0 && r.continents.contains(&a) || b != 0 && r.continents.contains(&b);
+    }
+    if r.national {
+        let (n, c) = (nation.addr(), club_nation.addr());
+        if n != 0 && r.nations.contains(&n) || c != 0 && r.nations.contains(&c) {
+            return true;
+        }
+        if n == 0 {
+            return false;
+        }
+        // England and Scotland reach each other through the manager's own nation
+        let (id, england, scotland) = (read_usize(n), read_usize(KEY_NATION_ENGLAND), read_usize(KEY_NATION_SCOTLAND));
+        let any_is = |key: usize| r.nations.iter().any(|&x| x != 0 && read_usize(x) == key);
+        return id == england && any_is(scotland) || id == scotland && any_is(england);
+    }
+    r.division && club.division().addr() == r.league
+}
+
+/// Appends `club` to the recipients array `out` at `n` and counts it.
+pub(crate) unsafe fn push_recipient(out: *mut usize, n: &mut i8, club: usize) {
+    *out.add(*n as usize) = club;
+    *n += 1;
+}
+
+/// The reputation of `target` as a fake person of the buying club sees it (`exe::database_get_staff_reputation_for_viewer`
+/// with a person record on the stack: id 0, the buyer as club job, the buyer's nation, no second nation, no player or
+/// non-player sheet, the five dates constructed; the rest is left uninitialised by the original and is not read).
+pub(crate) unsafe fn reputation_seen_by_club(target: Staff, buyer: Club) -> i32 {
+    let mut viewer = [0u8; staff::SIZE];
+    let v = Staff(viewer.as_mut_ptr() as usize);
+    // +0x31: the date after DATE_JOINED_NATION [inference: the nation contract end]
+    for date in [staff::DATE_OF_BIRTH, staff::DATE_JOINED_NATION, 0x31, staff::DATE_JOINED_CLUB, staff::DATE_EXPIRES_CLUB] {
+        exe::date_date_54a110(v.addr() + date);
+    }
+    write_usize(v.addr() + staff::CLUB_JOB, buyer.addr());
+    write_usize(v.addr() + staff::NATION, buyer.nation().addr());
+    write_usize(v.addr() + staff::NON_PLAYER, 0);
+    write_usize(v.addr() + staff::PLAYER, 0);
+    write_usize(v.addr() + staff::SECOND_NATION, 0);
+    write_usize(v.addr(), 0);
+    exe::database_get_staff_reputation_for_viewer(target, v, target.player().is_null() as u32) as i32
+}
+
+/// The reach of news about offer `o` (see `collect_offer_news_recipients`, flag 0x10).
+pub(crate) unsafe fn offer_news_reach(this: TransferManagerFields, o: Offer, target: Staff, seller: usize, buyer: Club, flags: u32) -> OfferNewsReach {
+    let mut r = OfferNewsReach::default();
+    // a player job, the buyer shortlisting him in a first-team slot (slot type below 3) and a fee of a million or more
+    let entry = exe::shortlist_manager_find_club_shortlist_entry(this.shortlist_manager(), buyer, target, 0, 0);
+    r.buyer_division = exe::database_is_player_job(o.job_type() as i8) != 0 && entry != 0
+        && read_u8(entry + shortlist_slot::FLAGS) & 0x1e < 6 && o.fee() as i32 >= 1_000_000;
+    if !target.club_job().is_null() {
+        r.target_league = target.club_job().division().addr();
+    }
+    r.buyer_league = buyer.division().addr();
+    let sheet = target.player();
+    let non_player = target.non_player();
+    let (mut current, mut home, mut world) = (0i16, 0i16, 0i16);
+    if !sheet.is_null() {
+        (current, home, world) = (sheet.current_reputation(), sheet.home_reputation(), sheet.world_reputation());
+    } else if !non_player.is_null() {
+        (current, home, world) = (non_player.current_reputation(), non_player.home_reputation(), non_player.world_reputation());
+        if matches!(o.job_type(), 8..=10) {
+            // jobs 8 to 10: a quarter of the reputations
+            let quarter = |x: i16| ftol_x87(x as i32 as f64 * read_f64(rdata::F64_0_25)) as i16;
+            (current, home, world) = (quarter(current), quarter(home), quarter(world));
+        }
+    }
+    // the bonus: 3000 - offer value x 0.0006 (500 for a pre-contract); each threshold is at most 9750
+    let bonus = if o.pre_contract() == 0 {
+        let value = exe::transfer_offer_get_weighted_value(o, 0, 0, 0, 0, 1);
+        ftol_x87(read_f64(rdata::F64_3000) - value as f64 * read_f64(rdata::F64_0_0006)) as i16 as i32 // f64 3000.0, 0.0006
+    } else {
+        500
+    };
+    let cap = |t: i32| t.min(0x2616);
+    let (current, home, world) = (current as i32, home as i32, world as i32);
+    let national = cap(bonus + 0x1c20);
+    let in_form = |base: f64| {
+        !sheet.is_null() && exe::playerstats_get_stat(read_usize(G_PLAYER_STATS), sheet, 2, 0x12, 6.5) > base - current as f64 * read_f64(rdata::F64_0_00025)
+    };
+    if world > cap(bonus + 0x23f0) {
+        r.everyone = true;
+    } else if world > cap(bonus + 0x206c) {
+        r.continental = true;
+        if !target.nation().is_null() {
+            r.continents[0] = target.nation().continent();
+        }
+        if seller != 0 && !Club(seller).nation().is_null() {
+            r.continents[1] = Club(seller).nation().continent();
+        }
+        if !buyer.nation().is_null() {
+            r.continents[2] = buyer.nation().continent();
+        }
+    } else if home > national || current > national {
+        covered!("sx02_2 national reach");
+        r.national = true; // sx02_2: national by reputation
+        if home > national {
+            r.nations[0] = target.nation().addr();
+        }
+        if current > national && seller != 0 {
+            r.nations[1] = Club(seller).nation().addr();
+        }
+        let buyer_nation = buyer.nation();
+        if buyer_nation.addr() != r.nations[0] && buyer_nation.addr() != r.nations[1]
+            && (world > national
+                || exe::transfer_offer_get_weighted_value(o, 0, 0, 0, 0, 1) >= (buyer_nation.league_standard() as i8 as i32 - 10) * 500_000
+                || !target.national_job().is_null() && target.int_apps() > 20 && target.national_job().reputation() as i16 > 5500) {
+            // sx02_2: the buyer's nation for a big name, a big fee for its league or a capped international
+            r.nations[2] = buyer_nation.addr();
+        }
+    } else if in_form(read_f64(rdata::F64_9_25)) && current > 3000 && flags & 0x80 != 0 {
+        // f64 9.25: a player in form with some reputation reaches the seller's nation
+        r.national = true;
+        if seller != 0 {
+            r.nations[1] = Club(seller).nation().addr();
+        }
+    } else if flags & 0x40 != 0 {
+        if r.target_league != 0 {
+            let limit = Competition(r.target_league).reputation() as i32 * 350;
+            // f64 9.0 for the form
+            if current > limit && current > 2500 || in_form(read_f64(rdata::F64_9)) {
+                r.target_division = true; // sx02_2: the target's division
+            }
+        }
+        if r.buyer_league != 0 && reputation_seen_by_club(target, buyer) > Competition(r.buyer_league).reputation() as i32 * 350 && current > 1500 {
+            r.buyer_division = true;
+        }
+    }
+    r
+}
+
+/// Whether the offer's reach takes the human `manager` of `club`.
+pub(crate) unsafe fn offer_news_reach_takes(r: &OfferNewsReach, manager: Staff, club: Club) -> bool {
+    let (nation, club_nation) = (manager.nation(), club.nation());
+    if r.everyone {
+        return true;
+    }
+    if r.continental {
+        let a = if nation.is_null() { 0 } else { nation.continent() };
+        let b = if club_nation.is_null() { 0 } else { club_nation.continent() };
+        return a != 0 && r.continents.contains(&a) || b != 0 && r.continents.contains(&b);
+    }
+    if r.national {
+        let (n, c) = (nation.addr(), club_nation.addr());
+        if n != 0 && r.nations.contains(&n) || c != 0 && r.nations.contains(&c) {
+            return true;
+        }
+        if n == 0 {
+            return false;
+        }
+        // England and Scotland reach each other through the manager's own nation
+        let (id, england, scotland) = (read_usize(n), read_usize(KEY_NATION_ENGLAND), read_usize(KEY_NATION_SCOTLAND));
+        let any_is = |key: usize| r.nations.iter().any(|&x| x != 0 && read_usize(x) == key);
+        return id == england && any_is(scotland) || id == scotland && any_is(england);
+    }
+    let league = club.division().addr();
+    r.target_division && league == r.target_league || r.buyer_division && league == r.buyer_league
+}
+
+/// The clubs of the `refused` list (club ids) kept for the news of a player's answer: the first three, then each later
+/// one replaces the lowest-reputation kept club (the first of equals) when its reputation is higher.
+pub(crate) unsafe fn keep_three_refused_clubs(refused: Llist, kept: &mut [usize; 3]) -> usize {
+    let mut k = 0usize;
+    if refused.is_null() || refused.count() == 0 {
+        return 0;
+    }
+    refused.set_cursor(refused.head());
+    loop {
+        let e = exe::llist_get_next(refused);
+        if e == 0 {
+            return k;
+        }
+        let club = transfer_manager_club_by_id(read_usize(e));
+        if k < 3 {
+            kept[k] = club.addr();
+            k += 1;
+            continue;
+        }
+        let (mut lowest, mut at) = (0x2711i16, None);
+        for (i, &c) in kept.iter().enumerate() {
+            let reputation = Club(c).reputation() as i16;
+            if reputation < lowest {
+                (lowest, at) = (reputation, Some(i));
+            }
+        }
+        if club.reputation() as i16 > lowest {
+            if let Some(i) = at {
+                kept[i] = club.addr(); // sx02_3: a better-known refused club
+            }
+        }
+    }
+}
+
+/// The player's interest in joining `club` (`exe::shortlist_manager_staff_interest_in_joining_club` with 0, the loan
+/// flag and the squad status of `contract`, the high nibble of `contract::SQUAD_STATUS`): (its out flags, interest x
+/// 1000 truncated).
+pub(crate) unsafe fn interest_slots(this: TransferManagerFields, person: Staff, club: Club, o: Offer, contract: Contract) -> (u32, u32) {
+    let mut flags = 0u32;
+    let interest = exe::shortlist_manager_staff_interest_in_joining_club(this.shortlist_manager(), person, club, 0,
+        (o.offer_type() == 1) as u32, (contract.squad_status() >> 4) as u32, &mut flags as *mut u32 as u32) as f32;
+    (flags, ftol_x87(interest as f64 * read_f64(rdata::F64_1000)) as u32)
+}
+
+/// Whether the past transfer record `r` is due within the months asked: (past the end: stop, inside the range).
+/// The year of its date (unsigned) against the end year, then the month (`exe::date_get_month`, signed) when equal;
+/// then the same against the start.
+pub(crate) unsafe fn past_transfer_in_range(r: usize, start: (u32, u32), end: (u32, u32)) -> (bool, bool) {
+    let year = read_u16(r + past_transfer::DATE + cm_date::YEAR);
+    if year > end.1 as u16 || year == end.1 as u16 && exe::date_get_month(r + past_transfer::DATE) as i8 > end.0 as i8 {
+        return (true, false);
+    }
+    let inside = year > start.1 as u16 || year == start.1 as u16 && exe::date_get_month(r + past_transfer::DATE) as i8 >= start.0 as i8;
+    (false, inside)
+}
+
+/// Appends record `r` to the caller's array `*list` (`*capacity` entries; it grows by 100 through the game's
+/// `exe::crt_realloc`/`exe::crt_malloc`, the "Memory Allocation Error" box at `row` when it fails) at index `n`.
+pub(crate) unsafe fn append_past_transfer(list: *mut usize, capacity: *mut i32, n: &mut i32, r: usize, row: u32) {
+    if *n == *capacity {
+        *capacity += 100;
+        let bytes = (*capacity as usize * PAST_TRANSFER_SIZE) as u32;
+        *list = if *list != 0 { exe::crt_realloc(*list, bytes) } else { exe::crt_malloc(bytes) };
+        if *list == 0 {
+            show_out_of_memory_box(row, 0xa8ecb8); // "TRANSFER_MANAGER::get_past_transfers() : cannot malloc transfers"
+        }
+    }
+    let to = *list + *n as usize * PAST_TRANSFER_SIZE;
+    *n += 1;
+    core::ptr::copy_nonoverlapping(r as *const u8, to as *mut u8, past_transfer::DATE);
+    let mut tmp = [0u8; 8];
+    exe::date_operator_3d(to + past_transfer::DATE, tmp.as_mut_ptr() as usize, r + past_transfer::DATE);
+}
+
+/// The nation of the player's contract club (not a type-5 contract), 0 without one; two contract lookups, as the
+/// original does (the first only checks that there is a club).
+pub(crate) unsafe fn player_contract_club_nation(player: Staff) -> usize {
+    if contract_club_excluding_type5(player.addr()) == 0 {
+        return 0;
+    }
+    Club(contract_club_excluding_type5(player.addr())).nation().addr()
+}
+
+/// How far news about a player reaches the human managers (flag 0x10 of `collect_player_news_recipients`), worked out
+/// from his reputations: every human manager, those of the same continent, of the same nation (England and Scotland
+/// count as one), or those whose club plays in the player's club's division.
+#[derive(Default)]
+pub(crate) struct PlayerNewsReach {
+    pub(crate) everyone: bool,
+    pub(crate) continental: bool,
+    pub(crate) national: bool,
+    pub(crate) division: bool,
+    /// The continent of the player's nation and of his club job's nation.
+    pub(crate) continents: [usize; 2],
+    /// The player's nation (by home reputation) and his contract club's nation (by current reputation or form).
+    pub(crate) nations: [usize; 2],
+    /// The division of the player's contract club (not a type-5 contract).
+    pub(crate) league: usize,
+}
+
+/// How far news about an offer reaches the human managers (flag 0x10 of `collect_offer_news_recipients`), worked out
+/// from the target's reputations and the offer's value.
+#[derive(Default)]
+pub(crate) struct OfferNewsReach {
+    pub(crate) everyone: bool,
+    pub(crate) continental: bool,
+    pub(crate) national: bool,
+    pub(crate) target_division: bool,
+    pub(crate) buyer_division: bool,
+    /// The continent of the target's nation, of the seller's nation and of the buyer's nation.
+    pub(crate) continents: [usize; 3],
+    /// The target's nation (by home reputation), the seller's nation (by current reputation or form) and the buyer's
+    /// nation (a big name, a big fee or a capped international).
+    pub(crate) nations: [usize; 3],
+    /// The division of the target's club job.
+    pub(crate) target_league: usize,
+    /// The division of the buying club.
+    pub(crate) buyer_league: usize,
+}
+
+pub(crate) const FN_TRANSFER_OFFER_REMOVE_EXCHANGE_PLAYER: usize = 0x8e81a0;

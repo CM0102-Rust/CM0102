@@ -1,0 +1,1 @@
+Depende do sx20_1 (simulated_group, simulated_nearby_index, SIMULATED_GROUP_SIZE/CLUBS).

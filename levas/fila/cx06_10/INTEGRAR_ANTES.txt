@@ -1,0 +1,1 @@
+Antes de integrar: pôr (0x580010, 3) em RELATIVAS no rust/src/detours.rs (prólogo push esi; mov esi, ecx; call rel32 League::update_positions_and_status). Depende do cx04_5 (compare_group_championship_progress).

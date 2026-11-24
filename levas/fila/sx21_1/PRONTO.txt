@@ -1,0 +1,2 @@
+sx21_1 (simulacao, carreira ENG ate 2002-06-01): compilado sobre o HEAD c269cb610 com os itens sx21_1..sx21_37 aplicados pela ancora (cargo build --release sem erro e sem aviso no codigo do item). Nao rodado no jogo.
+Prova: carreira ENG ate 2002-06-01 comparando (o construtor na criacao, as duas regras nas transferencias inglesas); mutacoes 3, pelos comparadores (o limite de estrangeiros raramente bate num elenco ingles: a carreira pode nao pegar).

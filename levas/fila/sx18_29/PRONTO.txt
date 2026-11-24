@@ -1,0 +1,4 @@
+sx18_29 (TELAS): format_venue_marker (0x7e4ca0), reserve_comp_destructor (0x7e6150), under21_int_comp_destructor (0x7e6340), b_int_comp_destructor (0x7e6370).
+Compilado sobre o HEAD 589af8252 (e antes sobre o e9661948e) (copia propria de rust/ e cm0102-base/, os sx18_1..29 aplicados pela ancora, cargo build --release ok, 0 avisos nas linhas dos itens; com todas as mutacoes aplicadas juntas, ok). Prologos conferidos (nenhum com call/salto relativo) e as rotinas iguais no cm0102-1080.exe. Nao rodado no jogo.
+Depende do sx18_4 (integrar depois).
+Prova: o Lucas jogando comparando, pelos caminhos do cabecalho do rotinas.py (ficha de jogador suspenso ou com cartoes, elenco do clube com o aviso "a um amarelo da suspensao", historico de partidas do clube; carregar outro jogo para os destrutores), com a liga de cada orgao carregada.

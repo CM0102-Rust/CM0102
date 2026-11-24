@@ -1,0 +1,1 @@
+Antes de integrar: pôr (0x9260e0, 3), (0x927a30, 3), (0x4c1880, 3), (0x4c30e0, 3), (0x4c4850, 3) em RELATIVAS no rust/src/detours.rs (prólogo push esi; mov esi, ecx; call rel32 ~X).

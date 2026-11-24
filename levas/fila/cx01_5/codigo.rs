@@ -1,0 +1,122 @@
+// ---------- cx01_5: the grammatical gender of a stage, round or group name (comp_util.cpp) ----------
+
+/// The stage, round and group name ids that have a gender in some language of `comp_util_get_stage_name_gender` (323,
+/// from 0 to 1155; read from the original's switches for every language, style and id).
+const STAGE_NAME_GENDER_IDS: [u16; 323] = [
+    0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0xa, 0xb, 0xc, 0xd, 0xe, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1e, 0x1f, 0x20,
+    0x21, 0x22, 0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x32, 0x33, 0x34, 0x35, 0x36, 0x3c, 0x3d, 0x3e, 0x3f, 0x40, 0x46, 0x47, 0x48,
+    0x49, 0x4a, 0x50, 0x51, 0x52, 0x53, 0x54, 0x5a, 0x5b, 0x5c, 0x5d, 0x5e, 0x64, 0x65, 0x66, 0x67, 0x68, 0x6e, 0x6f, 0x70,
+    0x71, 0x72, 0x78, 0x79, 0x7a, 0x7b, 0x7c, 0x7d, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x8c, 0x8d, 0x8e, 0x8f, 0x90, 0x96,
+    0x97, 0x98, 0x99, 0x9a, 0x9b, 0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xaa, 0xab, 0xac, 0xad, 0xae, 0xb4, 0xb5, 0xb6, 0xb7, 0xb8,
+    0xbe, 0xbf, 0xc0, 0xc1, 0xc2, 0xc8, 0xc9, 0xca, 0xcb, 0xcc, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xdc, 0xdd, 0xde, 0xdf, 0xe0,
+    0xe6, 0xe7, 0xe8, 0xe9, 0xea, 0xf0, 0xf3, 0xf4, 0xfa, 0xfd, 0xfe, 0x104, 0x107, 0x108, 0x10e, 0x111, 0x112, 0x118, 0x11b, 0x11c,
+    0x122, 0x125, 0x126, 0x12c, 0x136, 0x137, 0x138, 0x139, 0x13a, 0x140, 0x143, 0x144, 0x14a, 0x14d, 0x14e, 0x154, 0x157, 0x158, 0x15e, 0x161,
+    0x162, 0x168, 0x16b, 0x16c, 0x172, 0x175, 0x176, 0x3e8, 0x3e9, 0x3ea, 0x3eb, 0x3ec, 0x3ed, 0x3ee, 0x3ef, 0x3f0, 0x3f1, 0x3f2, 0x3f3, 0x3f4,
+    0x3f5, 0x3f6, 0x3f7, 0x3f8, 0x3f9, 0x3fa, 0x3fb, 0x3fc, 0x3fd, 0x3fe, 0x3ff, 0x400, 0x401, 0x402, 0x403, 0x404, 0x405, 0x406, 0x407, 0x408,
+    0x409, 0x40a, 0x40b, 0x40c, 0x40d, 0x40e, 0x40f, 0x410, 0x411, 0x412, 0x413, 0x414, 0x415, 0x416, 0x417, 0x418, 0x419, 0x41a, 0x41b, 0x41c,
+    0x41d, 0x41e, 0x41f, 0x420, 0x421, 0x422, 0x423, 0x424, 0x425, 0x426, 0x427, 0x428, 0x429, 0x42a, 0x42b, 0x42c, 0x42d, 0x42e, 0x42f, 0x430,
+    0x431, 0x432, 0x433, 0x434, 0x435, 0x436, 0x437, 0x438, 0x439, 0x43a, 0x43b, 0x43c, 0x43d, 0x43e, 0x43f, 0x440, 0x441, 0x442, 0x443, 0x444,
+    0x445, 0x446, 0x447, 0x448, 0x449, 0x44a, 0x44b, 0x44c, 0x44d, 0x44e, 0x44f, 0x450, 0x451, 0x452, 0x453, 0x454, 0x455, 0x456, 0x457, 0x458,
+    0x459, 0x45a, 0x45b, 0x45c, 0x45d, 0x45e, 0x45f, 0x460, 0x461, 0x462, 0x463, 0x464, 0x465, 0x466, 0x467, 0x468, 0x469, 0x46a, 0x46b, 0x46c,
+    0x46d, 0x46e, 0x46f, 0x470, 0x471, 0x472, 0x473, 0x474, 0x475, 0x476, 0x477, 0x478, 0x479, 0x47a, 0x47b, 0x47c, 0x47d, 0x47e, 0x47f, 0x480,
+    0x481, 0x482, 0x483,
+];
+
+/// The gender of each id of `STAGE_NAME_GENDER_IDS` (a digit; '-' = not in that table), one row per language and
+/// style: languages 2, 3, 4, 5 and 9, each with any style and then with style 3.
+const STAGE_NAME_GENDERS: [&str; 10] = [
+    // language 2, style any
+    concat!("-22522222222222222222222222222222222222222222222222222222222223222221111122222211111232233111111111132233222",
+            "222222222222222222221111111113333333222221111111111111112222222222222222222222232222222222222221111100113312",
+            "21131122222222222222222001100110111111111111111111322222132222231111222222222222221222222222222222111222222"),
+    // language 2, style 3
+    concat!("-33333233332333332333323333233332333323333233332333323333233333333333333333333333333333333333333333333333233",
+            "332333323333233332221331331333333333222223333333333333332222222222222222222222222222222222222222221100113313",
+            "311-1122222222222222222001111110111111111111111111111111111111111111111111222222221211111222222222111222222"),
+    // language 3, style any
+    concat!("033333233332333332333323333233332333323333233332333323333233333333333333333333333333333333322333333333333233",
+            "332333323333233333332332332333333333333332330000003330003332222222222222222222202222222222222222222222222212",
+            "22242222222222222222223002222221222222222222222244222222430000021111222222222222222000000222222224222222222"),
+    // language 3, style 3
+    concat!("033443244442444442444424444244442444424444244442444424444244444444444444444444444444444444422433444444444244",
+            "442444443333233333332442332443443443444444440000004440004442222222222222222222202222222222222222222222224412",
+            "222-2222222222222222223002222221222222222222222244222222430000021111222222222222222022222222222224222222222"),
+    // language 4, style any
+    concat!("-33413133411334111334113341133411334113341133411334113341133415334123333323334133333254355333333333353355133",
+            "411334113341133413331111111111111111333413333333333333333411111111111111111111171111111111111113333311335535",
+            "53331111111111111111115333311333111111111111111111111111111111111111111111111111111111111111111111311111111"),
+    // language 4, style 3
+    concat!("-33773777777777777777777777777777777777777777777777777777777775777777777773777777777757777777777777757777777",
+            "777777777777777773331111111111111111377777777777777777773771111111111111111111171111111111111113333311335535",
+            "53331111111111111111115333311333111111111111111111111111111111111111111111111111111111111111111111311111111"),
+    // language 5, style any
+    concat!("-2222122222222222222222-222222222222222222222222222222222222221222222222221222222222112222222222222212222222",
+            "222222222222222222222222222221221221122222222222222222221221111111111111111111131111111111111111112222221121",
+            "11122211111111111111111222211222111122222222222222111111211111212222111111111111111211111111111111222111111"),
+    // language 5, style 3
+    concat!("-4444324444244444244442-444244442444424444244442444424444244443444444444443444444444334444444444444434444244",
+            "442444424444244442442332332331331331122224444444444444441221111111111111111111131111111111111111112222221121",
+            "11122211111111111111111222211222111122222222222222111111211111212222111111111111111111111111111111222111111"),
+    // language 9, style any
+    concat!("-11110111111111111111111111111111111111111111111111111111111112111111111100111111111101111011111111101111111",
+            "111111111111111111111111111110000001011111111111111111110110000000000000000000030000000000000001111100110010",
+            "01111100000000000000000001111111000011111111111111001111100000001111000000000000001000000000000000111000000"),
+    // language 9, style 3
+    concat!("-33330333333333333333333333333333333333333333333333333333333332333333333323333333333323333333333333323333333",
+            "333333333333333333331111111110000001333333333333333333333330000000000000000000030000000000000000001122112210",
+            "011-1100000000000000000001111110000011111111111111111111111111111111111111000000001111111000000000111000000"),
+];
+
+/// The row of `STAGE_NAME_GENDERS` for the game's language and the style (`None`: a language without genders).
+fn stage_name_gender_row(language: i32, style: u8) -> Option<&'static [u8]> {
+    let k = match language {
+        2 => 0,
+        3 => 2,
+        4 => 4,
+        5 => 6,
+        9 => 8,
+        _ => return None,
+    };
+    Some(STAGE_NAME_GENDERS[k + (style == 3) as usize].as_bytes())
+}
+
+/// Returns the grammatical gender code of a stage, round or group name (`id`, as a signed word) in the game's language
+/// (the dword at [`G_CONFIG`] + 8), with a separate table for style 3 (the plural style).
+///
+/// Languages 2, 3, 4, 5 and 9 have genders (`STAGE_NAME_GENDERS`, read from the original's twenty kilobytes of
+/// switches); any other language answers 0 straight away. An id of the table answers its gender (0 included). Any
+/// other id writes "Cannot find index %d" with the id into the global text buffer 0xde1f64 (crt sprintf) and answers
+/// 0, except in language 2 with style 3 for an id above 1155, which answers 0 without the text.
+/// Original: `comp_util_get_stage_name_gender` (0x4ba8f0, comp_util.cpp, cdecl).
+pub(crate) unsafe extern "C" fn comp_util_get_stage_name_gender(id: u32, style: u32) -> u8 {
+    let language = read_i32(read_usize(G_CONFIG) + 8); // the game's language code
+    let style = style as u8;
+    let Some(row) = stage_name_gender_row(language, style) else {
+        return 0;
+    };
+    let id = id as u16 as i16;
+    if id >= 0 {
+        if let Ok(k) = STAGE_NAME_GENDER_IDS.binary_search(&(id as u16)) {
+            if row[k] != b'-' {
+                covered!("cx01_5 stage name gender");
+                return row[k] - b'0';
+            }
+        }
+    }
+    if language == 2 && style == 3 && id > 0x483 {
+        return 0;
+    }
+    covered!("cx01_5 stage name gender not found");
+    let sprintf: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
+    sprintf(0xde1f64, 0x9a51b0, id as i32); // the global text buffer, "Cannot find index %d"
+    0
+}
+
+/// Comparer for `comp_util_get_stage_name_gender`: side by side on the first 32 bytes of the global text buffer (the
+/// "Cannot find index" text); the genders and the buffers must match.
+pub(crate) unsafe extern "C" fn compare_comp_util_get_stage_name_gender(id: u32, style: u32) -> u8 {
+    let o = original_fn::<unsafe extern "C" fn(u32, u32) -> u8>(%%I0%%);
+    let (r, n, same, mo, mr) = crate::comparison::side_by_side_light(&[(0xde1f64, 0x20)], || o(id, style), || comp_util_get_stage_name_gender(id, style));
+    SCOREBOARD.record(same && r == n, || format!("comp_util_get_stage_name_gender({}, {}): original {} {:x?} rust {} {:x?}", id as u16 as i16, style as u8, r, mo, n, mr));
+    r
+}

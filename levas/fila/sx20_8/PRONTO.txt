@@ -1,0 +1,2 @@
+NAO PROVADO NO JOGO (leitor sx20, rodada 5, 24/11/2026): compila sobre o HEAD 589af8252 junto com os outros sx20 (copia propria; cargo build --release sem erros e sem avisos nas linhas dos itens; as mutacoes dos 15 itens aplicadas juntas tambem compilam; ancoras 1 vez no motor com os itens). Prologos conferidos em fronteira de instrucao, sem relativas.
+SAVE; DEPENDE DO sx20_5 (de simulacao: integrar antes ou na mesma leva). Prova: prova do save (a gravacao do .qst; os destrutores rodam no free_game_data do .qst, sem rastro no arquivo). Comparadores: so a original.

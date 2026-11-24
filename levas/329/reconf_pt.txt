@@ -1,0 +1,3 @@
+game.cfg restaurado;  removido
+carregar comparar: parou em 2001-207, 7172738 sorteios, impressao 7f02dc5b6d280da9, partidas 25/0e5bd6f82d20c459, banco 49bcc242d91b3788, 39 s
+mutacao sx07_nunca_em_casa   40s engine: 100000000 comparisons, 0 divergences

@@ -1,0 +1,7 @@
+NAO PROVADO NO JOGO (leitor sxB, rodada 5, 24/11/2026): MANAGER_MANAGER::news_board_request_reply_text 0x6a9470
+((6, 0x1786)) e news_ultimatum_response_text 0x6adb70 ((6, 0x178f)), inteiras, um desvio cada. Item de SIMULACAO
+(sem TELAS): rodam pelo modo CM_TEXTO_NOTICIAS quando o tecnico humano faz um pedido a diretoria ou um ultimato (na
+carreira automatica de ferias isso pode nao acontecer: as mutacoes escapariam por falta de chamada; a prova seria o
+Lucas jogando comparando).
+Compila sobre o HEAD c269cb610 (0 avisos nas linhas do item); com as mutacoes, compila; ancoras com 1 ocorrencia.
+Comparador: compare_text_writer.

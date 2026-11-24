@@ -142,6 +142,7 @@ pub(crate) mod rdata {
     pub(crate) const F64_0_0001: usize = 0x96a5c0; // f64 = 0.0001
     pub(crate) const F64_0_000125: usize = 0x96a6b8; // f64 = 0.000125
     pub(crate) const F64_0_0001333333333: usize = 0x968dd0; // f64 = 0.00013333333333333334
+    pub(crate) const F64_0_00015: usize = 0x970430; // f64 = 0.00015
     pub(crate) const F64_0_0001612903226: usize = 0x96f960; // f64 = 0.00016129032258064516
     pub(crate) const F64_0_0001666666667: usize = 0x968f40; // f64 = 0.00016666666666666666
     pub(crate) const F64_0_0001904761905: usize = 0x968f28; // f64 = 0.00019047619047619048
@@ -150,6 +151,7 @@ pub(crate) mod rdata {
     pub(crate) const F64_0_0003333333333: usize = 0x968ed8; // f64 = 0.0003333333333333333
     pub(crate) const F64_0_0004: usize = 0x96a608; // f64 = 0.0004
     pub(crate) const F64_0_0005: usize = 0x96a658; // f64 = 0.0005
+    pub(crate) const F64_0_0006: usize = 0x96a610; // f64 = 0.0006
     pub(crate) const F64_0_0006666666667: usize = 0x968da0; // f64 = 0.0006666666666666666
     pub(crate) const F64_0_0008: usize = 0x96a618; // f64 = 0.0008
     pub(crate) const F64_0_0008333333333: usize = 0x96d268; // f64 = 0.0008333333333333334
@@ -377,6 +379,7 @@ pub(crate) mod rdata {
     pub(crate) const F64_3: usize = 0x968930; // f64 = 3.0
     pub(crate) const F64_30: usize = 0x968dd8; // f64 = 30.0
     pub(crate) const F64_300: usize = 0x96a6b0; // f64 = 300.0
+    pub(crate) const F64_3000: usize = 0x96d200; // f64 = 3000.0
     pub(crate) const F64_31: usize = 0x968df0; // f64 = 31.0
     pub(crate) const F64_31680: usize = 0x968db8; // f64 = 31680.0
     pub(crate) const F64_32500: usize = 0x968e98; // f64 = 32500.0
@@ -466,7 +469,9 @@ pub(crate) mod rdata {
     pub(crate) const F64_8750000: usize = 0x968fc8; // f64 = 8750000.0
     pub(crate) const F64_8_333333333ENEG_05: usize = 0x96fe30; // f64 = 8.333333333333333e-05
     pub(crate) const F64_8_5: usize = 0x96a790; // f64 = 8.5
+    pub(crate) const F64_9: usize = 0x96d230; // f64 = 9.0
     pub(crate) const F64_90: usize = 0x96d2b0; // f64 = 90.0
+    pub(crate) const F64_9_25: usize = 0x970428; // f64 = 9.25
     pub(crate) const F64_NEG_0_0002: usize = 0x96f970; // f64 = -0.0002
     pub(crate) const F64_NEG_0_0035: usize = 0x96bac0; // f64 = -0.0035
     pub(crate) const F64_NEG_0_05: usize = 0x96d280; // f64 = -0.05

@@ -1,0 +1,7 @@
+mutacao sx03_3_limites_40   519s engine: 1000000000 comparisons, 0 divergences
+mutacao sx03_4_sem_jogador_mundial  480s engine: 1000000000 comparisons, 0 divergences
+mutacao sx07_codigo_365     500s engine: 1000000000 comparisons, 0 divergences
+mutacao sx07_valor_sem_assinatura  111s engine: DIVERGENCE contract_manager_write_offer_response_news_text(news 0xffff294, full 1): original "Nikos Machlas vai continuar a sua liga��o ao Aja
+mutacao sx07_recusa_sem_motivos  494s engine: 1000000000 comparisons, 0 divergences
+mutacao sx05_1_uma_decimal  478s engine: 1000000000 comparisons, 0 divergences
+restaurado e recompilado
