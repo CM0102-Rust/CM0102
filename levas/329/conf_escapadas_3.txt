@@ -1,0 +1,7 @@
+mutacao sx03_3_limites_40  6231s engine: 10000000000 comparisons, 0 divergences
+mutacao sx03_4_sem_jogador_mundial 6175s engine: 10000000000 comparisons, 0 divergences
+mutacao sx07_codigo_365    2978s engine: DIVERGENCE contract_manager_post_offer_response_news(offer 0xffffddc, refused 1) rng same true; 1 sends, human items original [[b8, b, 0, 0, 0
+mutacao sx07_recusa_sem_motivos 6255s engine: 10000000000 comparisons, 0 divergences
+mutacao sx05_1_uma_decimal  833s engine: DIVERGENCE cash_format_money(19750000, 0x4) original=["0xfffcea4+0x5 o=[35, 4d, 00, c4, ce, ff, 0f, 18] r=[4d, 00, 05, c4, ce, ff, 0f, 18]"] r
+restaurado e recompilado
+FIM

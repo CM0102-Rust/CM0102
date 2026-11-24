@@ -1,0 +1,1 @@
+MUTACOES = [('sx07_nunca_em_casa', 'read_u32(read_usize(hm + 0x39)) == slot(4); // sx07_2: at home', 'read_u32(read_usize(hm + 0x39)) == slot(4) && false; // mutation: never at home', 'sx07_2 offer response text')]

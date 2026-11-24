@@ -40,7 +40,7 @@ SAVE=""; [ -f "$RAIZ/levas/$N/SAVE" ] && SAVE=1
 FIM=2002-06-01; [ "$(head -1 "$RAIZ/levas/$N/LIGAS" 2>/dev/null | tr -d '\r')" = MUNDO ] && FIM=2002-08-01
 [ -f "$RAIZ/levas/$N/ATE" ] && FIM="$(head -1 "$RAIZ/levas/$N/ATE" | tr -d '\r')"
 MODO="--carreira $FIM $CONF --confirmar-pt"; [ -n "$SAVE" ] && MODO="--prova-save $N"
-LIGAS=""; ATE_REAL=2002-01-01; LIM_REAL=3600
+LIGAS=""; ATE_REAL=2002-01-01; LIM_REAL=5400  # 24/11/2026: the news texts mode (CM_TEXTOS) made it pass 3600 s on a loaded machine
 if [ -f "$RAIZ/levas/$N/LIGAS" ]; then LIGAS="$(head -1 "$RAIZ/levas/$N/LIGAS" | tr -d '\r')"; ATE_REAL=$FIM; LIM_REAL=30000; fi
 LIM_CAR=2400; [ "$LIGAS" = MUNDO ] && LIM_CAR=20000
 L=(); M=(); [ -n "$LIGAS" ] && L=(--ligas "$LIGAS") && M=(--ligas "$LIGAS" --limite 3600)
