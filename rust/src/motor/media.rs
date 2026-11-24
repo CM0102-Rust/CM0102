@@ -10311,3 +10311,167 @@ impl StoryEffects {
         (self.expected as f64 - margin) > self.form as f64
     }
 }
+
+/// What `write_team_media_story_news_text` reads from the news item and prepares before writing (the original's frame).
+pub(crate) struct TeamText {
+    pub(crate) draw: i32,
+    pub(crate) tone: i32,
+    pub(crate) club_index: i32,
+    pub(crate) confident: u32,
+    pub(crate) cautious: u32,
+    pub(crate) comp_index: i32,
+    pub(crate) kind: i32,
+    pub(crate) reply: i32,
+    pub(crate) manager: i32,
+    pub(crate) manager_ids: [u32; 3],
+    pub(crate) person: i32,
+    pub(crate) person_ids: [u32; 3],
+    pub(crate) has_game: u32,
+    pub(crate) record: [u8; 0x20],
+    pub(crate) variant: i32,
+    pub(crate) latest: u32,
+    pub(crate) host_a: i32,
+    pub(crate) host_b: i32,
+    pub(crate) extra: u32,
+    pub(crate) person_club: i32,
+    pub(crate) person_job: i32,
+    pub(crate) caps: u32,
+    pub(crate) shootout: i32,
+    pub(crate) pundit: i32,
+    pub(crate) on_screen: bool,
+    pub(crate) home: bool,
+    pub(crate) home_england: bool,
+    pub(crate) manager_name: [u8; 0x78],
+    pub(crate) person_name: [u8; 0x78],
+    pub(crate) person_short: [u8; 0x78],
+    pub(crate) outlet: [u8; 0xc8],
+    pub(crate) outlet_gender: u8,
+    pub(crate) adjective: [u8; 0x78],
+    pub(crate) score: [u8; 0x20],
+    pub(crate) stage: [u8; 0xc8],
+    pub(crate) money: [u8; 0x40],
+    pub(crate) text: [u8; 0x1388],
+    pub(crate) second: [u8; 0x400],
+}
+
+impl TeamText {
+    pub(crate) fn piece(&self, name: &'static str) {
+        if let Ok(mut p) = TEAM_TEXT_PIECE.lock() {
+            *p = name;
+        }
+    }
+    pub(crate) unsafe fn club(&self) -> usize {
+        club_at(self.club_index as isize).addr()
+    }
+    pub(crate) unsafe fn comp(&self) -> usize {
+        read_usize(G_CLUB_COMP_TABLE).wrapping_add((self.comp_index as usize).wrapping_mul(NEWS_COMP_SIZE))
+    }
+    pub(crate) unsafe fn nation(&self) -> usize {
+        read_usize(self.club() + club::NATION)
+    }
+    /// The club, competition or nation record's short name and its gender byte (the three share the layout).
+    pub(crate) unsafe fn short(rec: usize) -> usize {
+        rec + club::SHORT_NAME
+    }
+    pub(crate) unsafe fn short_gender(rec: usize) -> i32 {
+        read_i8(rec + club::SHORT_GENDER_NAME) as i32
+    }
+    pub(crate) unsafe fn long(rec: usize) -> usize {
+        rec + club::NAME
+    }
+    pub(crate) unsafe fn long_gender(rec: usize) -> i32 {
+        read_i8(rec + club::GENDER_NAME) as i32
+    }
+    pub(crate) unsafe fn cs(&self) -> usize { Self::short(self.club()) }
+    pub(crate) unsafe fn cg(&self) -> i32 { Self::short_gender(self.club()) }
+    pub(crate) unsafe fn ks(&self) -> usize { Self::short(self.comp()) }
+    pub(crate) unsafe fn kg(&self) -> i32 { Self::short_gender(self.comp()) }
+    pub(crate) unsafe fn kn(&self) -> usize { Self::long(self.comp()) }
+    pub(crate) unsafe fn kgl(&self) -> i32 { Self::long_gender(self.comp()) }
+    pub(crate) unsafe fn ns(&self) -> usize { Self::short(self.nation()) }
+    pub(crate) unsafe fn ng(&self) -> i32 { Self::short_gender(self.nation()) }
+    /// The opponent of the story's match (the match record's opponent index).
+    pub(crate) unsafe fn opponent(&self) -> usize {
+        club_at(read_i32(self.record.as_ptr() as usize + club_match_record::OPPONENT_ID) as isize).addr()
+    }
+    pub(crate) unsafe fn on(&self) -> usize { Self::long(self.opponent()) }
+    pub(crate) unsafe fn os(&self) -> usize { Self::short(self.opponent()) }
+    pub(crate) unsafe fn og(&self) -> i32 { Self::short_gender(self.opponent()) }
+    pub(crate) unsafe fn ogl(&self) -> i32 { Self::long_gender(self.opponent()) }
+    /// The person's club (the club of his job, from the news).
+    pub(crate) unsafe fn ps(&self) -> usize { Self::short(club_at(self.person_club as isize).addr()) }
+    pub(crate) unsafe fn pg(&self) -> i32 { Self::short_gender(club_at(self.person_club as isize).addr()) }
+    /// A host nation of the tournament (`G_NATION_TABLE` by index).
+    pub(crate) unsafe fn host(&self, i: i32) -> usize {
+        read_usize(G_NATION_TABLE).wrapping_add((i as usize).wrapping_mul(nation::SIZE))
+    }
+    pub(crate) unsafe fn as_(&self) -> usize { Self::short(self.host(self.host_a)) }
+    pub(crate) unsafe fn ag(&self) -> i32 { Self::short_gender(self.host(self.host_a)) }
+    pub(crate) unsafe fn bs(&self) -> usize { Self::short(self.host(self.host_b)) }
+    pub(crate) unsafe fn bg(&self) -> i32 { Self::short_gender(self.host(self.host_b)) }
+    /// The continent of the club's nation: its name (+4) and that name's gender byte (+0x1e).
+    pub(crate) unsafe fn continent(&self) -> (usize, i32) {
+        let c = read_usize(self.nation() + nation::CONTINENT);
+        (c + 4, read_i8(c + 0x1e) as i32)
+    }
+    pub(crate) unsafe fn gf(&self) -> i32 {
+        self.record[club_match_record::GOALS_FOR] as i8 as i32
+    }
+    pub(crate) unsafe fn ga(&self) -> i32 {
+        self.record[club_match_record::GOALS_AGAINST] as i8 as i32
+    }
+    /// The score class of the story's match: a hammering (margin above 3), a thriller (more than 5 goals) or plain.
+    pub(crate) unsafe fn score_class(&self) -> u8 {
+        if self.gf() - self.ga() > 3 {
+            0
+        } else if self.gf() + self.ga() > 5 {
+            1
+        } else {
+            2
+        }
+    }
+    /// The score as "high-low" (`%d-%d` of the larger and the smaller goal count).
+    pub(crate) unsafe fn score_high_low(&mut self) {
+        let (a, b) = (self.gf(), self.ga());
+        let (lo, hi) = (if a < b { a } else { b }, if a > b { a } else { b });
+        let s = self.score.as_mut_ptr();
+        story_crt!(s, 0x98c114, hi, lo); // "%d-%d"
+    }
+    /// The club's nationality adjective in form `form` (`nation_get_nationality_adjective`, 0x78).
+    pub(crate) unsafe fn adjective(&mut self, form: u32) -> usize {
+        exe::nation_get_nationality_adjective(self.nation(), self.adjective.as_mut_ptr() as usize, 0x78, form);
+        self.adjective.as_ptr() as usize
+    }
+    /// The name and gender of the person's club job (`database_get_job_name`).
+    pub(crate) unsafe fn job(&self) -> (usize, i32) {
+        let mut g: i8 = 0;
+        let n = exe::database_get_job_name(self.person_job as u32, 0, 0, &mut g);
+        (n, g as i32)
+    }
+    /// The national team hosts the tournament (either host is the club's nation).
+    pub(crate) unsafe fn hosting(&self) -> bool {
+        let id = read_i32(self.nation());
+        self.host_a == id || self.host_b == id
+    }
+    pub(crate) fn pname(&self) -> usize {
+        self.person_name.as_ptr() as usize
+    }
+    pub(crate) fn pshort(&self) -> usize {
+        self.person_short.as_ptr() as usize
+    }
+    pub(crate) fn mname(&self) -> usize {
+        self.manager_name.as_ptr() as usize
+    }
+    pub(crate) fn outlet_name(&self) -> usize {
+        self.outlet.as_ptr() as usize
+    }
+    pub(crate) fn om(&self) -> i32 {
+        self.outlet_gender as i8 as i32
+    }
+    pub(crate) fn score_text(&self) -> usize {
+        self.score.as_ptr() as usize
+    }
+}
+
+/// The last piece `write_team_media_story_news_text` ran (for the comparer's message).
+pub(crate) static TEAM_TEXT_PIECE: std::sync::Mutex<&'static str> = std::sync::Mutex::new("");

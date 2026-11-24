@@ -41,13 +41,16 @@ const ARG_SECOND_SEEDED_AVERAGES: [(usize, i16, u8, i16, u8); 25] = [
 /// count (read once): the club of its id (`club_at`, unchecked) must have a division (`club::DIVISION`) whose id is that
 /// of `KEY_CLUB_COMP_ARGENTINE_SECOND_DIVISION`; at the first that has not, the rows are freed and a new empty table made
 /// (`reset_relegation_averages`, the box of line 0x6d1).
-/// Defects of the original: with fewer than 25 clubs the seeded rows are written past the block; a row with id −1 is
+/// Defects of the original: with fewer than 25 clubs the seeded rows are written past the block (the copy reserves 25
+/// rows: correction, 24/11/2026); a row with id −1 is
 /// looked up 0x245 bytes before the club table.
 /// Original: `ArgSecond::init_relegation_averages` (0x4093f0, arg_second.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn arg_second_init_relegation_averages(this: usize) {
     let this = League(this);
     write_i16(this.addr() + ARG_AVERAGE_COUNT, this.club_count());
-    let rows = exe::crt_calloc(this.club_count() as i32 as u32, ARG_AVERAGE_ROW_SIZE as u32);
+    // correction of the original (24/11/2026, Lucas): the 25 seeded rows are written whatever the count, past the block
+    // with fewer than 25 clubs (a heap overflow); the copy reserves at least 25 rows (docs/DEFEITOS_DO_ORIGINAL.md)
+    let rows = exe::crt_calloc((this.club_count() as i32).max(ARG_SECOND_SEEDED_AVERAGES.len() as i32) as u32, ARG_AVERAGE_ROW_SIZE as u32);
     write_usize(this.addr() + ARG_AVERAGES, rows);
     if rows == 0 {
         return show_error_at(ARG_SECOND_FILE, 0x638);

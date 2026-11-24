@@ -8,19 +8,19 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 
 | Medida | Quantidade |
 |---|---:|
-| deslocamentos crus | 3738 |
+| deslocamentos crus | 3746 |
 | chaves fixas cruas | 1120 |
 | chamadas por endereço | 0 |
 | cópias de acesso à memória | 0 |
 | rotinas sem cabeçalho | 0 |
 | locais/parâmetros em português | 222 |
-| linhas | 385749 |
+| linhas | 386088 |
 
 ## Por arquivo (os 40 piores, pelos deslocamentos crus)
 
 | Arquivo | deslocamentos crus | chaves fixas cruas | chamadas por endereço | cópias de acesso à memória | rotinas sem cabeçalho | locais/parâmetros em português | linhas |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| `motor.rs` | 584 | 0 | 0 | 0 | 0 | 72 | 12240 |
+| `motor.rs` | 583 | 0 | 0 | 0 | 0 | 72 | 12080 |
 | `motor/comp_screens.rs` | 339 | 11 | 0 | 0 | 0 | 0 | 9534 |
 | `motor/club_screens.rs` | 321 | 2 | 0 | 0 | 0 | 0 | 13774 |
 | `motor/news.rs` | 164 | 0 | 0 | 0 | 0 | 0 | 3647 |
@@ -32,11 +32,11 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 | `motor/manager_screens.rs` | 65 | 0 | 0 | 0 | 0 | 0 | 1811 |
 | `motor/search_screens.rs` | 61 | 1 | 0 | 0 | 0 | 0 | 4877 |
 | `motor/national_teams.rs` | 54 | 1 | 0 | 0 | 0 | 2 | 3230 |
-| `motor/fields.rs` | 51 | 0 | 0 | 0 | 0 | 0 | 3391 |
+| `motor/fields.rs` | 51 | 0 | 0 | 0 | 0 | 0 | 3392 |
 | `motor/transfer_manager.rs` | 50 | 0 | 0 | 0 | 0 | 3 | 12650 |
-| `motor/media.rs` | 47 | 0 | 0 | 0 | 0 | 0 | 10313 |
+| `motor/club_records.rs` | 48 | 3 | 0 | 0 | 0 | 0 | 2761 |
+| `motor/media.rs` | 48 | 0 | 0 | 0 | 0 | 0 | 10477 |
 | `motor/award_screens.rs` | 41 | 0 | 0 | 0 | 0 | 0 | 1110 |
-| `motor/club_records.rs` | 40 | 3 | 0 | 0 | 0 | 0 | 2436 |
 | `motor/menubar.rs` | 40 | 0 | 0 | 0 | 0 | 0 | 2904 |
 | `motor/player_search.rs` | 40 | 0 | 0 | 0 | 0 | 0 | 1599 |
 | `motor/comp/cup.rs` | 37 | 3 | 0 | 0 | 0 | 2 | 4261 |

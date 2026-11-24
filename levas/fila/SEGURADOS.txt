@@ -51,11 +51,9 @@ cx17_3	ATE 2005-12-31
 cx17_5	dependencia fora: cx16_7
 cx17_6	dependencia fora: cx16_8
 sbC_5	caixa de mensagem: decisao do desvio de observacao
-sbD_9	estouro de heap do original (25 linhas fixas)
 sbE_11	BASE NORMAL
 sbE_12	BASE NORMAL
 sbE_13	BASE NORMAL
-sbE_8	estouro de heap do original (31 datas em 30)
 sbF_10	BASE NORMAL
 sbF_9	BASE NORMAL
 sbG_3	BASE NORMAL

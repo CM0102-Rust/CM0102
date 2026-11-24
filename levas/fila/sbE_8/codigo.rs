@@ -90,7 +90,7 @@ pub(crate) unsafe fn rus_prm_title_play_off_round(this: League) -> EngCcCupCupRo
 /// the table of 0x68 bytes (the box at line 0x10f) with `rus_prm_title_play_off_round` (`write_play_off_round`). Any
 /// other stage: 0, nothing written.
 /// Defect of the original: the finals dates are 31 (round 30 on 12 November), written past the end of the 30-round table
-/// (a heap overflow of the round record at index 30); the copy does the same.
+/// (a heap overflow of the round record at index 30); the copy reserves room for it (correction, 24/11/2026).
 /// Original: `RusPrm::create_schedule` (0x7ead50, rus_prm.cpp, thiscall, ret 0x10).
 pub(crate) unsafe extern "thiscall" fn rus_prm_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let l = League(this);
@@ -101,12 +101,15 @@ pub(crate) unsafe extern "thiscall" fn rus_prm_create_schedule(this: usize, stag
             }
             *rounds = 0x1e;
             *extra = 0;
-            let t = exe::crt_malloc(0x1e * 0x41);
+            let finals = russia_at_finals();
+            // correction of the original (24/11/2026, Lucas): with Russia at the finals the 31 dates are written into a
+            // 30-round table (a heap overflow of one round record); the copy reserves the 31st (docs/DEFEITOS_DO_ORIGINAL.md)
+            let t = exe::crt_malloc(if finals { 0x1f * 0x41 } else { 0x1e * 0x41 });
             if t == 0 {
                 show_error_at(0xa7acc8, 0xaa);
                 return 0;
             }
-            let table: &[FraThirdLeagueRound] = if russia_at_finals() { &RUS_PRM_FINALS_ROUNDS } else { &RUS_PRM_ROUNDS }; // sbE_8: the finals dates
+            let table: &[FraThirdLeagueRound] = if finals { &RUS_PRM_FINALS_ROUNDS } else { &RUS_PRM_ROUNDS }; // sbE_8: the finals dates
             covered!("sbE_8 russian premier league schedule");
             write_dates_then_empty_slots(t, (l.year() as u16) as u32, table, 0x1e);
             t

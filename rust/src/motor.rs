@@ -4008,8 +4008,10 @@ routines! {
     Prologue { address: 0x54cf70, bytes: &[0x8b, 0x41, 0x04, 0x56, 0x85, 0xc0] } => date_get_day_of_month, compare_date_get_day_of_month;
     Prologue { address: 0x54cfb0, bytes: &[0x8b, 0x41, 0x04, 0xba, 0x60, 0x84, 0x9b, 0x00] } => date_get_month, compare_date_get_month;
     Prologue { address: 0x54cfe0, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x81, 0xe1, 0xff, 0xff, 0x00, 0x00] } => date_is_leap_year, compare_date_is_leap_year;
+    Prologue { address: 0x449590, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => club_records_record_type_applies, compare_club_records_record_type_applies;
+    Prologue { address: 0x447880, bytes: &[0x6a, 0xff, 0x68, 0x03, 0x52, 0x95, 0x00] } => club_records_end_season_for_nation, compare_club_records_end_season_for_nation;
 }
-const N: usize = 3850;
+const N: usize = 3852;
 include!(concat!(env!("OUT_DIR"), "/indices.rs")); // IDX_<NAME>: the position of each routine (build.rs)
 
 /// Size of the engine object (the game allocates it with new(0xf63b)): side 1's block (+0xf5f2, 0x36
@@ -5480,171 +5482,9 @@ pub(crate) use self::zipdir::*;
 
 compare_value!(compare_staff_criterion, staff_criterion, IDX_STAFF_CRITERION, () -> u32);
 
+// ---------- batch 331: club records: which record types apply and the end of a nation's season (club_records.cpp) ----------
+
 // --- sx01_1: Media::write_team_media_story_news_text (0x74bbd0, media.cpp, 35,664 bytes), the whole routine in named pieces ---
-
-/// The last piece `write_team_media_story_news_text` ran (for the comparer's message).
-pub(crate) static TEAM_TEXT_PIECE: std::sync::Mutex<&'static str> = std::sync::Mutex::new("");
-
-/// What `write_team_media_story_news_text` reads from the news item and prepares before writing (the original's frame).
-pub(crate) struct TeamText {
-    draw: i32,
-    tone: i32,
-    club_index: i32,
-    confident: u32,
-    cautious: u32,
-    comp_index: i32,
-    kind: i32,
-    reply: i32,
-    manager: i32,
-    manager_ids: [u32; 3],
-    person: i32,
-    person_ids: [u32; 3],
-    has_game: u32,
-    record: [u8; 0x20],
-    variant: i32,
-    latest: u32,
-    host_a: i32,
-    host_b: i32,
-    extra: u32,
-    person_club: i32,
-    person_job: i32,
-    caps: u32,
-    shootout: i32,
-    pundit: i32,
-    on_screen: bool,
-    home: bool,
-    home_england: bool,
-    manager_name: [u8; 0x78],
-    person_name: [u8; 0x78],
-    person_short: [u8; 0x78],
-    outlet: [u8; 0xc8],
-    outlet_gender: u8,
-    adjective: [u8; 0x78],
-    score: [u8; 0x20],
-    stage: [u8; 0xc8],
-    money: [u8; 0x40],
-    text: [u8; 0x1388],
-    second: [u8; 0x400],
-}
-
-impl TeamText {
-    fn piece(&self, name: &'static str) {
-        if let Ok(mut p) = TEAM_TEXT_PIECE.lock() {
-            *p = name;
-        }
-    }
-    unsafe fn club(&self) -> usize {
-        club_at(self.club_index as isize).addr()
-    }
-    unsafe fn comp(&self) -> usize {
-        read_usize(G_CLUB_COMP_TABLE).wrapping_add((self.comp_index as usize).wrapping_mul(NEWS_COMP_SIZE))
-    }
-    unsafe fn nation(&self) -> usize {
-        read_usize(self.club() + club::NATION)
-    }
-    /// The club, competition or nation record's short name and its gender byte (the three share the layout).
-    unsafe fn short(rec: usize) -> usize {
-        rec + club::SHORT_NAME
-    }
-    unsafe fn short_gender(rec: usize) -> i32 {
-        read_i8(rec + club::SHORT_GENDER_NAME) as i32
-    }
-    unsafe fn long(rec: usize) -> usize {
-        rec + club::NAME
-    }
-    unsafe fn long_gender(rec: usize) -> i32 {
-        read_i8(rec + club::GENDER_NAME) as i32
-    }
-    unsafe fn cs(&self) -> usize { Self::short(self.club()) }
-    unsafe fn cg(&self) -> i32 { Self::short_gender(self.club()) }
-    unsafe fn ks(&self) -> usize { Self::short(self.comp()) }
-    unsafe fn kg(&self) -> i32 { Self::short_gender(self.comp()) }
-    unsafe fn kn(&self) -> usize { Self::long(self.comp()) }
-    unsafe fn kgl(&self) -> i32 { Self::long_gender(self.comp()) }
-    unsafe fn ns(&self) -> usize { Self::short(self.nation()) }
-    unsafe fn ng(&self) -> i32 { Self::short_gender(self.nation()) }
-    /// The opponent of the story's match (the match record's opponent index).
-    unsafe fn opponent(&self) -> usize {
-        club_at(read_i32(self.record.as_ptr() as usize + club_match_record::OPPONENT_ID) as isize).addr()
-    }
-    unsafe fn on(&self) -> usize { Self::long(self.opponent()) }
-    unsafe fn os(&self) -> usize { Self::short(self.opponent()) }
-    unsafe fn og(&self) -> i32 { Self::short_gender(self.opponent()) }
-    unsafe fn ogl(&self) -> i32 { Self::long_gender(self.opponent()) }
-    /// The person's club (the club of his job, from the news).
-    unsafe fn ps(&self) -> usize { Self::short(club_at(self.person_club as isize).addr()) }
-    unsafe fn pg(&self) -> i32 { Self::short_gender(club_at(self.person_club as isize).addr()) }
-    /// A host nation of the tournament (`G_NATION_TABLE` by index).
-    unsafe fn host(&self, i: i32) -> usize {
-        read_usize(G_NATION_TABLE).wrapping_add((i as usize).wrapping_mul(nation::SIZE))
-    }
-    unsafe fn as_(&self) -> usize { Self::short(self.host(self.host_a)) }
-    unsafe fn ag(&self) -> i32 { Self::short_gender(self.host(self.host_a)) }
-    unsafe fn bs(&self) -> usize { Self::short(self.host(self.host_b)) }
-    unsafe fn bg(&self) -> i32 { Self::short_gender(self.host(self.host_b)) }
-    /// The continent of the club's nation: its name (+4) and that name's gender byte (+0x1e).
-    unsafe fn continent(&self) -> (usize, i32) {
-        let c = read_usize(self.nation() + nation::CONTINENT);
-        (c + 4, read_i8(c + 0x1e) as i32)
-    }
-    unsafe fn gf(&self) -> i32 {
-        self.record[club_match_record::GOALS_FOR] as i8 as i32
-    }
-    unsafe fn ga(&self) -> i32 {
-        self.record[club_match_record::GOALS_AGAINST] as i8 as i32
-    }
-    /// The score class of the story's match: a hammering (margin above 3), a thriller (more than 5 goals) or plain.
-    unsafe fn score_class(&self) -> u8 {
-        if self.gf() - self.ga() > 3 {
-            0
-        } else if self.gf() + self.ga() > 5 {
-            1
-        } else {
-            2
-        }
-    }
-    /// The score as "high-low" (`%d-%d` of the larger and the smaller goal count).
-    unsafe fn score_high_low(&mut self) {
-        let (a, b) = (self.gf(), self.ga());
-        let (lo, hi) = (if a < b { a } else { b }, if a > b { a } else { b });
-        let s = self.score.as_mut_ptr();
-        story_crt!(s, 0x98c114, hi, lo); // "%d-%d"
-    }
-    /// The club's nationality adjective in form `form` (`nation_get_nationality_adjective`, 0x78).
-    unsafe fn adjective(&mut self, form: u32) -> usize {
-        exe::nation_get_nationality_adjective(self.nation(), self.adjective.as_mut_ptr() as usize, 0x78, form);
-        self.adjective.as_ptr() as usize
-    }
-    /// The name and gender of the person's club job (`database_get_job_name`).
-    unsafe fn job(&self) -> (usize, i32) {
-        let mut g: i8 = 0;
-        let n = exe::database_get_job_name(self.person_job as u32, 0, 0, &mut g);
-        (n, g as i32)
-    }
-    /// The national team hosts the tournament (either host is the club's nation).
-    unsafe fn hosting(&self) -> bool {
-        let id = read_i32(self.nation());
-        self.host_a == id || self.host_b == id
-    }
-    fn pname(&self) -> usize {
-        self.person_name.as_ptr() as usize
-    }
-    fn pshort(&self) -> usize {
-        self.person_short.as_ptr() as usize
-    }
-    fn mname(&self) -> usize {
-        self.manager_name.as_ptr() as usize
-    }
-    fn outlet_name(&self) -> usize {
-        self.outlet.as_ptr() as usize
-    }
-    fn om(&self) -> i32 {
-        self.outlet_gender as i8 as i32
-    }
-    fn score_text(&self) -> usize {
-        self.score.as_ptr() as usize
-    }
-}
 
 // ---------- sx04_1: the month change of a nation's awards, the month award's new season and the month ratings order (nation_awards.cpp, month_award.cpp, month_ratings.cpp) ----------
 

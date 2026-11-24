@@ -2,7 +2,7 @@
 
 Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os arquivos-fonte do mapa de [maxevans60](https://github.com/maxevans60/cm0102-function-map) (CC BY 4.0). Uma função conta quando o início dela é desviado para Rust (`Prologue` em `rust/src/motor.rs`). O placar do motor de partidas, pelas nossas fronteiras, fica em `PLACAR.md`.
 
-**Exe inteiro:** 3846 de 6709 funções, 3783.2 de 5528.0 KB (**68.44%**) · 298 de 393 arquivos com rotinas em Rust
+**Exe inteiro:** 3848 de 6709 funções, 3785.6 de 5528.0 KB (**68.48%**) · 298 de 393 arquivos com rotinas em Rust
 
 | Arquivo | Funções | KB | Progresso |
 |---|---|---|---|
@@ -205,13 +205,13 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `comp_util.cpp` | 28/38 | 46.4/68.4 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **67.8%** |
 | `wc_oceania_league.cpp` | 12/21 | 5.9/8.8 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **67.4%** |
 | `transfer_manager.cpp` | 151/199 | 112.4/167.1 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **67.2%** |
+| `club_records.cpp` | 41/56 | 40.6/61.6 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **65.9%** |
 | `player_regen.cpp` | 42/51 | 29.2/44.7 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **65.2%** |
 | `squad_manager.cpp` | 10/16 | 4.5/7.0 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **64.7%** |
 | `media.cpp` | 44/69 | 130.3/202.1 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **64.5%** |
 | `Database.cpp` | 170/181 | 93.8/148.5 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **63.2%** |
 | `por_prm.cpp` | 6/12 | 5.3/8.5 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **62.5%** |
 | `friendly.cpp` | 49/67 | 26.0/41.7 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **62.4%** |
-| `club_records.cpp` | 39/56 | 38.2/61.6 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **62.0%** |
 | `officials_manager.cpp` | 13/34 | 7.4/12.0 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **61.8%** |
 | `sco_lge_cup.cpp` | 4/8 | 2.7/4.4 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **61.7%** |
 | `brazil_rules.cpp` | 1/3 | 0.3/0.5 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **61.3%** |
