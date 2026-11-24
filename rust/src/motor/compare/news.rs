@@ -39,6 +39,7 @@ pub(crate) unsafe extern "thiscall" fn compare_send_by_scope(this: usize, news: 
 
 /// Comparer for `send_to_club_manager`.
 pub(crate) unsafe extern "thiscall" fn compare_send_to_club_manager(this: usize, news: usize, club: usize) -> u32 {
+    let _texts = news_texts_posting(news); // CM_TEXTO_NOTICIAS
     let club = Club(club);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_CLUB_MANAGER);
     if news == 0 || club.is_null() {
@@ -54,6 +55,7 @@ pub(crate) unsafe extern "thiscall" fn compare_send_to_club_manager(this: usize,
 
 /// Comparer for `deliver_to_manager`.
 pub(crate) unsafe extern "thiscall" fn compare_deliver_to_manager(this: usize, news: usize, manager: usize, free: u32) -> u32 {
+    let _texts = news_texts_posting(news); // CM_TEXTO_NOTICIAS
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(IDX_DELIVER_TO_MANAGER);
     if news == 0 || manager == 0 || news_human_manager_index(manager) < 0 {
         return o(this, news, manager, free);
@@ -138,12 +140,14 @@ pub(crate) unsafe extern "thiscall" fn compare_set_slot_string(this: usize, fiel
 
 /// Comparer for `send_to_continent_managers`.
 pub(crate) unsafe extern "thiscall" fn compare_send_to_continent_managers(this: usize, news: usize, continent: usize) -> u32 {
+    let _texts = news_texts_posting(news); // CM_TEXTO_NOTICIAS
     covered!("send_to_continent_managers");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_CONTINENT_MANAGERS)(this, news, continent)
 }
 
 /// Comparer for `send_to_comp_region`.
 pub(crate) unsafe extern "thiscall" fn compare_send_to_comp_region(this: usize, news: usize, comp: usize) -> u32 {
+    let _texts = news_texts_posting(news); // CM_TEXTO_NOTICIAS
     covered!("send_to_comp_region");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_COMP_REGION)(this, news, comp)
 }
@@ -175,24 +179,28 @@ pub(crate) unsafe extern "thiscall" fn compare_get_slot_string(news: usize, give
 
 /// Comparer for `send_to_all_managers`.
 pub(crate) unsafe extern "thiscall" fn compare_send_to_all_managers(this: usize, news: usize) -> u32 {
+    let _texts = news_texts_posting(news); // CM_TEXTO_NOTICIAS
     covered!("send_to_all_managers");
     original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SEND_TO_ALL_MANAGERS)(this, news)
 }
 
 /// Comparer for `send_to_division_managers`.
 pub(crate) unsafe extern "thiscall" fn compare_send_to_division_managers(this: usize, news: usize, division: usize) -> u32 {
+    let _texts = news_texts_posting(news); // CM_TEXTO_NOTICIAS
     covered!("send_to_division_managers");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_DIVISION_MANAGERS)(this, news, division)
 }
 
 /// Comparer for `send_to_nation_managers`.
 pub(crate) unsafe extern "thiscall" fn compare_send_to_nation_managers(this: usize, news: usize, nation: usize) -> u32 {
+    let _texts = news_texts_posting(news); // CM_TEXTO_NOTICIAS
     covered!("send_to_nation_managers");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_NATION_MANAGERS)(this, news, nation)
 }
 
 /// Comparer for `send_to_nation_club_managers`.
 pub(crate) unsafe extern "thiscall" fn compare_send_to_nation_club_managers(this: usize, news: usize, nation: usize) -> u32 {
+    let _texts = news_texts_posting(news); // CM_TEXTO_NOTICIAS
     covered!("send_to_nation_club_managers");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_NATION_CLUB_MANAGERS)(this, news, nation)
 }

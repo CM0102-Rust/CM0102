@@ -34,8 +34,8 @@ static mut GAME_ESP: u32 = 0;
 /// calling a routine that preserves it (`exe::utils_random` does push ecx/pop ecx); the exit stub used ECX and the
 /// patch's 9-iteration loop at 0x602610 never reached 0 (CLZ, 25/10/2026).
 static mut GAME_ECX: u32 = 0;
-const STACK: usize = 1 << 20;
-const STACK_BASE: usize = 0x0ff0_0000;
+pub(crate) const STACK: usize = 1 << 20;
+pub(crate) const STACK_BASE: usize = 0x0ff0_0000;
 const ARG_DWORDS: u32 = 16; // dwords copied from the game's stack (enough for any detoured routine)
 
 /// Switches on the private stack for detours installed from here on.

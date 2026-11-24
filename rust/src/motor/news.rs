@@ -163,6 +163,7 @@ pub(crate) unsafe extern "thiscall" fn send_by_scope(this: usize, news: usize, c
 /// the career left be54a138); since the test criterion changed and the list was emptied, the copy runs again
 /// Original: `News::send_to_club_manager` (0x7861e0, news.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn send_to_club_manager(this: usize, news: usize, club: usize) -> u32 {
+    let _texts = news_texts_posting(news); // CM_TEXTO_NOTICIAS
     let club = Club(club);
     if news == 0 {
         show_error_at(0xa693ec, 0x2026);
@@ -190,6 +191,7 @@ pub(crate) unsafe extern "thiscall" fn send_to_club_manager(this: usize, news: u
 /// reads: the career left be54a138); since then the routine is hooked again
 /// Original: `News::deliver_to_manager` (0x785d40, news.cpp, thiscall, ret 0xc).
 pub(crate) unsafe extern "thiscall" fn deliver_to_manager(this: usize, news: usize, manager: usize, _free: u32) -> u32 {
+    let _texts = news_texts_posting(news); // CM_TEXTO_NOTICIAS
     let manager = Staff(manager);
     if news == 0 {
         show_error_at(0xa693ec, 0x1f3f);
@@ -405,6 +407,7 @@ pub(crate) unsafe extern "thiscall" fn set_slot_string(this: usize, field: u32, 
 /// first refusal. Null news or continent: as in the original ("Error" box).
 /// Original: `News::send_to_continent_managers` (0x786640, news.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn send_to_continent_managers(this: usize, news: usize, continent: usize) -> u32 {
+    let _texts = news_texts_posting(news); // CM_TEXTO_NOTICIAS
     if news == 0 || continent == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_CONTINENT_MANAGERS)(this, news, continent); // message box: original only
     }
@@ -431,6 +434,7 @@ pub(crate) unsafe extern "thiscall" fn send_to_continent_managers(this: usize, n
 /// returns. Null news or competition: as in the original ("Error" box).
 /// Original: `News::send_to_comp_region` (0x786860, news.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn send_to_comp_region(this: usize, news: usize, comp: usize) -> u32 {
+    let _texts = news_texts_posting(news); // CM_TEXTO_NOTICIAS
     let comp = Competition(comp);
     if news == 0 || comp.is_null() {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_COMP_REGION)(this, news, comp.addr()); // message box: original only
@@ -545,6 +549,7 @@ pub(crate) unsafe fn deliver_to_human_managers(this: usize, news: usize, reach: 
 /// or 0 on the first refusal
 /// Original: `News::send_to_all_managers` (0x786780, news.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn send_to_all_managers(this: usize, news: usize) -> u32 {
+    let _texts = news_texts_posting(news); // CM_TEXTO_NOTICIAS
     if news == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SEND_TO_ALL_MANAGERS)(this, news); // message box: original only
     }
@@ -559,6 +564,7 @@ pub(crate) unsafe extern "thiscall" fn send_to_all_managers(this: usize, news: u
 /// refusal. Null news or division: as in the original ("Error" box).
 /// Original: `News::send_to_division_managers` (0x7862d0, news.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn send_to_division_managers(this: usize, news: usize, division: usize) -> u32 {
+    let _texts = news_texts_posting(news); // CM_TEXTO_NOTICIAS
     if news == 0 || division == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_DIVISION_MANAGERS)(this, news, division); // message box: original only
     }
@@ -576,6 +582,7 @@ pub(crate) unsafe extern "thiscall" fn send_to_division_managers(this: usize, ne
 /// (`club::NATION`). Returns 0. Null news or nation: as in the original ("Error" box).
 /// Original: `News::send_to_nation_managers` (0x7863f0, news.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn send_to_nation_managers(this: usize, news: usize, nation: usize) -> u32 {
+    let _texts = news_texts_posting(news); // CM_TEXTO_NOTICIAS
     if news == 0 || nation == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_NATION_MANAGERS)(this, news, nation); // message box: original only
     }
@@ -596,6 +603,7 @@ pub(crate) unsafe extern "thiscall" fn send_to_nation_managers(this: usize, news
 /// box).
 /// Original: `News::send_to_nation_club_managers` (0x786520, news.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn send_to_nation_club_managers(this: usize, news: usize, nation: usize) -> u32 {
+    let _texts = news_texts_posting(news); // CM_TEXTO_NOTICIAS
     if news == 0 || nation == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_NATION_CLUB_MANAGERS)(this, news, nation); // message box: original only
     }
@@ -3507,4 +3515,128 @@ pub(crate) enum NewsWriter {
     Object(usize, usize),
     /// A `cdecl(news, body, out)` routine.
     Plain(usize),
+}
+
+// ---------- CM_TEXTO_NOTICIAS: every news text written when posted (test mode) ----------
+//
+// The text writers (`newsitem_write_text` and the `write_*_news_text` it dispatches to) only run when someone opens a
+// news item on screen, so the automatic career never calls them. With `CM_TEXTO_NOTICIAS=1` every news item, when it is
+// sent (the seven `send_to_*` and `deliver_to_manager`, the doors every posted item goes through, also those of the
+// machine's clubs), gets its headline and its body written for the first active human manager into a scratch Text,
+// through the exe's address (0x77bc80): in comparison mode the comparers of the writers run. The writing must not change
+// the career: the generator's state (`crate::rng::STATE_REGIONS`) is restored and its draws are not counted, the
+// game heap's blocks come from a side region (`crate::allocator::aside`) and the private stack below the call is
+// copied back (an original that reads a local without a value would find other garbage).
+
+/// The news items being sent (the outer `send_to_*`, then its `deliver_to_manager`): a nested door with the same item
+/// does not write it again.
+static TEXTS_SENDING: [AtomicUsize; 8] = [const { AtomicUsize::new(0) }; 8];
+static TEXTS_DEPTH: AtomicUsize = AtomicUsize::new(0);
+static TEXTS_WRITING: AtomicBool = AtomicBool::new(false);
+/// The private stack below the writing, copied before and written back after.
+static mut TEXTS_STACK: [u32; crate::detours::STACK / 4] = [0; crate::detours::STACK / 4];
+
+fn news_texts_on() -> bool {
+    static ON: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *ON.get_or_init(|| crate::win::ambiente("CM_TEXTO_NOTICIAS"))
+}
+
+/// The guard of a door the news item goes through (dropped at its end).
+pub(crate) struct NewsTextsPosting(bool);
+
+impl Drop for NewsTextsPosting {
+    fn drop(&mut self) {
+        if self.0 {
+            TEXTS_DEPTH.fetch_sub(1, Relaxed);
+        }
+    }
+}
+
+/// At a door of the news (`send_to_*`, `deliver_to_manager`): with `CM_TEXTO_NOTICIAS=1`, writes the item's texts
+/// unless an outer door is sending the same item. Without the variable, nothing.
+pub(crate) unsafe fn news_texts_posting(news: usize) -> NewsTextsPosting {
+    if news == 0 || !news_texts_on() {
+        return NewsTextsPosting(false);
+    }
+    let d = TEXTS_DEPTH.load(Relaxed);
+    if d >= TEXTS_SENDING.len() {
+        return NewsTextsPosting(false);
+    }
+    if !TEXTS_SENDING[..d].iter().any(|s| s.load(Relaxed) == news) && !TEXTS_WRITING.load(Relaxed) {
+        news_texts_write(news);
+    }
+    TEXTS_SENDING[d].store(news, Relaxed);
+    TEXTS_DEPTH.store(d + 1, Relaxed);
+    NewsTextsPosting(true)
+}
+
+/// Copies whole dwords from `src` up to `src_end` into `dst`, without touching the stack (the copy of the stack).
+#[inline(always)]
+unsafe fn news_texts_copy(src: usize, dst: usize, src_end: usize) {
+    if src >= src_end {
+        return;
+    }
+    core::arch::asm!(
+        "2:",
+        "mov {t}, dword ptr [{s}]",
+        "mov dword ptr [{d}], {t}",
+        "add {s}, 4",
+        "add {d}, 4",
+        "cmp {s}, {e}",
+        "jb 2b",
+        s = inout(reg) src => _, d = inout(reg) dst => _, e = in(reg) src_end, t = out(reg) _,
+        options(nostack),
+    );
+}
+
+#[inline(always)]
+unsafe fn news_texts_esp() -> usize {
+    let esp: usize;
+    core::arch::asm!("mov {}, esp", out(reg) esp, options(nomem, nostack, preserves_flags));
+    esp
+}
+
+#[inline(never)]
+unsafe fn news_texts_write(news: usize) {
+    use crate::detours::{STACK, STACK_BASE};
+    let copy = (&raw mut TEXTS_STACK) as usize;
+    // the private stack (the simulation) below here; on the game's stack nothing is reproducible anyway
+    let top = news_texts_esp();
+    let private = (STACK_BASE..STACK_BASE + STACK).contains(&top);
+    if private {
+        news_texts_copy(STACK_BASE, copy, top);
+    }
+    TEXTS_WRITING.store(true, Relaxed);
+    let rng = [read_u32(0xde1f5c), read_u32(0xde1f60), read_u32(0xad6c30)]; // crate::rng::STATE_REGIONS
+    crate::rng::without_counting(|| crate::rng::pause_trace(|| crate::allocator::aside(|| news_texts_write_both(news))));
+    write_u32(0xde1f5c, rng[0]);
+    write_u32(0xde1f60, rng[1]);
+    write_u32(0xad6c30, rng[2]);
+    TEXTS_WRITING.store(false, Relaxed);
+    if private {
+        let now = news_texts_esp().min(top);
+        news_texts_copy(copy, STACK_BASE, copy + (now - STACK_BASE));
+    }
+}
+
+unsafe fn news_texts_write_both(news: usize) {
+    let Some(manager) = (0..0x10).find_map(|i| active_human_manager(i)) else { return };
+    if !newsitem_writes(exe::newsitem_get_category(news), read_u32(news)) {
+        return; // the "Error" box of an unknown type would stop the career
+    }
+    covered!("news texts written on posting");
+    for body in [0, 1] {
+        // as the inbox screen: headline (0, 0) and body (1, 0)
+        let mut text = [0usize; 2];
+        exe::newsitem_write_text(news, manager, text.as_mut_ptr(), body, 0);
+        exe::drop_text(text.as_mut_ptr());
+    }
+}
+
+/// Whether `newsitem_write_text` has a writer for the category and type (otherwise it shows the "Error" box).
+pub(crate) fn newsitem_writes(cat: u8, ty: u32) -> bool {
+    match (cat, ty) {
+        (2, 1 | 3..=13 | 16..=23 | 0x1a | 0x1b | 0x1c | 0x1f | 0x23 | 0x26 | 0x27 | 0x28) | (7, 0x3e9) | (3, 0x7d0) | (1, 0x1388) => true,
+        _ => NEWS_WRITERS.iter().any(|e| e.0 == cat && e.1 == ty),
+    }
 }

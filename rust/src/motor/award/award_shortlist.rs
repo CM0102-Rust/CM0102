@@ -84,11 +84,11 @@ pub(crate) unsafe extern "thiscall" fn compare_award_shortlist_save(this: usize,
 /// `shortlist_computer_vote`, the turn starting at 0. Then sorted by votes (comparer 0x418420) and the first `count`
 /// entries (at most the entry count) go to `out` as staff records (`staff_at`(id)).
 /// Original: `AWARD_SHORTLIST::pick_winners` (0x417c50, award_shortlist.cpp, thiscall, ret 8).
-pub(crate) unsafe extern "thiscall" fn award_shortlist_pick_winners(this: usize, out: *mut usize, count: i16) {
+pub(crate) unsafe extern "thiscall" fn award_shortlist_pick_winners(this: usize, out: *mut usize, count: i16) -> u32 {
     use award_shortlist_fields as asl;
     let entries = read_i16(this + asl::COUNT);
     if entries == 0 {
-        return;
+        return 0;
     }
     covered!("tel29_3 winners picked");
     exe::crt_qsort(read_usize(this + asl::ENTRIES), entries as i32 as u32, asl::ENTRY_SIZE as u32, 0x4183f0usize);
@@ -154,13 +154,15 @@ pub(crate) unsafe extern "thiscall" fn award_shortlist_pick_winners(this: usize,
         *out.add(k as i16 as isize as usize) = staff_at(id as isize).addr();
         k += 1;
     }
+    // the original returns the winners written in ax (inc eax per winner); 0x768b20 reads it
+    k as u32
 }
 
 /// Comparer for `award_shortlist_pick_winners`: side by side over the entries, the winners written and the random
 /// generator.
-pub(crate) unsafe extern "thiscall" fn compare_award_shortlist_pick_winners(this: usize, out: *mut usize, count: i16) {
+pub(crate) unsafe extern "thiscall" fn compare_award_shortlist_pick_winners(this: usize, out: *mut usize, count: i16) -> u32 {
     use award_shortlist_fields as asl;
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, i16)>(IDX_AWARD_SHORTLIST_PICK_WINNERS);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, i16) -> u32>(IDX_AWARD_SHORTLIST_PICK_WINNERS);
     let entries = read_i16(this + asl::COUNT);
     let mut regions = vec![(this, 0x40)];
     if entries > 0 {
@@ -170,9 +172,10 @@ pub(crate) unsafe extern "thiscall" fn compare_award_shortlist_pick_winners(this
         }
     }
     regions.extend_from_slice(&crate::rng::STATE_REGIONS);
-    let (_, _, equal, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, out, count),
-        || crate::rng::without_counting(|| award_shortlist_pick_winners(this, out, count)));
-    SCOREBOARD.record(equal, || format!("award_shortlist_pick_winners({:#x}, {}): differences em {:?}", this, count, first_differences(&mo, &mr)));
+    let (ro, rr, equal, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, out, count) as u16,
+        || crate::rng::without_counting(|| award_shortlist_pick_winners(this, out, count) as u16));
+    SCOREBOARD.record(equal && ro == rr, || format!("award_shortlist_pick_winners({:#x}, {}): returned {} x {}, differences in {:?}", this, count, ro, rr, first_differences(&mo, &mr)));
+    ro as u32
 }
 
 /// Records a human manager's vote for a shortlisted player: his vote slot (`shortlist_vote_slot`) gets the player's

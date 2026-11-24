@@ -168,6 +168,8 @@ def rodar(args, semente, extra=()):
         'CM_COMPARAR': '1' if args.modo == 'comparar' else '0',
         'CM_RASTRO': os.environ.get('CM_RASTRO', '0000-00-00'),
         'CM_COBERTURA': '1' if args.cobertura else '0',
+        # o texto de cada noticia escrito ao ser enviada (modo de teste da DLL); sempre presente, '0' ou '1'
+        'CM_TEXTO_NOTICIAS': '1' if getattr(args, 'textos', False) or (args.modo == 'comparar' and os.environ.get('CM_TEXTOS') == '1') else '0',
     }
     # CM_FERIAS (carga da prova do save, prova_save.py): so quando pedida, para nao mexer no ambiente
     # (e na heap) das outras execucoes; vai igual nos dois modos da carga.
@@ -286,6 +288,7 @@ def main():
     ap.add_argument('--parar-na-divergencia', action='store_true', help='encerra a execucao na primeira DIVERGENCIA do ddraw.log')
     ap.add_argument('--referencia', help='diario da base (linhas "dia"): encerra no primeiro dia diferente')
     ap.add_argument('--exe', default='cm0102-1080.exe')
+    ap.add_argument('--textos', action='store_true', help='CM_TEXTO_NOTICIAS=1: escreve a manchete e o corpo de cada noticia ao ser enviada (os escritores de texto rodam e, comparando, sao comparados)')
     ap.add_argument('--cobertura', action='store_true', help='conta as chamadas das funcoes de jogo/cobertura.txt (gerado por cobertura.py)')
     ap.add_argument('--sem-trava', action='store_true', help='nao espera a trava do laboratorio (o vigia de memoria continua)')
     ap.add_argument('--detector', action='store_true', help='depois das execucoes, mais uma com a pilha particular envenenada (detector de lixo, so registro)')

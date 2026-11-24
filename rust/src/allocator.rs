@@ -266,6 +266,12 @@ unsafe extern "system" fn heap_alloc(h: usize, flags: u32, n: usize) -> usize {
         let f: unsafe extern "system" fn(usize, u32, usize) -> usize = core::mem::transmute(ORIGINALS[1]);
         return f(h, flags, n);
     }
+    if IN_SIDE.load(Ordering::Relaxed) {
+        let p = SIDE.lock().unwrap_or_else(|e| e.into_inner()).alocar(n, flags & HEAP_ZERO_MEMORY != 0);
+        if p != 0 {
+            return p;
+        }
+    }
     let p = with_heap(|a| a.alocar(n, flags & HEAP_ZERO_MEMORY != 0));
     if p == 0 {
         linha(&format!("allocator: region exhausted asking for {} bytes", n));
@@ -276,6 +282,10 @@ unsafe extern "system" fn heap_free(h: usize, flags: u32, p: usize) -> i32 {
     if !is_ours(h) {
         let f: unsafe extern "system" fn(usize, u32, usize) -> i32 = core::mem::transmute(ORIGINALS[2]);
         return f(h, flags, p);
+    }
+    if in_side(p) {
+        SIDE.lock().unwrap_or_else(|e| e.into_inner()).liberar(p);
+        return 1;
     }
     if p != 0 {
         // the match engine (0xf63b bytes, 0xf640 with the CRT's rounding; players on the pitch included) goes into the match fingerprint
@@ -291,12 +301,18 @@ unsafe extern "system" fn heap_realloc(h: usize, flags: u32, p: usize, n: usize)
         let f: unsafe extern "system" fn(usize, u32, usize, usize) -> usize = core::mem::transmute(ORIGINALS[3]);
         return f(h, flags, p, n);
     }
+    if in_side(p) {
+        return SIDE.lock().unwrap_or_else(|e| e.into_inner()).realocar(p, n, flags);
+    }
     with_heap(|a| a.realocar(p, n, flags))
 }
 unsafe extern "system" fn heap_size(h: usize, flags: u32, p: usize) -> usize {
     if !is_ours(h) {
         let f: unsafe extern "system" fn(usize, u32, usize) -> usize = core::mem::transmute(ORIGINALS[4]);
         return f(h, flags, p);
+    }
+    if in_side(p) {
+        return SIDE.lock().unwrap_or_else(|e| e.into_inner()).tamanho(p);
     }
     with_heap(|a| a.tamanho(p))
 }
@@ -312,6 +328,53 @@ unsafe extern "system" fn heap_destroy(h: usize) -> i32 {
 pub fn game_region() -> (usize, usize) {
     let a = HEAP.lock().unwrap_or_else(|e| e.into_inner());
     (a.start, a.top)
+}
+
+// ---------- the side region (CM_TEXTO_NOTICIAS) ----------
+//
+// The test mode that writes every news text (motor/news.rs, `news_texts_posting`) must not move the game heap: its
+// Text strings would take addresses and change the free lists, and the game breaks ties by pointer order. Inside
+// `aside` the game's new blocks come from a region of their own, freed by address; the VC6 CRT's small-block heap
+// (SBH, with its own free lists inside the game's memory) is bypassed by setting its thresholds to 0, so every malloc
+// reaches HeapAlloc. A block of the game freed or grown inside `aside` still goes to the game region (by address).
+// When the side region runs out, the block comes from the game region (the career may then change).
+
+const SIDE_REGION: usize = 0x0400_0000; // 64 MB; the Texts are freed after each news item
+static SIDE: Mutex<Allocator> = Mutex::new(Allocator::new(0, 0));
+static SIDE_RANGE: [AtomicUsize; 2] = [AtomicUsize::new(0), AtomicUsize::new(0)];
+static IN_SIDE: AtomicBool = AtomicBool::new(false);
+const SBH_THRESHOLD: *mut u32 = 0xde43fc as *mut u32; // __sbh_threshold (V6 heap, [0xde4404] = 3)
+const OLD_SBH_THRESHOLD: *mut u32 = 0xad8d7c as *mut u32; // __old_sbh_threshold (V5 heap, [0xde4404] = 2)
+
+fn in_side(p: usize) -> bool {
+    (SIDE_RANGE[0].load(Ordering::Relaxed)..SIDE_RANGE[1].load(Ordering::Relaxed)).contains(&p)
+}
+
+/// Runs `f` with the game heap's new blocks in the side region (see above). Outside the simulation (the game heap is
+/// Windows') `f` just runs. None, without running `f`, only when the side region cannot be reserved.
+pub unsafe fn aside<R>(f: impl FnOnce() -> R) -> Option<R> {
+    if HANDLE == 0 {
+        return Some(f());
+    }
+    {
+        let mut s = SIDE.lock().unwrap_or_else(|e| e.into_inner());
+        if !s.active() {
+            let p = crate::win::VirtualAlloc(core::ptr::null_mut(), SIDE_REGION, crate::win::MEM_COMMIT | crate::win::MEM_RESERVE, crate::win::PAGE_READWRITE) as usize;
+            if p == 0 {
+                return None;
+            }
+            s.activate(p, SIDE_REGION);
+            SIDE_RANGE[0].store(p, Ordering::Relaxed);
+            SIDE_RANGE[1].store(p + SIDE_REGION, Ordering::Relaxed);
+        }
+    }
+    let thresholds = (*SBH_THRESHOLD, *OLD_SBH_THRESHOLD);
+    (*SBH_THRESHOLD, *OLD_SBH_THRESHOLD) = (0, 0);
+    let before = IN_SIDE.swap(true, Ordering::Relaxed);
+    let r = f();
+    IN_SIDE.store(before, Ordering::Relaxed);
+    (*SBH_THRESHOLD, *OLD_SBH_THRESHOLD) = thresholds;
+    Some(r)
 }
 
 /// Peak usage of the region (bytes), for the simulation's log.

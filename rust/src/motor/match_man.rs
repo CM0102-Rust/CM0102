@@ -1359,14 +1359,9 @@ pub(crate) unsafe extern "thiscall" fn store_tactic(c: usize) {
 /// Shows the game's "v%s %s.%s %d" error box for source file `arquivo` and line (game continues), clearing
 /// G_MOUSE_LEFT_BUTTON_DOWN.
 pub(crate) unsafe fn show_error_at(file: usize, row: u32) {
-    let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
-    let join: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
-    let (mut nome, mut ext) = ([0u8; 256], [0u8; 256]);
-    exe::crt_strtok(file, 0, 0, nome.as_mut_ptr(), ext.as_mut_ptr());
-    let s = join(nome.as_mut_ptr(), ext.as_mut_ptr(), row);
-    format(0xae24d0, 0x9870e8, s);
-    exe::gui_show_message_box(0x9870e0, 0xae24d0, 0);
-    write_u32(G_MOUSE_LEFT_BUTTON_DOWN, 0);
+    // the format "v%s %s.%s %d" takes the version, the file name, the extension and the line: the same box as
+    // show_error_box (until 24/11/2026 only the version went, and sprintf read the other three from the stack)
+    show_error_box(file, row);
 }
 
 /// the staff selects the team against the opponent. Outside the human, weighs today's match against the next one on the

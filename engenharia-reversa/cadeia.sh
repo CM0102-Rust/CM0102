@@ -28,6 +28,9 @@
 RAIZ="$(cd "$(dirname "$0")/.." && pwd)"
 # a game message with a character outside cp1252 (the console's code page) must not stop the tools (23/11/2026)
 export PYTHONIOENCODING=utf-8
+# the news texts written at posting in every comparison run (24/11/2026): the text writers, which only run when a
+# news item is opened, get compared and their mutations caught (CM_TEXTOS=0 turns it off)
+export CM_TEXTOS=${CM_TEXTOS:-1}
 N=$1
 DATA=${2:-2001-08-20}
 mkdir -p "$RAIZ/levas/$N"
