@@ -1,0 +1,1 @@
+Depende do sbE_2 (move_group_clubs_to_division, injury_club_count_without_nations ja publicado): integrar depois dele.

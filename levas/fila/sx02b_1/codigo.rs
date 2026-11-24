@@ -232,7 +232,8 @@ pub(crate) unsafe extern "thiscall" fn setup_transfer_rules(this: usize) {
 
 /// Comparer for `setup_transfer_rules`: only the original runs (it allocates the rules objects); then the window
 /// table is rebuilt from its objects (`collect_transfer_window_dates`, sorted with the same qsort) and checked against
-/// the original's, and each national object's nation (`transfer_rules::NATION_ID`) against its key.
+/// the original's, and each national object's nation (`transfer_rules::NATION_ID`, the nation's record: the base
+/// constructor 0x8e84a0 stores `G_NATION_TABLE + id × nation::SIZE` for the id its key holds) against its key.
 pub(crate) unsafe extern "thiscall" fn compare_setup_transfer_rules(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
     let tm = TransferManagerFields(this);
@@ -245,7 +246,7 @@ pub(crate) unsafe extern "thiscall" fn compare_setup_transfer_rules(this: usize)
         && core::slice::from_raw_parts(tm.transfer_windows() as *const usize, n) == plan.as_slice();
     let wrong_nation = NATIONAL_TRANSFER_RULES.iter().find(|&&(k, _, _, nation)| {
         let rules = transfer_rules_at(tm, k);
-        rules != 0 && read_usize(rules + transfer_rules::NATION_ID) != read_usize(nation)
+        rules != 0 && read_usize(rules + transfer_rules::NATION_ID) != read_usize(G_NATION_TABLE) + read_usize(nation) * nation::SIZE
     });
     SCOREBOARD.record(same_table && wrong_nation.is_none(), || format!(
         "setup_transfer_rules: {} window dates (plan {}), table equal {}, rules slot with another nation {:?}",

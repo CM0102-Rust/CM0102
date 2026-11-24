@@ -1,0 +1,6 @@
+NAO PROVADO NO JOGO (leitor sbB, rodada 5, 24/11/2026): MANAGER_MANAGER::build_board_confidence_text 0x690d80 (11 KB),
+inteira, um desvio. Item de SIMULACAO (sem TELAS): roda pelo modo CM_TEXTO_NOTICIAS no corpo da noticia da confianca da
+diretoria (6, 0x1772), postada por alcance a todos os clubes (cerca de 40 mil vezes ate 2002-06-01), e na tela da
+confianca da diretoria. Comparador: side by side sobre o buffer (como o de build_board_expectation_text).
+Tabelas de modelos geradas emulando a original (unicorn) e o codigo.rs conferido de volta: 7782 casos, 0 diferencas.
+Compila sobre o HEAD b55a04f18 (0 avisos nas linhas do item); com as mutacoes, compila; ancoras com 1 ocorrencia.

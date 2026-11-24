@@ -3535,19 +3535,19 @@ pub(crate) enum NewsWriter {
 
 /// The news items being sent (the outer `send_to_*`, then its `deliver_to_manager`): a nested door with the same item
 /// does not write it again.
-static TEXTS_SENDING: [AtomicUsize; 8] = [const { AtomicUsize::new(0) }; 8];
-static TEXTS_DEPTH: AtomicUsize = AtomicUsize::new(0);
-static TEXTS_WRITING: AtomicBool = AtomicBool::new(false);
+pub(crate) static TEXTS_SENDING: [AtomicUsize; 8] = [const { AtomicUsize::new(0) }; 8];
+pub(crate) static TEXTS_DEPTH: AtomicUsize = AtomicUsize::new(0);
+pub(crate) static TEXTS_WRITING: AtomicBool = AtomicBool::new(false);
 /// The private stack below the writing, copied before and written back after.
-static mut TEXTS_STACK: [u32; crate::detours::STACK / 4] = [0; crate::detours::STACK / 4];
+pub(crate) static mut TEXTS_STACK: [u32; crate::detours::STACK / 4] = [0; crate::detours::STACK / 4];
 
-fn news_texts_on() -> bool {
+pub(crate) fn news_texts_on() -> bool {
     static ON: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
     *ON.get_or_init(|| crate::win::ambiente("CM_TEXTO_NOTICIAS"))
 }
 
 /// The guard of a door the news item goes through (dropped at its end).
-pub(crate) struct NewsTextsPosting(bool);
+pub(crate) struct NewsTextsPosting(pub(crate) bool);
 
 impl Drop for NewsTextsPosting {
     fn drop(&mut self) {
@@ -3577,7 +3577,7 @@ pub(crate) unsafe fn news_texts_posting(news: usize) -> NewsTextsPosting {
 
 /// Copies whole dwords from `src` up to `src_end` into `dst`, without touching the stack (the copy of the stack).
 #[inline(always)]
-unsafe fn news_texts_copy(src: usize, dst: usize, src_end: usize) {
+pub(crate) unsafe fn news_texts_copy(src: usize, dst: usize, src_end: usize) {
     if src >= src_end {
         return;
     }
@@ -3595,14 +3595,14 @@ unsafe fn news_texts_copy(src: usize, dst: usize, src_end: usize) {
 }
 
 #[inline(always)]
-unsafe fn news_texts_esp() -> usize {
+pub(crate) unsafe fn news_texts_esp() -> usize {
     let esp: usize;
     core::arch::asm!("mov {}, esp", out(reg) esp, options(nomem, nostack, preserves_flags));
     esp
 }
 
 #[inline(never)]
-unsafe fn news_texts_write(news: usize) {
+pub(crate) unsafe fn news_texts_write(news: usize) {
     use crate::detours::{STACK, STACK_BASE};
     let copy = (&raw mut TEXTS_STACK) as usize;
     // the private stack (the simulation) below here; on the game's stack nothing is reproducible anyway
@@ -3624,7 +3624,7 @@ unsafe fn news_texts_write(news: usize) {
     }
 }
 
-unsafe fn news_texts_write_both(news: usize) {
+pub(crate) unsafe fn news_texts_write_both(news: usize) {
     let Some(manager) = (0..0x10).find_map(|i| active_human_manager(i)) else { return };
     if !newsitem_writes(exe::newsitem_get_category(news), read_u32(news)) {
         return; // the "Error" box of an unknown type would stop the career

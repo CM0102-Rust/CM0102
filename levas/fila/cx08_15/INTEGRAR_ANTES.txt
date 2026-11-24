@@ -1,0 +1,1 @@
+Depende do cx08_6 (comp_record_by_key): integrar depois dele.

@@ -1,0 +1,7 @@
+NAO PROVADO NO JOGO (leitor sbB, rodada 5, 24/11/2026): SCOUT_MANAGER::write_scout_report_news_text 0x7f9d10 (9,3 KB),
+inteira, um desvio. Item de SIMULACAO (sem TELAS): roda pelo modo CM_TEXTO_NOTICIAS quando sai a noticia do relatorio
+dos olheiros (1, 0x138e), de send_scout_report_news 0x7f9a60; se sai na carreira inglesa ate 2002-06-01 nao se sabe sem
+rodar. Comparador: compare_text_writer.
+Prova sem o jogo: a original do exe e a copia da ddraw.dll compilada emuladas (unicorn) no mesmo mundo com stubs:
+20000 noticias sorteadas (0..3 olheiros) e 2000 com 4..8, 0 diferencas, os 87 modelos vistos; as 3 mutacoes acusadas.
+Compila sobre o HEAD b55a04f18 (0 avisos nas linhas do item); com as mutacoes, compila; ancoras com 1 ocorrencia.

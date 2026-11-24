@@ -2,7 +2,7 @@
 
 Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os arquivos-fonte do mapa de [maxevans60](https://github.com/maxevans60/cm0102-function-map) (CC BY 4.0). Uma função conta quando o início dela é desviado para Rust (`Prologue` em `rust/src/motor.rs`). O placar do motor de partidas, pelas nossas fronteiras, fica em `PLACAR.md`.
 
-**Exe inteiro:** 3819 de 6709 funções, 3730.8 de 5528.0 KB (**67.49%**) · 296 de 393 arquivos com rotinas em Rust
+**Exe inteiro:** 3846 de 6709 funções, 3783.2 de 5528.0 KB (**68.44%**) · 298 de 393 arquivos com rotinas em Rust
 
 | Arquivo | Funções | KB | Progresso |
 |---|---|---|---|
@@ -204,13 +204,14 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `awol.cpp` | 13/19 | 8.1/11.9 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **67.9%** |
 | `comp_util.cpp` | 28/38 | 46.4/68.4 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **67.8%** |
 | `wc_oceania_league.cpp` | 12/21 | 5.9/8.8 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **67.4%** |
+| `transfer_manager.cpp` | 151/199 | 112.4/167.1 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **67.2%** |
 | `player_regen.cpp` | 42/51 | 29.2/44.7 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **65.2%** |
 | `squad_manager.cpp` | 10/16 | 4.5/7.0 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **64.7%** |
-| `transfer_manager.cpp` | 144/199 | 107.1/167.1 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **64.1%** |
+| `media.cpp` | 44/69 | 130.3/202.1 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **64.5%** |
+| `Database.cpp` | 170/181 | 93.8/148.5 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **63.2%** |
 | `por_prm.cpp` | 6/12 | 5.3/8.5 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **62.5%** |
 | `friendly.cpp` | 49/67 | 26.0/41.7 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **62.4%** |
 | `club_records.cpp` | 39/56 | 38.2/61.6 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **62.0%** |
-| `Database.cpp` | 165/181 | 92.0/148.5 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **61.9%** |
 | `officials_manager.cpp` | 13/34 | 7.4/12.0 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **61.8%** |
 | `sco_lge_cup.cpp` | 4/8 | 2.7/4.4 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **61.7%** |
 | `brazil_rules.cpp` | 1/3 | 0.3/0.5 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **61.3%** |
@@ -228,14 +229,13 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `rus_first.cpp` | 4/7 | 1.5/2.8 | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **51.4%** |
 | `fin_first.cpp` | 7/18 | 4.2/8.7 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **48.7%** |
 | `european_cup.cpp` | 19/50 | 14.2/29.3 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **48.6%** |
+| `month_ratings.cpp` | 5/8 | 0.9/1.9 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **48.4%** |
 | `pol_lge_cup.cpp` | 3/7 | 1.5/3.2 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **47.8%** |
 | `cup_stage.cpp` | 3/7 | 3.5/7.7 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **46.0%** |
 | `fifa_confed.cpp` | 7/20 | 3.8/8.5 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **44.7%** |
-| `media.cpp` | 41/69 | 88.6/202.1 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **43.8%** |
 | `swe_prm.cpp` | 5/13 | 3.0/7.0 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **43.7%** |
 | `national_teams.cpp` | 54/69 | 25.4/58.6 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **43.3%** |
 | `tur_first.cpp` | 6/10 | 2.5/5.9 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **41.6%** |
-| `month_ratings.cpp` | 4/8 | 0.8/1.9 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **41.0%** |
 | `wc_south_american_league.cpp` | 7/17 | 3.6/9.0 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **40.4%** |
 | `rus_prm.cpp` | 5/13 | 2.3/5.9 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **39.5%** |
 | `notes.cpp` | 4/23 | 3.6/9.2 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **39.4%** |
@@ -261,6 +261,7 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `year_ratings.cpp` | 2/14 | 1.2/4.9 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **24.7%** |
 | `human_manager.cpp` | 20/61 | 6.2/25.5 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **24.4%** |
 | `Fine.cpp` | 5/19 | 3.9/15.9 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **24.4%** |
+| `nation_awards.cpp` | 4/19 | 2.1/8.6 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **24.0%** |
 | `nor_prm.cpp` | 4/10 | 1.4/6.1 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **22.7%** |
 | `bel_second.cpp` | 6/18 | 1.7/7.7 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **22.6%** |
 | `world_club_champ.cpp` | 3/18 | 2.0/8.9 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **22.0%** |
@@ -280,9 +281,10 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `euro_champ_qual.cpp` | 5/32 | 4.0/25.1 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **16.1%** |
 | `game.cpp` | 16/34 | 6.7/43.1 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **15.6%** |
 | `portugal_rules.cpp` | 1/5 | 0.2/1.6 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **15.4%** |
+| `month_award.cpp` | 3/10 | 0.5/3.2 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **14.6%** |
 | `league_stage.cpp` | 2/6 | 1.1/7.7 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **14.0%** |
 | `coach.cpp` | 3/10 | 2.4/18.3 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **13.0%** |
-| `month_award.cpp` | 2/10 | 0.4/3.2 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **12.1%** |
+| `Date.cpp` | 6/36 | 1.3/13.6 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **9.7%** |
 | `wc_europe_league.cpp` | 4/30 | 2.1/23.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **9.2%** |
 | `main.cpp` | 4/16 | 0.3/3.0 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.7%** |
 | `utils.cpp` | 1/23 | 0.5/5.7 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.0%** |
@@ -303,4 +305,4 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `hol_cup.cpp` | 1/19 | 0.1/8.1 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **1.7%** |
 | `library_without_asserts` | 1/243 | 0.3/205.5 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **0.1%** |
 
-Os outros 97 arquivos ainda não têm rotina em Rust.
+Os outros 95 arquivos ainda não têm rotina em Rust.

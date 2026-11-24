@@ -1,0 +1,1 @@
+Depende do cx09_1 (drop_plain_league) e do cx01_14 (delete_comp_stats).

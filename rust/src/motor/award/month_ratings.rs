@@ -183,3 +183,29 @@ pub(crate) unsafe extern "thiscall" fn compare_month_ratings_reset(this: usize, 
     SCOREBOARD.record(ok, || format!("month_ratings_reset({}, {}): table {:x} count {} capacity {} month {} year {}",
         month, year, read_usize(this), read_u32(this + 4), read_u32(this + 8), read_u8(this + month_ratings_fields::MONTH), read_i16(this + month_ratings_fields::YEAR)));
 }
+
+/// The qsort order of the month ratings (12-byte `month_rating_entry` records): the best average rating first, with
+/// those of fewer than 3 matches after all the others. `a` with fewer than 3 matches: 1 when `b` has at least 3, else 0;
+/// `b` with fewer than 3 (and `a` not): −1; otherwise the averages (the rating sum, i16 at +8, / `month_rating_entry::MATCHES`, signed)
+/// decide: −1 when `a`'s is higher, 1 when lower, 0 when equal. Used by `find_best_player`.
+/// Original: `month_ratings_compare_average` (0x768200, month_ratings.cpp, cdecl).
+pub(crate) unsafe extern "C" fn month_ratings_compare_average(a: *const usize, b: *const usize) -> i32 {
+    let (a, b) = (a as usize, b as usize);
+    let (ma, mb) = (read_i8(a + month_rating_entry::MATCHES), read_i8(b + month_rating_entry::MATCHES));
+    if ma < 3 { // sx04_1: fewer than three matches go last
+        return (mb >= 3) as i32;
+    }
+    if mb < 3 {
+        return -1;
+    }
+    covered!("sx04_1 averages compared");
+    let average = |e: usize, m: i8| read_i16(e + 8) as i32 as f64 / m as i32 as f64; // +8: the rating sum
+    let (va, vb) = (average(a, ma), average(b, mb));
+    if va > vb {
+        -1
+    } else if va < vb {
+        1
+    } else {
+        0
+    }
+}

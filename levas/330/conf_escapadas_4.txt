@@ -1,0 +1,1 @@
+mutacao sx01_em_casa        441s engine: DIVERGENCE write_team_media_story_news_text(kind 61, body 1, piece supporters fury (0x3d), unset false) original "Um jornal local noticiou que

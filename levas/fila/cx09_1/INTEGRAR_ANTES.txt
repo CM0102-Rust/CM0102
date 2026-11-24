@@ -1,0 +1,1 @@
+Depende do cx02_3 (drop_group_cup) e do cx01_14 (delete_comp_stats).

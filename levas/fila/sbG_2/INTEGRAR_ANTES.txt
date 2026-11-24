@@ -1,0 +1,1 @@
+Depende do cx16_1 (concacaf_entrant_marks) e do cx16_2 (build_phase_table_with_fields e compare_phase_table_with_fields; o cx16_2 depende do cx06_4): mesma leva ou depois.

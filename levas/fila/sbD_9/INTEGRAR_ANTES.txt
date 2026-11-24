@@ -1,0 +1,1 @@
+Depende do cx08_4 e do cx08_5 (os promedios da Primeira: constantes, auxiliares e o comparador); por eles, do cx04_5.

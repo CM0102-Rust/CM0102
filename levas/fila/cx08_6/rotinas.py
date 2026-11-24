@@ -18,7 +18,8 @@
 #   as a result of their poor average of points over the last three seasons."), o Text e os vinculos 0x7d5 e 0x7d0;
 #   senao Comp::build_fate_news_text 0x48c6d0 (a7 = 0). Prologo mov eax, [esp+0xc]; push ebx (5 bytes).
 # Defeito do original: o troca-troca nao libera a lista dos clubes da Terceira depois de subir (160 bytes por virada).
-# Os auxiliares comp_record_by_key e relegated_by_average_text ficam aqui (o cx08_10 os usa).
+# Os auxiliares comp_record_by_key e relegated_by_average_text ficam aqui (o cx08_15 usa o primeiro; o segundo serve ao
+# texto da Segunda, que ficou para a proxima rodada: ver cx08_10/FORA.md).
 # Comparadores: a cadeia e o troca-troca so a original (movem clubes, sorteiam); o texto lado a lado (compare_text_writer,
 # sem partida; com o modo CM_TEXTO_NOTICIAS).
 # Depende do cx08_4 (update_relegation_averages_virtual): integrar depois.

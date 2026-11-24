@@ -145,3 +145,33 @@ pub(crate) unsafe fn clamp_word(a: usize, floor: i16) {
     }
 }
 
+/// Moves a month award on to the next season: unless the first month slot is already in `year` (or no slot is in
+/// use), every used slot (`MONTH_AWARD_SLOT_COUNT`, read again at each step) goes one year on
+/// (`month_award_fields::SLOT_YEAR` + 1) and loses its winner and club (`SLOT_WINNER_ID`, `SLOT_CLUB_ID` = −1). Called
+/// by each nation's `daily_update` on the nation's season start day, with the current year.
+/// Original: `MONTH_AWARD::start_new_season` (0x7672e0, month_award.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn month_award_new_season(this: usize, year: u16) {
+    if read_i8(this + MONTH_AWARD_SLOT_COUNT) <= 0 || read_u16(this + month_award_fields::SLOT_YEAR) == year {
+        return;
+    }
+    covered!("sx04_1 month slots moved on");
+    let mut k = 0;
+    while k < read_i8(this + MONTH_AWARD_SLOT_COUNT) as i32 {
+        let slot = this + k as usize * MONTH_AWARD_SLOT_SIZE;
+        write_u16(slot + month_award_fields::SLOT_YEAR, read_u16(slot + month_award_fields::SLOT_YEAR).wrapping_add(1)); // sx04_1: one year on
+        write_i32(slot + month_award_fields::SLOT_WINNER_ID, -1);
+        write_i32(slot + month_award_fields::SLOT_CLUB_ID, -1);
+        k += 1;
+    }
+}
+
+/// Comparer for `month_award_new_season`: side by side over the twelve month slots.
+pub(crate) unsafe extern "thiscall" fn compare_month_award_new_season(this: usize, year: u16) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u16)>(IDX_MONTH_AWARD_NEW_SEASON);
+    let regions = [(this + month_award_fields::SLOT_WINNER_ID, 12 * MONTH_AWARD_SLOT_SIZE)];
+    let (_, _, same, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, year), || month_award_new_season(this, year));
+    SCOREBOARD.record(same, || format!("month_award_new_season(year {}) original={:x?} rust={:x?}", year, mo, mr));
+}
+
+/// One month slot of a month award (12 of them from `month_award_fields::SLOT_WINNER_ID`).
+pub(crate) const MONTH_AWARD_SLOT_SIZE: usize = 11;

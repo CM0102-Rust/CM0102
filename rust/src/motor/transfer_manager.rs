@@ -12112,3 +12112,539 @@ pub(crate) struct OfferNewsReach {
 }
 
 pub(crate) const FN_TRANSFER_OFFER_REMOVE_EXCHANGE_PLAYER: usize = 0x8e81a0;
+
+/// Builds the transfer manager, for a new game (`stream` 0) or from the saved game.
+///
+/// - The 150 day buckets at +0x18 (LLISTs of 14 bytes, `exe::crt_vector_constructor_iterator`), the date
+/// `current_date()` (`exe::date_date_54a110`) and the inline lists `INSTALMENTS` and `FREE_TRANSFER_QUEUE`
+/// (`exe::new_llist`).
+/// - The CD check (`find_game_cd`, the no-CD patch read at 0x8bbaf2 and 0x8bbb34).
+/// - The offers and negotiations (+0..+0x14), the past transfers, the next-sale percentages, both appearance money
+/// arrays, the future transfers, the work permits (pointers, capacities and counts) and the loan negotiations zeroed;
+/// `day_cursor()` 0; `current_date()` = a date built with 0, 0 (`exe::new_date`, `exe::date_operator_3d`);
+/// `current_slice()` 0.
+/// - The transfer rules (`setup_transfer_rules`).
+/// - `person_flags()` = calloc(`G_STAFF_COUNT`, 8) and `season_loan_counts()` = calloc(`G_CLUB_COUNT`, 16); either
+/// failing: the "Memory Allocation Error" box (lines 0xa3 and 0xab) and the construction stops there.
+/// - `lowest_free_slot()` = −1.
+/// - With a `stream`, the manager is read from the saved game (`FN_TRANSFER_MANAGER_LOAD_FROM_DISK`); when that
+/// works, nothing else. Otherwise a new Shortlist_Manager (`exe::crt_operator_new` of 0xe0 bytes, its constructor with
+/// 0) in `shortlist_manager()`; none: the box (line 0xc0) and stop; then the work permits (`init_work_permits`).
+///
+/// Returns this.
+/// Original: `TRANSFER_MANAGER::TRANSFER_MANAGER` (0x8bba30, transfer_manager.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn construct_transfer_manager(this: usize, stream: usize) -> usize {
+    let tm = TransferManagerFields(this);
+    exe::crt_vector_constructor_iterator(this + 0x18, 0xe, 0x96, FN_LLIST_LLIST, FN_LLIST_DESTRUCTOR_LLIST); // the day buckets
+    exe::date_date_54a110(this + transfer_manager_fields::CURRENT_DATE);
+    exe::new_llist(this + transfer_manager_fields::INSTALMENTS);
+    exe::new_llist(this + transfer_manager_fields::FREE_TRANSFER_QUEUE);
+    find_game_cd(0x8bbaf2, 0x8bbb34);
+    for field in [0x0usize, 0x8, 0x4, 0xc, 0x14, 0x10, // the offer and negotiation arrays
+                  transfer_manager_fields::PAST_TRANSFERS, transfer_manager_fields::PAST_TRANSFER_COUNT, 0x866, // 0x866: past transfer capacity
+                  transfer_manager_fields::NEXT_SALE_PERCENTAGES, transfer_manager_fields::NEXT_SALE_PERCENTAGE_COUNT, 0x884, // 0x884: their capacity
+                  transfer_manager_fields::APPEARANCE_MONEY, transfer_manager_fields::APPEARANCE_MONEY_COUNT, 0x890, // 0x890: their capacity
+                  transfer_manager_fields::INTERNATIONAL_APPEARANCE_MONEY, transfer_manager_fields::INTERNATIONAL_APPEARANCE_MONEY_COUNT, 0x89c, // 0x89c: their capacity
+                  transfer_manager_fields::FUTURE_TRANSFERS, transfer_manager_fields::FUTURE_TRANSFER_COUNT, 0x924, // 0x924: their capacity
+                  transfer_manager_fields::WORK_PERMITS, transfer_manager_fields::WORK_PERMIT_COUNT, 0x942, // 0x942: their capacity
+                  transfer_manager_fields::LOAN_NEGOTIATIONS] {
+        write_u32(this + field, 0);
+    }
+    tm.set_day_cursor(0);
+    let (mut start, mut result) = ([0u8; 8], [0u8; 8]);
+    let d = exe::new_date(start.as_mut_ptr() as usize, 0, 0);
+    exe::date_operator_3d(this + transfer_manager_fields::CURRENT_DATE, result.as_mut_ptr() as usize, d);
+    tm.set_current_slice(0);
+    setup_transfer_rules(this);
+    let flags = exe::crt_calloc(read_u32(G_STAFF_COUNT), 8);
+    write_usize(this + transfer_manager_fields::PERSON_FLAGS, flags);
+    if flags == 0 {
+        show_out_of_memory_box(0xa3, 0xa8d4cc); // "TRANSFER_MANAGER::constructor() : cannot malloc staff information array"
+        return this;
+    }
+    let loans = exe::crt_calloc(read_u32(G_CLUB_COUNT), 0x10);
+    write_usize(this + transfer_manager_fields::SEASON_LOAN_COUNTS, loans);
+    if loans == 0 {
+        show_out_of_memory_box(0xab, 0xa8d484); // "TRANSFER_MANAGER::constructor() : cannot malloc club information array"
+        return this;
+    }
+    write_i32(this + transfer_manager_fields::LOWEST_FREE_SLOT, -1);
+    if stream != 0 {
+        let load: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_LOAD_FROM_DISK);
+        if load(this, stream) != 0 {
+            covered!("sx02b_1 loaded from the saved game");
+            return this;
+        }
+    }
+    covered!("sx02b_1 new transfer manager");
+    let mut shortlist = exe::crt_operator_new(0xe0);
+    if shortlist != 0 {
+        let construct: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_SHORTLIST_MANAGER_CONSTRUCTOR);
+        shortlist = construct(shortlist, 0);
+    }
+    write_usize(this + transfer_manager_fields::SHORTLIST_MANAGER, shortlist);
+    if shortlist == 0 {
+        show_out_of_memory_box(0xc0, 0xa8d440); // "TRANSFER_MANAGER::constructor() : cannot create shortlist manager"
+        return this;
+    }
+    init_work_permits(this); // sx02b_1: the work permits of a new manager
+    this
+}
+
+/// Comparer for `construct_transfer_manager`: only the original runs (it builds the rules objects and the shortlist
+/// manager, which cannot be built twice).
+pub(crate) unsafe extern "thiscall" fn compare_construct_transfer_manager(this: usize, stream: usize) -> usize {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_CONSTRUCT_TRANSFER_MANAGER)(this, stream) // simplification: original only
+}
+
+/// Builds the 28 transfer rules objects and the sorted table of all their window dates.
+///
+/// - Each object (`exe::crt_operator_new` of 0x19 bytes; when it fails the slot stays 0 and nothing is built): slot 0
+/// the European rules (`FN_EUROPEAN_TRANSFER_RULES_CONSTRUCTOR` with 0, −1, `KEY_CONTINENT_EUROPE`, 2, 0), then the
+/// 27 national ones of `NATIONAL_TRANSFER_RULES` (id, the nation, −1, 1, 0), in that order.
+/// - `transfer_window_count()` = the sum of 2 × the window count (signed byte +8) of each object; `transfer_windows()`
+/// = malloc of 4 × that (none: the "Memory Allocation Error" box, line 0x3bdf, and nothing more), filled with the
+/// opening and closing date of each window (`collect_transfer_window_dates`) and sorted by month, then day
+/// (`exe::crt_qsort` with 0x8e5590).
+/// Original: `TRANSFER_MANAGER::setup_transfer_rules` (0x8d26b0, transfer_manager.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn setup_transfer_rules(this: usize) {
+    let slot = |k: usize| this + transfer_manager_fields::TRANSFER_RULES + 4 * k;
+    let mut rules = exe::crt_operator_new(TRANSFER_RULES_OBJECT_SIZE);
+    if rules != 0 {
+        let construct: unsafe extern "thiscall" fn(usize, u32, i32, usize, u32, u32) -> usize = core::mem::transmute(FN_EUROPEAN_TRANSFER_RULES_CONSTRUCTOR);
+        rules = construct(rules, 0, -1, read_usize(KEY_CONTINENT_EUROPE), 2, 0);
+    }
+    write_usize(slot(0), rules);
+    for &(k, id, constructor, nation) in NATIONAL_TRANSFER_RULES.iter() {
+        let mut rules = exe::crt_operator_new(TRANSFER_RULES_OBJECT_SIZE);
+        if rules != 0 {
+            let construct: unsafe extern "thiscall" fn(usize, u32, usize, i32, u32, u32) -> usize = core::mem::transmute(constructor);
+            rules = construct(rules, id, read_usize(nation), -1, 1, 0); // sx02b_1: a national rules object
+        }
+        write_usize(slot(k), rules);
+    }
+    let dates = collect_transfer_window_dates(this);
+    write_usize(this + transfer_manager_fields::TRANSFER_WINDOW_COUNT, dates.len());
+    let table = exe::crt_malloc((dates.len() * 4) as u32);
+    write_usize(this + transfer_manager_fields::TRANSFER_WINDOWS, table);
+    if table == 0 {
+        show_out_of_memory_box(0x3bdf, 0xa8f530); // "TRANSFER_MANAGER::setup_transfer_rules() : cannot malloc deadline dates"
+        return;
+    }
+    core::ptr::copy_nonoverlapping(dates.as_ptr(), table as *mut usize, dates.len());
+    exe::crt_qsort(table, dates.len() as u32, 4, 0x8e5590usize);
+}
+
+/// Comparer for `setup_transfer_rules`: only the original runs (it allocates the rules objects); then the window
+/// table is rebuilt from its objects (`collect_transfer_window_dates`, sorted with the same qsort) and checked against
+/// the original's, and each national object's nation (`transfer_rules::NATION_ID`, the nation's record: the base
+/// constructor 0x8e84a0 stores `G_NATION_TABLE + id × nation::SIZE` for the id its key holds) against its key.
+pub(crate) unsafe extern "thiscall" fn compare_setup_transfer_rules(this: usize) {
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SETUP_TRANSFER_RULES)(this);
+    let tm = TransferManagerFields(this);
+    let mut plan = collect_transfer_window_dates(this);
+    if !plan.is_empty() {
+        exe::crt_qsort(plan.as_mut_ptr() as usize, plan.len() as u32, 4, 0x8e5590usize);
+    }
+    let n = tm.transfer_window_count();
+    let same_table = n == plan.len() && tm.transfer_windows() != 0
+        && core::slice::from_raw_parts(tm.transfer_windows() as *const usize, n) == plan.as_slice();
+    let wrong_nation = NATIONAL_TRANSFER_RULES.iter().find(|&&(k, _, _, nation)| {
+        let rules = transfer_rules_at(tm, k);
+        rules != 0 && read_usize(rules + transfer_rules::NATION_ID) != read_usize(G_NATION_TABLE) + read_usize(nation) * nation::SIZE
+    });
+    SCOREBOARD.record(same_table && wrong_nation.is_none(), || format!(
+        "setup_transfer_rules: {} window dates (plan {}), table equal {}, rules slot with another nation {:?}",
+        n, plan.len(), same_table, wrong_nation.map(|r| {
+            let rules = transfer_rules_at(tm, r.0);
+            (r.0, read_usize(rules + transfer_rules::NATION_ID), read_usize(r.3), read_usize(G_NATION_TABLE))
+        })));
+}
+
+/// Moves the past transfers older than a year to the yearly files and shrinks the array.
+///
+/// - The cut-off is today (`G_CURRENT_DATE`) less 52 weeks (`exe::date_sub_weeks`). The records in front dated before
+/// it (`count_past_transfers_before`) are appended (`exe::crt_fwrite` of 37 bytes) to `transfers_<year>.tmp` in
+/// CM3_TEMP (the name sprintf'ed into 0xde1f64, `exe::utils_build_file_path`, `exe::crt_fopen` "ab"), one file open at
+/// a time, closed when the year changes and at the end.
+/// - A file that does not open: the "Error" box (line 0x1332); a write that fails: the "Error" box (line 0x133c).
+/// - With records moved: a new array (malloc of 37 × (left + 100); none: the "Memory Allocation Error" box, line
+/// 0x135d, and the array stays as it was) gets the records left, the old one is freed; count = left, capacity = left +
+/// 100.
+///
+/// Defects of the original: after a file fails to open, the other records of that year count as moved without being
+/// written anywhere (they are lost); a record whose write fails is not counted, so the array keeps as many of the
+/// last written ones (they show twice later) and the failed one is lost; when the new array cannot be allocated, the
+/// records already appended to the files also stay in memory (they show twice later).
+/// Original: `TRANSFER_MANAGER::clear_old_past_transfers` (0x8c3eb0, transfer_manager.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn clear_old_past_transfers(this: usize) {
+    let tm = TransferManagerFields(this);
+    covered!("sx02b_2 clear old transfers");
+    let mut cutoff = [0u8; 8];
+    exe::date_sub_weeks(G_CURRENT_DATE, &mut cutoff, 0x34);
+    let old = count_past_transfers_before(tm, cutoff.as_ptr() as usize);
+    let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
+    let (mut file, mut year_open, mut moved) = (0usize, 0u16, 0usize);
+    for i in 0..old {
+        let r = tm.past_transfers() + i * PAST_TRANSFER_SIZE;
+        let year = read_u16(r + past_transfer::DATE + cm_date::YEAR);
+        if year != year_open {
+            if file != 0 {
+                exe::crt_fclose(file);
+            }
+            year_open = year;
+            format(0xde1f64, 0xa8ea38, year as u32); // "transfers_%d.tmp"
+            file = exe::crt_fopen(exe::utils_build_file_path(0x987da0, 0xde1f64), 0x9c79b0); // "CM3_TEMP", "ab"
+            if file == 0 {
+                show_error_box(0xa8d514, 0x1332);
+                continue;
+            }
+            covered!("sx02b_2 yearly file");
+        } else if file == 0 {
+            moved += 1; // the original counts it without a file
+            continue;
+        }
+        if exe::crt_fwrite(r, PAST_TRANSFER_SIZE as u32, 1, file) == 1 {
+            moved += 1; // sx02b_2: a record moved to its year's file
+        } else {
+            show_error_box(0xa8d514, 0x133c);
+        }
+    }
+    if file != 0 {
+        exe::crt_fclose(file);
+    }
+    if moved == 0 {
+        return;
+    }
+    let left = tm.past_transfer_count() - moved;
+    let capacity = left + 100;
+    let array = exe::crt_malloc((capacity * PAST_TRANSFER_SIZE) as u32);
+    if array == 0 {
+        show_out_of_memory_box(0x135d, 0xa8e9dc); // "TRANSFER_MANAGER::clear old_past_transfers() : could not malloc new past transfers array"
+        return;
+    }
+    core::ptr::copy_nonoverlapping((tm.past_transfers() + moved * PAST_TRANSFER_SIZE) as *const u8, array as *mut u8, left * PAST_TRANSFER_SIZE);
+    exe::crt_free(tm.past_transfers());
+    write_usize(this + transfer_manager_fields::PAST_TRANSFERS, array);
+    write_usize(this + transfer_manager_fields::PAST_TRANSFER_COUNT, left);
+    write_usize(this + 0x866, capacity); // 0x866: past transfer capacity
+}
+
+/// Comparer for `clear_old_past_transfers`: only the original runs (it appends to the yearly files). The plan is made
+/// beforehand (the records before the cut-off, `count_past_transfers_before`, and a copy of the array); afterwards the
+/// count must have dropped by that much, the capacity be the count + 100 (when something moved) and the array hold the
+/// records that were after them.
+pub(crate) unsafe extern "thiscall" fn compare_clear_old_past_transfers(this: usize) {
+    let tm = TransferManagerFields(this);
+    let mut cutoff = [0u8; 8];
+    exe::date_sub_weeks(G_CURRENT_DATE, &mut cutoff, 0x34);
+    let old = count_past_transfers_before(tm, cutoff.as_ptr() as usize);
+    let records = || {
+        let n = tm.past_transfer_count();
+        if n == 0 { Vec::new() } else { core::slice::from_raw_parts(tm.past_transfers() as *const u8, n * PAST_TRANSFER_SIZE).to_vec() }
+    };
+    let (n, before) = (tm.past_transfer_count(), records());
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CLEAR_OLD_PAST_TRANSFERS)(this);
+    let (m, after) = (tm.past_transfer_count(), records());
+    let same = m + old == n && (old == 0 || read_usize(this + 0x866) == m + 100) && after[..] == before[old * PAST_TRANSFER_SIZE..];
+    SCOREBOARD.record(same, || format!("clear_old_past_transfers: {} records, {} left (plan {} moved)", n, m, old));
+}
+
+/// Cancels the offers of a club whose manager leaves, and those for its players.
+///
+/// - A national team (`exe::database_is_national_team`): nothing.
+/// - Each open offer (not `offer_is_closed`) the club made (`buyer_club_id()` = the club's id), by slot up to
+/// `offer_capacity()`: unless it is a future transfer (`offer_status::FUTURE_TRANSFER`), it is cancelled
+/// (`cancel_offer_of_departed_manager`).
+/// - Then each person in the club's squad (`exe::database_collect_club_squad`, 50 slots; empty slots and ids from
+/// `G_STAFF_COUNT` up skipped): his open offers (`exe::transfer_manager_get_offers_for_player` with 0) are appended to
+/// one list, and every offer in that list that is not a future transfer nor a pre-contract (`pre_contract()`) is
+/// cancelled.
+///
+/// Defect of the original: the list of the squad's offers is never emptied between players, so a player with open
+/// offers makes the offers of the players before him go through again: cancelled once more, scheduled again and their
+/// collapse news posted again.
+/// Original: `TRANSFER_MANAGER::cancel_club_offers` (0x8c4950, transfer_manager.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn cancel_club_offers(this: usize, club: usize) {
+    let tm = TransferManagerFields(this);
+    if exe::database_is_national_team(club) != 0 {
+        return;
+    }
+    let mut list = [0u8; 0x10];
+    let l = Llist(list.as_mut_ptr() as usize);
+    exe::new_llist(l);
+    let id = read_usize(club); // the club's id
+    let mut found = 0;
+    for k in 0..tm.offer_capacity() as i32 {
+        let o = Offer(offer_at(this, k as usize));
+        if !o.is_null() && !offer_is_closed(o) && o.buyer_club_id() == id {
+            exe::llist_add_tail(l, &k as *const i32 as usize, 4);
+            found += 1;
+        }
+    }
+    if found != 0 {
+        l.set_cursor(l.head());
+        loop {
+            let e = exe::llist_get_next(l);
+            if e == 0 {
+                break;
+            }
+            let o = Offer(offer_at(this, read_usize(e)));
+            if o.status() != offer_status::FUTURE_TRANSFER {
+                covered!("sx02b_2 the club's own offer");
+                cancel_offer_of_departed_manager(tm, o, club); // sx02b_2: the club's own offer
+            }
+        }
+    }
+    exe::llist_clear(l);
+    let mut squad = [0usize; 50];
+    exe::database_collect_club_squad(club, squad.as_mut_ptr(), 0);
+    for &person in squad.iter() {
+        if person == 0 || read_i32(person) >= read_i32(G_STAFF_COUNT) {
+            continue;
+        }
+        if exe::transfer_manager_get_offers_for_player(this, person, l, 0) == 0 {
+            continue;
+        }
+        l.set_cursor(l.head());
+        loop {
+            let e = exe::llist_get_next(l);
+            if e == 0 {
+                break;
+            }
+            let o = Offer(offer_at(this, read_usize(e)));
+            if o.status() != offer_status::FUTURE_TRANSFER && o.pre_contract() == 0 {
+                covered!("sx02b_2 an offer for a squad player");
+                cancel_offer_of_departed_manager(tm, o, club); // sx02b_2: an offer for a squad player
+            }
+        }
+    }
+    exe::drop_llist(l);
+}
+
+/// Comparer for `cancel_club_offers`: only the original runs (it schedules offers, removes contract offers and posts
+/// news, none of which can run twice).
+pub(crate) unsafe extern "thiscall" fn compare_cancel_club_offers(this: usize, club: usize) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_CANCEL_CLUB_OFFERS)(this, club) // simplification: original only
+}
+
+/// Orders two 13-byte next-sale percentage entries (`next_sale_percentages()`) for qsort and bsearch: by the person id
+/// at +9, then by the club id at +1 (each as the difference of the two ints, wrapping).
+/// Original: `transfer_manager_compare_next_sale_entries` (0x8e54d0, transfer_manager.cpp, cdecl).
+pub(crate) unsafe extern "C" fn compare_next_sale_entries(a: usize, b: usize) -> i32 {
+    let d = read_i32(a + 9).wrapping_sub(read_i32(b + 9)); // sx02b_3: +9, the person id
+    if d != 0 {
+        return d;
+    }
+    read_i32(a + 1).wrapping_sub(read_i32(b + 1)) // +1: the club id
+}
+
+/// Comparer for `compare_next_sale_entries`: both run side by side (they only read).
+pub(crate) unsafe extern "C" fn compare_compare_next_sale_entries(a: usize, b: usize) -> i32 {
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_COMPARE_NEXT_SALE_ENTRIES)(a, b);
+    let n = compare_next_sale_entries(a, b);
+    SCOREBOARD.record(r == n, || format!("compare_next_sale_entries original={} rust={}", r, n));
+    r
+}
+
+/// Orders two transfer window dates through pointers to them (the table `transfer_windows()`): by the month byte
+/// (`transfer_window::MONTH`), then the day byte (+3), each as the difference of the two signed bytes.
+/// Original: `transfer_manager_compare_window_dates` (0x8e5590, transfer_manager.cpp, cdecl).
+pub(crate) unsafe extern "C" fn compare_window_dates(a: usize, b: usize) -> i32 {
+    let (a, b) = (read_usize(a), read_usize(b));
+    let (ma, mb) = (read_i8(a + transfer_window::MONTH), read_i8(b + transfer_window::MONTH));
+    if ma != mb {
+        return ma as i32 - mb as i32; // sx02b_3: by month
+    }
+    read_i8(a + 3) as i32 - read_i8(b + 3) as i32 // +3: the day
+}
+
+/// Comparer for `compare_window_dates`: both run side by side (they only read).
+pub(crate) unsafe extern "C" fn compare_compare_window_dates(a: usize, b: usize) -> i32 {
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_COMPARE_WINDOW_DATES)(a, b);
+    let n = compare_window_dates(a, b);
+    SCOREBOARD.record(r == n, || format!("compare_window_dates original={} rust={}", r, n));
+    r
+}
+
+/// Orders two 14-byte work permit entries (`work_permits()`) by the person id at +0, with the empty key −1 last: both
+/// −1, 0; only the first, 1; only the second, −1; otherwise the difference (wrapping).
+/// Original: `transfer_manager_compare_work_permit_entries` (0x8e55c0, transfer_manager.cpp, cdecl).
+pub(crate) unsafe extern "C" fn compare_work_permit_entries(a: usize, b: usize) -> i32 {
+    let (ka, kb) = (read_i32(a), read_i32(b));
+    match (ka == -1, kb == -1) {
+        (true, true) => 0,
+        (true, false) => 1, // sx02b_3: the empty key last
+        (false, true) => -1,
+        (false, false) => ka.wrapping_sub(kb),
+    }
+}
+
+/// Comparer for `compare_work_permit_entries`: both run side by side (they only read).
+pub(crate) unsafe extern "C" fn compare_compare_work_permit_entries(a: usize, b: usize) -> i32 {
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_COMPARE_WORK_PERMIT_ENTRIES)(a, b);
+    let n = compare_work_permit_entries(a, b);
+    SCOREBOARD.record(r == n, || format!("compare_work_permit_entries original={} rust={}", r, n));
+    r
+}
+
+/// The CD search of a constructor: among the drives (GetLogicalDriveStringsA, 200 bytes) the first CD drive
+/// (GetDriveTypeA = 5, always asked) holding "<root>cm0102.exe" (`exe::file_find_first`; on the others the search is
+/// closed, `exe::file_find_close`); none: the "Insert CD" box (langlib_sprintf of 0x987df4 and 0x987dc4, the box with
+/// 1) and again, forever. A no-CD exe (as cm0102-1080) patched this copy of the check: the `jne` on the drive type at
+/// `drive_type_jump` made nops and the found test at `found_test` (85 c0) made xor; the copy reads those bytes of the
+/// running exe.
+pub(crate) unsafe fn find_game_cd(drive_type_jump: usize, found_test: usize) {
+    let drives: unsafe extern "system" fn(u32, *mut u8) -> u32 = core::mem::transmute(read_usize(0x9670f8)); // GetLogicalDriveStringsA
+    let kind: unsafe extern "system" fn(usize) -> u32 = core::mem::transmute(read_usize(0x967100)); // GetDriveTypeA
+    let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
+    let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+    let any_drive = read_u8(drive_type_jump) == 0x90;
+    let always_found = read_u8(found_test) != 0x85;
+    loop {
+        // simplification: the buffer starts zeroed; the original would only read garbage with more than 200 bytes of drives
+        let mut list = [0u8; 0x100];
+        if drives(200, list.as_mut_ptr()) != 0 && list[0] != 0 {
+            let mut i = 0usize;
+            loop {
+                let root = list.as_ptr() as usize + i;
+                let t = kind(root);
+                if any_drive || t == 5 {
+                    let (mut name, mut found) = ([0u8; 0x104], [0u8; 0x114]);
+                    let nm = name.as_mut_ptr() as usize;
+                    format(nm, 0x987e00, root, 0x63u32, 0x6du32, 0x30u32, 0x31u32, 0x30u32, 0x32u32, 0x2eu32, 0x65u32, 0x78u32, 0x65u32);
+                    let f = found.as_mut_ptr() as usize;
+                    if exe::file_find_first(nm, f, 0) == 0 || always_found {
+                        return;
+                    }
+                    exe::file_find_close(f);
+                }
+                // simplification: the original walks with an i8 (steps of 4): it would only pass 127 with more than 32 drives
+                i += 4;
+                if list[i] == 0 {
+                    break;
+                }
+            }
+        }
+        let (mut title, mut msg) = ([0u8; 0x100], [0u8; 0x100]);
+        text(title.as_mut_ptr() as usize, 0x987df4); // "Insert CD"
+        text(msg.as_mut_ptr() as usize, 0x987dc4); // "Please insert the CM01/02 CD and click on OK"
+        exe::gui_show_message_box(title.as_ptr() as usize, msg.as_ptr() as usize, 1);
+    }
+}
+
+/// The transfer window dates of the manager's rules objects, in rules order: for each of the 28 objects (a null one
+/// skipped) and each of its windows (signed byte +8; 12-byte entries at the pointer +4), the opening date (entry +0)
+/// and the closing one (entry +6).
+pub(crate) unsafe fn collect_transfer_window_dates(this: usize) -> Vec<usize> {
+    let mut dates = Vec::new();
+    for k in 0..0x1c {
+        let rules = transfer_rules_at(TransferManagerFields(this), k);
+        if rules == 0 {
+            continue;
+        }
+        // simplification: a negative count (never in the data) would lower the original's total and add no date
+        for c in 0..read_i8(rules + 8).max(0) as usize { // +8: window count
+            let window = read_usize(rules + 4) + c * 0xc; // +4: the window entries
+            dates.push(window);
+            dates.push(window + 6); // sx02b_1: the closing date
+        }
+    }
+    dates
+}
+
+/// How many past transfer records the manager has before `cutoff`: they are in date order, so the count of the leading
+/// records dated before it (`transfer_manager_date_before`: year unsigned, then day signed).
+pub(crate) unsafe fn count_past_transfers_before(this: TransferManagerFields, cutoff: usize) -> usize {
+    (0..this.past_transfer_count())
+        .take_while(|&i| transfer_manager_date_before(this.past_transfers() + i * PAST_TRANSFER_SIZE + past_transfer::DATE, cutoff))
+        .count()
+}
+
+/// Cancels offer `o` because the manager of `club` left: status `offer_status::CANCELLED`, its contract offers closed
+/// (`exe::transfer_manager_close_offer_contract_offers`), the bid markers cleared (the buyer's on the target and the
+/// seller's, the club of the target's contract through `club_of_staff_contract`, on each exchange player:
+/// `exe::shortlist_manager_clear_bid_markers_for_player`), the target's contract offer from the buyer removed
+/// (`exe::contract_manager_remove_contract_offer`), `terms_state()` 0, each exchange player's contract offer for the
+/// offer's slot removed (`exe::contract_manager_remove_contract_offer_for_transfer`) and his "terms offered" byte
+/// cleared; due again in 10 days (`exe::transfer_manager_schedule_offer`) and the collapse news with reason 0xb
+/// (`exe::transfer_manager_post_offer_collapsed_news`).
+pub(crate) unsafe fn cancel_offer_of_departed_manager(this: TransferManagerFields, o: Offer, club: usize) {
+    o.set_status(offer_status::CANCELLED); // sx02b_2: an offer cancelled
+    exe::transfer_manager_close_offer_contract_offers(this, o);
+    let target = transfer_manager_staff_by_id(o.target_staff_id());
+    let seller = club_of_staff_contract(target);
+    let buyer = transfer_manager_club_by_id(o.buyer_club_id());
+    exe::shortlist_manager_clear_bid_markers_for_player(this.shortlist_manager(), buyer, target);
+    let exchange = o.exchange_players();
+    if !exchange.is_null() {
+        exchange.set_cursor(exchange.head());
+        loop {
+            let x = exe::llist_get_next(exchange);
+            if x == 0 {
+                break;
+            }
+            exe::shortlist_manager_clear_bid_markers_for_player(this.shortlist_manager(), seller, transfer_manager_staff_by_id(read_usize(x)));
+        }
+    }
+    exe::contract_manager_remove_contract_offer(read_usize(G_CONTRACT_MANAGER), target, buyer);
+    o.set_terms_state(0);
+    let exchange = o.exchange_players();
+    if !exchange.is_null() {
+        exchange.set_cursor(exchange.head());
+        loop {
+            let x = exe::llist_get_next(exchange);
+            if x == 0 {
+                break;
+            }
+            exe::contract_manager_remove_contract_offer_for_transfer(read_usize(G_CONTRACT_MANAGER), transfer_manager_staff_by_id(read_usize(x)), o.slot_index());
+            write_u8(x + 4, 0); // exchange item +4: terms offered
+        }
+    }
+    exe::transfer_manager_schedule_offer(this, o, 10, 0);
+    exe::transfer_manager_post_offer_collapsed_news(this, o, club, 0xb);
+}
+
+pub(crate) const FN_SHORTLIST_MANAGER_CONSTRUCTOR: usize = 0x839a80;
+
+pub(crate) const FN_TRANSFER_MANAGER_LOAD_FROM_DISK: usize = 0x8bc020;
+
+/// The 27 national transfer rules objects after the European one, in the order the original builds them: (slot in
+/// `transfer_manager_fields::TRANSFER_RULES`, rules id, constructor, nation key). Slots 0x10 and 0x11 are built in
+/// the opposite order (Norway before Northern Ireland). Each constructor is thiscall(this, id, nation, −1, 1, 0), ret
+/// 0x14.
+pub(crate) const NATIONAL_TRANSFER_RULES: [(usize, u32, usize, usize); 27] = [
+    (1, 0x1, 0x40a580, KEY_NATION_ARGENTINA),
+    (2, 0x2, 0x412c80, KEY_NATION_AUSTRALIA),
+    (3, 0x3, 0x424b90, KEY_NATION_BELGIUM),
+    (4, 0x4, 0x43f0e0, KEY_NATION_BRAZIL),
+    (5, 0x5, 0x518500, KEY_NATION_CROATIA),
+    (6, 0x6, 0x555460, KEY_NATION_DENMARK),
+    (7, 0x7, 0x579b30, KEY_NATION_ENGLAND),
+    (8, 0x8, 0x5a9950, KEY_NATION_FINLAND),
+    (9, 0x9, 0x5c1570, KEY_NATION_FRANCE),
+    (10, 0xa, 0x5dff70, KEY_NATION_GERMANY),
+    (11, 0xb, 0x5eceb0, KEY_NATION_GREECE),
+    (12, 0xc, 0x5f9690, KEY_NATION_HOLLAND),
+    (13, 0xd, 0x63c210, KEY_NATION_REPUBLIC_OF_IRELAND),
+    (14, 0xe, 0x661380, KEY_NATION_ITALY),
+    (15, 0xf, 0x666bd0, KEY_NATION_JAPAN),
+    (17, 0x11, 0x7944f0, KEY_NATION_NORWAY),
+    (16, 0x10, 0x7936d0, KEY_NATION_NORTHERN_IRELAND),
+    (18, 0x12, 0x7cd830, KEY_NATION_POLAND),
+    (19, 0x13, 0x7d3d80, KEY_NATION_PORTUGAL),
+    (20, 0x14, 0x7ec770, KEY_NATION_RUSSIA),
+    (21, 0x15, 0x7f6390, KEY_NATION_SCOTLAND),
+    (22, 0x16, 0x859400, KEY_NATION_SPAIN),
+    (23, 0x17, 0x893d80, KEY_NATION_SWEDEN),
+    (24, 0x18, 0x9020a0, KEY_NATION_TURKEY),
+    (25, 0x19, 0x90b940, KEY_NATION_UNITED_STATES),
+    (26, 0x1a, 0x90f080, KEY_NATION_WALES),
+    (27, 0x1b, 0x66e630, KEY_NATION_SOUTH_KOREA),
+];
+
+/// The European rules constructor (slot 0): thiscall(this, 0, −1, continent, 2, 0), ret 0x14.
+pub(crate) const FN_EUROPEAN_TRANSFER_RULES_CONSTRUCTOR: usize = 0x583280;
+
+/// Size of a transfer rules object (`operator new` of each one).
+pub(crate) const TRANSFER_RULES_OBJECT_SIZE: u32 = 0x19;

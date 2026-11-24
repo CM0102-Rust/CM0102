@@ -1,0 +1,1 @@
+Antes de integrar: pôr (0x645800, 3) em RELATIVAS no rust/src/detours.rs (prólogo push esi; mov esi, ecx; call rel32 Date::Date).

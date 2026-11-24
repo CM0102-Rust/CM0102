@@ -1,0 +1,4 @@
+Compilado em 24/11/2026 sobre o HEAD 7ca43a0b8 (copia propria no rascunho, cargo build --release sem erros) junto com
+os outros itens cx08 e as dependencias sx16_7, cx01_7, cx01_14, cx02_3, cx03_3, cx04_1, cx01_8, cx04_5 e cx02_13;
+ancoras das mutacoes unicas no motor inteiro. Nao rodou o jogo (a prova e da sessao principal).
+Prova com a Belgica ate 2002-08-01: as tres na virada belga do verao de 2002 (BelFirst::start_new_season, 1 chamada). Depende do cx08_6.

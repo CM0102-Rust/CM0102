@@ -1,0 +1,2 @@
+Depende do cx03_3 (delete_through) e dos itens cx09_1..3 (os destrutores chamados pelo desvio).
+Antes de integrar: pôr (0x435560, 3), (0x436610, 3), (0x437620, 3), (0x438b10, 3), (0x439c60, 3), (0x43b350, 3), (0x43c4c0, 3), (0x554090, 3) em RELATIVAS no rust/src/detours.rs (prólogo push esi; mov esi, ecx; call rel32 ~X).

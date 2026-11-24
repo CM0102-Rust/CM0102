@@ -1,0 +1,1 @@
+Depende do cx07_11 e do cx07_12. Decisao do Lucas pendente: como esta porta convive com o desvio de observacao do rust/src/detours.rs (install_box); ver PRONTO.txt. Nao integrar sem essa decisao.

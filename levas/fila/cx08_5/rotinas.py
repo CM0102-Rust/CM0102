@@ -17,7 +17,8 @@
 #   mov ecx, [ecx+8] (7 bytes).
 # Defeito do original: no init, um clube ausente do banco (id -1) e procurado 0x245 bytes antes da tabela dos clubes.
 # Os auxiliares reset_relegation_averages, find_average_row, take_season_points, average_seasons, drop_departed_clubs e
-# o comparador compare_relegation_averages_update ficam aqui (o cx08_11 os usa).
+# o comparador compare_relegation_averages_update ficam aqui (servem aos promedios da Segunda, que ficaram para a proxima
+# rodada: ver cx08_10/FORA.md).
 # Comparadores: o init so a original (as linhas semeadas ou vazias); o update lado a lado nas linhas dos promedios (com
 # rolar so a original); o progresso lado a lado nos 3 bytes (compare_group_championship_progress do cx04_5).
 # Depende do cx08_4 (os nomes dos promedios) e do cx04_5 (compare_group_championship_progress): integrar depois.

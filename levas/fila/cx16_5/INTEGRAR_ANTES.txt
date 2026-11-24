@@ -1,0 +1,2 @@
+Depende do cx01_14 (delete_comp_stats), do cx02_3 (delete_stages_and_vector) e do cx03_3 (delete_through); esses tres auxiliares estao sem pub(crate) nos itens deles: se o esvaziar_motor.py os levar a outro modulo, precisam ficar pub(crate).
+Antes de integrar: por (0x914ca0, 3), (0x9184a0, 3), (0x91e1e0, 3) em RELATIVAS no rust/src/detours.rs (prologo push esi; mov esi, ecx; call rel32 ~X).

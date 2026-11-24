@@ -1,0 +1,1 @@
+Depende do sbA_5 (file_llist_fail, FILE_LLIST_DISK_IO): integrar o sbA_5 antes.

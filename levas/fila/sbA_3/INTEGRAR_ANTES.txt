@@ -1,0 +1,1 @@
+Depende do cx10_7 (FINANCE_TEXT_SIZE e club_long_name): integrar o cx10_7 antes.

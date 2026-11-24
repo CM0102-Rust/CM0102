@@ -1,0 +1,1 @@
+Depende do cx07_11 (globais do video, cursores, user32_*, com_call0) e do cx07_12 (WINDOW_FRAME_X, WINDOW_CAPTION_Y, SCREEN_PIXEL_FORMAT, SURFACE_DESC_SIZE).

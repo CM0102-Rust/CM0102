@@ -1,0 +1,1 @@
+Depende do sbE_2 (open_nation_division, build_new_nation_division) e do cx13_5 (pol_first_set_predicted_positions): integrar depois deles.

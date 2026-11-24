@@ -5,12 +5,12 @@
 # - o espaco entre letras sem a meia altura (acusada em todo texto de fonte de mapa de bits).
 MUTACOES = [
     ('cx07_12_verde_de_5_bits',
-     '        ((r & 0xf8) << 8) | ((g & 0xfc) << 3) | (b >> 3)',
+     '        ((r & 0xf8) << 8) | ((g & 0xfc) << 3) | (b >> 3) // cx07_12: the 565 pixel',
      '        ((r & 0xf8) << 8) | ((g & 0xf8) << 3) | (b >> 3) // mutation'),
     ('cx07_12_escala_sem_teto',
      '    let scale = |c: u8| ((c as i32 * (percent & 0xff) as i32) / 100).min(0xff) as u8;',
      '    let scale = |c: u8| ((c as i32 * (percent & 0xff) as i32) / 100) as u8; // mutation'),
     ('cx07_12_espaco_sem_tres_quartos',
      '    let gap = read_i32(base + 0x284).wrapping_mul(3) / 4',
-     '    let gap = read_i32(base + 0x284).wrapping_mul(3) / 2 // mutation'),
+     '    let gap = read_i32(base + 0x284).wrapping_mul(3) / 2'),
 ]

@@ -1,0 +1,1 @@
+Depende do cx08_4 (UPDATE_RELEGATION_AVERAGES_SLOT, ARG_AVERAGES, arg_average_row_club, this_average_count) e do cx04_5 (compare_group_championship_progress): integrar depois deles.

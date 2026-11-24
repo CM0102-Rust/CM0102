@@ -1,0 +1,1 @@
+Depende do sx22_1 (weather_news_headline, weather_news_body).

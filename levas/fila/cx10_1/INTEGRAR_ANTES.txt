@@ -1,0 +1,1 @@
+Antes de integrar: pôr (0x59a5a0, 4) (salto curto je rel8), (0x595400, 3), (0x5b9440, 3), (0x5bb560, 3), (0x5bb590, 3), (0x5bb5c0, 3), (0x5bd850, 3) em RELATIVAS no rust/src/detours.rs. Depende do cx01_14 (delete_comp_stats) e do cx03_3 (delete_through).

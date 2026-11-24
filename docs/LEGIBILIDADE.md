@@ -8,19 +8,19 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 
 | Medida | Quantidade |
 |---|---:|
-| deslocamentos crus | 3728 |
+| deslocamentos crus | 3738 |
 | chaves fixas cruas | 1120 |
 | chamadas por endereço | 0 |
 | cópias de acesso à memória | 0 |
 | rotinas sem cabeçalho | 0 |
 | locais/parâmetros em português | 222 |
-| linhas | 381721 |
+| linhas | 385749 |
 
 ## Por arquivo (os 40 piores, pelos deslocamentos crus)
 
 | Arquivo | deslocamentos crus | chaves fixas cruas | chamadas por endereço | cópias de acesso à memória | rotinas sem cabeçalho | locais/parâmetros em português | linhas |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| `motor.rs` | 583 | 0 | 0 | 0 | 0 | 72 | 12017 |
+| `motor.rs` | 584 | 0 | 0 | 0 | 0 | 72 | 12240 |
 | `motor/comp_screens.rs` | 339 | 11 | 0 | 0 | 0 | 0 | 9534 |
 | `motor/club_screens.rs` | 321 | 2 | 0 | 0 | 0 | 0 | 13774 |
 | `motor/news.rs` | 164 | 0 | 0 | 0 | 0 | 0 | 3647 |
@@ -32,9 +32,9 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 | `motor/manager_screens.rs` | 65 | 0 | 0 | 0 | 0 | 0 | 1811 |
 | `motor/search_screens.rs` | 61 | 1 | 0 | 0 | 0 | 0 | 4877 |
 | `motor/national_teams.rs` | 54 | 1 | 0 | 0 | 0 | 2 | 3230 |
-| `motor/fields.rs` | 51 | 0 | 0 | 0 | 0 | 0 | 3390 |
-| `motor/media.rs` | 47 | 0 | 0 | 0 | 0 | 0 | 8056 |
-| `motor/transfer_manager.rs` | 47 | 0 | 0 | 0 | 0 | 3 | 12114 |
+| `motor/fields.rs` | 51 | 0 | 0 | 0 | 0 | 0 | 3391 |
+| `motor/transfer_manager.rs` | 50 | 0 | 0 | 0 | 0 | 3 | 12650 |
+| `motor/media.rs` | 47 | 0 | 0 | 0 | 0 | 0 | 10313 |
 | `motor/award_screens.rs` | 41 | 0 | 0 | 0 | 0 | 0 | 1110 |
 | `motor/club_records.rs` | 40 | 3 | 0 | 0 | 0 | 0 | 2436 |
 | `motor/menubar.rs` | 40 | 0 | 0 | 0 | 0 | 0 | 2904 |
@@ -53,10 +53,10 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 | `motor/setup.rs` | 27 | 0 | 0 | 0 | 0 | 0 | 8258 |
 | `motor/comp/intercomp/oceania_nations.rs` | 27 | 0 | 0 | 0 | 0 | 0 | 506 |
 | `motor/comp/league.rs` | 26 | 0 | 0 | 0 | 0 | 5 | 4345 |
+| `motor/database.rs` | 25 | 4 | 0 | 0 | 0 | 8 | 8530 |
 | `motor/file_screens.rs` | 23 | 0 | 0 | 0 | 0 | 0 | 1142 |
 | `motor/history.rs` | 23 | 0 | 0 | 0 | 0 | 0 | 1085 |
 | `motor/comp/uefa_seeding.rs` | 22 | 0 | 0 | 0 | 0 | 0 | 1033 |
 | `motor/contract_screens.rs` | 21 | 0 | 0 | 0 | 0 | 0 | 5129 |
 | `motor/comp/stadium.rs` | 21 | 0 | 0 | 0 | 0 | 2 | 1322 |
 | `motor/comp/eurocomp/asia_club_champ.rs` | 21 | 0 | 0 | 0 | 0 | 2 | 1005 |
-| `motor/database.rs` | 20 | 4 | 0 | 0 | 0 | 8 | 8303 |

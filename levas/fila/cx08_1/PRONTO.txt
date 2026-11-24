@@ -1,0 +1,4 @@
+Compilado em 24/11/2026 sobre o HEAD 7ca43a0b8 (copia propria no rascunho, cargo build --release sem erros) junto com
+os outros itens cx08 e as dependencias sx16_7, cx01_7, cx01_14, cx02_3, cx03_3, cx04_1, cx01_8, cx04_5 e cx02_13;
+ancoras das mutacoes unicas no motor inteiro. Nao rodou o jogo (a prova e da sessao principal).
+TELAS: prova do Lucas carregando outro save com um jogo aberto que tenha a Argentina, a Australia ou a Belgica (comparador so a original). RELATIVAS (0x404490, 3), (0x406e20, 3), (0x4110c0, 3), (0x41df60, 3), (0x41f260, 3). Depende do cx01_14, cx03_3 e cx04_1.

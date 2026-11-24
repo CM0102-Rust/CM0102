@@ -8301,3 +8301,230 @@ pub(crate) fn same_arguments(a: &[u32; 7], b: &[u32; 7]) -> bool {
 
 /// 0x6d6f70 reads the 1st argument as a word and the 3rd to 6th as bytes: the rest is stack garbage.
 pub(crate) const MASK_6D6F70: [u32; 7] = [0xffff, u32::MAX, 0xff, 0xff, 0xff, 0xff, u32::MAX];
+
+/// `database_compare_staff_by_birth_date(a, b)`: qsort comparison of person pointers by date of birth, oldest first,
+/// then by the style-4 name ("surname, first name").
+///
+/// The birth year (`date_of_birth_year()`, unsigned) decides first: `b`'s later, -1; earlier, 1. Then the day of the
+/// year (`date_of_birth()`, signed) the same way. Same date: the two names (`exe::database_format_staff_name` into
+/// 0x7d0 bytes, style 4) through the case-insensitive text comparison (`compare_text_nocase`). A null person counts as
+/// the default `Date` (day 40 of 1972, `exe::date_date_54a110`) and the empty name. The community map calls the order
+/// "youngest first"; the disassembly sorts the oldest first. Used by the squad numbers
+/// (`SQUAD_MANAGER::allocate_squad_number` and the squad number list of squad_manager.cpp).
+/// Original: `database_compare_staff_by_birth_date` (0x540130, Database.cpp, cdecl).
+pub(crate) unsafe extern "C" fn database_compare_staff_by_birth_date(a: usize, b: usize) -> i32 {
+    let birth = |p: usize| {
+        let s = Staff(read_usize(p));
+        if s.is_null() { (40i16, 1972u16) } else { (s.date_of_birth(), s.date_of_birth_year()) } // the default Date
+    };
+    let ((day_a, year_a), (day_b, year_b)) = (birth(a), birth(b));
+    if year_b != year_a {
+        return if year_b > year_a { -1 } else { 1 };
+    }
+    if day_b != day_a {
+        return if day_b > day_a { -1 } else { 1 };
+    }
+    let mut name_a = [0u8; 0x7d0];
+    let mut name_b = [0u8; 0x7d0];
+    let (pa, pb) = (read_usize(a), read_usize(b));
+    if pa != 0 {
+        exe::database_format_staff_name(pa, name_a.as_mut_ptr() as usize, 0x7d0, 4); // "surname, first name"
+    }
+    if pb != 0 {
+        exe::database_format_staff_name(pb, name_b.as_mut_ptr() as usize, 0x7d0, 4);
+    }
+    compare_text_nocase(name_a.as_ptr(), name_b.as_ptr())
+}
+
+/// Comparer for `database_compare_staff_by_birth_date`: the order of the original and of the copy.
+pub(crate) unsafe extern "C" fn compare_database_compare_staff_by_birth_date(a: usize, b: usize) -> i32 {
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_DATABASE_COMPARE_STAFF_BY_BIRTH_DATE)(a, b);
+    let n = database_compare_staff_by_birth_date(a, b);
+    SCOREBOARD.record(r == n, || format!("database_compare_staff_by_birth_date({:x}, {:x}) original={} rust={}", a, b, r, n));
+    r
+}
+
+/// `init_transfer_rule_change_date()`: static initialiser of the exe (runs in the CRT start-up, before WinMain, with
+/// the detours already installed by the DLL load): sets `G_TRANSFER_RULE_CHANGE_DATE` to 31 August 2001 and registers
+/// its destructor (`destroy_transfer_rule_change_date` 0x524d00, an empty body) with `exe::crt_atexit`.
+///
+/// The date is read by the daily game loop (the "new transfer system" news), the contracts signed before the change
+/// (contract_manager, staff_contracts) and the contract screen.
+/// Original: `init_transfer_rule_change_date` (0x524cd0, Database.cpp, cdecl).
+pub(crate) unsafe extern "C" fn init_transfer_rule_change_date() {
+    set_transfer_rule_change_date(G_TRANSFER_RULE_CHANGE_DATE);
+    exe::crt_atexit(0x524d00usize); // destroy_transfer_rule_change_date: an empty body
+}
+
+/// Comparer for `init_transfer_rule_change_date`: the original runs (it registers the destructor once); the copy writes
+/// the date into a local and its 8 bytes are compared with the global's.
+pub(crate) unsafe extern "C" fn compare_init_transfer_rule_change_date() {
+    original_fn::<unsafe extern "C" fn()>(IDX_INIT_TRANSFER_RULE_CHANGE_DATE)();
+    let mut copy = [0u16; 4];
+    set_transfer_rule_change_date(copy.as_mut_ptr() as usize);
+    let original: [u16; 4] = core::array::from_fn(|k| read_u16(G_TRANSFER_RULE_CHANGE_DATE + 2 * k));
+    SCOREBOARD.record(copy == original, || format!("init_transfer_rule_change_date: original={:x?} rust={:x?}", original, copy));
+}
+
+/// `staff_add_disliked_staff(person, other, force)`: puts `other` among the person's three disliked staff (preferences
+/// `staff_preferences()`: `preferences::STAFF_DISLIKED_STAFF1`..+0x30).
+///
+/// Nothing when `other` is the person, or with a null person, preferences or other. Already disliked: nothing; one of
+/// the three favoured staff (`preferences::STAFF_FAVOURITE_STAFF1`..+0x24): stops being one and the routine stops;
+/// otherwise the first free disliked slot; with no free slot, with `force`, a random slot (`random`, 3)
+/// (`database_add_to_preference_list`). Used after the match (the media's ratings of a player, the fights and the
+/// reserves' complaints), by the injuries and the transfers.
+/// Original: `staff_add_disliked_staff` (0x547af0, Database.cpp, cdecl).
+pub(crate) unsafe extern "C" fn staff_add_disliked_staff(person: usize, other: usize, force: u32) {
+    let person = Staff(person);
+    if person.addr() == other || person.is_null() {
+        return;
+    }
+    let pref = person.staff_preferences();
+    if pref == 0 || other == 0 {
+        return;
+    }
+    let disliked = pref + preferences::STAFF_DISLIKED_STAFF1;
+    database_add_to_preference_list(disliked, pref + preferences::STAFF_FAVOURITE_STAFF1, other, list3_contains(disliked, other), force)
+}
+
+/// Comparer for `staff_add_disliked_staff`: the favoured and disliked staff (24 bytes) and the random generator, side by
+/// side.
+pub(crate) unsafe extern "C" fn compare_staff_add_disliked_staff(person: usize, other: usize, force: u32) {
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, u32)>(IDX_STAFF_ADD_DISLIKED_STAFF);
+    let pref = if person != 0 { Staff(person).staff_preferences() } else { 0 };
+    let reg = preference_regions(if pref != 0 { pref + preferences::STAFF_FAVOURITE_STAFF1 } else { 0 });
+    let (_, _, same, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(person, other, force),
+        || crate::rng::without_counting(|| staff_add_disliked_staff(person, other, force)));
+    SCOREBOARD.record(same, || format!("staff_add_disliked_staff({:x}, {:x}, {}) {:x?} x {:x?}", person, other, force, mo, mr));
+}
+
+/// `staff_add_favoured_club(person, club, force)`: puts the club among the person's three favoured clubs (preferences
+/// `staff_preferences()`: `preferences::STAFF_FAVOURITE_CLUBS1`..+0xc).
+///
+/// Null person, preferences or club: nothing. The club already favours the person (`club::FAV_STAFF1`..+0xa3):
+/// nothing; the club is one of the person's disliked clubs (`preferences::STAFF_DISLIKED_CLUBS1`..+0x18): it stops
+/// being one and the routine stops; otherwise the first free favoured slot (without checking whether it is already
+/// among the favoured, as in the original); with no free slot, with `force`, a random slot (`random`, 3)
+/// (`database_add_to_preference_list`). Used after the match (the player pleased with his club) and by the transfers.
+/// Original: `staff_add_favoured_club` (0x547d90, Database.cpp, cdecl).
+pub(crate) unsafe extern "C" fn staff_add_favoured_club(person: usize, club: usize, force: u32) {
+    let person = Staff(person);
+    let club = Club(club);
+    if person.is_null() {
+        return;
+    }
+    let pref = person.staff_preferences();
+    if pref == 0 || club.is_null() {
+        return;
+    }
+    let club_favours_person = list3_contains(club.addr() + club::FAV_STAFF1, person.addr());
+    database_add_to_preference_list(pref + preferences::STAFF_FAVOURITE_CLUBS1, pref + preferences::STAFF_DISLIKED_CLUBS1, club.addr(), club_favours_person, force)
+}
+
+/// Comparer for `staff_add_favoured_club`: the favoured and disliked clubs (24 bytes) and the random generator, side by
+/// side.
+pub(crate) unsafe extern "C" fn compare_staff_add_favoured_club(person: usize, club: usize, force: u32) {
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, u32)>(IDX_STAFF_ADD_FAVOURED_CLUB);
+    let pref = if person != 0 { Staff(person).staff_preferences() } else { 0 };
+    let reg = preference_regions(if pref != 0 { pref + preferences::STAFF_FAVOURITE_CLUBS1 } else { 0 });
+    let (_, _, same, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(person, club, force),
+        || crate::rng::without_counting(|| staff_add_favoured_club(person, club, force)));
+    SCOREBOARD.record(same, || format!("staff_add_favoured_club({:x}, {:x}, {}) {:x?} x {:x?}", person, club, force, mo, mr));
+}
+
+/// `eng_lng_load_tables(table)` (thiscall): opens CM3_TEMP\eng.lng (`exe::utils_build_file_path`, `exe::crt_fopen`
+/// "rb"); missing file: the Database.cpp error box (line 0x4dd2) and 0.
+///
+/// Reads the format marker (`exe::utils_read_file_format_marker`: 0xf1fffff1 = big-endian file) and the 8-dword header
+/// into +0..+0x1c of the table, byte-swapping each dword when big-endian. Counts that do not match the loaded tables
+/// (`eng_lng_counts_match`): closes the file, error box (line 0x4df1) and 0. Otherwise, for each table in file order
+/// (`ENG_LNG_TABLES`), `exe::crt_malloc`(count × row size) into its row pointer and, when it came, `exe::crt_fread` of
+/// the rows (the row data is never swapped); closes the file and returns 1. Called once, on the first use of an
+/// English name (`nation_get_english_name` and its sisters build the 0x40-byte object with the row pointers at zero
+/// and keep it in [`G_ENGLISH_NAME_TABLES`]).
+/// Original: `eng_lng_load_tables` (0x544fc0, Database.cpp, thiscall).
+pub(crate) unsafe extern "thiscall" fn eng_lng_load_tables(t: usize) -> u32 {
+    let path = exe::utils_build_file_path(0x987da0usize, 0x9b632cusize); // "CM3_TEMP", "eng.lng"
+    let file = exe::crt_fopen(path, 0x98f928usize); // "rb"
+    if file == 0 {
+        database_error_box(0x4dd2);
+        return 0;
+    }
+    let big_endian = exe::utils_read_file_format_marker(file) == 0xf1fffff1;
+    exe::crt_fread(t, 0x20, 1, file);
+    if big_endian {
+        for k in 0..8 {
+            write_u32(t + 4 * k, read_u32(t + 4 * k).swap_bytes());
+        }
+    }
+    if !eng_lng_counts_match(t) {
+        exe::crt_fclose(file);
+        database_error_box(0x4df1);
+        return 0;
+    }
+    for (count, rows, size) in ENG_LNG_TABLES {
+        let n = read_u32(t + count);
+        let p = exe::crt_malloc(n.wrapping_mul(size));
+        write_usize(t + rows, p);
+        if p != 0 {
+            exe::crt_fread(p, size, n, file);
+        }
+    }
+    exe::crt_fclose(file);
+    1
+}
+
+/// Comparer for `eng_lng_load_tables`: the original loads into the game's object; the copy loads into a local
+/// 0x40-byte object (row pointers at zero, as the callers build it). The answer, the header and each table's rows
+/// must match; then the copy's rows are freed (`eng_lng_free_tables`).
+pub(crate) unsafe extern "thiscall" fn compare_eng_lng_load_tables(t: usize) -> u32 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ENG_LNG_LOAD_TABLES)(t);
+    let mut copy = [0u8; 0x40];
+    let c = copy.as_mut_ptr() as usize;
+    let n = eng_lng_load_tables(c);
+    let rows_equal = |count: usize, rows: usize, size: u32| {
+        let (po, pc) = (read_usize(t + rows), read_usize(c + rows));
+        let len = read_u32(t + count).wrapping_mul(size) as usize;
+        (po == 0) == (pc == 0)
+            && (po == 0 || core::slice::from_raw_parts(po as *const u8, len) == core::slice::from_raw_parts(pc as *const u8, len))
+    };
+    // without the file nothing is read: the game's header is still the garbage of `new`
+    let header_equal = r == 0 || (0..0x20).all(|k| read_u8(t + k) == copy[k]);
+    let tables_equal = r == 0 || ENG_LNG_TABLES.iter().all(|&(count, rows, size)| rows_equal(count, rows, size));
+    SCOREBOARD.record(r == n && header_equal && tables_equal,
+        || format!("eng_lng_load_tables: original={} rust={} header {} tables {}", r, n, header_equal, tables_equal));
+    eng_lng_free_tables(c);
+    r
+}
+
+/// Writes the date the new transfer rules come into force (31 August 2001) into `date` (8 bytes, `Date::Date`
+/// `exe::date_date_549f70`(date, 31, 7, 2001, -1), months counted from 0).
+pub(crate) unsafe fn set_transfer_rule_change_date(date: usize) {
+    exe::date_date_549f70(date as *mut [u16; 4], 0x1f, 7, 0x7d1, u32::MAX); // 31 August 2001
+}
+
+/// True when the eng.lng header counts match the loaded tables: continents, nations, cities, stadiums and staff
+/// competitions one by one, and the club plus nation competitions against [`G_CLUB_COMP_COUNT`] − 127; the club
+/// count (+0) is not checked.
+pub(crate) unsafe fn eng_lng_counts_match(t: usize) -> bool {
+    read_u32(t + 4) == read_u32(G_CONTINENT_COUNT)
+        && read_u32(t + 0xc) == read_u32(G_NATION_COUNT)
+        && read_u32(t + 0x10) == read_u32(G_CITY_COUNT)
+        && read_u32(t + 8).wrapping_add(read_u32(t + 0x14)) == read_u32(G_CLUB_COMP_COUNT).wrapping_sub(0x7f)
+        && read_u32(t + 0x18) == read_u32(G_STADIUM_COUNT)
+        && read_u32(t + 0x1c) == read_u32(0xae2388) // staff competition count
+}
+
+/// The eight name tables of eng.lng in file order: (offset of the count in the header, offset of the row pointer in
+/// the table object, row size). The counts are the 8 header dwords at +0..+0x1c; the rows go to +0x20..+0x3c.
+pub(crate) const ENG_LNG_TABLES: [(usize, usize, u32); 8] = [
+    (0x0, english_name_tables::CLUB_ROWS, 0x4f),        // clubs, 79 bytes
+    (0x4, 0x24, 0xba),                                  // continents, 186 bytes
+    (0x8, english_name_tables::NATION_COMP_ROWS, 0x53), // nation competitions, 83 bytes
+    (0xc, english_name_tables::NATION_ROWS, 0x6d),      // nations, 109 bytes
+    (0x18, english_name_tables::STADIUM_ROWS, 0x34),    // stadiums, 52 bytes
+    (0x10, 0x30, 0x34),                                 // cities, 52 bytes
+    (0x1c, english_name_tables::STAFF_COMP_ROWS, 0x4f), // staff competitions, 79 bytes
+    (0x14, english_name_tables::CLUB_COMP_ROWS, 0x53),  // club competitions, 83 bytes
+];

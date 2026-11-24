@@ -1,0 +1,1 @@
+Depende do cx08_16 (belgian_progress_virtual) e do cx13_6 (PlayOffRecord, table_row_of_club): integrar depois deles.

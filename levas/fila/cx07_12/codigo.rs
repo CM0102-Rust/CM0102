@@ -109,7 +109,7 @@ pub(crate) unsafe extern "C" fn graphics_rgb_to_pixel(red: u32, green: u32, blue
 unsafe fn pack_pixel(red: u8, green: u8, blue: u8, format: usize) -> u16 {
     let (r, g, b) = (red as u16, green as u16, blue as u16);
     if read_u32(format + 0x14) == 0x7e0 {
-        ((r & 0xf8) << 8) | ((g & 0xfc) << 3) | (b >> 3)
+        ((r & 0xf8) << 8) | ((g & 0xfc) << 3) | (b >> 3) // cx07_12: the 565 pixel
     } else {
         ((r & 0xf8) << 7) | ((g & 0xf8) << 2) | (b >> 3)
     }

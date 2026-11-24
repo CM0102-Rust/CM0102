@@ -1,0 +1,1 @@
+Depende do cx02_4 (compare_club_progress) e do cx03_9 (store_club_progress): integrar depois deles.

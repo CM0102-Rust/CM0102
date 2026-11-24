@@ -1,0 +1,1 @@
+Depende do cx15_12 (QualifierList, qualifier_list_from_ids, save_qualifier_list, qualifier_list_is_clubs): entra na mesma leva ou depois.

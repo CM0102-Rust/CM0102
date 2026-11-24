@@ -1,0 +1,1 @@
+Depende do cx08_4 (ARG_AVERAGES, ARG_AVERAGE_COUNT, ARG_AVERAGE_ROW_SIZE, arg_average_row_club, this_average_count, update_relegation_averages_virtual).

@@ -1,0 +1,1 @@
+Depende do cx08_2 (compare_staged_schedule, ScheduleTable) e do cx08_16 (belgian_progress_virtual): integrar depois deles.

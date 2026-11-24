@@ -1,0 +1,1 @@
+Depende do cx04_5 (group_qualify_text, compare_group_championship_progress): integrar depois dele.

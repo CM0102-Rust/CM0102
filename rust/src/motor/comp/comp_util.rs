@@ -2684,3 +2684,14 @@ pub(crate) enum TieScore {
     /// No goals (a forfeit).
     Nothing,
 }
+
+/// Writes a date name into one of the shared name buffers and returns the buffer: the langlib template (its extra
+/// argument is the empty string, which only the templates with a translator's comment read), or the empty string when
+/// there is none.
+pub(crate) unsafe fn write_date_name(buffer: usize, template: Option<usize>) -> usize {
+    match template {
+        Some(t) => story_lang!(buffer, t, EMPTY_STRING),
+        None => copy_c_string(buffer, EMPTY_STRING),
+    }
+    buffer
+}

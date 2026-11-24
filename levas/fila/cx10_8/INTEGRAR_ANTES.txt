@@ -1,0 +1,1 @@
+Depende do cx10_7 (finance_news_text, club_long_name, stadium_name): integrar depois dele.

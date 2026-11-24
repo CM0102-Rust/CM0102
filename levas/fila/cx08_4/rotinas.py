@@ -15,7 +15,7 @@
 #   (push 0x13 ou 0x14 tres vezes; push -2; push clube), ou as caixas 0x31c e 0x32b; status 3 nas linhas desses clubes na
 #   tabela e nas fases 0 e 1; League::record_season_honours 0x684640 e a virtual 0x30 da fase 0. Prologo sub esp, 0x200.
 # Os nomes UPDATE_RELEGATION_AVERAGES_SLOT, ARG_AVERAGES, ARG_AVERAGE_COUNT, ARG_AVERAGE_ROW_SIZE, arg_average_row_club e
-# this_average_count ficam aqui (o cx08_5, o cx08_8 e o cx08_11 os usam).
+# this_average_count ficam aqui (o cx08_5 e o cx08_6 os usam).
 # Comparadores: so a original nas tres (mexem em clubes, resultados e noticias): a virada pelo ano + 1; o resultado pela
 # fase da partida e as estatisticas de volta; o fim da temporada pelo status 3 dos dois rebaixados.
 # Iguais no cm0102-1080.exe.

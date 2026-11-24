@@ -1,0 +1,1 @@
+Depende do cx06_4 (EURO_QUAL_GROUP_OPS, EURO_QUAL_PLAYOFF_OPS, EURO_QUAL_PLAYOFF_SIX e EURO_QUAL_PLAYOFF_EIGHT: as eliminatorias europeias da Copa usam as mesmas datas das da Eurocopa): mesma leva ou depois.

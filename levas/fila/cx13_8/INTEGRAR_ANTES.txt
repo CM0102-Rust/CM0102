@@ -1,0 +1,1 @@
+Depende do cx13_4 (GroupStageRecord, championship_group_text): integrar depois dele.

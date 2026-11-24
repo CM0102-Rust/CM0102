@@ -1,0 +1,1 @@
+Depende do sbC_1 (compare_drawing_in_box, lock_back_buffer_pixels, bitmap_font_glyph, T2K_FONT_SIZES), do cx07_11 e do cx07_12.

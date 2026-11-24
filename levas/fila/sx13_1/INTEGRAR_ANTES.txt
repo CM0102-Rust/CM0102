@@ -1,0 +1,1 @@
+Antes de integrar: pôr (0x68d010, 3) em RELATIVAS no rust/src/detours.rs (mov eax, [ecx]; push eax; call rel32).

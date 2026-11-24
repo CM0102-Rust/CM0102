@@ -1,0 +1,1 @@
+Depende do cx08_4 (update_relegation_averages_virtual): integrar depois dele.

@@ -1,0 +1,2 @@
+Depende do cx09_2 (drop_regional_league), do cx09_1 e do cx03_3 (delete_through).
+Antes de integrar: pôr (0x421920, 3), (0x429a70, 3), (0x42c060, 3), (0x56dd80, 3), (0x5718a0, 3), (0x5756c0, 3), (0x577000, 3), (0x5930e0, 3) em RELATIVAS no rust/src/detours.rs (prólogo push esi; mov esi, ecx; call rel32 ~X).

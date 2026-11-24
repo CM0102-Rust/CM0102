@@ -1,0 +1,1 @@
+Depende do sbD_1 (NewsPerson, story_newspaper) e do sbD_3 (player_headline_text).

@@ -1,0 +1,1 @@
+Depende do sx02b_1 (find_game_cd; integrado na leva 330).

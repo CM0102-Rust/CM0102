@@ -1,0 +1,1 @@
+Depende do cx11_7 (create_serie_c2_playoff_stages, compare_serie_c2_playoff_stages): integrar depois dele.

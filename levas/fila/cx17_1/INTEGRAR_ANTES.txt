@@ -1,0 +1,2 @@
+Antes de integrar: por (0x9204e0, 3) e (0x92c1b0, 3) em RELATIVAS no rust/src/detours.rs (prologo push esi; mov esi, ecx; call rel32 ~X).
+Depende do cx01_14 (delete_comp_stats), do cx03_3 (delete_through) e do cx04_1 (drop_stats_league): integrar depois deles. Os tres auxiliares estao sem pub(crate) nos itens deles: se o esvaziar_motor.py os levar a outro modulo, precisam ficar pub(crate).

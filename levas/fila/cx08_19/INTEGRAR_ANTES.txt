@@ -1,0 +1,1 @@
+Depende do cx08_16 (BEL_SECOND_PERIOD_WON) e do cx02_13 (compare_cup_extra_data_load): integrar depois deles.

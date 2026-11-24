@@ -1,0 +1,6 @@
+Compilado em 24/11/2026 sobre o HEAD 7ca43a0b8 (copia propria no rascunho, cargo build --release sem erros e sem
+aviso novo) junto com os outros itens cx11 e as dependencias sx16_7, cx01_7, cx01_14, cx02_3, cx03_3, cx04_1, cx10_1,
+cx10_4 e cx04_5; ancoras das mutacoes unicas no motor inteiro e rotulos do covered! presentes. Nao rodou o jogo (a
+prova e da sessao principal).
+BASE NORMAL: a Serie C2 so existe com DATABASE=NORMAL (ou MAXIMUM) no auto_setup; o simular.py usa MINIMUM e com
+ela as C2 nao sao criadas (0 chamadas). A prova pede LIGAS ENG ITA, DATABASE=NORMAL e ATE 2002-09-30. A virada no verao de 2002; a temporada nova comeca em 5/set (por isso ATE 2002-09-30).

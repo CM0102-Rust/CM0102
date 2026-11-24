@@ -1,0 +1,7 @@
+Compilado em 24/11/2026 sobre o HEAD 7ca43a0b8 (copia propria no rascunho, cargo build --release sem erros e sem
+aviso novo) junto com os outros itens cx11 e as dependencias sx16_7, cx01_7, cx01_14, cx02_3, cx03_3, cx04_1, cx10_1,
+cx10_4 e cx04_5; ancoras das mutacoes unicas no motor inteiro e rotulos do covered! presentes. Nao rodou o jogo (a
+prova e da sessao principal).
+TELAS: prova do Lucas carregando outro save com um jogo aberto que tenha a Italia com as divisoes inferiores (base NORMAL
+ou MAXIMA na criacao); comparador so a original. RELATIVAS (0x6530c0, 3), (0x657580, 3). Depende do cx10_4 e do cx03_3
+(e por eles do cx01_14, cx04_1, cx10_1).
