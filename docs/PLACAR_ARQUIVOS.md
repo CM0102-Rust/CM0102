@@ -2,7 +2,7 @@
 
 Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os arquivos-fonte do mapa de [maxevans60](https://github.com/maxevans60/cm0102-function-map) (CC BY 4.0). Uma função conta quando o início dela é desviado para Rust (`Prologue` em `rust/src/motor.rs`). O placar do motor de partidas, pelas nossas fronteiras, fica em `PLACAR.md`.
 
-**Exe inteiro:** 3914 de 6709 funções, 3841.5 de 5528.0 KB (**69.49%**) · 299 de 393 arquivos com rotinas em Rust
+**Exe inteiro:** 3917 de 6709 funções, 3842.0 de 5528.0 KB (**69.50%**) · 299 de 393 arquivos com rotinas em Rust
 
 | Arquivo | Funções | KB | Progresso |
 |---|---|---|---|
@@ -263,6 +263,7 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `norway_rules.cpp` | 2/6 | 0.4/1.5 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **26.6%** |
 | `kor_league.cpp` | 3/7 | 1.1/4.1 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **26.0%** |
 | `england_awards.cpp` | 3/5 | 1.3/4.9 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **26.0%** |
+| `key_nation.cpp` | 18/27 | 3.3/12.9 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **25.4%** |
 | `germany_rules.cpp` | 2/7 | 0.4/1.7 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **25.2%** |
 | `nation_awards.cpp` | 4/19 | 2.1/8.6 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **24.0%** |
 | `fog_of_war.cpp` | 11/34 | 2.9/12.4 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **23.3%** |
@@ -271,7 +272,6 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `bel_second.cpp` | 6/18 | 1.7/7.7 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **22.6%** |
 | `world_club_champ.cpp` | 3/18 | 2.0/8.9 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **22.0%** |
 | `fifa_rankings.cpp` | 9/20 | 2.1/9.6 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **22.0%** |
-| `key_nation.cpp` | 15/27 | 2.8/12.9 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **21.9%** |
 | `award_manager.cpp` | 9/22 | 1.5/7.0 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **21.3%** |
 | `hall_of_fame.cpp` | 3/20 | 1.8/8.3 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **21.2%** |
 | `hol_first.cpp` | 6/18 | 1.8/8.4 | 🟩🟩🟨⬜⬜⬜⬜⬜⬜⬜ **20.9%** |

@@ -1,0 +1,2 @@
+NAO PROVADO NO JOGO (leitor rx05, rodada 6, 25/11/2026): compila sobre o HEAD 28b7c951f (copia propria com rx05_1..rx05_10, sem aviso no codigo do item); mutacoes compilam; ancoras unicas; prologos conferidos no cm0102.exe e no cm0102-1080.exe.
+Textos de noticias com contagem 0 na carreira ENG e no mundo ate 2002-08-01 (o texto so e escrito quando a noticia e lida). Comparador de texto lado a lado (compare_text_writer); as mutacoes escapam da cadeia por nao rodar e ficam para uma sessao com o Lucas (ler a noticia comparando).

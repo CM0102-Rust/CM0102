@@ -1,0 +1,2 @@
+Compilado em 25/11/2026 sobre o HEAD 28b7c951f (cópia própria no rascunho, cargo build --release sem erros nem avisos novos), junto com os outros itens rx07; com todas as mutações aplicadas também compila. Âncoras das mutações únicas no motor e na fila. Não rodou o jogo.
+Prova: LIGAS ENG KOR ARG ITA FRA ESP AUS até 2002-08-01 (as cláusulas rodam no fim das ligas da Itália e da Espanha, que usam o League::promote_and_relegate, entre junho e julho de 2002). As duas mutações mexem no plano que o comparador usa: a comparação acusa mesmo sem mudar a carreira.

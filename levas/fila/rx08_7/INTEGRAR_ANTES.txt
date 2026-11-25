@@ -1,0 +1,1 @@
+cx06_2 (FN_CRT_FGETPOS, FN_CRT_FSETPOS) e cx16_6 (club_indices_to_pointers, club_pointers_to_indices): integrar depois deles.

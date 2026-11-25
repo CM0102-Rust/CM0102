@@ -1,0 +1,1 @@
+Depende do rx10_4 (os auxiliares das ligas divididas: DividedLeague, construct_divided_league, fill_section_table, create_section_stage, divided_league_turnover, divided_league_club_array, section_predicted_positions e os comparadores): integrar depois dele.

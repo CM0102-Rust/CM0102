@@ -1,0 +1,2 @@
+NAO PROVADO NO JOGO (leitor rx05, rodada 6, 25/11/2026): compila sobre o HEAD 28b7c951f (copia propria com rx05_1..rx05_10, sem aviso no codigo do item); mutacoes compilam; ancora unica; prologo conferido no cm0102.exe e no cm0102-1080.exe.
+Texto da noticia 0xfb3 (transferencia acertada): 59 chamadas no mundo ate 2002-08-01, 0 na ENG. Pede LIGAS do mundo (ou a auditoria) para rodar; a mutacao e acusada pelo comparador de texto (compare_text_writer), nao pela carreira.

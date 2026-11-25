@@ -1,0 +1,1 @@
+Depende do rx05_1 (news_contract_club_id_or_none, news_contract_club_id, send_news_to_clubs): integrar junto com ele ou depois.

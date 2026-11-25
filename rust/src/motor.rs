@@ -4076,8 +4076,11 @@ routines! {
     Prologue { address: 0x5a53d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => fine_save, compare_fine_save;
     Prologue { address: 0x569910, bytes: &[0x6a, 0xff, 0x68, 0xb3, 0x80, 0x95, 0x00] } => dispute_load, compare_dispute_load;
     Prologue { address: 0x569ae0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => dispute_save, compare_dispute_save;
+    Prologue { address: 0x66a280, bytes: &[0x51, 0x8b, 0x44, 0x24, 0x10] } => nation_menu_split_construct, compare_nation_menu_split_construct;
+    Prologue { address: 0x66a360, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => nation_menu_split_format_header, compare_nation_menu_split_format_header;
+    Prologue { address: 0x66a430, bytes: &[0x8b, 0x41, 0x0a, 0x85, 0xc0] } => nation_menu_split_in_second_part, compare_nation_menu_split_in_second_part;
 }
-const N: usize = 3918;
+const N: usize = 3921;
 include!(concat!(env!("OUT_DIR"), "/indices.rs")); // IDX_<NAME>: the position of each routine (build.rs)
 
 /// Size of the engine object (the game allocates it with new(0xf63b)): side 1's block (+0xf5f2, 0x36
@@ -5550,6 +5553,8 @@ pub(crate) use self::zipdir::*;
 // ---------- 161st batch: watch list, position code and staff criterion ----------
 
 compare_value!(compare_staff_criterion, staff_criterion, IDX_STAFF_CRITERION, () -> u32);
+
+// ---------- batch 335: the nation menu split: building it, its part headers and the side of a nation (key_nation.cpp; sx12_3) ----------
 
 // ponytail: cuts, compacts and reallocates the staff tables in place and draws; it cannot run twice. Only the
 // original; the copy is proved by the save proof (the .qst carries the cut tables).

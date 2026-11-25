@@ -1,0 +1,1 @@
+Depende do rx05_1 (send_news_to_clubs): integrar junto com ele ou depois.

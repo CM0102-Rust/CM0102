@@ -1,0 +1,1 @@
+Depende do rx10_4 (os auxiliares das ligas divididas) e do rx10_7 (SEGUNDA_B): integrar depois deles.

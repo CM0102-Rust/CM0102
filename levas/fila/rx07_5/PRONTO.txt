@@ -1,0 +1,2 @@
+Compilado em 25/11/2026 sobre o HEAD 28b7c951f (cópia própria no rascunho, cargo build --release sem erros nem avisos novos), junto com os outros itens rx07; com todas as mutações aplicadas também compila. Âncoras das mutações únicas no motor e na fila. Não rodou o jogo.
+Depende do rx07_4. Prova: a da carga (CARGA: o FeriasTesteSave carregado com e sem a rotina, a impressão comparada). Os ramos dos saves antigos (versão até 0x3e032, sem o byte de versão) não rodam com o save de teste.

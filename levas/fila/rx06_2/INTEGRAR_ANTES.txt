@@ -1,0 +1,1 @@
+Depende do sx17_2 e do sx17_5 (integrar junto ou depois): usa player_search_append_result e player_search_note_rating (sx17_5) e player_search_sort_or_free_results (sx17_2). O prólogo não tem call nem jmp relativo.

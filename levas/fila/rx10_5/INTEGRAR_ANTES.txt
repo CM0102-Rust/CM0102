@@ -1,0 +1,1 @@
+Depende do rx10_4 (SectionStage, create_section_stage, compare_section_stage, divided_league_club_array, compare_divided_league_club_array): integrar depois dele.

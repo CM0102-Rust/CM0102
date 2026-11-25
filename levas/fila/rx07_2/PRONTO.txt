@@ -1,0 +1,2 @@
+Compilado em 25/11/2026 sobre o HEAD 28b7c951f (cópia própria no rascunho, cargo build --release sem erros nem avisos novos), junto com os outros itens rx07; com todas as mutações aplicadas também compila. Âncoras das mutações únicas no motor e na fila. Não rodou o jogo.
+Prova: carreira ENG até 2002-06-01 (roda uma vez, na criação do jogo). O comparador roda só a original e confere o contrato principal de cada pessoa com cargo que leva contrato; as mutações (anos do fim do contrato, 51 semanas, o cargo 15) mudam os contratos do banco inteiro e devem mudar a carreira.

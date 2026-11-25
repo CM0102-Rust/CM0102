@@ -1,0 +1,2 @@
+NAO PROVADO NO JOGO (leitor rx05, rodada 6, 25/11/2026): compila sobre o HEAD 28b7c951f (copia propria com rx05_1..rx05_10, sem aviso no codigo do item); mutacao compila; ancora unica; prologo conferido no cm0102.exe e no cm0102-1080.exe.
+Item de TELAS: a prova e o Lucas jogando comparando. Caminho: uma oferta recebida por um jogador do seu clube > Recusar; o dialogo lista os motivos, cada um escrito por esta rotina (comparador lado a lado sobre o texto).

@@ -1,0 +1,2 @@
+Compilado em 25/11/2026 sobre o HEAD 28b7c951f (cópia própria no rascunho, cargo build --release sem erros nem avisos novos), junto com os outros itens rx07; com todas as mutações aplicadas também compila. Âncoras das mutações únicas no motor e na fila. Não rodou o jogo.
+Prova: contagem 0 na carreira automática e no mundo (só com técnico humano). Entra numa leva de simulação ENG, mas só a carreira do Lucas com a comparação (JOGAR_COMPARANDO.bat) exercita as rotinas; as mutações não serão acusadas pela cadeia.

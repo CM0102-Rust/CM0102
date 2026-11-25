@@ -1,0 +1,1 @@
+Depende do cx16_7 (compare_progress_codes, pub(crate)) e do cx16_8 (qualifying_stat_byte, pub(crate)): integrar depois deles.
