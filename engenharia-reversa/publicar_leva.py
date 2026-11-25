@@ -67,6 +67,8 @@ def main():
         print(f'a {prox}a já está integrada; pulando o integrar.py', flush=True)
     else:
         rodar(sys.executable, os.path.join('levas', str(prox), 'integrar.py'))
+        # the RELATIVAS pairs the items ask for (25/11/2026: batch 333's comparison crashed without sx09_4's)
+        rodar(sys.executable, os.path.join('engenharia-reversa', 'relativas_pedidas.py'), str(prox))
         # the readability style for the code that came in (10/11/2026): typed records, read_T/write_T, English names
         # and messages, named constants; the batch's chain then tests it in that form
         rodar('bash', os.path.join('engenharia-reversa', 'padronizar.sh'))
