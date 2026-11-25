@@ -18,7 +18,7 @@ ESCAPADAS = {
         'ACUSADA NA COMPARACAO LONGA. No modo 3, as assistencias valem 1 em vez de 3 na nota do candidato: o comparador '
         'da ordem (year_ratings_compare_mode_3) a acusou antes de 2002-08-01 (levas/332/conf_escapadas_4b.txt; a primeira '
         'rodada, conf_escapadas_4.txt, parou num falso alarme do elogio corrigido na propria 332a).',
-        'CAUGHT BY THE LONG COMPARISON. In mode 3, the assists count 1 instead of 3 in the candidate's score: the order '
+        'CAUGHT BY THE LONG COMPARISON. In mode 3, the assists count 1 instead of 3 in the candidate\'s score: the order '
         'comparer (year_ratings_compare_mode_3) caught it before 2002-08-01 (levas/332/conf_escapadas_4b.txt; the first run, '
         'conf_escapadas_4.txt, stopped at a false alarm of the praise fixed in batch 332 itself).'),
 }  # nome: (explicacao pt, explicacao en)
