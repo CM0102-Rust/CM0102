@@ -428,3 +428,35 @@ pub(crate) unsafe extern "thiscall" fn compare_nation_menu_split_part_count(this
     SCOREBOARD.record(r == n, || format!("NATION_MENU_SPLIT::part_count(count {}) original {} rust {}", read_i8(this + 9), r, n));
     r
 }
+
+/// Tells every competition of each key nation row to save itself to its temporary file; returns 1.
+///
+/// `key_nation_save_all_comps()`: for each of the 35 rows of `G_LEAGUE_TABLE` with a competition array (+0x10, count at
+/// +0xc), each competition that is not null gets its virtual `comp_vtable::SAVE_TO_TEMP_FILE` with 1. Called by the
+/// game save (step 0x19 of 0x82e430).
+/// Original: `key_nation_save_all_comps` (0x6692f0, key_nation.cpp, cdecl).
+pub(crate) unsafe extern "C" fn key_nation_save_all_comps() -> u32 {
+    for k in 0..0x23usize {
+        let row = G_LEAGUE_TABLE + 72 * k;
+        if read_usize(row + 0x10) == 0 {
+            continue; // no competition array
+        }
+        let mut i = 0;
+        while i < read_i32(row + 0xc) {
+            let comp = read_usize(read_usize(row + 0x10) + 4 * i as usize);
+            if comp != 0 {
+                covered!("sx12_5 save competition");
+                let f: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(read_usize(read_usize(comp) + comp_vtable::SAVE_TO_TEMP_FILE));
+                f(comp, 1); // sx12_5: the competition's temporary file
+            }
+            i += 1;
+        }
+    }
+    1
+}
+
+/// Comparer for `key_nation_save_all_comps`: only the original runs (each competition writes its temporary file);
+/// proven by the save proof.
+pub(crate) unsafe extern "C" fn compare_key_nation_save_all_comps() -> u32 {
+    original_fn::<unsafe extern "C" fn() -> u32>(IDX_KEY_NATION_SAVE_ALL_COMPS)()
+}

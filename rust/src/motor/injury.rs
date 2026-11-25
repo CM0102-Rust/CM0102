@@ -3015,3 +3015,83 @@ pub(crate) unsafe extern "thiscall" fn compare_get_player_injury(this: usize, pe
     SCOREBOARD.record(r == n, || format!("get_player_injury(person {:#x}) original {:#x} rust {:#x}", person, r, n));
     r
 }
+
+/// Writes the injury state into the `injury.dat` item of a saved game.
+///
+/// `Injury::save(save)`: no container: the "Error" box (injury.cpp line 0x227). Opens `injury.dat` for writing
+/// (`exe::zopen`; failing: the box, line 0x22f). Then, each write checked against its count, in order: the 31-byte
+/// physical records (`injury_fields::PHYSICAL_RECORDS`, `G_STAFF_COUNT` of them; line 0x236), the injury slot count
+/// (`injury_fields::INJURY_ENTRY_COUNT`; 0x23e) and the 0x30-byte injuries (`injury_fields::INJURY_ENTRIES`; 0x246),
+/// the recovery news count (`injury_fields::RECOVERY_NEWS_COUNT`; 0x24e) and, when not zero, its 22-byte entries
+/// (`injury_fields::RECOVERY_NEWS_QUEUE`; 0x259), the outbreak count (`injury_fields::OUTBREAK_COUNT`; 0x262) and,
+/// when not zero, the 17-byte outbreaks (`injury_fields::OUTBREAKS`; 0x26e), the word count of the match knock list
+/// (`injury_fields::MATCH_HIT_LIST`, an LLIST; 0 without a list; 0x27d) and, when not zero, each of its 6-byte
+/// items from the first (`exe::llist_get_next`; 0x28f). A failed write shows the box with its line and closes the item
+/// (`exe::zclose`); otherwise the item is closed at the end. Defect of the original: a failed write of a knock item
+/// (line 0x28f) leaves the item open.
+/// Original: `Injury::save` (0x62b2d0, injury.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn injury_save(this: usize, save: usize) {
+    const FILE: usize = 0x9e7f28; // "...\injury.cpp"
+    if save == 0 {
+        show_error_at(FILE, 0x227);
+        return;
+    }
+    let mut z = exe::zopen(save, 0x9e7f68usize, 1, 0x16, 4); // "injury.dat"
+    if z == 0 {
+        show_error_at(FILE, 0x22f);
+        return;
+    }
+    covered!("sx12_5 injury save");
+    let failed = |z: &mut usize, row: u32| {
+        show_error_at(FILE, row);
+        exe::zclose(z);
+    };
+    let staff = read_u32(G_STAFF_COUNT);
+    if exe::zwrite(read_usize(this + injury_fields::PHYSICAL_RECORDS), 0x1f, staff, z) != read_u32(G_STAFF_COUNT) { // sx12_5: the physical records
+        return failed(&mut z, 0x236);
+    }
+    if exe::zwrite(this + injury_fields::INJURY_ENTRY_COUNT, 4, 1, z) != 1 {
+        return failed(&mut z, 0x23e);
+    }
+    let slots = read_u32(this + injury_fields::INJURY_ENTRY_COUNT);
+    if exe::zwrite(read_usize(this + injury_fields::INJURY_ENTRIES), 0x30, slots, z) != read_u32(this + injury_fields::INJURY_ENTRY_COUNT) {
+        return failed(&mut z, 0x246);
+    }
+    if exe::zwrite(this + injury_fields::RECOVERY_NEWS_COUNT, 4, 1, z) != 1 {
+        return failed(&mut z, 0x24e);
+    }
+    let news = read_u32(this + injury_fields::RECOVERY_NEWS_COUNT);
+    if news != 0 && exe::zwrite(read_usize(this + injury_fields::RECOVERY_NEWS_QUEUE), 0x16, news, z) != read_u32(this + injury_fields::RECOVERY_NEWS_COUNT) {
+        return failed(&mut z, 0x259);
+    }
+    if exe::zwrite(this + injury_fields::OUTBREAK_COUNT, 4, 1, z) != 1 {
+        return failed(&mut z, 0x262);
+    }
+    let outbreaks = read_u32(this + injury_fields::OUTBREAK_COUNT);
+    if outbreaks != 0 && exe::zwrite(read_usize(this + injury_fields::OUTBREAKS), 0x11, outbreaks, z) != read_u32(this + injury_fields::OUTBREAK_COUNT) {
+        return failed(&mut z, 0x26e); // sx12_5: the outbreaks
+    }
+    let list = read_usize(this + injury_fields::MATCH_HIT_LIST);
+    let count: u16 = if list != 0 { read_u16(list + llist::COUNT) } else { 0 };
+    if exe::zwrite(&count as *const u16 as usize, 2, 1, z) != 1 {
+        return failed(&mut z, 0x27d);
+    }
+    if count != 0 {
+        awol_llist_rewind(read_usize(this + injury_fields::MATCH_HIT_LIST));
+        let mut item = exe::llist_get_next(read_usize(this + injury_fields::MATCH_HIT_LIST));
+        while item != 0 {
+            if exe::zwrite(item, 6, 1, z) != 1 {
+                show_error_at(FILE, 0x28f); // the original leaves the item open here
+                return;
+            }
+            item = exe::llist_get_next(read_usize(this + injury_fields::MATCH_HIT_LIST));
+        }
+    }
+    exe::zclose(&mut z);
+}
+
+/// Comparer for `injury_save`: writes into the save container (cannot run twice); only the original runs, and the
+/// copy is proven by the save proof (the `.qst` written with and without the batch, item by item).
+pub(crate) unsafe extern "thiscall" fn compare_injury_save(this: usize, save: usize) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_INJURY_SAVE)(this, save)
+}

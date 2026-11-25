@@ -175,3 +175,54 @@ pub(crate) unsafe extern "thiscall" fn compare_month_award_new_season(this: usiz
 
 /// One month slot of a month award (12 of them from `month_award_fields::SLOT_WINNER_ID`).
 pub(crate) const MONTH_AWARD_SLOT_SIZE: usize = 11;
+
+/// Reads a month award from the saved game: its twelve month slots (`MONTH_AWARD_SLOT_SIZE` bytes each, from
+/// `month_award_fields::SLOT_WINNER_ID`) and its slot count (`MONTH_AWARD_SLOT_COUNT`, a byte), each with
+/// `exe::zread`. Returns 1, or 0 after the Load Game Error box of the first short read (month_award.cpp 110 "cannot
+/// read months", 117 "cannot read no of months").
+/// Original: `MONTH_AWARD::load_from_disk` (0x766f50, month_award.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn month_award_load_from_disk(this: usize, file: usize) -> u32 {
+    if exe::zread(this + month_award_fields::SLOT_WINNER_ID, MONTH_AWARD_SLOT_SIZE as u32, 12, file) != 12 {
+        award_load_error_box(MONTH_AWARD_CPP, 0x6e, 0xa5abb0, LOAD_ERROR);
+        return 0;
+    }
+    if exe::zread(this + MONTH_AWARD_SLOT_COUNT, 1, 1, file) != 1 { // sx04b_6: the slot count
+        award_load_error_box(MONTH_AWARD_CPP, 0x75, 0xa5ab78, LOAD_ERROR);
+        return 0;
+    }
+    covered!("sx04b_6 month award loaded");
+    1
+}
+
+/// Comparer for `month_award_load_from_disk`: the load reads the file once; only the original runs, and a loaded
+/// award must keep at most twelve slots.
+pub(crate) unsafe extern "thiscall" fn compare_month_award_load_from_disk(this: usize, file: usize) -> u32 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_MONTH_AWARD_LOAD_FROM_DISK)(this, file);
+    if r == 1 {
+        let n = read_i8(this + MONTH_AWARD_SLOT_COUNT);
+        SCOREBOARD.record((0..=12).contains(&n), || format!("month_award_load_from_disk({:#x}): {} slots", this, n));
+    }
+    r
+}
+
+/// Writes a month award to the saved game as `month_award_load_from_disk` reads it: the twelve month slots, then the
+/// slot count (`exe::zwrite`); a short write shows the "Error" box (month_award.cpp 135, 142) and stops there.
+/// Original: `MONTH_AWARD::save_to_disk` (0x767070, month_award.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn month_award_save_to_disk(this: usize, file: usize) {
+    if exe::zwrite(this + month_award_fields::SLOT_WINNER_ID, MONTH_AWARD_SLOT_SIZE as u32, 12, file) != 12 { // sx04b_6: the twelve slots
+        return tel26_error_box(MONTH_AWARD_CPP, 0x87);
+    }
+    if exe::zwrite(this + MONTH_AWARD_SLOT_COUNT, 1, 1, file) != 1 {
+        return tel26_error_box(MONTH_AWARD_CPP, 0x8e);
+    }
+    covered!("sx04b_6 month award saved");
+}
+
+/// Comparer for `month_award_save_to_disk`: it writes the file once; only the original runs (the save proof compares
+/// the written game).
+pub(crate) unsafe extern "thiscall" fn compare_month_award_save_to_disk(this: usize, file: usize) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_MONTH_AWARD_SAVE_TO_DISK)(this, file)
+}
+
+/// "E:\dev\CM3\cm3 00-01\cm3\code\award\month_award.cpp" and "...\month_ratings.cpp" (the error boxes).
+pub(crate) const MONTH_AWARD_CPP: usize = 0xa5abe4;

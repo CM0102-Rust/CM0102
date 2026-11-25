@@ -655,3 +655,89 @@ pub(crate) unsafe extern "thiscall" fn set_on_holiday(this: usize, holiday: u32,
     }
 }
 
+/// Writes every human manager record and the counts into the `human_manager.dat` item of a saved game; returns 1, or 0
+/// after an error.
+///
+/// `HUMAN_MANAGER::save(save)`: no container: the "Error" box (human_manager.cpp line 0x916) and 0. Opens
+/// `human_manager.dat` for writing (`exe::zopen`; failing: the box, line 0x91e, and 0). Writes the record count (+4;
+/// failing: line 0x925, the item closed, 0). For each record (0xa6ef bytes from [this]), unchecked: the first two
+/// tactic slots (2 × 0x1ecd), `human_manager_record::ON_HOLIDAY` (4), the dword at +0x9a05 (the two option bytes
+/// `CONTROLS_RESERVE_TEAM`, `CONTROLS_ALL_NATIONAL_TEAMS` and two more), the draft contract (+0x9a09, 0x50), the two
+/// offer pointers (+0x9a59, +0x9a5d), the dword +0x9a61, `HOLIDAY_STAMP`, `ACTIVE_TACTIC_SLOT` (1), the password
+/// (+0x9a6a, 0x32) and its typed entry (+0x9a9c, 0x32), `COMPUTER_CONTROLLED`, the commentary speed (+0x9ad2, 2), the
+/// watched fixture (`WATCHED_FIXTURE`, 0x4f), three folder paths, the first two with their four recent files
+/// (+0x9ba8, 0x104; +0x9cac, 0x410; +0xa0bc, 0x104; +0xa1c0, 0x410; +0xa5d0, 0x104), the squad view (+0xa6d4, 0xf), the
+/// five `HOLIDAY_OPTIONS`, the 16 `SAVED_LINEUP` pairs (8 bytes each), `NICKNAME_COUNT` and the 30-byte `NICKNAMES`.
+/// Then the dwords +8 (line 0x94d) and +0xc (line 0x955), each failing with the item closed and 0; at the end, for each
+/// record, the last three tactic slots (3 × 0x1ecd from slot 2, +0x3d9a), the item closed, 1.
+/// Original: `HUMAN_MANAGER::save` (0x5ff9e0, human_manager.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn human_manager_save(this: usize, save: usize) -> u32 {
+    const FILE: usize = 0x9cf11c; // "...\human_manager.cpp"
+    if save == 0 {
+        show_error_at(FILE, 0x916);
+        return 0;
+    }
+    let mut z = exe::zopen(save, 0x9cf164usize, 1, 0x16, 4); // "human_manager.dat"
+    if z == 0 {
+        show_error_at(FILE, 0x91e);
+        return 0;
+    }
+    let failed = |z: &mut usize, row: u32| {
+        show_error_at(FILE, row);
+        exe::zclose(z);
+        0
+    };
+    if exe::zwrite(this + 4, 4, 1, z) != 1 {
+        return failed(&mut z, 0x925);
+    }
+    covered!("sx12_5 human manager save");
+    // (offset in the record, item size, item count), in the original's order
+    const FIELDS: [(usize, u32, u32); 23] = [
+        (0, 0x1ecd, 2), // the first two tactic slots
+        (human_manager_record::ON_HOLIDAY, 4, 1),
+        (human_manager_record::CONTROLS_RESERVE_TEAM, 4, 1), // the option bytes
+        (0x9a09, 0x50, 1), // the draft contract
+        (0x9a59, 4, 1), // the bid offer
+        (0x9a5d, 4, 1), // the offer to confirm
+        (0x9a61, 4, 1),
+        (human_manager_record::HOLIDAY_STAMP, 4, 1),
+        (human_manager_record::ACTIVE_TACTIC_SLOT, 1, 1),
+        (0x9a6a, 1, 0x32), // the password
+        (0x9a9c, 1, 0x32), // the typed password
+        (human_manager_record::COMPUTER_CONTROLLED, 4, 1),
+        (0x9ad2, 2, 1), // the commentary speed
+        (human_manager_record::WATCHED_FIXTURE, 0x4f, 1),
+        (0x9ba8, 1, 0x104), // a folder path
+        (0x9cac, 1, 0x410), // its four recent files
+        (0xa0bc, 1, 0x104), // a folder path
+        (0xa1c0, 1, 0x410), // its four recent files
+        (0xa5d0, 1, 0x104), // a folder path
+        (0xa6d4, 0xf, 1), // the squad view
+        (human_manager_record::HOLIDAY_OPTIONS, 1, 5),
+        (human_manager_record::SAVED_LINEUP, 8, 0x10),
+        (human_manager_record::NICKNAME_COUNT, 4, 1),
+    ];
+    for k in 0..read_i32(this + 4).max(0) as usize {
+        let record = human_manager_record_at(this, k);
+        for &(at, size, n) in FIELDS.iter() {
+            exe::zwrite(record + at, size, n, z); // sx12_5: the record's fields
+        }
+        exe::zwrite(read_usize(record + human_manager_record::NICKNAMES), 0x1e, read_u32(record + human_manager_record::NICKNAME_COUNT), z);
+    }
+    if exe::zwrite(this + 8, 4, 1, z) != 1 {
+        return failed(&mut z, 0x94d);
+    }
+    if exe::zwrite(this + 0xc, 4, 1, z) != 1 {
+        return failed(&mut z, 0x955);
+    }
+    for k in 0..read_i32(this + 4).max(0) as usize {
+        exe::zwrite(human_manager_record_at(this, k) + 2 * 0x1ecd, 0x1ecd, 3, z); // the last three tactic slots
+    }
+    exe::zclose(&mut z);
+    1
+}
+
+/// Comparer for `human_manager_save`: only the original runs (the save container); proven by the save proof.
+pub(crate) unsafe extern "thiscall" fn compare_human_manager_save(this: usize, save: usize) -> u32 {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_HUMAN_MANAGER_SAVE)(this, save)
+}

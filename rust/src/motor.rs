@@ -4048,8 +4048,36 @@ routines! {
     Prologue { address: 0x66a0c0, bytes: &[0x32, 0xc0, 0xb9, 0x38, 0x3d, 0xb6, 0x00] } => key_nation_sorted_order, compare_key_nation_sorted_order;
     Prologue { address: 0x66a100, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x53] } => key_nation_compare_entries, compare_key_nation_compare_entries;
     Prologue { address: 0x66a350, bytes: &[0x80, 0x79, 0x09, 0x10, 0x0f, 0x9f, 0xc0] } => nation_menu_split_part_count, compare_nation_menu_split_part_count;
+    Prologue { address: 0x524d70, bytes: &[0x6a, 0xff, 0x68, 0xa7, 0x78, 0x95, 0x00] } => database_trim_staff_tables, compare_database_trim_staff_tables;
+    Prologue { address: 0x5af630, bytes: &[0x55, 0x8b, 0xe9, 0x57, 0xb9, 0x10, 0x00, 0x00, 0x00] } => fog_of_war_new, compare_fog_of_war_new;
+    Prologue { address: 0x5af6e0, bytes: &[0x6a, 0xff, 0x68, 0x6c, 0x98, 0x95, 0x00] } => fog_of_war_load, compare_fog_of_war_load;
+    Prologue { address: 0x5b0010, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => fog_of_war_map_load, compare_fog_of_war_map_load;
+    Prologue { address: 0x5afad0, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] } => fog_of_war_save, compare_fog_of_war_save;
+    Prologue { address: 0x5b0170, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => fog_of_war_map_save, compare_fog_of_war_map_save;
+    Prologue { address: 0x5af6a0, bytes: &[0x53, 0x56, 0x57, 0x8b, 0xf9] } => fog_of_war_destructor, compare_fog_of_war_destructor;
+    Prologue { address: 0x72b1d0, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x4c, 0x24, 0x08] } => new_media, compare_new_media;
+    Prologue { address: 0x72b200, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x46, 0x0c] } => drop_media, compare_drop_media;
+    Prologue { address: 0x72b240, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x10, 0x02, 0x00, 0x00] } => load_media_dat, compare_load_media_dat;
+    Prologue { address: 0x72b5f0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => save_media_dat, compare_save_media_dat;
+    Prologue { address: 0x62b2d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => injury_save, compare_injury_save;
+    Prologue { address: 0x5ff9e0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => human_manager_save, compare_human_manager_save;
+    Prologue { address: 0x6692f0, bytes: &[0x56, 0x57, 0xbe, 0x6c, 0x3d, 0xb6, 0x00] } => key_nation_save_all_comps, compare_key_nation_save_all_comps;
+    Prologue { address: 0x418440, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => awol_construct, compare_awol_construct;
+    Prologue { address: 0x418670, bytes: &[0x6a, 0xff, 0x68, 0x89, 0x3e, 0x95, 0x00] } => awol_load, compare_awol_load;
+    Prologue { address: 0x418980, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => awol_save, compare_awol_save;
+    Prologue { address: 0x766f50, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => month_award_load_from_disk, compare_month_award_load_from_disk;
+    Prologue { address: 0x767070, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => month_award_save_to_disk, compare_month_award_save_to_disk;
+    Prologue { address: 0x767b20, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => month_ratings_load_from_disk, compare_month_ratings_load_from_disk;
+    Prologue { address: 0x7763b0, bytes: &[0x6a, 0xff, 0x68, 0x19, 0xdf, 0x95, 0x00] } => nationalteams_load_dat, compare_nationalteams_load_dat;
+    Prologue { address: 0x76a4e0, bytes: &[0x6a, 0xff, 0x68, 0xac, 0xdc, 0x95, 0x00] } => nationalteams_constructor, compare_nationalteams_constructor;
+    Prologue { address: 0x776a20, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] } => nationalteams_save_dat, compare_nationalteams_save_dat;
+    Prologue { address: 0x76a710, bytes: &[0x6a, 0xff, 0x68, 0xcb, 0xdc, 0x95, 0x00] } => nationalteams_destructor, compare_nationalteams_destructor;
+    Prologue { address: 0x5a5180, bytes: &[0x6a, 0xff, 0x68, 0x06, 0x93, 0x95, 0x00] } => fine_load, compare_fine_load;
+    Prologue { address: 0x5a53d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => fine_save, compare_fine_save;
+    Prologue { address: 0x569910, bytes: &[0x6a, 0xff, 0x68, 0xb3, 0x80, 0x95, 0x00] } => dispute_load, compare_dispute_load;
+    Prologue { address: 0x569ae0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => dispute_save, compare_dispute_save;
 }
-const N: usize = 3890;
+const N: usize = 3918;
 include!(concat!(env!("OUT_DIR"), "/indices.rs")); // IDX_<NAME>: the position of each routine (build.rs)
 
 /// Size of the engine object (the game allocates it with new(0xf63b)): side 1's block (+0xf5f2, 0x36
@@ -5522,6 +5550,33 @@ pub(crate) use self::zipdir::*;
 // ---------- 161st batch: watch list, position code and staff criterion ----------
 
 compare_value!(compare_staff_criterion, staff_criterion, IDX_STAFF_CRITERION, () -> u32);
+
+// ponytail: cuts, compacts and reallocates the staff tables in place and draws; it cannot run twice. Only the
+// original; the copy is proved by the save proof (the .qst carries the cut tables).
+
+// ---------- sx10_1: the fog of war in the save: building it and reading it (fog_of_war.cpp) ----------
+
+/// FOG_OF_WAR::add_manager_map (thiscall(fog, manager) ret 4).
+pub(crate) const FN_FOG_OF_WAR_ADD_MANAGER_MAP: usize = 0x5afd70;
+
+// ---------- sx10_2: the fog of war in the save: writing it and freeing it (fog_of_war.cpp) ----------
+
+// --- sx01d_3: Media::Media (0x72b1d0), Media::~Media (0x72b200) and Media::load_media_dat (0x72b240), media.cpp ---
+
+// --- sx01d_4: Media::save_media_dat (0x72b5f0, media.cpp) ---
+
+// ---------- sx04b_6: the month award in the saved game and the month ratings' load (month_award.cpp, month_ratings.cpp) ----------
+
+/// The boxes of a failed load: "Load Game Error" with "The save game is corrupted..." (`LOAD_ERROR`), or "Memory
+/// Allocation Error" with its body (`MEMORY_ERROR`); title and body, both translated.
+pub(crate) const LOAD_ERROR: (usize, usize) = (0x9af3e0, 0x9af334);
+pub(crate) const MEMORY_ERROR: (usize, usize) = (0x9a8108, 0x9a7ff8);
+
+// ---------- batch 334: the national teams object written to the saved game and destroyed (national_teams.cpp) ----------
+
+// --- sx09c_2: fine.dat in the save: Fine::load (0x5a5180) and Fine::save (0x5a53d0), Fine.cpp ---
+
+// --- sx09c_3: dispute.dat in the save: DISPUTE::load (0x569910) and DISPUTE::save (0x569ae0), dispute.cpp ---
 
 // ---------- batch 333: the run-up to the start date (game.cpp) ----------
 

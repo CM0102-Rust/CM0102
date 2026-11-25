@@ -8,19 +8,19 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 
 | Medida | Quantidade |
 |---|---:|
-| deslocamentos crus | 3826 |
-| chaves fixas cruas | 1120 |
+| deslocamentos crus | 3851 |
+| chaves fixas cruas | 1121 |
 | chamadas por endereço | 0 |
 | cópias de acesso à memória | 0 |
 | rotinas sem cabeçalho | 0 |
 | locais/parâmetros em português | 222 |
-| linhas | 388974 |
+| linhas | 391218 |
 
 ## Por arquivo (os 40 piores, pelos deslocamentos crus)
 
 | Arquivo | deslocamentos crus | chaves fixas cruas | chamadas por endereço | cópias de acesso à memória | rotinas sem cabeçalho | locais/parâmetros em português | linhas |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| `motor.rs` | 583 | 0 | 0 | 0 | 0 | 72 | 12166 |
+| `motor.rs` | 583 | 0 | 0 | 0 | 0 | 72 | 12221 |
 | `motor/comp_screens.rs` | 339 | 11 | 0 | 0 | 0 | 0 | 9539 |
 | `motor/club_screens.rs` | 321 | 2 | 0 | 0 | 0 | 0 | 13774 |
 | `motor/news.rs` | 164 | 0 | 0 | 0 | 0 | 0 | 3655 |
@@ -29,12 +29,12 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 | `motor/match_man.rs` | 122 | 1 | 0 | 0 | 0 | 1 | 4267 |
 | `motor/match_screens.rs` | 92 | 0 | 0 | 0 | 0 | 6 | 6374 |
 | `motor/match_eng.rs` | 90 | 0 | 0 | 0 | 0 | 22 | 11071 |
-| `motor/database.rs` | 66 | 4 | 0 | 0 | 0 | 8 | 8902 |
+| `motor/database.rs` | 79 | 4 | 0 | 0 | 0 | 8 | 9428 |
 | `motor/manager_screens.rs` | 65 | 0 | 0 | 0 | 0 | 0 | 1811 |
+| `motor/media.rs` | 65 | 0 | 0 | 0 | 0 | 0 | 11529 |
 | `motor/search_screens.rs` | 61 | 1 | 0 | 0 | 0 | 0 | 4877 |
-| `motor/media.rs` | 57 | 0 | 0 | 0 | 0 | 0 | 11344 |
-| `motor/national_teams.rs` | 54 | 1 | 0 | 0 | 0 | 2 | 3230 |
-| `motor/fields.rs` | 51 | 0 | 0 | 0 | 0 | 0 | 3394 |
+| `motor/national_teams.rs` | 54 | 1 | 0 | 0 | 0 | 2 | 3603 |
+| `motor/fields.rs` | 51 | 0 | 0 | 0 | 0 | 0 | 3395 |
 | `motor/transfer_manager.rs` | 50 | 0 | 0 | 0 | 0 | 3 | 12650 |
 | `motor/club_records.rs` | 48 | 3 | 0 | 0 | 0 | 0 | 2761 |
 | `motor/award_screens.rs` | 41 | 0 | 0 | 0 | 0 | 0 | 1110 |
