@@ -1,0 +1,1 @@
+MUTACOES = [('sx05_3_assistencias_valem_um', '(5 * e.goals() + 3 * e.assists() + e.rating_sum(2))', '(5 * e.goals() + e.assists() + e.rating_sum(2)) /* mutation: assists count 1 */', 'sx05_3 mode 3 by club reputation')]

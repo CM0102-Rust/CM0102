@@ -1,1 +1,4 @@
 mutacao sx05_2_cinco_partidas 5747s engine: DIVERGENCE year_ratings_compare_mode_2(person 3664, person 4083) original=-1 rust=1
+mutacao sx05_3_assistencias_valem_um 4473s engine: DIVERGENCE newsitem_write_text(category 4, type 0xbdd, body 1, flag 0, piece ): original "Sepp Maier, preparador f�sico{} do Bayern Munique, a
+restaurado e recompilado
+FIM
