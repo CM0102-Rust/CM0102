@@ -75,7 +75,7 @@ pub(crate) unsafe extern "thiscall" fn dispute_save(this: usize, save: usize) ->
     }
     covered!("sx09c_3 save dispute.dat");
     let write = |z: usize| -> Result<(), u32> {
-        if exe::zwrite(G_STAFF_COUNT, 4, 1, z) != 1 {
+        if exe::zwrite(G_STAFF_COUNT, 4, 1, z) != 1 { // sx09c_3: the people count
             return Err(0xf8);
         }
         if exe::zwrite(read_usize(this + 4), 1, read_u32(G_STAFF_COUNT), z) != read_u32(G_STAFF_COUNT) { // sx09c_3: the flags

@@ -122,6 +122,7 @@ def materializar(nomes, n, base, antes):
     os.makedirs(destino, exist_ok=False)
     codigos, rotinas, mutacoes, docs, tpts, tens = [], [], [], [], [], []
     campos, interessa = [], []  # LEIA: campos tocados e sessões irmãs interessadas (desde a 215a)
+    marcas = []  # the items are marked only after the checks pass (25/11/2026: a failed 334 left 13 items marked)
     b = base
     for nome in nomes:
         src = os.path.join(FILA, nome)
@@ -139,15 +140,18 @@ def materializar(nomes, n, base, antes):
         docs += d
         campos += rot.get('CAMPOS', [])
         interessa += [t for t in rot.get('INTERESSA', []) if t not in interessa]
-        with open(os.path.join(src, 'materializada.txt'), 'w', encoding='utf-8') as f:
-            f.write(f'leva {n}, índices {b}..{b + len(rot["ROTINAS"]) - 1}\n')
+        marcas.append((os.path.join(src, 'materializada.txt'), f'leva {n}, índices {b}..{b + len(rot["ROTINAS"]) - 1}\n'))
         b += len(rot['ROTINAS'])
     assert len({m[0] for m in mutacoes}) == len(mutacoes), 'mutações com o mesmo nome em itens diferentes'
     # o trecho de cada mutação tem de aparecer uma vez só no motor.rs com a leva (24/10: a dq10_contar casava 8
     # vezes e a cadeia da 225a parou sem rodar as mutações)
     junto = texto_do_motor(R) + '\n'.join(codigos)
     repetidas = [(m[0], junto.count(m[1])) for m in mutacoes if junto.count(m[1]) != 1]
-    assert not repetidas, ('trecho de mutação que não aparece uma vez só', repetidas)
+    if repetidas:
+        os.rmdir(destino)  # nothing written yet: the batch number stays free
+        sys.exit('trecho de mutação que não aparece uma vez só: %s' % repetidas)
+    for caminho, texto in marcas:
+        open(caminho, 'w', encoding='utf-8').write(texto)
     open(os.path.join(destino, 'codigo.rs'), 'w', encoding='utf-8').write('\n'.join(codigos))
     # EXE = {address: 'original'}: the routine is hooked only in the original exe; assinaturas.py reads the list
     so_orig = ['%#x  # %s, %s' % (a, x, n) for x in nomes
