@@ -1,22 +1,9 @@
 # ordem da fila (fila.py); um item por linha
-sx09_3
-sx09_4
-sx09_5
-sx09_6
-sx08b_1
 sx08b_2
 sx10_1
 sx10_2
-sx10_6
-sx11_1
-sx11_2
-sx01d_1
-sx01d_2
 sx01d_3
 sx01d_4
-sx01d_5
-sx12_1
-sx12_2
 sx12_3
 sx12_5
 sx12_6

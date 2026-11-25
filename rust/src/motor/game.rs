@@ -832,3 +832,252 @@ pub(crate) unsafe fn season_pass_restart_comp(comp: usize) {
         exe::date_operator_3d(season_pass::LAST_DATE, c.as_mut_ptr() as usize, G_CURRENT_DATE);
     }
 }
+
+/// Runs the game day by day from the game date to the chosen start date before the career begins.
+///
+/// First the player setup files (`player_setup_cfg_load` with the masks 0x100, 0x1000, 0x800 and 0x200, no error
+/// reports). The progress total is the number of days to go: (start year − game year) × 365 − game day + start day.
+/// Then, while the game date is before `G_GAME_START_DATE` (year unsigned, then day signed), each of the three slices of
+/// a day (`G_CURRENT_DAY_SLICE` 0..2):
+///
+/// - a new year sets the fixtures' year (`exe::fixture_manager_set_year`);
+/// - the matches, fixtures, staff records, competitions and contracts of the slice (`start_date_slice_matches`);
+/// - on the third slice, the ages, the weather, the "Initialising Leagues" progress step and the world's daily updates
+///   (`start_date_slice_world`: discipline, injuries, UEFA seeding, awards, competitions, host countries, the season
+///   pass, the nation coefficients, national teams, finances, officials, managers, stadiums);
+/// - the club records' news (`Club_Records::send_record_news`);
+/// - the slice moves on; after the third, the date moves one day (`start_date_next_day`, with the FIFA rules check);
+/// - the Windows messages (`exe::pump_messages`).
+///
+/// At the end `G_LAST_PROCESSED_DATE` is the day before the game date, the game phase byte 0xae2cfc becomes 2, the
+/// computer clubs assess their squads (shortlists, `Shortlist_Manager` at `[G_TRANSFER_MANAGER] + 0x856`), the player
+/// setup file is read with mask 0x203b and the squads' fitness is set (`Injury::init_squad_fitness`).
+///
+/// The original passes the year and the slice in registers whose high bits are leftovers; the callees read only the
+/// word or the byte (`set_year` compares `bx`, `set_up_the_day` and the contracts read the byte).
+/// Original: `game_run_to_start_date` (0x5cc850, game.cpp, cdecl).
+pub(crate) unsafe extern "C" fn game_run_to_start_date() {
+    for mask in [0x100u32, 0x1000, 0x800, 0x200] {
+        let load: unsafe extern "C" fn(u32, u32) = core::mem::transmute(FN_PLAYER_SETUP_CFG_LOAD);
+        load(mask, 0);
+    }
+    let start: [u16; 4] = core::array::from_fn(|k| read_u16(G_GAME_START_DATE + 2 * k));
+    let total = (start[1] as i32 - read_u16(G_CURRENT_DATE_YEAR) as i32) * 365 - read_i16(G_CURRENT_DATE) as i32 + start[0] as i16 as i32;
+    let (mut last_year, mut counter) = (0u16, 0i32);
+    loop {
+        let start: [u16; 4] = core::array::from_fn(|k| read_u16(G_GAME_START_DATE + 2 * k)); // re-read every day, as the original
+        if !before_start_date(&start) {
+            break;
+        }
+        let year = read_u16(G_CURRENT_DATE_YEAR);
+        if year != last_year {
+            exe::fixture_manager_set_year(read_usize(G_FIXTURE_MANAGER), year as u32);
+            last_year = read_u16(G_CURRENT_DATE_YEAR);
+        }
+        let slice = read_u8(G_CURRENT_DAY_SLICE);
+        start_date_slice_matches(slice);
+        if read_u8(G_CURRENT_DAY_SLICE) == 2 {
+            start_date_slice_world(&mut counter, total);
+        }
+        start_date_call0(start_date_fns::CLUB_RECORDS_SEND_RECORD_NEWS, read_usize(G_CLUB_RECORDS));
+        let next = read_u8(G_CURRENT_DAY_SLICE).wrapping_add(1);
+        write_u8(G_CURRENT_DAY_SLICE, next);
+        if next > 2 {
+            write_u8(G_CURRENT_DAY_SLICE, 0);
+            start_date_next_day();
+        }
+        exe::pump_messages();
+    }
+    let (mut out, mut tmp) = ([0u16; 4], [0u16; 4]);
+    let yesterday = exe::date_sub_days(G_CURRENT_DATE, out.as_mut_ptr() as usize, 1);
+    exe::date_operator_3d(G_LAST_PROCESSED_DATE, tmp.as_mut_ptr() as usize, yesterday);
+    write_u8(start_date_fns::G_GAME_PHASE, 2);
+    start_date_call0(start_date_fns::ASSESS_CLUB_SQUADS, read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856)); // the Shortlist_Manager
+    let load: unsafe extern "C" fn(u32, u32) = core::mem::transmute(FN_PLAYER_SETUP_CFG_LOAD);
+    load(0x203b, 0);
+    start_date_call0(start_date_fns::INJURY_INIT_SQUAD_FITNESS, read_usize(G_INJURY));
+}
+
+/// Comparer for `game_run_to_start_date`: it plays every day up to the start date and cannot run twice, so only the
+/// original runs and the plan is checked afterwards: the game date reached the start date (when it was before it), the
+/// last processed date is the day before, no match day is left, the slice is back to 0 and the phase byte is 2.
+pub(crate) unsafe extern "C" fn compare_game_run_to_start_date() {
+    let start: [u16; 4] = core::array::from_fn(|k| read_u16(G_GAME_START_DATE + 2 * k));
+    let ran = before_start_date(&start);
+    original_fn::<unsafe extern "C" fn()>(IDX_GAME_RUN_TO_START_DATE)();
+    let mut out = [0u16; 4];
+    let yesterday = exe::date_sub_days(G_CURRENT_DATE, out.as_mut_ptr() as usize, 1);
+    let last_ok = read_u16(G_LAST_PROCESSED_DATE) == read_u16(yesterday) && read_u16(G_LAST_PROCESSED_DATE + 2) == read_u16(yesterday + 2);
+    let date_ok = !ran || (read_u16(G_CURRENT_DATE) == start[0] && read_u16(G_CURRENT_DATE_YEAR) == start[1] && read_u8(G_CURRENT_DAY_SLICE) == 0);
+    let ok = last_ok && date_ok && read_usize(G_MATCH_DAY) == 0 && read_u8(start_date_fns::G_GAME_PHASE) == 2;
+    SCOREBOARD.record(ok, || format!("game_run_to_start_date: ran {} date {}/{} slice {} (start {}/{}), last processed {}/{}, match day {:x}, phase {}",
+        ran, read_i16(G_CURRENT_DATE), read_u16(G_CURRENT_DATE_YEAR), read_u8(G_CURRENT_DAY_SLICE), start[0] as i16, start[1],
+        read_i16(G_LAST_PROCESSED_DATE), read_u16(G_LAST_PROCESSED_DATE + 2), read_usize(G_MATCH_DAY), read_u8(start_date_fns::G_GAME_PHASE)));
+}
+
+/// `compare_shorts_ascending(a, b)`: qsort comparison of two 16-bit values, ascending: `*a − *b`, both sign-extended.
+/// Used by the daily person pass (`game_daily_staff_update` 0x5ce2d0) to sort the two tables of the day's abilities
+/// (current and potential) that the players' development reads.
+/// Original: `compare_shorts_ascending` (0x5d6200, game.cpp, cdecl).
+pub(crate) unsafe extern "C" fn compare_shorts_ascending(a: *const i16, b: *const i16) -> i32 {
+    read_i16(a as usize) as i32 - read_i16(b as usize) as i32
+}
+
+/// Comparer for `compare_shorts_ascending`: the order of the original and of the copy.
+pub(crate) unsafe extern "C" fn compare_compare_shorts_ascending(a: *const i16, b: *const i16) -> i32 {
+    let r = original_fn::<unsafe extern "C" fn(*const i16, *const i16) -> i32>(IDX_COMPARE_SHORTS_ASCENDING)(a, b);
+    let n = compare_shorts_ascending(a, b);
+    SCOREBOARD.record(r == n, || format!("compare_shorts_ascending({}, {}) original={} rust={}", read_i16(a as usize), read_i16(b as usize), r, n));
+    r
+}
+
+/// `game_date_static_init()`: static initialiser of the exe (runs in the CRT start-up, before WinMain, with the detours
+/// already installed by the DLL load): builds the game date `G_CURRENT_DATE` with the default `Date` and registers its
+/// destructor (`game_date_static_dtor` 0x5cc670, an empty body) with `exe::crt_atexit`. The game date is set for real
+/// when a game is created or loaded.
+/// Original: `game_date_static_init` (0x5cc650, game.cpp, cdecl).
+pub(crate) unsafe extern "C" fn game_date_static_init() {
+    construct_static_date(G_CURRENT_DATE);
+    exe::crt_atexit(0x5cc670usize); // game_date_static_dtor: an empty body
+}
+
+/// `last_processed_date_static_init()`: static initialiser of the exe, like `game_date_static_init`, for the last
+/// processed date `G_LAST_PROCESSED_DATE` (destructor `last_processed_date_static_dtor` 0x5cc6a0, an empty body).
+/// Original: `last_processed_date_static_init` (0x5cc680, game.cpp, cdecl).
+pub(crate) unsafe extern "C" fn last_processed_date_static_init() {
+    construct_static_date(G_LAST_PROCESSED_DATE);
+    exe::crt_atexit(0x5cc6a0usize); // last_processed_date_static_dtor: an empty body
+}
+
+/// Comparer for `game_date_static_init`.
+pub(crate) unsafe extern "C" fn compare_game_date_static_init() {
+    compare_static_date("game_date_static_init", original_fn::<unsafe extern "C" fn()>(IDX_GAME_DATE_STATIC_INIT), G_CURRENT_DATE);
+}
+
+/// Comparer for `last_processed_date_static_init`.
+pub(crate) unsafe extern "C" fn compare_last_processed_date_static_init() {
+    compare_static_date("last_processed_date_static_init", original_fn::<unsafe extern "C" fn()>(IDX_LAST_PROCESSED_DATE_STATIC_INIT), G_LAST_PROCESSED_DATE);
+}
+
+/// `this` routine of the exe called with no argument (thiscall).
+pub(crate) unsafe fn start_date_call0(f: usize, this: usize) {
+    let g: unsafe extern "thiscall" fn(usize) = core::mem::transmute(f);
+    g(this)
+}
+
+/// Whether the game date is still before the start date `start` (day i16, year u16): the year unsigned first, then the
+/// day of the year signed.
+pub(crate) unsafe fn before_start_date(start: &[u16; 4]) -> bool {
+    let year = read_u16(G_CURRENT_DATE_YEAR);
+    if start[1] != year {
+        return start[1] > year;
+    }
+    start[0] as i16 > read_i16(G_CURRENT_DATE)
+}
+
+/// The first part of a day slice: the match day of the slice (built, played, ended and freed; `G_MATCH_DAY` points at
+/// it meanwhile), the fixtures, the staff records, the competitions (`game_update_comps_for_date(0)`) and the
+/// contracts.
+pub(crate) unsafe fn start_date_slice_matches(slice: u8) {
+    let day = exe::crt_operator_new(0x38);
+    let day = if day != 0 {
+        let set_up: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(start_date_fns::SET_UP_THE_DAY);
+        set_up(day, G_CURRENT_DATE, slice as u32)
+    } else {
+        0
+    };
+    write_usize(G_MATCH_DAY, day);
+    start_date_call0(start_date_fns::PLAY_THE_DAY, day); // the original calls it even on a null day
+    exe::fixture_manager_daily_update(read_usize(G_FIXTURE_MANAGER));
+    start_date_call_today(start_date_fns::STAFF_RECORDS_DAILY_UPDATE, read_usize(G_STAFF_RECORDS));
+    game_update_comps_for_date(0);
+    let day = read_usize(G_MATCH_DAY);
+    if day != 0 {
+        start_date_call0(start_date_fns::END_DAY, day);
+        exe::crt_operator_delete(day);
+    }
+    write_usize(G_MATCH_DAY, 0);
+    let contracts: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(start_date_fns::CONTRACT_MANAGER_DAILY_UPDATE);
+    contracts(read_usize(G_CONTRACT_MANAGER), G_CURRENT_DATE, read_u8(G_CURRENT_DAY_SLICE) as u32, 1); // the slice read again
+}
+
+/// The third slice of a day: every person's age (`staff::AGE`, from `exe::database_get_staff_age` on the game date),
+/// the weather, the "Initialising Leagues" progress step, then the world's daily updates in the original's order.
+pub(crate) unsafe fn start_date_slice_world(counter: &mut i32, total: i32) {
+    for i in 0..read_usize(G_STAFF_COUNT) as i32 {
+        let p = staff_at(i as isize);
+        p.set_age(exe::database_get_staff_age(p, G_CURRENT_DATE as *const u16) as i16);
+    }
+    start_date_call0(start_date_fns::UPDATE_CITY_WEATHER, read_usize(G_WEATHER));
+    let text: unsafe extern "C" fn(usize, usize, ...) -> usize = core::mem::transmute(FN_LANGLIB_SPRINTF);
+    text(start_date_fns::G_STATUS_TEXT, start_date_fns::TEXT_INITIALISING_LEAGUES);
+    exe::screenmanager_send_network_status_message(G_SCREEN_MANAGER, start_date_fns::G_STATUS_TEXT, *counter, total as u32, -1);
+    *counter += 1;
+    start_date_call_today(start_date_fns::DISCIPLINE_DAILY_UPDATE, read_usize(G_DISCIPLINE));
+    start_date_call0(start_date_fns::INJURY_DAILY_UPDATE, read_usize(G_INJURY));
+    exe::uefaseeding_update_season(read_usize(G_UEFA_SEEDING), 1);
+    start_date_call_today(start_date_fns::AWARD_MANAGER_PROCESS_DATE, read_usize(G_AWARD_MANAGER));
+    game_update_comps_for_date(1); // the competitions' day (phase 1) and the fixtures again
+    start_date_call_today(start_date_fns::HOST_COUNTRY_DAILY_UPDATE, read_usize(G_HOST_COUNTRY));
+    let cdecl0 = |f: usize| {
+        let g: unsafe extern "C" fn() = core::mem::transmute(f);
+        g()
+    };
+    cdecl0(start_date_fns::GAME_SEASON_UPDATE_PASS);
+    cdecl0(start_date_fns::GAME_UPDATE_NATION_COEFFICIENTS);
+    start_date_call_today(start_date_fns::NATIONAL_TEAMS_DAILY_UPDATE, read_usize(G_NATIONAL_TEAMS));
+    start_date_call_today(start_date_fns::FINANCE_TABLE_DAILY_UPDATE, read_usize(G_FINANCE_TABLE));
+    start_date_call0(start_date_fns::OFFICIALS_CLEAR_BUSY_FLAGS, read_usize(G_OFFICIALS_MANAGER));
+    start_date_call0(start_date_fns::MANAGER_MANAGER_DAILY_UPDATE, read_usize(G_MANAGER_MANAGER));
+    start_date_call_today(start_date_fns::STADIUM_DAILY_UPDATE, read_usize(G_STADIUM));
+}
+
+/// After the third slice the date moves on one day (`exe::date_add_days`, `exe::date_operator_3d`), and the FIFA
+/// transfer rules (`G_FIFA_TRANSFER_RULES_FEATURE_ENABLED` on and not yet `G_FIFA_TRANSFER_RULES_IN_FORCE`) check their
+/// date `G_TRANSFER_RULE_CHANGE_DATE`: already past (year unsigned, then day signed), the rules come into force
+/// (`G_MAX_CONTRACT_LENGTH_YEARS` = 5, news `exe::news_post_transfer_system_change(1)`); exactly 25 days before it, the
+/// warning news (`news_post_transfer_system_change(0)`).
+pub(crate) unsafe fn start_date_next_day() {
+    let (mut out, mut tmp) = ([0u16; 4], [0u16; 4]);
+    let next = exe::date_add_days(G_CURRENT_DATE, out.as_mut_ptr() as usize, 1);
+    exe::date_operator_3d(G_CURRENT_DATE, tmp.as_mut_ptr() as usize, next);
+    if read_u8(G_FIFA_TRANSFER_RULES_FEATURE_ENABLED) == 0 || read_u8(G_FIFA_TRANSFER_RULES_IN_FORCE) != 0 {
+        return;
+    }
+    let (rule_day, rule_year) = (read_i16(G_TRANSFER_RULE_CHANGE_DATE), read_u16(G_TRANSFER_RULE_CHANGE_DATE + 2));
+    let year = read_u16(G_CURRENT_DATE_YEAR);
+    if rule_year < year || (rule_year == year && rule_day < read_i16(G_CURRENT_DATE)) {
+        covered!("sx11_1 transfer rules in force");
+        write_u8(G_FIFA_TRANSFER_RULES_IN_FORCE, 1);
+        write_u8(G_MAX_CONTRACT_LENGTH_YEARS, 5);
+        exe::news_post_transfer_system_change(1);
+        return;
+    }
+    let mut warn = [0u16; 4];
+    let d = exe::date_sub_days(G_TRANSFER_RULE_CHANGE_DATE, warn.as_mut_ptr() as usize, 0x19);
+    if read_u16(d + 2) == read_u16(G_CURRENT_DATE_YEAR) && read_i16(d) == read_i16(G_CURRENT_DATE) {
+        covered!("sx11_1 transfer rules warning");
+        exe::news_post_transfer_system_change(0);
+    }
+}
+
+/// Builds a game date with the default `Date` (`exe::date_date_54a110`: day 40 of 1972).
+pub(crate) unsafe fn construct_static_date(date: usize) {
+    exe::date_date_54a110(date);
+}
+
+/// Comparer of a static date initialiser: the original runs (it registers the destructor once); the copy builds the date
+/// into a local and its 8 bytes are compared with the global's.
+pub(crate) unsafe fn compare_static_date(name: &str, original: unsafe extern "C" fn(), global: usize) {
+    original();
+    let mut copy = [0u16; 4];
+    construct_static_date(copy.as_mut_ptr() as usize);
+    let orig: [u16; 4] = core::array::from_fn(|k| read_u16(global + 2 * k));
+    SCOREBOARD.record(copy == orig, || format!("{}: original={:x?} rust={:x?}", name, orig, copy));
+}
+
+/// `this` routine of the exe called with the game date (thiscall, ret 4).
+pub(crate) unsafe fn start_date_call_today(f: usize, this: usize) {
+    let g: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(f);
+    g(this, G_CURRENT_DATE)
+}

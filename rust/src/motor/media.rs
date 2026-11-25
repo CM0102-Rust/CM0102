@@ -10476,3 +10476,869 @@ impl TeamText {
 
 /// The last piece `write_team_media_story_news_text` ran (for the comparer's message).
 pub(crate) static TEAM_TEXT_PIECE: std::sync::Mutex<&'static str> = std::sync::Mutex::new("");
+
+/// `Media::apply_team_story_response(club, kind, response, subject)`: the effects of the manager's answer (1, 2 or 3,
+/// the low byte of `response`) to a media story about his club, through the supporters' confidence
+/// (`Media::adjust_supporter_confidence`), the board's (`Media::adjust_board_confidence`), the staff's
+/// (`board_record::STAFF_CONFIDENCE`) and the story effects on the squad (`Media::apply_story_effect_flags`, weighted by
+/// the club's stat).
+///
+/// Nothing without the club, its manager (+0xcf) with a `.non_player()` sheet or, for a club that is not a national
+/// team (`exe::database_is_national_team`), its division's object in `G_COMP_OBJECT_TABLE` with the division stats
+/// (+8). The chairman's weight is (`.ambition()` - 10) x 0.05 + 1 (0.25 without a chairman); the stat is the club's
+/// stat 3 in the division stats (`exe::comp_stats_get_club_stat`, as a float, 0 for a national team) and the base
+/// x = trunc(stat x 67) (a word). The kind picks the piece: 0x3c/0x3d `team_story_crowd`, 0x63/0x5b/0x61, 0x62/0x5d,
+/// 0x5f and 0x5c `team_story_standard`, 0x3f and 0x60 `team_story_relegation`, 0x40/0x41 `team_story_minus_thousand`
+/// (with `team_story_promotion_reply`), 0x43 `team_story_injuries`, 0x42 `team_story_fixed`, 0x52
+/// `team_story_subject`, 0x44 and 0x5a `team_story_supporters_only`; any other kind or an answer outside 1..3 does
+/// nothing.
+///
+/// Defects of the original: answer 2 to kind 0x43 with the board expecting promotion or a title (flags & 6) passes the
+/// story effects the change computed with the formula of flags & 9 (-500 - stat x 30 instead of -1500 - stat x 40);
+/// answer 1 to kind 0x60 passes the story effects trunc(-x / multiplier) while the confidences get +x / multiplier;
+/// several targets are a dword whose low word is the computed value and whose high word is the kind's or the base's
+/// (the adjustments only use the low word).
+/// Original: `Media::apply_team_story_response` (0x73e870, media.cpp, thiscall, ret 0x10).
+pub(crate) unsafe extern "thiscall" fn apply_team_story_response(this: usize, club: usize, kind: u32, response: u32, subject: usize) {
+    let club = Club(club);
+    if club.is_null() {
+        return;
+    }
+    let manager = club.manager();
+    if manager.is_null() || manager.non_player().is_null() {
+        return;
+    }
+    let comp_object = || read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(4 * read_usize(club.division().addr())));
+    if exe::database_is_national_team(club) == 0 && (club.division().is_null() || comp_object() == 0) {
+        return;
+    }
+    let mut stats = 0usize;
+    if exe::database_is_national_team(club) == 0 {
+        stats = read_usize(comp_object() + 8);
+        if stats == 0 {
+            return;
+        }
+    }
+    let chairman = club.chairman();
+    let weight = if chairman.is_null() {
+        0.25
+    } else {
+        (chairman.ambition() as i32 - 10) as f64 * read_f64(rdata::F64_0_05) + read_f64(rdata::F64_1)
+    };
+    let stat = if stats != 0 { exe::comp_stats_get_club_stat(stats, club, 3) as f32 } else { 0.0 };
+    let base = ftol(stat as f64 * read_f32(TEAM_STORY_F32_67) as f64);
+    let mut s = TeamStory { this, club, subject, kind, response, stats, weight, stat, base, mult: 1.0 };
+    let flags = s.expectations();
+    match kind as u16 {
+        0x3c | 0x3d => team_story_crowd(&s),
+        0x63 | 0x5b | 0x61 => {
+            s.mult = if flags & 2 != 0 { 1.5 } else if flags & 1 != 0 { 1.1 } else { 1.0 };
+            covered!("sx01d_1 team story bad run");
+            team_story_standard(&s, kind, 100, read_f64(rdata::F64_500), false, 0x10, |s| team_story_raise(s, 0x71, 2));
+        }
+        0x62 | 0x5d => {
+            s.mult = if flags & 2 != 0 { 1.75 } else if flags & 1 != 0 { 1.3 } else { 1.0 };
+            covered!("sx01d_1 team story good run");
+            team_story_standard(&s, kind, 0x14, read_f64(rdata::F64_200), true, 0x50, |s| team_story_raise(s, 0x71, 2));
+        }
+        0x5f => {
+            s.mult = if flags & 4 != 0 { 1.5 } else if flags & 8 != 0 { 1.1 } else { 1.0 };
+            covered!("sx01d_1 team story 0x5f");
+            team_story_standard(&s, 0x5f, 100, read_f64(rdata::F64_500), true, 0x50, |s| team_story_raise(s, 0x78, 4));
+        }
+        0x5c => {
+            s.mult = if flags & 0x400 != 0 { 1.5 } else { 1.0 };
+            covered!("sx01d_1 team story continental");
+            team_story_standard(&s, 0x5c, 100, read_f64(rdata::F64_500), true, 0x50, |s| {
+                s.swap_expectations(1, 0, 4); // board_record::EXPECTATION_FLAGS | 0x400, no table test
+                true
+            });
+        }
+        0x3f | 0x60 => {
+            s.mult = team_story_relegation_multiplier(flags, 0.5, 0.75, 1.5, 3.0);
+            team_story_relegation(&s, kind as u16 as u32);
+        }
+        0x43 => team_story_injuries(&s, flags),
+        0x40 | 0x41 => {
+            s.mult = team_story_relegation_multiplier(flags, 0.1, 0.2, 1.75, 3.0);
+            team_story_minus_thousand(&s);
+        }
+        0x42 => {
+            s.mult = if flags & 6 != 0 { 1.5 } else { 1.0 };
+            team_story_fixed(&s);
+        }
+        0x52 => team_story_subject(&s),
+        0x44 | 0x5a => team_story_supporters_only(&s, kind as u16 as u32),
+        _ => {}
+    }
+}
+
+/// Comparer for `apply_team_story_response`: the routine draws, posts news (through the confidence adjustments) and
+/// passes the reaction to the squad, so it cannot run twice; only the original runs. The proof is the Rust careers and
+/// the mutations (the routine runs on every answer to a team story).
+pub(crate) unsafe extern "thiscall" fn compare_apply_team_story_response(this: usize, club: usize, kind: u32, response: u32, subject: usize) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize)>(IDX_APPLY_TEAM_STORY_RESPONSE)(this, club, kind, response, subject)
+}
+
+/// Queues news item 0xbcb about a player filmed making obscene gestures to the fans.
+///
+/// Nothing without the player, his `.player()` sheet with a `.current_reputation()` of at least 3500, or the club. The
+/// local news item 0xbcb: 0..3 the player and his names (the common name -1 when he has none), 4 the club id, 5
+/// draw(2), then the match record (`exe::fill_match_record_from_fixture` with the club, `exe::write_match_record_to_news`
+/// from slot 6) and, in the next slot, the shoot-out: 0 when there was none (`fixture::HOME_PENALTIES` 0xff), 1 when the
+/// club won it, 2 when it lost it, no slot when the shoot-out goals are equal. It goes to every human club following the
+/// player (`exe::transfer_manager_collect_player_news_recipients` with 0xda, up to 30, only with `G_TRANSFER_MANAGER`)
+/// through `exe::news_send_to_club_manager`.
+///
+/// Called by `apply_obscene_gesture_ban` (0x7daf50, printouts.rs).
+/// Original: `Media::queue_obscene_gesture_story` (0x7570b0, media.cpp, thiscall, ret 0xc).
+pub(crate) unsafe extern "thiscall" fn queue_obscene_gesture_story(_this: usize, player: usize, club: usize, fixture: usize) {
+    let mut record = [0u8; 0x20]; // the 0x1f-byte match record
+    exe::date_date_54a110(record.as_mut_ptr() as usize);
+    let (player, club, fixture) = (Staff(player), Club(club), Fixture(fixture));
+    if player.is_null() || player.player().is_null() || club.is_null() || (player.player().current_reputation() as i16) < 0xdac {
+        return;
+    }
+    covered!("sx01d_2 obscene gesture story");
+    let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
+    let n = local.as_mut_ptr() as usize;
+    exe::new_newsitem(n, 0xbcb, 0);
+    set_person_name_slots_or_none(n, 0, player);
+    exe::newsitem_set_slot(n, 4, read_u32(club.addr()));
+    exe::newsitem_set_slot(n, 5, exe::utils_random(2) as u32);
+    exe::fill_match_record_from_fixture(fixture, club, record.as_mut_ptr() as usize);
+    let mut k: u8 = 6;
+    exe::write_match_record_to_news(record.as_mut_ptr() as usize, n, &mut k);
+    if let Some(result) = news_shootout_result(fixture, club) {
+        exe::newsitem_set_slot(n, k as i8, result);
+    }
+    let mut clubs = [0usize; 30];
+    let count = if read_usize(G_TRANSFER_MANAGER) != 0 { player_news_recipients(player, 0xda, clubs.as_mut_ptr(), 0x1e) as i8 } else { 0 };
+    for &c in clubs.iter().take(count.max(0) as usize) {
+        exe::news_send_to_club_manager(read_usize(G_NEWS), n, c);
+    }
+}
+
+/// Comparer for `queue_obscene_gesture_story`: it draws and posts news, so it cannot run twice; only the original runs.
+pub(crate) unsafe extern "thiscall" fn compare_queue_obscene_gesture_story(this: usize, player: usize, club: usize, fixture: usize) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(IDX_QUEUE_OBSCENE_GESTURE_STORY)(this, player, club, fixture)
+}
+
+/// Queues news item 0xbe8 about an unhappy player who wants first team football.
+///
+/// Nothing without the player, his `.nation()`, his club (`.club_job()`) with a `.manager()` and a `.stadium()`, his
+/// `.player()` sheet or his contract at the club (`exe::contract_manager_get_contract_for_club`). The local news item
+/// 0xbe8: 0..3 the player and his names, 4..7 the manager and his names, 8 the club id, 9 his natural positions
+/// (`exe::staff_get_natural_position_mask`), 10 draw(2), 11 the outlet (`exe::media_pick_outlet_type_for_person`), 12
+/// the pundit (`exe::punditlist_pick_random_pundit` with the club, the outlet and the club's `.nation()` or -1), 13 the
+/// strength flags (`exe::staff_get_player_strength_flags`), 14 the sheet's position mask
+/// (`exe::formation_get_position_mask`), 15 `reaction`, 16 the contract's `.morale()`, 17 the player's age, 18 the
+/// computer manager's response (`exe::media_pick_ai_manager_response` with 0x83; 0 for a human club), 19 the contract's
+/// `.squad_status()` >> 4, 20 one when `.aggression()` + `.temperament()` (a byte) is below 10 and `.ambition()` above
+/// 10, 21 `exe::staff_is_transfer_listed_or_requested`. With `reaction` it goes to the club's manager; otherwise to
+/// every manager of the player's nation when his `.world_reputation()` is above 4750, else to the club's manager.
+///
+/// Called by the squad's daily review (0x5d24a2) and by `apply_wants_first_team_response` (the player's reaction).
+/// Original: `Media::queue_wants_first_team_story` (0x75a640, media.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn queue_wants_first_team_story(this: usize, player: usize, reaction: u32) {
+    let player = Staff(player);
+    if player.is_null() || player.nation().is_null() {
+        return;
+    }
+    let club = player.club_job();
+    if club.is_null() || club.manager().is_null() || club.stadium().addr() == 0 || player.player().is_null() {
+        return;
+    }
+    let contract = Contract(exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), player, club));
+    if contract.is_null() {
+        return;
+    }
+    covered!("sx01d_2 wants first team story");
+    let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
+    let n = local.as_mut_ptr() as usize;
+    exe::new_newsitem(n, 0xbe8, 0);
+    let write = news_item_fns().1;
+    set_person_name_slots(write, n, 0, player.addr());
+    set_person_name_slots(write, n, 4, club.manager().addr());
+    exe::newsitem_set_slot(n, 8, read_u32(club.addr()));
+    exe::newsitem_set_slot(n, 9, exe::staff_get_natural_position_mask(player));
+    exe::newsitem_set_slot(n, 10, exe::utils_random(2) as u32);
+    let outlet = exe::media_pick_outlet_type_for_person(player);
+    exe::newsitem_set_slot(n, 11, outlet);
+    let nation = club.nation().addr();
+    exe::newsitem_set_slot(n, 12, exe::punditlist_pick_random_pundit(read_usize(G_PUNDIT_LIST), club, outlet, if nation != 0 { read_i32(nation) } else { -1 }) as u32);
+    exe::newsitem_set_slot(n, 13, exe::staff_get_player_strength_flags(player, club));
+    exe::newsitem_set_slot(n, 14, exe::formation_get_position_mask(player.player()) as i16 as i32 as u32);
+    exe::newsitem_set_slot(n, 15, reaction);
+    exe::newsitem_set_slot(n, 16, contract.morale() as i8 as i32 as u32);
+    exe::newsitem_set_slot(n, 17, player.age() as i8 as i32 as u32);
+    let response = if media_is_human_club(club.addr(), 0, 1) == 0 {
+        exe::media_pick_ai_manager_response(this, club.manager(), player, 0x83)
+    } else {
+        0
+    };
+    exe::newsitem_set_slot(n, 18, response);
+    exe::newsitem_set_slot(n, 19, (contract.squad_status() as u8 >> 4) as u32);
+    let hot = ((player.player().aggression() as u8).wrapping_add(player.temperament() as u8) as i8) < 10 && player.ambition() as i8 > 10;
+    exe::newsitem_set_slot(n, 20, hot as u32);
+    exe::newsitem_set_slot(n, 21, exe::staff_is_transfer_listed_or_requested(player, 0));
+    if reaction == 0 && player.player().world_reputation() as i16 > 0x128e {
+        covered!("sx01d_2 wants first team story to the nation");
+        exe::news_send_to_nation_managers(read_usize(G_NEWS), n, player.nation());
+    } else {
+        exe::news_send_to_club_manager(read_usize(G_NEWS), n, club);
+    }
+}
+
+/// Comparer for `queue_wants_first_team_story`: it draws (also through the computer manager's response) and posts
+/// news, so it cannot run twice; only the original runs.
+pub(crate) unsafe extern "thiscall" fn compare_queue_wants_first_team_story(this: usize, player: usize, reaction: u32) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_QUEUE_WANTS_FIRST_TEAM_STORY)(this, player, reaction)
+}
+
+/// Creates the news item 0xbd9 of a player's outburst at his club or team-mates (or, with the report flag, the
+/// assistant manager's report on his attitude) after a match, from the outburst record `story`: +0 the player's staff
+/// id, +4 the club index, +0xc a signed byte, +0xe the report flag, +0xf the other person's staff id (-1 none), +0x13
+/// the story kind (a word).
+///
+/// Nothing without the record, the player's `.player()` sheet with a `.current_reputation()` of at least 3500, a club
+/// index from 0 to the club count (`G_CLUB_COUNT`, inclusive: one past the table passes, a defect of the original) or
+/// the club's `.nation()`. Without the report flag, nothing when the story is already logged (`exe::media_has_logged_story`
+/// with 0xbd9 and the kind); with it, nothing without the other person. The slots: the player and his names, the club
+/// index, the byte +0xc, the kind, draw(2), the report flag, 30, the computer manager's response
+/// (`exe::media_pick_ai_manager_response` with the kind, only without the flag and for a club that is not human;
+/// otherwise 0), the other person and his names (-1 x 4 without him), then with a match 1, the match record and the
+/// shoot-out (`NewsSlots::put_match`), without one 0, then the outlet (`exe::media_pick_outlet_type_for_person`) and
+/// the pundit (`exe::punditlist_pick_random_pundit` with the club's nation). With the report flag it goes to the club's
+/// manager; otherwise to every human club following the player (`exe::transfer_manager_collect_player_news_recipients`
+/// with 0x1a, up to 30, only with `G_TRANSFER_MANAGER`), then the squad reacts
+/// (`exe::media_apply_squad_reaction_to_player_story`) and the story is logged (`log_story`, the kind's byte). Last,
+/// without the flag and for a club that is not human, the computer manager answers (0,
+/// `exe::media_apply_player_story_response`).
+///
+/// Called by the post-match events (0x6b7787) and by `create_player_media_story` (0x72c4cd, 0x72cc59); behind the
+/// post-match gate (`POS_PROLOGUES`, match_day.rs).
+/// Original: `Media::create_player_outburst_story` (0x733a60, media.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn create_player_outburst_story(this: usize, story: usize, fixture: usize) {
+    let mut record = [0u8; 0x20]; // the 0x1f-byte match record
+    exe::date_date_54a110(record.as_mut_ptr() as usize);
+    if story == 0 {
+        return;
+    }
+    let player = staff_at(read_i32(story) as isize);
+    if player.player().is_null() || (player.player().current_reputation() as i16) < 0xdac {
+        return;
+    }
+    let index = read_i32(story + 4); // the club index
+    if index < 0 || index > read_i32(G_CLUB_COUNT) {
+        return;
+    }
+    let club = club_at(index as isize);
+    if club.nation().is_null() {
+        return;
+    }
+    let other_id = read_i32(story + 0xf); // the other person's staff id
+    let other = if other_id > -1 { staff_at(other_id as isize) } else { Staff(0) };
+    let report = read_u8(story + 0xe) != 0; // the assistant's report flag
+    let kind = read_u16(story + 0x13) as u32; // the story kind
+    if !report && exe::media_has_logged_story(this, player, club, 0xbd9, kind, core::ptr::null()) != 0 {
+        return;
+    }
+    if report && other.is_null() {
+        return;
+    }
+    covered!("sx01d_5 outburst story");
+    let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
+    let mut s = NewsSlots { n: local.as_mut_ptr() as usize, k: 0 };
+    exe::new_newsitem(s.n, 0xbd9, 0);
+    s.put_person(player);
+    s.put(index as u32);
+    s.put(read_i8(story + 0xc) as i32 as u32);
+    s.put(kind as u16 as i16 as i32 as u32);
+    s.put(exe::utils_random(2) as u32);
+    s.put(read_i8(story + 0xe) as i32 as u32);
+    s.put(0x1e);
+    let ai = media_is_human_club(club.addr(), 0, 1) == 0 && !report;
+    s.put(if ai { exe::media_pick_ai_manager_response(this, club.manager(), player, kind) } else { 0 });
+    if other_id > -1 {
+        s.put(other_id as u32);
+        for name in [other.first_name(), other.second_name(), other.common_name()] {
+            s.put(read_u32(name + names::ID));
+        }
+    } else {
+        for _ in 0..4 {
+            s.put(u32::MAX);
+        }
+    }
+    if fixture != 0 {
+        covered!("sx01d_5 outburst story after a match");
+        s.put(1);
+        s.put_match(&mut record, Fixture(fixture), club);
+    } else {
+        s.put(0);
+    }
+    let outlet = exe::media_pick_outlet_type_for_person(player);
+    s.put(outlet);
+    let nation = club.nation().addr();
+    s.put(exe::punditlist_pick_random_pundit(read_usize(G_PUNDIT_LIST), club, outlet, if nation != 0 { read_i32(nation) } else { -1 }) as u32);
+    if report {
+        covered!("sx01d_5 assistant report");
+        exe::news_send_to_club_manager(read_usize(G_NEWS), s.n, club_at(index as isize));
+    } else {
+        let mut clubs = [0usize; 30];
+        let count = if read_usize(G_TRANSFER_MANAGER) != 0 { player_news_recipients(player, 0x1a, clubs.as_mut_ptr(), 0x1e) as i8 } else { 0 };
+        for &c in clubs.iter().take(count.max(0) as usize) {
+            exe::news_send_to_club_manager(read_usize(G_NEWS), s.n, c);
+        }
+        exe::media_apply_squad_reaction_to_player_story(this, kind, player, club, core::ptr::null_mut(), u32::MAX);
+        log_story(this, player.addr(), club.addr(), 0xbd9, read_u8(story + 0x13) as u32, 0);
+    }
+    if media_is_human_club(club.addr(), 0, 1) == 0 && !report {
+        exe::media_apply_player_story_response(this, player, club, kind, 0);
+    }
+}
+
+/// Comparer for `create_player_outburst_story`: it draws, posts news and answers the story, so it cannot run twice;
+/// only the original runs (in the comparison mode the post-match gate of 0x733a60 is installed first and keeps the
+/// address, see the item).
+pub(crate) unsafe extern "thiscall" fn compare_create_player_outburst_story(this: usize, story: usize, fixture: usize) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_CREATE_PLAYER_OUTBURST_STORY)(this, story, fixture)
+}
+
+/// The multiplier of kinds 0x3f, 0x60, 0x40 and 0x41 by the expectation flags: & 0x20, & 0x10, & 9, & 6 (1.0 without).
+pub(crate) fn team_story_relegation_multiplier(flags: u16, a: f64, b: f64, c: f64, d: f64) -> f64 {
+    if flags & 0x20 != 0 {
+        a
+    } else if flags & 0x10 != 0 {
+        b
+    } else if flags & 9 != 0 {
+        c
+    } else if flags & 6 != 0 {
+        d
+    } else {
+        1.0
+    }
+}
+
+/// Kinds 0x63/0x5b/0x61, 0x62/0x5d, 0x5f and 0x5c, by answer:
+/// - 3: when the stat - 5 is below draw(-100), the supporters get trunc(x × multiplier) and the board that × the
+///   chairman's weight; story effects 4;
+/// - 2: the supporters get trunc(-x × multiplier) and the board trunc(-x × multiplier × weight), both at most 0; story
+///   effects 8 with trunc(x × -0.25), at most 0;
+/// - 1: the supporters get trunc(x × multiplier); when draw(`draw`) is below the stat and `raise` raises the
+///   expectations (`team_story_raise`; 0x5c sets 0x400 without the table test), the board gets trunc(x × multiplier × weight + `bonus`) with the sixth argument
+///   1, otherwise without the bonus and 0; then with `staff` the staff's confidence moves by trunc(x × 0.25) and the
+///   story effects get `flags` with 0, otherwise `flags` with trunc(x × 0.25).
+pub(crate) unsafe fn team_story_standard(s: &TeamStory, kind: u32, draw: i32, bonus: f64, staff: bool, flags: u32, raise: impl FnOnce(&TeamStory) -> bool) {
+    let x = s.x() as f64;
+    match s.response as i8 {
+        3 => {
+            let f = (s.stat as f64 - read_f32(rdata::F32_5) as f64) as f32;
+            if exe::utils_random(-100) as f64 > f as f64 {
+                covered!("sx01d_1 team story standard 3");
+                let p = x * s.mult;
+                s.supporters(kind, ftol(p) as u32);
+                s.board(kind, ftol(p * s.weight) as u32, 0);
+            }
+            s.effects(kind, 4, 0, 0);
+        }
+        2 => {
+            covered!("sx01d_1 team story standard 2");
+            let p = x * s.mult;
+            s.supporters(kind, ftol(team_story_at_most(-p, read_f64(rdata::F64_0))) as u32);
+            s.board(kind, ftol(team_story_at_most(-(p * s.weight), read_f64(rdata::F64_0))) as u32, 0);
+            s.effects(kind, 8, ftol(team_story_at_most(x * read_f64(TEAM_STORY_F64_NEG_0_25), read_f64(rdata::F64_0))) as u32, 0);
+        }
+        1 => {
+            let p = x * s.mult;
+            s.supporters(kind, ftol(p) as u32);
+            if (exe::utils_random(draw) as f64) < s.stat as f64 && raise(s) {
+                covered!("sx01d_1 team story standard 1 raised");
+                s.board(kind, ftol(p * s.weight + bonus) as u32, 1);
+            } else {
+                s.board(kind, ftol(p * s.weight) as u32, 0);
+            }
+            if staff {
+                s.staff_confidence_add(x * read_f64(rdata::F64_0_25));
+                s.effects(kind, flags, 0, 0);
+            } else {
+                s.effects(kind, flags, ftol(x * read_f64(rdata::F64_0_25)) as u32, 0);
+            }
+        }
+        _ => {}
+    }
+}
+
+/// The raised expectations of answer 1 to kinds 0x63/0x5b/0x61, 0x62/0x5d and 0x5f: with `table_entry_ok`, the
+/// expectation flags lose `clear` and take `set`.
+pub(crate) unsafe fn team_story_raise(s: &TeamStory, clear: u8, set: u8) -> bool {
+    if !s.table_entry_ok() {
+        return false;
+    }
+    s.swap_expectations(0, clear, set);
+    true
+}
+
+/// Kinds 0x3f and 0x60: answers 3 and 2 by `team_story_minus_thousand_low` (answer 3 when draw(100) is below the
+/// stat + 5). Answer 1: q = -x / multiplier for 0x3f, +x / multiplier for 0x60, at most 500 (c); the supporters get
+/// trunc(c); when draw(100) is below the stat + 5, `table_entry_ok` and the expectation flags have 0x20, the flags
+/// trade 0x20 for 0x10 and the board is raised (`team_story_promotion_board`); story effects 0x50 with trunc(c) for
+/// 0x3f and trunc(-x / multiplier), at most 500, for 0x60.
+pub(crate) unsafe fn team_story_relegation(s: &TeamStory, kind: u32) {
+    let up = |s: &TeamStory| (exe::utils_random(100) as f64) < ((s.stat as f64 + read_f32(rdata::F32_5) as f64) as f32) as f64;
+    match s.response as i8 {
+        3 => {
+            let won = up(s);
+            team_story_minus_thousand_low(s, kind, won);
+        }
+        2 => team_story_minus_thousand_low(s, kind, false),
+        1 => {
+            covered!("sx01d_1 team story relegation 1");
+            let x = s.x() as f64;
+            let q = if kind == 0x3f { -x / s.mult } else { x / s.mult };
+            let c = team_story_at_most(q, read_f64(rdata::F64_500));
+            s.supporters(kind, ftol(c) as u32);
+            let raised = up(s) && s.table_entry_ok() && s.expectations() & 0x20 != 0;
+            if raised {
+                s.swap_expectations(0, 0x20, 0x10);
+            }
+            team_story_promotion_board(s, kind, c, raised);
+            let change = if kind == 0x3f { c } else { team_story_at_most(-x / s.mult, read_f64(rdata::F64_500)) };
+            s.effects(kind, 0x50, ftol(change) as u32, 0);
+        }
+        _ => {}
+    }
+}
+
+/// Kinds 0x40 and 0x41 (the whole kind dword is passed on): answers 3 and 2 by `team_story_minus_thousand_low`
+/// (answer 3 when the stat - 5 is below draw(-100)). Answer 1: c = -x / multiplier, at most 500; the supporters get
+/// trunc(c); with `table_entry_ok` the expectation flags may be raised (`team_story_promotion_reply`) and the board
+/// follows (`team_story_promotion_board`); story effects 0x50 with trunc(c).
+pub(crate) unsafe fn team_story_minus_thousand(s: &TeamStory) {
+    match s.response as i8 {
+        3 => {
+            let f = (s.stat as f64 - read_f32(rdata::F32_5) as f64) as f32;
+            let won = exe::utils_random(-100) as f64 > f as f64;
+            team_story_minus_thousand_low(s, s.kind, won);
+        }
+        2 => team_story_minus_thousand_low(s, s.kind, false),
+        1 => {
+            covered!("sx01d_1 team story minus thousand 1");
+            let c = team_story_at_most(-(s.x() as f64) / s.mult, read_f64(rdata::F64_500));
+            s.supporters(s.kind, ftol(c) as u32);
+            let raised = s.table_entry_ok() && team_story_promotion_reply(s);
+            team_story_promotion_board(s, s.kind, c, raised);
+            s.effects(s.kind, 0x50, ftol(c) as u32, 0);
+        }
+        _ => {}
+    }
+}
+
+/// The raised expectations of answer 1 to kinds 0x40 and 0x41: up to four draws(100), each below the stat + 5, tried
+/// in turn: flags 8 become 4; 1 becomes 2; 0x40 becomes 8 when the division's object has +0x1c not -1 and the byte
+/// +0xbf set; 0x40 becomes 1 when +0x1c is -1. The first that applies raises the board.
+pub(crate) unsafe fn team_story_promotion_reply(s: &TeamStory) -> bool {
+    let f = ((s.stat as f64 + read_f32(rdata::F32_5) as f64) as f32) as f64;
+    if (exe::utils_random(100) as f64) < f && s.expectations() & 8 != 0 {
+        s.swap_expectations(0, 8, 4);
+        return true;
+    }
+    if (exe::utils_random(100) as f64) < f && s.expectations() & 1 != 0 {
+        s.swap_expectations(0, 1, 2);
+        return true;
+    }
+    if (exe::utils_random(100) as f64) < f && s.expectations() & 0x40 != 0 {
+        let o = s.competition_object();
+        if read_i32(o + 0x1c) != -1 && read_u8(o + 0xbf) != 0 {
+            // +0x1c and +0xbf of the division's competition object, unnamed
+            s.swap_expectations(0, 0x40, 8);
+            return true;
+        }
+    }
+    if (exe::utils_random(100) as f64) < f && s.expectations() & 0x40 != 0 && read_i32(s.competition_object() + 0x1c) == -1 {
+        s.swap_expectations(0, 0x40, 1);
+        return true;
+    }
+    false
+}
+
+/// Kind 0x43 (the multiplier and the weight are not used). Answer 3: story effects 4. Answer 2, by the expectation
+/// flags: & 0x20 the supporters and the board get 0 and story effects 4; & 0x10 v = stat × -30 (a float, at most 0) to
+/// both and story effects 4 with v; & 9 v = -500 - stat × 30 and story effects 8 with v; & 6 v = -1500 - stat × 40 and
+/// story effects 8 with -500 - stat × 30 (the original's slip); otherwise story effects 8. Answer 1: & 0x20 or & 0x10
+/// the supporters get trunc(v + 200) with v = stat × 20 or × 30, and when draw(100) is below the stat + 5 and
+/// `table_entry_ok`, the flags trade 0x20 for 0x10 (0x10 for 0x40) and the board gets trunc(v + 400), otherwise the
+/// supporters' value (in a dword with the kind's or the base's high word); story effects 0x50 with that dword, or with
+/// trunc(stat × -30) (at most 0) for 0x10; & 9 and & 6 t = trunc(stat × 20) (- 150 for 6) to both and to the story
+/// effects 0x50; otherwise story effects 0x50.
+pub(crate) unsafe fn team_story_injuries(s: &TeamStory, flags: u16) {
+    let stat = s.stat as f64;
+    let zero = read_f32(rdata::F32_0) as f64;
+    match s.response as i8 {
+        3 => s.effects(0x43, 4, 0, 0),
+        2 => {
+            covered!("sx01d_1 team story injuries 2");
+            let both = |v: f32| {
+                let c = ftol(team_story_at_most(v as f64, zero)) as u32;
+                s.supporters(0x43, c);
+                s.board(0x43, c, 0);
+                c
+            };
+            let alt = || ftol(team_story_at_most(read_f32(rdata::F32_NEG_500) as f64 - stat * read_f32(STORY_F32_30) as f64, zero)) as u32;
+            if flags & 0x20 != 0 {
+                s.supporters(0x43, 0);
+                s.board(0x43, 0, 0);
+                s.effects(0x43, 4, 0, 0);
+            } else if flags & 0x10 != 0 {
+                let c = both((stat * read_f32(TEAM_STORY_F32_NEG_30) as f64) as f32);
+                s.effects(0x43, 4, c, 0);
+            } else if flags & 9 != 0 {
+                let c = both((read_f32(rdata::F32_NEG_500) as f64 - stat * read_f32(STORY_F32_30) as f64) as f32);
+                s.effects(0x43, 8, c, 0);
+            } else if flags & 6 != 0 {
+                both((read_f32(TEAM_STORY_F32_NEG_1500) as f64 - stat * read_f32(rdata::F32_40) as f64) as f32);
+                s.effects(0x43, 8, alt(), 0);
+            } else {
+                s.effects(0x43, 8, 0, 0);
+            }
+        }
+        1 => {
+            covered!("sx01d_1 team story injuries 1");
+            if flags & 0x30 != 0 {
+                let (scale, clear, set) = if flags & 0x20 != 0 { (read_f32(rdata::F32_20), 0x20, 0x10) } else { (read_f32(STORY_F32_30), 0x10, 0x40) };
+                let v = (stat * scale as f64) as f32;
+                let t = ftol(stat * scale as f64 + read_f32(rdata::F32_200) as f64);
+                s.supporters(0x43, t as u32);
+                let high = if flags & 0x20 != 0 { s.kind } else { s.base as u32 };
+                let kept = TeamStory::word_into(high, t);
+                let up = (exe::utils_random(100) as f64) < ((stat + read_f32(rdata::F32_5) as f64) as f32) as f64;
+                if up && s.table_entry_ok() {
+                    s.swap_expectations(0, clear, set);
+                    s.board(0x43, ftol(v as f64 + read_f32(rdata::F32_400) as f64) as u32, 0);
+                } else {
+                    s.board(0x43, kept, 0);
+                }
+                let change = if flags & 0x20 != 0 { kept } else { ftol(team_story_at_most(stat * read_f32(TEAM_STORY_F32_NEG_30) as f64, zero)) as u32 };
+                s.effects(0x43, 0x50, change, 0);
+            } else if flags & 0xf != 0 {
+                let mut v = stat * read_f32(rdata::F32_20) as f64;
+                if flags & 9 == 0 {
+                    v -= read_f32(rdata::F32_150) as f64;
+                }
+                let t = TeamStory::word_into(s.kind, ftol(v));
+                s.supporters(0x43, t);
+                s.board(0x43, t, 0);
+                s.effects(0x43, 0x50, t, 0);
+            } else {
+                s.effects(0x43, 0x50, 0, 0);
+            }
+        }
+        _ => {}
+    }
+}
+
+/// Kind 0x42. Answer 3: story effects 4. Answer 2: the supporters get trunc(multiplier × -500), the board
+/// trunc(multiplier × weight × -500), story effects 8 with trunc(multiplier × -250). Answer 1: q = 500 / multiplier;
+/// the supporters get trunc(q) (in a dword with the kind's high word), the board trunc(q × weight), story effects 0x50
+/// with the supporters' dword.
+pub(crate) unsafe fn team_story_fixed(s: &TeamStory) {
+    match s.response as i8 {
+        3 => s.effects(0x42, 4, 0, 0),
+        2 => {
+            covered!("sx01d_1 team story 0x42 2");
+            s.supporters(0x42, ftol(s.mult * read_f64(TEAM_STORY_F64_NEG_500)) as u32);
+            s.board(0x42, ftol(s.mult * s.weight * read_f64(TEAM_STORY_F64_NEG_500)) as u32, 0);
+            s.effects(0x42, 8, ftol(s.mult * read_f64(TEAM_STORY_F64_NEG_250)) as u32, 0);
+        }
+        1 => {
+            covered!("sx01d_1 team story 0x42 1");
+            let q = read_f64(rdata::F64_500) / s.mult;
+            let t = TeamStory::word_into(s.kind, ftol(q));
+            s.supporters(0x42, t);
+            s.board(0x42, ftol(q * s.weight) as u32, 0);
+            s.effects(0x42, 0x50, t, 0);
+        }
+        _ => {}
+    }
+}
+
+/// Kind 0x52, about a person (nothing without the subject). The supporters move by 200 or 1000 when the club favours
+/// (`exe::club_favours_staff`) or dislikes (`exe::club_dislikes_staff`) the subject, the board by the weight × 200 or
+/// × 1000 when the chairman favours (`exe::staff_is_favoured_by`) or dislikes him; the sign follows the answer: 3
+/// (favoured -200 / disliked +200, story effects 4), 2 (-1000 / +1000, story effects 0x80), 1 (+1000 / -1000, story
+/// effects 0x300); the story effects get the subject.
+pub(crate) unsafe fn team_story_subject(s: &TeamStory) {
+    if s.subject == 0 {
+        return;
+    }
+    let (fans, board, flags) = match s.response as i8 {
+        3 => (-200, (rdata::F64_NEG_200, rdata::F64_200), 4),
+        2 => (-1000, (rdata::F64_NEG_1000, rdata::F64_1000), 0x80),
+        1 => (1000, (rdata::F64_1000, rdata::F64_NEG_1000), 0x300),
+        _ => return,
+    };
+    covered!("sx01d_1 team story subject");
+    let subject = Staff(s.subject);
+    if exe::club_favours_staff(subject, s.club) != 0 {
+        s.supporters(0x52, fans as u32);
+    } else if exe::club_dislikes_staff(subject, s.club) != 0 {
+        s.supporters(0x52, (-fans) as u32);
+    }
+    let chairman = s.club.chairman();
+    if exe::staff_is_favoured_by(subject, chairman) != 0 {
+        s.board(0x52, ftol(s.weight * read_f64(board.0)) as u32, 0);
+    } else if exe::staff_is_disliked_by(subject, chairman) != 0 {
+        s.board(0x52, ftol(s.weight * read_f64(board.1)) as u32, 0);
+    }
+    s.effects(0x52, flags, 0, s.subject);
+}
+
+/// Kinds 0x44 and 0x5a: answer 1 moves the supporters by draw(200), answer 2 by draw(-200); nothing else.
+pub(crate) unsafe fn team_story_supporters_only(s: &TeamStory, kind: u32) {
+    match s.response as i8 {
+        1 => {
+            covered!("sx01d_1 team story national 1");
+            s.supporters(kind, exe::utils_random(200) as u32);
+        }
+        2 => s.supporters(kind, exe::utils_random(-200) as u32),
+        _ => {}
+    }
+}
+
+/// Kinds 0x3c and 0x3d (the whole kind dword is passed on). Answer 3: with a negative stat and expectation flags in
+/// 0x48f, the supporters get trunc(x × 0.65) and the board that × the weight; otherwise the supporters get
+/// trunc((draw(20) - draw(20)) × stat); story effects 0x44. Answer 2: p = x × (0.5 with flags in 0x48f, otherwise the
+/// multiplier); the supporters get trunc(-p), the board draw(trunc(-p × weight)); story effects 2 with the base + 100.
+/// Answer 1: p = x × (1.5 with flags in 0x48f, 0.65 with 0x30, otherwise the multiplier); the supporters get trunc(p),
+/// the board trunc(p × weight); story effects 0x41 with trunc(x × -1.5).
+pub(crate) unsafe fn team_story_crowd(s: &TeamStory) {
+    let flags = s.expectations();
+    let x = s.x() as f64;
+    match s.response as i8 {
+        3 => {
+            covered!("sx01d_1 team story crowd 3");
+            if (s.stat as f64) < read_f32(rdata::F32_0) as f64 && flags & 0x48f != 0 {
+                let p = x * read_f64(rdata::F64_0_65);
+                s.supporters(s.kind, ftol(p) as u32);
+                s.board(s.kind, ftol(p * s.weight) as u32, 0);
+            } else {
+                let d = exe::utils_random(0x14).wrapping_sub(exe::utils_random(0x14));
+                s.supporters(s.kind, ftol(d as f64 * s.stat as f64) as u32);
+            }
+            s.effects(s.kind, 0x44, 0, 0);
+        }
+        2 => {
+            covered!("sx01d_1 team story crowd 2");
+            let m = if flags & 0x48f != 0 { read_f64(rdata::F64_0_5) } else { s.mult };
+            let p = x * m;
+            s.supporters(s.kind, ftol(-p) as u32);
+            s.board(s.kind, exe::utils_random(ftol(-(p * s.weight))) as u32, 0);
+            s.effects(s.kind, 2, s.base.wrapping_add(100) as u32, 0);
+        }
+        1 => {
+            covered!("sx01d_1 team story crowd 1");
+            let m = if flags & 0x48f != 0 {
+                read_f64(rdata::F64_1_5)
+            } else if flags & 0x30 != 0 {
+                read_f64(rdata::F64_0_65)
+            } else {
+                s.mult
+            };
+            let p = x * m;
+            s.supporters(s.kind, ftol(p) as u32);
+            s.board(s.kind, ftol(p * s.weight) as u32, 0);
+            s.effects(s.kind, 0x41, ftol(x * read_f64(rdata::F64_NEG_1_5)) as u32, 0);
+        }
+        _ => {}
+    }
+}
+
+/// Writes a person's id and three name keys into news slots k..k+3, the common name (+0xc) as -1 when the person has
+/// none (the first and second names are read without a test, as the original).
+pub(crate) unsafe fn set_person_name_slots_or_none(n: usize, k: i8, p: Staff) {
+    exe::newsitem_set_slot(n, k, read_u32(p.addr()));
+    exe::newsitem_set_slot(n, k + 1, read_u32(p.first_name() + names::ID));
+    exe::newsitem_set_slot(n, k + 2, read_u32(p.second_name() + names::ID));
+    let common = p.common_name();
+    exe::newsitem_set_slot(n, k + 3, if common != 0 { read_u32(common + names::ID) } else { u32::MAX });
+}
+
+/// The shoot-out slot of a match story: 0 without a shoot-out (`fixture::HOME_PENALTIES` 0xff), 1 when `club` won
+/// it, 2 when it lost it, none when the shoot-out goals are equal (signed bytes).
+pub(crate) unsafe fn news_shootout_result(fixture: Fixture, club: Club) -> Option<u32> {
+    let home = fixture.home_penalties();
+    let away = fixture.away_penalties();
+    if home == -1 {
+        return Some(0);
+    }
+    if home == away {
+        return None;
+    }
+    covered!("sx01d_2 match story shoot-out");
+    let winner = read_usize(fixture.addr() + if home > away { fixture::HOME_CLUB } else { fixture::AWAY_CLUB });
+    Some(if winner == club.addr() { 1 } else { 2 })
+}
+
+/// `v`, or `cap` when `cap < v` (the x87 `fcomp`/`fstp` pairs of the original).
+pub(crate) fn team_story_at_most(v: f64, cap: f64) -> f64 {
+    if cap < v { cap } else { v }
+}
+
+/// Answers 3 and 2 of kinds 0x3f, 0x60, 0x40 and 0x41, with e = -1000 - x:
+/// - 3 (`won`): the supporters get trunc(e × multiplier) and the board that × the weight, both at most 0; story effects
+///   8 with e (at most 0); without `won` story effects 4;
+/// - 2: the same confidences; story effects 8 with trunc(e × 0.5), at most 0.
+pub(crate) unsafe fn team_story_minus_thousand_low(s: &TeamStory, kind: u32, won: bool) {
+    let e = -1000 - s.x();
+    if s.response as i8 == 3 && !won {
+        s.effects(kind, 4, 0, 0);
+        return;
+    }
+    let p = e as f64 * s.mult;
+    s.supporters(kind, ftol(team_story_at_most(p, read_f64(rdata::F64_0))) as u32);
+    s.board(kind, ftol(team_story_at_most(p * s.weight, read_f64(rdata::F64_0))) as u32, 0);
+    if s.response as i8 == 3 {
+        covered!("sx01d_1 team story minus thousand 3");
+        s.effects(kind, 8, e.min(0) as u32, 0);
+    } else {
+        covered!("sx01d_1 team story minus thousand 2");
+        s.effects(kind, 8, ftol(team_story_at_most(e as f64 * read_f64(rdata::F64_0_5), read_f64(rdata::F64_0))) as u32, 0);
+    }
+}
+
+/// The board's part of answer 1 to kinds 0x3f, 0x60, 0x40 and 0x41 with the capped value c (at most 500): with
+/// `raised` trunc(c × weight + 250) and the sixth argument 1, otherwise trunc(c × weight) and 0.
+pub(crate) unsafe fn team_story_promotion_board(s: &TeamStory, kind: u32, c: f64, raised: bool) {
+    if raised {
+        covered!("sx01d_1 team story expectations raised");
+        s.board(kind, ftol(c * s.weight + read_f64(TEAM_STORY_F64_250)) as u32, 1);
+    } else {
+        s.board(kind, ftol(c * s.weight) as u32, 0);
+    }
+}
+
+/// The constants of `apply_team_story_response` that have no name in `rdata_consts.rs` yet (cm0102.exe .rdata); the
+/// f32 30.0 is `STORY_F32_30` (sx01c_1).
+pub(crate) const TEAM_STORY_F32_67: usize = 0x96d8a8; // f32 = 67.0
+
+pub(crate) const TEAM_STORY_F32_NEG_30: usize = 0x96d8a4; // f32 = -30.0
+
+pub(crate) const TEAM_STORY_F32_NEG_1500: usize = 0x96d8a0; // f32 = -1500.0
+
+pub(crate) const TEAM_STORY_F64_NEG_0_25: usize = 0x96d218; // f64 = -0.25
+
+pub(crate) const TEAM_STORY_F64_NEG_250: usize = 0x96d890; // f64 = -250.0
+
+pub(crate) const TEAM_STORY_F64_NEG_500: usize = 0x96d898; // f64 = -500.0
+
+pub(crate) const TEAM_STORY_F64_250: usize = 0x968898; // f64 = 250.0
+
+/// What `apply_team_story_response` keeps in its frame.
+pub(crate) struct TeamStory {
+    pub(crate) this: usize,
+    pub(crate) club: Club,
+    /// the person the story is about (may be null), passed on to the confidence adjustments
+    pub(crate) subject: usize,
+    /// the story kind as passed (its word picks the branch; some branches pass the whole dword on)
+    pub(crate) kind: u32,
+    /// the manager's answer as passed (its low byte, 1..3, picks the branch; the whole dword is passed on)
+    pub(crate) response: u32,
+    /// the club's division stats object (0 for a national team)
+    pub(crate) stats: usize,
+    /// the chairman's weight: (ambition - 10) x 0.05 + 1, 0.25 without a chairman
+    pub(crate) weight: f64,
+    /// the club's stat 3 in the division stats (0 for a national team), the weight of the story effects
+    pub(crate) stat: f32,
+    /// trunc(stat x 67): a dword whose low word (`x`) is the story's base
+    pub(crate) base: i32,
+    /// the kind's multiplier from the board's expectation flags (1.0 by default)
+    pub(crate) mult: f64,
+}
+
+impl TeamStory {
+    /// The base as the original reads it, `movsx` of the low word.
+    pub(crate) fn x(&self) -> i32 {
+        self.base as i16 as i32
+    }
+
+    /// The low word of `high` replaced by `t` (the original writes a word into a dword slot and passes the dword on).
+    pub(crate) fn word_into(high: u32, t: i32) -> u32 {
+        (high & 0xffff_0000) | (t as u32 & 0xffff)
+    }
+
+    /// The club's `board_record::EXPECTATION_FLAGS` word.
+    pub(crate) unsafe fn expectations(&self) -> u16 {
+        read_u16(manager_manager_row(self.club) + board_record::EXPECTATION_FLAGS)
+    }
+
+    /// Clears `clear` and sets `set` in byte `k` (0 or 1) of the club's expectation flags.
+    pub(crate) unsafe fn swap_expectations(&self, k: usize, clear: u8, set: u8) {
+        let p = manager_manager_row(self.club) + board_record::EXPECTATION_FLAGS + k;
+        write_u8(p, read_u8(p) & !clear | set);
+    }
+
+    /// The division's competition object in `G_COMP_OBJECT_TABLE` (read without a null check, as the original).
+    pub(crate) unsafe fn competition_object(&self) -> usize {
+        read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(4 * read_usize(self.club.division().addr())))
+    }
+
+    /// The club's entry in the division stats exists and its byte +4 is below 25 [inference: the league position].
+    pub(crate) unsafe fn table_entry_ok(&self) -> bool {
+        exe::comp_stats_find_club_entry(self.stats, self.club) != 0
+            && read_u8(exe::comp_stats_find_club_entry(self.stats, self.club) + 4) < 0x19
+    }
+
+    /// `Media::adjust_supporter_confidence(club, subject, kind, target, response)`.
+    pub(crate) unsafe fn supporters(&self, kind: u32, target: u32) {
+        player_story_supporters(self.this, self.club, Staff(self.subject), kind, target as i32, self.response)
+    }
+
+    /// `Media::adjust_board_confidence(club, subject, kind, target, response, sixth)`.
+    pub(crate) unsafe fn board(&self, kind: u32, target: u32, sixth: u32) {
+        let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32) = core::mem::transmute(player_story_fns::ADJUST_BOARD_CONFIDENCE);
+        f(self.this, self.club.addr(), self.subject, kind, target, self.response, sixth)
+    }
+
+    /// `Media::apply_story_effect_flags(club, kind, flags, stat, response, change, player)`.
+    pub(crate) unsafe fn effects(&self, kind: u32, flags: u32, change: u32, player: usize) {
+        let f: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32, usize) = core::mem::transmute(player_story_fns::APPLY_STORY_EFFECT_FLAGS);
+        f(self.this, self.club.addr(), kind, flags, self.stat.to_bits(), self.response, change, player)
+    }
+
+    /// Adds trunc(v) to the club's `board_record::STAFF_CONFIDENCE`, kept between 1 and 10000.
+    pub(crate) unsafe fn staff_confidence_add(&self, v: f64) {
+        add_clamped_confidence(manager_manager_row(self.club) + board_record::STAFF_CONFIDENCE, ftol(v) as i16);
+    }
+}
+
+/// A local news item filled slot after slot (the original's running byte index).
+pub(crate) struct NewsSlots {
+    pub(crate) n: usize,
+    pub(crate) k: u8,
+}
+
+impl NewsSlots {
+    /// Writes `v` into the next slot.
+    pub(crate) unsafe fn put(&mut self, v: u32) {
+        exe::newsitem_set_slot(self.n, self.k as i8, v);
+        self.k = self.k.wrapping_add(1);
+    }
+
+    /// The person's id and his three name keys (read without a test, as the original).
+    pub(crate) unsafe fn put_person(&mut self, p: Staff) {
+        self.put(read_u32(p.addr()));
+        for name in [p.first_name(), p.second_name(), p.common_name()] {
+            self.put(read_u32(name + names::ID));
+        }
+    }
+
+    /// The match record (`exe::fill_match_record_from_fixture` with the club, `exe::write_match_record_to_news` from
+    /// the next slot) and the shoot-out slot (`news_shootout_result`); `record` holds the record's date.
+    pub(crate) unsafe fn put_match(&mut self, record: &mut [u8; 0x20], fixture: Fixture, club: Club) {
+        exe::fill_match_record_from_fixture(fixture, club, record.as_mut_ptr() as usize);
+        exe::write_match_record_to_news(record.as_mut_ptr() as usize, self.n, &mut self.k);
+        if let Some(result) = news_shootout_result(fixture, club) {
+            self.put(result);
+        }
+    }
+}

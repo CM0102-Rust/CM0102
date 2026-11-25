@@ -1425,14 +1425,15 @@ pub(crate) unsafe extern "C" fn compare_discipline_appeal_dialog_handle_click(ra
     original_fn::<unsafe extern "C" fn(u32) -> i32>(IDX_DISCIPLINE_APPEAL_DIALOG_HANDLE_CLICK)(raw)
 }
 
-/// Allocates the 43-entry ruling body table and constructs one 0x23-byte ruling body object per active rule set.
+/// Allocates the 43-entry ruling body table and constructs one ruling body object per active rule set (0x23 bytes;
+/// the English one 0x2b).
 ///
 /// `Discipline::create_rule_sets(arg)`: the table (`exe::crt_calloc` of 0x2b dwords) in the discipline object's first
 /// dword; failing, the error box (discipline.cpp line 0x161e) and nothing else. Then, in `RULE_SETS` order, each
 /// ruling body whose condition holds: a nation's by its league being selected (the `nation::LEAGUE_SELECTED` byte of
 /// the nation the key names), Oceania's by its continent (0x6699d0 on `G_CONTINENT_TABLE` + key × 0xc6), the last two
 /// (the South Korean one also by the nation) with the constructor's argument 0 when the absolute data version
-/// (`G_GAME_DATA_VERSION`) is below 0x3e044 / 0x3e047, otherwise `arg`; each one `exe::crt_operator_new(0x23)` and
+/// (`G_GAME_DATA_VERSION`) is below 0x3e044 / 0x3e047, otherwise `arg`; each one `exe::crt_operator_new(0x23)` (0x2b for slot 0x24, England) and
 /// its constructor (null when the allocation fails), stored in its slot.
 /// Original: `Discipline::create_rule_sets` (0x55d420, discipline.cpp, thiscall, ret 4).
 pub(crate) unsafe extern "thiscall" fn discipline_create_rule_sets(this: usize, arg: u32) {
@@ -1472,7 +1473,9 @@ pub(crate) unsafe extern "thiscall" fn discipline_create_rule_sets(this: usize, 
             covered!("sma_5 english rule set");
         }
         let a = if slot == 0x24 { a } else { a }; // sma5: the English rule set's argument (the mutation's anchor)
-        let o = exe::crt_operator_new(0x23);
+        // the English ruling body takes 0x2b bytes (0x55d733): RbEngland keeps a date at +0x23..+0x2a; with 0x23 its
+        // constructor wrote 8 bytes past the block (24/11/2026; found by the reader of sx18)
+        let o = exe::crt_operator_new(if slot == 0x24 { 0x2b } else { 0x23 });
         let v = if o != 0 {
             let f: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(ctor);
             f(o, a)

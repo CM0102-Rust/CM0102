@@ -4022,8 +4022,34 @@ routines! {
     Prologue { address: 0x8afa40, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] } => team_award_add_candidate, compare_team_award_add_candidate;
     Prologue { address: 0x8afd90, bytes: &[0x56, 0x8d, 0x41, 0x52, 0xbe, 0x14, 0x00, 0x00, 0x00] } => team_award_clear_selection, compare_team_award_clear_selection;
     Prologue { address: 0x8afdc0, bytes: &[0x8a, 0x81, 0x5c, 0x02, 0x00, 0x00] } => team_award_init_slot_positions, compare_team_award_init_slot_positions;
+    Prologue { address: 0x54d170, bytes: &[0x0f, 0xbf, 0x44, 0x24, 0x04] } => date_get_weekday_name, compare_date_get_weekday_name;
+    Prologue { address: 0x54d210, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] } => date_get_short_month_name, compare_date_get_short_month_name;
+    Prologue { address: 0x54d3b0, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] } => date_get_month_name, compare_date_get_month_name;
+    Prologue { address: 0x54d040, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x25, 0xff, 0x00, 0x00, 0x00] } => date_get_time_of_day_name, compare_date_get_time_of_day_name;
+    Prologue { address: 0x54d130, bytes: &[0xe8, 0x9b, 0x23, 0x12, 0x00] } => date_get_time_of_day_gender, compare_date_get_time_of_day_gender;
+    Prologue { address: 0x54d550, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x83, 0xf8, 0x09] } => date_get_weekday_gender, compare_date_get_weekday_gender;
+    Prologue { address: 0x54ae10, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => date_get_short_weekday_date_string, compare_date_get_short_weekday_date_string;
+    Prologue { address: 0x54ba20, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => date_get_long_date_string, compare_date_get_long_date_string;
+    Prologue { address: 0x54bef0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => date_get_long_date_string_no_year, compare_date_get_long_date_string_no_year;
+    Prologue { address: 0x54c3b0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => date_get_date_string_no_weekday, compare_date_get_date_string_no_weekday;
+    Prologue { address: 0x5339a0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => database_load_language_names, compare_database_load_language_names;
+    Prologue { address: 0x5b27c0, bytes: &[0x53, 0x55, 0x56, 0x8b, 0xe9] } => formation_new, compare_formation_new;
+    Prologue { address: 0x5cc850, bytes: &[0x6a, 0xff, 0x68, 0x0b, 0xa4, 0x95, 0x00] } => game_run_to_start_date, compare_game_run_to_start_date;
+    Prologue { address: 0x5d6200, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x4c, 0x24, 0x08] } => compare_shorts_ascending, compare_compare_shorts_ascending;
+    Prologue { address: 0x5cc650, bytes: &[0xb9, 0x90, 0x2c, 0xae, 0x00] } => game_date_static_init, compare_game_date_static_init;
+    Prologue { address: 0x5cc680, bytes: &[0xb9, 0x78, 0x2c, 0xae, 0x00] } => last_processed_date_static_init, compare_last_processed_date_static_init;
+    Prologue { address: 0x73e870, bytes: &[0x83, 0xec, 0x20, 0x53, 0x55] } => apply_team_story_response, compare_apply_team_story_response;
+    Prologue { address: 0x7570b0, bytes: &[0x6a, 0xff, 0x68, 0x06, 0xd9, 0x95, 0x00] } => queue_obscene_gesture_story, compare_queue_obscene_gesture_story;
+    Prologue { address: 0x75a640, bytes: &[0x6a, 0xff, 0x68, 0xbb, 0xd9, 0x95, 0x00] } => queue_wants_first_team_story, compare_queue_wants_first_team_story;
+    Prologue { address: 0x733a60, bytes: &[0x6a, 0xff, 0x68, 0xe6, 0xd6, 0x95, 0x00] } => create_player_outburst_story, compare_create_player_outburst_story;
+    Prologue { address: 0x62ed70, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => get_player_injury, compare_get_player_injury;
+    Prologue { address: 0x6699d0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x53] } => key_nation_continent_has_selected_nation, compare_key_nation_continent_has_selected_nation;
+    Prologue { address: 0x669140, bytes: &[0x32, 0xd2, 0x53, 0x88, 0x15, 0x38, 0x47, 0xb6, 0x00] } => key_nation_number_active_entries, compare_key_nation_number_active_entries;
+    Prologue { address: 0x66a0c0, bytes: &[0x32, 0xc0, 0xb9, 0x38, 0x3d, 0xb6, 0x00] } => key_nation_sorted_order, compare_key_nation_sorted_order;
+    Prologue { address: 0x66a100, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x53] } => key_nation_compare_entries, compare_key_nation_compare_entries;
+    Prologue { address: 0x66a350, bytes: &[0x80, 0x79, 0x09, 0x10, 0x0f, 0x9f, 0xc0] } => nation_menu_split_part_count, compare_nation_menu_split_part_count;
 }
-const N: usize = 3864;
+const N: usize = 3890;
 include!(concat!(env!("OUT_DIR"), "/indices.rs")); // IDX_<NAME>: the position of each routine (build.rs)
 
 /// Size of the engine object (the game allocates it with new(0xf63b)): side 1's block (+0xf5f2, 0x36
@@ -5496,6 +5522,49 @@ pub(crate) use self::zipdir::*;
 // ---------- 161st batch: watch list, position code and staff criterion ----------
 
 compare_value!(compare_staff_criterion, staff_criterion, IDX_STAFF_CRITERION, () -> u32);
+
+// ---------- batch 333: the run-up to the start date (game.cpp) ----------
+
+/// Exe routines the run-up to the start date calls without an `exe::` wrapper (cm0102.exe 3.9.68; most are Rust and
+/// run through their detour). Conventions checked at the call sites in 0x5cc850.
+#[allow(dead_code)]
+pub(crate) mod start_date_fns {
+    pub(crate) const SET_UP_THE_DAY: usize = 0x6b3c10; // MATCH_DAY::set_up_the_day thiscall(day, date, slice) ret 8
+    pub(crate) const PLAY_THE_DAY: usize = 0x6b4360; // MATCH_DAY::play_the_day thiscall(day)
+    pub(crate) const END_DAY: usize = 0x6b4190; // MATCH_DAY::end_day thiscall(day)
+    pub(crate) const STAFF_RECORDS_DAILY_UPDATE: usize = 0x86dda0; // thiscall(this, date) ret 4
+    pub(crate) const CONTRACT_MANAGER_DAILY_UPDATE: usize = 0x4c7ac0; // thiscall(this, date, slice, people) ret 0xc
+    pub(crate) const UPDATE_CITY_WEATHER: usize = 0x922ee0; // Weather thiscall(this)
+    pub(crate) const DISCIPLINE_DAILY_UPDATE: usize = 0x556240; // thiscall(this, date) ret 4
+    pub(crate) const INJURY_DAILY_UPDATE: usize = 0x62b7b0; // thiscall(this)
+    pub(crate) const AWARD_MANAGER_PROCESS_DATE: usize = 0x413540; // thiscall(this, date) ret 4
+    pub(crate) const HOST_COUNTRY_DAILY_UPDATE: usize = 0x5fa850; // thiscall(this, date) ret 4
+    pub(crate) const NATIONAL_TEAMS_DAILY_UPDATE: usize = 0x76b100; // thiscall(this, date) ret 4
+    pub(crate) const FINANCE_TABLE_DAILY_UPDATE: usize = 0x59b9c0; // thiscall(this, date) ret 4
+    pub(crate) const OFFICIALS_CLEAR_BUSY_FLAGS: usize = 0x79bf40; // thiscall(this)
+    pub(crate) const MANAGER_MANAGER_DAILY_UPDATE: usize = 0x68f9c0; // thiscall(this)
+    pub(crate) const STADIUM_DAILY_UPDATE: usize = 0x85b820; // thiscall(this, date) ret 4
+    pub(crate) const CLUB_RECORDS_SEND_RECORD_NEWS: usize = 0x448e30; // thiscall(this)
+    pub(crate) const ASSESS_CLUB_SQUADS: usize = 0x83a1b0; // Shortlist_Manager thiscall(this) ("Assessing Club Squads")
+    pub(crate) const INJURY_INIT_SQUAD_FITNESS: usize = 0x62a920; // thiscall(this)
+    pub(crate) const GAME_SEASON_UPDATE_PASS: usize = 0x5d5ae0; // cdecl()
+    pub(crate) const GAME_UPDATE_NATION_COEFFICIENTS: usize = 0x5d5f20; // cdecl()
+    /// The game phase byte saved with the game (+ field of the save at 0xae2cfc): 2 once the run-up is over [inference].
+    pub(crate) const G_GAME_PHASE: usize = 0xae2cfc;
+    /// The progress bar's status text buffer (the "Initialising Leagues" text).
+    pub(crate) const G_STATUS_TEXT: usize = 0xde1f64;
+    pub(crate) const TEXT_INITIALISING_LEAGUES: usize = 0x9cd244; // "Initialising Leagues"
+}
+
+// ---------- batch 333: the ability order and the game's static dates (game.cpp) ----------
+
+// --- sx01d_1: Media::apply_team_story_response (0x73e870, media.cpp, 10,160 bytes), the whole routine in named pieces ---
+
+// --- sx01d_2: Media::queue_obscene_gesture_story (0x7570b0) and Media::queue_wants_first_team_story (0x75a640), media.cpp ---
+
+// --- sx01d_5: Media::create_player_outburst_story (0x733a60, media.cpp) ---
+
+// ---------- batch 333: the key nation menu order and the nation menu split count (key_nation.cpp; sx12_2) ----------
 
 const TEAM_AWARD_SUBSTITUTES: [u16; 9] = [1, 0x40, 4, 0x10, 0x40, 4, 0x10, 0x40, 4];
 

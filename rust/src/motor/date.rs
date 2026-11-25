@@ -232,3 +232,398 @@ pub(crate) const DIFFERENCE_DESTRUCTOR: usize = 0x54cda0;
 pub(crate) const SUB_DAYS_RESULT: usize = 0xae24c0;
 
 pub(crate) const SUB_DAYS_GUARD: usize = 0xae249e;
+
+/// Writes the name of a weekday to the shared buffer and returns it.
+///
+/// `date_get_weekday_name(weekday)` (the weekday as `i16`, 0 for Monday to 6 for Sunday): the translated name
+/// (`WEEKDAY_NAMES`, langlib) in `WEEKDAY_NAME_BUFFER`; any other value leaves the empty string there.
+/// Original: `date_get_weekday_name` (0x54d170, Date.cpp, cdecl).
+pub(crate) unsafe extern "C" fn date_get_weekday_name(weekday: u32) -> usize {
+    covered!("sx09_3 weekday name");
+    write_date_name(WEEKDAY_NAME_BUFFER, date_name_template(&WEEKDAY_NAMES, weekday as i16 as i32)) // sx09_3: the weekday
+}
+
+/// Writes the three-letter name of a month to the shared buffer and returns it.
+///
+/// `date_get_short_month_name(month)` (the month as a signed byte, 0 for January): the translated name
+/// (`SHORT_MONTH_NAMES`, langlib) in `SHORT_MONTH_NAME_BUFFER`; any other value leaves the empty string there.
+/// Original: `date_get_short_month_name` (0x54d210, Date.cpp, cdecl).
+pub(crate) unsafe extern "C" fn date_get_short_month_name(month: u32) -> usize {
+    covered!("sx09_3 short month name");
+    write_date_name(SHORT_MONTH_NAME_BUFFER, date_name_template(&SHORT_MONTH_NAMES, month as i8 as i32)) // sx09_3: the short month
+}
+
+/// Writes the full name of a month to the shared buffer and returns it.
+///
+/// `date_get_month_name(month)` (the month as a signed byte, 0 for January): the translated name (`MONTH_NAMES`,
+/// langlib) in `MONTH_NAME_BUFFER`; any other value leaves the empty string there.
+/// Original: `date_get_month_name` (0x54d3b0, Date.cpp, cdecl).
+pub(crate) unsafe extern "C" fn date_get_month_name(month: u32) -> usize {
+    covered!("sx09_3 month name");
+    write_date_name(MONTH_NAME_BUFFER, date_name_template(&MONTH_NAMES, month as i8 as i32)) // sx09_3: the month
+}
+
+/// Comparer for `date_get_weekday_name`.
+pub(crate) unsafe extern "C" fn compare_date_get_weekday_name(weekday: u32) -> usize {
+    let o = original_fn::<unsafe extern "C" fn(u32) -> usize>(IDX_DATE_GET_WEEKDAY_NAME);
+    compare_date_name("date_get_weekday_name", (WEEKDAY_NAME_BUFFER, 0x1c), weekday, || o(weekday), || date_get_weekday_name(weekday))
+}
+
+/// Comparer for `date_get_short_month_name`.
+pub(crate) unsafe extern "C" fn compare_date_get_short_month_name(month: u32) -> usize {
+    let o = original_fn::<unsafe extern "C" fn(u32) -> usize>(IDX_DATE_GET_SHORT_MONTH_NAME);
+    compare_date_name("date_get_short_month_name", (SHORT_MONTH_NAME_BUFFER, 0xa), month, || o(month), || date_get_short_month_name(month))
+}
+
+/// Comparer for `date_get_month_name`.
+pub(crate) unsafe extern "C" fn compare_date_get_month_name(month: u32) -> usize {
+    let o = original_fn::<unsafe extern "C" fn(u32) -> usize>(IDX_DATE_GET_MONTH_NAME);
+    compare_date_name("date_get_month_name", (MONTH_NAME_BUFFER, 0x19), month, || o(month), || date_get_month_name(month))
+}
+
+/// Writes the time of day name to the shared buffer and returns it.
+///
+/// `date_get_time_of_day_name(time, capital)` (the time as a byte: 0 morning, 1 afternoon, 2 evening): "Morning",
+/// "Afternoon" or "Evening" (capitalised when `capital` is not 0, else in lower case; langlib) in
+/// `TIME_OF_DAY_BUFFER`; any other time leaves the empty string there.
+/// Original: `date_get_time_of_day_name` (0x54d040, Date.cpp, cdecl).
+pub(crate) unsafe extern "C" fn date_get_time_of_day_name(time: u32, capital: u32) -> usize {
+    covered!("sx09_4 time of day name");
+    let names = if capital != 0 { &TIME_OF_DAY_NAMES } else { &TIME_OF_DAY_NAMES_LOWER }; // sx09_4: the case
+    write_date_name(TIME_OF_DAY_BUFFER, names.get(time as u8 as usize).copied())
+}
+
+/// Returns the grammar code of the time of day word in the current language, which picks the matching article.
+///
+/// `date_get_time_of_day_gender(time)` (the time as a byte), by the language (`exe::langlib_get_language`): 9 and 3,
+/// 1; 5, 2; 4, 1 for the morning and the afternoon (0 and 1) and 3 for the evening (2); otherwise, and for any other
+/// time in language 4, 0. Only the low byte is the result.
+/// Original: `date_get_time_of_day_gender` (0x54d130, Date.cpp, cdecl).
+pub(crate) unsafe extern "C" fn date_get_time_of_day_gender(time: u32) -> u32 {
+    covered!("sx09_4 time of day gender");
+    // ponytail: the original asks for the language up to four times; the getter has no side effect, once is the same
+    match exe::langlib_get_language() {
+        LANGUAGE_9 | LANGUAGE_3 => 1,
+        LANGUAGE_5 => 2,
+        LANGUAGE_4 => match time as u8 {
+            0 | 1 => 1,
+            2 => 3,
+            _ => 0,
+        },
+        _ => 0, // sx09_4: no gender
+    }
+}
+
+/// Returns the grammar flag of a weekday name in a language, which picks the matching article in translated dates.
+///
+/// `date_get_weekday_gender(language, weekday)`: in language 9, 0 for Saturday and Sunday (5 and 6, the weekday as
+/// `i16`) and 1 for the other days; in any other language, 1 only for language 3. Only the low byte is the result.
+/// Original: `date_get_weekday_gender` (0x54d550, Date.cpp, cdecl).
+pub(crate) unsafe extern "C" fn date_get_weekday_gender(language: u32, weekday: u32) -> u32 {
+    covered!("sx09_4 weekday gender");
+    if language as i32 == LANGUAGE_9 {
+        return !(5..=6).contains(&(weekday as i16)) as u32; // sx09_4: the weekend days
+    }
+    (language as i32 == LANGUAGE_3) as u32 // sx09_4: language 3
+}
+
+/// Comparer for `date_get_time_of_day_name`: the buffer and the returned address side by side.
+pub(crate) unsafe extern "C" fn compare_date_get_time_of_day_name(time: u32, capital: u32) -> usize {
+    let o = original_fn::<unsafe extern "C" fn(u32, u32) -> usize>(IDX_DATE_GET_TIME_OF_DAY_NAME);
+    let (ro, rr, equal, mo, mr) = crate::comparison::side_by_side_light(&[(TIME_OF_DAY_BUFFER, 0x19)], || o(time, capital), || date_get_time_of_day_name(time, capital));
+    SCOREBOARD.record(equal && ro == rr, || format!("date_get_time_of_day_name({}, {}) original {:x?} rust {:x?}", time as u8, capital, mo, mr));
+    ro
+}
+
+/// Comparer for `date_get_time_of_day_gender`: the low byte, side by side.
+pub(crate) unsafe extern "C" fn compare_date_get_time_of_day_gender(time: u32) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(u32) -> u32>(IDX_DATE_GET_TIME_OF_DAY_GENDER)(time);
+    let n = date_get_time_of_day_gender(time);
+    SCOREBOARD.record(r as u8 == n as u8, || format!("date_get_time_of_day_gender({}) original {} rust {}", time as u8, r as u8, n as u8));
+    r
+}
+
+/// Comparer for `date_get_weekday_gender`: the low byte, side by side.
+pub(crate) unsafe extern "C" fn compare_date_get_weekday_gender(language: u32, weekday: u32) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(u32, u32) -> u32>(IDX_DATE_GET_WEEKDAY_GENDER)(language, weekday);
+    let n = date_get_weekday_gender(language, weekday);
+    SCOREBOARD.record(r as u8 == n as u8, || format!("date_get_weekday_gender({}, {}) original {} rust {}", language, weekday as i16, r as u8, n as u8));
+    r
+}
+
+/// Writes the date as the short weekday, the ordinal day, the short month and the year.
+///
+/// `Date::get_short_weekday_date_string(out, size, time)`: a null `out` (Date.cpp, line 0x1bf) or a size below 0x12
+/// (line 0x1c6) gives the error box and 0 (`date_text_buffer_ok`). With a time of day (0..2), "AM", "PM" or "EVE" first
+/// (`write_time_suffix`). Then the short weekday (`write_short_weekday`), the short month name, the ordinal day of the
+/// month (`date_ordinal`) and, langlib in `out`, "<Sat> <10th> <Feb> <1972>" or, with the time, "<Sat> <10th> <Feb>
+/// <1972> <AM>". Returns 1.
+/// Original: `Date::get_short_weekday_date_string` (0x54ae10, Date.cpp, thiscall, ret 0xc).
+pub(crate) unsafe extern "thiscall" fn date_get_short_weekday_date_string(this: *const GameDate, out: usize, size: u32, time: u32) -> u32 {
+    if !date_text_buffer_ok(out, size, 0x12, 0x1bf, 0x1c6) {
+        return 0;
+    }
+    let Some((month, day)) = date_text_parts(&*this) else {
+        return original_fn::<unsafe extern "thiscall" fn(*const GameDate, usize, u32, u32) -> u32>(IDX_DATE_GET_SHORT_WEEKDAY_DATE_STRING)(this, out, size, time);
+    };
+    let year = (*this).year as u32;
+    if date_text_has_time(time) {
+        covered!("sx09_5 short weekday date with the time");
+        write_time_suffix(time);
+        write_short_weekday(this);
+        let name = date_short_month_name(month);
+        story_lang!(out, 0x9b87a0, SHORT_WEEKDAY_BUFFER, date_ordinal(day), name, year, TIME_SUFFIX_BUFFER);
+    } else {
+        covered!("sx09_5 short weekday date");
+        write_short_weekday(this);
+        let name = date_short_month_name(month);
+        story_lang!(out, 0x9b881c, SHORT_WEEKDAY_BUFFER, date_ordinal(day), name, year); // sx09_5: day, month, year
+    }
+    1
+}
+
+/// Writes the date as the weekday, the ordinal day, the month name and the year.
+///
+/// `Date::get_long_date_string(out, size, time)`: a null `out` (line 0x270) or a size below 0x32 (line 0x277) gives the
+/// error box and 0. With a time of day (0..2), "Morning", "Afternoon" or "Evening" first
+/// (`exe::date_get_time_of_day_name`, capitalised). Then the weekday name (`exe::date_get_weekday_name` of
+/// `crate::date::weekday`), the month name (`exe::date_get_month_name`), the ordinal day (`date_ordinal`) and, langlib
+/// in `out`, "<Saturday>{} <10th> <February> <1972>" or, with the time, the same followed by "(<Morning>)" (the `{}`
+/// takes `DATE_TEXT_GRAMMAR`). Returns 1.
+/// Original: `Date::get_long_date_string` (0x54ba20, Date.cpp, thiscall, ret 0xc).
+pub(crate) unsafe extern "thiscall" fn date_get_long_date_string(this: *const GameDate, out: usize, size: u32, time: u32) -> u32 {
+    if !date_text_buffer_ok(out, size, 0x32, 0x270, 0x277) {
+        return 0;
+    }
+    let Some((month, day)) = date_text_parts(&*this) else {
+        return original_fn::<unsafe extern "thiscall" fn(*const GameDate, usize, u32, u32) -> u32>(IDX_DATE_GET_LONG_DATE_STRING)(this, out, size, time);
+    };
+    let year = (*this).year as u32;
+    if date_text_has_time(time) {
+        covered!("sx09_5 long date with the time");
+        let when = exe::date_get_time_of_day_name(time, 1);
+        let weekday = exe::date_get_weekday_name(crate::date::weekday(this) as u32);
+        let name = exe::date_get_month_name(month as u32);
+        story_lang!(out, 0x9b89f8, DATE_TEXT_GRAMMAR, weekday, date_ordinal(day), name, year, when);
+    } else {
+        covered!("sx09_5 long date");
+        let weekday = exe::date_get_weekday_name(crate::date::weekday(this) as u32);
+        let name = exe::date_get_month_name(month as u32);
+        story_lang!(out, 0x9b8aa0, DATE_TEXT_GRAMMAR, weekday, date_ordinal(day), name, year); // sx09_5: the long date
+    }
+    1
+}
+
+/// Writes the date as the weekday, the ordinal day and the month name, without the year.
+///
+/// `Date::get_long_date_string_no_year(out, size, time)`: as `date_get_long_date_string` (error lines 0x2af and 0x2b6),
+/// with "<Saturday>{} <10th> <February>" or, with the time, the same followed by "(<Morning>)". Returns 1.
+/// Original: `Date::get_long_date_string_no_year` (0x54bef0, Date.cpp, thiscall, ret 0xc).
+pub(crate) unsafe extern "thiscall" fn date_get_long_date_string_no_year(this: *const GameDate, out: usize, size: u32, time: u32) -> u32 {
+    if !date_text_buffer_ok(out, size, 0x32, 0x2af, 0x2b6) {
+        return 0;
+    }
+    let Some((month, day)) = date_text_parts(&*this) else {
+        return original_fn::<unsafe extern "thiscall" fn(*const GameDate, usize, u32, u32) -> u32>(IDX_DATE_GET_LONG_DATE_STRING_NO_YEAR)(this, out, size, time);
+    };
+    if date_text_has_time(time) {
+        covered!("sx09_5 long date without the year, with the time");
+        let when = exe::date_get_time_of_day_name(time, 1);
+        let weekday = exe::date_get_weekday_name(crate::date::weekday(this) as u32);
+        let name = exe::date_get_month_name(month as u32);
+        story_lang!(out, 0x9b8b0c, DATE_TEXT_GRAMMAR, weekday, date_ordinal(day), name, when);
+    } else {
+        covered!("sx09_5 long date without the year");
+        let weekday = exe::date_get_weekday_name(crate::date::weekday(this) as u32);
+        let name = exe::date_get_month_name(month as u32);
+        story_lang!(out, 0x9b8b84, DATE_TEXT_GRAMMAR, weekday, date_ordinal(day), name); // sx09_5: without the year
+    }
+    1
+}
+
+/// Comparer for `date_get_short_weekday_date_string`.
+pub(crate) unsafe extern "thiscall" fn compare_date_get_short_weekday_date_string(this: *const GameDate, out: usize, size: u32, time: u32) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(*const GameDate, usize, u32, u32) -> u32>(IDX_DATE_GET_SHORT_WEEKDAY_DATE_STRING);
+    compare_date_text("date_get_short_weekday_date_string", this, out, size, 0x12, time, || o(this, out, size, time), || date_get_short_weekday_date_string(this, out, size, time))
+}
+
+/// Comparer for `date_get_long_date_string`.
+pub(crate) unsafe extern "thiscall" fn compare_date_get_long_date_string(this: *const GameDate, out: usize, size: u32, time: u32) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(*const GameDate, usize, u32, u32) -> u32>(IDX_DATE_GET_LONG_DATE_STRING);
+    compare_date_text("date_get_long_date_string", this, out, size, 0x32, time, || o(this, out, size, time), || date_get_long_date_string(this, out, size, time))
+}
+
+/// Comparer for `date_get_long_date_string_no_year`.
+pub(crate) unsafe extern "thiscall" fn compare_date_get_long_date_string_no_year(this: *const GameDate, out: usize, size: u32, time: u32) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(*const GameDate, usize, u32, u32) -> u32>(IDX_DATE_GET_LONG_DATE_STRING_NO_YEAR);
+    compare_date_text("date_get_long_date_string_no_year", this, out, size, 0x32, time, || o(this, out, size, time), || date_get_long_date_string_no_year(this, out, size, time))
+}
+
+/// Writes the date as the ordinal day, the month name and the year.
+///
+/// `Date::get_date_string_no_weekday(out, size, time)`: a null `out` (Date.cpp, line 0x2ed) or a size below 0x32
+/// (line 0x2f4) gives the error box and 0 (`date_text_buffer_ok`). With a time of day (0..2), "Morning", "Afternoon" or
+/// "Evening" first (`exe::date_get_time_of_day_name`, capitalised). Then the month name (`exe::date_get_month_name`),
+/// the ordinal day of the month (`date_ordinal`) and, langlib in `out`, "<10th> <February> <1972>" or, with the time,
+/// the same followed by "(<Morning>)". Returns 1.
+/// Original: `Date::get_date_string_no_weekday` (0x54c3b0, Date.cpp, thiscall, ret 0xc).
+pub(crate) unsafe extern "thiscall" fn date_get_date_string_no_weekday(this: *const GameDate, out: usize, size: u32, time: u32) -> u32 {
+    if !date_text_buffer_ok(out, size, 0x32, 0x2ed, 0x2f4) {
+        return 0;
+    }
+    let Some((month, day)) = date_text_parts(&*this) else {
+        return original_fn::<unsafe extern "thiscall" fn(*const GameDate, usize, u32, u32) -> u32>(IDX_DATE_GET_DATE_STRING_NO_WEEKDAY)(this, out, size, time);
+    };
+    let year = (*this).year as u32;
+    if date_text_has_time(time) {
+        covered!("sx09_6 date without the weekday, with the time");
+        let when = exe::date_get_time_of_day_name(time, 1);
+        let name = exe::date_get_month_name(month as u32);
+        story_lang!(out, 0x9b8bd8, date_ordinal(day), name, year, when);
+    } else {
+        covered!("sx09_6 date without the weekday");
+        let name = exe::date_get_month_name(month as u32);
+        story_lang!(out, 0x9b8c4c, date_ordinal(day), name, year); // sx09_6: day, month and year
+    }
+    1
+}
+
+/// Comparer for `date_get_date_string_no_weekday` (`compare_date_text`).
+pub(crate) unsafe extern "thiscall" fn compare_date_get_date_string_no_weekday(this: *const GameDate, out: usize, size: u32, time: u32) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(*const GameDate, usize, u32, u32) -> u32>(IDX_DATE_GET_DATE_STRING_NO_WEEKDAY);
+    compare_date_text("date_get_date_string_no_weekday", this, out, size, 0x32, time, || o(this, out, size, time), || date_get_date_string_no_weekday(this, out, size, time))
+}
+
+/// The template of entry `k` of a name table, none when `k` is negative or past the end.
+pub(crate) fn date_name_template(names: &[usize], k: i32) -> Option<usize> {
+    usize::try_from(k).ok().and_then(|k| names.get(k).copied())
+}
+
+/// The comparer of a date name routine: the buffer (up to the next variable) and the returned address side by side.
+pub(crate) unsafe fn compare_date_name(name: &str, buffer: (usize, usize), arg: u32, original: impl FnOnce() -> usize, rust: impl FnOnce() -> usize) -> usize {
+    let (ro, rr, equal, mo, mr) = crate::comparison::side_by_side_light(&[buffer], original, rust);
+    SCOREBOARD.record(equal && ro == rr, || format!("{}({}) original {:x?} rust {:x?}", name, arg as i32, mo, mr));
+    ro
+}
+
+/// The checks every date text routine makes first: a null buffer gives the error box (Date.cpp, `null_line`) and a
+/// size below `min` (read as `i16`) gives the error box (`size_line`); either way the routine returns 0.
+pub(crate) unsafe fn date_text_buffer_ok(out: usize, size: u32, min: i16, null_line: u32, size_line: u32) -> bool {
+    if out == 0 {
+        crate::crt::error_box(DATE_CPP, null_line);
+        return false;
+    }
+    if (size as i16) < min {
+        crate::crt::error_box(DATE_CPP, size_line);
+        return false;
+    }
+    true
+}
+
+/// The month (0..11) and the day of the month a date text writes; none when the day of the year is -1 or less, where
+/// the original reads the month from an uninitialised stack byte (only the original runs then).
+pub(crate) unsafe fn date_text_parts(d: &GameDate) -> Option<(usize, i16)> {
+    let month = date_month_index(d)?;
+    Some((month, d.day.wrapping_sub(days_before_month(d.is_leap_year != 0, month))))
+}
+
+/// Whether a date text adds the time of day: the time (a byte) is 0 (morning), 1 (afternoon) or 2 (evening).
+pub(crate) fn date_text_has_time(time: u32) -> bool {
+    time as u8 <= 2
+}
+
+/// Writes "AM", "PM" or "EVE" for the time of day to `TIME_SUFFIX_BUFFER` (langlib, with the empty string for the
+/// comment); a time outside 0..2 leaves the empty string.
+pub(crate) unsafe fn write_time_suffix(time: u32) {
+    write_date_name(TIME_SUFFIX_BUFFER, TIME_SUFFIXES.get(time as u8 as usize).copied());
+}
+
+/// Writes the short weekday name of a date ("Mon" .. "Sun" by `crate::date::weekday`, langlib) to
+/// `SHORT_WEEKDAY_BUFFER`; a weekday outside 0..6 (a year before 1600) leaves the empty string.
+pub(crate) unsafe fn write_short_weekday(d: *const GameDate) {
+    let weekday = crate::date::weekday(d);
+    write_date_name(SHORT_WEEKDAY_BUFFER, usize::try_from(weekday).ok().and_then(|k| SHORT_WEEKDAY_NAMES.get(k).copied()));
+}
+
+/// The short month name (`FN_DATE_GET_SHORT_MONTH_NAME`).
+pub(crate) unsafe fn date_short_month_name(month: usize) -> usize {
+    let f: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_DATE_GET_SHORT_MONTH_NAME);
+    f(month as u32)
+}
+
+/// The day of the month as an ordinal ("10th", `exe::utils_format_ordinal` with 1).
+pub(crate) unsafe fn date_ordinal(day: i16) -> usize {
+    exe::utils_format_ordinal(day as i32, 1)
+}
+
+/// The comparer of a date text routine: `out` (up to its size, at most 0x400 bytes), the shared name buffers and the
+/// return side by side. A null buffer, a short size or a day of -1 or less: only the original (the error box, or the
+/// uninitialised month).
+pub(crate) unsafe fn compare_date_text(name: &str, this: *const GameDate, out: usize, size: u32, min: i16, time: u32, original: impl FnOnce() -> u32, rust: impl FnOnce() -> u32) -> u32 {
+    if out == 0 || (size as i16) < min || date_text_parts(&*this).is_none() {
+        return original();
+    }
+    let mut regions = DATE_TEXT_BUFFERS.to_vec();
+    regions.push((out, (size as i16 as usize).min(0x400)));
+    let (ro, rr, equal, mo, mr) = crate::comparison::side_by_side(&regions, original, rust);
+    SCOREBOARD.record(equal && ro == rr, || {
+        let text = |m: &crate::comparison::MemorySnapshot| m.0.last().map(|(_, b)| String::from_utf8_lossy(&b[..b.iter().position(|&c| c == 0).unwrap_or(b.len())]).into_owned());
+        format!("{}({:?}, team {}) original {} {:?} rust {} {:?}; memory {:x?} x {:x?}", name, *this, time as u8, ro, text(&mo), rr, text(&mr), mo, mr)
+    });
+    ro
+}
+
+/// The shared buffers of the date names.
+pub(crate) const WEEKDAY_NAME_BUFFER: usize = 0xae2434;
+
+pub(crate) const SHORT_MONTH_NAME_BUFFER: usize = 0xae24a0;
+
+pub(crate) const MONTH_NAME_BUFFER: usize = 0xae2450;
+
+/// The weekday names as langlib templates, 0 for Monday to 6 for Sunday ("Monday" .. "Sunday").
+pub(crate) const WEEKDAY_NAMES: [usize; 7] = [0x9b8790, 0x9b8788, 0x9b877c, 0x9b8770, 0x9b8768, 0x9b875c, 0x9b8798];
+
+/// The three-letter month names, January to December ("Jan" .. "Dec"; March and December carry a translator's
+/// comment).
+pub(crate) const SHORT_MONTH_NAMES: [usize; 12] = [0x9b8d2c, 0x9b8d28, 0x9b8d00, 0x9b8cfc, 0x9b8cf8, 0x9b8cf4, 0x9b8cf0, 0x9b8cec, 0x9b8ce8, 0x9b8ce4, 0x9b8ce0, 0x9b8cb8];
+
+/// The full month names, January to December (May carries a translator's comment).
+pub(crate) const MONTH_NAMES: [usize; 12] = [0x9b8db8, 0x9b8dac, 0x9b8da4, 0x9b8d9c, 0x9b8d74, 0x9b8d6c, 0x9b8d64, 0x9b8d5c, 0x9b8d50, 0x9b8d48, 0x9b8d3c, 0x9b8d30];
+
+/// The shared buffer of the time of day name.
+pub(crate) const TIME_OF_DAY_BUFFER: usize = 0xae2484;
+
+/// The times of day (morning, afternoon, evening) capitalised and in lower case.
+pub(crate) const TIME_OF_DAY_NAMES: [usize; 3] = [0x9b8a84, 0x9b8a8c, 0x9b8a98];
+
+pub(crate) const TIME_OF_DAY_NAMES_LOWER: [usize; 3] = [0x9b8c9c, 0x9b8ca4, 0x9b8cb0];
+
+/// The languages whose date words have grammatical gender (`exe::langlib_get_language`).
+pub(crate) const LANGUAGE_3: i32 = 3;
+
+pub(crate) const LANGUAGE_4: i32 = 4;
+
+pub(crate) const LANGUAGE_5: i32 = 5;
+
+pub(crate) const LANGUAGE_9: i32 = 9;
+
+/// `date_get_short_month_name(month)` (0x54d210, Date.cpp, cdecl): "Jan".."Dec" in its shared buffer.
+pub(crate) const FN_DATE_GET_SHORT_MONTH_NAME: usize = 0x54d210;
+
+/// The shared buffers of the date texts: the short weekday name and the AM, PM or EVE suffix.
+pub(crate) const SHORT_WEEKDAY_BUFFER: usize = 0xae2478;
+
+pub(crate) const TIME_SUFFIX_BUFFER: usize = 0xae24ac;
+
+/// The short weekday names, 0 for Monday to 6 for Sunday ("Mon" .. "Sun").
+pub(crate) const SHORT_WEEKDAY_NAMES: [usize; 7] = [0x9b8890, 0x9b888c, 0x9b8888, 0x9b8884, 0x9b8880, 0x9b887c, 0x9b8894];
+
+/// The time suffixes of the numeric dates: "AM", "PM" and "EVE" (each with a translator's comment).
+pub(crate) const TIME_SUFFIXES: [usize; 3] = [0x9b8508, 0x9b8524, 0x9b8544];
+
+/// The argument of the `{}` grammar code that the long date templates carry after the weekday.
+pub(crate) const DATE_TEXT_GRAMMAR: u32 = 0x64;
+
+/// The shared buffers a date text may write besides its own (the weekday, month, short weekday, short month, time
+/// of day and suffix names, and the ordinal's at 0xde2734).
+pub(crate) const DATE_TEXT_BUFFERS: [(usize, usize); 7] = [(0xae2434, 0x1c), (0xae2450, 0x19), (0xae2478, 0xc), (0xae2484, 0x19), (0xae24a0, 0xa), (0xae24ac, 0x14), (0xde2734, 0x20)];

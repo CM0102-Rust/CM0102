@@ -2975,3 +2975,43 @@ pub(crate) const INJURY_TYPE_NAMES: [usize; 0x52] = [
     0x9e8024, 0x9e8010, 0x9e8004, 0x9e7ff4, 0x9e83e8, 0x9e83d8, 0x9e83c8, 0x9e83c0, 0x9e83b0,
     0x9e83a8,
 ];
+
+/// Returns the address of a person's current injury entry, or 0 when he has none.
+///
+/// `Injury::get_player_injury(person)`: a null person shows the "Error" box (injury.cpp line 0xe3a) and returns 0; a
+/// person id at or above `G_STAFF_COUNT` returns 0. Otherwise it runs the day's fitness update
+/// (`exe::injury_update_player_fitness`, once a day) and returns the 0x30-byte entry of `injury_fields::INJURY_ENTRIES`
+/// indexed by the 31-byte physical record's `physical_record::CURRENT_INJURY`, or 0 when that index is -1.
+/// Original: `Injury::get_player_injury` (0x62ed70, injury.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn get_player_injury(this: usize, person: usize) -> usize {
+    if person == 0 {
+        show_error_at(0x9e7f28, 0xe3a); // "...\injury.cpp"
+        return 0;
+    }
+    if read_i32(person) >= read_i32(G_STAFF_COUNT) {
+        return 0;
+    }
+    exe::injury_update_player_fitness(this, person);
+    let id = read_i32(person) as usize;
+    let record = read_usize(this + injury_fields::PHYSICAL_RECORDS).wrapping_add(id.wrapping_mul(31));
+    let k = read_i32(record + physical_record::CURRENT_INJURY);
+    if k == -1 {
+        return 0;
+    }
+    covered!("sx12_1 current injury");
+    read_usize(this + injury_fields::INJURY_ENTRIES).wrapping_add((k as usize).wrapping_mul(0x30)) // sx12_1: the injury entry
+}
+
+/// Comparer for `get_player_injury`: the returned entry, side by side. The original runs first and does the day's
+/// fitness update (with its draws), so the copy finds the day already done. A null person (the "Error" box): only the
+/// original runs.
+pub(crate) unsafe extern "thiscall" fn compare_get_player_injury(this: usize, person: usize) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_GET_PLAYER_INJURY);
+    if person == 0 {
+        return o(this, person);
+    }
+    let r = o(this, person);
+    let n = get_player_injury(this, person);
+    SCOREBOARD.record(r == n, || format!("get_player_injury(person {:#x}) original {:#x} rust {:#x}", person, r, n));
+    r
+}

@@ -1,0 +1,2 @@
+# escapadas da 333a para a comparacao longa (bancada 4)
+MUTACOES = [('sx09_sem_genero', '        _ => 0, // sx09_4: no gender', '        _ => 1, // mutation: a gender for every language', 'sx09_4 time of day gender'), ('sx09_lingua_3', '(language as i32 == LANGUAGE_3) as u32 // sx09_4: language 3', '(language as i32 != LANGUAGE_3) as u32 // mutation: every language but 3', 'sx09_4 weekday gender')]
