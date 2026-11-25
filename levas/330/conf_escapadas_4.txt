@@ -1,1 +1,4 @@
 mutacao sx01_em_casa        441s engine: DIVERGENCE write_team_media_story_news_text(kind 61, body 1, piece supporters fury (0x3d), unset false) original "Um jornal local noticiou que
+mutacao sx04_2_jogador_dobro_dos_jogos 5446s engine: DIVERGENCE nation_awards_award_player_of_year: history offsets (ffffffff, ffffffff) -> (4e, 4e), rust planned Some([d2, 07, b4, 0d, 00, 00, 1c
+mutacao sx02b_3_revenda_ao_contrario 5834s engine: 10000000000 comparisons, 0 divergences
+mutacao sx01c_confianca_da_comissao 5081s engine: 10000000000 comparisons, 0 divergences

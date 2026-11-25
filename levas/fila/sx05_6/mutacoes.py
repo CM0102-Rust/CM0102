@@ -5,8 +5,8 @@
 # - os reservas com a ordem 4 e 0x40 trocada.
 MUTACOES = [
     ('sx05_6_oito_sem_dezesseis',
-     '    if m & 8 != 0 {\n        m |= 0x10;',
-     '    if m & 8 != 0 {\n        m |= 0; // mutation: 8 no longer gives 0x10',
+     '    if m & 8 != 0 { // sx05_6: 8 brings 0x10\n        m |= 0x10;',
+     '    if m & 8 != 0 { // sx05_6: 8 brings 0x10\n        m |= 0; // mutation: 8 no longer gives 0x10',
      'sx05_6 candidate'),
     ('sx05_6_sem_troca',
      '            core::ptr::copy(t.slot(k) as *const u8, t.slot(j) as *mut u8, TEAM_AWARD_SLOT_SIZE);\n            return place(k);',

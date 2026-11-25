@@ -67,7 +67,9 @@ def mundo():
 def linhas_carreira(ligas='ENG', fundo='', motor='nao'):
     """As linhas do auto_setup.cfg da carreira automatica de ferias (formato em docs/VERSAO_SEM_TELA.md)."""
     ligas = mundo() if ligas == 'MUNDO' else ligas
-    return ['LANGUAGE=POR', 'DATABASE=MINIMUM', 'MATCH_STATS=NORMAL', 'FOREGROUND_LEAGUES=' + ligas,
+    # CM_BASE (24/11/2026, Lucas): NORMAL or MAXIMUM loads the lower divisions (Conference, Serie C2...); the chain sets it
+    # from levas/N/BASE
+    return ['LANGUAGE=POR', 'DATABASE=' + os.environ.get('CM_BASE', 'MINIMUM'), 'MATCH_STATS=NORMAL', 'FOREGROUND_LEAGUES=' + ligas,
             'BACKGROUND_LEAGUES=' + fundo, 'ENABLE_MATCH_ENGINE=' + ('YES' if motor == 'sim' else 'NO'),
             'ENABLE_COMPUTER_BIDS=YES', 'ON_HOLIDAY=YES']
 

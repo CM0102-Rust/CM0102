@@ -37,6 +37,9 @@ mkdir -p "$RAIZ/levas/$N"
 cd "$RAIZ/engenharia-reversa"
 CONF="--confirmar $DATA"; [ "$DATA" = "-" ] && CONF=""
 SAVE=""; [ -f "$RAIZ/levas/$N/SAVE" ] && SAVE=1
+# levas/N/BASE (24/11/2026, Lucas): the career created with that database (NORMAL loads the lower divisions); simular.py
+# reads CM_BASE, and the parallel bench inherits it
+[ -f "$RAIZ/levas/$N/BASE" ] && export CM_BASE="$(head -1 "$RAIZ/levas/$N/BASE" | tr -d '\r')"
 FIM=2002-06-01; [ "$(head -1 "$RAIZ/levas/$N/LIGAS" 2>/dev/null | tr -d '\r')" = MUNDO ] && FIM=2002-08-01
 [ -f "$RAIZ/levas/$N/ATE" ] && FIM="$(head -1 "$RAIZ/levas/$N/ATE" | tr -d '\r')"
 MODO="--carreira $FIM $CONF --confirmar-pt"; [ -n "$SAVE" ] && MODO="--prova-save $N"

@@ -39,7 +39,7 @@ pub(crate) fn widen_award_positions(mut m: u16) -> u16 {
     if m & 2 != 0 {
         m |= 4;
     }
-    if m & 8 != 0 {
+    if m & 8 != 0 { // sx05_6: 8 brings 0x10
         m |= 0x10;
     }
     if m & 0x20 != 0 {

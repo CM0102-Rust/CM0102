@@ -79,16 +79,42 @@ def do_lote(ordem_):
     def tipo(nome):
         rot = runpy.run_path(os.path.join(FILA, nome, 'rotinas.py'))
         if rot.get('TELAS'):  # the screens batch is one type whatever MOTOR/SAVE the items carry (21/11/2026)
-            return False, False, '', '', True
-        return bool(rot.get('MOTOR')), bool(rot.get('SAVE')), rot.get('LIGAS', ''), rot.get('ATE', ''), bool(rot.get('TELAS'))
+            return False, False, '', '', True, ''
+        return bool(rot.get('MOTOR')), bool(rot.get('SAVE')), rot.get('LIGAS', ''), rot.get('ATE', ''), bool(rot.get('TELAS')), rot.get('BASE', '')
+    # 24/11/2026: an item never jumps ahead of a skipped one (another type) that defines a name it uses, or that its
+    # INTEGRAR_ANTES.txt names: batch 332 took sx05b_1..4 without sx05b_5 and cx16_1 without cx06_4 (45 build errors)
+    definidos_no_motor = set(DEF.findall(sem_comentarios(texto_do_motor(R))))
+    pulados, nomes_pulados = set(), set()
+
+    def depende_de_pulado(nome):
+        codigo = sem_comentarios(open(os.path.join(FILA, nome, 'codigo.rs'), encoding='utf-8').read())
+        antes = os.path.join(FILA, nome, 'INTEGRAR_ANTES.txt')
+        pedidos = set(re.findall(r'\b([a-z]+\d*[a-zA-Z]?_\d+)\b', open(antes, encoding='utf-8').read())) if os.path.exists(antes) else set()
+        return bool(set(IDENT.findall(codigo)) & pulados) or bool(pedidos & nomes_pulados)
+
+    def pular(nome):
+        nomes_pulados.add(nome)
+        pulados.update(set(DEF.findall(sem_comentarios(open(os.path.join(FILA, nome, 'codigo.rs'), encoding='utf-8').read()))) - definidos_no_motor)
+
     lote = [ordem_[0]]
     for nome in ordem_[1:]:
         # 21/11/2026 (Lucas): as telas entram todas numa leva só, provada por ele jogando comparando
         if len(lote) == ITENS_POR_LEVA and not tipo(lote[0])[4]:
             break
-        if tipo(nome) == tipo(lote[0]):
+        if tipo(nome) == tipo(lote[0]) and not depende_de_pulado(nome):
             lote.append(nome)
+        else:
+            pular(nome)
     return lote
+
+
+DEF = re.compile(r'\b(?:fn|struct|enum|const|static|type|mod|trait)\s+([A-Za-z_]\w*)')
+IDENT = re.compile(r'\b[A-Za-z_]\w*\b')
+
+
+def sem_comentarios(codigo):
+    """The code without its // comments (a word in a comment is not a name the item defines or uses)."""
+    return re.sub(r'//[^\n]*', '', codigo)
 
 
 def materializar(nomes, n, base, antes):
@@ -143,6 +169,9 @@ def materializar(nomes, n, base, antes):
     ate = runpy.run_path(os.path.join(FILA, nomes[0], 'rotinas.py')).get('ATE')
     if ate:  # 12/11/2026: a data final da cadeia (ex.: 2002-08-01, depois da virada); com ela o jogo real roda na cadeia
         open(os.path.join(destino, 'ATE'), 'w', encoding='utf-8').write(ate + '\n')
+    base_dados = runpy.run_path(os.path.join(FILA, nomes[0], 'rotinas.py')).get('BASE')
+    if base_dados:  # 24/11/2026 (Lucas): divisions that only exist with a bigger database; the chain creates the game with it
+        open(os.path.join(destino, 'BASE'), 'w', encoding='utf-8').write(base_dados + '\n')
     open(os.path.join(destino, 'integrar.py'), 'w', encoding='utf-8').write(INTEGRAR.format(n=n, rotinas=rotinas, base=base))
     with open(os.path.join(R, 'engenharia-reversa', 'mutacoes', f'leva{n}.py'), 'w', encoding='utf-8') as f:
         uso = f'--prova-save {n}' if save else '--carreira 2002-06-01'
