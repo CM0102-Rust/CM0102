@@ -1,0 +1,4 @@
+mutacao sx09_sem_genero    5870s engine: 10000000000 comparisons, 0 divergences
+mutacao sx09_lingua_3      5260s engine: 10000000000 comparisons, 0 divergences
+restaurado e recompilado
+FIM
