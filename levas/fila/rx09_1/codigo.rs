@@ -88,7 +88,7 @@ pub(crate) unsafe fn construct_grouped_league(this: usize, year: u32, record: us
 /// (0x856ef0, line 0x48), SpaSecondB::load_group_clubs (0x856cd0, line 0x4f), sort 0x56, statistics 0x5e, fixtures
 /// 0x67; SpaSecondB::create_group_stage (0x857210) for groups 2 to 4 and SpaSecondB::set_predicted_positions
 /// (0x8582f0).
-pub(crate) const SEGUNDA_B: GroupedLeagueCtor = GroupedLeagueCtor {
+pub(crate) const SPANISH_SEGUNDA_B: GroupedLeagueCtor = GroupedLeagueCtor {
     shape: LeagueWithStages {
         division: LeagueDivision { vtabela: 0x96fc84, discipline: 0x1a, rules: 0x856ef0, table: 0x856cd0, file: SEGUNDA_B_SOURCE, rows: [0x48, 0x4f, 0x67, 0x56, 0x5e], low: false },
         stages: 9, // rx09_1: the nine stages of the Second Division B
@@ -100,25 +100,25 @@ pub(crate) const SEGUNDA_B: GroupedLeagueCtor = GroupedLeagueCtor {
     predicted: 0x8582f0,
 };
 
-/// Builds the Spanish Second Division B at game creation (`construct_grouped_league` with `SEGUNDA_B`): group 1 in the
+/// Builds the Spanish Second Division B at game creation (`construct_grouped_league` with `SPANISH_SEGUNDA_B`): group 1 in the
 /// league's own table, groups 2 to 4 as stages 0 to 2, then the predicted positions.
 /// Original: `SpaSecondB::SpaSecondB` (0x855f40, spa_second_b.cpp, thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn construct_spa_second_b(this: usize, year: u32, record: usize) -> usize {
-    construct_grouped_league(this, year, record, &SEGUNDA_B, "rx09_1 new segunda b")
+    construct_grouped_league(this, year, record, &SPANISH_SEGUNDA_B, "rx09_1 new segunda b")
 }
 
-/// Comparer for `construct_spa_second_b` (`compare_league_with_stages_ctor` with the shape of `SEGUNDA_B`): only the
+/// Comparer for `construct_spa_second_b` (`compare_league_with_stages_ctor` with the shape of `SPANISH_SEGUNDA_B`): only the
 /// original runs (it allocates the league, the stages and the statistics).
 pub(crate) unsafe extern "thiscall" fn compare_construct_spa_second_b(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%);
-    compare_league_with_stages_ctor("construct_spa_second_b", League(this), year, record, &SEGUNDA_B.shape, || o(this, year, record))
+    compare_league_with_stages_ctor("construct_spa_second_b", League(this), year, record, &SPANISH_SEGUNDA_B.shape, || o(this, year, record))
 }
 
 /// The rules of the Spanish Second Division B (four groups of 20): 2 legs, 3 points a win and 1 a draw, league matches,
 /// national clubs; tie-breaks 4, 1, 2 (head to head, goal difference, goals for); none up directly, 4 to the promotion
 /// play-off, 1 to the relegation play-off, 4 down; the Second Division above, nothing below; 3 substitutions, 5
 /// substitutes; the rule bits 0x42 (a word). +0xab, +0xdb, +0xc8 and +0x52 are not written.
-pub(crate) unsafe fn segunda_b_rules() -> Vec<(usize, u8, u32)> {
+pub(crate) unsafe fn spanish_segunda_b_rules() -> Vec<(usize, u8, u32)> {
     vec![(league::LEGS, 2, 2), (league::WIN_POINTS, 1, 3), (league::DRAW_POINTS, 1, 1), (league::MATCH_CATEGORY, 1, 2), (league::CLUB_SIDES, 1, 1),
         (league::TIEBREAKS, 1, 4), (league::TIEBREAKS + 1, 1, 1), (league::TIEBREAKS + 2, 1, 2), (league::PROMOTED_COUNT, 1, 0),
         (league::PROMOTION_PLAYOFF_COUNT, 1, 4), (league::RELEGATION_PLAYOFF_COUNT, 1, 1), (league::RELEGATED_COUNT, 1, 4), // rx09_1: four go down
@@ -128,17 +128,17 @@ pub(crate) unsafe fn segunda_b_rules() -> Vec<(usize, u8, u32)> {
 
 /// Rule: the Spanish Second Division B: 3 points a win and 1 a draw; tie-breaks head to head, goal difference, goals
 /// for; the top four of each group to the promotion play-off, the sixteenth to the relegation play-off, the last four
-/// down; the Second Division above (`segunda_b_rules`, then the main round table into `league::ROUND_DATES`).
+/// down; the Second Division above (`spanish_segunda_b_rules`, then the main round table into `league::ROUND_DATES`).
 /// Original: `SpaSecondB::set_up_rules` (0x856ef0, spa_second_b.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn spa_second_b_set_up_rules(this: usize) -> u32 {
     covered!("rx09_1 segunda b rules");
-    eng_prm_apply_league_rules(League(this), &segunda_b_rules())
+    eng_prm_apply_league_rules(League(this), &spanish_segunda_b_rules())
 }
 
 /// Comparer for `spa_second_b_set_up_rules` (the rehearsal of `eng_prm_compare_league_rules`).
 pub(crate) unsafe extern "thiscall" fn compare_spa_second_b_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
-    eng_prm_compare_league_rules("spa_second_b_set_up_rules", League(this), segunda_b_rules(), || o(this), || spa_second_b_set_up_rules(this))
+    eng_prm_compare_league_rules("spa_second_b_set_up_rules", League(this), spanish_segunda_b_rules(), || o(this), || spa_second_b_set_up_rules(this))
 }
 
 /// A league round table (0x41-byte rounds) of a `create_schedule`: the league output 1 (when given), the rounds and

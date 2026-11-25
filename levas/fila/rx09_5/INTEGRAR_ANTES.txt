@@ -1,0 +1,1 @@
+Depende do rx09_1 (SEGUNDA_B_SOURCE), do cx13_6 (play_off_club_text) e do cx14_3 (grouped_league_club_array, grouped_league_predicted_positions e os comparadores): integrar depois deles.

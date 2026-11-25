@@ -1,0 +1,1 @@
+Depende do rx09_2 (segunda_b_group_clubs) e do cx14_6 (stage_round_table, category_b_league_stage, category_b_stage_clubs, compare_category_b_stage; este depende do cx14_3): integrar depois deles.

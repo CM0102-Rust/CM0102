@@ -4079,8 +4079,33 @@ routines! {
     Prologue { address: 0x66a280, bytes: &[0x51, 0x8b, 0x44, 0x24, 0x10] } => nation_menu_split_construct, compare_nation_menu_split_construct;
     Prologue { address: 0x66a360, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => nation_menu_split_format_header, compare_nation_menu_split_format_header;
     Prologue { address: 0x66a430, bytes: &[0x8b, 0x41, 0x0a, 0x85, 0xc0] } => nation_menu_split_in_second_part, compare_nation_menu_split_in_second_part;
+    Prologue { address: 0x5fb810, bytes: &[0x6a, 0xff, 0x68, 0x16, 0xb0, 0x95, 0x00] } => reset_human_record, compare_reset_human_record;
+    Prologue { address: 0x669180, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] } => key_nation_create_all_comps, compare_key_nation_create_all_comps;
+    Prologue { address: 0x5efaa0, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] } => hall_of_fame_load, compare_hall_of_fame_load;
+    Prologue { address: 0x5f0680, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => hall_of_fame_unscramble_and_check, compare_hall_of_fame_unscramble_and_check;
+    Prologue { address: 0x5f0620, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => hall_of_fame_compare_entries, compare_hall_of_fame_compare_entries;
+    Prologue { address: 0x557280, bytes: &[0x6a, 0xff, 0x68, 0x01, 0x7d, 0x95, 0x00] } => post_ban_news, compare_post_ban_news;
+    Prologue { address: 0x55e5f0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] } => compare_nation_index_entries, compare_compare_nation_index_entries;
+    Prologue { address: 0x5a5930, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] } => halve_club_fine_count, compare_halve_club_fine_count;
+    Prologue { address: 0x5a5960, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] } => clear_club_fine_count, compare_clear_club_fine_count;
+    Prologue { address: 0x55ce40, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => get_scope_text, compare_get_scope_text;
+    Prologue { address: 0x569e30, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => is_in_dispute, compare_is_in_dispute;
+    Prologue { address: 0x56a030, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x08] } => get_dispute_club_id, compare_get_dispute_club_id;
+    Prologue { address: 0x569ed0, bytes: &[0x51, 0x53, 0x8b, 0xd9, 0x55] } => process_hearings, compare_process_hearings;
+    Prologue { address: 0x56a3b0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => dispute_post_news, compare_dispute_post_news;
+    Prologue { address: 0x5a7ed0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x85, 0xc0] } => write_board_fine_warning_news_text, compare_write_board_fine_warning_news_text;
+    Prologue { address: 0x8af520, bytes: &[0x6a, 0xff, 0x68, 0xcc, 0x37, 0x96, 0x00] } => team_award_construct, compare_team_award_construct;
+    Prologue { address: 0x92fe80, bytes: &[0x6a, 0xff, 0x68, 0x83, 0x60, 0x96, 0x00] } => year_award_construct, compare_year_award_construct;
+    Prologue { address: 0x931360, bytes: &[0x66, 0x8b, 0x44, 0x24, 0x04] } => year_ratings_construct, compare_year_ratings_construct;
+    Prologue { address: 0x419840, bytes: &[0x6a, 0xff, 0x68, 0xb0, 0x3e, 0x95, 0x00] } => awol_start_absence, compare_awol_start_absence;
+    Prologue { address: 0x419ad0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => awol_post_news, compare_awol_post_news;
+    Prologue { address: 0x43f7f0, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] } => cash_set_currency, compare_cash_set_currency;
+    Prologue { address: 0x43f4e0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x8b, 0xd9] } => cash_step_up, compare_cash_step_up;
+    Prologue { address: 0x43f580, bytes: &[0x83, 0xec, 0x08, 0x53, 0x8b, 0xd9] } => cash_step_down, compare_cash_step_down;
+    Prologue { address: 0x4415e0, bytes: &[0xa0, 0x40, 0xb1, 0x98, 0x00] } => cash_get_currency, compare_cash_get_currency;
+    Prologue { address: 0x43f350, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x8b, 0xc8] } => swap_bytes_64_array, compare_swap_bytes_64_array;
 }
-const N: usize = 3921;
+const N: usize = 3946;
 include!(concat!(env!("OUT_DIR"), "/indices.rs")); // IDX_<NAME>: the position of each routine (build.rs)
 
 /// Size of the engine object (the game allocates it with new(0xf63b)): side 1's block (+0xf5f2, 0x36
@@ -4127,6 +4152,9 @@ pub(crate) use self::award_nation_awards::*;
 #[path = "motor/award/team_award.rs"]
 pub(crate) mod award_team_award;
 pub(crate) use self::award_team_award::*;
+#[path = "motor/award/year_award.rs"]
+pub(crate) mod award_year_award;
+pub(crate) use self::award_year_award::*;
 #[path = "motor/award/year_ratings.rs"]
 pub(crate) mod award_year_ratings;
 pub(crate) use self::award_year_ratings::*;
@@ -5553,6 +5581,149 @@ pub(crate) use self::zipdir::*;
 // ---------- 161st batch: watch list, position code and staff criterion ----------
 
 compare_value!(compare_staff_criterion, staff_criterion, IDX_STAFF_CRITERION, () -> u32);
+
+// ---------- batch 336: loading the hall of fame file and the order of its entries (hall_of_fame.cpp; sx12_7) ----------
+
+// --- sx09b_1: the news item of a new ban (discipline.cpp) ---
+
+// --- sx09b_2: the discipline nation index order and the clubs' fine counts (discipline.cpp, Fine.cpp) ---
+
+compare_order!(compare_compare_nation_index_entries, compare_nation_index_entries, IDX_COMPARE_NATION_INDEX_ENTRIES);
+
+// --- sx09b_3: the scope text of a ban (discipline.cpp) ---
+
+// --- sx09b_5: the contract disputes before the Player Status Committee (dispute.cpp) ---
+
+// --- sx09b_6: the news item of a contract dispute (dispute.cpp) ---
+
+// --- sx09b_8: the text of the board's warning about fining players too often (Fine.cpp) ---
+
+// ---------- sx05b_5: the team award, year award and year ratings constructors; the award builders the nations share ----------
+
+/// The award base fields every award class shares (`AWARD`, award.cpp): +4 the award type byte (0 team, 1 year, 2
+/// month), +0xd the nation id and +0x11 the award's index in its nation (the news slots 0 and 1); the rest is
+/// `award_fields`.
+pub(crate) mod award_base {
+    pub(crate) const TYPE: usize = 0x4;
+    pub(crate) const STAFF_COMP: usize = 0x5;
+    pub(crate) const CLUB_COMP: usize = 0x9;
+    pub(crate) const NATION_ID: usize = 0xd;
+    pub(crate) const INDEX: usize = 0x11;
+}
+
+/// The year award (`YEAR_AWARD`, 0x2b bytes): the record kind byte Staff_Records keeps (+0x1d), a second option byte
+/// (+0x1e) [inference], the owned shortlist (+0x1f, or 0) and its first and last record offsets in the award manager's
+/// year history (+0x23, +0x27; −1 none).
+pub(crate) mod year_award_obj {
+    pub(crate) const SIZE: u32 = 0x2b;
+    pub(crate) const VTABLE: usize = 0x9713b8;
+    pub(crate) const KIND: usize = 0x1d;
+    pub(crate) const OPTION: usize = 0x1e;
+    pub(crate) const SHORTLIST: usize = 0x1f;
+    pub(crate) const HISTORY_FIRST: usize = 0x23;
+    pub(crate) const HISTORY_LAST: usize = 0x27;
+}
+
+/// The team award (`TEAM_AWARD`, 0x25d bytes; the selection itself is `TeamAward`): the update date (+0x1d), the
+/// season span in years (+0x25), the period start and end dates (+0x242, +0x24a, inside the 0x205-byte record from
+/// +0x4e the history keeps; the filled count +0x252 is `TeamAward::filled`), the substitutes count (+0x253), the
+/// history offsets (+0x254, +0x258) and the formation mode (+0x25c).
+pub(crate) mod team_award_obj {
+    pub(crate) const SIZE: u32 = 0x25d;
+    pub(crate) const VTABLE: usize = 0x9703f0;
+    pub(crate) const UPDATE_DATE: usize = 0x1d;
+    pub(crate) const SEASON_SPAN: usize = 0x25;
+    pub(crate) const RECORD: usize = 0x4e;
+    pub(crate) const RECORD_SIZE: u32 = 0x205;
+    pub(crate) const PERIOD_START: usize = 0x242;
+    pub(crate) const PERIOD_END: usize = 0x24a;
+    pub(crate) const SUBSTITUTES: usize = 0x253;
+    pub(crate) const HISTORY_FIRST: usize = 0x254;
+    pub(crate) const HISTORY_LAST: usize = 0x258;
+    pub(crate) const FORMATION_MODE: usize = 0x25c;
+}
+
+/// A nation's awards object (`NationAwards`): the vtable, the award table (+4) and count (+8, i16), the month ratings
+/// (+0xa), the type byte (+0x12), the nation record (+0xe) and the nation id the awards carry (+0x13).
+pub(crate) mod nation_awards_fields {
+    pub(crate) const TABLE: usize = 0x4;
+    pub(crate) const COUNT: usize = 0x8;
+    pub(crate) const MONTH_RATINGS: usize = 0xa;
+    pub(crate) const NATION: usize = 0xe;
+    pub(crate) const TYPE: usize = 0x12;
+    pub(crate) const NATION_ID: usize = 0x13;
+}
+
+/// How a nation's awards object starts: its vtable, the key of its nation (none for the World Cup), the nation id, the
+/// type byte, and the month ratings it needs (with the error line when they cannot be built).
+pub(crate) struct NationAwardsClass {
+    pub(crate) vtable: usize,
+    pub(crate) nation_key: Option<usize>,
+    pub(crate) nation_id: u32,
+    pub(crate) kind: u8,
+    pub(crate) month_ratings: Option<(usize, u32)>,
+}
+
+pub(crate) const FN_NATION_AWARDS_TOP_THREE_FROM_RATINGS: usize = 0x769380;
+pub(crate) const FN_NATION_AWARDS_BASE_DAILY_UPDATE: usize = 0x768310;
+
+/// The top three of the year ratings for `award` (`nation_awards_award_top_three_from_ratings`) with the seven
+/// filters as the nation passes them.
+pub(crate) unsafe fn award_top_three_from_ratings(this: usize, today: usize, award: usize, filters: [i32; 7]) {
+    let f: unsafe extern "thiscall" fn(usize, usize, usize, i32, i32, i32, i32, i32, i32, i32) = core::mem::transmute(FN_NATION_AWARDS_TOP_THREE_FROM_RATINGS);
+    let [a, b, c, d, e, g, h] = filters;
+    f(this, today, award, a, b, c, d, e, g, h)
+}
+
+/// The base daily update of a nation's awards (`NationAwards::daily_update`: the month change).
+pub(crate) unsafe fn nation_awards_base_daily_update(this: usize, today: usize) {
+    let f: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_NATION_AWARDS_BASE_DAILY_UPDATE);
+    f(this, today)
+}
+
+/// The comparer of a nation awards constructor: it allocates (and may load); only the original runs, then the object
+/// must carry the class's vtable, nation id and type, and (without a file) `count` awards.
+pub(crate) unsafe fn compare_nation_awards_built(r: usize, this: usize, file: usize, class: &NationAwardsClass, count: i16, what: &str) -> usize {
+    use nation_awards_fields as na;
+    let ok = r == this && read_usize(this) == class.vtable && read_u32(this + na::NATION_ID) == class.nation_id && read_u8(this + na::TYPE) == class.kind
+        && (file != 0 || read_usize(this + na::TABLE) == 0 || read_i16(this + na::COUNT) == count);
+    SCOREBOARD.record(ok, || format!("{}: vtable {:#x} nation id {:#x} type {} count {}", what, read_usize(this), read_u32(this + na::NATION_ID), read_u8(this + na::TYPE), read_i16(this + na::COUNT)));
+    r
+}
+
+/// The comparer of a nation's `init_awards`: it allocates the awards; only the original runs, then each award must be
+/// built for this nation in its slot (`award_base::NATION_ID`, `award_base::INDEX`) with its staff competition.
+pub(crate) unsafe fn compare_nation_awards_init(this: usize, original: impl FnOnce(), what: &str) {
+    use nation_awards_fields as na;
+    original();
+    let table = read_usize(this + na::TABLE);
+    if table == 0 {
+        return;
+    }
+    let n = read_i16(this + na::COUNT).max(0) as usize;
+    let bad: Vec<usize> = (0..n).filter(|&k| {
+        let a = read_usize(table + 4 * k);
+        a != 0 && (read_u32(a + award_base::NATION_ID) != read_u32(this + na::NATION_ID) || read_u32(a + award_base::INDEX) != k as u32)
+    }).collect();
+    SCOREBOARD.record(bad.is_empty(), || format!("{}: awards with the wrong nation or index {:?}", what, bad));
+}
+
+// ---------- sx05b_21: setting the display currency (cash.cpp) ----------
+
+/// One display currency as `cash_set_currency` sets it: the exchange rate, the round rate and the scale (f64 bits),
+/// the prefix and suffix texts and the unit texts of thousands, millions, billions and thousands of billions (copied
+/// from these addresses of the exe), the thousands and decimal separators and the no-separator-under-10,000 flag.
+pub(crate) struct Currency {
+    rate: u64,
+    round_rate: u64,
+    scale: u64,
+    prefix: usize,
+    suffix: usize,
+    thousands: u8,
+    no_separator_under_10000: u32,
+    decimal: u8,
+    units: [usize; 4],
+}
 
 // ---------- batch 335: the nation menu split: building it, its part headers and the side of a nation (key_nation.cpp; sx12_3) ----------
 

@@ -1,0 +1,1 @@
+Antes de integrar: pôr (0x5fb720, 3) em RELATIVAS no rust/src/detours.rs (prólogo push esi; mov esi, ecx; call rel32 Formation::Formation; o relativas_pedidas.py aplica). Depende do sx12b_2 (HUMAN_TACTIC_SLOT_SIZE).

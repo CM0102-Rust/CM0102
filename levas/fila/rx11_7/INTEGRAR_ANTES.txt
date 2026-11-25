@@ -1,0 +1,1 @@
+Depende do sx05b_5 (AwardSpec, NationAwardsClass, nation_awards_fields, nation_awards_build, award_player_of_year_from_ratings, nation_awards_base_daily_update, compare_nation_awards_built, compare_nation_awards_init): integrar depois dele.

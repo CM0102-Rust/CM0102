@@ -1,0 +1,1 @@
+Depende do rx09_3 (league_cup_stage, compare_league_cup_stage, segunda_b_group), do rx09_2 (SEGUNDA_B_GROUPS) e do cx14_6: integrar depois deles.

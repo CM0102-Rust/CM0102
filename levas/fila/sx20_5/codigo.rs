@@ -10,7 +10,7 @@ pub(crate) const SHORTLIST_SLOT_SIZE: usize = 0x25;
 pub(crate) const SHORTLIST_SLOTS: usize = 40;
 pub(crate) const SHORTLIST_CLUB_ENTRY_SIZE: usize = 9;
 /// Shortlist_Manager::build_position_lists and Shortlist_Manager::sort_position_lists, called through the exe.
-const SHORTLIST_BUILD_POSITION_LISTS: usize = 0x839e60;
+pub(crate) const SHORTLIST_BUILD_POSITION_LISTS: usize = 0x839e60;
 const SHORTLIST_SORT_POSITION_LISTS: usize = 0x83a780;
 /// Shortlist_Manager::load, called through the exe.
 const SHORTLIST_LOAD: usize = 0x83a9d0;
@@ -18,7 +18,7 @@ const SHORTLIST_LOAD: usize = 0x83a9d0;
 /// Empties a shortlist slot: +0 = 0xb, no position, valuation, price ceiling or price, no target, replacement or
 /// offer (-1), flag bits 1-4 set and bits 0 and 5 cleared (bits 6-7 keep what the memory held), index -1 and the date
 /// 1/1997.
-unsafe fn shortlist_slot_reset(slot: ShortlistSlot) {
+pub(crate) unsafe fn shortlist_slot_reset(slot: ShortlistSlot) {
     write_u8(slot.addr(), 0xb); // the slot's +0 byte
     slot.set_position(0);
     slot.set_valuation(0);

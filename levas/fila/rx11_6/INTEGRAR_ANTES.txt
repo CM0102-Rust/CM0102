@@ -1,0 +1,1 @@
+Depende do sx05b_5 (AwardSpec, NationAwardsClass, nation_awards_construct, nation_awards_build, compare_nation_awards_built, compare_nation_awards_init, nation_awards_fields): integrar depois dele.

@@ -16,7 +16,7 @@ pub(crate) unsafe fn drop_plain_league(this: League, vtable: usize) {
 }
 
 /// Destroys an owned competition through its scalar deleting destructor (virtual slot 0) with 1, when there is one.
-unsafe fn delete_owned_comp(comp: usize) {
+pub(crate) unsafe fn delete_owned_comp(comp: usize) {
     if comp != 0 {
         let destroy: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(comp) + comp_vtable::SCALAR_DELETING_DESTRUCTOR));
         destroy(comp, 1);

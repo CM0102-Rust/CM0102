@@ -4265,3 +4265,65 @@ pub(crate) fn first_difference(mo: &crate::comparison::MemorySnapshot, mr: &crat
         })
         .unwrap_or_default()
 }
+
+/// Fills a nation's award table: the count, the table (4 bytes an award, `exe::crt_malloc`; out of memory the error box
+/// of `cpp` at `line` and nothing more) and each award built from its spec in order.
+pub(crate) unsafe fn nation_awards_build(this: usize, specs: &[AwardSpec], cpp: usize, line: u32) {
+    write_i16(this + nation_awards_fields::COUNT, specs.len() as i16);
+    let table = exe::crt_malloc(4 * specs.len() as u32);
+    write_usize(this + nation_awards_fields::TABLE, table);
+    if table == 0 {
+        show_error_at(cpp, line);
+        return;
+    }
+    for (k, spec) in specs.iter().enumerate() {
+        write_usize(table + 4 * k, award_new(spec));
+    }
+}
+
+/// A new award object from its spec (`exe::crt_operator_new` of the class size, then its constructor through the
+/// game's address); 0 when out of memory, as the original leaves it.
+pub(crate) unsafe fn award_new(spec: &AwardSpec) -> usize {
+    let size = match spec {
+        AwardSpec::Year(_) => year_award_obj::SIZE,
+        AwardSpec::Team(_) => team_award_obj::SIZE,
+        AwardSpec::Month(_) => MONTH_AWARD_SIZE,
+    };
+    let p = exe::crt_operator_new(size);
+    if p == 0 {
+        return 0;
+    }
+    match spec {
+        AwardSpec::Year(a) => {
+            let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_YEAR_AWARD_CONSTRUCT);
+            f(p, a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10])
+        }
+        AwardSpec::Team(a) => {
+            let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_TEAM_AWARD_CONSTRUCT);
+            f(p, a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9])
+        }
+        AwardSpec::Month(a) => {
+            let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_MONTH_AWARD_CONSTRUCT);
+            f(p, a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11])
+        }
+    }
+}
+
+/// The year award constructor (0x92fe80, thiscall, ret 0x2c) and the team award one (0x8af520, ret 0x28), as the
+/// nations' `init_awards` call them (through the hooks).
+pub(crate) const FN_YEAR_AWARD_CONSTRUCT: usize = 0x92fe80;
+
+pub(crate) const FN_TEAM_AWARD_CONSTRUCT: usize = 0x8af520;
+
+/// `MONTH_AWARD::MONTH_AWARD` (0x766e10, thiscall, ret 0x30; 12 arguments), 0xa2 bytes.
+pub(crate) const FN_MONTH_AWARD_CONSTRUCT: usize = 0x766e10;
+
+pub(crate) const MONTH_AWARD_SIZE: u32 = 0xa2;
+
+/// One award a nation builds in its `init_awards`: the constructor's arguments in order (the nation id and the
+/// award's index first, the file second to last).
+pub(crate) enum AwardSpec {
+    Year([u32; 11]),
+    Team([u32; 10]),
+    Month([u32; 12]),
+}

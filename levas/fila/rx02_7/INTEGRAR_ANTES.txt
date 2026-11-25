@@ -1,0 +1,1 @@
+Depende de: o rx01_1, o rx01_2 (projection_stretch), o rx01_5 (HintGlyph, GlyphHinter), o rx01_7 (glyph_hint_collect_stem_widths_checked, chamada pelo endereco do exe), o rx01_8 (lib_mem_free) e o rx02_1; integrar depois deles, na mesma leva de telas (os rx01_* e os rx02_* juntos). Sem pares de RELATIVAS.

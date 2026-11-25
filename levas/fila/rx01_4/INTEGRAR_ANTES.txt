@@ -1,0 +1,1 @@
+Depende do rx01_1 e do rx01_3 (TT_ONE, TT_MOVE_FREE); integrar depois deles, na mesma leva de telas.

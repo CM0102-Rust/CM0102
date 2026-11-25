@@ -2,7 +2,7 @@
 
 /// Deletes each stage object from 0 to `CURRENT_STAGE` (read again each time; none when it is negative) through its
 /// scalar deleting destructor (vtable slot 0 with 1), then frees the stage vector (`STAGES`) and zeroes it.
-unsafe fn delete_stages_and_vector(this: League) {
+pub(crate) unsafe fn delete_stages_and_vector(this: League) {
     let mut k = 0i32;
     while k <= this.current_stage() as i32 {
         let stage = read_usize(this.stages() + 4 * k as usize);

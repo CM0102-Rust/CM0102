@@ -27,7 +27,9 @@ impl NewsPlayerList {
             text: [0; 0x190],
         };
         l.text[0] = read_u8(0xad9c64); // the original starts the list text with the empty string's byte
-        if count == 0 {
+        if count <= 0 {
+            // a negative count (over 127 players in the signed byte) leaves at once in the original too (signed
+            // compare); `min(count, 3) as usize` would otherwise run away
             return l;
         }
         let mut slot = first;

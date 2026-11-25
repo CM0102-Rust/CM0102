@@ -1,0 +1,2 @@
+rxs1_11 (TRANSFER_MANAGER_CPP, TRANSFER_DAT, SCHEDULE_BUCKETS)
+sx21b_5 (TRANSFER_OFFER::load 0x8e5790, called by its address) and sx20_5 (the loading Shortlist_Manager constructor, called by its address): not needed to compile, only for the proof of the whole load

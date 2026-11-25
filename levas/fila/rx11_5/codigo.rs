@@ -30,8 +30,10 @@ pub(crate) unsafe fn first_three_still_in(cup: Cup) -> [Option<usize>; 3] {
 /// 0x58: the section, `size`, the teams, 2, the record, the round table, rounds, 3, 1, 0xa, the tie-breaks {1, 2, 3,
 /// 0}, the places {`qualifiers`, 0, 0, 0}, the year, `index`, the label, `importance`, 4, 0, `code`, −1, 0, 2; the
 /// original pushes the words and the index with garbage in the high bytes, which the constructor does not read: the
-/// copy passes clean values) into `cup::STAGES`[index]. Returns the stage (or 0) and the round table.
-pub(crate) unsafe fn concacaf_group_stage(this: usize, index: u8, teams: usize, size: u32, qualifiers: u8, importance: u32, code: u32) -> (usize, usize) {
+/// copy passes clean values) into `cup::STAGES`[index]. Returns the stage (or 0) and the round table. The Central
+/// American groups' `concacaf_group_stage` (cx16_3) is this with places {1, 1, 0, 0}, importance 0xf and code 0x28,
+/// without the store: one can replace the other when both are in the motor.
+pub(crate) unsafe fn concacaf_qualifying_group_stage(this: usize, index: u8, teams: usize, size: u32, qualifiers: u8, importance: u32, code: u32) -> (usize, usize) {
     let cup = Cup(this);
     let create_schedule: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + comp_vtable::CREATE_SCHEDULE));
     let (mut rounds, mut label) = (0i16, 0i16);
@@ -74,7 +76,7 @@ pub(crate) unsafe fn concacaf_semi_final_fourth(this: usize, g: usize) -> usize 
 /// (`first_three_still_in` of the cup) and the play-off survivors (of `cup::STAGES`[2]). For the three groups at the
 /// current stage g (`cup::CURRENT_STAGE`, its byte) and g + 1, g + 2: slot 0 `take_next_concacaf_seed` (none: the slot
 /// keeps what was there), slots 1 and 2 the survivors, slot 3 `concacaf_semi_final_fourth`; the stage of 4 nations, 2
-/// qualifying, importance 0xf, code 0x28 (`concacaf_group_stage`); without it, the error box (lines 0x698, 0x6c4,
+/// qualifying, importance 0xf, code 0x28 (`concacaf_qualifying_group_stage`); without it, the error box (lines 0x698, 0x6c4,
 /// 0x6f3) and the routine ends (the array and the round table not freed). Groups A and B: the round table freed and
 /// the group draw news (`exe::league_send_group_draw_news`). Group C: the array and the round table freed, then
 /// `cup::CURRENT_STAGE` g + 2 and its draw news. The SEH frame covers only each stage's new.
@@ -101,7 +103,7 @@ pub(crate) unsafe extern "thiscall" fn wc_concacaf_cup_create_semi_final_groups(
         write_usize(teams + 8, play_off[g].unwrap_or(0)); // rx11_5: one play-off survivor per group
         write_usize(teams + 0xc, concacaf_semi_final_fourth(this, g));
         let index = first.wrapping_add(g as u8);
-        let (stage, table) = concacaf_group_stage(this, index, teams, 4, 2, 0xf, 0x28);
+        let (stage, table) = concacaf_qualifying_group_stage(this, index, teams, 4, 2, 0xf, 0x28);
         if g == 2 {
             exe::crt_free(teams);
             exe::crt_free(table);
@@ -124,7 +126,7 @@ pub(crate) unsafe extern "thiscall" fn wc_concacaf_cup_create_semi_final_groups(
 /// A team array (`exe::crt_malloc(0x18)`; null, the error box of line 0x723). The current stage s (`cup::CURRENT_STAGE`,
 /// its byte); for the semi-final groups s − 3, s − 2 and s − 1, rows 0 and 1 (`exe::league_get_table_row`(group, row),
 /// thiscall, ret 4; the club at the row's start). The stage of 6 nations at index s, with 3 − the exempt count
-/// (+0xba, the byte `wc_concacaf_progress_codes` reads) qualifying, importance 0x14, code 0x24 (`concacaf_group_stage`);
+/// (+0xba, the byte `wc_concacaf_progress_codes` reads) qualifying, importance 0x14, code 0x24 (`concacaf_qualifying_group_stage`);
 /// the array and the round table freed; without a stage, the error box of line 0x742. No draw news, and the current
 /// stage is not touched (advance_stage set it).
 /// Original: `WcConcacafCup::create_final_group` (0x917830, wc_concacaf_cup.cpp, thiscall, ret 0).
@@ -145,7 +147,7 @@ pub(crate) unsafe extern "thiscall" fn wc_concacaf_cup_create_final_group(this: 
             write_usize(teams + (g as usize * 2 + row) * 4, read_usize(exe::league_get_table_row(group, row as i32))); // rx11_5: the top two of each group
         }
     }
-    let (stage, table) = concacaf_group_stage(this, index, teams, 6, qualifiers, 0x14, 0x24);
+    let (stage, table) = concacaf_qualifying_group_stage(this, index, teams, 6, qualifiers, 0x14, 0x24);
     exe::crt_free(teams);
     exe::crt_free(table);
     if stage == 0 {

@@ -1,0 +1,2 @@
+Antes de integrar: pôr (0x797150, 3) em RELATIVAS no rust/src/detours.rs (prólogo push esi; mov esi, ecx; call rel32 ~X).
+Depende do cx03_3 (delete_through, que é privado no cx03_3: tornar pub(crate) se os dois não entrarem na mesma leva, como já pede o sobras.md): integrar depois dele.

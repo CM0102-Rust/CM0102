@@ -1,0 +1,1 @@
+Depende de: o rx01_1 (os tipos do interpretador), o rx01_2 (TtRoundFn) e o rx01_5 (at_i16, at_i32, set_i32); integrar depois deles, na mesma leva de telas (os rx01_* e os rx02_* juntos). Sem pares de RELATIVAS.

@@ -179,7 +179,11 @@ pub(crate) unsafe extern "thiscall" fn compare_reset_human_record(this: usize, m
         covered!("sx12_6 reset with offers only in the original");
         return o(this, manager);
     }
-    let (r, n, equal, mo, mr) = crate::comparison::side_by_side(&[(record, 0xa6ef), (this + 8, 8)], || o(this, manager), || reset_human_record(this, manager));
+    // the draft contract (+0x9a09, 0x50 bytes) is left out: STAFF_CONTRACT::STAFF_CONTRACT (0x85e410) sets only a few
+    // fields (+4, +8, the dates, +0x3b, +0x40, +0x45, +0x49..+0x4e) and the original copies the rest of that local, stack
+    // leftovers, into the record (DEFEITOS_DO_ORIGINAL); the copy starts from a zeroed contract
+    let regions = [(record, 0x9a09), (record + 0x9a59, 0xa6ef - 0x9a59), (this + 8, 8)];
+    let (r, n, equal, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, manager), || reset_human_record(this, manager));
     SCOREBOARD.record(equal && r == n, || format!("HUMAN_MANAGER::reset_human_record(record {}) original {} rust {}: {:?}", k, r, n, first_differences(&mo, &mr)));
     r
 }

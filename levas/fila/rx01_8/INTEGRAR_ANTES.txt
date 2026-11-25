@@ -1,0 +1,1 @@
+Depende de o rx01_1, o rx01_5 e o rx01_7; integrar na mesma leva de telas (os rx01_5..8 se chamam entre si).

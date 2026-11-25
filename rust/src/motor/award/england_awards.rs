@@ -204,3 +204,12 @@ pub(crate) const NATION_AWARDS_MONTH_RATINGS: usize = 0xa;
 /// team, manager of the month, player of the month, young player of the month, manager of the year, team of the season
 /// in the order the routines below use).
 pub(crate) const ENGLAND_DIVISIONS: [usize; 4] = [KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION, KEY_CLUB_COMP_ENGLISH_FIRST_DIVISION, KEY_CLUB_COMP_ENGLISH_SECOND_DIVISION, KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION];
+
+/// The shared body of the nations' `update_team_of_the_week`: when `award` is one of the table's `slots`, the team of
+/// the week (`build_team_of_the_week`).
+pub(crate) unsafe fn nation_awards_team_of_the_week_of(this: usize, award: usize, slots: &[usize]) {
+    if slots.iter().any(|&k| nation_award(this, k) == award) {
+        covered!("sx05b_5 team of the week");
+        build_team_of_the_week(this, award);
+    }
+}

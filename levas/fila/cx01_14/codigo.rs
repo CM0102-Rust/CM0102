@@ -47,7 +47,7 @@ pub(crate) unsafe extern "thiscall" fn drop_cup(this: usize) {
 }
 
 /// Destroys a statistics object (`Comp_Stats::~Comp_Stats` and the operator delete).
-unsafe fn delete_comp_stats(stats: usize) {
+pub(crate) unsafe fn delete_comp_stats(stats: usize) {
     if stats != 0 {
         cup_load_delete_comp_stats(stats);
     }
@@ -56,7 +56,7 @@ unsafe fn delete_comp_stats(stats: usize) {
 /// The body of the national cups' destructors (thiscall, ret 0; SEH frame only for the base): the cup's vtable back,
 /// the team table (+0xa7) and the round table (+0xa3) freed, each round's tie array (`TIE_TABLES`, `ROUND_COUNT` of
 /// them) and the array freed, the statistics destroyed, all left as they are, then the Cup base (`exe::drop_cup`).
-unsafe fn drop_national_cup(this: usize, vtable: usize) {
+pub(crate) unsafe fn drop_national_cup(this: usize, vtable: usize) {
     let cup = Cup(this);
     write_usize(this, vtable);
     for table in [cup.team_table(), cup.round_table()] {

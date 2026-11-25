@@ -1,0 +1,12 @@
+NAO PROVADO NO JOGO (leitor rxt, rodada 6, 25/11/2026): player_search_write_opposition_report_text 0x7be670 (5,4 KB),
+inteira, um desvio. Item de TELAS: so o corpo da noticia da observacao de clube (rxt_1, 0x7b81f0) o chama. Caminho
+para o Lucas, jogando comparando: mandar um olheiro observar o proximo adversario e abrir a noticia do fim da
+observacao. Comparador: lado a lado do texto (0x1000 bytes), dos ids, de quantos e do gerador; o texto fica de lado
+quando a copia passa por um valor que a original le do quadro sem iniciar (OPPOSITION_REPORT_UNSET).
+Prova sem o jogo: a original e a copia emuladas (unicorn, scratchpad\rxt\check3.py) no mesmo mundo com stubs e as tres
+escolhas por posicao originais: 6000 relatorios sorteados (faixas 0..6, tecnico/auxiliar/nenhum, formacao, estilo,
+respostas, 0..4 jogadores com marcas e habilidade sorteadas), 0 diferencas fora dos 48 casos do defeito do ponta com um
+meia so (diferem so pela marca do segundo meia nao iniciado); 93 modelos vistos. Faixa fora de 0..6 e tecnico sem ficha
+ficaram fora do sorteio (defeitos, inalcancaveis ou nao iniciados). Mutacoes 3/3 juntas mudam a saida (377 de 1500;
+vista a faixa 2). Compila sobre o HEAD 2fe2ea3c6 junto com o rxt_1 (0 avisos nas linhas do item); com as mutacoes,
+compila; ancoras com 1 ocorrencia. Nao rodei o conferir_assinaturas.py --fila: rodar antes de integrar.

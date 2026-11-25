@@ -17,7 +17,7 @@ pub(crate) unsafe fn swedish_second_rules() -> Vec<(usize, u8, u32)> {
 
 /// The Swedish Second Division: vtable 0x9702a0, the Swedish discipline rule 0x1c, seven stages after the North
 /// section (the five other sections, the promotion play-off and the relegation play-off); the rules written inline
-/// (no box; SwedishSecond::set_up_rules 0x892380 is not called), SweSecond::create_table (0x8921b0, line 0x50), sort
+/// (no box; SweSecond::set_up_rules 0x892380 is not called), SweSecond::create_table (0x8921b0, line 0x50), sort
 /// 0x57, statistics 0x5f, fixtures 0x68; SweSecond::create_section_stage (0x892670) for the five other sections and
 /// SweSecond::set_predicted_positions (0x893470).
 pub(crate) const SWEDISH_SECOND: GroupedLeagueCtor = GroupedLeagueCtor {

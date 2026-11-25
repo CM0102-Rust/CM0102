@@ -1,0 +1,7 @@
+Depende do rx04_1 (langlib_lookup_translation, as globais G_LANGLIB_* e a entrada LANGLIB_ENTRY_*): integrar depois dele.
+
+PEDIDO À SESSÃO PRINCIPAL (sem isto o item não funciona na simulação): em rust/src/detours.rs, ARG_DWORDS = 16 -> 28.
+O langlib_sprintf é variádico e o desvio com pilha particular copia só ARG_DWORDS dwords da pilha do jogo. Há chamadas
+com até 26 dwords (0x748782: add esp, 0x68; ~600 chamadas passam mais de 16). Com 16, os argumentos depois do 14o
+viriam do lixo da pilha particular (texto errado ou queda num %s). 28 cabe no deslocamento de 8 bits do "push dword
+[eax + 4i]" do stub (4 x 31 = 124 é o máximo; 32 daria 128 = -128).

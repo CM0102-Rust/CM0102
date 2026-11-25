@@ -1,0 +1,1 @@
+Depende do rx09_16 (WC_ASIA_EXEMPT), do cx17_2 (FN_NATIONALTEAMS_ADD_QUALIFIED_NATION; este depende do cx16_8), do cx13_6 (play_off_club_text) e do cx14_4 (club_and_competition_short_text): integrar depois deles.

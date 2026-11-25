@@ -1,0 +1,1 @@
+Depende do rxs1_1 (news_text_name_n, news_text_link_name_n, news_text_club) e do rx07_9 (news_text_link_club_field): integrar junto com eles ou depois.

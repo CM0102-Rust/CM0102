@@ -1,0 +1,2 @@
+Depende do cx16_5 (qualifying_progress_sprintf, compare_qualifying_progress_text) e do cx03_3 (delete_through, que precisa ficar pub(crate) se o esvaziar_motor.py o levar a outro modulo): integrar depois deles.
+Antes de integrar: pôr (0x7e6130, 3), (0x7e6320, 3), (0x7e6350, 3) em RELATIVAS no rust/src/detours.rs (prólogo push esi; mov esi, ecx; call rel32 ~X).

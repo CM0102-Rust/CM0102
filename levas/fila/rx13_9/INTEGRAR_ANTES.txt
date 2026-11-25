@@ -1,0 +1,1 @@
+Depende do rx13_8 (fate_base_text, fate_headline, compare_fate_text): integrar depois dele.

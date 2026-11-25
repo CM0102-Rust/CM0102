@@ -56,3 +56,20 @@ pub(crate) const FN_NATION_AWARDS_AWARD_FROM_SHORTLIST: usize = 0x768b20;
 
 /// nation_awards_award_top_three_from_ratings (0x768720, thiscall(today, award, year ratings, continent, a, b, c), ret 0x1c).
 pub(crate) const FN_NATION_AWARDS_AWARD_TOP_THREE_FROM_RATINGS: usize = 0x768720;
+
+/// The player of the year of `award` from the year ratings (`NationAwards::award_player_of_year_from_ratings`) with
+/// the award manager's ratings table and the seven filters as the nation passes them.
+pub(crate) unsafe fn award_player_of_year_from_ratings(this: usize, today: usize, award: usize, filters: [i32; 7]) {
+    let f: unsafe extern "thiscall" fn(usize, usize, usize, usize, i32, i32, i32, i32, i32, i32, i32) = core::mem::transmute(FN_NATION_AWARDS_PLAYER_OF_YEAR_FROM_RATINGS);
+    let [a, b, c, d, e, g, h] = filters;
+    f(this, today, award, read_usize(read_usize(G_AWARD_MANAGER) + AWARD_MANAGER_YEAR_RATINGS), a, b, c, d, e, g, h)
+}
+
+/// The `NationAwards` routines the nations' `daily_update` call by address that the England item (sx03_2) has no
+/// helper for: the player of the year from the year ratings (today, award, ratings, then seven filters; ret 0x28), the
+/// top three from the ratings (today, award, then seven filters ending in the position mask and the mode; ret 0x24)
+/// and the base daily update (today; ret 4).
+pub(crate) const FN_NATION_AWARDS_PLAYER_OF_YEAR_FROM_RATINGS: usize = 0x7683c0;
+
+/// The award manager's year ratings table (`YEAR_RATINGS`, +0xc of `G_AWARD_MANAGER`) [inference].
+pub(crate) const AWARD_MANAGER_YEAR_RATINGS: usize = 0xc;

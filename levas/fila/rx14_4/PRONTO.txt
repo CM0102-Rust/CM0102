@@ -1,0 +1,4 @@
+rx14_4: delete_ita_c_cup (0x63ce90), delete_ita_cup (0x63eb50), delete_ita_super (0x65f830), delete_jap_emp_cup (0x661f00), delete_jap_j_cup (0x665550), delete_jap_super (0x665f30), delete_kor_fa_cup (0x66a630), delete_kor_league_cup (0x66c140).
+NAO PROVADO NO JOGO (leitor rx14, rodada 6, 25/11/2026): compila sobre o HEAD 2fe2ea3c6 junto com cx01_14, cx02_3, cx03_3 e rx14_1..5 (git archive de rust/ e cm0102-base/, as RELATIVAS do INTEGRAR_ANTES aplicadas, cargo build --release sem erro e sem aviso novo; o rx14_5 tambem com a mutacao 2 aplicada). Prologos e rotinas inteiras conferidos no cm0102.exe e iguais no cm0102-1080.exe; nenhum endereco no rust/src nem na fila. Nao rodei o conferir_assinaturas.py.
+Depende do cx03_3 (delete_through). INTEGRAR_ANTES.txt: as entradas RELATIVAS (endereco, 3).
+TELAS (sem mutacoes): o Lucas carregando outro save comparando, com as ligas das copas carregadas.

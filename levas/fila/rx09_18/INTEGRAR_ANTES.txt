@@ -1,0 +1,1 @@
+Depende do rx09_16 (WC_ASIA_EXEMPT, WC_ASIA_ENTRANT_COUNT), do rx09_3 (league_cup_stage, compare_league_cup_stage) e do cx14_6 (stage_round_table): integrar depois deles.

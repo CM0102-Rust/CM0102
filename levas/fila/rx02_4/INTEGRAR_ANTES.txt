@@ -1,0 +1,1 @@
+Depende de: o rx01_1, o rx01_2 (projection_stretch), o rx01_5, o rx02_1 e o rx02_2; integrar depois deles, na mesma leva de telas (os rx01_* e os rx02_* juntos). Sem pares de RELATIVAS.

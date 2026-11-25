@@ -1,0 +1,1 @@
+Depende do cx14_4 (CategoryBRecord, CategoryBRecordPlan), do cx13_6 (play_off_club_text), do cx14_3 (grouped_league_club_array), do rx09_8 (SWEDISH_SECOND_SECTIONS) e do rx09_7: integrar depois deles.

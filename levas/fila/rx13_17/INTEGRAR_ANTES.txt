@@ -1,0 +1,1 @@
+Depende do rx13_16 (CLUB_LATITUDE_COMPARE): integrar depois dele.

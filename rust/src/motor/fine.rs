@@ -506,3 +506,80 @@ pub(crate) const FINE_DAT: usize = 0x9ca1d4;
 
 /// The source path of Fine.cpp in the "Error" box ("E:\dev\CM3\cm3 00-01\cm3\code\Fine.cpp").
 pub(crate) const FINE_CPP_PATH: usize = 0x9ca1e0;
+
+/// Halves the club's count of player fines (at the new season): the signed byte × 0.5 (`rdata::F64_0_5`), truncated
+/// (`ftol`). A null club: nothing.
+/// Original: `Fine::halve_club_fine_count` (0x5a5930, Fine.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn halve_club_fine_count(this: usize, club: usize) {
+    if club == 0 {
+        return;
+    }
+    let e = club_fine_count(this, club);
+    write_u8(e, ftol(read_i8(e) as f64 * read_f64(rdata::F64_0_5)) as u8);
+}
+
+/// Clears the club's count of player fines (when its manager leaves). A null club: nothing.
+/// Original: `Fine::clear_club_fine_count` (0x5a5960, Fine.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn clear_club_fine_count(this: usize, club: usize) {
+    if club == 0 {
+        return;
+    }
+    write_u8(club_fine_count(this, club), 0);
+}
+
+/// Comparer for `halve_club_fine_count`: side by side over the club's byte.
+pub(crate) unsafe extern "thiscall" fn compare_halve_club_fine_count(this: usize, club: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_HALVE_CLUB_FINE_COUNT);
+    if club == 0 {
+        return o(this, club);
+    }
+    let e = club_fine_count(this, club);
+    let (_, _, same, mo, mr) = crate::comparison::side_by_side_light(&[(e, 1)], || o(this, club), || halve_club_fine_count(this, club));
+    SCOREBOARD.record(same, || format!("halve_club_fine_count(club {:#x}) original={:x?} rust={:x?}", club, mo, mr));
+}
+
+/// Comparer for `clear_club_fine_count`: side by side over the club's byte.
+pub(crate) unsafe extern "thiscall" fn compare_clear_club_fine_count(this: usize, club: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_CLEAR_CLUB_FINE_COUNT);
+    if club == 0 {
+        return o(this, club);
+    }
+    let e = club_fine_count(this, club);
+    let (_, _, same, mo, mr) = crate::comparison::side_by_side_light(&[(e, 1)], || o(this, club), || clear_club_fine_count(this, club));
+    SCOREBOARD.record(same, || format!("clear_club_fine_count(club {:#x}) original={:x?} rust={:x?}", club, mo, mr));
+}
+
+/// Writes the headline or the body of news item 6020 (0x1784): the board's warning about a manager who fines his
+/// players too often.
+///
+/// `write_board_fine_warning_news_text(news, full, out)`: the headline "The board make concerns known" (0x9cba54); the
+/// body by the news item's slot 0 (`exe::newsitem_get_slot`): set, the first warning ("The board are concerned that
+/// your frequent fining of players will damage the squads morale...", 0x9cbb3c), clear, the last one ("...we may be
+/// forced to look for a new manager", 0x9cba74). Formatted into `NEWS_TEXT_BUFFER` and set as the text of `out`
+/// (`exe::text_set_string`).
+/// Original: `write_board_fine_warning_news_text` (0x5a7ed0, Fine.cpp, thiscall, ret 0xc).
+pub(crate) unsafe extern "thiscall" fn write_board_fine_warning_news_text(_this: usize, news: usize, full: u32, out: usize) {
+    let template = if full == 0 {
+        0x9cba54 // "The board make concerns known"
+    } else if exe::newsitem_get_slot(news, 0) != 0 { // sx09b_8: the first warning
+        covered!("sx09b_8 board fine warning, the first");
+        0x9cbb3c
+    } else {
+        covered!("sx09b_8 board fine warning, the last");
+        0x9cba74
+    };
+    story_lang!(NEWS_TEXT_BUFFER, template);
+    exe::text_set_string(out, NEWS_TEXT_BUFFER as *const u8);
+}
+
+/// Comparer for `write_board_fine_warning_news_text`: the text side by side (`compare_text_writer`).
+pub(crate) unsafe extern "thiscall" fn compare_write_board_fine_warning_news_text(this: usize, news: usize, full: u32, out: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_WRITE_BOARD_FINE_WARNING_NEWS_TEXT);
+    let what = || format!("write_board_fine_warning_news_text(news {:#x}, full {})", news, full);
+    compare_text_writer(out, || o(this, news, full, out), |t| write_board_fine_warning_news_text(this, news, full, t), what);
+}
+
+/// The club's fine count: the byte of the club (by its id) in the Fine object's per-club table (the pointer at +8).
+pub(crate) unsafe fn club_fine_count(this: usize, club: usize) -> usize {
+    read_usize(this + 8).wrapping_add(read_usize(club)) // +8: the per-club fine count table
+}

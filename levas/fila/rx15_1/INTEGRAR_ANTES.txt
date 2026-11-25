@@ -1,0 +1,1 @@
+Antes de integrar: pôr (0x66d9e0, 3), (0x765e10, 3), (0x7667e0, 3), (0x789fb0, 3), (0x78a780, 3), (0x78c9d0, 3), (0x78f1f0, 3), (0x9024d0, 3), (0x92b680, 3) em RELATIVAS no rust/src/detours.rs (prólogo push esi; mov esi, ecx; call rel32 ~X; o relativas_pedidas.py aplica). Depende do cx03_3 (delete_through).

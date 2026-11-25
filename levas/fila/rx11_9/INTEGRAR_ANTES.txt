@@ -1,0 +1,1 @@
+Depende do sx05b_5 (o molde comum dos premios), do sx04c_1 (award_player_of_year_from_world_ratings) e do rx11_7 (nation_awards_construct_from_version): integrar depois deles.

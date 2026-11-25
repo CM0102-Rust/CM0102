@@ -1,0 +1,1 @@
+Depende do sx05b_5 (leva 336: NationAwardsClass, AwardSpec, nation_awards_construct, nation_awards_build, compare_nation_awards_built/_init, nation_awards_base_daily_update, nation_awards_team_of_the_week_of): integrar depois dele.

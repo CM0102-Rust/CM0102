@@ -1,0 +1,1 @@
+Antes de integrar: pôr (0x532e00, 4) em RELATIVAS no rust/src/detours.rs (prólogo push ebx; push ebp; push esi; push edi; call rel32 0x533080).

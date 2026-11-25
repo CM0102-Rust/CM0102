@@ -1,0 +1,1 @@
+Depende do rxs1_1 (news_text_name_n, news_text_link_name_n, news_text_club), do rxs1_2 (news_offer_at, news_store_item_slot, news_text_money_100) e do rx05_5 (NewsPlayerList): integrar junto com eles ou depois.

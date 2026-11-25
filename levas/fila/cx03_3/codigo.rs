@@ -3,7 +3,7 @@
 /// The body of the cups' scalar deleting destructors (thiscall, ret 4): the class destructor at `drop` (thiscall, ret 0,
 /// called through its detour) and, with bit 0 of `flags`, the object itself (`exe::crt_operator_delete`). Returns the
 /// object.
-unsafe fn delete_through(this: usize, flags: u32, drop: usize) -> usize {
+pub(crate) unsafe fn delete_through(this: usize, flags: u32, drop: usize) -> usize {
     let destroy: unsafe extern "thiscall" fn(usize) = core::mem::transmute(drop);
     destroy(this);
     if flags as u8 & 1 != 0 {

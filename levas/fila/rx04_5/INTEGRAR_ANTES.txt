@@ -1,0 +1,1 @@
+Depende do rx04_1 (c_string_bytes_eq): integrar depois dele.

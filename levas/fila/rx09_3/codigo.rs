@@ -164,7 +164,7 @@ pub(crate) unsafe fn league_cup_stage(l: League, n: u32, list: usize, table: usi
 }
 
 /// The clubs of a cup stage's team table (`cup::TEAM_TABLE`, `cup::TEAM_COUNT` entries of 6 bytes), in order.
-pub(crate) unsafe fn cup_stage_clubs(stage: usize) -> Vec<usize> {
+pub(crate) unsafe fn league_cup_stage_clubs(stage: usize) -> Vec<usize> {
     let c = Cup(stage);
     (0..c.team_count().max(0) as usize).map(|i| read_usize(c.team_table() + i * 6 + cup_team_entry::CLUB)).collect()
 }
@@ -204,7 +204,7 @@ pub(crate) unsafe extern "thiscall" fn spa_second_b_create_relegation_playoff(th
 /// stage.
 pub(crate) unsafe fn compare_league_cup_stage(name: &str, l: League, slot: usize, plan: &[usize]) {
     let stage = read_usize(l.stages() + 4 * slot);
-    let mut found = if stage == 0 { Vec::new() } else { cup_stage_clubs(stage) };
+    let mut found = if stage == 0 { Vec::new() } else { league_cup_stage_clubs(stage) };
     let mut want = plan.to_vec();
     found.sort_unstable();
     want.sort_unstable();

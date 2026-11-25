@@ -200,7 +200,7 @@ pub(crate) unsafe extern "thiscall" fn compare_swe_second_create_relegation_play
         return;
     }
     let stage = read_usize(l.stages() + 4 * 6);
-    let clubs = if stage == 0 { Vec::new() } else { cup_stage_clubs(stage) };
+    let clubs = if stage == 0 { Vec::new() } else { league_cup_stage_clubs(stage) };
     let ids: Vec<u32> = (0..12).map(|k| read_u32(this + 0xee + 4 * k)).collect();
     let in_stage_lower = clubs.iter().filter(|c| lower.contains(c)).count();
     let promoted_ok = ids.iter().all(|&id| lower.iter().any(|&c| read_u32(c) == id) && !clubs.iter().any(|&c| read_u32(c) == id));

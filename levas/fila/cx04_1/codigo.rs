@@ -4,7 +4,7 @@
 /// with 0), the round dates freed and cleared, every stage up to the current one destroyed (virtual slot 0 with 1), the
 /// stage vector freed and cleared, the statistics destroyed (left as they are), then League::~League
 /// (`exe::drop_league`). The same body as the Brazilian Champions Cup's (`drop_bra_champ_cup`).
-unsafe fn drop_stats_league(this: usize, vtable: usize) {
+pub(crate) unsafe fn drop_stats_league(this: usize, vtable: usize) {
     let l = League(this);
     write_usize(this, vtable);
     exe::league_free_table(this, 0);

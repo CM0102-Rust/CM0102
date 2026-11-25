@@ -1,0 +1,1 @@
+Depende do sx05b_5 (AwardSpec, nation_awards_build, nation_awards_fields, compare_nation_awards_init) e do rx09_13 (BRAZIL_STATES, BRAZIL_AWARDS_CPP): integrar depois deles.

@@ -18,7 +18,7 @@
 # Comparadores: so a original nas tres; os planos conferidos depois (os clubes das fases, os vencedores, os vices, os
 # ids guardados e a fase atual).
 # Depende do rx09_8 (swedish_second_section_clubs, mark_b_team_row), do rx09_7 (SWEDISH_SECOND_SOURCE), do rx09_3
-# (league_cup_stage, cup_stage_clubs, compare_league_cup_stage), do rx09_2 (domestic_clubs) e do cx14_6.
+# (league_cup_stage, league_cup_stage_clubs, compare_league_cup_stage), do rx09_2 (domestic_clubs) e do cx14_6.
 SAVE = False
 LIGAS = 'ENG ESP SWE'
 ATE = '2002-09-01'

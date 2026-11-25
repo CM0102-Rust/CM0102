@@ -1,0 +1,12 @@
+NAO PROVADO NO JOGO (leitor rxt, rodada 6, 25/11/2026): player_search_write_search_update_news_text 0x7b81f0 (5 KB),
+inteira, um desvio. Item de TELAS: a noticia 0x138a so sai com uma busca dada pelo tecnico humano ao olheiro.
+Caminho para o Lucas, jogando comparando: dar a um olheiro uma busca (nacao, regiao, competicao, base) e mandar outro
+observar o proximo adversario; abrir as noticias de progresso e a do fim (manchete e corpo). Comparador:
+compare_text_writer (texto, vinculos, gerador) e o retorno (1/0).
+Prova sem o jogo: a original do exe e a copia da ddraw.dll compilada emuladas (unicorn, scratchpad\rxt\check1.py) no
+mesmo mundo com stubs: 6000 noticias sorteadas (as cinco tarefas e nenhuma, manchete e corpo, olheiro com e sem id,
+nomes que conferem ou nao, observacao de clube com 0..2 jogadores e ids no limite), 0 diferencas, os 34 modelos vistos.
+Mutacoes 3/3 mudam o rastro na emulacao (build com as tres juntas: 431 de 1500 casos diferentes; vistas a contagem e o
+codigo 0x7e5). Compila sobre o HEAD 2fe2ea3c6 junto com o rxt_3 (0 avisos nas linhas do item); com as mutacoes,
+compila; ancoras com 1 ocorrencia em rust/src e na fila. Depende do rxt_3 so pelo endereco (chama 0x7be670 pelo exe).
+Nao rodei o conferir_assinaturas.py --fila: rodar antes de integrar.

@@ -1,0 +1,1 @@
+Depende do rx09_16 (WC_ASIA_DRAW, wc_asia_group_size) e do cx14_6 (stage_round_table, category_b_stage_clubs, compare_category_b_stage): integrar depois deles.

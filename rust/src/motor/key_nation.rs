@@ -569,3 +569,78 @@ pub(crate) unsafe extern "thiscall" fn compare_nation_menu_split_in_second_part(
     SCOREBOARD.record(r == n, || format!("NATION_MENU_SPLIT::in_second_part(nation {:#x}) original {} rust {}", nation, r, n));
     r
 }
+
+/// Builds the competitions of every active key nation row and sets each row's season dates; returns 1, or 0 after the
+/// "Error" box when a row's creation fails.
+///
+/// `key_nation_create_all_comps()`: for each of the 35 rows of `G_LEAGUE_TABLE` whose nation (+0) is null or chosen
+/// to be played (`.league_selected()`) and which has a creation function (`G_LEAGUE_WORLD_CUP_SETUP_FUNC`, +8, cdecl with
+/// the row): the function; returning 0: the box (key_nation.cpp line 0x1dc) and 0. Then the row's season start
+/// (`key_nation_record::START_DATE`) becomes the date of day +0x32 (word), month +0x34 (byte), year +0x35 and weekday
+/// +0x37 (words, `exe::date_date_549f70`), and the season end (`key_nation_record::END_DATE`) the date of day +0x41,
+/// month +0x43, year +0x44 and weekday +0x46. Called by the game setup (0x828110, 0x82a9c0: load step 0x1f).
+/// Original: `key_nation_create_all_comps` (0x669180, key_nation.cpp, cdecl).
+pub(crate) unsafe extern "C" fn key_nation_create_all_comps() -> u32 {
+    for k in 0..0x23usize {
+        let row = G_LEAGUE_TABLE + 72 * k;
+        let n = Nation(read_usize(row));
+        if !n.is_null() && n.league_selected() == 0 {
+            continue;
+        }
+        let create = read_usize(row + 8); // G_LEAGUE_WORLD_CUP_SETUP_FUNC of the row
+        if create == 0 {
+            continue;
+        }
+        let create: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(create);
+        if create(row) == 0 {
+            show_error_at(0x9eaff4, 0x1dc); // "...\key_nation.cpp"
+            return 0;
+        }
+        covered!("sx12_6 key nation competitions");
+        set_key_nation_season_dates(row); // sx12_6: the season dates
+    }
+    1
+}
+
+/// Comparer for `key_nation_create_all_comps`: the creation functions build the competitions once, so only the original
+/// runs; afterwards each active row's season dates are checked against the copy's (`set_key_nation_season_dates` on a
+/// copy of the row).
+pub(crate) unsafe extern "C" fn compare_key_nation_create_all_comps() -> u32 {
+    let r = original_fn::<unsafe extern "C" fn() -> u32>(IDX_KEY_NATION_CREATE_ALL_COMPS)();
+    if r == 0 {
+        return r;
+    }
+    for k in 0..0x23usize {
+        let row = G_LEAGUE_TABLE + 72 * k;
+        let n = Nation(read_usize(row));
+        if (!n.is_null() && n.league_selected() == 0) || read_usize(row + 8) == 0 {
+            continue;
+        }
+        let mut copy = [0u8; 72];
+        core::ptr::copy_nonoverlapping(row as *const u8, copy.as_mut_ptr(), 72);
+        set_key_nation_season_dates(copy.as_mut_ptr() as usize);
+        let (a, b) = (core::slice::from_raw_parts(row as *const u8, 72), &copy[..]);
+        SCOREBOARD.record(a == b, || format!("key_nation_create_all_comps row {}: original {:02x?} rust {:02x?}", k, a, b));
+    }
+    r
+}
+
+/// Sets a key nation row's season start and end dates from their day, month, year and weekday fields (see
+/// `key_nation_create_all_comps`).
+pub(crate) unsafe fn set_key_nation_season_dates(row: usize) {
+    let mut t = [0u8; 8];
+    for (date, parts) in [(key_nation_record::START_DATE, 0x32), (key_nation_record::END_DATE, 0x41)] {
+        let mut d = [0u16; 4];
+        let built = exe::date_date_549f70(&mut d, read_u16(row + parts) as u32, read_u8(row + parts + 2) as u32,
+            read_u16(row + parts + 3) as u32, read_u16(row + parts + 5) as u32);
+        exe::date_operator_3d(row + date, t.as_mut_ptr() as usize, built);
+    }
+}
+
+/// The day a nation's month award moves on to the next season: today's day word (signed) is the season end day of the
+/// nation's key nation record (`key_nation_record::SEASON_END_DAY` of `G_LEAGUE_TABLE` at
+/// `exe::key_nation_index_of_nation`).
+pub(crate) unsafe fn is_season_end_day(nation: usize, today: usize) -> bool {
+    let k = exe::key_nation_index_of_nation(nation) as isize;
+    read_i16(today) as i32 == read_u16((G_LEAGUE_TABLE as isize + k * 0x48) as usize + key_nation_record::SEASON_END_DAY) as i32
+}

@@ -1,0 +1,2 @@
+NAO PROVADO NO JOGO (leitor rxg, rodada 6, 25/11/2026): compila sobre o HEAD 2fe2ea3c6 junto com rxs1_11 e os outros rxg (copia propria; sem aviso nas linhas do item); prologo conferido nos dois exes (rotina inteira igual), sem relativas.
+Item de TELAS (0 chamadas na carreira automatica), depois do rxs1_11 (INTEGRAR_ANTES: TRANSFER_MANAGER_CPP). Caminho no jogo para o Lucas: propor o emprestimo de um jogador de um clube da IA, negociar o contrato do emprestimo e confirmar pela noticia. Comparador: so a original. Sem mutacoes (tela).

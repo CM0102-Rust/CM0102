@@ -572,3 +572,33 @@ impl YearEntry {
         read_i16(self.0 + 0x13) as i32
     }
 }
+
+/// Builds an empty year ratings table for `year` (no entries, count and capacity 0, the year word at +0xc) and, with
+/// a file, loads it (`YEAR_RATINGS::load_from_disk`, its result not read). Returns this.
+/// Original: `YEAR_RATINGS::YEAR_RATINGS` (0x931360, year_ratings.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn year_ratings_construct(this: usize, year: u32, file: usize) -> usize {
+    write_u16(this + 0xc, year as u16);
+    write_usize(this, 0);
+    write_u32(this + 4, 0);
+    write_u32(this + 8, 0);
+    if file != 0 {
+        let load: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_YEAR_RATINGS_LOAD_FROM_DISK);
+        load(this, file);
+    }
+    this
+}
+
+/// Comparer for `year_ratings_construct`: side by side over the 0xe bytes of the table without a file; with one, only
+/// the original (it loads).
+pub(crate) unsafe extern "thiscall" fn compare_year_ratings_construct(this: usize, year: u32, file: usize) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_YEAR_RATINGS_CONSTRUCT);
+    if file != 0 {
+        return o(this, year, file);
+    }
+    let (r, v, equal, a, b) = crate::comparison::side_by_side(&[(this, 0xe)], || o(this, year, file), || year_ratings_construct(this, year, file));
+    SCOREBOARD.record(equal && r == v, || format!("year_ratings_construct(year {}) {:?}", year as u16, first_differences(&a, &b)));
+    r
+}
+
+/// `YEAR_RATINGS::load_from_disk(file)` (0x931390, thiscall, ret 4).
+pub(crate) const FN_YEAR_RATINGS_LOAD_FROM_DISK: usize = 0x931390;

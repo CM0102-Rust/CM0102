@@ -1,0 +1,3 @@
+NAO PROVADO NO JOGO (leitor rx15, rodada 6, 25/11/2026): compila sobre o HEAD 2fe2ea3c6 junto com o rx15_1 e as dependencias (sx12b_2 e a cadeia do cx03_3); de novo com a mutacao aplicada: compila; ancora da mutacao unica no motor e na fila; rotulo do covered! presente. Prologo conferido (push esi; mov esi, ecx; call rel32 0x5b27c0) e a rotina inteira igual no cm0102-1080.exe.
+Simulacao (ENG ate 2002-06-01), na criacao do jogo: 80 construcoes pelo iterador do HUMAN_RECORD. Comparador lado a lado sobre a vaga (0x1ecd bytes). Mutacao 1: a vaga sem a formacao, acusada pelo comparador na primeira construcao.
+Depende do sx12b_2 (HUMAN_TACTIC_SLOT_SIZE). INTEGRAR_ANTES.txt: (0x5fb720, 3) em RELATIVAS.

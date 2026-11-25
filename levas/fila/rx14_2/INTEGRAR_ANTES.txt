@@ -1,0 +1,2 @@
+Depende do cx03_3 (delete_through): integrar depois dele.
+Antes de integrar: pôr (0x517650, 3), (0x550b80, 3), (0x56aca0, 3), (0x56c480, 3), (0x56d550, 3), (0x56f230, 3), (0x570dd0, 3), (0x592420, 3), (0x5ba300, 3), (0x5bcb50, 3), (0x5bf4e0, 3), (0x5d8df0, 3) em RELATIVAS no rust/src/detours.rs (prólogo push esi; mov esi, ecx; call rel32 ~X).

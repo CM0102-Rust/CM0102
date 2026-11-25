@@ -1,0 +1,1 @@
+Depende do rx04_1 (as globais G_LANGLIB_*, LANGLIB_ENTRY_*, langlib_fail, langlib_replace_string) e do rx04_3 (LANGLIB_SETUP_NOT_CALLED): integrar depois deles.

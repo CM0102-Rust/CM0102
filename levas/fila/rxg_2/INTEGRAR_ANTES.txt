@@ -1,0 +1,1 @@
+sx20_9 (TACTICS_SOURCE, TACTICS_ROW_SIZE, TACTIC_STATS_SIZE: private there, both items go to tactics.rs)

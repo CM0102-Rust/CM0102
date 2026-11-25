@@ -928,3 +928,52 @@ pub(crate) unsafe fn area_visible_item_rect(area: usize, item: usize, distance: 
 
 /// i32: the first row of the area's grid that the widgets use (`Area::init` sets 0x7fffffff, `add_widget` lowers it).
 pub(crate) const AREA_FIRST_ROW: usize = 0x10;
+
+/// The shared constructor of the nations' awards: the `NationAwards` base, the class's vtable, the nation record
+/// (`G_NATION_TABLE` at the nation key's index, or 0) and id, the type byte; with a file, the saved awards
+/// (`NationAwards::load_from_disk`) and nothing more when they load. Otherwise, a class with month ratings builds them
+/// (0xf bytes, `MONTH_RATINGS::MONTH_RATINGS(0)`; out of memory, the box and no awards) and then `init(this, file)`.
+pub(crate) unsafe fn nation_awards_construct(this: usize, class: &NationAwardsClass, file: usize, init: unsafe extern "thiscall" fn(usize, usize)) -> usize {
+    use nation_awards_fields as na;
+    let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_NATION_AWARDS_CONSTRUCT);
+    base(this);
+    write_usize(this, class.vtable);
+    let nation = match class.nation_key {
+        Some(key) => read_usize(G_NATION_TABLE) + read_u32(key) as usize * nation::SIZE,
+        None => 0,
+    };
+    write_usize(this + na::NATION, nation);
+    write_u32(this + na::NATION_ID, class.nation_id);
+    write_u8(this + na::TYPE, class.kind);
+    if file != 0 {
+        let load: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NATION_AWARDS_LOAD_FROM_DISK);
+        if load(this, file) != 0 {
+            return this;
+        }
+    }
+    if let Some((cpp, line)) = class.month_ratings {
+        let p = exe::crt_operator_new(0xf);
+        let ratings = if p != 0 {
+            let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_MONTH_RATINGS_CONSTRUCT);
+            f(p, 0)
+        } else {
+            0
+        };
+        write_usize(this + na::MONTH_RATINGS, ratings);
+        if ratings == 0 {
+            show_error_at(cpp, line);
+            return this;
+        }
+    }
+    covered!("sx05b_5 nation awards created");
+    init(this, file);
+    this
+}
+
+/// `NationAwards::NationAwards` (0x768290, thiscall), `NationAwards::load_from_disk(file)` (0x76a280, thiscall, ret
+/// 4: nonzero when read) and `MONTH_RATINGS::MONTH_RATINGS(file)` (0x767af0, thiscall, ret 4; 0xf bytes).
+pub(crate) const FN_NATION_AWARDS_CONSTRUCT: usize = 0x768290;
+
+pub(crate) const FN_NATION_AWARDS_LOAD_FROM_DISK: usize = 0x76a280;
+
+pub(crate) const FN_MONTH_RATINGS_CONSTRUCT: usize = 0x767af0;

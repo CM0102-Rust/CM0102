@@ -81,9 +81,11 @@ pub(crate) unsafe extern "C" fn compare_player_search_compare_report_entries(a: 
 /// and answers how many it copied (nothing without entries, an output or a positive count). An entry needs a staff id
 /// from 0 to the staff count.
 /// Defect of the original: the id equal to the staff count (one past the table) is accepted.
-unsafe fn player_search_collect_report_position(count: u32, entries: usize, out: usize, position: u32) -> u8 {
+unsafe fn player_search_collect_report_position(count: u32, entries: usize, club: usize, out: usize, position: u32) -> u8 {
     let count = count as u8 as i8;
-    if count == 0 || entries == 0 || out == 0 {
+    // cdecl(count, entries, club, out): the club (3rd) is only checked against null; the output is the 4th
+    // (0x7bfbe3, 0x7bfbf3; fixed 25/11/2026: the port had taken the club for the output)
+    if count == 0 || entries == 0 || club == 0 || out == 0 {
         return 0;
     }
     let mut copied = 0u8;
@@ -105,48 +107,48 @@ unsafe fn player_search_collect_report_position(count: u32, entries: usize, out:
 
 /// The opposition report's midfielders: `player_search_collect_report_position` with the midfielder flag (0x400).
 /// Original: `player_search_collect_report_midfielders` (0x7bfbd0, player_search.cpp, cdecl).
-pub(crate) unsafe extern "C" fn player_search_collect_report_midfielders(count: u32, entries: usize, out: usize) -> u8 {
-    player_search_collect_report_position(count, entries, out, REPORT_ENTRY_MIDFIELDER)
+pub(crate) unsafe extern "C" fn player_search_collect_report_midfielders(count: u32, entries: usize, club: usize, out: usize) -> u8 {
+    player_search_collect_report_position(count, entries, club, out, REPORT_ENTRY_MIDFIELDER)
 }
 
 /// The opposition report's strikers: `player_search_collect_report_position` with the striker flag (0x100).
 /// Original: `player_search_collect_report_strikers` (0x7bfc50, player_search.cpp, cdecl).
-pub(crate) unsafe extern "C" fn player_search_collect_report_strikers(count: u32, entries: usize, out: usize) -> u8 {
-    player_search_collect_report_position(count, entries, out, REPORT_ENTRY_STRIKER)
+pub(crate) unsafe extern "C" fn player_search_collect_report_strikers(count: u32, entries: usize, club: usize, out: usize) -> u8 {
+    player_search_collect_report_position(count, entries, club, out, REPORT_ENTRY_STRIKER)
 }
 
 /// The opposition report's defenders: `player_search_collect_report_position` with the defender flag (0x200).
 /// Original: `player_search_collect_report_defenders` (0x7bfcd0, player_search.cpp, cdecl).
-pub(crate) unsafe extern "C" fn player_search_collect_report_defenders(count: u32, entries: usize, out: usize) -> u8 {
-    player_search_collect_report_position(count, entries, out, REPORT_ENTRY_DEFENDER)
+pub(crate) unsafe extern "C" fn player_search_collect_report_defenders(count: u32, entries: usize, club: usize, out: usize) -> u8 {
+    player_search_collect_report_position(count, entries, club, out, REPORT_ENTRY_DEFENDER)
 }
 
 /// Runs a position pick side by side over the output (as many entries as the input) and the answer.
-unsafe fn player_search_compare_pick(name: &str, count: u32, entries: usize, out: usize,
-                                     original: unsafe extern "C" fn(u32, usize, usize) -> u8, copy: unsafe extern "C" fn(u32, usize, usize) -> u8) -> u8 {
+unsafe fn player_search_compare_pick(name: &str, count: u32, entries: usize, club: usize, out: usize,
+                                     original: unsafe extern "C" fn(u32, usize, usize, usize) -> u8, copy: unsafe extern "C" fn(u32, usize, usize, usize) -> u8) -> u8 {
     let n = (count as u8 as i8).max(0) as usize;
     if out == 0 || n == 0 {
-        return original(count, entries, out);
+        return original(count, entries, club, out);
     }
-    let (r, c, same, mo, mr) = crate::comparison::side_by_side(&[(out, n * REPORT_ENTRY_SIZE)], || original(count, entries, out), || copy(count, entries, out));
+    let (r, c, same, mo, mr) = crate::comparison::side_by_side(&[(out, n * REPORT_ENTRY_SIZE)], || original(count, entries, club, out), || copy(count, entries, club, out));
     SCOREBOARD.record(same && r == c, || format!("{}({}) original={} rust={} {:?}", name, n, r, c, first_differences(&mo, &mr)));
     r
 }
 
 /// Comparer for `player_search_collect_report_midfielders`.
-pub(crate) unsafe extern "C" fn compare_player_search_collect_report_midfielders(count: u32, entries: usize, out: usize) -> u8 {
-    player_search_compare_pick("player_search_collect_report_midfielders", count, entries, out,
-        original_fn::<unsafe extern "C" fn(u32, usize, usize) -> u8>(%%I3%%), player_search_collect_report_midfielders)
+pub(crate) unsafe extern "C" fn compare_player_search_collect_report_midfielders(count: u32, entries: usize, club: usize, out: usize) -> u8 {
+    player_search_compare_pick("player_search_collect_report_midfielders", count, entries, club, out,
+        original_fn::<unsafe extern "C" fn(u32, usize, usize, usize) -> u8>(%%I3%%), player_search_collect_report_midfielders)
 }
 
 /// Comparer for `player_search_collect_report_strikers`.
-pub(crate) unsafe extern "C" fn compare_player_search_collect_report_strikers(count: u32, entries: usize, out: usize) -> u8 {
-    player_search_compare_pick("player_search_collect_report_strikers", count, entries, out,
-        original_fn::<unsafe extern "C" fn(u32, usize, usize) -> u8>(%%I4%%), player_search_collect_report_strikers)
+pub(crate) unsafe extern "C" fn compare_player_search_collect_report_strikers(count: u32, entries: usize, club: usize, out: usize) -> u8 {
+    player_search_compare_pick("player_search_collect_report_strikers", count, entries, club, out,
+        original_fn::<unsafe extern "C" fn(u32, usize, usize, usize) -> u8>(%%I4%%), player_search_collect_report_strikers)
 }
 
 /// Comparer for `player_search_collect_report_defenders`.
-pub(crate) unsafe extern "C" fn compare_player_search_collect_report_defenders(count: u32, entries: usize, out: usize) -> u8 {
-    player_search_compare_pick("player_search_collect_report_defenders", count, entries, out,
-        original_fn::<unsafe extern "C" fn(u32, usize, usize) -> u8>(%%I5%%), player_search_collect_report_defenders)
+pub(crate) unsafe extern "C" fn compare_player_search_collect_report_defenders(count: u32, entries: usize, club: usize, out: usize) -> u8 {
+    player_search_compare_pick("player_search_collect_report_defenders", count, entries, club, out,
+        original_fn::<unsafe extern "C" fn(u32, usize, usize, usize) -> u8>(%%I5%%), player_search_collect_report_defenders)
 }

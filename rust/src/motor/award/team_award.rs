@@ -173,3 +173,72 @@ pub(crate) const TEAM_AWARD_ELEVENS: [[u16; 11]; 4] = [
 pub(crate) const TEAM_AWARD_SELECTION: (usize, usize) = (0x26, 0x253 - 0x26);
 
 pub(crate) const TEAM_AWARD_SLOT_SIZE: usize = 0x19;
+
+/// Builds a team award: the award base (nation, index, staff comp, national and world reputations, club comp, the
+/// file and the player flag), three empty dates (the update date and the period's), the season span (`span`), the
+/// formation mode (`mode`), type 0, three substitutes, no history (−1, −1), the selection cleared
+/// (`team_award_clear_selection`) and the slot masks (`team_award_init_slot_positions`); with a file, then
+/// `TEAM_AWARD::load_from_disk(file)` (its result not read). Returns this (the original builds the dates under an SEH
+/// frame; nothing here throws).
+/// Original: `TEAM_AWARD::TEAM_AWARD` (0x8af520, team_award.cpp, thiscall, ret 0x28).
+pub(crate) unsafe extern "thiscall" fn team_award_construct(this: usize, nation: u32, index: u32, staff_comp: u32, national_rep: u32,
+    world_rep: u32, club_comp: u32, span: u32, mode: u32, file: usize, for_players: u32) -> usize {
+    use team_award_obj as ta;
+    award_construct_base(this, [nation, index, staff_comp, national_rep, world_rep, club_comp, file as u32, for_players]);
+    exe::date_date_54a110(this + ta::UPDATE_DATE);
+    exe::date_date_54a110(this + ta::PERIOD_START);
+    exe::date_date_54a110(this + ta::PERIOD_END);
+    write_u8(this + ta::SEASON_SPAN, span as u8);
+    write_u8(this + ta::SUBSTITUTES, 3);
+    write_u8(this + ta::FORMATION_MODE, mode as u8);
+    write_usize(this, ta::VTABLE);
+    write_u8(this + award_base::TYPE, 0);
+    write_i32(this + ta::HISTORY_FIRST, -1);
+    write_i32(this + ta::HISTORY_LAST, -1);
+    team_award_clear_selection(this);
+    team_award_init_slot_positions(this);
+    if file != 0 {
+        covered!("sx05b_5 team award loaded");
+        let load: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_TEAM_AWARD_LOAD_FROM_DISK);
+        load(this, file);
+    }
+    this
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_team_award_construct(this: usize, nation: u32, index: u32, staff_comp: u32, national_rep: u32,
+    world_rep: u32, club_comp: u32, span: u32, mode: u32, file: usize, for_players: u32) -> usize {
+    use team_award_obj as ta;
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32, usize, u32) -> usize>(IDX_TEAM_AWARD_CONSTRUCT);
+    let r = o(this, nation, index, staff_comp, national_rep, world_rep, club_comp, span, mode, file, for_players);
+    let t = TeamAward(this);
+    compare_award_built(r, this, file, || {
+        read_usize(this) == ta::VTABLE && read_u8(this + ta::SEASON_SPAN) == span as u8 && read_u8(this + ta::FORMATION_MODE) == mode as u8
+            && read_u8(this + ta::SUBSTITUTES) == 3 && read_i32(this + ta::HISTORY_FIRST) == -1 && read_i32(this + ta::HISTORY_LAST) == -1
+            && t.filled() == 0 && (0..20).all(|k| t.slot_id(k) == -1) && read_u32(this + award_base::NATION_ID) == nation
+            && read_u32(this + award_base::INDEX) == index
+    }, || format!("team_award_construct(nation {}, index {}, span {}, mode {}): vtable {:#x} filled {}", nation, index, span, mode, read_usize(this), t.filled()))
+}
+
+/// Runs the award base constructor with the eight arguments the class constructors pass it.
+pub(crate) unsafe fn award_construct_base(this: usize, a: [u32; 8]) {
+    let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_AWARD_AWARD);
+    f(this, a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]);
+}
+
+/// The comparer of a constructor that allocates (and may load): only the original runs; `check` then reads what it
+/// built (without a file the plan is known) and `what` names the call.
+pub(crate) unsafe fn compare_award_built(r: usize, this: usize, file: usize, check: impl FnOnce() -> bool, what: impl Fn() -> String) -> usize {
+    if file != 0 {
+        return r;
+    }
+    let ok = r == this && check();
+    SCOREBOARD.record(ok, what);
+    r
+}
+
+/// `AWARD::AWARD(nation, index, staff comp, national rep, world rep, club comp, file, for players)` (0x412e40,
+/// thiscall, ret 0x20): the base fields (`award_base`, `award_fields`).
+pub(crate) const FN_AWARD_AWARD: usize = 0x412e40;
+
+/// `TEAM_AWARD::load_from_disk(file)` (0x8af660, thiscall, ret 4).
+pub(crate) const FN_TEAM_AWARD_LOAD_FROM_DISK: usize = 0x8af660;

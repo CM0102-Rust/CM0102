@@ -1,0 +1,1 @@
+sx05b_5 (NationAwardsClass, nation_awards_construct, nation_awards_build, AwardSpec, award_top_three_from_ratings, award_player_of_year_from_ratings, nation_awards_base_daily_update, is_season_end_day, nation_awards_team_of_the_week_of, compare_nation_awards_built/init, FN_NATION_AWARDS_PLAYER_OF_YEAR_FROM_RATINGS): integrar depois dele (esta na leva 336).

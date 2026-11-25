@@ -1,0 +1,1 @@
+Depende de o rx01_1 (lib_fixed_mul...) e o rx01_6 (glyph_hint_set_distance_by_axis...); integrar na mesma leva de telas (os rx01_5..8 se chamam entre si).
