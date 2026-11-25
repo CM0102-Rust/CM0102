@@ -9532,3 +9532,8 @@ impl RecordedSide {
         self.year() as i32 != read_u16(year_at) as i32
     }
 }
+
+/// The id of the record a pointer field points to (its first dword), or None when the pointer is null.
+pub(crate) unsafe fn id_at(record: usize) -> Option<i32> {
+    if record == 0 { None } else { Some(read_i32(record)) }
+}

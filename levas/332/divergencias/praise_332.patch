@@ -1,0 +1,115 @@
+diff --git a/rust/src/motor/compare/media.rs b/rust/src/motor/compare/media.rs
+index 2982f66..5153b88 100644
+--- a/rust/src/motor/compare/media.rs
++++ b/rust/src/motor/compare/media.rs
+@@ -436,6 +436,15 @@ pub(crate) unsafe fn text_contents(t: usize) -> (Vec<u8>, Vec<(Vec<u8>, u32, u32
+ /// the strings and the links must be equal and the generator must end in the same state. A Text is written once per
+ /// object, so the two never share one. `rust` gets the address of the local Text; `what` names the call in the message.
+ pub(crate) unsafe fn compare_text_writer(out: usize, original: impl FnOnce(), rust: impl FnOnce(usize), what: impl Fn() -> String) {
++    compare_text_writer_tolerant(out, original, rust, what, || false);
++}
++
++/// `compare_text_writer`, where the strings may also differ by "{}" marks alone when `unset_gender` (asked after both
++/// ran) says the text used a gender byte the original leaves uninitialised: langlib keeps the "{}" after an argument
++/// whose gender is out of range, so the original's text carries it or not by what its stack held
++/// (`PRAISE_JOB_GENDER_UNSET`, DEFEITOS_DO_ORIGINAL). The links and the generator must still be equal.
++pub(crate) unsafe fn compare_text_writer_tolerant(out: usize, original: impl FnOnce(), rust: impl FnOnce(usize), what: impl Fn() -> String,
++    unset_gender: impl FnOnce() -> bool) {
+     let mut local = [0usize; 2];
+     let lp = local.as_mut_ptr() as usize;
+     let (_, _, same_rng, _, _) = crate::comparison::side_by_side(&crate::rng::STATE_REGIONS, original, || crate::rng::without_counting(|| rust(lp)));
+@@ -444,5 +453,21 @@ pub(crate) unsafe fn compare_text_writer(out: usize, original: impl FnOnce(), ru
+     let show = |t: &(Vec<u8>, Vec<(Vec<u8>, u32, u32)>)| {
+         format!("{:?} {:x?}", String::from_utf8_lossy(&t.0), t.1.iter().map(|l| (String::from_utf8_lossy(&l.0).into_owned(), l.1, l.2)).collect::<Vec<_>>())
+     };
+-    SCOREBOARD.record(same_rng && mo == mr, || format!("{}: original {} rust {}", what(), show(&mo), show(&mr)));
++    let same = mo == mr || (mo.1 == mr.1 && unset_gender() && without_empty_marks(&mo.0) == without_empty_marks(&mr.0));
++    SCOREBOARD.record(same_rng && same, || format!("{}: original {} rust {}", what(), show(&mo), show(&mr)));
++}
++
++/// The text without its "{}" marks (the empty gender marks langlib leaves when a gender byte is out of range).
++pub(crate) fn without_empty_marks(t: &[u8]) -> Vec<u8> {
++    let mut v = Vec::with_capacity(t.len());
++    let mut i = 0;
++    while i < t.len() {
++        if t[i..].starts_with(b"{}") {
++            i += 2;
++        } else {
++            v.push(t[i]);
++            i += 1;
++        }
++    }
++    v
+ }
+diff --git a/rust/src/motor/media.rs b/rust/src/motor/media.rs
+index 4fc43c9..46e4074 100644
+--- a/rust/src/motor/media.rs
++++ b/rust/src/motor/media.rs
+@@ -3582,11 +3582,8 @@ pub(crate) unsafe extern "thiscall" fn compare_write_player_praise_news_text(thi
+         && lo.iter().zip(lr.iter()).all(|(a, b)| a.1 == b.1 && a.2 == b.2 && (a.0 == b.0 || (loose && a.1 == 0x7d3)));
+     // the great player's job gender outside language 4 is the original's uninitialised stack byte: a "{}" left
+     // after the job is the only difference accepted (and the text buffer then differs by it)
+-    let without_mark = |t: &[u8]| t.windows(2).fold((Vec::new(), false), |(mut v, pular), w| {
+-        if pular { (v, false) } else if w == b"{}" { (v, true) } else { v.push(w[0]); (v, false) }
+-    }).0;
+     let unset = PRAISE_JOB_GENDER_UNSET.load(Relaxed);
+-    let text_same = so == sr || (unset && without_mark(&[so.as_slice(), b"\0"].concat()) == without_mark(&[sr.as_slice(), b"\0"].concat()));
++    let text_same = so == sr || (unset && without_empty_marks(&so) == without_empty_marks(&sr));
+     SCOREBOARD.record((same || (unset && text_same)) && text_same && links_same, || format!(
+         "write_player_praise_news_text(kind {:#x}, body {}, piece {}) text {} links {} ({} x {}) memory {}\n original: {}\n rust:     {}\n links original {:x?}\n links rust {:x?}\n {:x?} x {:x?}",
+         kind, body, piece, so == sr, links_same, lo.len(), lr.len(), same, String::from_utf8_lossy(&so), String::from_utf8_lossy(&sr),
+@@ -6488,6 +6485,9 @@ pub(crate) unsafe fn praise_competition_v1(p: &mut Praise, m: &PraiseMatch, won:
+ }
+ 
+ /// Variant 2 of kind 0x34 (after helping the club to the score). Returns true after a win.
++/// With a rival club and value 1 at 0, the win (0xa3fc3c, 0x7476bd..) and the draw (0xa3f868, 0x747860..) push the
++/// genders in different orders: the win `0x64, rival, rival`, the draw `rival, rival, 0x64`. The draw's rival pair is
++/// the "{do}" before the club ("o jogador do Real Madrid"); with 0x64 there the article was left out (batch 332).
+ pub(crate) unsafe fn praise_competition_v2(p: &mut Praise, m: &PraiseMatch, won: bool) -> bool {
+     let f = Praise::format();
+     let (h, full, short, cname, cg) = (p.head(), p.full(), p.short(), p.cname(), p.cg());
+@@ -6496,9 +6496,10 @@ pub(crate) unsafe fn praise_competition_v2(p: &mut Praise, m: &PraiseMatch, won:
+         if p.m1 != 0 {
+             let t = if won { 0xa3fd7c } else { 0xa3f9a8 };
+             f(h, t, cg, cg, m.sg, m.sg, m.rg, m.rg, 0x64, 0x64, rv.rgs, rv.rgs, cname, m.score, m.stage, m.rname, full, short, rv.name);
++        } else if won {
++            f(h, 0xa3fc3c, cg, cg, m.sg, m.sg, m.rg, m.rg, 0x64, rv.rgs, rv.rgs, cname, m.score, m.stage, m.rname, rv.name, full);
+         } else {
+-            let t = if won { 0xa3fc3c } else { 0xa3f868 };
+-            f(h, t, cg, cg, m.sg, m.sg, m.rg, m.rg, 0x64, rv.rgs, rv.rgs, cname, m.score, m.stage, m.rname, rv.name, full);
++            f(h, 0xa3f868, cg, cg, m.sg, m.sg, m.rg, m.rg, rv.rgs, rv.rgs, 0x64, cname, m.score, m.stage, m.rname, rv.name, full);
+         }
+     } else {
+         let t = if won { 0xa3fb20 } else { 0xa3f74c };
+diff --git a/rust/src/motor/news.rs b/rust/src/motor/news.rs
+index 3376de5..beeb958 100644
+--- a/rust/src/motor/news.rs
++++ b/rust/src/motor/news.rs
+@@ -1033,7 +1033,8 @@ pub(crate) unsafe extern "thiscall" fn newsitem_write_text(news: usize, manager:
+ 
+ /// Compares `NewsItem::write_text`: the original writes into `out` and the copy into a local text, side by side
+ /// (`compare_text_writer`: the text, the links and the random generator), and the return values. Without a manager or
+-/// `out` (the error box) only the original runs.
++/// `out` (the error box) only the original runs. The player praise (category 4, type 0xbdd) may differ by "{}" marks
++/// alone when its great player's job gender was the original's unset stack byte (`compare_text_writer_tolerant`).
+ pub(crate) unsafe extern "thiscall" fn compare_newsitem_write_text(news: usize, manager: usize, out: usize, body: u32, flag: u32) -> u32 {
+     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32>(IDX_NEWSITEM_WRITE_TEXT);
+     if manager == 0 || out == 0 {
+@@ -1046,8 +1047,15 @@ pub(crate) unsafe extern "thiscall" fn compare_newsitem_write_text(news: usize,
+         return o(news, manager, out, body, flag);
+     }
+     let (ro, rr) = (core::cell::Cell::new(0u32), core::cell::Cell::new(0u32));
+-    compare_text_writer(out, || ro.set(o(news, manager, out, body, flag)), |t| rr.set(newsitem_write_text(news, manager, t, body, flag)),
+-        || format!("newsitem_write_text(category {}, type {:#x}, body {}, flag {}, piece {})", cat, ty, body, flag, NEWS_LAST_PIECE));
++    // the player praise (4, 0xbdd) runs 0x744f80 on both sides (its own comparer, which leaves the original's text in
++    // `out`): with a great player's job outside language 4 the two original runs format with different leftovers of
++    // the stack byte 0x53ad00 leaves unset, and one text keeps the "{}" after the job ("treinador{} da Escócia"). The
++    // flag is the last praise run's (the copy side's, on this item); it is cleared first so another item's is not read
++    let praise = cat == 4 && ty == 0xbdd;
++    PRAISE_JOB_GENDER_UNSET.store(false, Relaxed);
++    compare_text_writer_tolerant(out, || ro.set(o(news, manager, out, body, flag)), |t| rr.set(newsitem_write_text(news, manager, t, body, flag)),
++        || format!("newsitem_write_text(category {}, type {:#x}, body {}, flag {}, piece {})", cat, ty, body, flag, NEWS_LAST_PIECE),
++        || praise && PRAISE_JOB_GENDER_UNSET.load(Relaxed));
+     SCOREBOARD.record(ro.get() == rr.get(), || format!("newsitem_write_text(type {:#x}) returned {} x {}", ty, ro.get(), rr.get()));
+     ro.get()
+ }

@@ -436,6 +436,15 @@ pub(crate) unsafe fn text_contents(t: usize) -> (Vec<u8>, Vec<(Vec<u8>, u32, u32
 /// the strings and the links must be equal and the generator must end in the same state. A Text is written once per
 /// object, so the two never share one. `rust` gets the address of the local Text; `what` names the call in the message.
 pub(crate) unsafe fn compare_text_writer(out: usize, original: impl FnOnce(), rust: impl FnOnce(usize), what: impl Fn() -> String) {
+    compare_text_writer_tolerant(out, original, rust, what, || false);
+}
+
+/// `compare_text_writer`, where the strings may also differ by "{}" marks alone when `unset_gender` (asked after both
+/// ran) says the text used a gender byte the original leaves uninitialised: langlib keeps the "{}" after an argument
+/// whose gender is out of range, so the original's text carries it or not by what its stack held
+/// (`PRAISE_JOB_GENDER_UNSET`, DEFEITOS_DO_ORIGINAL). The links and the generator must still be equal.
+pub(crate) unsafe fn compare_text_writer_tolerant(out: usize, original: impl FnOnce(), rust: impl FnOnce(usize), what: impl Fn() -> String,
+    unset_gender: impl FnOnce() -> bool) {
     let mut local = [0usize; 2];
     let lp = local.as_mut_ptr() as usize;
     let (_, _, same_rng, _, _) = crate::comparison::side_by_side(&crate::rng::STATE_REGIONS, original, || crate::rng::without_counting(|| rust(lp)));
@@ -444,5 +453,21 @@ pub(crate) unsafe fn compare_text_writer(out: usize, original: impl FnOnce(), ru
     let show = |t: &(Vec<u8>, Vec<(Vec<u8>, u32, u32)>)| {
         format!("{:?} {:x?}", String::from_utf8_lossy(&t.0), t.1.iter().map(|l| (String::from_utf8_lossy(&l.0).into_owned(), l.1, l.2)).collect::<Vec<_>>())
     };
-    SCOREBOARD.record(same_rng && mo == mr, || format!("{}: original {} rust {}", what(), show(&mo), show(&mr)));
+    let same = mo == mr || (mo.1 == mr.1 && unset_gender() && without_empty_marks(&mo.0) == without_empty_marks(&mr.0));
+    SCOREBOARD.record(same_rng && same, || format!("{}: original {} rust {}", what(), show(&mo), show(&mr)));
+}
+
+/// The text without its "{}" marks (the empty gender marks langlib leaves when a gender byte is out of range).
+pub(crate) fn without_empty_marks(t: &[u8]) -> Vec<u8> {
+    let mut v = Vec::with_capacity(t.len());
+    let mut i = 0;
+    while i < t.len() {
+        if t[i..].starts_with(b"{}") {
+            i += 2;
+        } else {
+            v.push(t[i]);
+            i += 1;
+        }
+    }
+    v
 }

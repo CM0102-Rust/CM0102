@@ -4010,8 +4010,20 @@ routines! {
     Prologue { address: 0x54cfe0, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x81, 0xe1, 0xff, 0xff, 0x00, 0x00] } => date_is_leap_year, compare_date_is_leap_year;
     Prologue { address: 0x449590, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => club_records_record_type_applies, compare_club_records_record_type_applies;
     Prologue { address: 0x447880, bytes: &[0x6a, 0xff, 0x68, 0x03, 0x52, 0x95, 0x00] } => club_records_end_season_for_nation, compare_club_records_end_season_for_nation;
+    Prologue { address: 0x931f90, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x53] } => year_ratings_compare_mode_0, compare_year_ratings_compare_mode_0;
+    Prologue { address: 0x9320e0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x53] } => year_ratings_compare_mode_1, compare_year_ratings_compare_mode_1;
+    Prologue { address: 0x932230, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x53] } => year_ratings_compare_mode_2, compare_year_ratings_compare_mode_2;
+    Prologue { address: 0x9323b0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x53] } => year_ratings_compare_mode_3, compare_year_ratings_compare_mode_3;
+    Prologue { address: 0x932500, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => year_ratings_compare_mode_4, compare_year_ratings_compare_mode_4;
+    Prologue { address: 0x932590, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x53] } => year_ratings_compare_mode_5, compare_year_ratings_compare_mode_5;
+    Prologue { address: 0x931aa0, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x4c, 0x24, 0x08] } => year_ratings_reset_if_year, compare_year_ratings_reset_if_year;
+    Prologue { address: 0x931ae0, bytes: &[0x83, 0xec, 0x0c, 0x53, 0x55] } => year_ratings_collect_best_players, compare_year_ratings_collect_best_players;
+    Prologue { address: 0x931d50, bytes: &[0x83, 0xec, 0x08, 0x8a, 0x44, 0x24, 0x1c] } => year_ratings_collect_candidates, compare_year_ratings_collect_candidates;
+    Prologue { address: 0x8afa40, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] } => team_award_add_candidate, compare_team_award_add_candidate;
+    Prologue { address: 0x8afd90, bytes: &[0x56, 0x8d, 0x41, 0x52, 0xbe, 0x14, 0x00, 0x00, 0x00] } => team_award_clear_selection, compare_team_award_clear_selection;
+    Prologue { address: 0x8afdc0, bytes: &[0x8a, 0x81, 0x5c, 0x02, 0x00, 0x00] } => team_award_init_slot_positions, compare_team_award_init_slot_positions;
 }
-const N: usize = 3852;
+const N: usize = 3864;
 include!(concat!(env!("OUT_DIR"), "/indices.rs")); // IDX_<NAME>: the position of each routine (build.rs)
 
 /// Size of the engine object (the game allocates it with new(0xf63b)): side 1's block (+0xf5f2, 0x36
@@ -4055,6 +4067,9 @@ pub(crate) use self::award_month_ratings::*;
 #[path = "motor/award/nation_awards.rs"]
 pub(crate) mod award_nation_awards;
 pub(crate) use self::award_nation_awards::*;
+#[path = "motor/award/team_award.rs"]
+pub(crate) mod award_team_award;
+pub(crate) use self::award_team_award::*;
 #[path = "motor/award/year_ratings.rs"]
 pub(crate) mod award_year_ratings;
 pub(crate) use self::award_year_ratings::*;
@@ -5481,6 +5496,8 @@ pub(crate) use self::zipdir::*;
 // ---------- 161st batch: watch list, position code and staff criterion ----------
 
 compare_value!(compare_staff_criterion, staff_criterion, IDX_STAFF_CRITERION, () -> u32);
+
+const TEAM_AWARD_SUBSTITUTES: [u16; 9] = [1, 0x40, 4, 0x10, 0x40, 4, 0x10, 0x40, 4];
 
 // ---------- batch 331: club records: which record types apply and the end of a nation's season (club_records.cpp) ----------
 

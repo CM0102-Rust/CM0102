@@ -1033,7 +1033,8 @@ pub(crate) unsafe extern "thiscall" fn newsitem_write_text(news: usize, manager:
 
 /// Compares `NewsItem::write_text`: the original writes into `out` and the copy into a local text, side by side
 /// (`compare_text_writer`: the text, the links and the random generator), and the return values. Without a manager or
-/// `out` (the error box) only the original runs.
+/// `out` (the error box) only the original runs. The player praise (category 4, type 0xbdd) may differ by "{}" marks
+/// alone when its great player's job gender was the original's unset stack byte (`compare_text_writer_tolerant`).
 pub(crate) unsafe extern "thiscall" fn compare_newsitem_write_text(news: usize, manager: usize, out: usize, body: u32, flag: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32>(IDX_NEWSITEM_WRITE_TEXT);
     if manager == 0 || out == 0 {
@@ -1046,8 +1047,15 @@ pub(crate) unsafe extern "thiscall" fn compare_newsitem_write_text(news: usize, 
         return o(news, manager, out, body, flag);
     }
     let (ro, rr) = (core::cell::Cell::new(0u32), core::cell::Cell::new(0u32));
-    compare_text_writer(out, || ro.set(o(news, manager, out, body, flag)), |t| rr.set(newsitem_write_text(news, manager, t, body, flag)),
-        || format!("newsitem_write_text(category {}, type {:#x}, body {}, flag {}, piece {})", cat, ty, body, flag, NEWS_LAST_PIECE));
+    // the player praise (4, 0xbdd) runs 0x744f80 on both sides (its own comparer, which leaves the original's text in
+    // `out`): with a great player's job outside language 4 the two original runs format with different leftovers of
+    // the stack byte 0x53ad00 leaves unset, and one text keeps the "{}" after the job ("treinador{} da Escócia"). The
+    // flag is the last praise run's (the copy side's, on this item); it is cleared first so another item's is not read
+    let praise = cat == 4 && ty == 0xbdd;
+    PRAISE_JOB_GENDER_UNSET.store(false, Relaxed);
+    compare_text_writer_tolerant(out, || ro.set(o(news, manager, out, body, flag)), |t| rr.set(newsitem_write_text(news, manager, t, body, flag)),
+        || format!("newsitem_write_text(category {}, type {:#x}, body {}, flag {}, piece {})", cat, ty, body, flag, NEWS_LAST_PIECE),
+        || praise && PRAISE_JOB_GENDER_UNSET.load(Relaxed));
     SCOREBOARD.record(ro.get() == rr.get(), || format!("newsitem_write_text(type {:#x}) returned {} x {}", ty, ro.get(), rr.get()));
     ro.get()
 }

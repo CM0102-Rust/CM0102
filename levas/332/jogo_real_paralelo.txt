@@ -1,0 +1,12 @@
+    pool nao paginado 2.33 -> 2.40 GB, paginado 6.23 -> 6.59 GB
+execucao 1: parou em 2002-212, 2516770953 sorteios, impressao 8e2fd83fd7d3c38a, partidas 19840/5c34cb898ff0ef9d, banco 96ec25ad9eb53982, 6424 s
+    date: 1000000000 comparacoes, 0 divergencias
+    engine: 10000000000 comparacoes, 2 divergencias
+    random: 1000000000 comparacoes, 0 divergencias
+game.cfg restaurado; auto_setup.cfg removido
+engine: DIVERGENCE write_player_praise_news_text(kind 0x34, body 1, piece body_competition) text false links true (14 x 14) memory false
+engine: DIVERGENCE write_player_praise_news_text(kind 0x34, body 1, piece body_competition) text false links true (14 x 14) memory false
+engine: DIVERGENCE newsitem_write_text(category 4, type 0xbdd, body 1, flag 0, piece ): original "Berti Vogts, treinador{} da Esc�cia, afirmou acreditar que Thierry Henry, avan�ado m�vel do Arsenal, � um dos melhores jogadores do mundo do momento.\n\nO treinador Ars�ne Wenger concordou que
+random: 1000000000 comparisons, 0 divergences
+engine: 10000000000 comparisons, 2 divergences
+date: 1000000000 comparisons, 0 divergences

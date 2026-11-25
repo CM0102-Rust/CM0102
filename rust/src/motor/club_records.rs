@@ -2590,19 +2590,19 @@ pub(crate) unsafe fn club_of_key_nation(club: Club, nation: usize) -> bool {
 /// created together by the match records, so the creation never runs.
 pub(crate) unsafe fn end_club_season(this: usize, club: Club, nation: KeyNationRecord, mut plan: Option<&mut SeasonEndPlan>) {
     let season = club_season_record(this, club.addr(), 0);
-    let mut all_time = club_all_time_record(this, club.addr(), 0);
+    let mut all_team = club_all_time_record(this, club.addr(), 0);
     let entry = ClubRecordEntry(club_records_entry(this, club.addr()));
     let year = exe::key_nation_get_club_season_year(club);
     if exe::club_records_record_type_applies(RECORD_AVERAGE_ATTENDANCE as u32, club, 1) != 0 && season != 0 {
         let average = read_i32(season + 0x77); // the average attendance record
         if average > -1 {
-            let best = read_i32(all_time + 0x77);
+            let best = read_i32(all_team + 0x77);
             if best == -1 || average > best {
-                if all_time == 0 {
-                    all_time = club_all_time_record(this, club.addr(), 1);
+                if all_team == 0 {
+                    all_team = club_all_time_record(this, club.addr(), 1);
                 }
-                write_i32(all_time + 0x77, average);
-                write_u16(all_time + 0x7b, year); // its year
+                write_i32(all_team + 0x77, average);
+                write_u16(all_team + 0x7b, year); // its year
                 queue_season_end_news(this, club, entry, RECORD_AVERAGE_ATTENDANCE, plan.as_deref_mut());
             }
         }
@@ -2612,14 +2612,14 @@ pub(crate) unsafe fn end_club_season(this: usize, club: Club, nation: KeyNationR
     }
     if exe::club_records_record_type_applies(RECORD_SEASON_RATING as u32, club, 1) != 0 && season != 0 {
         let rating = read_f32(season + club_record::SEASON_RATING) as f64;
-        let best = read_f32(all_time + club_record::SEASON_RATING) as f64;
+        let best = read_f32(all_team + club_record::SEASON_RATING) as f64;
         if rating > read_f64(rdata::F64_NEG_1) && (best == read_f64(rdata::F64_NEG_1) || rating > best) {
             covered!("sx06_1 all-time rating");
-            if all_time == 0 {
-                all_time = club_all_time_record(this, club.addr(), 1);
+            if all_team == 0 {
+                all_team = club_all_time_record(this, club.addr(), 1);
             }
-            rating_record_assign(all_time + club_record::SEASON_RATING, season + club_record::SEASON_RATING);
-            write_u16(all_time + club_record::SEASON_RATING_YEAR, year); // sx06: the all-time rating's year
+            rating_record_assign(all_team + club_record::SEASON_RATING, season + club_record::SEASON_RATING);
+            write_u16(all_team + club_record::SEASON_RATING_YEAR, year); // sx06: the all-time rating's year
             queue_season_end_news(this, club, entry, RECORD_SEASON_RATING, plan.as_deref_mut());
         }
     }

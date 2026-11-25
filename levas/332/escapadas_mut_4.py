@@ -1,0 +1,2 @@
+# escapadas da 332a para a comparacao longa (bancada 4)
+MUTACOES = [('sx05_2_cinco_partidas', '    if a.matches() < 3 {\n        return (b.matches() >= 3) as i32;', '    if a.matches() < 5 { // mutation: 5 matches\n        return (b.matches() >= 3) as i32;', 'sx05_2 year order by score'), ('sx05_3_assistencias_valem_um', '(5 * e.goals() + 3 * e.assists() + e.rating_sum(2))', '(5 * e.goals() + e.assists() + e.rating_sum(2)) /* mutation: assists count 1 */', 'sx05_3 mode 3 by club reputation')]

@@ -2,7 +2,7 @@
 //! mudar a tabela PROLOGOS do motor.rs. (início, tamanho até a próxima fronteira real, FNV-1a 64 no
 //! cm0102.exe original, FNV-1a 64 no cm0102-1080.exe). Ordenada pelo início (busca binária).
 
-pub const ASSINATURAS: [(usize, usize, u64, u64); 3852] = [
+pub const ASSINATURAS: [(usize, usize, u64, u64); 3864] = [
     (0x401000, 544, 0x07248056f27f191f, 0x07248056f27f191f),
     (0x4012e0, 1760, 0x86ea7ac579cbfed1, 0x86ea7ac579cbfed1),
     (0x4019c0, 240, 0x182cb3e580f9deb2, 0x182cb3e580f9deb2),
@@ -3411,6 +3411,9 @@ pub const ASSINATURAS: [(usize, usize, u64, u64); 3852] = [
     (0x8ad780, 1072, 0x1ea1cfbbf89d9442, 0x1ea1cfbbf89d9442),
     (0x8adbb0, 720, 0x5a8a2a887d037e82, 0x5a8a2a887d037e82),
     (0x8ade80, 592, 0xbb8e57517e08bac0, 0xbb8e57517e08bac0),
+    (0x8afa40, 848, 0xa78a8e5b5f50d83f, 0xa78a8e5b5f50d83f),
+    (0x8afd90, 48, 0xba95fcfebcb2b38c, 0xba95fcfebcb2b38c),
+    (0x8afdc0, 320, 0x9b9afe848af93910, 0x9b9afe848af93910),
     (0x8b1730, 32, 0x6e11df7309da6fe7, 0x6e11df7309da6fe7),
     (0x8b1750, 2784, 0xd5d4e8ec91f6eaf8, 0xd5d4e8ec91f6eaf8),
     (0x8b2230, 32, 0xb295952e552288a7, 0xb295952e552288a7),
@@ -3844,6 +3847,15 @@ pub const ASSINATURAS: [(usize, usize, u64, u64); 3852] = [
     (0x92f680, 1424, 0x3de48eddd2f06b14, 0x3de48eddd2f06b14),
     (0x9315d0, 192, 0xb87622ffb970533b, 0xb87622ffb970533b),
     (0x931690, 1040, 0x870e40f85e9c73f3, 0x870e40f85e9c73f3),
+    (0x931aa0, 64, 0xbe9cef82e6ce8a76, 0xbe9cef82e6ce8a76),
+    (0x931ae0, 624, 0x3fa4e6b271967d68, 0x3fa4e6b271967d68),
+    (0x931d50, 576, 0xf4acdb03e8edfbea, 0xf4acdb03e8edfbea),
+    (0x931f90, 336, 0x15ade8a080d53975, 0x15ade8a080d53975),
+    (0x9320e0, 336, 0x93862912b3108791, 0x93862912b3108791),
+    (0x932230, 384, 0xf502d1e1f37e6b09, 0xf502d1e1f37e6b09),
+    (0x9323b0, 336, 0x39e8dad2d2987686, 0x39e8dad2d2987686),
+    (0x932500, 144, 0x18d49eb4ae9bc4e4, 0x18d49eb4ae9bc4e4),
+    (0x932590, 336, 0xa1b1a6925ed6b673, 0xa1b1a6925ed6b673),
     (0x9326e0, 1056, 0xd09fbfd151f9e2b1, 0xd09fbfd151f9e2b1),
     (0x932b00, 304, 0x40516de6b306d7c5, 0x40516de6b306d7c5),
     (0x932c30, 480, 0xe7624fb20c621e4f, 0xe7624fb20c621e4f),
