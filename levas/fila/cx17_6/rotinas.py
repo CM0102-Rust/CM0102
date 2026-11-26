@@ -13,7 +13,7 @@
 # Usa o qualifying_stat_byte do cx16_8: integrar depois dele (INTEGRAR_ANTES.txt).
 SAVE = False
 LIGAS = 'ENG'
-ATE = '2002-08-01'
+ATE = '2005-12-31'  # 26/11/2026: in the night round with cx16_7/cx16_8 (its dependencies)
 ROTINAS = [('world_cup_get_qualification_status', 0x92fae0, [0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08]),
            ('world_cup_get_qualification_status_change', 0x92fb40, [0x53, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x10])]
 DOCS = ('a situação de classificação na Copa do Mundo e a mudança dela',

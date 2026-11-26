@@ -1,0 +1,14 @@
+    pool nao paginado 1.39 -> 1.46 GB, paginado 2.47 -> 2.79 GB
+execucao 1: parou em 2002-212, 2492147410 sorteios, impressao 4e89796648def979, partidas 19895/e68c796e5ee1d6d9, banco 8b0a4c448c0c6865, 6381 s
+    date: 1000000000 comparacoes, 0 divergencias
+    engine: 10000000000 comparacoes, 0 divergencias
+    random: 1000000000 comparacoes, 0 divergencias
+game.cfg restaurado; auto_setup.cfg removido
+engine: DIVERGENCE year_award_post_winner_news(0x19170fb0) draws original [(3, 0), (3, 2), (3, 2), (50, 29), (50, 19), (5, 2), (5, 0), (5, 2), (5, 0), (5, 1), (5, 1), (5, 2), (5, 3), (3, 1), (4, 1), (3, 0)] rust [(3, 0), (3, 2), (3, 2), (50, 29), (50, 19), (5, 2), (5, 0), (5, 2), (5, 0), (5, 1), (5,
+engine: DIVERGENCE year_award_post_winner_news(0x1916cc30) draws original [(3, 2), (3, 1), (3, 2), (50, 14), (50, 40), (5, 0), (5, 2), (5, 4), (5, 2), (5, 3), (5, 2), (5, 4), (5, 1), (3, 0), (4, 0), (20, 12), (3, 0)] rust [(3, 2), (3, 1), (3, 2), (50, 14), (50, 40), (5, 0), (5, 2), (5, 4), (5, 2), (
+engine: DIVERGENCE nation_awards_award_player_of_year_from_ratings(award 0x19171070) shortlist original ([0a, 00, 0a, 00, ff, ff, ff, ff, ff, ff, ff, ff, ff, ff, ff, ff, ff, ff, ff, ff, ff, ff, ff, ff, ff, ff, ff, ff, ff, ff, ff, ff, ff, ff, ff, ff], [[16, 07, 00, 00, c7, 05, 00, 00, cd, cc, cc, 3f,
+engine: DIVERGENCE year_award_post_winner_news(0x19171070) draws original [(3, 1), (3, 2), (3, 1), (50, 14), (50, 20), (5, 4), (5, 4), (5, 4), (5, 0), (5, 1), (5, 0), (5, 1), (5, 3), (3, 2), (4, 2), (20, 2)] rust [(3, 1), (3, 2), (3, 1), (50, 14), (50, 20), (5, 4), (5, 4), (5, 4), (5, 0), (5, 1), (5
+engine: DIVERGENCE year_award_post_winner_news(0x1916cdf0) draws original [(3, 1), (3, 2), (3, 0), (50, 48), (50, 12), (5, 0), (5, 3), (5, 1), (5, 2), (5, 4), (5, 2), (5, 1), (5, 0), (3, 0), (4, 0), (20, 1)] rust [(3, 1), (3, 2), (3, 0), (50, 48), (50, 12), (5, 0), (5, 3), (5, 1), (5, 2), (5, 4), (5
+random: 1000000000 comparisons, 0 divergences
+engine: 10000000000 comparisons, 0 divergences
+date: 1000000000 comparisons, 0 divergences

@@ -3581,9 +3581,9 @@ pub(crate) unsafe extern "thiscall" fn compare_write_player_praise_news_text(thi
     let links_same = lo.len() == lr.len()
         && lo.iter().zip(lr.iter()).all(|(a, b)| a.1 == b.1 && a.2 == b.2 && (a.0 == b.0 || (loose && a.1 == 0x7d3)));
     // the great player's job gender outside language 4 is the original's uninitialised stack byte: a "{}" left
-    // after the job is the only difference accepted (and the text buffer then differs by it)
+    // after the job and the article before it are the only differences accepted (and the text buffer then differs)
     let unset = PRAISE_JOB_GENDER_UNSET.load(Relaxed);
-    let text_same = so == sr || (unset && without_empty_marks(&so) == without_empty_marks(&sr));
+    let text_same = so == sr || (unset && same_but_job_gender(&so, &sr));
     SCOREBOARD.record((same || (unset && text_same)) && text_same && links_same, || format!(
         "write_player_praise_news_text(kind {:#x}, body {}, piece {}) text {} links {} ({} x {}) memory {}\n original: {}\n rust:     {}\n links original {:x?}\n links rust {:x?}\n {:x?} x {:x?}",
         kind, body, piece, so == sr, links_same, lo.len(), lr.len(), same, String::from_utf8_lossy(&so), String::from_utf8_lossy(&sr),
@@ -8129,7 +8129,7 @@ pub(crate) unsafe extern "thiscall" fn compare_write_team_media_story_news_text(
     let show = |t: &(Vec<u8>, Vec<(Vec<u8>, u32, u32)>)| {
         format!("{:?} {:x?}", String::from_utf8_lossy(&t.0), t.1.iter().map(|l| (String::from_utf8_lossy(&l.0).into_owned(), l.1, l.2)).collect::<Vec<_>>())
     };
-    SCOREBOARD.record(same_rng && text_same && mo.1 == mr.1, || format!(
+    SCOREBOARD.record(same_rng && text_same && same_links_but_match_text(&mo.1, &mr.1), || format!(
         "write_team_media_story_news_text(kind {}, body {}, piece {}, unset {}) original {} rust {}",
         exe::newsitem_get_slot(news, 9) as i32, body, piece, unset, show(&mo), show(&mr)));
 }

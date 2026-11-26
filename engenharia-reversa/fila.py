@@ -71,7 +71,7 @@ def ordem():
 # Para voltar às levas de 3 rotinas: ITENS_POR_LEVA = 1.
 # 24/10/2026: o Lucas dobrou a aposta: a 232ª junta 7 itens (20 rotinas). Para voltar às de 9: ITENS_POR_LEVA = 3.
 # 29/10/2026: o Lucas aprovou levas de 13 itens (39 rotinas) a partir da 251ª. Para voltar às de 20: ITENS_POR_LEVA = 7.
-ITENS_POR_LEVA = 13
+ITENS_POR_LEVA = int(os.environ.get('FILA_ITENS', 13))  # 26/11/2026: FILA_ITENS=N for one larger batch (the night round)
 
 
 def do_lote(ordem_):

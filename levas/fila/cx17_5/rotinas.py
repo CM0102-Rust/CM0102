@@ -25,7 +25,7 @@
 # Usa write_progress_codes e compare_progress_codes do cx16_7: integrar depois dele (INTEGRAR_ANTES.txt).
 SAVE = False
 LIGAS = 'ENG'
-ATE = '2002-08-01'
+ATE = '2005-12-31'  # 26/11/2026: in the night round with cx16_7/cx16_8 (its dependencies)
 ROTINAS = [('world_cup_update_staff_records_for_status', 0x92ccf0, [0x8a, 0x44, 0x24, 0x0c, 0x56]),
            ('world_cup_set_club_progress', 0x92f9e0, [0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08]),
            ('world_cup_start_new_season', 0x92d330, [0x81, 0xec, 0x00, 0x02, 0x00, 0x00])]

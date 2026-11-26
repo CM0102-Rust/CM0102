@@ -4123,7 +4123,7 @@ pub(crate) unsafe fn staff_day_going_home(d: &StaffDay) -> bool {
     if standing >= 0 {
         bar += (loyalty + 30) * (standing as i32 + 1);
     }
-    if read_i32(state) != -1 || read_i32(club.addr() + 0x1db) != -1 {
+    if read_i32(state) != -1 || (club.continental_comp_id() as i32) != -1 {
         bar += (loyalty + 10) * 50;
     }
     if exe::database_is_staff_foreign(p, club.nation().addr(), 1) != 0 {

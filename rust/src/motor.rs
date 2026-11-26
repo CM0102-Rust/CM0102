@@ -4123,8 +4123,30 @@ routines! {
     Prologue { address: 0x7777e0, bytes: &[0x6a, 0xff, 0x68, 0x98, 0xdf, 0x95, 0x00] } => reschedule_clashing_club_fixtures, compare_reschedule_clashing_club_fixtures;
     Prologue { address: 0x744240, bytes: &[0x6a, 0xff, 0x68, 0x06, 0xd8, 0x95, 0x00] } => post_player_praise_story, compare_post_player_praise_story;
     Prologue { address: 0x72c1f0, bytes: &[0x6a, 0xff, 0x68, 0x86, 0xd6, 0x95, 0x00] } => create_player_media_story, compare_create_player_media_story;
+    Prologue { address: 0x8affb0, bytes: &[0x51, 0x53, 0x55, 0x56, 0x8b, 0xf1] } => team_award_record_winners, compare_team_award_record_winners;
+    Prologue { address: 0x8b0140, bytes: &[0x6a, 0xff, 0x68, 0x0b, 0x38, 0x96, 0x00] } => team_award_send_club_news, compare_team_award_send_club_news;
+    Prologue { address: 0x8aff50, bytes: &[0x83, 0xec, 0x10, 0x56, 0x8b, 0xf1] } => team_award_set_season_dates, compare_team_award_set_season_dates;
+    Prologue { address: 0x8b0370, bytes: &[0x81, 0xec, 0xf4, 0x02, 0x00, 0x00] } => team_award_write_news, compare_team_award_write_news;
+    Prologue { address: 0x8aff00, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x83, 0xec, 0x08] } => team_award_set_dates, compare_team_award_set_dates;
+    Prologue { address: 0x9302f0, bytes: &[0x53, 0x55, 0x56, 0x8b, 0xf1] } => year_award_record_winners, compare_year_award_record_winners;
+    Prologue { address: 0x9304f0, bytes: &[0x6a, 0xff, 0x68, 0xdb, 0x60, 0x96, 0x00] } => year_award_post_winner_news, compare_year_award_post_winner_news;
+    Prologue { address: 0x930880, bytes: &[0x81, 0xec, 0x48, 0x04, 0x00, 0x00] } => year_award_write_news, compare_year_award_write_news;
+    Prologue { address: 0x92fc10, bytes: &[0x6a, 0xff, 0x68, 0x28, 0x60, 0x96, 0x00] } => world_cup_awards_construct, compare_world_cup_awards_construct;
+    Prologue { address: 0x92fc80, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => world_cup_awards_init, compare_world_cup_awards_init;
+    Prologue { address: 0x92fdf0, bytes: &[0x83, 0xec, 0x10, 0x56, 0x8b, 0x74, 0x24, 0x18] } => world_cup_awards_daily_update, compare_world_cup_awards_daily_update;
+    Prologue { address: 0x768720, bytes: &[0x81, 0xec, 0x54, 0x02, 0x00, 0x00] } => nation_awards_award_top_three_from_ratings, compare_nation_awards_award_top_three_from_ratings;
+    Prologue { address: 0x768b20, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x81, 0xec, 0x50, 0x02, 0x00, 0x00] } => nation_awards_award_from_shortlist, compare_nation_awards_award_from_shortlist;
+    Prologue { address: 0x7690c0, bytes: &[0x83, 0xec, 0x7c, 0x8b, 0x84, 0x24, 0x80, 0x00, 0x00, 0x00] } => nation_awards_award_tournament_player, compare_nation_awards_award_tournament_player;
+    Prologue { address: 0x769af0, bytes: &[0x83, 0xec, 0x14, 0x8b, 0x44, 0x24, 0x18] } => nation_awards_award_tournament_team, compare_nation_awards_award_tournament_team;
+    Prologue { address: 0x9149f0, bytes: &[0x6a, 0xff, 0x68, 0x29, 0x58, 0x96, 0x00] } => construct_wc_concacaf_cup, compare_construct_wc_concacaf_cup;
+    Prologue { address: 0x917db0, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => wc_concacaf_cup_rank_teams, compare_wc_concacaf_cup_rank_teams;
+    Prologue { address: 0x915d40, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => wc_concacaf_cup_build_team_table, compare_wc_concacaf_cup_build_team_table;
+    Prologue { address: 0x916250, bytes: &[0x81, 0xec, 0x14, 0x02, 0x00, 0x00] } => wc_concacaf_cup_select_entrants, compare_wc_concacaf_cup_select_entrants;
+    Prologue { address: 0x916cd0, bytes: &[0x6a, 0xff, 0x68, 0x9c, 0x58, 0x96, 0x00] } => wc_concacaf_cup_create_central_american_groups, compare_wc_concacaf_cup_create_central_american_groups;
+    Prologue { address: 0x915e40, bytes: &[0x6a, 0xff, 0x68, 0x68, 0x58, 0x96, 0x00] } => wc_concacaf_cup_update_for_date, compare_wc_concacaf_cup_update_for_date;
+    Prologue { address: 0x918200, bytes: &[0x6a, 0xff, 0x68, 0x57, 0x59, 0x96, 0x00] } => construct_wc_europe_league, compare_construct_wc_europe_league;
 }
-const N: usize = 3965;
+const N: usize = 3987;
 include!(concat!(env!("OUT_DIR"), "/indices.rs")); // IDX_<NAME>: the position of each routine (build.rs)
 
 /// Size of the engine object (the game allocates it with new(0xf63b)): side 1's block (+0xf5f2, 0x36
@@ -4171,6 +4193,9 @@ pub(crate) use self::award_nation_awards::*;
 #[path = "motor/award/team_award.rs"]
 pub(crate) mod award_team_award;
 pub(crate) use self::award_team_award::*;
+#[path = "motor/award/world_cup_awards.rs"]
+pub(crate) mod award_world_cup_awards;
+pub(crate) use self::award_world_cup_awards::*;
 #[path = "motor/award/year_award.rs"]
 pub(crate) mod award_year_award;
 pub(crate) use self::award_year_award::*;
@@ -5601,6 +5626,18 @@ pub(crate) use self::zipdir::*;
 
 compare_value!(compare_staff_criterion, staff_criterion, IDX_STAFF_CRITERION, () -> u32);
 
+// ---------- sx05b_3: the year award's winners and their news (award/year_award.cpp) ----------
+
+/// A year award winners record (`YEAR_AWARD::record_winners`'s argument, 0x4a bytes): the year word (+0) and three
+/// 0x18-byte entries from +2 (first, second and common name ids, staff id, score, club id).
+pub(crate) mod year_record {
+    pub(crate) const YEAR: usize = 0x0;
+    pub(crate) const ENTRY: usize = 0x2;
+    pub(crate) const ENTRY_SIZE: usize = 0x18;
+    pub(crate) const STAFF_ID: usize = 0xc;
+    pub(crate) const CLUB_ID: usize = 0x14;
+}
+
 // ---------- gra_2c: the daily staff update (game.cpp): game_daily_staff_update, the whole routine ----------
 //
 // `game_daily_staff_update` (0x5ce2d0, game.cpp, cdecl, 30,544 bytes) runs every day over the staff table. Ported
@@ -5772,43 +5809,6 @@ pub(crate) struct NationAwardsClass {
     pub(crate) nation_id: u32,
     pub(crate) kind: u8,
     pub(crate) month_ratings: Option<(usize, u32)>,
-}
-
-pub(crate) const FN_NATION_AWARDS_TOP_THREE_FROM_RATINGS: usize = 0x769380;
-
-/// The top three of the year ratings for `award` (`nation_awards_award_top_three_from_ratings`) with the seven
-/// filters as the nation passes them.
-pub(crate) unsafe fn award_top_three_from_ratings(this: usize, today: usize, award: usize, filters: [i32; 7]) {
-    let f: unsafe extern "thiscall" fn(usize, usize, usize, i32, i32, i32, i32, i32, i32, i32) = core::mem::transmute(FN_NATION_AWARDS_TOP_THREE_FROM_RATINGS);
-    let [a, b, c, d, e, g, h] = filters;
-    f(this, today, award, a, b, c, d, e, g, h)
-}
-
-/// The comparer of a nation awards constructor: it allocates (and may load); only the original runs, then the object
-/// must carry the class's vtable, nation id and type, and (without a file) `count` awards.
-pub(crate) unsafe fn compare_nation_awards_built(r: usize, this: usize, file: usize, class: &NationAwardsClass, count: i16, what: &str) -> usize {
-    use nation_awards_fields as na;
-    let ok = r == this && read_usize(this) == class.vtable && read_u32(this + na::NATION_ID) == class.nation_id && read_u8(this + na::TYPE) == class.kind
-        && (file != 0 || read_usize(this + na::TABLE) == 0 || read_i16(this + na::COUNT) == count);
-    SCOREBOARD.record(ok, || format!("{}: vtable {:#x} nation id {:#x} type {} count {}", what, read_usize(this), read_u32(this + na::NATION_ID), read_u8(this + na::TYPE), read_i16(this + na::COUNT)));
-    r
-}
-
-/// The comparer of a nation's `init_awards`: it allocates the awards; only the original runs, then each award must be
-/// built for this nation in its slot (`award_base::NATION_ID`, `award_base::INDEX`) with its staff competition.
-pub(crate) unsafe fn compare_nation_awards_init(this: usize, original: impl FnOnce(), what: &str) {
-    use nation_awards_fields as na;
-    original();
-    let table = read_usize(this + na::TABLE);
-    if table == 0 {
-        return;
-    }
-    let n = read_i16(this + na::COUNT).max(0) as usize;
-    let bad: Vec<usize> = (0..n).filter(|&k| {
-        let a = read_usize(table + 4 * k);
-        a != 0 && (read_u32(a + award_base::NATION_ID) != read_u32(this + na::NATION_ID) || read_u32(a + award_base::INDEX) != k as u32)
-    }).collect();
-    SCOREBOARD.record(bad.is_empty(), || format!("{}: awards with the wrong nation or index {:?}", what, bad));
 }
 
 // ---------- sx05b_21: setting the display currency (cash.cpp) ----------

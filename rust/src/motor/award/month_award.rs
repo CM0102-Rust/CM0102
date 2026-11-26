@@ -343,14 +343,14 @@ pub(crate) unsafe extern "thiscall" fn month_award_write_news(this: usize, news:
     let month = slot(7) as u8 as u32;
     let reworded = slot(9) != MONTH_AWARD_NEWS_VERSION;
     let draw = slot(0xa) as u8 as i8;
-    let no_player = slot(0xb);
+    let in_the_player = slot(0xb);
     let positions = slot(0xc);
     let strengths = slot(0xd);
     let player_boss = slot(0xe);
     let mut description = [0u8; 0xc8];
     let desc = description.as_mut_ptr() as usize;
     let mut gender: u8 = 0;
-    if no_player == 0 && !reworded {
+    if in_the_player == 0 && !reworded {
         gender = exe::write_position_name(positions, desc, 0xc8, 1);
     }
     let mut long_name = [0u8; 0xc8];
@@ -369,7 +369,7 @@ pub(crate) unsafe extern "thiscall" fn month_award_write_news(this: usize, news:
             let month_name = exe::date_get_month_name(month);
             // "<player> has won the <award> award for the month of <month>."
             fmt(buf, 0xa5ad8c, 0x64, comp_gender, comp_gender, 0x64, 0x64, long, comp_name, month_name);
-        } else if no_player == 0 && draw != 0 && !reworded {
+        } else if in_the_player == 0 && draw != 0 && !reworded {
             covered!("sx04b_1 body with the description");
             let club = club_at(club_id as isize);
             gender = exe::write_player_description(winner, positions, strengths, desc, 0xc8, gender as u32, 1);

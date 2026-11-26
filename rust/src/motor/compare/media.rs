@@ -453,8 +453,49 @@ pub(crate) unsafe fn compare_text_writer_tolerant(out: usize, original: impl FnO
     let show = |t: &(Vec<u8>, Vec<(Vec<u8>, u32, u32)>)| {
         format!("{:?} {:x?}", String::from_utf8_lossy(&t.0), t.1.iter().map(|l| (String::from_utf8_lossy(&l.0).into_owned(), l.1, l.2)).collect::<Vec<_>>())
     };
-    let same = mo == mr || (mo.1 == mr.1 && unset_gender() && without_empty_marks(&mo.0) == without_empty_marks(&mr.0));
+    let links = same_links_but_match_text(&mo.1, &mr.1);
+    let same = (mo.0 == mr.0 && links) || (links && unset_gender() && same_but_job_gender(&mo.0, &mr.0));
     SCOREBOARD.record(same_rng && same, || format!("{}: original {} rust {}", what(), show(&mo), show(&mr)));
+}
+
+/// Equal link lists, but a match link (0x7d3) may differ when one side's text is a leftover (empty, or with a control byte): the
+/// original builds that text (a score) only in some pieces and its frame keeps stack garbage otherwise
+/// (DEFEITOS_DO_ORIGINAL).
+pub(crate) fn same_links_but_match_text(o: &[(Vec<u8>, u32, u32)], r: &[(Vec<u8>, u32, u32)]) -> bool {
+    // a leftover: empty, or with a control byte (a score never has one); either side may hold it, since each side's
+    // writer runs on its own stack
+    let leftover = |t: &[u8]| t.is_empty() || t.iter().any(|&c| c < 0x20);
+    o.len() == r.len() && o.iter().zip(r).all(|(a, b)| a.1 == b.1 && a.2 == b.2 && (a.0 == b.0 || (a.1 == 0x7d3 && (leftover(&a.0) || leftover(&b.0)))))
+}
+
+/// Equal texts once the marks of the great player's unset job gender are left out: the "{}" after the job and the
+/// article before it ("presidente{} do Bayern" x "O presidente do Bayern"), which langlib writes or drops by that byte.
+/// The article is one short word (up to 3 letters) followed by a space or an apostrophe, on either side.
+pub(crate) fn same_but_job_gender(a: &[u8], b: &[u8]) -> bool {
+    let (a, b) = (without_empty_marks(a), without_empty_marks(b));
+    if a == b {
+        return true;
+    }
+    let (s, l) = if a.len() < b.len() { (a, b) } else { (b, a) };
+    let k = l.len() - s.len();
+    let i = s.iter().zip(l.iter()).take_while(|(x, y)| x == y).count();
+    // the article may start up to 3 bytes before the first difference ("Ana" x "A Ana" differ only at byte 1)
+    (2..=4).contains(&k)
+        && (i.saturating_sub(3)..=i).any(|j| {
+            l[j..j + k - 1].iter().all(|c| c.is_ascii_alphabetic())
+                && matches!(l[j + k - 1], b' ' | b'\'')
+                && l[j + k..] == s[j..]
+        })
+}
+
+#[cfg(test)]
+#[test]
+fn same_but_job_gender_accepts_only_the_article_and_marks() {
+    assert!(same_but_job_gender(b"presidente{} do Bayern", b"O presidente do Bayern"));
+    assert!(same_but_job_gender(b"disse A Ana", b"disse Ana{}"));
+    assert!(same_but_job_gender(b"treinador{} da Escocia", b"treinador da Escocia"));
+    assert!(!same_but_job_gender(b"presidente do Bayern", b"O presidente do Porto"));
+    assert!(!same_but_job_gender(b"presidente do Bayern", b"Um longo presidente do Bayern"));
 }
 
 /// The text without its "{}" marks (the empty gender marks langlib leaves when a gender byte is out of range).

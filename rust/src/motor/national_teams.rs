@@ -4535,9 +4535,9 @@ pub(crate) unsafe fn intl_format(out: usize, template: usize, form: &[IntlArg], 
 
 /// The template a tree picks for a performance code and a draw (the first rule whose mask the code holds; without
 /// codes, the fallback).
-pub(crate) fn intl_pick(tree: &IntlTree, code: u8, no_codes: bool, draw: u32) -> IntlLine {
+pub(crate) fn intl_pick(tree: &IntlTree, code: u8, in_the_codes: bool, draw: u32) -> IntlLine {
     let by_draw = |zero: IntlLine, other: IntlLine| if draw == 0 { zero } else { other };
-    if !no_codes {
+    if !in_the_codes {
         if let Some(rule) = tree.rules.iter().find(|rule| code & rule.mask == rule.mask) {
             return by_draw(rule.zero, rule.other);
         }
