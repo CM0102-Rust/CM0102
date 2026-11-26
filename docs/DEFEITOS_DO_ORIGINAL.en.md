@@ -107,6 +107,10 @@ The list of the defects (bugs) of CM 01/02 3.9.68 that we found while porting, o
 | 0x5f2840 | `verify_history_files`, History.cpp | A NATION `.his` is checked only against the club names. | [inference] A valid nation `.his` is reported as ownerless (or a wrong one passes). | ported, reproduces: `rust/src/motor.rs:7424` | reader of round tel42 (disassembly, 2026-11-22) |
 | 0x5f1e50 | `history_load_his_file`, History.cpp | The error returns leave the file open; the first character of text right after a `}` is lost; the section name has no limit, and the `fscanf` buffer is 32 bytes. | One more open file on a broken `.his`; a lost letter in the text; a long section name overflows the stack. | ported, reproduces: `rust/src/motor.rs:7123` | reader of round tel42 (disassembly, 2026-11-22) |
 | 0x443cd0 | `Club_History::load`, club_history.cpp | If the item is missing from the save, it only shows the box, and the constructor rebuilds the history empty, with no warning. | The club history disappears with no warning when loading a save without the item. | ported, reproduces: `rust/src/motor.rs:7965` | reader of round tel42 (disassembly, 2026-11-22) |
+| 0x52dad0 (line 0x1362) | `save_database`, Database.cpp | The stadiums' error box uses the continents' text (0x9b6020). | Wrong message only when the save fails. | the copy keeps the text (item `rxdb_1`) | reader rxdb |
+| 0x52dad0 | `save_database`, Database.cpp | Without the people entry in the loaded index, preferences, non-players and players compare the file name with an uninitialised `entries[local]`: it reads outside the frame and may crash. | Rare crash when saving. | the copy keeps the right name (item `rxdb_1`) | reader rxdb |
+| 0x5313a6..0x5313d8 | `save_database`, Database.cpp | Failing to write the index.dat entries closes the file twice (zclose/fclose). | Double close on failure. | the copy closes once (item `rxdb_1`) | reader rxdb |
+| 0x52dad0 | `save_database`, Database.cpp | The CM3_TEMP folder goes by strcpy into a 260-byte local, unbounded. | Stack overflow with a long path. | the copy cuts at 259 (item `rxdb_1`) | reader rxdb |
 
 ## Others
 

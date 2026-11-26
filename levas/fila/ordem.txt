@@ -1,5 +1,4 @@
 # ordem da fila (fila.py); um item por linha
-gra_2c
 sx05b_1
 sx05b_2
 sx05b_3
@@ -15,24 +14,12 @@ sx05b_16
 sx05b_17
 sx05b_18
 sx05b_19
-sx14_1
-sx14_2
-sx14_3
-sx04b_2
-sx04b_1
-sx04b_3
 sx04b_4
 sx04b_5
 sx04b_7
 sx04b_8
-sx15_3
-sx15_4
-sx15_5
-sx15_6
 sx15_1
 sx15_2
-sx01e_1
-sx01e_2
 sx09c_1
 sx09c_4
 sx09c_5
@@ -710,3 +697,15 @@ rx02_4
 rx02_5
 rx02_6
 rx02_7
+rxdb_1
+rx03_1
+rx03_2
+rx03_3
+rx03_4
+rx03_5
+rx03_6
+rx03_7
+rx03_9
+rx03_10
+rx03_11
+rx03_12

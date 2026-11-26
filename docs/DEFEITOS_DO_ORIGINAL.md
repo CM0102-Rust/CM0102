@@ -107,6 +107,10 @@ A lista dos defeitos (bugs) do CM 01/02 3.9.68 que achamos ao portar, ou que a c
 | 0x5f2840 | `verify_history_files`, History.cpp | Um `.his` de NATION é conferido só contra os nomes de clubes. | [inferência] Um `.his` de nação válido é dado como sem dono (ou um errado passa). | portada, reproduz: `rust/src/motor.rs:7424` | leitor da rodada tel42 (desmontagem, 22/11/2026) |
 | 0x5f1e50 | `history_load_his_file`, History.cpp | Os retornos de erro deixam o arquivo aberto; o primeiro caractere do texto colado logo depois de um `}` se perde; o nome de seção não tem limite, e o buffer do `fscanf` tem 32 bytes. | Arquivo aberto a mais em `.his` estragado; letra perdida no texto; nome de seção longo estoura a pilha. | portada, reproduz: `rust/src/motor.rs:7123` | leitor da rodada tel42 (desmontagem, 22/11/2026) |
 | 0x443cd0 | `Club_History::load`, club_history.cpp | Se o item faltar no save, só mostra a caixa, e o construtor recria o histórico vazio, sem aviso. | O histórico dos clubes some sem aviso ao carregar um save sem o item. | portada, reproduz: `rust/src/motor.rs:7965` | leitor da rodada tel42 (desmontagem, 22/11/2026) |
+| 0x52dad0 (linha 0x1362) | `save_database`, Database.cpp | A caixa de erro dos estádios usa o texto dos continentes (0x9b6020). | Mensagem errada só na falha de gravação. | a cópia mantém o texto (item `rxdb_1`) | leitor rxdb |
+| 0x52dad0 | `save_database`, Database.cpp | Sem a entrada das pessoas no índice carregado, preferências, não jogadores e jogadores comparam o nome do arquivo com `entries[local]` não iniciado: lê fora do quadro e pode cair. | Queda rara na gravação. | a cópia mantém o nome certo (item `rxdb_1`) | leitor rxdb |
+| 0x5313a6..0x5313d8 | `save_database`, Database.cpp | A falha ao gravar as entradas do index.dat fecha o arquivo duas vezes (zclose/fclose). | Fecho duplo na falha. | a cópia fecha uma vez (item `rxdb_1`) | leitor rxdb |
+| 0x52dad0 | `save_database`, Database.cpp | A pasta CM3_TEMP vai por strcpy num local de 260 bytes, sem limite. | Estouro de pilha com caminho longo. | a cópia corta em 259 (item `rxdb_1`) | leitor rxdb |
 
 ## Outros
 

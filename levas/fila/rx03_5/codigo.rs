@@ -7,23 +7,19 @@
 /// programs, +0xbc..+0xcc the scale record), +0xe4 the units per em, +0xe6 the twilight point count, +0xe8 and +0xec the
 /// program lengths, +0xf0 the twilight zone (+0xf4..+0x11c its arrays) and +0x120 the glyph zone.
 pub(crate) mod tt_exec {
-    pub(crate) const MEM: usize = 0x0;
     pub(crate) const X_PPEM: usize = 0x4;
     pub(crate) const Y_PPEM: usize = 0x8;
     pub(crate) const CVT_UNITS: usize = 0xc;
     pub(crate) const CVT_COUNT: usize = 0x10;
     pub(crate) const WORK: usize = 0x14;
     pub(crate) const GLOBAL: usize = 0x18;
-    pub(crate) const SCALE_FN: usize = 0xb0;
     pub(crate) const PREP: usize = 0xb4;
     pub(crate) const FPGM: usize = 0xb8;
     pub(crate) const UNITS_PER_EM: usize = 0xe4;
     pub(crate) const TWILIGHT_POINTS: usize = 0xe6;
     pub(crate) const PREP_LENGTH: usize = 0xe8;
     pub(crate) const FPGM_LENGTH: usize = 0xec;
-    pub(crate) const TWILIGHT: usize = 0xf0;
     pub(crate) const TWILIGHT_ARRAYS: usize = 0xf4;
-    pub(crate) const GLYPH_ZONE: usize = 0x120;
 }
 
 /// The scale record that `tt_compute_scale_factor` fills (0x12 bytes): +0 the multiplier (i16), +2 the shift (i16),

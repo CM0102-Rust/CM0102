@@ -36,10 +36,13 @@ struct HintGlyphView {
 /// matrix when it is not the identity), and with command bit 2 the scan converter builds the bitmap (dropout control
 /// remembered per glyph in the scaler's bit sets).
 /// Defect of the original: the column dropout is decided by the row dropout bit set (+0x10) too; the column bit set
-/// (+0x14) is written but never read.
+/// (+0x14) is written but never read. The depth argument is counted up by each component of a composite glyph, so a
+/// composite glyph at the top level skips the depth 0 step (its points are not moved to the origin nor its phantom
+/// points rounded to whole pixels).
 /// Original: `t2k_render_glyph_internal` (0x93e970, library_without_asserts, T2K t2k.c, cdecl).
 pub(crate) unsafe extern "C" fn t2k_render_glyph_internal(t: usize, code: i32, depth: i32, dx: i32, dy: i32, grey: i32, cmd: u32) {
     let mut cmd = cmd;
+    let mut depth = depth;
     let mut tt_hint = cmd & 0x80;
     let mut digit = 0i32;
     let auto_hint;
@@ -95,8 +98,9 @@ pub(crate) unsafe extern "C" fn t2k_render_glyph_internal(t: usize, code: i32, d
     write_usize(t + t2k_scaler::GLYPH, g);
     let n;
     if read_i16(g + t2k_glyph::CONTOURS) < 0 {
-        let (joined, all_flags) = render_components(t, g, depth, dx, dy, cmd, mode);
+        let (joined, all_flags, after) = render_components(t, g, depth, dx, dy, cmd, mode);
         g = joined;
+        depth = after;
         n = read_i16(g + t2k_glyph::POINTS) as i32;
         let (oox, xs) = (read_usize(g + t2k_glyph::OOX), read_usize(g + t2k_glyph::X));
         if all_flags & 0x200 == 0 {
@@ -141,8 +145,9 @@ pub(crate) unsafe extern "C" fn t2k_render_glyph_internal(t: usize, code: i32, d
 }
 
 /// The components of a composite glyph rendered and joined (see `t2k_render_glyph_internal`): returns the joined
-/// glyph and the union of the component flags.
-unsafe fn render_components(t: usize, g: usize, depth: i32, dx: i32, dy: i32, cmd: u32, mode: i16) -> (usize, u32) {
+/// glyph, the union of the component flags and the depth after the components (the original counts them in its
+/// depth argument, which the end of the rendering then reads).
+unsafe fn render_components(t: usize, g: usize, depth: i32, dx: i32, dy: i32, cmd: u32, mode: i16) -> (usize, u32, i32) {
     let mut depth = depth;
     let hints = read_usize(g + t2k_glyph::HINTS);
     let records = read_usize(g + t2k_glyph::COMPONENTS);
@@ -231,7 +236,7 @@ unsafe fn render_components(t: usize, g: usize, depth: i32, dx: i32, dy: i32, cm
     write_usize(g + t2k_glyph::HINTS, hints);
     write_u32(g + t2k_glyph::HINT_LENGTH, hint_length);
     lib_ctx_free(read_usize(t + t2k_scaler::MEM), records);
-    (g, all_flags)
+    (g, all_flags, depth)
 }
 
 /// The scaler's 2×2 matrix (16.16; +8..+0x14) and its identity flag (+0x1c).

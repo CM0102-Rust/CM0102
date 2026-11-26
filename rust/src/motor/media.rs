@@ -11527,3 +11527,794 @@ pub(crate) const MEDIA_STORY_LOG_ORDER: usize = 0x757ee0;
 
 /// The game data version from which the story log records are 23 bytes (before it, 22).
 pub(crate) const MEDIA_LOG_23_BYTES_VERSION: i32 = 0x3e037;
+
+/// Posts the praise story about a player (news item 0xbdd), raises his reputations and lets the computer manager
+/// answer it at once.
+///
+/// Nothing without the player, his `.player()` sheet, a staff id other than 0 (a defect of the original: the person
+/// with id 0 is never praised), a `.current_reputation()` of at least 3500, his `.nation()`, the club, its `.manager()`
+/// and `.nation()`. A club that is not a national team (`exe::database_is_national_team`) needs a division other than
+/// 0x9cf764 and the player's contract with it (`exe::contract_manager_get_contract_for_club`).
+///
+/// The slots: 0..3 the player and his names (the common name -1 when he has none), 4 the club id, 5 the kind
+/// (`praise_story_kind`; the world stage 0x33 and the competition 0x34 passed in are kept); nothing when the story is
+/// already logged (`exe::media_has_logged_story` with 0xbdd and the kind); 6 the board confidence below 4000
+/// (`board_record::CONFIDENCE`), 7 his nation id, 8 the kind's draw, 9..12 the club's manager and his names, 13 the
+/// computer manager's response (`exe::media_pick_ai_manager_response`, for a club that is not human; otherwise 0), 14
+/// his strength flags (`exe::staff_get_player_strength_flags`), 15 his position mask (`exe::formation_get_position_mask`),
+/// 16 the competition id: for the competition the fixture's (or, without one, as the world stage, the nation's current
+/// competition, `exe::nationalteams_get_current_competition`, nothing without it), otherwise the club's division; the
+/// match and transfer slots (`praise_story_match_and_transfer`); the former international pundit and his names
+/// (`exe::media_pick_former_international_pundit`, -1 × 4 without one), the next hosts of the competition
+/// (`exe::hostcountry_find_next_hosts`, 0 and -1 by default), the shoot-out (1 won, 2 lost, otherwise 0), the pundit's
+/// job and club (club job first, then national job; -1 × 2 without), the outlet (`exe::media_pick_outlet_type_for_person`),
+/// the pundit of the outlet (`exe::punditlist_pick_random_pundit` with the club's nation), his age and whether he is a
+/// goalkeeper (20).
+///
+/// The world stage goes to every manager when his world reputation plus the club's is above 13750, otherwise to the
+/// continent of the club's nation; the competition to every manager; the others to every human club following him
+/// (`exe::transfer_manager_collect_player_news_recipients` with 0x25a, up to 30). Then the story is logged (`log_story`
+/// with the response), his current and home reputations rise by 200 and the world one by 100 (each up to 10000), he
+/// goes onto the clubs' shortlists (`exe::shortlist_manager_add_player_to_club_shortlists`), the chairman of a random
+/// club of the same nation favours him (`exe::staff_add_favoured_staff`) and, for a club that is not human, the
+/// computer manager's response is applied (`exe::media_apply_player_story_response`).
+///
+/// Called by the daily loop (0x5d02ab, 0x5d05f7, 0x5d0e1a) and the match day (0x6b715b); behind the post-match gate
+/// (`POS_PROLOGUES`, match_day.rs).
+/// Original: `Media::post_player_praise_story` (0x744240, media.cpp, thiscall, ret 0x10).
+pub(crate) unsafe extern "thiscall" fn post_player_praise_story(this: usize, player: usize, club: usize, kind: u32, fixture: usize) {
+    let (player, club) = (Staff(player), Club(club));
+    if player.is_null() || player.player().is_null() || read_i32(player.addr()) == 0 || player.player().current_reputation() < 0xdac || player.nation().is_null() {
+        return;
+    }
+    if club.is_null() || club.manager().is_null() || club.nation().is_null() {
+        return;
+    }
+    let mut contract = Contract(0);
+    if exe::database_is_national_team(club) == 0 {
+        let division = club.division();
+        if division.is_null() || read_i32(division.addr()) == read_i32(0x9cf764) {
+            return; // 0x9cf764: the id of a division that gets no praise
+        }
+        contract = Contract(exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), player, club));
+        if contract.is_null() {
+            return;
+        }
+    }
+    covered!("sx01e_1 praise story");
+    let first_draw = exe::utils_random(2) as u32;
+    let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
+    let mut s = NewsSlots { n: local.as_mut_ptr() as usize, k: 0 };
+    exe::new_newsitem(s.n, 0xbdd, 0);
+    set_person_name_slots_or_none(s.n, 0, player);
+    s.k = 4;
+    s.put(read_u32(club.addr()));
+    let (kind, draw) = praise_story_kind(player, club, kind as u8, contract, first_draw);
+    s.put(kind as i8 as i32 as u32);
+    if exe::media_has_logged_story(this, player, club, 0xbdd, kind as u32, core::ptr::null()) != 0 {
+        return;
+    }
+    s.put((read_i16(manager_manager_row(club) + board_record::CONFIDENCE) < 4000) as u32);
+    s.put(read_u32(player.nation().addr()));
+    s.put(draw);
+    s.put_person(club.manager());
+    let response = if media_is_human_club(club.addr(), 0, 1) == 0 { exe::media_pick_ai_manager_response(this, club.manager(), player, kind as u32) } else { 0 };
+    s.put(response);
+    s.put(exe::staff_get_player_strength_flags(player, club));
+    s.put(exe::formation_get_position_mask(player.player()) as i16 as i32 as u32);
+    let comp_id = if kind == PRAISE_COMPETITION && fixture != 0 {
+        read_u32(fixture) // fixture::COMP_ID
+    } else if kind == PRAISE_WORLD_STAGE || kind == PRAISE_COMPETITION {
+        let teams = read_usize(G_NATIONAL_TEAMS);
+        if exe::nationalteams_get_current_competition(teams, club.nation()) == 0 {
+            return;
+        }
+        read_u32(exe::nationalteams_get_current_competition(teams, club.nation()))
+    } else {
+        read_u32(club.division().addr())
+    };
+    s.put(comp_id);
+    praise_story_match_and_transfer(&mut s, player, club, fixture);
+    let pundit = Staff(exe::media_pick_former_international_pundit(this, club, player));
+    if pundit.is_null() {
+        for _ in 0..4 {
+            s.put(u32::MAX);
+        }
+    } else {
+        s.put_person(pundit);
+    }
+    let (mut hosts, mut next_hosts) = (0u32, u32::MAX);
+    exe::hostcountry_find_next_hosts(read_usize(G_HOST_COUNTRY), comp_id, &mut hosts, &mut next_hosts);
+    s.put(hosts);
+    s.put(next_hosts);
+    s.put(if fixture != 0 { news_shootout_result(Fixture(fixture), club).unwrap_or(0) } else { 0 });
+    if !pundit.is_null() && !pundit.club_job().is_null() {
+        s.put(pundit.job_for_club() as i8 as i32 as u32);
+        s.put(read_u32(pundit.club_job().addr()));
+    } else if !pundit.is_null() && !pundit.national_job().is_null() {
+        s.put(pundit.job_for_nation() as i8 as i32 as u32);
+        s.put(read_u32(pundit.national_job().addr()));
+    } else {
+        s.put(u32::MAX);
+        s.put(u32::MAX);
+    }
+    let outlet = exe::media_pick_outlet_type_for_person(player);
+    s.put(outlet);
+    let nation = club.nation();
+    s.put(exe::punditlist_pick_random_pundit(read_usize(G_PUNDIT_LIST), club, outlet, if nation.is_null() { -1 } else { read_i32(nation.addr()) }) as u32);
+    s.put(player.age() as i8 as i32 as u32);
+    s.put((player.player().goalkeeper() == 0x14) as u32);
+    let mut clubs = [0usize; 30];
+    let count = if read_usize(G_TRANSFER_MANAGER) != 0 { player_news_recipients(player, 0x25a, clubs.as_mut_ptr(), 0x1e) as i8 } else { 0 };
+    let news = read_usize(G_NEWS);
+    if kind == PRAISE_WORLD_STAGE {
+        if player.player().world_reputation() as i32 + club.reputation() as i32 > 0x35b6 {
+            exe::news_send_to_all_managers(news, s.n);
+        } else {
+            exe::news_send_to_continent_managers(news, s.n, nation.continent());
+        }
+    } else if kind == PRAISE_COMPETITION {
+        exe::news_send_to_all_managers(news, s.n);
+    } else {
+        for &c in clubs.iter().take(count.max(0) as usize) {
+            exe::news_send_to_club_manager(news, s.n, c);
+        }
+    }
+    log_story(this, player.addr(), club.addr(), 0xbdd, kind as u32, response);
+    let sheet = player.player();
+    sheet.set_current_reputation(sheet.current_reputation().wrapping_add(200).min(10000));
+    sheet.set_home_reputation(sheet.home_reputation().wrapping_add(200).min(10000));
+    sheet.set_world_reputation(sheet.world_reputation().wrapping_add(100).min(10000));
+    exe::shortlist_manager_add_player_to_club_shortlists(read_usize(read_usize(G_TRANSFER_MANAGER) + transfer_manager_fields::SHORTLIST_MANAGER), player, 1);
+    let other = club_at(exe::utils_random(read_i32(G_CLUB_COUNT)) as isize);
+    if !other.nation().is_null() && other.nation() == club.nation() {
+        exe::staff_add_favoured_staff(other.chairman(), player, 1);
+    }
+    if media_is_human_club(club.addr(), 0, 1) == 0 {
+        exe::media_apply_player_story_response(this, player, club, kind as u32, response);
+    }
+}
+
+/// Comparer for `post_player_praise_story`: it draws, posts news and changes reputations, so it cannot run twice; only
+/// the original runs (in the comparison mode the post-match gate of 0x744240 is installed first and keeps the address,
+/// see the item).
+pub(crate) unsafe extern "thiscall" fn compare_post_player_praise_story(this: usize, player: usize, club: usize, kind: u32, fixture: usize) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, usize)>(IDX_POST_PLAYER_PRAISE_STORY)(this, player, club, kind, fixture)
+}
+
+/// Creates a media story about a player (news item 0xbd0), refining the kind asked for from his form, contract and
+/// character, and the computer manager's response.
+///
+/// Nothing without the player, his `.player()` sheet with a `.current_reputation()` of at least 3500, his
+/// `.nation()`, the club, its `.nation()`, `.stadium()` with a city and `.manager()`. The contract is his with his
+/// club job's club or, failing that, with the club (`exe::contract_manager_get_contract_for_club`); nothing without
+/// one. Without a club job the original first reads an uninitialised stack slot as the contract (a defect; here
+/// none). The rival manager comes from `exe::media_pick_rival_manager_id`.
+///
+/// The kind (`media_story_kind`, which may post the outburst instead), then nothing when the story is already logged
+/// (`exe::media_has_logged_story` with 0xbd0). The slots: 0..3 the player and his names (the common name -1 when he
+/// has none), 4 the club id, 5 the variant (`media_story_variant`), 6 the outlet
+/// (`exe::media_pick_outlet_type_for_person`), 7 his nation id, 8 the stadium's city id, 9 the kind, 10 the computer
+/// manager's response (`exe::media_pick_ai_manager_response`, for a club that is not human; otherwise 0), 11..14 the
+/// rival manager and his names (-1 × 4 without one), 15 the contract's `.unhappy_flag()` up to 1, 16 the high nibble
+/// of the `.squad_status()`, 17 his age, 18 his weakness flags (`staff_get_player_weakness_flags`) without 8 when his
+/// stat 6 (`exe::playerstats_get_stat`) is below 20. Then the team takeover (`media_story_team_takeover`) may post
+/// another story and stop. 0x17..0x1a the club's manager and his names, 0x1b the rival manager's club id (-1), and the
+/// tail (`media_story_tail_slots`) with the pundit (`exe::punditlist_pick_random_pundit` with the club's nation).
+///
+/// It goes to every human club following the player (`exe::transfer_manager_collect_player_news_recipients` with
+/// 0x2da, up to 30) and is logged (`log_story` with the response). For a kind other than 0x13 with random(pressure)
+/// < random(5), or with a morale below −70 − professionalism, the contract gets the event flag 0x40000
+/// (`exe::staff_contract_apply_event_flags`); the morale moves by random(pressure − 30), within ±100. Kinds 0x1e and
+/// 0x20 let the squad react (`exe::media_apply_squad_reaction_to_player_story`); the others, when random(150) is below
+/// the chairman's interference and the contract has grievances, make the chairman dislike him
+/// (`exe::staff_add_disliked_staff`). Last, for a club that is not human, the computer manager's response is applied
+/// (`exe::media_apply_player_story_response`).
+///
+/// Called by the post-match events (0x6b7012, 0x6b75fd, 0x6b796e), the daily loop (0x5cff53, 0x5d0a64...), 0x4194e0
+/// and 0x7581b2; behind the post-match gate (`POS_PROLOGUES`, match_day.rs).
+/// Original: `Media::create_player_media_story` (0x72c1f0, media.cpp, thiscall, ret 0x14).
+pub(crate) unsafe extern "thiscall" fn create_player_media_story(this: usize, player: usize, club: usize, kind: u32, fixture: usize, person: usize) {
+    let mut record = [0u8; 0x20]; // the 0x1f-byte match record
+    exe::date_date_54a110(record.as_mut_ptr() as usize);
+    let (player, club, person) = (Staff(player), Club(club), Staff(person));
+    if player.is_null() || player.player().is_null() || player.player().current_reputation() < 0xdac || player.nation().is_null() {
+        return;
+    }
+    if club.is_null() || club.nation().is_null() || club.stadium().is_null() || read_usize(club.stadium().addr() + stadium::CITY) == 0 || club.manager().is_null() {
+        return;
+    }
+    let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
+    let mut s = NewsSlots { n: local.as_mut_ptr() as usize, k: 0 };
+    exe::new_newsitem(s.n, 0xbd0, 0);
+    set_person_name_slots_or_none(s.n, 0, player);
+    s.k = 4;
+    s.put(read_u32(club.addr()));
+    let contracts = read_usize(G_CONTRACT_MANAGER);
+    let mut contract = Contract(0);
+    if !player.club_job().is_null() {
+        contract = Contract(exe::contract_manager_get_contract_for_club(contracts, player, player.club_job()));
+    }
+    if contract.is_null() {
+        contract = Contract(exe::contract_manager_get_contract_for_club(contracts, player, club));
+        if contract.is_null() {
+            return;
+        }
+    }
+    let manager = club.manager();
+    let rival = exe::media_pick_rival_manager_id(this, club);
+    let mut score = media_story_temper(player, contract);
+    let Some(kind) = media_story_kind(this, player, club, contract, kind, &mut score) else {
+        return;
+    };
+    if exe::media_has_logged_story(this, player, club, 0xbd0, kind, core::ptr::null()) != 0 {
+        return;
+    }
+    covered!("sx01e_2 media story");
+    s.put(media_story_variant(player, kind, rival) as u32);
+    let outlet = exe::media_pick_outlet_type_for_person(player);
+    s.put(outlet);
+    s.put(read_u32(player.nation().addr()));
+    s.put(read_u32(read_usize(club.stadium().addr() + stadium::CITY)));
+    s.put(kind as u16 as i16 as i32 as u32);
+    let response = if media_is_human_club(club.addr(), 0, 1) == 0 { exe::media_pick_ai_manager_response(this, manager, player, kind) } else { 0 };
+    s.put(response);
+    if rival == -1 {
+        for _ in 0..4 {
+            s.put(u32::MAX);
+        }
+    } else {
+        let r = staff_at(rival as isize);
+        s.put(rival as u32);
+        for name in [r.first_name(), r.second_name(), r.common_name()] {
+            s.put(read_u32(name + names::ID));
+        }
+    }
+    s.put((contract.unhappy_flag() <= 1) as u32);
+    s.put((contract.squad_status() >> 4) as u32);
+    s.put(player.age() as i8 as i32 as u32);
+    let mut flags = staff_get_player_weakness_flags(player.addr(), club.addr());
+    let stat = exe::playerstats_get_stat(read_usize(G_PLAYER_STATS), player.player(), 6, 1, 6.5);
+    if flags & 8 != 0 && stat < read_f32(rdata::F32_20) as f64 {
+        flags ^= 8;
+    }
+    s.put(flags);
+    if media_story_team_takeover(this, player, club, contract, flags, score) {
+        return;
+    }
+    s.k = 0x17;
+    s.put_person(manager);
+    let rival_club = if rival > -1 { staff_at(rival as isize).club_job() } else { Club(0) };
+    s.put(if rival_club.is_null() { u32::MAX } else { read_u32(rival_club.addr()) });
+    let nation = club.nation();
+    let pundit = exe::punditlist_pick_random_pundit(read_usize(G_PUNDIT_LIST), club, outlet, if nation.is_null() { -1 } else { read_i32(nation.addr()) }) as u32;
+    media_story_tail_slots(&mut s, &mut record, player, club, kind, fixture, person, pundit);
+    let mut clubs = [0usize; 30];
+    let count = if read_usize(G_TRANSFER_MANAGER) != 0 { player_news_recipients(player, 0x2da, clubs.as_mut_ptr(), 0x1e) as i8 } else { 0 };
+    for &c in clubs.iter().take(count.max(0) as usize) {
+        exe::news_send_to_club_manager(read_usize(G_NEWS), s.n, c);
+    }
+    log_story(this, player.addr(), club.addr(), 0xbd0, kind, response);
+    let professionalism = player.professionalism() as i32;
+    let pressured = kind as u16 != 0x13 && exe::utils_random(player.pressure() as i32) < exe::utils_random(5);
+    if pressured || (contract.morale() as i32) < -0x46 - professionalism {
+        exe::staff_contract_apply_event_flags(contract, 0x40000, 0);
+    }
+    let change = exe::utils_random(player.pressure() as i32 - 0x1e) as i8;
+    let morale = change as i32 + contract.morale() as i32;
+    contract.set_morale(if morale > 100 { 100 } else if morale < -100 { -100 } else { change.wrapping_add(contract.morale()) });
+    if kind as u16 == 0x1e || kind as u16 == 0x20 {
+        exe::media_apply_squad_reaction_to_player_story(this, kind, player, club, core::ptr::null_mut(), u32::MAX);
+    } else {
+        let chairman = club.chairman();
+        if !chairman.is_null() && !chairman.non_player().is_null() && (chairman.non_player().interference() as i32) > exe::utils_random(0x96) && contract.grievances() != 0 {
+            exe::staff_add_disliked_staff(chairman, player, 1);
+        }
+    }
+    if media_is_human_club(club.addr(), 0, 1) == 0 {
+        exe::media_apply_player_story_response(this, player, club, kind, response);
+    }
+}
+
+/// Comparer for `create_player_media_story`: it draws, posts news and changes the contract, so it cannot run twice;
+/// only the original runs (in the comparison mode the post-match gate of 0x72c1f0 is installed first and keeps the
+/// address, see the item).
+pub(crate) unsafe extern "thiscall" fn compare_create_player_media_story(this: usize, player: usize, club: usize, kind: u32, fixture: usize, person: usize) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, usize, usize)>(IDX_CREATE_PLAYER_MEDIA_STORY)(this, player, club, kind, fixture, person)
+}
+
+/// The praise story's kind and the draw of slot 8. The world stage and the competition keep their kind (draw 4).
+/// Otherwise, with random(3) ≠ 0 and today before the day he joined the club plus 30 + random(150) days, he impresses
+/// (draw 3); then the young kinds (under 22 without caps, `praise_kind_young`); then his attitude (over 30, leadership
+/// and professionalism above 15, more than 400 days at the club, a current reputation above 7250 and random(3) = 0),
+/// which keeps the first draw (`first_draw`, random(2)); then the older kinds (`praise_kind_senior`).
+pub(crate) unsafe fn praise_story_kind(player: Staff, club: Club, kind: u8, contract: Contract, first_draw: u32) -> (u8, u32) {
+    if kind == PRAISE_WORLD_STAGE || kind == PRAISE_COMPETITION {
+        return (kind, exe::utils_random(4) as u32);
+    }
+    if exe::utils_random(3) != 0 {
+        let mut settled = [0u8; 8];
+        let days = exe::utils_random(0x96) + 0x1e;
+        let settled = exe::date_add_days(player.addr() + staff::DATE_JOINED_CLUB, settled.as_mut_ptr() as usize, days as u32);
+        if media_date_before(G_CURRENT_DATE, settled) {
+            covered!("sx01e_1 praise impresses");
+            return (PRAISE_IMPRESSES, exe::utils_random(3) as u32);
+        }
+    }
+    let age = player.age() as i8 as i32;
+    if age < 0x16 && player.int_apps() == 0 {
+        return praise_kind_young(player, club, contract);
+    }
+    let sheet = player.player();
+    if age > 0x1e
+        && sheet.leadership() > 0xf
+        && exe::date_days_since(G_CURRENT_DATE, player.date_joined_club() as u32, player.date_joined_club_leap_year() as u32) > 400
+        && sheet.current_reputation() > 0x1c52
+        && player.professionalism() > 0xf
+        && exe::utils_random(3) == 0
+    {
+        covered!("sx01e_1 praise attitude");
+        return (PRAISE_ATTITUDE, first_draw);
+    }
+    praise_kind_senior(player, club)
+}
+
+/// The slots after the match (from 0x11): with a match 1, the match record and the shoot-out comes later; without
+/// one 0. Then the transfer slots: with a future transfer (`exe::transfer_manager_get_future_transfer`) the buying
+/// club's id (+8 of the offer, `exe::transfer_manager_get_offer_slot`), 1 and the transfer date (day signed, year);
+/// otherwise his club's id (-1 without one), 0, -1, -1. Then the state nibble without a future transfer (0 with one).
+pub(crate) unsafe fn praise_story_match_and_transfer(s: &mut NewsSlots, player: Staff, club: Club, fixture: usize) {
+    s.k = 0x11;
+    if fixture != 0 {
+        let mut record = [0u8; 0x20]; // the 0x1f-byte match record
+        exe::date_date_54a110(record.as_mut_ptr() as usize);
+        s.put(1);
+        exe::fill_match_record_from_fixture(fixture, club, record.as_mut_ptr() as usize);
+        exe::write_match_record_to_news(record.as_mut_ptr() as usize, s.n, &mut s.k);
+    } else {
+        s.put(0);
+    }
+    let transfers = read_usize(G_TRANSFER_MANAGER);
+    let mut future = 0usize;
+    if exe::transfer_manager_get_future_transfer(transfers, player, &mut future as *mut usize as u32) != 0 {
+        covered!("sx01e_1 praise with a future transfer");
+        let offer = read_usize(exe::transfer_manager_get_offer_slot(transfers, read_i32(future + 8)));
+        s.put(read_u32(offer + 8)); // the buying club's id
+        s.put(1);
+        s.put(read_i16(future) as i32 as u32); // the transfer date: day
+        s.put(read_u16(future + 2) as u32); // year
+    } else {
+        s.put(if player.club_job().is_null() { u32::MAX } else { read_u32(player.club_job().addr()) });
+        s.put(0);
+        s.put(u32::MAX);
+        s.put(u32::MAX);
+    }
+    s.put(if exe::transfer_manager_get_future_transfer(transfers, player, 0) == 0 { staff_state_nibble(player) as u32 } else { 0 });
+}
+
+/// The player's temper score for the media story: with one of the contract grievances 0x30321, 3 for a
+/// professionalism of 1, 2 below 6, 1 below 15, +1 for an ambition above 15, +2 for a temperament of 1 and +1 below 6,
+/// +1 for a pressure below 10; without them, 1 for a professionalism of 1.
+pub(crate) unsafe fn media_story_temper(player: Staff, contract: Contract) -> i8 {
+    let professionalism = player.professionalism();
+    if contract.is_null() || contract.grievances() & 0x30321 == 0 {
+        return (professionalism == 1) as i8;
+    }
+    let mut score: i8 = if professionalism == 1 {
+        3
+    } else if professionalism < 6 {
+        2
+    } else if professionalism < 0xf {
+        1
+    } else {
+        0
+    };
+    if player.ambition() > 0xf {
+        score += 1;
+    }
+    if player.temperament() == 1 {
+        score += 2;
+    }
+    if player.temperament() < 6 {
+        score += 1;
+    }
+    if player.pressure() < 10 {
+        score += 1;
+    }
+    score
+}
+
+/// The kind of the player's media story, refined from the kind asked for (0 = criticism of form, 1, 2 = criticism of
+/// contract talk, 0xd, 0x23...). `None` when the player blew up instead (`post_player_outburst_record` with 0x1e).
+///
+/// 1. For kinds 0, 1, 2 and 0x23, a professionalism below the temper score + 6, loyalty below 15 and temperament below
+///    10: when random(morale) < random(-75) and random(professionalism) < random(score + 10), kind 2 becomes 0x1e with
+///    random(3) = 0, otherwise random(4) = 0 gives 0x20 and anything else the outburst.
+/// 2. A logged story about him answered with 2 adds 5 to the score.
+/// 3. Loyalty below 15, temperament below 10, professionalism below score + 6 and random(professionalism) <
+///    random(score + 7): kinds 0, 2 and 0xd become 0x21; the others, with a logged story answered with 2 and a manager
+///    at the club for more than 45 days, 0x22.
+/// 4. Otherwise kinds 0 and 2: younger than 18 + random(2), a current reputation below random(7000) and a deserved
+///    squad status of 1, 2 or 3 (`exe::contract_manager_get_deserved_squad_status`) give 7; otherwise a goalkeeper over
+///    34, a defender over 33 or any other player over 32 gives 4 with random(3) = 0.
+/// 5. The contract grievances 0x2000 or 8 with random(professionalism) < random(10) + 5 give 0x21; otherwise kind 2
+///    with a wage above 7500 and a squad status 0x10, 0x20 or 0x30 gives 9 when random(consistency) < random(25).
+/// 6. A goalkeeper's kinds 0, 2 and 0xd become 0xe.
+pub(crate) unsafe fn media_story_kind(this: usize, player: Staff, club: Club, contract: Contract, kind: u32, score: &mut i8) -> Option<u32> {
+    let sheet = player.player();
+    let mut kind = kind;
+    let is = |kind: u32, kinds: &[u16]| kinds.contains(&(kind as u16));
+    let professionalism = player.professionalism() as i32;
+    if is(kind, &[0, 2, 0x23, 1]) && professionalism < *score as i32 + 6 && player.loyalty() < 0xf && player.temperament() < 10 {
+        let morale = exe::utils_random(contract.morale() as i32);
+        if morale < exe::utils_random(-0x4b) {
+            let limit = exe::utils_random(*score as i32 + 10);
+            if exe::utils_random(professionalism) < limit {
+                if exe::utils_random(3) == 0 && kind as u16 == 2 {
+                    kind = 0x1e;
+                } else if exe::utils_random(4) == 0 {
+                    kind = 0x20;
+                } else {
+                    covered!("sx01e_2 media story outburst");
+                    post_player_outburst_record(this, player, club, 0x1e);
+                    return None;
+                }
+            }
+        }
+    }
+    if has_logged_response_two(this, player) {
+        *score += 5;
+    }
+    let mut refined = None;
+    if player.loyalty() < 0xf && player.temperament() < 10 && professionalism < *score as i32 + 6 {
+        let limit = exe::utils_random(*score as i32 + 7);
+        if exe::utils_random(professionalism) < limit {
+            if is(kind, &[0, 2, 0xd]) {
+                refined = Some(0x21);
+            } else if has_logged_response_two(this, player) {
+                let manager = club.manager();
+                if !manager.is_null() && exe::date_days_since(G_CURRENT_DATE, manager.date_joined_club() as u32, manager.date_joined_club_leap_year() as u32) > 0x2d {
+                    refined = Some(0x22);
+                }
+            }
+        }
+    }
+    if let Some(k) = refined {
+        kind = k;
+    } else if is(kind, &[0, 2])
+        && (player.age() as i8 as i32) < exe::utils_random(2) + 0x12
+        && (sheet.current_reputation() as i32) < exe::utils_random(7000)
+        && (1..=3).any(|s| exe::contract_manager_get_deserved_squad_status(read_usize(G_CONTRACT_MANAGER), player, contract) == s)
+    {
+        kind = 7;
+    } else if is(kind, &[0, 2]) {
+        let age = player.age() as i8;
+        let old = if sheet.goalkeeper() == 0x14 { age > 0x22 } else if sheet.defender() == 0x14 { age > 0x21 } else { age > 0x20 };
+        if old && exe::utils_random(3) == 0 {
+            kind = 4;
+        }
+    }
+    let grievances = contract.grievances();
+    if (grievances & 0x2000 != 0 || grievances & 8 != 0) && exe::utils_random(professionalism) < exe::utils_random(10) + 5 {
+        kind = 0x21;
+    } else if kind as u16 == 2 && contract.wage() > 0x1d4c && matches!(contract.squad_status() & 0xf0, 0x30 | 0x10 | 0x20) {
+        if exe::utils_random(sheet.consistency() as i32) < exe::utils_random(0x19) {
+            kind = 9;
+        }
+    }
+    if sheet.goalkeeper() == 0x14 && is(kind, &[0, 2, 0xd]) {
+        kind = 0xe;
+    }
+    Some(kind)
+}
+
+/// The variant of the media story (slot 5), by kind: 0 random(12); 1 random(4) within a year at the club, then
+/// random(2) + 4 up to 32 or random(3) + 4 older; 2 random(1); 3 random(5) for a capped player under 32 with a current
+/// reputation above 6250, otherwise random(4) + 1; 4 and 0x20 random(3); 5, 7, 8 and 0x22 random(2); 9 from the rival
+/// manager (without one random(4) + 2; random(his +0x5d) < random(20) gives random(2), otherwise random(6)), a 3 under
+/// 21 with a current reputation above 6250 becoming random(2) + 4; 0xd and 0x21 random(4); 0xe by consistency below 6
+/// (random(4) within a year, random(5) after) or not (random(2) + 2 within a year, random(3) + 2 after); 0x11
+/// random(3); 0x23 3 up to 23 with a current reputation up to 6250, otherwise random(3); the others 0.
+pub(crate) unsafe fn media_story_variant(player: Staff, kind: u32, rival: i32) -> i32 {
+    let sheet = player.player();
+    let age = player.age() as i8;
+    let days_at_club = || exe::date_days_since(G_CURRENT_DATE, player.date_joined_club() as u32, player.date_joined_club_leap_year() as u32);
+    let random = |n: i32| exe::utils_random(n);
+    match kind as u16 as i16 {
+        0 => random(12),
+        1 => {
+            if days_at_club() < 0x16d {
+                random(4)
+            } else if age > 0x20 {
+                random(3) + 4
+            } else {
+                random(2) + 4
+            }
+        }
+        2 => random(1),
+        3 => {
+            if player.int_apps() != 0 && age < 0x20 && sheet.current_reputation() > 0x186a {
+                random(5)
+            } else {
+                random(4) + 1
+            }
+        }
+        4 | 0x20 => random(3),
+        5 | 7 | 8 | 0x22 => random(2),
+        9 => {
+            let v = if rival == -1 {
+                random(4) + 2
+            } else {
+                let temper = random(staff_at(rival as isize).temperament() as i32);
+                if temper < random(0x14) { random(2) } else { random(6) }
+            };
+            if v == 3 && age < 0x15 && sheet.current_reputation() > 0x186a {
+                random(2) + 4
+            } else {
+                v
+            }
+        }
+        0xd | 0x21 => random(4),
+        0xe => {
+            let settled = days_at_club() > 0x16d;
+            match (sheet.consistency() < 6, settled) {
+                (true, false) => random(4),
+                (true, true) => random(5),
+                (false, false) => random(2) + 2,
+                (false, true) => random(3) + 2,
+            }
+        }
+        0x11 => random(3),
+        0x23 => {
+            if age > 0x17 || sheet.current_reputation() > 0x186a {
+                random(3)
+            } else {
+                3
+            }
+        }
+        _ => 0,
+    }
+}
+
+/// The team story that may replace the player's media story when his weakness flags have 0x200200 and none of 0x180:
+/// with his attribute 0xc above random(4) + the club reputation / 1250 + 8 and the club's division object in
+/// `G_COMP_OBJECT_TABLE`, either his outburst (kind 0x52: loyalty below 15, professionalism below the score + 5 and
+/// random(loyalty − trunc(morale × −0.1) + professionalism) < random(50)), or, with the division's stats (+8), a
+/// stat 3 of the club up to 0, its stat 1 × 1.4 above its stat 10 and random(4) = 0, when he holds a selection slot
+/// 0..10 (`exe::tactics_find_selection_slot`) whose position (`exe::formation_get_slot_position` of the club's tactic)
+/// has 0x40, the team story 0x52 about him (`exe::media_post_team_media_story`). True when one of them was posted.
+pub(crate) unsafe fn media_story_team_takeover(this: usize, player: Staff, club: Club, contract: Contract, flags: u32, score: i8) -> bool {
+    if flags & 0x200200 != 0x200200 || flags & 0x180 != 0 {
+        return false;
+    }
+    let threshold = exe::utils_random(4) + club.reputation() as i32 / 1250 + 8;
+    if (exe::staff_get_player_attribute(player, 0xc) as i32) <= threshold {
+        return false;
+    }
+    let division = club.division();
+    if division.is_null() {
+        return false;
+    }
+    let comp_object = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(4 * read_usize(division.addr())));
+    if comp_object == 0 {
+        return false;
+    }
+    let loyalty = player.loyalty() as i32;
+    let professionalism = player.professionalism() as i32;
+    if loyalty < 0xf && professionalism < score as i32 + 5 {
+        let morale = ftol(contract.morale() as f64 * read_f64(rdata::F64_NEG_0_1));
+        let temper = exe::utils_random(loyalty - morale + professionalism);
+        if temper < exe::utils_random(0x32) {
+            covered!("sx01e_2 media story team outburst");
+            post_player_outburst_record(this, player, club, 0x52);
+            return true;
+        }
+    }
+    let stats = read_usize(comp_object + 8);
+    if stats == 0 || exe::comp_stats_get_club_stat(stats, club, 3) > read_f32(rdata::F32_0) as f64 {
+        return false;
+    }
+    let lost = exe::comp_stats_get_club_stat(stats, club, 10);
+    if exe::comp_stats_get_club_stat(stats, club, 1) * read_f64(rdata::F64_1_4) <= lost || exe::utils_random(4) != 0 {
+        return false;
+    }
+    let slot = exe::tactics_find_selection_slot(read_usize(G_TACTICS), club, player, 0) as i8;
+    if !(0..0xb).contains(&slot) {
+        return false;
+    }
+    let tactic = exe::tactics_get_club_tactic(read_usize(G_TACTICS), club, 0);
+    if exe::formation_get_slot_position(tactic, slot as u32, 0) & 0x40 == 0 {
+        return false;
+    }
+    covered!("sx01e_2 media story becomes a team story");
+    exe::media_post_team_media_story(this, club, 0x52, player.addr() as u32, 0usize, 0, -1);
+    true
+}
+
+/// The slots from 0x1c: with a match (and a kind other than 0x13) 1, the match record and the shoot-out
+/// (`NewsSlots::put_match`), his strength flags, his position mask and the pundit; otherwise 0, the strength flags,
+/// the position mask, the pundit, his natural position mask (`exe::staff_get_natural_position_mask`), the club's
+/// injured squad count (the original asks `exe::injury_get_player_injury_status` about the player himself once per
+/// filled squad slot, a defect: the count is 0 or the number of filled slots), whether the computer manager's man
+/// handling is below 10, and the other person with his names (-1 × 4 without him).
+pub(crate) unsafe fn media_story_tail_slots(s: &mut NewsSlots, record: &mut [u8; 0x20], player: Staff, club: Club, kind: u32, fixture: usize, person: Staff, pundit: u32) {
+    s.k = 0x1c;
+    if fixture != 0 && kind as u16 != 0x13 {
+        covered!("sx01e_2 media story after a match");
+        s.put(1);
+        s.put_match(record, Fixture(fixture), club);
+        s.put(exe::staff_get_player_strength_flags(player, club));
+        s.put(exe::formation_get_position_mask(player.player()) as i16 as i32 as u32);
+        s.put(pundit);
+        return;
+    }
+    s.put(0);
+    s.put(exe::staff_get_player_strength_flags(player, club));
+    s.put(exe::formation_get_position_mask(player.player()) as i16 as i32 as u32);
+    s.put(pundit);
+    s.put(exe::staff_get_natural_position_mask(player));
+    let mut injured: i8 = 0;
+    for k in 0..50 {
+        if club.squad(k) != 0 && exe::injury_get_player_injury_status(read_usize(G_INJURY), player) == 2 {
+            injured += 1;
+        }
+    }
+    s.put(injured as i32 as u32);
+    let manager = club.manager();
+    let careless = media_is_human_club(club.addr(), 0, 1) == 0 && !manager.is_null() && !manager.non_player().is_null() && (manager.non_player().man_handling() as i8) < 10;
+    s.put(careless as u32);
+    if person.is_null() {
+        for _ in 0..4 {
+            s.put(u32::MAX);
+        }
+    } else {
+        s.put_person(person);
+    }
+}
+
+/// The low nibble of the person's byte `staff_state::STATUS_FLAGS` in the 79-byte staff state table.
+pub(crate) unsafe fn staff_state_nibble(person: Staff) -> i32 {
+    let row = read_usize(G_STAFF_STATE_TABLE).wrapping_add((read_i32(person.addr()) as usize).wrapping_mul(staff_state::SIZE));
+    (read_u8(row + staff_state::STATUS_FLAGS) & 0xf) as i32
+}
+
+/// The praise story's kind and the draw of slot 8 (the kinds of a young player). Below 22 without caps: a current
+/// reputation above 1.3 × the club's with random(ambition) > random(20) and no offer, or the grievance bit 1 of the
+/// contract with no offer and the state nibble at least random(ambition / 2): the big move (draw 6); otherwise in the
+/// national squad (class 1 or 2) with a home reputation above 4250 and above 30 × the nation's, the future
+/// international, else the youngster (draw 4). `contract` is null for a national team: the original reads an
+/// uninitialised stack slot there (here the bit is clear).
+pub(crate) unsafe fn praise_kind_young(player: Staff, club: Club, contract: Contract) -> (u8, u32) {
+    let sheet = player.player();
+    let current = sheet.current_reputation() as i32;
+    if club.reputation() as f64 * read_f64(rdata::F64_1_3) < current as f64 {
+        let ambition = exe::utils_random(player.ambition() as i32);
+        if ambition > exe::utils_random(0x14) && has_no_offers(player) {
+            covered!("sx01e_1 praise big move");
+            return (PRAISE_BIG_MOVE, exe::utils_random(6) as u32);
+        }
+    }
+    if !contract.is_null() && contract.grievances() & 1 != 0 && has_no_offers(player) && staff_state_nibble(player) >= exe::utils_random(player.ambition() as i32 / 2) {
+        covered!("sx01e_1 praise big move by grievance");
+        return (PRAISE_BIG_MOVE, exe::utils_random(6) as u32);
+    }
+    let home = sheet.home_reputation() as i32;
+    let in_squad = national_squad_class(player) == 1 || national_squad_class(player) == 2;
+    let kind = if in_squad && home > 0x109a && home > player.nation().reputation() as i32 * 30 { PRAISE_FUTURE_INTERNATIONAL } else { PRAISE_YOUNGSTER };
+    (kind, exe::utils_random(4) as u32)
+}
+
+/// The praise story's kind and the draw of slot 8 (the kinds of an older or capped player), in this order: the call-up
+/// (a home reputation above 0.8 ×, a world one above 0.4 × and the club's above 0.65 × the nation's reputation, under
+/// 28, no caps, random(4) and no national job), on the rise (under 24 with a current reputation below 6000), world
+/// class (under 27 − random(4), current above 8000, world below 7000, ability above random(20) + 155, caps below
+/// random(5) + 10, club reputation above random(2000) + 6500), world class B (under 33, current above 9000, world
+/// above 8500, ability above random(20) + 175, club above random(2000) + 7500) each with draw(3), else the praise
+/// (draw 8).
+pub(crate) unsafe fn praise_kind_senior(player: Staff, club: Club) -> (u8, u32) {
+    let sheet = player.player();
+    let age = player.age() as i8 as i32;
+    let nation = player.nation().reputation() as f64;
+    let club_reputation = club.reputation() as i32;
+    if nation * read_f64(rdata::F64_0_8) < sheet.home_reputation() as f64
+        && nation * read_f64(rdata::F64_0_4) < sheet.world_reputation() as f64
+        && age < 0x1c
+        && nation * read_f64(rdata::F64_0_65) < club_reputation as f64
+        && player.int_apps() == 0
+        && exe::utils_random(4) != 0
+        && player.national_job().is_null()
+    {
+        return (PRAISE_CALL_UP, exe::utils_random(3) as u32);
+    }
+    let current = sheet.current_reputation() as i32;
+    if age < 0x18 && current < 6000 {
+        return (PRAISE_ON_THE_RISE, exe::utils_random(3) as u32);
+    }
+    let limit = 0x1b - exe::utils_random(4);
+    if age < limit
+        && current > 8000
+        && (sheet.world_reputation() as i32) < 7000
+        && sheet.current_ability() as i32 > exe::utils_random(0x14) + 0x9b
+        && (player.int_apps() as i32) < exe::utils_random(5) + 10
+        && club_reputation > exe::utils_random(2000) + 0x1964
+    {
+        covered!("sx01e_1 praise world class");
+        return (PRAISE_WORLD_CLASS, exe::utils_random(3) as u32);
+    }
+    if age < 0x21
+        && current > 9000
+        && sheet.world_reputation() as i32 > 0x2134
+        && sheet.current_ability() as i32 > exe::utils_random(0x14) + 0xaf
+        && club_reputation > exe::utils_random(2000) + 0x1d4c
+    {
+        return (PRAISE_WORLD_CLASS_B, exe::utils_random(3) as u32);
+    }
+    (PRAISE_PRAISED, exe::utils_random(8) as u32)
+}
+
+/// Hands a player's outburst at the club to `create_player_outburst_story` (through the exe, as the original), with
+/// a record on the stack: +0 the player's id, +4 the club id, +0xc 0, +0xe 0 (no assistant's report), +0xf -1 (no
+/// other person), +0x13 the outburst kind (0x1e or 0x52); no match.
+pub(crate) unsafe fn post_player_outburst_record(this: usize, player: Staff, club: Club, kind: u16) {
+    let mut story = [0u8; 0x17];
+    let r = story.as_mut_ptr() as usize;
+    write_u32(r, read_u32(player.addr()));
+    write_u32(r + 4, read_u32(club.addr()));
+    write_u32(r + 0xf, u32::MAX);
+    write_u16(r + 0x13, kind);
+    let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_MEDIA_CREATE_PLAYER_OUTBURST_STORY);
+    f(this, r, 0);
+}
+
+/// The first story log record (`media_fields::STORY_LOG_COUNT` records of 0x17 bytes) about the player
+/// (`story_log_entry::PERSON_A`) answered with response 2.
+pub(crate) unsafe fn has_logged_response_two(this: usize, player: Staff) -> bool {
+    let n = read_i32(this + media_fields::STORY_LOG_COUNT);
+    (0..n.max(0) as usize).any(|k| {
+        let r = read_usize(this).wrapping_add(k * 0x17);
+        read_i32(r + story_log_entry::PERSON_A) == read_i32(player.addr()) && read_u8(r + story_log_entry::RESPONSE) == 2
+    })
+}
+
+/// The person's national squad class (`FN_NATIONAL_TEAMS_GET_PLAYER_SQUAD_CLASS` on `G_NATIONAL_TEAMS`).
+pub(crate) unsafe fn national_squad_class(person: Staff) -> u8 {
+    let f: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_NATIONAL_TEAMS_GET_PLAYER_SQUAD_CLASS);
+    f(read_usize(G_NATIONAL_TEAMS), person.addr())
+}
+
+/// Whether the player has no transfer offer (`exe::transfer_manager_get_offers_for_player` with 0, 0).
+pub(crate) unsafe fn has_no_offers(player: Staff) -> bool {
+    exe::transfer_manager_get_offers_for_player(read_usize(G_TRANSFER_MANAGER), player, 0usize, 0) == 0
+}
+
+/// The kinds of the praise story (news item 0xbdd, slot 5), as the text writer reads them (`praise_body`).
+pub(crate) const PRAISE_FUTURE_INTERNATIONAL: u8 = 0x29;
+
+pub(crate) const PRAISE_YOUNGSTER: u8 = 0x2a;
+
+pub(crate) const PRAISE_PRAISED: u8 = 0x2b;
+
+pub(crate) const PRAISE_CALL_UP: u8 = 0x2c;
+
+pub(crate) const PRAISE_ON_THE_RISE: u8 = 0x2d;
+
+pub(crate) const PRAISE_BIG_MOVE: u8 = 0x2e;
+
+pub(crate) const PRAISE_ATTITUDE: u8 = 0x2f;
+
+pub(crate) const PRAISE_WORLD_CLASS: u8 = 0x30;
+
+pub(crate) const PRAISE_WORLD_CLASS_B: u8 = 0x31;
+
+pub(crate) const PRAISE_IMPRESSES: u8 = 0x32;
+
+pub(crate) const PRAISE_WORLD_STAGE: u8 = 0x33;
+
+pub(crate) const PRAISE_COMPETITION: u8 = 0x34;
+
+/// `NATIONAL_TEAMS::get_player_squad_class` (thiscall(national teams, person), ret 4, the class in al): 2 when the
+/// person's national job (+0x24) passes 0x5409b0, otherwise bit 3 of the byte +0x5e; -1 without a national job.
+pub(crate) const FN_NATIONAL_TEAMS_GET_PLAYER_SQUAD_CLASS: usize = 0x76e070;
+
+/// `Media::create_player_outburst_story` (0x733a60, thiscall(media, record, fixture), ret 8; sx01d_5).
+pub(crate) const FN_MEDIA_CREATE_PLAYER_OUTBURST_STORY: usize = 0x733a60;

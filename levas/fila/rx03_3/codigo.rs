@@ -8,8 +8,6 @@ pub(crate) mod t2k_stream {
     pub(crate) const POS: usize = 0x4;
     pub(crate) const END: usize = 0x8;
     pub(crate) const START: usize = 0xc;
-    pub(crate) const KIND: usize = 0x10;
-    pub(crate) const MEM: usize = 0x11;
 }
 
 /// The address of the next byte of the stream, and the position moved on by `n`.

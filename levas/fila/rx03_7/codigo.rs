@@ -8,7 +8,6 @@
 /// instructions and +0x64 their length, +0x68..+0x6e the bounding box (x min, y min, x max, y max), +0x71 the glyph
 /// index. Each point array has four phantom points after the outline (left and right side bearing, top and bottom).
 pub(crate) mod t2k_glyph {
-    pub(crate) const MEM: usize = 0x0;
     pub(crate) const ARRAY_CONTOURS: usize = 0x4;
     pub(crate) const ARRAY_POINTS: usize = 0x6;
     pub(crate) const INLINE_STARTS: usize = 0x12;
@@ -44,7 +43,7 @@ pub(crate) unsafe fn read_components(g: usize, s: usize) -> (usize, i32, u16) {
     write_i32(g + t2k_glyph::COMPONENT_CAPACITY, 0x400);
     let mut data = lib_ctx_alloc(read_usize(g), 0x800);
     let mut n = 0i32;
-    let mut put = |data: usize, n: &mut i32, v: i16| {
+    let put = |data: usize, n: &mut i32, v: i16| {
         write_i16(data + 2 * *n as usize, v);
         *n += 1;
     };

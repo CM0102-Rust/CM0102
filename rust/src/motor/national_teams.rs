@@ -3601,3 +3601,1245 @@ pub(crate) const FN_FIFA_RANKINGS_SAVE: usize = 0x58dae0;
 
 /// `FIFA_RANKINGS::~FIFA_RANKINGS()` (thiscall, ret 0).
 pub(crate) const FN_FIFA_RANKINGS_DESTRUCTOR: usize = 0x58cf20;
+
+/// Writes the headline or the body of the news on how a club's players did for their nation (news 0x24, sent to the
+/// club's manager by `send_club_international_report_news`).
+///
+/// The news item carries the match record, the highlighted player (the national side's highlight when he is from the
+/// club, else −1), how many of the club's players took part, the club, up to four players, the marker 0x420e9, a
+/// draw of 0 or 1 and each player's performance code (`match_performance_code`: 1 missed a penalty, 2/8/0x20/0x40
+/// scored one/two/three/more, 4 left the pitch early, 0x10 man of the match).
+///
+/// Headline (`full` = 0): `intl_headline`. Body: the players' names, both sides' names (the nation's main side),
+/// the fixture label (form 1, "friendly" lowercased) and the score line; then `intl_body_highlight` when there is a
+/// highlighted player, else `intl_body_players`; then the links (`intl_body_links`). The templates are picked from the
+/// trees by the result (won, drawn, lost), the first rule whose mask the first player's code holds (0x44, 0x14, 0x40,
+/// 0x24, 0x20, 8, 0x12, 0x10, 2, 4, 1; not all in every tree), and the draw.
+///
+/// Defects of the original: with more than four players of the club, the players' slots are not read, so the marker is
+/// not where the original looks for it: there are no codes, the texts use the count sentence and, with a highlighted
+/// player, the template is picked by a draw that was never read (an uninitialised stack dword; the copy uses 0 and the
+/// comparer leaves that case to the original).
+/// Original: `NationalTeams::write_club_players_international_text` (0x770d20, national_teams.cpp, thiscall, ret 0xc).
+pub(crate) unsafe extern "thiscall" fn write_club_players_international_text(_this: usize, news: usize, full: u32, out: usize) {
+    if full == 0 {
+        intl_headline(news, out);
+        return;
+    }
+    let r = IntlReport::read(news);
+    let mut t = intl_body_texts(&r);
+    if r.highlight[0] as i32 == -1 {
+        intl_body_players(&r, &mut t, out);
+    } else {
+        intl_body_highlight(&r, &mut t, out);
+    }
+    intl_body_links(&r, &t, out);
+}
+
+/// Comparer for `write_club_players_international_text`: side by side into two Texts (`compare_text_writer`); the
+/// highlighted body with more than four players (a template picked by an uninitialised stack dword) runs only the
+/// original.
+pub(crate) unsafe extern "thiscall" fn compare_write_club_players_international_text(this: usize, news: usize, full: u32, out: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_WRITE_CLUB_PLAYERS_INTERNATIONAL_TEXT);
+    if full != 0 && IntlReport::read(news).draw_uninitialized() {
+        covered!("sx15_3 uninitialized draw");
+        return o(this, news, full, out);
+    }
+    compare_text_writer(out, || o(this, news, full, out), |t| write_club_players_international_text(this, news, full, t),
+        || format!("write_club_players_international_text(news {:#x}, full {})", news, full));
+}
+
+/// Writes the headline or the body of the news (type 0x1d) that a club's players were called up by a national team.
+///
+/// The slots (`national_teams_post_call_up_news`): 0 the national team (club id), 1 the player's club, 2 no opponents,
+/// 3 the competition, 4 the player count, 5 the second team, 6 the opponent count, 7..9 the opponents (club ids),
+/// 10.. four per player (id and name ids). With fewer than four players their names are read
+/// (`read_call_up_players`), repeats dropped from the count.
+///
+/// Without opponents (slot 2 set) the text names the competition (`write_call_up_without_opponents`). Otherwise the
+/// national team's name is formatted (`exe::club_get_national_team_name`, 100 bytes, with the second-team flag), the
+/// opponents read when there are one to three (`write_call_up_opponents`) and the headline
+/// (`write_call_up_headline`) or the body (`write_call_up_body`) written.
+///
+/// Defect of the original: with opponents and none to read (slot 6 zero or negative), the bodies that name the
+/// opponents (up to three) append a 300-byte stack buffer that was never written (stack garbage); the copy writes an
+/// empty phrase and the comparer leaves that case to the original.
+/// Original: `NationalTeams::write_call_up_news_text` (0x76e3b0, national_teams.cpp, thiscall, ret 0xc).
+pub(crate) unsafe extern "thiscall" fn write_call_up_news_text(_this: usize, news: usize, body: u32, out: usize) {
+    let slot = |k: u32| exe::newsitem_get_slot(news, k);
+    let team = club_at(slot(0) as i32 as isize);
+    let club_ = club_at(slot(1) as i32 as isize);
+    let no_opponents = slot(2) as u8 != 0;
+    let comp = Competition(club_comp_record(slot(3) as usize));
+    let mut count = slot(4) as u8 as i8;
+    let second = slot(5) as u8 as i8 as i32;
+    let body = body != 0;
+    let mut players = CallUpPlayers { ids: [0; 3], first: [0; 3], second: [0; 3], common: [0; 3], names: [[0; 200]; 3] };
+    if count < 4 {
+        let (p, repeats) = read_call_up_players(news, count, body);
+        players = p;
+        count -= repeats;
+    }
+    if no_opponents {
+        covered!("sx15_4 call-up without opponents");
+        write_call_up_without_opponents(out, body, team, club_, comp, &players, count);
+        return;
+    }
+    let mut team_name = [0u8; 100];
+    exe::club_get_national_team_name(team, second as usize, team_name.as_mut_ptr() as usize, 100, 2, 1);
+    let opponents = slot(6) as u8 as i8;
+    let mut clubs = [Club(0); 3];
+    if opponents < 4 {
+        for k in 0..opponents.max(0) as usize {
+            clubs[k] = club_at(slot(7 + k as u32) as i32 as isize);
+        }
+    }
+    let mut versus = [0u8; 300]; // the original leaves it unwritten with no opponent (defect)
+    write_call_up_opponents(&mut clubs, opponents, &mut versus);
+    if !body {
+        covered!("sx15_4 call-up headline");
+        write_call_up_headline(out, team, club_, second, &players, count);
+    } else {
+        covered!("sx15_4 call-up body");
+        write_call_up_body(out, team, club_, second, &players, count, opponents, &clubs, &team_name, &versus);
+    }
+}
+
+/// Comparer for `write_call_up_news_text`: side by side into two Texts (`compare_text_writer`). A body with opponents
+/// and none to read appends the original's unwritten stack buffer (see the defect): only the original runs.
+pub(crate) unsafe extern "thiscall" fn compare_write_call_up_news_text(this: usize, news: usize, body: u32, out: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_WRITE_CALL_UP_NEWS_TEXT);
+    let slot = |k: u32| exe::newsitem_get_slot(news, k);
+    if body != 0 && slot(2) as u8 == 0 && slot(6) as u8 as i8 <= 0 {
+        covered!("sx15_4 unwritten opponents");
+        return o(this, news, body, out);
+    }
+    compare_text_writer(out, || o(this, news, body, out), |t| write_call_up_news_text(this, news, body, t),
+        || format!("write_call_up_news_text(team {}, club {}, players {}, opponents {}, body {})", slot(0) as i32, slot(1) as i32, slot(4) as u8 as i8, slot(6) as u8 as i8, body));
+}
+
+/// Posts one news item (type 0x2c) per finals with the nations that qualified for it and empties the list.
+///
+/// With new qualifiers (`national_teams_fields::NEW_QUALIFIERS`, an LLIST of national team and finals), one local news
+/// item is built (`exe::new_newsitem`, 0x2c) and, while the list has a finals not yet taken
+/// (`take_qualifiers_of_one_finals`): slot 0 the finals' id, 1 the count, 2 `utils_random(4)` (the headline wording),
+/// 3 `utils_random(2)` (the body wording), 4 and 5 the next hosts of that finals (`exe::hostcountry_find_next_hosts`,
+/// 0 and −1 when none), 6 the competition object's year (`cup::YEAR` in `G_COMP_OBJECT_TABLE`) and from 7 the
+/// national teams (club ids), ordered by reputation (`sort_qualifiers_by_reputation`). The European Championship
+/// (`KEY_CLUB_COMP_EUROPEAN_FOOTBALL_CHAMPIONSHIP`) goes to the managers of Europe (`exe::news_send_to_continent_managers`,
+/// the `KEY_CONTINENT_EUROPE` record), any other finals to every manager (`exe::news_send_to_all_managers`). The same
+/// news item carries over between finals (slots past the count keep the earlier ones). Finally the list is cleared.
+/// Original: `NationalTeams::post_qualified_nations_news` (0x7779e0, national_teams.cpp, thiscall).
+pub(crate) unsafe extern "thiscall" fn post_qualified_nations_news(this: usize) {
+    let list = Llist(this + national_teams_fields::NEW_QUALIFIERS);
+    if read_i16(list.addr()) == 0 {
+        return;
+    }
+    let mut news = [0u32; 0x38];
+    let nt = news.as_mut_ptr() as usize;
+    exe::new_newsitem(nt, 0x2c, 0);
+    let mut teams = [0u32; 256];
+    loop {
+        let (finals, count) = take_qualifiers_of_one_finals(list, nt, &mut teams);
+        if finals == 0 {
+            break;
+        }
+        covered!("sx15_5 qualified nations news");
+        exe::newsitem_set_slot(nt, 1, count as i32 as u32);
+        exe::newsitem_set_slot(nt, 2, exe::utils_random(4) as u32);
+        exe::newsitem_set_slot(nt, 3, exe::utils_random(2) as u32); // sx15_5: the body wording
+        let (mut host, mut co_host) = (0u32, u32::MAX);
+        exe::hostcountry_find_next_hosts(read_usize(G_HOST_COUNTRY), read_u32(finals), &mut host, &mut co_host);
+        exe::newsitem_set_slot(nt, 4, host);
+        exe::newsitem_set_slot(nt, 5, co_host);
+        let comp = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(finals).wrapping_mul(4)));
+        exe::newsitem_set_slot(nt, 6, read_i16(comp + cup::YEAR) as i32 as u32);
+        sort_qualifiers_by_reputation(&mut teams, count);
+        let mut k: i8 = 0;
+        while k < count {
+            exe::newsitem_set_slot(nt, k.wrapping_add(7), teams[k as u8 as usize]);
+            k += 1;
+        }
+        if read_u32(finals) == read_u32(KEY_CLUB_COMP_EUROPEAN_FOOTBALL_CHAMPIONSHIP) {
+            let europe = read_usize(G_CONTINENT_TABLE).wrapping_add(read_usize(KEY_CONTINENT_EUROPE).wrapping_mul(0xc6));
+            exe::news_send_to_continent_managers(read_usize(G_NEWS), nt, europe);
+        } else {
+            exe::news_send_to_all_managers(read_usize(G_NEWS), nt);
+        }
+    }
+    exe::llist_clear(list);
+}
+
+/// Comparer for `post_qualified_nations_news`: it draws, sends news and empties the list (it cannot run twice), so only
+/// the original runs; the plan checked afterwards is the empty list.
+pub(crate) unsafe extern "thiscall" fn compare_post_qualified_nations_news(this: usize) {
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_POST_QUALIFIED_NATIONS_NEWS)(this);
+    let left = read_i16(this + national_teams_fields::NEW_QUALIFIERS);
+    SCOREBOARD.record(left == 0, || format!("post_qualified_nations_news: {} qualifiers left in the list", left));
+}
+
+/// Writes the headline or the body of the news (type 0x2c) listing the nations that qualified for a finals.
+///
+/// Reads the slots (`post_qualified_nations_news`): 0 the finals (club competition id), 1 the count, 2 and 3 the drawn
+/// wordings, 4 and 5 the hosts (nation ids, −1 none), 6 the year and 7.. the national teams (club ids, by reputation),
+/// and the count in words (`exe::utils_number_to_words`, 0x78 bytes). The headline: `write_qualified_nations_headline`;
+/// the body: the others' phrase (`qualified_teams_phrase`) and `write_qualified_nations_body`. Then the text and the
+/// links: each team's long and short name (0x7d5), each host's short name to its national team (0x7d5,
+/// `exe::database_get_national_team`) and the competition's long and short name (2000).
+/// Original: `NationalTeams::write_qualified_nations_text` (0x777ca0, national_teams.cpp, thiscall, ret 0xc).
+pub(crate) unsafe extern "thiscall" fn write_qualified_nations_text(_this: usize, news: usize, body: u32, out: usize) {
+    let slot = |k: u32| exe::newsitem_get_slot(news, k);
+    let count = slot(1) as i32;
+    let mut q = QualifiedNations {
+        comp: Competition(club_comp_record(slot(0) as usize)),
+        count,
+        headline_kind: slot(2) as i32,
+        body_kind: slot(3) as i32,
+        host: slot(4) as i32,
+        co_host: slot(5) as i32,
+        year: slot(6) as i32,
+        teams: Vec::new(),
+    };
+    let mut k: i8 = 7;
+    while (k as i32) < count + 7 {
+        q.teams.push(club_at(slot(k as u8 as u32) as i32 as isize));
+        k = k.wrapping_add(1);
+    }
+    // ponytail: the poster always sends at least one team; with none the original would read stale stack, the copy club 0
+    q.teams.resize(q.teams.len().max(1), club_at(0));
+    let mut words = [0u8; 0x78];
+    exe::utils_number_to_words(count, words.as_mut_ptr(), 0x78, 0);
+    if body == 0 {
+        covered!("sx15_5 qualified nations headline");
+        write_qualified_nations_headline(&q, &words);
+    } else {
+        covered!("sx15_5 qualified nations body");
+        let mut others = [0u8; 1000];
+        qualified_teams_phrase(&q, &mut others);
+        write_qualified_nations_body(&q, &words, &others);
+    }
+    exe::text_set_string(out, NEWS_TEXT_BUFFER as *const u8);
+    let mut k: i8 = 0;
+    while (k as i32) < count {
+        let t = q.teams[k as u8 as usize];
+        exe::text_add_link(out, t.name_addr() as *const u8, 0x7d5, t);
+        exe::text_add_link(out, (t.addr() + club::SHORT_NAME) as *const u8, 0x7d5, t);
+        k = k.wrapping_add(1);
+    }
+    for id in [q.host, q.co_host] {
+        if id > -1 {
+            let nation = Nation(nation_by_id(id as usize));
+            exe::text_add_link(out, (nation.addr() + nation::SHORT_NAME) as *const u8, 0x7d5, exe::database_get_national_team(nation));
+        }
+    }
+    exe::text_add_link(out, q.comp.name_addr() as *const u8, 2000, q.comp); // sx15_5: the competition links
+    exe::text_add_link(out, q.comp.short_name_addr() as *const u8, 2000, q.comp);
+}
+
+/// Comparer for `write_qualified_nations_text`: side by side into two Texts (`compare_text_writer`).
+pub(crate) unsafe extern "thiscall" fn compare_write_qualified_nations_text(this: usize, news: usize, body: u32, out: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_WRITE_QUALIFIED_NATIONS_TEXT);
+    let slot = |k: u32| exe::newsitem_get_slot(news, k);
+    compare_text_writer(out, || o(this, news, body, out), |t| write_qualified_nations_text(this, news, body, t),
+        || format!("write_qualified_nations_text(finals {}, count {}, kinds {} {}, hosts {} {}, body {})", slot(0) as i32, slot(1) as i32, slot(2) as i32, slot(3) as i32, slot(4) as i32, slot(5) as i32, body));
+}
+
+/// Every national team of a competition leaves it: for each club of the competition's list (`for_each_comp_club`,
+/// stage 0) that is a national team (`exe::database_is_national_team`), its nation's current competition
+/// (`national_squad_record::CURRENT_COMPETITION`) becomes −1 and, with a manager manager (`G_MANAGER_MANAGER`), the FA
+/// reviews its manager's performance in the competition (`review_national_team_performance`).
+/// Original: `NationalTeams::clear_competition_for_comp_clubs` (0x775420, national_teams.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn clear_competition_for_comp_clubs(this: usize, comp: usize) {
+    let object = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(comp).wrapping_mul(4)));
+    for_each_comp_club(object, 0, |team| {
+        let nation = Club(team).nation();
+        if exe::database_is_national_team(team) == 0 {
+            return;
+        }
+        covered!("sx15_6 national team leaves the competition");
+        write_i32(nation_record_by_id(this, nation.addr()) + national_squad_record::CURRENT_COMPETITION, -1); // sx15_6: no current competition
+        let manager_manager = read_usize(G_MANAGER_MANAGER);
+        if manager_manager != 0 {
+            let review: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_MANAGER_MANAGER_REVIEW_NATIONAL_TEAM_PERFORMANCE);
+            review(manager_manager, comp, team);
+        }
+    });
+}
+
+/// Comparer for `clear_competition_for_comp_clubs`: the FA review draws and may sack managers (it cannot run twice),
+/// so only the original runs; the plan checked afterwards: no national team of the competition has a current
+/// competition.
+pub(crate) unsafe extern "thiscall" fn compare_clear_competition_for_comp_clubs(this: usize, comp: usize) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_CLEAR_COMPETITION_FOR_COMP_CLUBS)(this, comp);
+    let object = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(comp).wrapping_mul(4)));
+    let mut left = Vec::new();
+    crate::rng::pause_trace(|| for_each_comp_club(object, 0, |team| {
+        let nation = Club(team).nation();
+        if exe::database_is_national_team(team) != 0 && read_i32(nation_record_by_id(this, nation.addr()) + national_squad_record::CURRENT_COMPETITION) != -1 {
+            left.push(read_u32(team));
+        }
+    }));
+    SCOREBOARD.record(left.is_empty(), || format!("clear_competition_for_comp_clubs({}): national teams still in a competition {:?}", read_i32(comp), left));
+}
+
+/// Moves the fixtures of the clubs that would play near `date` with more than two players away on international duty.
+///
+/// The window is the day before and the day after (`exe::date_sub_days`, `exe::date_add_days`). Without the club marks
+/// (`national_teams_fields::CLUB_MARKS`) they are built for the date, the day before and the day after
+/// (`exe::nationalteams_mark_clubs_with_fixtures`). Then each club of `clubs_with_clashing_call_ups` has its fixture
+/// near the date rescheduled by the fixture manager (`FIXTURE_MANAGER::reschedule_club_fixtures_near_date` on
+/// `G_FIXTURE_MANAGER`, with the club record and the date).
+/// Original: `NationalTeams::reschedule_clashing_club_fixtures` (0x7777e0, national_teams.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn reschedule_clashing_club_fixtures(this: usize, date: usize) {
+    let (mut before, mut after) = ([0u8; 8], [0u8; 8]);
+    exe::date_sub_days(date, before.as_mut_ptr() as usize, 1);
+    exe::date_add_days(date, after.as_mut_ptr() as usize, 1);
+    if read_usize(this + national_teams_fields::CLUB_MARKS) == 0 {
+        covered!("sx15_6 marks the clubs of three days");
+        exe::nationalteams_mark_clubs_with_fixtures(this, date);
+        let (mut day, mut next, mut copy) = ([0u8; 8], [0u8; 8], [0u8; 8]);
+        exe::date_sub_days(date, day.as_mut_ptr() as usize, 1);
+        exe::nationalteams_mark_clubs_with_fixtures(this, day.as_mut_ptr() as usize);
+        let r = exe::date_add_days(day.as_mut_ptr() as usize, next.as_mut_ptr() as usize, 2);
+        exe::date_operator_3d(day.as_mut_ptr() as usize, copy.as_mut_ptr() as usize, r);
+        exe::nationalteams_mark_clubs_with_fixtures(this, day.as_mut_ptr() as usize);
+    }
+    let reschedule: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_FIXTURE_MANAGER_RESCHEDULE_CLUB_FIXTURES_NEAR_DATE);
+    for i in clubs_with_clashing_call_ups(this, &before, &after) {
+        covered!("sx15_6 club fixture moved");
+        reschedule(read_usize(G_FIXTURE_MANAGER), club_at(i as isize).addr(), date);
+    }
+}
+
+/// Comparer for `reschedule_clashing_club_fixtures`: it builds the club marks and moves fixtures (it cannot run twice),
+/// so only the original runs; the plan checked afterwards: the club marks exist (the routine builds them when missing).
+pub(crate) unsafe extern "thiscall" fn compare_reschedule_clashing_club_fixtures(this: usize, date: usize) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_RESCHEDULE_CLASHING_CLUB_FIXTURES)(this, date);
+    let marks = read_usize(this + national_teams_fields::CLUB_MARKS);
+    SCOREBOARD.record(marks != 0, || format!("reschedule_clashing_club_fixtures(day {}): no club marks", read_i16(date)));
+}
+
+/// The headline: one player ("X selected for England match", the highlighted player's or the lone player's name, mode
+/// 5, with his link when the names still match) or the club ("Leeds players selected in England match", with the
+/// club's link); then the national side's link (0x7d6 in the B internationals, else 0x7d5).
+pub(crate) unsafe fn intl_headline(news: usize, out: usize) {
+    let mut record = [0u8; 0x20];
+    exe::date_date_54a110(record.as_mut_ptr() as usize);
+    let mut k: u8 = 0;
+    exe::read_match_record_from_news(news, &mut k, record.as_mut_ptr());
+    let mut next = || {
+        let v = exe::newsitem_get_slot(news, k as u32);
+        k = k.wrapping_add(1);
+        v
+    };
+    let mut player: [u32; 4] = [next(), next(), next(), next()];
+    let mut count = next() as i8;
+    let club = club_at(next() as i32 as isize);
+    if player[0] as i32 != -1 {
+        count = count.wrapping_add(1); // the highlighted player counts again
+    }
+    let b_side = intl_b_international(RecordMatch(record.as_ptr() as usize));
+    let nation = intl_sides(RecordMatch(record.as_ptr() as usize)).0;
+    let link = if b_side { 0x7d6 } else { 0x7d5 };
+    let mut nation_name = [0u8; 0x12c];
+    if count == 1 || (player[0] as i32 > -1 && count == 2) {
+        covered!("sx15_3 headline player");
+        if player[0] as i32 == -1 {
+            player = [next(), next(), next(), next()];
+        }
+        let mut name = [0u8; 0x12c];
+        exe::database_format_name_from_ids(player[1], player[2], player[3], name.as_mut_ptr(), 0x12c, 5, player[0]);
+        exe::club_get_national_team_name(nation, b_side as usize, nation_name.as_mut_ptr() as usize, 0x12c, 1, 1);
+        let g = nation.short_gender_name() as i8 as i32;
+        news_text_format()(NEWS_TEXT_BUFFER, INTL_HEADLINE_PLAYER, g, g, name.as_ptr() as usize, nation_name.as_ptr() as usize);
+        exe::text_set_string(out, NEWS_TEXT_BUFFER as *const u8);
+        let p = staff_at(player[0] as i32 as isize);
+        if exe::database_staff_matches_names(p, player[1], player[2], player[3], 0usize) != 0 {
+            exe::text_add_link(out, name.as_ptr(), 0x7d7, p);
+        }
+    } else {
+        covered!("sx15_3 headline club");
+        exe::club_get_national_team_name(nation, b_side as usize, nation_name.as_mut_ptr() as usize, 0x12c, 1, 1);
+        let (gc, gn) = (club.short_gender_name() as i8 as i32, nation.short_gender_name() as i8 as i32);
+        news_text_format()(NEWS_TEXT_BUFFER, INTL_HEADLINE_CLUB, gc, gc, gn, gn, club.addr() + club::SHORT_NAME, nation_name.as_ptr() as usize);
+        exe::text_set_string(out, NEWS_TEXT_BUFFER as *const u8);
+        exe::text_add_link(out, (club.addr() + club::SHORT_NAME) as *const u8, 0x7d5, club);
+    }
+    exe::text_add_link(out, nation_name.as_ptr(), link, nation);
+}
+
+/// The body's shared parts: the players' names (modes 1 and 5), both sides' names, the fixture label and its gender
+/// ("Friendly" lowercased) and the score line, highest first.
+pub(crate) unsafe fn intl_body_texts(r: &IntlReport) -> IntlTexts {
+    let mut t = IntlTexts {
+        player: [[0; 0x78]; 4],
+        player_short: [[0; 0x78]; 4],
+        highlight: [0; 0x12c],
+        highlight_short: [0; 0x12c],
+        nation: [0; 0x12c],
+        opponent: [0; 0x12c],
+        score: [0; 0xc],
+        fixture: [0; 0xc8],
+        fixture_gender: 0,
+        list: [0; 0x3e8],
+    };
+    for i in 0..r.players_read() {
+        let [id, first, second, common] = r.players[i];
+        exe::database_format_name_from_ids(first, second, common, t.player[i].as_mut_ptr(), 0x78, 1, id);
+        exe::database_format_name_from_ids(first, second, common, t.player_short[i].as_mut_ptr(), 0x78, 5, id);
+    }
+    let (nation, opponent) = r.sides();
+    intl_side_name(nation, &mut t.nation);
+    intl_side_name(opponent, &mut t.opponent);
+    // the round and stage words go as the dwords at +0xc and +0xe, as the original pushes them
+    let (comp, round, stage) = (r.record().comp(), read_u32(r.record().0 + 0xc), read_u32(r.record().0 + 0xe));
+    exe::comp_util_format_comp_stage_round_label(comp, round, stage, 1, t.fixture.as_mut_ptr(), 0xc8);
+    t.fixture_gender = exe::comp_util_get_label_gender(comp as u32, round, stage, 1) as i8;
+    if news_streq(t.fixture.as_ptr() as usize, INTL_FRIENDLY) {
+        t.fixture[0] = b'f';
+    }
+    let (ours, theirs) = r.record().goals();
+    let (high, low) = if ours < theirs { (theirs, ours) } else { (ours, theirs) };
+    news_text_format()(t.score.as_mut_ptr() as usize, INTL_SCORE_LINE, high as i32, low as i32);
+    t
+}
+
+/// The body without a highlighted player: two to four players make a list first; one player (or two when the first
+/// has a code) gets the lone-player tree; three or four (or two without a code) the list sentence by the result; more
+/// than four the count sentence by the result. Two players then add "and X" (the win form when the second player's
+/// code holds 0x7a and the side won).
+pub(crate) unsafe fn intl_body_players(r: &IntlReport, t: &mut IntlTexts, out: usize) {
+    let player: [usize; 4] = core::array::from_fn(|i| t.player[i].as_ptr() as usize);
+    let p = |i: usize| player[i];
+    let list = t.list.as_mut_ptr() as usize;
+    match r.count {
+        2 => { news_text_format()(list, INTL_LIST_TWO, p(0), p(1)); }
+        3 => { news_text_format()(list, INTL_LIST_THREE, p(0), p(1), p(2)); }
+        4 => { news_text_format()(list, INTL_LIST_FOUR, p(0), p(1), p(2), p(3)); }
+        _ => {}
+    }
+    let result = r.result();
+    let single = r.count == 1 || (r.count == 2 && r.codes[0] != 0);
+    if single {
+        covered!("sx15_3 lone player");
+        let (template, form) = intl_pick(&INTL_PLAYER_TREES[result], r.codes[0] as u8, r.no_codes, r.draw);
+        intl_format(NEWS_TEXT_BUFFER, template, form, p(0), r, t);
+        exe::text_set_string(out, NEWS_TEXT_BUFFER as *const u8);
+        if r.count == 2 {
+            let (ours, theirs) = r.record().goals();
+            let template = if r.codes[1] as u8 & 0x7a == 0 || ours <= theirs { INTL_AND_PLAYER } else { INTL_AND_PLAYER_WIN };
+            news_text_format()(NEWS_TEXT_BUFFER, template, p(1));
+            exe::text_append_string(out, NEWS_TEXT_BUFFER);
+        }
+    } else if r.count == 2 || r.count == 3 || r.count == 4 {
+        covered!("sx15_3 player list");
+        let template = [0xa5f968, 0xa5f878, 0xa5f788][result]; // sx15_3: the list sentence by the result
+        intl_format(NEWS_TEXT_BUFFER, template, INTL_FORM_LIST, 0, r, t);
+        exe::text_set_string(out, NEWS_TEXT_BUFFER as *const u8);
+    } else {
+        covered!("sx15_3 player count");
+        intl_format(NEWS_TEXT_BUFFER, [0xa5fc08, 0xa5fb30, 0xa5fa58][result], INTL_FORM_COUNT, 0, r, t);
+        exe::text_set_string(out, NEWS_TEXT_BUFFER as *const u8);
+    }
+}
+
+/// The body with a highlighted player: three or four players make a list of the others first; the highlighted tree by
+/// the result, the highlighted player's code and the draw; then two players add "and X", three or four "and the
+/// list", more than four "and N other players from the club"; then the highlighted player's links (modes 1 and 5)
+/// when his names still match.
+pub(crate) unsafe fn intl_body_highlight(r: &IntlReport, t: &mut IntlTexts, out: usize) {
+    let player: [usize; 4] = core::array::from_fn(|i| t.player[i].as_ptr() as usize);
+    let p = |i: usize| player[i];
+    let list = t.list.as_mut_ptr() as usize;
+    match r.count {
+        3 => { news_text_format()(list, INTL_LIST_TWO, p(1), p(2)); }
+        4 => { news_text_format()(list, INTL_LIST_THREE, p(1), p(2), p(3)); }
+        _ => {}
+    }
+    let [id, first, second, common] = r.highlight;
+    exe::database_format_name_from_ids(first, second, common, t.highlight.as_mut_ptr(), 0x12c, 1, id);
+    exe::database_format_name_from_ids(first, second, common, t.highlight_short.as_mut_ptr(), 0x12c, 5, id);
+    covered!("sx15_3 highlighted player");
+    let (template, form) = intl_pick(&INTL_HIGHLIGHT_TREES[r.result()], r.codes[0] as u8, r.no_codes, r.draw);
+    intl_format(NEWS_TEXT_BUFFER, template, form, t.highlight.as_ptr() as usize, r, t);
+    exe::text_set_string(out, NEWS_TEXT_BUFFER as *const u8);
+    let (ours, theirs) = r.record().goals();
+    match r.count {
+        2 => {
+            let template = if r.codes[1] as u8 & 0x7a == 0 || ours <= theirs { INTL_AND_PLAYER } else { INTL_AND_PLAYER_WIN };
+            news_text_format()(NEWS_TEXT_BUFFER, template, p(1));
+            exe::text_append_string(out, NEWS_TEXT_BUFFER);
+        }
+        3 | 4 => {
+            news_text_format()(NEWS_TEXT_BUFFER, INTL_AND_LIST, t.list.as_ptr() as usize);
+            exe::text_append_string(out, NEWS_TEXT_BUFFER);
+        }
+        n if n > 4 => {
+            covered!("sx15_3 other players");
+            let club = club_at(r.club as i32 as isize);
+            let g = club.short_gender_name() as i8 as i32;
+            news_text_format()(NEWS_TEXT_BUFFER, INTL_OTHERS, g, g, n as i32 - 1, club.addr() + club::SHORT_NAME);
+            exe::text_append_string(out, NEWS_TEXT_BUFFER);
+        }
+        _ => {}
+    }
+    let staff = staff_at(id as i32 as isize);
+    if exe::database_staff_matches_names(staff, first, second, common, 0usize) != 0 {
+        exe::text_add_link(out, t.highlight.as_ptr(), 0x7d7, staff);
+        exe::text_add_link(out, t.highlight_short.as_ptr(), 0x7d7, staff);
+    }
+}
+
+/// The body's links: each player read whose names still match (modes 1 and 5), the score (when the fixture is still in
+/// the match stats), the club, and both sides (0x7d6 in the B internationals, else 0x7d5).
+pub(crate) unsafe fn intl_body_links(r: &IntlReport, t: &IntlTexts, out: usize) {
+    for i in 0..r.players_read() {
+        let [id, first, second, common] = r.players[i];
+        let staff = staff_at(id as i32 as isize);
+        if exe::database_staff_matches_names(staff, first, second, common, 0usize) != 0 {
+            exe::text_add_link(out, t.player[i].as_ptr(), 0x7d7, staff);
+            exe::text_add_link(out, t.player_short[i].as_ptr(), 0x7d7, staff);
+        }
+    }
+    r.record().link_score(out, &t.score);
+    let club = club_at(r.club as i32 as isize);
+    exe::text_add_link(out, club.name_addr() as *const u8, 0x7d5, club);
+    let (nation, opponent) = r.sides();
+    let link = if r.b_international() { 0x7d6 } else { 0x7d5 };
+    exe::text_add_link(out, t.nation.as_ptr(), link, nation);
+    exe::text_add_link(out, t.opponent.as_ptr(), link, opponent);
+}
+
+/// Reads the `count` (< 4) players of the call-up news: player k from slot 10 + 4k (id, first, second, common name
+/// ids), his name formatted into `names[i]` (`exe::database_format_name_from_ids`, mode 1 in the body, 5 in the
+/// headline). A player whose id repeats an earlier one is read but then overwritten by the next one, and still counts
+/// as a read: the loop runs until `count` different players are kept, reading further slots. Returns the players and
+/// the number of repeats.
+pub(crate) unsafe fn read_call_up_players(news: usize, count: i8, body: bool) -> (CallUpPlayers, i8) {
+    let mut p = CallUpPlayers { ids: [0; 3], first: [0; 3], second: [0; 3], common: [0; 3], names: [[0; 200]; 3] };
+    let mut slot: u8 = 10;
+    let mut repeats: i8 = 0;
+    let mut i: i8 = 0;
+    while i < count {
+        let k = i as usize;
+        p.ids[k] = exe::newsitem_get_slot(news, slot as u32);
+        p.first[k] = exe::newsitem_get_slot(news, slot.wrapping_add(1) as u32);
+        p.second[k] = exe::newsitem_get_slot(news, slot.wrapping_add(2) as u32);
+        p.common[k] = exe::newsitem_get_slot(news, slot.wrapping_add(3) as u32);
+        slot = slot.wrapping_add(4);
+        let mode = if body { 1 } else { 5 };
+        exe::database_format_name_from_ids(p.first[k], p.second[k], p.common[k], p.names[k].as_mut_ptr(), 200, mode, p.ids[k]);
+        if (0..i).any(|j| p.ids[j as usize] == p.ids[k]) {
+            covered!("sx15_4 repeated player");
+            i -= 1; // the next player takes this place
+            repeats += 1;
+        }
+        i += 1;
+    }
+    (p, repeats)
+}
+
+/// The opponents of the call-up as one phrase in `out`: one club, its short name; two, "A and B" (0xa5c134), or one
+/// name when they are the same club; three, "A, B and C" (0xa5c0f8), with the repeats folded into the two-club phrase
+/// or one name. With three where the first two are the same club, the second slot takes the third club (the links
+/// read it later). Other counts leave `out` as it is.
+pub(crate) unsafe fn write_call_up_opponents(clubs: &mut [Club; 3], count: i8, out: &mut [u8; 300]) {
+    let fmt = news_text_format();
+    let gender = |c: Club| c.short_gender_name() as i8 as i32;
+    let short = |c: Club| c.addr() + club::SHORT_NAME;
+    let copy = |c: Club, out: &mut [u8; 300]| {
+        let name = core::slice::from_raw_parts(short(c) as *const u8, 26);
+        let n = name.iter().position(|&b| b == 0).unwrap_or(25) + 1;
+        out[..n].copy_from_slice(&name[..n]);
+    };
+    let two = |a: Club, b: Club, out: &mut [u8; 300]| {
+        fmt(out.as_mut_ptr() as usize, 0xa5c134, gender(a), gender(a), gender(b), gender(b), short(a), short(b));
+    };
+    match count {
+        1 => copy(clubs[0], out),
+        2 if clubs[0] == clubs[1] => copy(clubs[0], out),
+        2 => two(clubs[0], clubs[1], out),
+        3 if clubs[0] == clubs[1] => {
+            clubs[1] = clubs[2];
+            if clubs[0] != clubs[2] {
+                two(clubs[0], clubs[1], out);
+            } else {
+                copy(clubs[0], out);
+            }
+        }
+        3 if clubs[0] == clubs[2] => two(clubs[0], clubs[1], out),
+        3 if clubs[1] == clubs[2] => two(clubs[1], clubs[2], out),
+        3 => {
+            covered!("sx15_4 three opponents");
+            let (a, b, c) = (clubs[0], clubs[1], clubs[2]);
+            fmt(out.as_mut_ptr() as usize, 0xa5c0f8, gender(a), gender(a), gender(b), gender(b), gender(c), gender(c), short(a), short(b), short(c));
+        }
+        _ => {}
+    }
+}
+
+/// The call-up news without opponents (slot 2 set): the headline "<national team> name squad for <competition>"
+/// (0xa5c15c) with the national team (long name) and competition links, or the body by the player count: one
+/// (0xa5c444), two (0xa5c378), three (0xa5c280) by name, more (0xa5c1c0) with the count in words and the club; then the
+/// player links (or the club's, 0x7d5, with four or more), the national team's short name (0x7d5) and the
+/// competition (2000).
+pub(crate) unsafe fn write_call_up_without_opponents(out: usize, body: bool, team: Club, club_: Club, comp: Competition, p: &CallUpPlayers, count: i8) {
+    let fmt = news_text_format();
+    let tg = team.gender_name() as i32;
+    let cg = comp.short_gender_name() as i8 as i32;
+    let (tname, cname) = (team.name_addr(), comp.short_name_addr());
+    if !body {
+        fmt(NEWS_TEXT_BUFFER, 0xa5c15c, tg, tg, cg, cg, tname, cname);
+        exe::text_set_string(out, NEWS_TEXT_BUFFER as *const u8);
+        exe::text_add_link(out, tname as *const u8, 0x7d5, team);
+        exe::text_add_link(out, cname as *const u8, 2000, comp);
+        return;
+    }
+    let n = |k: usize| p.names[k].as_ptr() as usize;
+    match count {
+        1 => { fmt(NEWS_TEXT_BUFFER, 0xa5c444, tg, tg, cg, cg, n(0), tname, cname); }
+        2 => { fmt(NEWS_TEXT_BUFFER, 0xa5c378, tg, tg, cg, cg, n(0), n(1), tname, cname); }
+        3 => { fmt(NEWS_TEXT_BUFFER, 0xa5c280, tg, tg, cg, cg, n(0), n(1), n(2), tname, cname); }
+        _ => {
+            let words = players_in_words(count);
+            let g = club_.short_gender_name() as i8 as i32;
+            fmt(NEWS_TEXT_BUFFER, 0xa5c1c0, g, g, tg, tg, cg, cg, words.as_ptr() as usize, club_.addr() + club::SHORT_NAME, tname, cname);
+        }
+    }
+    exe::text_set_string(out, NEWS_TEXT_BUFFER as *const u8);
+    if count < 4 {
+        link_call_up_players(out, p, count);
+    } else {
+        exe::text_add_link(out, (club_.addr() + club::SHORT_NAME) as *const u8, 0x7d5, club_);
+    }
+    exe::text_add_link(out, (team.addr() + club::SHORT_NAME) as *const u8, 0x7d5, team);
+    exe::text_add_link(out, cname as *const u8, 2000, comp);
+}
+
+/// The headline of the call-up news with opponents: one player "<name> selected by <national team>" (0xa5b710 for the
+/// first team, 0xa5b6b4 for the second, 0xa5b654 when `exe::club_is_national_team` says the national team is not a
+/// first or second side [inference]), with the player's link written before the text; more players "<club> players
+/// called up by <national team>" (0xa5b5f0, 0xa5b588, 0xa5b51c the same way). Then the club's link (0x7d5) and the
+/// national team's (0x7d5 first team, 0x7d6 second).
+pub(crate) unsafe fn write_call_up_headline(out: usize, team: Club, club_: Club, second: i32, p: &CallUpPlayers, count: i8) {
+    let fmt = news_text_format();
+    let tg = team.short_gender_name() as i8 as i32;
+    let tshort = team.addr() + club::SHORT_NAME;
+    let special = exe::club_is_national_team(team) != 0;
+    if count == 1 {
+        let model = if special { 0xa5b654 } else if second == 0 { 0xa5b710 } else { 0xa5b6b4 };
+        fmt(NEWS_TEXT_BUFFER, model, tg, tg, p.names[0].as_ptr() as usize, tshort);
+        link_call_up_players(out, p, 1); // before the text, like the original
+    } else {
+        let model = if special { 0xa5b51c } else if second == 0 { 0xa5b5f0 } else { 0xa5b588 }; // sx15_4: the players headline
+        let g = club_.short_gender_name() as i8 as i32;
+        fmt(NEWS_TEXT_BUFFER, model, g, g, tg, tg, club_.addr() + club::SHORT_NAME, tshort);
+    }
+    exe::text_set_string(out, NEWS_TEXT_BUFFER as *const u8);
+    exe::text_add_link(out, (club_.addr() + club::SHORT_NAME) as *const u8, 0x7d5, club_);
+    exe::text_add_link(out, tshort as *const u8, if second == 0 { 0x7d5 } else { 0x7d6 }, team);
+}
+
+/// The body of the call-up news with opponents, by the player count and the opponent count (`opponents`, slot 6):
+/// - one player: one opponent 0xa5c050 (with the opponent's gender), up to three 0xa5bfa0, more 0xa5bf18 (without the
+///   opponents);
+/// - two: 0xa5be40, 0xa5bd60, 0xa5bca8; three: 0xa5bba4, 0xa5ba98, 0xa5b9b4, the same way;
+/// - four or more (the count in words and the club): 0xa5b8e8, 0xa5b814, 0xa5b768.
+/// `team_name` is the national team's name (`exe::club_get_national_team_name`), `versus` the opponents phrase.
+/// Then the player links (or the club's), the national team's name (0x7d5, second team 0x7d6) and each opponent's.
+#[allow(clippy::too_many_arguments)]
+pub(crate) unsafe fn write_call_up_body(out: usize, team: Club, club_: Club, second: i32, p: &CallUpPlayers, count: i8,
+    opponents: i8, clubs: &[Club; 3], team_name: &[u8; 100], versus: &[u8; 300]) {
+    let fmt = news_text_format();
+    let tg = team.short_gender_name() as i8 as i32;
+    let og = clubs[0].short_gender_name() as i8 as i32;
+    let (tn, vs) = (team_name.as_ptr() as usize, versus.as_ptr() as usize);
+    let n = |k: usize| p.names[k].as_ptr() as usize;
+    match count {
+        1 if opponents == 1 => { fmt(NEWS_TEXT_BUFFER, 0xa5c050, tg, tg, og, og, n(0), tn, vs); }
+        1 if opponents < 4 => { fmt(NEWS_TEXT_BUFFER, 0xa5bfa0, tg, tg, n(0), tn, vs); }
+        1 => { fmt(NEWS_TEXT_BUFFER, 0xa5bf18, tg, tg, n(0), tn); }
+        2 if opponents == 1 => { fmt(NEWS_TEXT_BUFFER, 0xa5be40, tg, tg, og, og, n(0), n(1), tn, vs); }
+        2 if opponents < 4 => { fmt(NEWS_TEXT_BUFFER, 0xa5bd60, tg, tg, 100, n(0), n(1), tn, vs); }
+        2 => { fmt(NEWS_TEXT_BUFFER, 0xa5bca8, tg, tg, n(0), n(1), tn); }
+        3 if opponents == 1 => { fmt(NEWS_TEXT_BUFFER, 0xa5bba4, tg, tg, og, og, n(0), n(1), n(2), tn, vs); }
+        3 if opponents < 4 => { fmt(NEWS_TEXT_BUFFER, 0xa5ba98, tg, tg, 100, n(0), n(1), n(2), tn, vs); }
+        3 => { fmt(NEWS_TEXT_BUFFER, 0xa5b9b4, tg, tg, n(0), n(1), n(2), tn); }
+        _ => {
+            let words = players_in_words(count);
+            let w = words.as_ptr() as usize;
+            let g = club_.short_gender_name() as i8 as i32;
+            let cshort = club_.addr() + club::SHORT_NAME;
+            if opponents == 1 {
+                fmt(NEWS_TEXT_BUFFER, 0xa5b8e8, g, g, tg, tg, og, og, w, cshort, tn, vs);
+            } else if opponents < 4 {
+                fmt(NEWS_TEXT_BUFFER, 0xa5b814, g, g, tg, tg, w, cshort, tn, vs); // sx15_4: many players, the opponents
+            } else {
+                fmt(NEWS_TEXT_BUFFER, 0xa5b768, g, g, tg, tg, w, cshort, tn);
+            }
+        }
+    }
+    exe::text_set_string(out, NEWS_TEXT_BUFFER as *const u8);
+    if count < 4 {
+        link_call_up_players(out, p, count);
+    } else {
+        exe::text_add_link(out, (club_.addr() + club::SHORT_NAME) as *const u8, 0x7d5, club_);
+    }
+    let kind = if second == 0 { 0x7d5 } else { 0x7d6 };
+    exe::text_add_link(out, team_name.as_ptr(), kind, team);
+    if opponents < 4 {
+        for c in clubs.iter().take(opponents.max(0) as usize) {
+            exe::text_add_link(out, (c.addr() + club::SHORT_NAME) as *const u8, kind, *c);
+        }
+    }
+}
+
+/// Takes from the new qualifiers list (`national_teams_fields::NEW_QUALIFIERS`, 8-byte items: national team, finals)
+/// the national teams of the first finals still in it, clearing their items, into `teams` (club ids); slot 0 of
+/// `news` gets the finals' id. Returns the finals (0 when none is left) and the count.
+pub(crate) unsafe fn take_qualifiers_of_one_finals(list: Llist, news: usize, teams: &mut [u32; 256]) -> (usize, i8) {
+    let mut finals = 0usize;
+    let mut count: i8 = 0;
+    list.set_cursor(list.head());
+    let mut item = exe::llist_get_next(list);
+    while item != 0 {
+        if read_usize(item) != 0 {
+            if finals == 0 {
+                finals = read_usize(item + 4);
+                exe::newsitem_set_slot(news, 0, read_u32(finals));
+                count = 0;
+            }
+            if read_usize(item + 4) == finals {
+                teams[count as u8 as usize] = read_u32(read_usize(item));
+                count = count.wrapping_add(1);
+                write_usize(item, 0); // taken
+            }
+        }
+        item = exe::llist_get_next(list);
+    }
+    (finals, count)
+}
+
+/// Orders the qualifiers by reputation (`.reputation()` as a signed word), highest first, by swapping pairs (i, j)
+/// with i < j < count − 1: the last one never moves (defect of the original: with two qualifiers nothing is sorted).
+pub(crate) unsafe fn sort_qualifiers_by_reputation(teams: &mut [u32; 256], count: i8) {
+    let n = count as i32;
+    let mut i: i8 = 0;
+    while (i as i32) < n - 2 {
+        let mut j = i + 1;
+        while (j as i32) < n - 1 {
+            let (a, b) = (teams[i as u8 as usize], teams[j as u8 as usize]);
+            if club_at(a as i32 as isize).reputation() < club_at(b as i32 as isize).reputation() {
+                teams[i as u8 as usize] = b;
+                teams[j as u8 as usize] = a;
+            }
+            j += 1;
+        }
+        i += 1;
+    }
+}
+
+/// The national teams after the first one as one phrase in `out`: one 0xa641a8, two 0xa64164, three 0xa64100 by
+/// name; with four the last three (0xa64100), five the last four (0xa6407c), more the 2nd to 6th (0xa63fdc) (the first
+/// one is named on its own in those bodies). Nothing for a count below 1.
+pub(crate) unsafe fn qualified_teams_phrase(q: &QualifiedNations, out: &mut [u8; 1000]) {
+    let fmt = news_text_format();
+    let o = out.as_mut_ptr() as usize;
+    let g = |k: usize| q.teams[k].short_gender_name() as i8 as i32;
+    let n = |k: usize| q.teams[k].addr() + club::SHORT_NAME;
+    match q.count {
+        1 => { fmt(o, 0xa641a8, g(0), g(0), n(0)); }
+        2 => { fmt(o, 0xa64164, g(0), g(0), g(1), g(1), n(0), n(1)); }
+        3 => { fmt(o, 0xa64100, g(0), g(0), g(1), g(1), g(2), g(2), n(0), n(1), n(2)); }
+        4 => { fmt(o, 0xa64100, g(1), g(1), g(2), g(2), g(3), g(3), n(1), n(2), n(3)); }
+        5 => { fmt(o, 0xa6407c, g(1), g(1), g(2), g(2), g(3), g(3), g(4), g(4), n(1), n(2), n(3), n(4)); }
+        c if c > 5 => { fmt(o, 0xa63fdc, g(1), g(1), g(2), g(2), g(3), g(3), g(4), g(4), g(5), g(5), n(1), n(2), n(3), n(4), n(5)); }
+        _ => {}
+    }
+}
+
+/// The headline by the drawn wording (slot 2): 0 by the count (one 0xa6425c, two 0xa64208, more 0xa641c8 with the
+/// count in words), 1 the competition (0xa642a0), 2 with a single host its name (0xa642e8), else 0xa64348, 3 0xa64384.
+pub(crate) unsafe fn write_qualified_nations_headline(q: &QualifiedNations, words: &[u8; 0x78]) {
+    let fmt = news_text_format();
+    let g = |k: usize| q.teams[k].short_gender_name() as i8 as i32;
+    let n = |k: usize| q.teams[k].addr() + club::SHORT_NAME;
+    let host = Nation(nation_by_id(q.host as usize));
+    match q.headline_kind {
+        0 if q.count == 1 => { fmt(NEWS_TEXT_BUFFER, 0xa6425c, g(0), g(0), n(0), q.year); }
+        0 if q.count == 2 => { fmt(NEWS_TEXT_BUFFER, 0xa64208, g(0), g(0), g(1), g(1), n(0), n(1)); }
+        0 => { fmt(NEWS_TEXT_BUFFER, 0xa641c8, words.as_ptr() as usize, q.year); }
+        1 => {
+            let cg = q.comp.short_gender_name() as i8 as i32;
+            fmt(NEWS_TEXT_BUFFER, 0xa642a0, cg, cg, q.comp.short_name_addr(), q.year);
+        }
+        2 if q.co_host < 0 => {
+            let hg = host.short_gender_name() as i8 as i32;
+            fmt(NEWS_TEXT_BUFFER, 0xa642e8, g(0), g(0), hg, hg, n(0), host.addr() + nation::SHORT_NAME, q.year);
+        }
+        2 => { fmt(NEWS_TEXT_BUFFER, 0xa64348, g(0), g(0), n(0), q.year); }
+        _ => { fmt(NEWS_TEXT_BUFFER, 0xa64384, g(0), g(0), n(0), q.year); }
+    }
+}
+
+/// The body by the drawn wording (slot 3, 0 or else) and the count (more than six, four to six, one, two or three),
+/// each with one host or two (slot 5 ≥ 0): the first team by name, the competition (long name, gender +0x37), the
+/// hosts, the year and the phrase of the others (`qualified_teams_phrase`); wording 0 with many teams also the count in
+/// words. Models (one host / two): wording 0: 0xa6357c/0xa63694, 0xa6332c/0xa63440, 0xa631cc/0xa63268,
+/// 0xa63034/0xa630ec; wording 1: 0xa63d88/0xa63e9c, 0xa63b40/0xa63c50, 0xa639a8/0xa63a60, 0xa637d4/0xa638a8.
+pub(crate) unsafe fn write_qualified_nations_body(q: &QualifiedNations, words: &[u8; 0x78], others: &[u8; 1000]) {
+    let fmt = news_text_format();
+    let (t0g, t0n) = (q.teams[0].short_gender_name() as i8 as i32, q.teams[0].addr() + club::SHORT_NAME);
+    let cg = q.comp.gender_name() as i8 as i32;
+    let cn = q.comp.name_addr();
+    let host = Nation(nation_by_id(q.host as usize));
+    let co_host = Nation(nation_by_id(q.co_host as usize));
+    let (hg, hn) = (host.short_gender_name() as i8 as i32, host.addr() + nation::SHORT_NAME);
+    let (h2g, h2n) = (co_host.short_gender_name() as i8 as i32, co_host.addr() + nation::SHORT_NAME);
+    let (w, l, y) = (words.as_ptr() as usize, others.as_ptr() as usize, q.year);
+    let two_hosts = q.co_host >= 0;
+    let many = |one: usize, two: usize| {
+        if q.body_kind == 0 {
+            if two_hosts {
+                fmt(NEWS_TEXT_BUFFER, two, 100, t0g, t0g, cg, cg, hg, hg, h2g, h2g, 100, w, t0n, y, cn, hn, h2n, l);
+            } else {
+                fmt(NEWS_TEXT_BUFFER, one, 100, t0g, t0g, cg, cg, hg, hg, 100, w, t0n, y, cn, hn, l);
+            }
+        } else if two_hosts {
+            fmt(NEWS_TEXT_BUFFER, two, t0g, t0g, cg, cg, hg, hg, h2g, h2g, 100, t0n, y, cn, hn, h2n, l);
+        } else {
+            fmt(NEWS_TEXT_BUFFER, one, t0g, t0g, cg, cg, hg, hg, 100, t0n, y, cn, hn, l);
+        }
+    };
+    let (zero, one) = (q.body_kind == 0, q.body_kind != 0);
+    match q.count {
+        c if c > 6 && zero => many(0xa6357c, 0xa63694),
+        c if c > 6 => many(0xa63d88, 0xa63e9c),
+        c if c > 3 && zero => many(0xa6332c, 0xa63440),
+        c if c > 3 => many(0xa63b40, 0xa63c50),
+        1 => {
+            let (m1, m2) = if one { (0xa639a8, 0xa63a60) } else { (0xa631cc, 0xa63268) };
+            if two_hosts {
+                fmt(NEWS_TEXT_BUFFER, m2, t0g, t0g, cg, cg, hg, hg, h2g, h2g, t0n, y, cn, hn, h2n);
+            } else {
+                fmt(NEWS_TEXT_BUFFER, m1, t0g, t0g, cg, cg, hg, hg, t0n, y, cn, hn);
+            }
+        }
+        _ => {
+            let (m1, m2) = if one { (0xa637d4, 0xa638a8) } else { (0xa63034, 0xa630ec) }; // sx15_5: two or three teams
+            if two_hosts {
+                fmt(NEWS_TEXT_BUFFER, m2, 100, cg, cg, hg, hg, h2g, h2g, l, y, cn, hn, h2n);
+            } else {
+                fmt(NEWS_TEXT_BUFFER, m1, 100, cg, cg, hg, hg, l, y, cn, hn);
+            }
+        }
+    }
+}
+
+/// The clubs whose fixture near `date` should move: those marked with a fixture around the date
+/// (`national_teams_fields::CLUB_MARKS`, 1 or 2) that have more than two players away on duty dated from the day before
+/// to the day after (the call-up entries of `national_teams_fields::CLUB_CALL_UP_RECORDS`, sorted by date: the counts
+/// of the entries from `before` on are added until one after `after`). Club ids below the non-national club count.
+pub(crate) unsafe fn clubs_with_clashing_call_ups(this: usize, before: &[u8; 8], after: &[u8; 8]) -> Vec<usize> {
+    let n = (read_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
+    let date = |d: &[u8; 8]| (u16::from_le_bytes([d[2], d[3]]), u16::from_le_bytes([d[0], d[1]]) as i16);
+    let ((by, bd), (ay, ad)) = (date(before), date(after));
+    let mut clubs = Vec::new();
+    for i in 0..n.max(0) as usize {
+        let mark = read_u8(read_usize(this + national_teams_fields::CLUB_MARKS) + i);
+        if mark != 1 && mark != 2 {
+            continue;
+        }
+        let rec = read_usize(this + national_teams_fields::CLUB_CALL_UP_RECORDS) + 6 * i;
+        let entries = read_i8(rec + 5);
+        let mut away: u8 = 0;
+        let mut k: i8 = 0;
+        while k < entries {
+            let e = read_usize(rec).wrapping_add(9 * k as i32 as usize);
+            let (ey, ed) = (read_u16(e + 2), read_i16(e));
+            k += 1;
+            if by > ey || (by == ey && bd > ed) {
+                continue; // before the window
+            }
+            if ay < ey || (ay == ey && ad < ed) {
+                break; // past the window: the rest is later
+            }
+            away = away.wrapping_add(read_u8(e + 8));
+        }
+        if away as i8 > 2 { // sx15_6: more than two players away
+            clubs.push(i);
+        }
+    }
+    clubs
+}
+
+/// The national side (+0x11 of the record) and its opponent.
+pub(crate) unsafe fn intl_sides(record: RecordMatch) -> (Club, Club) {
+    (club_at(read_i32(record.0 + 0x11) as isize), record.opponent())
+}
+
+/// Whether the match was in the B internationals (the sides' links are 0x7d6 instead of 0x7d5, and the headline names
+/// the B side).
+pub(crate) unsafe fn intl_b_international(record: RecordMatch) -> bool {
+    record.comp_index() as u32 == read_u32(KEY_CLUB_COMP_B_INTERNATIONAL)
+}
+
+/// The national side's name for the text: the nation's main side (`exe::database_get_national_team`), short form.
+pub(crate) unsafe fn intl_side_name(side: Club, buf: &mut [u8; 0x12c]) {
+    let team = exe::database_get_national_team(side.nation());
+    exe::club_get_national_team_name(team, 0usize, buf.as_mut_ptr() as usize, 0x12c, 1, 0);
+}
+
+/// Writes one template into `NEWS_TEXT_BUFFER` (or `out` for the list) with its arguments.
+pub(crate) unsafe fn intl_format(out: usize, template: usize, form: &[IntlArg], subject: usize, r: &IntlReport, t: &IntlTexts) {
+    let club = club_at(r.club as i32 as isize);
+    let (nation, opponent) = r.sides();
+    let mut v = [0usize; 16];
+    let mut n = 0;
+    let mut push = |x: usize| {
+        v[n] = x;
+        n += 1;
+    };
+    for a in form {
+        match a {
+            IntlArg::ClubGender => {
+                push(club.gender_name() as i32 as usize);
+                push(club.gender_name() as i32 as usize);
+            }
+            IntlArg::NationGender => {
+                push(nation.short_gender_name() as i8 as i32 as usize);
+                push(nation.short_gender_name() as i8 as i32 as usize);
+            }
+            IntlArg::OpponentGender => {
+                push(opponent.short_gender_name() as i8 as i32 as usize);
+                push(opponent.short_gender_name() as i8 as i32 as usize);
+            }
+            IntlArg::FixtureGender => {
+                push(t.fixture_gender as i32 as usize);
+                push(t.fixture_gender as i32 as usize);
+            }
+            IntlArg::Others => push((r.count as i32 - 1) as usize),
+            IntlArg::ClubName => push(club.name_addr()),
+            IntlArg::Subject => push(subject),
+            IntlArg::PlayerShort => push(t.player_short[0].as_ptr() as usize),
+            IntlArg::HighlightShort => push(t.highlight_short.as_ptr() as usize),
+            IntlArg::PlayerList => push(t.list.as_ptr() as usize),
+            IntlArg::Nation => push(t.nation.as_ptr() as usize),
+            IntlArg::Opponent => push(t.opponent.as_ptr() as usize),
+            IntlArg::Score => push(t.score.as_ptr() as usize),
+            IntlArg::Fixture => push(t.fixture.as_ptr() as usize),
+        }
+    }
+    news_text_format()(out, template, v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8], v[9], v[10], v[11], v[12], v[13], v[14], v[15]);
+}
+
+/// The template a tree picks for a performance code and a draw (the first rule whose mask the code holds; without
+/// codes, the fallback).
+pub(crate) fn intl_pick(tree: &IntlTree, code: u8, no_codes: bool, draw: u32) -> IntlLine {
+    let by_draw = |zero: IntlLine, other: IntlLine| if draw == 0 { zero } else { other };
+    if !no_codes {
+        if let Some(rule) = tree.rules.iter().find(|rule| code & rule.mask == rule.mask) {
+            return by_draw(rule.zero, rule.other);
+        }
+    }
+    by_draw(tree.fallback.0, tree.fallback.1)
+}
+
+/// Links each called-up player's name (0x7d7) when the person still has those names
+/// (`exe::database_staff_matches_names`).
+pub(crate) unsafe fn link_call_up_players(out: usize, p: &CallUpPlayers, count: i8) {
+    for k in 0..count.max(0) as usize {
+        let person = staff_at(p.ids[k] as i32 as isize);
+        if exe::database_staff_matches_names(person, p.first[k], p.second[k], p.common[k], 0usize) != 0 {
+            exe::text_add_link(out, p.names[k].as_ptr(), 0x7d7, person);
+        }
+    }
+}
+
+/// The number of players in words with a capital first letter (`exe::utils_number_to_words`, 0x32 bytes, then
+/// `exe::utils_char_to_upper` on the first byte).
+pub(crate) unsafe fn players_in_words(count: i8) -> [u8; 0x34] {
+    let mut words = [0u8; 0x34];
+    exe::utils_number_to_words(count as i32, words.as_mut_ptr(), 0x32, 1);
+    words[0] = exe::utils_char_to_upper(read_i32(words.as_ptr() as usize));
+    words
+}
+
+pub(crate) const INTL_FORM_LIST: &[IntlArg] = &[IntlArg::ClubGender, IntlArg::NationGender, IntlArg::FixtureGender, IntlArg::OpponentGender, IntlArg::ClubName, IntlArg::PlayerList, IntlArg::Nation, IntlArg::Score, IntlArg::Fixture, IntlArg::Opponent];
+
+pub(crate) const INTL_FORM_COUNT: &[IntlArg] = &[IntlArg::ClubGender, IntlArg::NationGender, IntlArg::FixtureGender, IntlArg::OpponentGender, IntlArg::Others, IntlArg::ClubName, IntlArg::Nation, IntlArg::Score, IntlArg::Fixture, IntlArg::Opponent];
+
+/// The templates of a lone player (no highlighted player): won, drawn, lost.
+pub(crate) const INTL_PLAYER_TREES: [IntlTree; 3] = {
+    [
+        IntlTree {
+            rules: &[
+                intl_rule(0x44, (0xa5f638, INTL_FORM_FULL_PLAYER_SHORT), (0xa5f638, INTL_FORM_FULL_PLAYER_SHORT)),
+                intl_rule(0x14, (0xa5f504, INTL_FORM_FULL_PLAYER_SHORT), (0xa5f504, INTL_FORM_FULL_PLAYER_SHORT)),
+                intl_rule(0x40, (0xa5f410, INTL_FORM_FULL), (0xa5f410, INTL_FORM_FULL)),
+                intl_rule(0x24, (0xa5f2c8, INTL_FORM_FULL_PLAYER_SHORT), (0xa5f2c8, INTL_FORM_FULL_PLAYER_SHORT)),
+                intl_rule(0x20, (0xa5f1f0, INTL_FORM_NATION_FIRST), (0xa5f104, INTL_FORM_FULL)),
+                intl_rule(0x08, (0xa5f03c, INTL_FORM_NATION_FIRST), (0xa5ef58, INTL_FORM_FULL)),
+                intl_rule(0x12, (0xa5eea4, INTL_FORM_NO_CLUB), (0xa5ed70, INTL_FORM_FULL_PLAYER_SHORT)),
+                intl_rule(0x10, (0xa5ecc8, INTL_FORM_NO_CLUB), (0xa5eb8c, INTL_FORM_FULL_PLAYER_SHORT)),
+                intl_rule(0x02, (0xa5eae8, INTL_FORM_NO_CLUB), (0xa5ea34, INTL_FORM_NO_FIXTURE_SCORE_LAST)),
+                intl_rule(0x04, (0xa5e998, INTL_FORM_NO_CLUB), (0xa5e8dc, INTL_FORM_NO_FIXTURE_SCORE_LAST)),
+                intl_rule(0x01, (0xa5e814, INTL_FORM_SUBJECT_FIRST), (0xa5e814, INTL_FORM_SUBJECT_FIRST)),
+            ],
+            fallback: ((0xa5e72c, INTL_FORM_FULL), (0xa5e678, INTL_FORM_NO_FIXTURE_SCORE_LAST)), // sx15_3: a lone player in a win
+        },
+        IntlTree {
+            rules: &[
+                intl_rule(0x14, (0xa5e540, INTL_FORM_FULL_PLAYER_SHORT), (0xa5e540, INTL_FORM_FULL_PLAYER_SHORT)),
+                intl_rule(0x40, (0xa5e44c, INTL_FORM_FULL), (0xa5e44c, INTL_FORM_FULL)),
+                intl_rule(0x24, (0xa5e2f0, INTL_FORM_FULL_PLAYER_SHORT), (0xa5e2f0, INTL_FORM_FULL_PLAYER_SHORT)),
+                intl_rule(0x20, (0xa5e218, INTL_FORM_NATION_FIRST), (0xa5e12c, INTL_FORM_FULL)),
+                intl_rule(0x08, (0xa5e064, INTL_FORM_NATION_FIRST), (0xa5df80, INTL_FORM_FULL)),
+                intl_rule(0x12, (0xa5dea0, INTL_FORM_SUBJECT_FIRST), (0xa5dd68, INTL_FORM_FULL_PLAYER_SHORT)),
+                intl_rule(0x10, (0xa5dcc0, INTL_FORM_NO_CLUB_SCORE_FIRST), (0xa5db80, INTL_FORM_FULL_PLAYER_SHORT)),
+                intl_rule(0x02, (0xa5dadc, INTL_FORM_NO_CLUB_SCORE_FIRST), (0xa5da10, INTL_FORM_NO_FIXTURE)),
+                intl_rule(0x04, (0xa5d974, INTL_FORM_NO_CLUB_SCORE_FIRST), (0xa5d87c, INTL_FORM_NO_FIXTURE_PLAYER_SHORT)),
+                intl_rule(0x01, (0xa5d7b0, INTL_FORM_SUBJECT_FIRST), (0xa5d7b0, INTL_FORM_SUBJECT_FIRST)),
+            ],
+            fallback: ((0xa5d6c8, INTL_FORM_FULL), (0xa5d5e4, INTL_FORM_FULL)),
+        },
+        IntlTree {
+            rules: &[
+                intl_rule(0x24, (0xa5d494, INTL_FORM_FULL_PLAYER_SHORT), (0xa5d494, INTL_FORM_FULL_PLAYER_SHORT)),
+                intl_rule(0x20, (0xa5d3b4, INTL_FORM_NATION_FIRST), (0xa5d2b8, INTL_FORM_FULL)),
+                intl_rule(0x08, (0xa5d1f0, INTL_FORM_NATION_FIRST), (0xa5d0fc, INTL_FORM_FULL)),
+                intl_rule(0x02, (0xa5d058, INTL_FORM_NO_CLUB_SCORE_FIRST), (0xa5cf9c, INTL_FORM_NO_FIXTURE)),
+                intl_rule(0x04, (0xa5cec8, INTL_FORM_SUBJECT_FIRST), (0xa5cdc4, INTL_FORM_NO_FIXTURE_PLAYER_SHORT)),
+                intl_rule(0x01, (0xa5ccf8, INTL_FORM_SUBJECT_FIRST), (0xa5ccf8, INTL_FORM_SUBJECT_FIRST)),
+            ],
+            fallback: ((0xa5cc18, INTL_FORM_FULL), (0xa5cb4c, INTL_FORM_NO_FIXTURE)),
+        },
+    ]
+};
+
+/// The templates of a highlighted player (named captain or man of the match): won, drawn, lost.
+pub(crate) const INTL_HIGHLIGHT_TREES: [IntlTree; 3] = {
+    [
+        IntlTree {
+            rules: &[
+                intl_rule(0x44, (0xa62d4c, INTL_FORM_FULL_PLAYER_SHORT), (0xa62d4c, INTL_FORM_FULL_PLAYER_SHORT)),
+                intl_rule(0x14, (0xa62c08, INTL_FORM_FULL_PLAYER_SHORT), (0xa62c08, INTL_FORM_FULL_PLAYER_SHORT)),
+                intl_rule(0x40, (0xa62afc, INTL_FORM_FULL), (0xa62afc, INTL_FORM_FULL)),
+                intl_rule(0x24, (0xa629a4, INTL_FORM_FULL_PLAYER_SHORT), (0xa629a4, INTL_FORM_FULL_PLAYER_SHORT)),
+                intl_rule(0x20, (0xa628c4, INTL_FORM_NATION_FIRST), (0xa627c0, INTL_FORM_FULL)),
+                intl_rule(0x08, (0xa626f0, INTL_FORM_NATION_FIRST), (0xa625f4, INTL_FORM_FULL)),
+                intl_rule(0x12, (0xa62534, INTL_FORM_NO_CLUB), (0xa623e4, INTL_FORM_FULL_HIGHLIGHT_SHORT)),
+                intl_rule(0x10, (0xa62334, INTL_FORM_NO_CLUB), (0xa621f0, INTL_FORM_FULL_HIGHLIGHT_SHORT)),
+                intl_rule(0x02, (0xa62144, INTL_FORM_NO_CLUB), (0xa62074, INTL_FORM_NO_FIXTURE_SCORE_LAST)),
+                intl_rule(0x04, (0xa61fd0, INTL_FORM_NO_CLUB), (0xa61ed0, INTL_FORM_NO_FIXTURE_SCORE_LAST_PLAYER_SHORT)),
+                intl_rule(0x01, (0xa61e00, INTL_FORM_SUBJECT_FIRST), (0xa61e00, INTL_FORM_SUBJECT_FIRST)),
+            ],
+            fallback: ((0xa61d10, INTL_FORM_FULL), (0xa61c4c, INTL_FORM_NO_FIXTURE_SCORE_LAST)),
+        },
+        IntlTree {
+            rules: &[
+                intl_rule(0x14, (0xa61b04, INTL_FORM_FULL_PLAYER_SHORT), (0xa61b04, INTL_FORM_FULL_PLAYER_SHORT)),
+                intl_rule(0x40, (0xa619f8, INTL_FORM_FULL), (0xa619f8, INTL_FORM_FULL)),
+                intl_rule(0x24, (0xa6189c, INTL_FORM_FULL_PLAYER_SHORT), (0xa6189c, INTL_FORM_FULL_PLAYER_SHORT)),
+                intl_rule(0x20, (0xa617bc, INTL_FORM_NATION_FIRST), (0xa616b4, INTL_FORM_FULL)),
+                intl_rule(0x08, (0xa615e4, INTL_FORM_NATION_FIRST), (0xa614e4, INTL_FORM_FULL)),
+                intl_rule(0x12, (0xa613f8, INTL_FORM_SUBJECT_FIRST), (0xa612a4, INTL_FORM_FULL_HIGHLIGHT_SHORT)),
+                intl_rule(0x10, (0xa611cc, INTL_FORM_SUBJECT_FIRST), (0xa61084, INTL_FORM_FULL_HIGHLIGHT_SHORT)),
+                intl_rule(0x02, (0xa60fb0, INTL_FORM_SUBJECT_FIRST), (0xa60eb4, INTL_FORM_FULL)),
+                intl_rule(0x04, (0xa60de8, INTL_FORM_SUBJECT_FIRST), (0xa60cbc, INTL_FORM_FULL_PLAYER_SHORT)),
+                intl_rule(0x01, (0xa60be8, INTL_FORM_SUBJECT_FIRST), (0xa60be8, INTL_FORM_SUBJECT_FIRST)),
+            ],
+            fallback: ((0xa60af8, INTL_FORM_FULL), (0xa60a04, INTL_FORM_FULL)),
+        },
+        IntlTree {
+            rules: &[
+                intl_rule(0x24, (0xa608a8, INTL_FORM_FULL_PLAYER_SHORT), (0xa608a8, INTL_FORM_FULL_PLAYER_SHORT)),
+                intl_rule(0x20, (0xa607c4, INTL_FORM_NATION_FIRST), (0xa606b0, INTL_FORM_FULL)),
+                intl_rule(0x08, (0xa605e0, INTL_FORM_NATION_FIRST), (0xa604d4, INTL_FORM_FULL)),
+                intl_rule(0x02, (0xa60428, INTL_FORM_NO_CLUB_SCORE_FIRST), (0xa60350, INTL_FORM_NO_FIXTURE)),
+                intl_rule(0x04, (0xa60274, INTL_FORM_SUBJECT_FIRST), (0xa60168, INTL_FORM_NO_FIXTURE_PLAYER_SHORT)),
+                intl_rule(0x01, (0xa60094, INTL_FORM_SUBJECT_FIRST), (0xa60094, INTL_FORM_SUBJECT_FIRST)),
+            ],
+            fallback: ((0xa5ffa4, INTL_FORM_FULL), (0xa5fea4, INTL_FORM_FULL)),
+        },
+    ]
+};
+
+/// The player list templates of the lone-player text (two, three, four players) and of the highlighted text (the two
+/// or three players after the highlighted one).
+pub(crate) const INTL_LIST_TWO: usize = 0xa62f1c;
+
+pub(crate) const INTL_LIST_THREE: usize = 0xa62ea8;
+
+pub(crate) const INTL_LIST_FOUR: usize = 0xa5fce0;
+
+/// "%d other players" from the club (more than four), the "and X" sentence (plain, or after a win when the second
+/// player scored or stood out), the list sentence, the score line and the two headlines.
+pub(crate) const INTL_OTHERS: usize = 0xa5fdc0;
+
+pub(crate) const INTL_AND_PLAYER: usize = 0xa5fe24;
+
+pub(crate) const INTL_AND_PLAYER_WIN: usize = 0xa5fe64;
+
+pub(crate) const INTL_AND_LIST: usize = 0xa5fd70;
+
+pub(crate) const INTL_SCORE_LINE: usize = 0x9c116c;
+
+pub(crate) const INTL_HEADLINE_PLAYER: usize = 0xa5ca9c;
+
+pub(crate) const INTL_HEADLINE_CLUB: usize = 0xa5caf0;
+
+/// "Friendly", lowercased at the start when it is the fixture label.
+pub(crate) const INTL_FRIENDLY: usize = 0x9db958;
+
+/// The slots of the club international report news (0x24), as the body reads them: the match record, the highlighted
+/// player (id and the three name ids; id −1 when he is not from the club), how many of the club's players there were,
+/// the club, up to four players (only when there were at most four), the marker, the draw and the players' codes (only
+/// with the marker).
+pub(crate) struct IntlReport {
+    pub(crate) record: [u8; 0x20],
+    pub(crate) highlight: [u32; 4],
+    pub(crate) count: i8,
+    pub(crate) club: u32,
+    pub(crate) players: [[u32; 4]; 4],
+    /// the slot after the players is not the marker (more than four players: the players are not read, so the marker
+    /// is not where the original looks)
+    pub(crate) no_codes: bool,
+    pub(crate) draw: u32,
+    pub(crate) codes: [u32; 4],
+}
+
+impl IntlReport {
+    /// How many players' slots the loops read: none above four, otherwise the count (at most four).
+    pub(crate) fn players_read(&self) -> usize {
+        if self.count > 4 { 0 } else { self.count.clamp(0, 4) as usize }
+    }
+
+    pub(crate) unsafe fn read(news: usize) -> IntlReport {
+        let mut r = IntlReport { record: [0; 0x20], highlight: [0; 4], count: 0, club: 0, players: [[0; 4]; 4], no_codes: false, draw: 0, codes: [0; 4] };
+        exe::date_date_54a110(r.record.as_mut_ptr() as usize);
+        let mut k: u8 = 0;
+        exe::read_match_record_from_news(news, &mut k, r.record.as_mut_ptr());
+        let mut next = || {
+            let v = exe::newsitem_get_slot(news, k as u32);
+            k = k.wrapping_add(1);
+            v
+        };
+        for v in r.highlight.iter_mut() {
+            *v = next();
+        }
+        r.count = next() as i8;
+        r.club = next();
+        for i in 0..r.players_read() {
+            for v in r.players[i].iter_mut() {
+                *v = next();
+            }
+        }
+        r.no_codes = next() != INTL_CODES_MARKER;
+        if !r.no_codes {
+            r.draw = next();
+            for i in 0..r.players_read() {
+                r.codes[i] = next();
+            }
+        }
+        r
+    }
+
+    /// The highlighted text with more than four players: the original picks its template by a draw it never read (a
+    /// stack dword left by earlier calls); the copy uses 0.
+    pub(crate) fn draw_uninitialized(&self) -> bool {
+        self.highlight[0] as i32 != -1 && self.no_codes
+    }
+
+    pub(crate) fn record(&self) -> RecordMatch {
+        RecordMatch(self.record.as_ptr() as usize)
+    }
+
+    pub(crate) unsafe fn sides(&self) -> (Club, Club) {
+        intl_sides(self.record())
+    }
+
+    /// 0 won, 1 drawn, 2 lost, by the national side's goals.
+    pub(crate) unsafe fn result(&self) -> usize {
+        let (ours, theirs) = self.record().goals();
+        if ours > theirs { 0 } else if ours == theirs { 1 } else { 2 }
+    }
+
+    pub(crate) unsafe fn b_international(&self) -> bool {
+        intl_b_international(self.record())
+    }
+}
+
+/// The buffers of the body text.
+pub(crate) struct IntlTexts {
+    pub(crate) player: [[u8; 0x78]; 4],
+    pub(crate) player_short: [[u8; 0x78]; 4],
+    pub(crate) highlight: [u8; 0x12c],
+    pub(crate) highlight_short: [u8; 0x12c],
+    pub(crate) nation: [u8; 0x12c],
+    pub(crate) opponent: [u8; 0x12c],
+    pub(crate) score: [u8; 0xc],
+    pub(crate) fixture: [u8; 0xc8],
+    pub(crate) fixture_gender: i8,
+    pub(crate) list: [u8; 0x3e8],
+}
+
+/// Up to three called-up players read from a call-up news item (slots 10.., four per player: id, first, second and
+/// common name ids) with their names formatted, the repeated ones dropped.
+pub(crate) struct CallUpPlayers {
+    pub(crate) ids: [u32; 3],
+    pub(crate) first: [u32; 3],
+    pub(crate) second: [u32; 3],
+    pub(crate) common: [u32; 3],
+    pub(crate) names: [[u8; 200]; 3],
+}
+
+/// The slots of a qualified nations news item, as the writer reads them.
+pub(crate) struct QualifiedNations {
+    pub(crate) comp: Competition,
+    pub(crate) count: i32,
+    pub(crate) headline_kind: i32,
+    pub(crate) body_kind: i32,
+    pub(crate) host: i32,
+    pub(crate) co_host: i32,
+    pub(crate) year: i32,
+    pub(crate) teams: Vec<Club>,
+}
+
+/// `MANAGER_MANAGER::review_national_team_performance` (thiscall(manager manager, competition, national team), ret 8).
+pub(crate) const FN_MANAGER_MANAGER_REVIEW_NATIONAL_TEAM_PERFORMANCE: usize = 0x6a5610;
+
+/// `FIXTURE_MANAGER::reschedule_club_fixtures_near_date` (thiscall(fixture manager, club, date), ret 8).
+pub(crate) const FN_FIXTURE_MANAGER_RESCHEDULE_CLUB_FIXTURES_NEAR_DATE: usize = 0x5abb10;
+
+pub(crate) const INTL_FORM_FULL: &[IntlArg] = &[IntlArg::ClubGender, IntlArg::NationGender, IntlArg::FixtureGender, IntlArg::OpponentGender, IntlArg::ClubName, IntlArg::Subject, IntlArg::Nation, IntlArg::Score, IntlArg::Fixture, IntlArg::Opponent];
+
+pub(crate) const INTL_FORM_FULL_PLAYER_SHORT: &[IntlArg] = &[IntlArg::ClubGender, IntlArg::NationGender, IntlArg::FixtureGender, IntlArg::OpponentGender, IntlArg::ClubName, IntlArg::Subject, IntlArg::Nation, IntlArg::Score, IntlArg::Fixture, IntlArg::Opponent, IntlArg::PlayerShort];
+
+pub(crate) const INTL_FORM_FULL_HIGHLIGHT_SHORT: &[IntlArg] = &[IntlArg::ClubGender, IntlArg::NationGender, IntlArg::FixtureGender, IntlArg::OpponentGender, IntlArg::ClubName, IntlArg::Subject, IntlArg::Nation, IntlArg::Score, IntlArg::Fixture, IntlArg::Opponent, IntlArg::HighlightShort];
+
+pub(crate) const INTL_FORM_NO_FIXTURE: &[IntlArg] = &[IntlArg::ClubGender, IntlArg::NationGender, IntlArg::OpponentGender, IntlArg::ClubName, IntlArg::Subject, IntlArg::Nation, IntlArg::Score, IntlArg::Opponent];
+
+pub(crate) const INTL_FORM_NO_FIXTURE_PLAYER_SHORT: &[IntlArg] = &[IntlArg::ClubGender, IntlArg::NationGender, IntlArg::OpponentGender, IntlArg::ClubName, IntlArg::Subject, IntlArg::Nation, IntlArg::Score, IntlArg::Opponent, IntlArg::PlayerShort];
+
+pub(crate) const INTL_FORM_NO_FIXTURE_SCORE_LAST: &[IntlArg] = &[IntlArg::ClubGender, IntlArg::NationGender, IntlArg::OpponentGender, IntlArg::ClubName, IntlArg::Subject, IntlArg::Nation, IntlArg::Opponent, IntlArg::Score];
+
+pub(crate) const INTL_FORM_NO_FIXTURE_SCORE_LAST_PLAYER_SHORT: &[IntlArg] = &[IntlArg::ClubGender, IntlArg::NationGender, IntlArg::OpponentGender, IntlArg::ClubName, IntlArg::Subject, IntlArg::Nation, IntlArg::Opponent, IntlArg::Score, IntlArg::PlayerShort];
+
+pub(crate) const INTL_FORM_NO_CLUB: &[IntlArg] = &[IntlArg::NationGender, IntlArg::OpponentGender, IntlArg::Subject, IntlArg::Nation, IntlArg::Opponent, IntlArg::Score];
+
+pub(crate) const INTL_FORM_NO_CLUB_SCORE_FIRST: &[IntlArg] = &[IntlArg::NationGender, IntlArg::OpponentGender, IntlArg::Subject, IntlArg::Nation, IntlArg::Score, IntlArg::Opponent];
+
+pub(crate) const INTL_FORM_NATION_FIRST: &[IntlArg] = &[IntlArg::NationGender, IntlArg::FixtureGender, IntlArg::OpponentGender, IntlArg::Nation, IntlArg::Subject, IntlArg::Score, IntlArg::Fixture, IntlArg::Opponent];
+
+pub(crate) const INTL_FORM_SUBJECT_FIRST: &[IntlArg] = &[IntlArg::NationGender, IntlArg::FixtureGender, IntlArg::OpponentGender, IntlArg::Subject, IntlArg::Nation, IntlArg::Score, IntlArg::Fixture, IntlArg::Opponent];
+
+/// A template tree: the rules by the player's performance code, and the lines when none matches (or the news item
+/// carries no codes), for a draw of 0 and another draw.
+pub(crate) struct IntlTree {
+    pub(crate) rules: &'static [IntlRule],
+    pub(crate) fallback: (IntlLine, IntlLine),
+}
+
+/// The slot that ends the players in the news item (`send_club_international_report_news`).
+pub(crate) const INTL_CODES_MARKER: u32 = 0x420e9;

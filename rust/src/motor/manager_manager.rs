@@ -7287,3 +7287,833 @@ pub(crate) struct BoardStoryCall {
     pub(crate) before: Vec<u8>,
     pub(crate) changes: Vec<(usize, u8)>,
 }
+
+/// Writes the board's (or the FA's) verdict on a match into the game's text buffer (`NEWS_TEXT_BUFFER`), by the
+/// match marks, with a sentence on the league run or on the players it named; returns 1, or 0 when only the plain
+/// default verdict was written.
+///
+/// `build_board_match_reaction_text(club, other, comp, marks, score, _, _, ids, variant, loss, run, target, current,
+/// best, in_league)`, called after every match by `update_board_confidence_after_match` (the text is not used there:
+/// only the return value) and by the news text `news_board_match_reaction_text`. The board: "The <club> board of
+/// directors" (0xa0fc54, the club's `.gender_name()` and name), or for a national team (`exe::database_is_national_team`)
+/// "The <nationality> Football Association" (0xa0fc8c, the adjective of the club's `.nation()` by
+/// `exe::nation_get_nationality_adjective`, with 100 as the two genders). The verdict by `marks`
+/// (`board_verdict_template`): the cases that ask whether the competition is a friendly
+/// (`exe::friendly_is_friendly_competition` of `G_FRIENDLY`) take the friendly template; the others, their template
+/// with the opponent's gender and name, the competition's `.short_gender_name()` and short name and the score.
+/// Marks without a case write straight into the buffer with the score and return 0: 0xa0e94c with 0x800, 0xa0be98
+/// with 0x400, else 0xa0bdd0.
+///
+/// The run sentence (`board_run_sentence`), only with `in_league`: a winning run (2) with the club at or above its
+/// target by at most 3 places gives "We are very impressed..."; a losing run (−2) with
+/// the target not above the best position: more than 4 places below the target "If this losing run isn't turned
+/// around...", more than 4 above it in a division (`league::ENTRANT_COUNT` low byte, `league::RELEGATED_COUNT`,
+/// `league_vtable::HAS_RELEGATION`) "danger of getting relegated" when the board expects a relegation battle
+/// (`expectation_flags::RELEGATION_BATTLE` of `board_record::EXPECTATION_FLAGS`) and the club is in the relegation
+/// places, else "danger of losing our good league position"; more than 2 places below the target, the "worried"
+/// sentence of the first expectation flag (European places, title, promotion, play-offs, 0x40, relegation battle,
+/// else the comfortable position). Without one and with marks 0x1800, the named players' sentence
+/// (`build_board_player_performance_text`, with "won" = marks bit 0x800 in the low byte of `loss`). The buffer gets
+/// "%s %s" (verdict and sentence) or "%s" (0x991948 / 0x991944, `story_crt!`).
+///
+/// Defects of the original: without a competition it writes 0xa0bd50 with the board string before building it
+/// (uninitialised stack; the callers always pass one); the winning-run tests make "Hopefully this run..." and the
+/// seven "This run of victories is keeping us on track..." sentences unreachable (they need the club both at or above
+/// and below its target); the two aggregate arguments are never read.
+/// Original: `MANAGER_MANAGER::build_board_match_reaction_text` (0x6a69c0, manager_manager.cpp, thiscall, ret 0x3c).
+#[allow(clippy::too_many_arguments)]
+pub(crate) unsafe extern "thiscall" fn build_board_match_reaction_text(this: usize, club: usize, other: usize, comp: usize, marks: i32, score: usize, _aggregate_for: i32,
+                                                                       _aggregate_against: i32, ids: usize, variant: u32, loss: u32, run: u32, target: u32,
+                                                                       current: u32, best: u32, in_league: u32) -> u32 {
+    let (club, other, comp) = (Club(club), Club(other), Competition(comp));
+    let mut board = [0u8; 200];
+    let b = board.as_mut_ptr() as usize;
+    if comp.is_null() {
+        // simplification: the original quotes the board string before writing it (stack garbage); the copy an empty one
+        story_lang!(NEWS_TEXT_BUFFER, 0xa0bd50, other.gender_name() as i32, other.gender_name() as i32, b, other.name_addr());
+        return 0;
+    }
+    if exe::database_is_national_team(club) != 0 {
+        let mut adjective = [0u8; 100];
+        exe::nation_get_nationality_adjective(club.nation(), adjective.as_mut_ptr() as usize, 100, 9);
+        story_lang!(b, 0xa0fc8c, 100, 100, adjective.as_ptr()); // "The <nationality> Football Association"
+    } else {
+        let g = club.gender_name() as i32;
+        story_lang!(b, 0xa0fc54, g, g, club.name_addr()); // "The <club> board of directors"
+    }
+    let mut verdict = [0u8; 1500];
+    let v = verdict.as_mut_ptr() as usize;
+    match board_verdict_template(marks) {
+        Some((friendly, template, shape)) => {
+            covered!("sx14_1 verdict");
+            match friendly {
+                Some(t) if exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), comp) != 0 => {
+                    covered!("sx14_1 friendly verdict");
+                    format_board_verdict(v, t, BoardVerdictArgs::Friendly, other, comp, b, score)
+                }
+                _ => format_board_verdict(v, template, shape, other, comp, b, score),
+            }
+        }
+        None => {
+            covered!("sx14_1 default verdict");
+            let template = if marks & 0x800 != 0 { 0xa0e94c } else if marks & 0x400 != 0 { 0xa0be98 } else { 0xa0bdd0 };
+            format_board_verdict(NEWS_TEXT_BUFFER, template, BoardVerdictArgs::OpponentInCompWithScore, other, comp, b, score);
+            return 0;
+        }
+    }
+    let mut sentence = [0u8; 1500];
+    let s = sentence.as_mut_ptr() as usize;
+    if in_league as u8 != 0 {
+        let t = board_run_sentence(this, club, run as i8, target as i8, current as i8, best as i8);
+        if t != 0 {
+            covered!("sx14_1 run sentence");
+            story_lang!(s, t);
+        }
+    }
+    if sentence[0] == 0 && marks & 0x1800 != 0 {
+        covered!("sx14_1 named players");
+        let won = (loss & 0xffff_ff00) | ((marks as u32 >> 11) & 1);
+        build_board_player_performance_text(ids as *const i32, won, s, variant);
+    }
+    if sentence[0] != 0 {
+        story_crt!(NEWS_TEXT_BUFFER, 0x991948, v, s); // "%s %s"
+    } else {
+        story_crt!(NEWS_TEXT_BUFFER, 0x991944, v); // "%s"
+    }
+    1
+}
+
+/// Comparer for `build_board_match_reaction_text`: the original and the copy side by side on the game's text buffer
+/// (`NEWS_TEXT_BUFFER`, 2000 bytes) and the return value. Without a competition only the original runs (it quotes an
+/// uninitialised string).
+#[allow(clippy::too_many_arguments)]
+pub(crate) unsafe extern "thiscall" fn compare_build_board_match_reaction_text(this: usize, club: usize, other: usize, comp: usize, marks: i32, score: usize, aggregate_for: i32,
+                                                                               aggregate_against: i32, ids: usize, variant: u32, loss: u32, run: u32, target: u32,
+                                                                               current: u32, best: u32, in_league: u32) -> u32 {
+    type F = unsafe extern "thiscall" fn(usize, usize, usize, usize, i32, usize, i32, i32, usize, u32, u32, u32, u32, u32, u32, u32) -> u32;
+    let o = original_fn::<F>(IDX_BUILD_BOARD_MATCH_REACTION_TEXT);
+    let original = || o(this, club, other, comp, marks, score, aggregate_for, aggregate_against, ids, variant, loss, run, target, current, best, in_league);
+    if comp == 0 {
+        return original();
+    }
+    let (ro, rr, same, mo, mr) = crate::comparison::side_by_side(&[(NEWS_TEXT_BUFFER, 2000)], original, || {
+        build_board_match_reaction_text(this, club, other, comp, marks, score, aggregate_for, aggregate_against, ids, variant, loss, run, target, current, best, in_league)
+    });
+    let text = |m: &crate::comparison::MemorySnapshot| {
+        let b = &m.0[0].1;
+        String::from_utf8_lossy(&b[..b.iter().position(|&c| c == 0).unwrap_or(b.len())]).into_owned()
+    };
+    SCOREBOARD.record(same && ro == rr, || {
+        format!("build_board_match_reaction_text(marks {:#x}, run {} target {} current {} best {} league {}) original {} {:?} rust {} {:?}",
+                marks, run as i8, target as i8, current as i8, best as i8, in_league as u8, ro, text(&mo), rr, text(&mr))
+    });
+    ro
+}
+
+/// Writes the headline or the body of the board's reaction to a match (news 0x138c, posted by
+/// `post_board_match_reaction_news`).
+///
+/// `news_board_match_reaction_text(news, body, out)`. The headline (`board_reaction_headline`) from slots 0 (the
+/// marks), 1 (the club) and 2 (the opponent), with the links to the two clubs' short names (0x7d5). The body reads
+/// the 18 slots in order (the marks, the clubs, the score, the aggregate, the fixture's stats slot, the three named
+/// players, the variant, the defeat, the run, the target, the current and best positions and the league flag) and
+/// the match record behind them (`exe::read_match_record_from_news`, a `RecordMatch`); the score "<higher>-<lower>"
+/// (0xa0bd30) and the verdict (`FN_MANAGER_MANAGER_BUILD_BOARD_MATCH_REACTION_TEXT`, with the record's competition)
+/// into the game's text buffer, which goes into `out` (`exe::text_set_string`); the links: the two clubs' names
+/// (0x7d5), the competition's short name (0x7d0), each named player still set (0x7db, the name by
+/// `exe::database_format_staff_name`, mode 1) and the score (0x7d3) when the fixture is still in the match stats
+/// (`RecordMatch::link_score`).
+/// Original: `MANAGER_MANAGER::news_board_match_reaction_text` (0x6a6310, manager_manager.cpp, thiscall, ret 0xc).
+pub(crate) unsafe extern "thiscall" fn news_board_match_reaction_text(this: usize, news: usize, body: u32, out: usize) {
+    if body == 0 {
+        covered!("sx14_2 headline");
+        let (marks, club, other) = (exe::newsitem_get_slot(news, 0), exe::newsitem_get_slot(news, 1), exe::newsitem_get_slot(news, 2));
+        let (club, other) = (club_at(club as i32 as isize), club_at(other as i32 as isize));
+        board_reaction_headline(marks, club, other);
+        exe::text_set_string(out, NEWS_TEXT_BUFFER as *const u8);
+        exe::text_add_link(out, (club.addr() + club::SHORT_NAME) as *const u8, 0x7d5, club);
+        exe::text_add_link(out, (other.addr() + club::SHORT_NAME) as *const u8, 0x7d5, other);
+        return;
+    }
+    covered!("sx14_2 body");
+    let mut k: u8 = 0;
+    let mut slots = [0u32; 18];
+    for v in slots.iter_mut() {
+        *v = exe::newsitem_get_slot(news, k as i8 as u32);
+        k += 1;
+    }
+    let mut record = [0u8; 0x20];
+    let rec = record.as_mut_ptr() as usize;
+    exe::date_date_54a110(rec);
+    exe::read_match_record_from_news(news, &mut k, record.as_mut_ptr());
+    let record = RecordMatch(rec);
+    let [marks, club, other, goals_a, goals_b, aggregate_for, aggregate_against, _stats_slot, id1, id2, id3, variant, loss, run, target, current, best, in_league] = slots;
+    let (club, other) = (club_at(club as i32 as isize), club_at(other as i32 as isize));
+    let (goals_a, goals_b) = (goals_a as i32, goals_b as i32);
+    let mut score = [0u8; 100];
+    story_lang!(score.as_mut_ptr(), 0xa0bd30, goals_a.max(goals_b), goals_a.min(goals_b)); // "<goals>-<opp goals>"
+    let ids = [id1 as i32, id2 as i32, id3 as i32];
+    let verdict: unsafe extern "thiscall" fn(usize, usize, usize, usize, i32, usize, i32, i32, usize, u32, u32, u32, u32, u32, u32, u32) -> u32 =
+        core::mem::transmute(FN_MANAGER_MANAGER_BUILD_BOARD_MATCH_REACTION_TEXT);
+    verdict(this, club.addr(), other.addr(), record.comp(), marks as i32, score.as_ptr() as usize, aggregate_for as i32, aggregate_against as i32,
+            ids.as_ptr() as usize, variant, loss, run, target, current, best, in_league);
+    exe::text_set_string(out, NEWS_TEXT_BUFFER as *const u8);
+    exe::text_add_link(out, club.name_addr() as *const u8, 0x7d5, club);
+    exe::text_add_link(out, other.name_addr() as *const u8, 0x7d5, other);
+    let comp = record.comp();
+    exe::text_add_link(out, (comp + competition::SHORT_NAME) as *const u8, 0x7d0, comp);
+    let mut name = [0u8; 200];
+    for id in ids {
+        if id != -1 {
+            let p = staff_at(id as isize);
+            exe::database_format_staff_name(p, name.as_mut_ptr() as usize, 200, 1);
+            exe::text_add_link(out, name.as_ptr(), 0x7db, p);
+        }
+    }
+    record.link_score(out, &score);
+}
+
+/// Comparer for `news_board_match_reaction_text`: the text side by side (`compare_text_writer`).
+pub(crate) unsafe extern "thiscall" fn compare_news_board_match_reaction_text(this: usize, news: usize, body: u32, out: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_NEWS_BOARD_MATCH_REACTION_TEXT);
+    compare_text_writer(out, || o(this, news, body, out), |t| news_board_match_reaction_text(this, news, body, t),
+                        || format!("news_board_match_reaction_text(news {:#x}, body {})", news, body));
+}
+
+/// The board's daily pass over the clubs and the manager market.
+///
+/// `MANAGER_MANAGER::daily_update()`, every day (the game's day loop). When the month changes (`exe::date_get_month`
+/// against the last month seen at 0xb67a40; the first day after loading only records it, flag 0x9f18a0), each club that
+/// is not a national team, or a national team whose nation has +0x71 set, gets the board's confidence news
+/// (`post_board_confidence_update_news`), then `fix_missing_jobs`. The human managers settle in after 180 days
+/// (`settle_new_human_managers`); on Sundays (day of the year divisible by 7) `weekly_board_confidence_update`; the
+/// pending departures (`process_pending_departures`). Then every vacancy of `manager_manager_fields::VACANCY_LIST`
+/// from the head: past its arrival date, the appointment (`appoint_from_vacancy`); before it, the rumour
+/// (`vacancy_rumour`). Finally the ban appeals (`process_ban_appeals`).
+///
+/// Defects of the original: a person moving to a club from his national team is released by his national job, but
+/// the default case writes his club job (0xb, 0 or 8); the "manager record" check after the appointment can only show
+/// its error box (line 0x5e2) if a call in between cleared the record.
+/// Original: `MANAGER_MANAGER::daily_update` (0x68f9c0, manager_manager.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn daily_update(this: usize) {
+    const FIRST_DAY_AFTER_LOAD: usize = 0x9f18a0;
+    const LAST_MONTH: usize = 0xb67a40;
+    let month = exe::date_get_month(G_CURRENT_DATE);
+    if read_u8(FIRST_DAY_AFTER_LOAD) != 0 {
+        write_u8(LAST_MONTH, month);
+        write_u8(FIRST_DAY_AFTER_LOAD, 0);
+    } else if month != read_u8(LAST_MONTH) {
+        covered!("sx14_3 new month");
+        write_u8(LAST_MONTH, exe::date_get_month(G_CURRENT_DATE));
+        let mut k = 0;
+        while k < read_i32(G_CLUB_COUNT) {
+            let club = club_at(k as isize);
+            let nation = club.nation();
+            if exe::database_is_national_team(club) == 0 || (!nation.is_null() && read_u32(nation.addr() + 0x71) != 0) {
+                post_board_confidence_update_news(this, club.addr());
+            }
+            k += 1;
+        }
+        fix_missing_jobs(this);
+    }
+    settle_new_human_managers(this);
+    if read_i16(G_CURRENT_DATE) % 7 == 0 {
+        weekly_board_confidence_update(this);
+    }
+    process_pending_departures(this);
+    let list = read_usize(this + manager_manager_fields::VACANCY_LIST);
+    list_rewind(list);
+    loop {
+        let e = exe::llist_get_next(list);
+        if e == 0 {
+            break;
+        }
+        let item = VacancyItem(e);
+        if item.date_passed(0x16) {
+            appoint_from_vacancy(this, list, item, item.person(), item.club());
+        } else {
+            vacancy_rumour(this, item);
+        }
+    }
+    process_ban_appeals(this);
+}
+
+/// Comparer for `daily_update`: it moves managers, posts news and draws, so only the original runs (its effects are
+/// checked by the career).
+pub(crate) unsafe extern "thiscall" fn compare_daily_update(this: usize) {
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_DAILY_UPDATE)(this)
+}
+
+/// The verdict template of a match by its marks: the friendly template (form `Friendly`) when the case asks whether
+/// the competition is a friendly, the other template and its argument shape; `None` for the marks without a case of
+/// their own (the 0x800 / 0x400 / plain defaults).
+pub(crate) fn board_verdict_template(marks: i32) -> Option<(Option<usize>, usize, BoardVerdictArgs)> {
+    use BoardVerdictArgs::*;
+    Some(match marks {
+        0x401 | 0x501 => (Some(0xa0f5f4), 0xa0f548, OpponentInComp),
+        0x402 | 0x502 => (Some(0xa0f8ac), 0xa0f7f8, OpponentInComp),
+        0x408 | 0x4a0 | 0x608 | 0x6a0 => (Some(0xa0eab4), 0xa0ea10, OpponentInComp),
+        0x420 | 0x620 => (Some(0xa0f204), 0xa0f164, OpponentInComp),
+        0x441 | 0x541 => (Some(0xa0f750), 0xa0f694, OpponentInComp),
+        0x442 | 0x542 => (Some(0xa0fa34), 0xa0f958, OpponentInCompWithScore),
+        0x444 | 0x544 => (Some(0xa0fbac), 0xa0fad8, OpponentInCompWithScore),
+        0x448 | 0x648 => (Some(0xa0f350), 0xa0f2a0, OpponentInComp),
+        0x450 | 0x650 => (Some(0xa0ee98), 0xa0ede4, OpponentInComp),
+        0x460 | 0x660 => (Some(0xa0ec04), 0xa0eb54, OpponentInComp),
+        0x481 | 0x581 => (Some(0xa0f49c), 0xa0f3f0, OpponentInComp),
+        0x482 | 0x582 => (Some(0xa0f5f4), 0xa0ef3c, OpponentInComp), // the friendly text of 0x401
+        0x484 | 0x584 => (Some(0xa0f0bc), 0xa0efec, OpponentInCompWithScore),
+        0x488 | 0x688 => (Some(0xa0ed4c), 0xa0ecac, OpponentInComp),
+        0x808 | 0xa08 => (None, 0xa0e6cc, CompThenOpponentWithScore),
+        0x810 | 0xa10 => (None, 0xa0e168, CompThenOpponentWithScore),
+        0x820 | 0xa20 => (None, 0xa0e350, CompThenOpponentWithScore),
+        0x848 | 0xa48 => (Some(0xa0e62c), 0xa0e55c, OpponentInCompWithScore),
+        0x850 | 0xa50 => (Some(0xa0e2c8), 0xa0e210, OpponentInCompWithScore),
+        0x860 | 0xa60 => (Some(0xa0e4c8), 0xa0e404, OpponentInCompWithScore),
+        0x888 | 0xa88 => (Some(0xa0e0d0), 0xa0e008, OpponentInCompWithScore),
+        0x890 | 0xa90 => (Some(0xa0de38), 0xa0dd88, OpponentInCompWithScore),
+        0x8a0 | 0xaa0 => (Some(0xa0df7c), 0xa0dec0, OpponentInCompWithScore),
+        0x948 => (None, 0xa0e86c, OpponentInCompWithScore),
+        0x988 => (None, 0xa0e790, OpponentInCompWithScore),
+        0x1001 | 0x1101 => (Some(0xa0d030), 0xa0cf74, OpponentInCompWithScore),
+        0x1002 | 0x1102 => (None, 0xa0d3cc, CompThenOpponentWithScore),
+        0x1008 => (Some(0xa0dcd4), 0xa0dc08, OpponentInCompWithScore),
+        0x1020 | 0x1120 => (Some(0xa0d85c), 0xa0d794, OpponentInCompWithScore),
+        0x1041 | 0x1141 => (Some(0xa0d314), 0xa0d244, OpponentInCompWithScore),
+        0x1042 | 0x1142 => (Some(0xa0d560), 0xa0d490, OpponentInCompWithScore),
+        0x1044 | 0x1144 => (Some(0xa0d6f0), 0xa0d624, OpponentInCompWithScore),
+        0x1048 | 0x1148 => (Some(0xa0db68), 0xa0da90, OpponentInCompWithScore),
+        0x1060 | 0x1160 => (Some(0xa0d9dc), 0xa0d908, OpponentInCompWithScore),
+        0x1081 | 0x1181 => (Some(0xa0d194), 0xa0d0d0, OpponentInCompWithScore),
+        0x1082 | 0x1182 => (Some(0xa0ceb4), 0xa0cdec, OpponentInCompWithScore),
+        0x1084 | 0x1184 => (Some(0xa0c9b8), 0xa0c8f4, OpponentInCompWithScore),
+        0x1088 | 0x1188 => (Some(0xa0cd48), 0xa0cc70, OpponentInCompWithScore),
+        0x10a0 | 0x11a0 => (Some(0xa0cb30), 0xa0ca60, OpponentInCompWithScore),
+        0x1208 => (None, 0xa0cbd0, OpponentInComp),
+        0x1220 => (None, 0xa0c854, OpponentInComp),
+        0x1248 => (None, 0xa0c780, OpponentInComp),
+        0x1260 => (None, 0xa0c610, OpponentInComp),
+        0x1288 => (None, 0xa0c6b8, OpponentInComp),
+        0x12a0 => (None, 0xa0c560, OpponentInComp),
+        _ => return None,
+    })
+}
+
+/// Formats one board verdict (`story_lang!`) into `out` with the argument shape of its case.
+pub(crate) unsafe fn format_board_verdict(out: usize, template: usize, shape: BoardVerdictArgs, other: Club, comp: Competition, board: usize, score: usize) {
+    let go = other.gender_name() as i32;
+    let gc = comp.short_gender_name() as i8 as i32;
+    let (name, short) = (other.name_addr(), comp.short_name_addr());
+    match shape {
+        BoardVerdictArgs::Friendly => story_lang!(out, template, go, go, board, score, name),
+        BoardVerdictArgs::OpponentInComp => story_lang!(out, template, go, go, gc, gc, board, name, short),
+        BoardVerdictArgs::OpponentInCompWithScore => story_lang!(out, template, go, go, gc, gc, board, score, name, short),
+        BoardVerdictArgs::CompThenOpponentWithScore => story_lang!(out, template, gc, gc, go, go, board, score, short, name),
+    }
+}
+
+/// The board's sentence on the league run after the verdict (0 when there is none): `run` 2 (a winning run) or −2 (a
+/// losing run), the board's target, the club's current and best positions.
+pub(crate) unsafe fn board_run_sentence(this: usize, club: Club, run: i8, target: i8, current: i8, best: i8) -> usize {
+    let (target, current) = (target as i32, current as i32);
+    let flags = read_u16(board_row(this, club) + board_record::EXPECTATION_FLAGS);
+    // the first expectation flag (in this order) picks the sentence of the run of victories / of defeats
+    let by_expectation = |sentences: [usize; 7]| {
+        let bits = [1u16, 2, 4, 8, 0x40, 0x20];
+        bits.iter().position(|&b| flags & b != 0).map_or(sentences[6], |k| sentences[k])
+    };
+    if run == 2 {
+        if target < current {
+            return 0;
+        }
+        if current > target + 4 {
+            return 0xa0c514; // "Hopefully this run of results indicates a change in the club's fortunes."
+        }
+        if current > target - 4 {
+            return 0xa0c4c4; // "We are very impressed with the way that the team is performing at the moment."
+        }
+        if current <= target {
+            return 0;
+        }
+        return by_expectation([0xa0c474, 0xa0c42c, 0xa0c3e8, 0xa0c3a0, 0xa0c354, 0xa0c310, 0xa0c2c4]); // "This run of victories is keeping us on track to ..."
+    }
+    if run != -2 || target < best as i32 {
+        return 0;
+    }
+    if current > target + 4 {
+        return 0xa0c270; // "If this losing run isn't turned around soon we may have to look for a new manager."
+    }
+    if current < target - 4 && !club.division().is_null() {
+        let league = League(read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((read_i32(club.division().addr()) as usize).wrapping_mul(4))));
+        if !league.is_null() {
+            let clubs = (league.entrant_count() as i8) as i32; // a byte of the entrant count
+            let relegation_zone = flags as i16 & expectation_flags::RELEGATION_BATTLE != 0
+                && call_comp_virtual(league.addr(), league_vtable::HAS_RELEGATION) != 0
+                && current > clubs - (league.relegated_count() as i8) as i32;
+            return if relegation_zone {
+                0xa0c22c // "We are in danger of getting relegated unless results improve soon."
+            } else {
+                0xa0c1d8 // "We are in danger of losing our good league position unless results improve soon."
+            };
+        }
+    }
+    if current <= target + 2 {
+        return 0;
+    }
+    by_expectation([0xa0c174, 0xa0c118, 0xa0c0c0, 0xa0c068, 0xa0c008, 0xa0bfc0, 0xa0bf5c]) // "We are worried that this run of defeats ..."
+}
+
+/// The headline of the board's match reaction (news 0x138c): the derby headlines (marks 0x40) have no club; the
+/// others quote the opponent, except the fury one, which quotes the club itself.
+pub(crate) unsafe fn board_reaction_headline(marks: u32, club: Club, other: Club) {
+    if marks & 0x40 != 0 {
+        let template = if marks & 8 != 0 {
+            0xa0bd0c // "Board delighted at derby showing"
+        } else if marks & 0x20 != 0 {
+            0xa0bcec // "Board happy at derby display"
+        } else if marks & 1 != 0 {
+            0xa0bccc // "Board furious at derby display"
+        } else if marks & 2 != 0 {
+            0xa0bca8 // "Board unhappy with derby display"
+        } else {
+            0xa0bc88 // "Board reaction to derby match"
+        };
+        story_lang!(NEWS_TEXT_BUFFER, template);
+        return;
+    }
+    let (template, quoted) = if marks & 8 != 0 {
+        (0xa0bc48, other) // "Board delighted after <club> game"
+    } else if marks & 0x20 != 0 {
+        (0xa0bc0c, other) // "<club> match pleases board"
+    } else if marks & 1 != 0 {
+        (0xa0bbcc, club) // "Board fury at <club> performance"
+    } else if marks & 2 != 0 && marks & 0x1000 != 0 {
+        (0xa0bb8c, other) // "Board unhappy after <club> defeat"
+    } else {
+        (0xa0bb50, other) // "Board reaction to <club> game"
+    };
+    let g = quoted.short_gender_name() as i8 as i32;
+    story_lang!(NEWS_TEXT_BUFFER, template, g, g, quoted.addr() + club::SHORT_NAME);
+}
+
+/// The 16 human managers who joined their club more than 180 days ago lose the club board's
+/// `board_record_flags::NEW_MANAGER` bit (bit 0 of `board_record::FLAGS`).
+pub(crate) unsafe fn settle_new_human_managers(this: usize) {
+    let mut since = [0u16; 4];
+    exe::date_sub_days(G_CURRENT_DATE, since.as_mut_ptr() as usize, 0xb4);
+    for k in 0..0x10 {
+        let person = staff_at((read_i32(G_STAFF_COUNT) - 0x10 + k) as isize);
+        let club = person.club_job();
+        if club.is_null() || person.classification() == 0 {
+            continue;
+        }
+        let year = person.date_joined_club_year();
+        if since[1] > year || (since[1] == year && (since[0] as i16) > (person.date_joined_club() as i16)) {
+            let flags = board_row(this, club) + board_record::FLAGS;
+            write_u8(flags, read_u8(flags) & 0xfe);
+        }
+    }
+}
+
+/// An AI person's vacancy whose arrival date came: without a manager record the vacancy reopens with him; on loan or
+/// retiring (staff state 0x30) without both records it reopens without him; a club that already has a manager, or
+/// a person under offer, just drops the item. Otherwise the appointment: the club he leaves
+/// (`previous_club`; if he managed it and it can be managed, its season expectations and a vacancy there), the job
+/// application date cleared, the release and the appointment news (`release_appointed_person`), the past transfer of a
+/// player between two clubs (`record_manager_move`), the installation (`install_manager`), the item off the list and
+/// the board reset (`reset_board_for_new_manager`).
+pub(crate) unsafe fn appoint_from_vacancy(this: usize, list: usize, item: VacancyItem, person: Staff, club: Club) {
+    if is_human_id(person) {
+        human_vacancy_reached(this, list, item, person, club);
+        return;
+    }
+    let contracts = read_usize(G_CONTRACT_MANAGER);
+    let reopen = |left: usize| {
+        clear_job_application_date(this, club);
+        exe::llist_remove(list, item.0);
+        add_job_vacancy(this, club.addr(), left);
+    };
+    if person.non_player().is_null() {
+        clear_job_application_date(this, club);
+        exe::llist_remove(list, item.0);
+        add_job_vacancy(this, club.addr(), person.addr());
+        return;
+    }
+    if exe::contract_manager_get_loan_contract(contracts, person) != 0
+        || (staff_state_byte_b(read_i32(person.addr())) & 0x30 != 0 && (person.non_player().is_null() || person.player().is_null()))
+    {
+        reopen(0);
+        return;
+    }
+    if exe::database_get_club_manager(club) != 0 || exe::transfer_manager_is_player_under_offer(read_usize(G_TRANSFER_MANAGER), person, 0) != 0 {
+        clear_job_application_date(this, club);
+        exe::llist_remove(list, item.0);
+        return;
+    }
+    covered!("sx14_3 appointment");
+    let previous = previous_club(person, club);
+    if let Some(from) = previous {
+        if from.manager() == person && exe::club_can_be_managed(from) != 0 {
+            set_season_expectations(this, from.addr(), 1);
+            add_job_vacancy(this, from.addr(), person.addr());
+        }
+    }
+    clear_job_application_date(this, club);
+    if person.non_player().is_null() {
+        show_error_at(0x9f18a4, 0x5e2);
+    }
+    release_appointed_person(this, person, previous, club);
+    if let Some(from) = previous {
+        if !person.player().is_null() && exe::database_is_national_team(from) == 0 && !club.is_null() && exe::database_is_national_team(club) == 0 {
+            record_manager_move(person, from, club);
+        }
+    }
+    install_manager(this, person, club);
+    // simplification: the original then syncs a human's scout lists and training schedules (0x7f7270, 0x8b2470), a
+    // test that never holds here (the humans took `human_vacancy_reached`)
+    exe::llist_remove(list, item.0);
+    reset_board_for_new_manager(this, club.addr());
+}
+
+/// A vacancy still before its arrival date: once its rumour date passed, the rumour linking the candidate with the
+/// club is posted once (`post_job_rumour_news`), while the club has no manager.
+pub(crate) unsafe fn vacancy_rumour(this: usize, item: VacancyItem) {
+    let e = item.0;
+    if read_u8(e) == 0 || !item.date_passed(0x1e) || read_u8(e + 1) != 0 || read_i32(e + 2) == -1 {
+        return;
+    }
+    write_u8(e + 1, 1);
+    let club = item.club();
+    if club.manager().is_null() {
+        covered!("sx14_3 rumour");
+        post_job_rumour_news(this, staff_at(read_i32(e + 2) as isize).addr(), club.addr());
+    }
+}
+
+/// The base daily update of a nation's awards (`NationAwards::daily_update`: the month change).
+pub(crate) unsafe fn nation_awards_base_daily_update(this: usize, today: usize) {
+    let f: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_NATION_AWARDS_BASE_DAILY_UPDATE);
+    f(this, today)
+}
+
+/// Sets the club's `board_record::JOB_APPLICATION_DATE` to "never" (23/07/1971).
+pub(crate) unsafe fn clear_job_application_date(this: usize, club: Club) {
+    let mut never = [0u16; 4];
+    let d = exe::date_date_549f70(&mut never, 0x17, 7, 0x7b3, u32::MAX);
+    manager_manager_copy_date(board_row(this, club) + board_record::JOB_APPLICATION_DATE, d);
+}
+
+/// True for the 16 human managers (the last ids of the staff table).
+pub(crate) unsafe fn is_human_id(person: Staff) -> bool {
+    read_i32(person.addr()) >= read_i32(G_STAFF_COUNT) - 0x10
+}
+
+/// A human manager's vacancy whose arrival date came: without a classification the vacancy reopens; without a club or
+/// out of work for 90 days the club offers him the job (`FN_POST_JOB_OFFER_TO_HUMAN_NEWS`) and the vacancy reopens;
+/// otherwise the vacancy reopens too (the order of the list calls is the original's).
+pub(crate) unsafe fn human_vacancy_reached(this: usize, list: usize, item: VacancyItem, person: Staff, club: Club) {
+    if person.classification() == 0 {
+        clear_job_application_date(this, club);
+        exe::llist_remove(list, item.0);
+        add_job_vacancy(this, club.addr(), person.addr());
+    } else if person.club_job().is_null()
+        || exe::date_days_since(G_CURRENT_DATE, person.date_joined_club() as u32, person.date_joined_club_leap_year() as u32) >= 0x5a
+    {
+        covered!("sx14_3 offer to the human");
+        let offer: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_POST_JOB_OFFER_TO_HUMAN_NEWS);
+        offer(this, club.addr(), person.addr());
+        exe::llist_remove(list, item.0);
+        add_job_vacancy(this, club.addr(), person.addr());
+    } else {
+        clear_job_application_date(this, club);
+        add_job_vacancy(this, club.addr(), person.addr());
+        exe::llist_remove(list, item.0);
+    }
+}
+
+/// The club the appointed person leaves: his national team (for a national team, unless his job there is 11), else
+/// his club; an AI manager going from a club to a national team with reputation above 6000 that is not a B team
+/// (`exe::club_is_national_team`) leaves his club too. None otherwise.
+pub(crate) unsafe fn previous_club(person: Staff, club: Club) -> Option<Club> {
+    let national = exe::database_is_national_team(club) != 0;
+    if national && !person.national_job().is_null() && person.job_for_nation() != 0xb {
+        return Some(person.national_job());
+    }
+    if !national && !person.club_job().is_null() {
+        return Some(person.club_job());
+    }
+    if !is_human_id(person) && national && exe::club_is_national_team(club) == 0 && club.reputation() > 0x1770 && !person.club_job().is_null() {
+        return Some(person.club_job());
+    }
+    None
+}
+
+/// Posts the appointment and frees the person from the club he leaves (`leave_*`), ending his contract
+/// (`exe::contract_manager_remove_contract`).
+pub(crate) unsafe fn release_appointed_person(this: usize, person: Staff, previous: Option<Club>, club: Club) {
+    let contracts = read_usize(G_CONTRACT_MANAGER);
+    let appoint = |from: usize, kind: u32| post_manager_appointment_news(this, person.addr(), from, club.addr(), kind);
+    if exe::database_is_national_team(club) == 0 {
+        match previous {
+            Some(from) if from == person.club_job() => {
+                let kind = leave_club_for_club(this, person, from);
+                appoint(from.addr(), kind);
+                exe::contract_manager_remove_contract(contracts, person);
+            }
+            Some(from) if !is_human_id(person) && from == person.national_job() => {
+                let kind = leave_national_team_for_club(this, person, from);
+                appoint(from.addr(), kind);
+                exe::contract_manager_remove_contract(contracts, person);
+            }
+            _ => appoint(0, 2),
+        }
+    } else {
+        match previous {
+            Some(from) if from == person.national_job() || from == person.club_job() => {
+                covered!("sx14_3 to a national team");
+                let kind = leave_for_national_team(this, person, from);
+                appoint(from.addr(), kind);
+                if exe::database_is_national_team(from) == 0 {
+                    exe::contract_manager_remove_contract(contracts, person);
+                }
+            }
+            _ => appoint(0, 2),
+        }
+    }
+}
+
+/// A player moving between two clubs goes into the past transfers (`exe::transfer_manager_add_past_transfer`): the
+/// person, his three name ids (−1 without a name), the new and the old club, no fee, type 5 and today.
+pub(crate) unsafe fn record_manager_move(person: Staff, previous: Club, club: Club) {
+    let mut rec = [0u8; 0x25];
+    let r = rec.as_mut_ptr() as usize;
+    exe::date_date_54a110(r + 0x1d);
+    write_i32(r, read_i32(person.addr()));
+    for (k, name) in [person.first_name(), person.second_name(), person.common_name()].into_iter().enumerate() {
+        write_i32(r + 4 + 4 * k, if name == 0 { -1 } else { read_i32(name + names::ID) });
+    }
+    write_i32(r + 0x10, read_i32(club.addr()));
+    write_i32(r + 0x14, read_i32(previous.addr()));
+    write_i32(r + 0x18, 0); // the fee
+    write_u8(r + 0x1c, 5); // a non-player job
+    manager_manager_copy_date(r + 0x1d, G_CURRENT_DATE);
+    exe::transfer_manager_add_past_transfer(read_usize(G_TRANSFER_MANAGER), rec.as_mut_ptr());
+}
+
+/// The person takes the club: the joining date, the club's manager, and at a club the job (a player-manager, job 0xc,
+/// with a free squad place, his reputation + 750 above the club's, fewer than 45 in the squad and outside Italy; else
+/// manager, job 5) and the board's wealth band; at a national team the national job (5).
+pub(crate) unsafe fn install_manager(this: usize, person: Staff, club: Club) {
+    if exe::database_is_national_team(club) != 0 {
+        manager_manager_copy_date(person.date_joined_nation_addr(), G_CURRENT_DATE);
+    } else {
+        manager_manager_copy_date(person.addr() + staff::DATE_JOINED_CLUB, G_CURRENT_DATE);
+    }
+    club.set_manager(person);
+    let row = board_row(this, club);
+    if exe::database_is_national_team(club) != 0 {
+        person.set_national_job(club);
+        write_u8(row + board_record::WEALTH_BAND, 0);
+        person.set_job_for_nation(5);
+        return;
+    }
+    person.set_club_job(club);
+    let player = person.player();
+    let nation = club.nation();
+    let free_place = if !player.is_null()
+        && (club.reputation() as i32) < player.current_reputation() as i32 + 0x2ee
+        && (exe::database_count_club_squad(club, 0, 0) as i8) < 0x2d
+        && !nation.is_null()
+        && read_i32(nation.addr()) != read_i32(KEY_NATION_ITALY)
+    {
+        (0..0x32).find(|&k| club.squad(k) == 0)
+    } else {
+        None
+    };
+    match free_place {
+        Some(k) => {
+            covered!("sx14_3 player-manager");
+            club.set_squad(k, person.addr());
+            person.set_job_for_club(0xc);
+            if exe::database_is_national_team(club) == 0 {
+                let contracts = read_usize(G_CONTRACT_MANAGER);
+                exe::contract_manager_remove_contract(contracts, person);
+                exe::contract_manager_add_staff_contract(contracts, person, person.value() as u32);
+                let squads = read_usize(G_SQUAD_MANAGER);
+                exe::squad_manager_set_squad_number(squads, person, club, 0);
+                if exe::squad_manager_club_uses_squad_numbers(squads, club, 0) != 0 {
+                    exe::squad_manager_allocate_squad_number(squads, club, 0usize);
+                }
+            }
+        }
+        None => person.set_job_for_club(5),
+    }
+    let finance = exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), club);
+    write_u8(row + board_record::WEALTH_BAND, if finance != 0 { exe::finance_get_wealth_band(finance) } else { 0 });
+}
+
+/// Moving to a club from his own club: frees his jobs there by his club job (`staff::JOB_FOR_CLUB`) and returns the
+/// appointment kind (1 a player, 3 a manager or player-manager, 2 otherwise).
+pub(crate) unsafe fn leave_club_for_club(this: usize, person: Staff, from: Club) -> u32 {
+    match person.job_for_club() as i8 {
+        5 => {
+            remove_staff(this, person, from);
+            3
+        }
+        6 | 8 => {
+            remove_staff(this, person, from);
+            2
+        }
+        0xb => {
+            remove_player(this, person, from);
+            1
+        }
+        0xc => {
+            remove_player(this, person, from);
+            remove_staff(this, person, from);
+            3
+        }
+        0xf => {
+            remove_player(this, person, from);
+            remove_staff(this, person, from);
+            2
+        }
+        _ => {
+            if person.non_player().is_null() {
+                person.set_job_for_club(0xb);
+            } else {
+                remove_staff(this, person, from);
+            }
+            if person.player().is_null() {
+                person.set_job_for_club(if person.non_player().is_null() { 0 } else { 8 });
+            } else {
+                remove_player(this, person, from);
+            }
+            2
+        }
+    }
+}
+
+/// An AI person moving to a club from his national team: frees his jobs by his national job
+/// (`staff::JOB_FOR_NATION`), although the default case writes his club job, and returns the appointment kind.
+pub(crate) unsafe fn leave_national_team_for_club(this: usize, person: Staff, from: Club) -> u32 {
+    match person.job_for_nation() as i8 {
+        5 | 0xc => {
+            remove_staff(this, person, from);
+            3
+        }
+        6 | 8 | 0xf => {
+            remove_staff(this, person, from);
+            2
+        }
+        0xb => 1,
+        _ => {
+            if person.non_player().is_null() {
+                person.set_job_for_club(0xb);
+            } else {
+                remove_staff(this, person, from);
+            }
+            if !person.player().is_null() {
+                remove_player(this, person, from);
+            } else {
+                person.set_job_for_club(if person.non_player().is_null() { 0 } else { 8 });
+            }
+            2
+        }
+    }
+}
+
+/// Moving to a national team: frees his jobs at the club or national team he leaves by his national job and returns
+/// the appointment kind; a job 15 without a player record shows the original's error box (line 0x6bb).
+pub(crate) unsafe fn leave_for_national_team(this: usize, person: Staff, from: Club) -> u32 {
+    match person.job_for_nation() as i8 {
+        5 => {
+            remove_staff(this, person, from);
+            3
+        }
+        6 | 8 => {
+            remove_staff(this, person, from);
+            2
+        }
+        0xb => {
+            remove_player(this, person, from);
+            1
+        }
+        0xc => {
+            remove_player(this, person, from);
+            remove_staff(this, person, from);
+            2
+        }
+        0xf => {
+            if person.player().is_null() {
+                show_error_at(0x9f18a4, 0x6bb);
+            } else {
+                remove_player(this, person, from);
+            }
+            remove_staff(this, person, from);
+            2
+        }
+        _ => {
+            if person.non_player().is_null() {
+                person.set_job_for_nation(0xb);
+            } else {
+                remove_staff(this, person, from);
+            }
+            if !person.player().is_null() {
+                remove_player(this, person, from);
+            } else {
+                person.set_job_for_club(if person.non_player().is_null() { 0 } else { 8 });
+            }
+            2
+        }
+    }
+}
+
+/// Frees the person's staff job at `from` when he has a manager record (`remove_staff_from_club`).
+pub(crate) unsafe fn remove_staff(this: usize, person: Staff, from: Club) {
+    if !person.non_player().is_null() {
+        remove_staff_from_club(this, person.addr(), from.addr());
+    }
+}
+
+/// The argument shapes of the board's match verdicts (the format call of each case of
+/// `build_board_match_reaction_text`): who comes first and whether the score is quoted.
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub(crate) enum BoardVerdictArgs {
+    /// friendly: the opponent's gender twice, the board, the score and the opponent's name
+    Friendly,
+    /// the opponent and the competition, the board, the opponent's name and the competition's short name
+    OpponentInComp,
+    /// as `OpponentInComp`, with the score after the board
+    OpponentInCompWithScore,
+    /// the competition first: its gender, the opponent's, the board, the score, the competition's short name and the
+    /// opponent's name
+    CompThenOpponentWithScore,
+}
+
+/// `MANAGER_MANAGER::post_job_offer_to_human_news` (0x6a4f80; thiscall(this, club, person), ret 8): the job offer to a
+/// human manager.
+pub(crate) const FN_POST_JOB_OFFER_TO_HUMAN_NEWS: usize = 0x6a4f80;
+
+/// The vacancy item (`manager_manager_fields::VACANCY_LIST`, 0x26 bytes): the rumour flags (+0 posted, +1 done), the
+/// linked candidate (+2), the chosen person (+6), the club (`job_vacancy::CLUB_ID`), the arrival date (+0x16 day,
+/// +0x18 year) and the rumour date (+0x1e day, +0x20 year).
+#[derive(Clone, Copy)]
+pub(crate) struct VacancyItem(pub(crate) usize);
+
+impl VacancyItem {
+    pub(crate) unsafe fn person(self) -> Staff {
+        staff_at(read_i32(self.0 + 6) as isize)
+    }
+    pub(crate) unsafe fn club(self) -> Club {
+        club_at(read_i32(self.0 + job_vacancy::CLUB_ID) as isize)
+    }
+    /// True once today is past the date at `day` (+0 day, +2 year).
+    pub(crate) unsafe fn date_passed(self, day: usize) -> bool {
+        let (today, year) = (read_i16(G_CURRENT_DATE), read_u16(G_CURRENT_DATE + 2));
+        let year_due = read_u16(self.0 + day + 2);
+        year > year_due || (year == year_due && today > read_i16(self.0 + day))
+    }
+}
+
+pub(crate) const FN_NATION_AWARDS_BASE_DAILY_UPDATE: usize = 0x768310;

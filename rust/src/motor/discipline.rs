@@ -2055,3 +2055,10 @@ pub(crate) static BAN_NEWS_DRY_RUN: AtomicBool = AtomicBool::new(false);
 
 /// The sends the dry run kept: (the club, or 0 for every human manager; the news item's first `news_item::ID` bytes).
 pub(crate) static BAN_NEWS_SENT: std::sync::Mutex<Vec<(usize, Vec<u8>)>> = std::sync::Mutex::new(Vec::new());
+
+/// Takes the person out of the squad of `from` when he has a player record (`manager_manager_remove_player_from_squad`).
+pub(crate) unsafe fn remove_player(this: usize, person: Staff, from: Club) {
+    if !person.player().is_null() {
+        manager_manager_remove_player_from_squad(this, person.addr(), from.addr());
+    }
+}

@@ -282,3 +282,37 @@ pub(crate) const MONTH_RATINGS_COUNT: usize = 0x4;
 pub(crate) const MONTH_RATINGS_CAPACITY: usize = 0x8;
 
 pub(crate) const MONTH_RATING_ENTRY_SIZE: u32 = 0xc;
+
+/// Builds an empty month ratings table: no entries (+0 pointer, +4 count, +8 capacity), month −1
+/// (`month_ratings_fields::MONTH`) and year 0 (`month_ratings_fields::YEAR`), so that the first day of play closes no
+/// month; with a save file, the table is then read from it (`MONTH_RATINGS::load_from_disk`). Returns `this`.
+/// Original: `MONTH_RATINGS::MONTH_RATINGS` (0x767af0, month_ratings.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn construct_month_ratings(this: usize, file: usize) -> usize {
+    covered!("sx04b_2 month ratings built");
+    write_u8(this + month_ratings_fields::MONTH, 0xff); // sx04b_2: no month yet
+    write_u16(this + month_ratings_fields::YEAR, 0);
+    write_u32(this, 0); // the entries
+    write_u32(this + 4, 0); // the count
+    write_u32(this + 8, 0); // the capacity
+    if file != 0 {
+        covered!("sx04b_2 month ratings loaded");
+        let load: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_MONTH_RATINGS_LOAD_FROM_DISK);
+        load(this, file);
+    }
+    this
+}
+
+/// Comparer for `construct_month_ratings`: side by side over the 0xf bytes of the table; with a save file (the load
+/// allocates) only the original.
+pub(crate) unsafe extern "thiscall" fn compare_construct_month_ratings(this: usize, file: usize) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_CONSTRUCT_MONTH_RATINGS);
+    if file != 0 {
+        return o(this, file);
+    }
+    let (r, n, equal, mo, mr) = crate::comparison::side_by_side(&[(this, 0xf)], || o(this, file), || construct_month_ratings(this, file));
+    SCOREBOARD.record(equal && r == n, || format!("construct_month_ratings original={:x?} rust={:x?}", mo, mr));
+    r
+}
+
+/// `MONTH_RATINGS::load_from_disk(file)` (0x767b20, month_ratings.cpp, thiscall, ret 4).
+pub(crate) const FN_MONTH_RATINGS_LOAD_FROM_DISK: usize = 0x767b20;

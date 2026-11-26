@@ -1,0 +1,1 @@
+Depende de: rx01_1, rx01_5, rx01_6, rx01_8, rx03_7. Integrar na mesma leva de telas que os rx01_* e os rx02_*, depois deles, com os rx03_* juntos (ha dependencias entre eles nos dois sentidos). Sem pares de RELATIVAS (prologos conferidos: fronteira de instrucao, >= 5 bytes, sem call/jmp relativo).

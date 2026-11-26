@@ -4104,8 +4104,27 @@ routines! {
     Prologue { address: 0x43f580, bytes: &[0x83, 0xec, 0x08, 0x53, 0x8b, 0xd9] } => cash_step_down, compare_cash_step_down;
     Prologue { address: 0x4415e0, bytes: &[0xa0, 0x40, 0xb1, 0x98, 0x00] } => cash_get_currency, compare_cash_get_currency;
     Prologue { address: 0x43f350, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x8b, 0xc8] } => swap_bytes_64_array, compare_swap_bytes_64_array;
+    Prologue { address: 0x5ce2d0, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] } => game_daily_staff_update, compare_game_daily_staff_update;
+    Prologue { address: 0x6a69c0, bytes: &[0x81, 0xec, 0xe8, 0x0c, 0x00, 0x00] } => build_board_match_reaction_text, compare_build_board_match_reaction_text;
+    Prologue { address: 0x6a6310, bytes: &[0x6a, 0xff, 0x68, 0x2b, 0xcf, 0x95, 0x00] } => news_board_match_reaction_text, compare_news_board_match_reaction_text;
+    Prologue { address: 0x68f9c0, bytes: &[0x6a, 0xff, 0x68, 0x56, 0xcc, 0x95, 0x00] } => daily_update, compare_daily_update;
+    Prologue { address: 0x768290, bytes: &[0x8b, 0xc1, 0x33, 0xc9, 0xc7, 0x00, 0x10, 0xda, 0x96, 0x00] } => construct_nation_awards, compare_construct_nation_awards;
+    Prologue { address: 0x767af0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] } => construct_month_ratings, compare_construct_month_ratings;
+    Prologue { address: 0x766e10, bytes: &[0x6a, 0xff, 0x68, 0x88, 0xdb, 0x95, 0x00] } => construct_month_award, compare_construct_month_award;
+    Prologue { address: 0x767330, bytes: &[0x6a, 0xff, 0x68, 0xab, 0xdb, 0x95, 0x00] } => month_award_post_winner_news, compare_month_award_post_winner_news;
+    Prologue { address: 0x767580, bytes: &[0x81, 0xec, 0x80, 0x02, 0x00, 0x00] } => month_award_write_news, compare_month_award_write_news;
+    Prologue { address: 0x7683a0, bytes: &[0x8b, 0x49, 0x0a, 0x85, 0xc9] } => nation_awards_record_match_ratings, compare_nation_awards_record_match_ratings;
+    Prologue { address: 0x7683c0, bytes: &[0x81, 0xec, 0x60, 0x02, 0x00, 0x00] } => nation_awards_award_player_of_year_from_ratings, compare_nation_awards_award_player_of_year_from_ratings;
+    Prologue { address: 0x770d20, bytes: &[0x6a, 0xff, 0x68, 0xbb, 0xde, 0x95, 0x00] } => write_club_players_international_text, compare_write_club_players_international_text;
+    Prologue { address: 0x76e3b0, bytes: &[0x81, 0xec, 0x78, 0x04, 0x00, 0x00] } => write_call_up_news_text, compare_write_call_up_news_text;
+    Prologue { address: 0x7779e0, bytes: &[0x6a, 0xff, 0x68, 0xbb, 0xdf, 0x95, 0x00] } => post_qualified_nations_news, compare_post_qualified_nations_news;
+    Prologue { address: 0x777ca0, bytes: &[0x81, 0xec, 0x20, 0x06, 0x00, 0x00] } => write_qualified_nations_text, compare_write_qualified_nations_text;
+    Prologue { address: 0x775420, bytes: &[0x83, 0xec, 0x08, 0x8b, 0x44, 0x24, 0x0c] } => clear_competition_for_comp_clubs, compare_clear_competition_for_comp_clubs;
+    Prologue { address: 0x7777e0, bytes: &[0x6a, 0xff, 0x68, 0x98, 0xdf, 0x95, 0x00] } => reschedule_clashing_club_fixtures, compare_reschedule_clashing_club_fixtures;
+    Prologue { address: 0x744240, bytes: &[0x6a, 0xff, 0x68, 0x06, 0xd8, 0x95, 0x00] } => post_player_praise_story, compare_post_player_praise_story;
+    Prologue { address: 0x72c1f0, bytes: &[0x6a, 0xff, 0x68, 0x86, 0xd6, 0x95, 0x00] } => create_player_media_story, compare_create_player_media_story;
 }
-const N: usize = 3946;
+const N: usize = 3965;
 include!(concat!(env!("OUT_DIR"), "/indices.rs")); // IDX_<NAME>: the position of each routine (build.rs)
 
 /// Size of the engine object (the game allocates it with new(0xf63b)): side 1's block (+0xf5f2, 0x36
@@ -5582,6 +5601,97 @@ pub(crate) use self::zipdir::*;
 
 compare_value!(compare_staff_criterion, staff_criterion, IDX_STAFF_CRITERION, () -> u32);
 
+// ---------- gra_2c: the daily staff update (game.cpp): game_daily_staff_update, the whole routine ----------
+//
+// `game_daily_staff_update` (0x5ce2d0, game.cpp, cdecl, 30,544 bytes) runs every day over the staff table. Ported
+// from the disassembly in named pieces, in the original's order (gra_2, gra_2b, gra_2c); every routine of the exe it
+// calls goes through the exe's address (the hooked ones too), so the game passes through their hooks. Proven by the
+// emulation of the whole routine against the original (levas/fila/gra_2c/check_routine.py).
+
+// ---------- the development day (0x5d3d09..0x5d5771) ----------
+
+/// The locals of one development day, as the original keeps them in its frame.
+struct Development {
+    /// The person (`ebp`) and his player sheet (`esi`).
+    p: usize,
+    pd: usize,
+    /// The club job ([esp+0x30], `ebx`).
+    club: usize,
+    /// The age byte ([esp+0x3f]).
+    age: i8,
+    /// The age factor ([esp+0x20], a float): positive while the player still develops, negative when he declines.
+    x: f32,
+    /// The stamina mark ([esp+0x48], a byte): added to the stamina change.
+    mark: i8,
+    /// A long injury cut the growth ([esp+0x58]).
+    injured: bool,
+    /// The day's growth (the short [esp+0x28]); its final value also marks the day as changed.
+    growth: i16,
+    /// The physical attributes' step (the short [esp+0x5c]): the second growth step, at least -8.
+    step: i16,
+    /// The growth as it was when the ability moved ([esp+0x2c] from 0x5d4897).
+    saved_growth: i32,
+}
+
+// ---------- batch 337: the news text on how a club's players did for their nation (national_teams.cpp) ----------
+
+/// One argument of a club-players-international template, in the order the original pushes it. The genders and the
+/// fixture label's gender are pushed twice (sign-extended), as every `{}` pair of the template reads them.
+#[derive(Clone, Copy)]
+enum IntlArg {
+    /// the club's `gender_name` (+0x37), twice
+    ClubGender,
+    /// the national side's `short_gender_name` (+0x52), twice
+    NationGender,
+    /// the opponent side's `short_gender_name`, twice
+    OpponentGender,
+    /// the fixture label's gender (`exe::comp_util_get_label_gender`), twice
+    FixtureGender,
+    /// how many players the club had, minus one (once, a `%d`)
+    Others,
+    /// the club's name (+4)
+    ClubName,
+    /// the subject's name, mode 1: the first player (no highlight) or the highlighted player
+    Subject,
+    /// the first player's name, mode 5
+    PlayerShort,
+    /// the highlighted player's name, mode 5
+    HighlightShort,
+    /// the list of the club's players ("A and B", "A, B and C"...)
+    PlayerList,
+    /// the national side's name
+    Nation,
+    /// the opponent side's name
+    Opponent,
+    /// the score line, highest first ("2-1")
+    Score,
+    /// the fixture label ("friendly" lowercased)
+    Fixture,
+}
+
+// The argument lists of the templates (the subject is the player or the highlighted player).
+
+/// A template and its arguments.
+type IntlLine = (usize, &'static [IntlArg]);
+
+/// One rule of a template tree: when `code & mask == mask` (the first that matches), the template for a draw of 0
+/// (`zero`) or any other draw (`other`).
+struct IntlRule {
+    mask: u8,
+    zero: IntlLine,
+    other: IntlLine,
+}
+
+const fn intl_rule(mask: u8, zero: IntlLine, other: IntlLine) -> IntlRule {
+    IntlRule { mask, zero, other }
+}
+
+// ---------- batch 337: the national teams leaving a competition and the club fixtures that clash with call-ups (national_teams.cpp) ----------
+
+// --- sx01e_1: Media::post_player_praise_story (0x744240, media.cpp) ---
+
+// --- sx01e_2: Media::create_player_media_story (0x72c1f0, media.cpp) ---
+
 // ---------- batch 336: loading the hall of fame file and the order of its entries (hall_of_fame.cpp; sx12_7) ----------
 
 // --- sx09b_1: the news item of a new ban (discipline.cpp) ---
@@ -5665,7 +5775,6 @@ pub(crate) struct NationAwardsClass {
 }
 
 pub(crate) const FN_NATION_AWARDS_TOP_THREE_FROM_RATINGS: usize = 0x769380;
-pub(crate) const FN_NATION_AWARDS_BASE_DAILY_UPDATE: usize = 0x768310;
 
 /// The top three of the year ratings for `award` (`nation_awards_award_top_three_from_ratings`) with the seven
 /// filters as the nation passes them.
@@ -5673,12 +5782,6 @@ pub(crate) unsafe fn award_top_three_from_ratings(this: usize, today: usize, awa
     let f: unsafe extern "thiscall" fn(usize, usize, usize, i32, i32, i32, i32, i32, i32, i32) = core::mem::transmute(FN_NATION_AWARDS_TOP_THREE_FROM_RATINGS);
     let [a, b, c, d, e, g, h] = filters;
     f(this, today, award, a, b, c, d, e, g, h)
-}
-
-/// The base daily update of a nation's awards (`NationAwards::daily_update`: the month change).
-pub(crate) unsafe fn nation_awards_base_daily_update(this: usize, today: usize) {
-    let f: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_NATION_AWARDS_BASE_DAILY_UPDATE);
-    f(this, today)
 }
 
 /// The comparer of a nation awards constructor: it allocates (and may load); only the original runs, then the object
