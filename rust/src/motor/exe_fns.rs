@@ -2137,3 +2137,4 @@ pub const FN_CUP_STAGE_CUP_STAGE_5230E0: usize = 0x5230e0; // Cup_Stage::Cup_Sta
 pub const FN_CUP_STAGE_LOAD_FROM_FILE: usize = 0x523380; // Cup_Stage::load_from_file
 pub const FN_LEAGUE_STAGE_LEAGUE_STAGE_68B4F0: usize = 0x68b4f0; // League_Stage::League_Stage
 pub const FN_LEAGUE_STAGE_LOAD_FROM_FILE: usize = 0x68b720; // League_Stage::load_from_file
+pub const FN_GRECUP_CREATE_GROUP_STAGE: usize = 0x5e9650; // GreCup::create_group_stage

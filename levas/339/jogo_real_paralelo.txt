@@ -1,0 +1,11 @@
+    pool nao paginado 1.82 -> 2.00 GB, paginado 4.42 -> 5.20 GB
+execucao 1: parou em 2002-212, 5803746567 sorteios, impressao 86ce41a16f08503b, partidas 39352/826cf9377586730a, banco b07079a72520cd8e, 17156 s
+    date: 1000000000 comparacoes, 0 divergencias
+    engine: 100000000000 comparacoes, 0 divergencias
+    random: 10000000000 comparacoes, 0 divergencias
+game.cfg restaurado; auto_setup.cfg removido
+engine: DIVERGENCE write_team_media_story_news_text(kind 96, body 1, piece escaping relegation (0x60), unset false) original "O treinador adjunto{} do Fenerbah�e Oguz �etin prev� que o Mardinspor consiga fugir � despromo��o na 2�Divis�o B esta �poca.\n\nVoc� decidiu ignorar esta 
+engine: DIVERGENCE newsitem_write_text(category 4, type 0xbdf, body 1, flag 0, piece ): original "O treinador adjunto do Fenerbah�e Oguz �etin prev� que o Mardinspor consiga fugir � despromo��o na 2�Divis�o B esta �poca.\n\nVoc� decidiu ignorar esta not�cia." [("Oguz �etin", 
+date: 1000000000 comparisons, 0 divergences
+random: 10000000000 comparisons, 0 divergences
+engine: 100000000000 comparisons, 0 divergences

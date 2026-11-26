@@ -4145,8 +4145,39 @@ routines! {
     Prologue { address: 0x916cd0, bytes: &[0x6a, 0xff, 0x68, 0x9c, 0x58, 0x96, 0x00] } => wc_concacaf_cup_create_central_american_groups, compare_wc_concacaf_cup_create_central_american_groups;
     Prologue { address: 0x915e40, bytes: &[0x6a, 0xff, 0x68, 0x68, 0x58, 0x96, 0x00] } => wc_concacaf_cup_update_for_date, compare_wc_concacaf_cup_update_for_date;
     Prologue { address: 0x918200, bytes: &[0x6a, 0xff, 0x68, 0x57, 0x59, 0x96, 0x00] } => construct_wc_europe_league, compare_construct_wc_europe_league;
+    Prologue { address: 0x7cc490, bytes: &[0x8b, 0x15, 0x58, 0xf8, 0x9c, 0x00] } => pol_second_update_staff_records_for_status, compare_pol_second_update_staff_records_for_status;
+    Prologue { address: 0x7cc680, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x28] } => pol_second_build_fate_news_text, compare_pol_second_build_fate_news_text;
+    Prologue { address: 0x7cc800, bytes: &[0x8b, 0x49, 0x08, 0x53, 0x56] } => pol_second_set_club_progress, compare_pol_second_set_club_progress;
+    Prologue { address: 0x901800, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => tur_second_b_get_club_array, compare_tur_second_b_get_club_array;
+    Prologue { address: 0x901950, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => tur_second_b_set_predicted_positions, compare_tur_second_b_set_predicted_positions;
+    Prologue { address: 0x901ac0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] } => tur_second_b_set_club_progress, compare_tur_second_b_set_club_progress;
+    Prologue { address: 0x9012d0, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => tur_second_b_update_staff_records_for_status, compare_tur_second_b_update_staff_records_for_status;
+    Prologue { address: 0x9015f0, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0x56] } => tur_second_b_build_fate_news_text, compare_tur_second_b_build_fate_news_text;
+    Prologue { address: 0x901ba0, bytes: &[0x51, 0x53, 0x55, 0x56, 0x57] } => tur_second_b_record_final_positions, compare_tur_second_b_record_final_positions;
+    Prologue { address: 0x900780, bytes: &[0x6a, 0xff, 0x68, 0xae, 0x50, 0x96, 0x00] } => tur_second_b_create_group_stage, compare_tur_second_b_create_group_stage;
+    Prologue { address: 0x900ab0, bytes: &[0x6a, 0xff, 0x68, 0xce, 0x50, 0x96, 0x00] } => tur_second_b_create_promotion_group, compare_tur_second_b_create_promotion_group;
+    Prologue { address: 0x900d00, bytes: &[0x6a, 0xff, 0x68, 0xee, 0x50, 0x96, 0x00] } => tur_second_b_create_classification_groups, compare_tur_second_b_create_classification_groups;
+    Prologue { address: 0x4c0a40, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x4c, 0x24, 0x08] } => compare_clubs_by_last_division, compare_compare_clubs_by_last_division;
+    Prologue { address: 0x5e8bf0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => gre_cup_create_schedule, compare_gre_cup_create_schedule;
+    Prologue { address: 0x5e9260, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => gre_cup_create_table, compare_gre_cup_create_table;
+    Prologue { address: 0x5e9650, bytes: &[0x6a, 0xff, 0x68, 0x8e, 0xa9, 0x95, 0x00] } => gre_cup_create_group_stage, compare_gre_cup_create_group_stage;
+    Prologue { address: 0x5e88a0, bytes: &[0x6a, 0xff, 0x68, 0x49, 0xa9, 0x95, 0x00] } => construct_gre_cup, compare_construct_gre_cup;
+    Prologue { address: 0x5e9850, bytes: &[0x6a, 0xff, 0x68, 0xae, 0xa9, 0x95, 0x00] } => gre_cup_create_knockout_stage, compare_gre_cup_create_knockout_stage;
+    Prologue { address: 0x5e9350, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0xb0, 0x04] } => gre_cup_set_up_rules, compare_gre_cup_set_up_rules;
+    Prologue { address: 0x5e93f0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => gre_cup_start_new_season, compare_gre_cup_start_new_season;
+    Prologue { address: 0x5ea060, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] } => gre_cup_set_predicted_positions, compare_gre_cup_set_predicted_positions;
+    Prologue { address: 0x5e95c0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => gre_cup_advance_stage, compare_gre_cup_advance_stage;
+    Prologue { address: 0x7e9ec0, bytes: &[0x83, 0xec, 0x10, 0x53, 0x8b, 0x5c, 0x24, 0x1c] } => rus_cup_update_for_date, compare_rus_cup_update_for_date;
+    Prologue { address: 0x516060, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => cro_a2a_advance_stage, compare_cro_a2a_advance_stage;
+    Prologue { address: 0x5160f0, bytes: &[0x6a, 0xff, 0x68, 0x2e, 0x74, 0x95, 0x00] } => cro_a2a_create_tiebreak_playoff_stage, compare_cro_a2a_create_tiebreak_playoff_stage;
+    Prologue { address: 0x516360, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x53] } => cro_a2a_update_for_date, compare_cro_a2a_update_for_date;
+    Prologue { address: 0x5150f0, bytes: &[0xa1, 0xfc, 0xad, 0xad, 0x00] } => cro_a1_process_promotion_relegation_chain, compare_cro_a1_process_promotion_relegation_chain;
+    Prologue { address: 0x515190, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => cro_a1_realign_second_division_groups, compare_cro_a1_realign_second_division_groups;
+    Prologue { address: 0x7ca2a0, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x3c, 0x01] } => pol_first_update_staff_records_for_status, compare_pol_first_update_staff_records_for_status;
+    Prologue { address: 0x7ca320, bytes: &[0x53, 0x8a, 0x5c, 0x24, 0x10] } => pol_first_build_fate_news_text, compare_pol_first_build_fate_news_text;
+    Prologue { address: 0x7ca3f0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] } => pol_first_set_club_progress, compare_pol_first_set_club_progress;
 }
-const N: usize = 3987;
+const N: usize = 4018;
 include!(concat!(env!("OUT_DIR"), "/indices.rs")); // IDX_<NAME>: the position of each routine (build.rs)
 
 /// Size of the engine object (the game allocates it with new(0xf63b)): side 1's block (+0xf5f2, 0x36
@@ -5625,6 +5656,10 @@ pub(crate) use self::zipdir::*;
 // ---------- 161st batch: watch list, position code and staff criterion ----------
 
 compare_value!(compare_staff_criterion, staff_criterion, IDX_STAFF_CRITERION, () -> u32);
+
+// ---------- cx01_9: the order of clubs by their last division (comp_util.cpp, used by the Turkish cup) ----------
+
+compare_order!(compare_compare_clubs_by_last_division, compare_clubs_by_last_division, IDX_COMPARE_CLUBS_BY_LAST_DIVISION);
 
 // ---------- sx05b_3: the year award's winners and their news (award/year_award.cpp) ----------
 

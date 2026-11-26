@@ -8089,6 +8089,7 @@ pub(crate) unsafe fn story_strcat(dst: usize, src: usize) {
 /// Original: `Media::write_team_media_story_news_text` (0x74bbd0, media.cpp, thiscall, ret 0xc).
 pub(crate) unsafe extern "thiscall" fn write_team_media_story_news_text(_this: usize, news: usize, body: u32, out: usize) {
     TEAM_TEXT_UNSET.store(false, Relaxed);
+    PRAISE_JOB_GENDER_UNSET.store(false, Relaxed);
     let mut s = Box::new(team_text_read(news));
     team_text_names(&mut s);
     team_text_outlet(&mut s);
@@ -8124,7 +8125,8 @@ pub(crate) unsafe extern "thiscall" fn compare_write_team_media_story_news_text(
     exe::drop_text(local.as_mut_ptr());
     mo.1.drain(..before.min(mo.1.len()));
     let unset = TEAM_TEXT_UNSET.load(Relaxed);
-    let text_same = mo.0 == mr.0 || (unset && mo.0.ends_with(&mr.0));
+    let text_same = mo.0 == mr.0 || (unset && mo.0.ends_with(&mr.0))
+        || (PRAISE_JOB_GENDER_UNSET.load(Relaxed) && same_but_job_gender(&mo.0, &mr.0));
     let piece = TEAM_TEXT_PIECE.lock().map(|p| *p).unwrap_or("");
     let show = |t: &(Vec<u8>, Vec<(Vec<u8>, u32, u32)>)| {
         format!("{:?} {:x?}", String::from_utf8_lossy(&t.0), t.1.iter().map(|l| (String::from_utf8_lossy(&l.0).into_owned(), l.1, l.2)).collect::<Vec<_>>())
@@ -10445,6 +10447,10 @@ impl TeamText {
     }
     /// The name and gender of the person's club job (`database_get_job_name`).
     pub(crate) unsafe fn job(&self) -> (usize, i32) {
+        // 0x53ad00 writes the gender only in language 4: the original formats with a stack byte otherwise
+        if exe::langlib_get_language() != 4 {
+            PRAISE_JOB_GENDER_UNSET.store(true, Relaxed);
+        }
         let mut g: i8 = 0;
         let n = exe::database_get_job_name(self.person_job as u32, 0, 0, &mut g);
         (n, g as i32)

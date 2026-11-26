@@ -105,11 +105,26 @@ def do_lote(ordem_):
             lote.append(nome)
         else:
             pular(nome)
+    # 26/11/2026: nor ahead of an item further down the queue: the night round moved to the top went in without
+    # cx14_6 and rx09_3 (batch 339's first try, 10 build errors). Moving items is by hand, so this only stops.
+    # Only the crate-visible definitions of the items further down count (a local `fn group` is not a dependency).
+    def codigo_de(nome):
+        return sem_comentarios(open(os.path.join(FILA, nome, 'codigo.rs'), encoding='utf-8').read())
+    no_lote = set().union(*(set(DEF.findall(codigo_de(nome))) for nome in lote))
+    adiante = [nome for nome in ordem_[1:] if nome not in lote]
+    pulados.clear()
+    pulados.update(set().union(*(set(DEF_PUB.findall(codigo_de(nome))) for nome in adiante)) - definidos_no_motor - no_lote)
+    nomes_pulados.clear()
+    nomes_pulados.update(adiante)
+    faltam = [nome for nome in lote if depende_de_pulado(nome)]
+    if faltam:
+        sys.exit('itens que dependem de outros mais adiante na fila (ver INTEGRAR_ANTES.txt e os nomes): %s' % faltam)
     return lote
 
 
 DEF = re.compile(r'\b(?:fn|struct|enum|const|static|type|mod|trait)\s+([A-Za-z_]\w*)')
 IDENT = re.compile(r'\b[A-Za-z_]\w*\b')
+DEF_PUB = re.compile(r'^pub\(crate\)\s+(?:unsafe\s+)?(?:extern\s+"[^"]+"\s+)?(?:fn|struct|enum|const|static|type|trait)\s+([A-Za-z_]\w*)', re.M)
 
 
 def sem_comentarios(codigo):

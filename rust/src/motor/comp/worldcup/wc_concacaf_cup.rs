@@ -177,7 +177,7 @@ pub(crate) unsafe extern "thiscall" fn wc_concacaf_cup_rank_teams(this: usize) {
     if stats == 0 {
         return show_error_at(wt::WC_CONCACAF_CUP_CPP, 0x7cf);
     }
-    let n = read_u32(this.addr() + 0xb6); // the entrant count
+    let n = read_u32(this.addr() + league::NEXT_DRAW_DAY); // the entrant count
     let v = exe::crt_malloc(n << 2);
     if v == 0 {
         return show_error_at(wt::WC_CONCACAF_CUP_CPP, 0x7d7);
@@ -186,7 +186,7 @@ pub(crate) unsafe extern "thiscall" fn wc_concacaf_cup_rank_teams(this: usize) {
     predicted_by_reputation_sort(v, n);
     let national_teams = read_usize(G_NATIONAL_TEAMS);
     exe::nationalteams_release_competitions_of_continent(national_teams, read_usize(G_CONTINENT_TABLE).wrapping_add(read_usize(KEY_CONTINENT_NORTH_AMERICA).wrapping_mul(0xc6)), 0);
-    let exempt = read_u8(this.addr() + 0xba) as i8 as i32; // the exempt North Americans (hosts and holder)
+    let exempt = (this.round_dates() as u8) as i8 as i32; // the exempt North Americans (hosts and holder)
     covered!("cx16_1 concacaf predicted positions");
     for (k, p) in concacaf_predicted_positions(n as i32, exempt).into_iter().enumerate() {
         exe::comp_stats_set_club_final_position(stats, read_usize(v + k * 4), p);
@@ -483,7 +483,7 @@ pub(crate) unsafe extern "thiscall" fn wc_concacaf_cup_update_for_date(this: usi
         exe::nationalteams_release_competitions_of_continent(national_teams, read_usize(G_CONTINENT_TABLE).wrapping_add(read_usize(KEY_CONTINENT_NORTH_AMERICA).wrapping_mul(0xc6)), 0);
         let list = read_usize(this.addr() + wc_cup_turnover_consts::CUP_ENTRANT_LIST);
         let mut k = 0i16;
-        while (k as i32) < read_u32(this.addr() + 0xb6) as i32 {
+        while (k as i32) < read_u32(this.addr() + league::NEXT_DRAW_DAY) as i32 {
             let team = Club(read_usize(list + k as usize * 4));
             if !team.is_null() {
                 exe::nationalteams_set_current_competition(national_teams, team.nation().addr(), record);
@@ -518,7 +518,7 @@ pub(crate) unsafe extern "thiscall" fn compare_wc_concacaf_cup_update_for_date(t
     if busy {
         let record = this.competition().addr();
         let list = read_usize(this.addr() + 0xb2);
-        let n = read_u32(this.addr() + 0xb6) as i32;
+        let n = read_u32(this.addr() + league::NEXT_DRAW_DAY) as i32;
         let free: Vec<usize> = (0..n.clamp(0, 64) as usize)
             .map(|k| Club(read_usize(list + k * 4)))
             .filter(|t| !t.is_null() && !t.nation().is_null() && exe::nationalteams_get_current_competition(read_usize(G_NATIONAL_TEAMS), t.nation().addr()) != record)
@@ -549,7 +549,7 @@ pub(crate) fn concacaf_predicted_positions(n: i32, exempt: i32) -> Vec<u32> {
 /// national team's current competition.
 pub(crate) unsafe fn concacaf_entrant_marks(this: usize) -> Vec<(usize, u8, usize)> {
     let this = League(this);
-    let (stats, list, n) = (this.comp_stats(), read_usize(this.addr() + 0xb2), read_u32(this.addr() + 0xb6) as i32);
+    let (stats, list, n) = (this.comp_stats(), read_usize(this.addr() + 0xb2), read_u32(this.addr() + league::NEXT_DRAW_DAY) as i32);
     if stats == 0 || list == 0 || !(0..=64).contains(&n) {
         return Vec::new();
     }

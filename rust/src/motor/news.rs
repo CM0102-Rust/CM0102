@@ -1051,7 +1051,7 @@ pub(crate) unsafe extern "thiscall" fn compare_newsitem_write_text(news: usize, 
     // `out`): with a great player's job outside language 4 the two original runs format with different leftovers of
     // the stack byte 0x53ad00 leaves unset, and one text keeps the "{}" after the job ("treinador{} da Escócia"). The
     // flag is the last praise run's (the copy side's, on this item); it is cleared first so another item's is not read
-    let praise = cat == 4 && ty == 0xbdd;
+    let praise = cat == 4 && (ty == 0xbdd || ty == 0xbdf); // the player praise and the team media story
     PRAISE_JOB_GENDER_UNSET.store(false, Relaxed);
     compare_text_writer_tolerant(out, || ro.set(o(news, manager, out, body, flag)), |t| rr.set(newsitem_write_text(news, manager, t, body, flag)),
         || format!("newsitem_write_text(category {}, type {:#x}, body {}, flag {}, piece {})", cat, ty, body, flag, NEWS_LAST_PIECE),

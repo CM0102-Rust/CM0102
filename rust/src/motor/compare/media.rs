@@ -490,7 +490,7 @@ pub(crate) fn same_but_job_gender(a: &[u8], b: &[u8]) -> bool {
 
 #[cfg(test)]
 #[test]
-fn same_but_job_gender_accepts_only_the_article_and_marks() {
+pub(crate) fn same_but_job_gender_accepts_only_the_article_and_marks() {
     assert!(same_but_job_gender(b"presidente{} do Bayern", b"O presidente do Bayern"));
     assert!(same_but_job_gender(b"disse A Ana", b"disse Ana{}"));
     assert!(same_but_job_gender(b"treinador{} da Escocia", b"treinador da Escocia"));
