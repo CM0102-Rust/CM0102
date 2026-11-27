@@ -476,6 +476,15 @@ pub(crate) fn same_but_job_gender(a: &[u8], b: &[u8]) -> bool {
     if a == b {
         return true;
     }
+    // a short word changed for another ("os jogador" x "o jogador"): the same words but one, both of up to 3 letters
+    let (wa, wb): (Vec<&[u8]>, Vec<&[u8]>) = (a.split(|&c| c == b' ').collect(), b.split(|&c| c == b' ').collect());
+    let short = |w: &[u8]| (1..=3).contains(&w.len()) && w.iter().all(|c| c.is_ascii_alphabetic());
+    if wa.len() == wb.len() {
+        let diff: Vec<usize> = (0..wa.len()).filter(|&k| wa[k] != wb[k]).collect();
+        if diff.len() == 1 && short(wa[diff[0]]) && short(wb[diff[0]]) {
+            return true;
+        }
+    }
     let (s, l) = if a.len() < b.len() { (a, b) } else { (b, a) };
     let k = l.len() - s.len();
     let i = s.iter().zip(l.iter()).take_while(|(x, y)| x == y).count();
@@ -495,6 +504,8 @@ pub(crate) fn same_but_job_gender_accepts_only_the_article_and_marks() {
     assert!(same_but_job_gender(b"disse A Ana", b"disse Ana{}"));
     assert!(same_but_job_gender(b"treinador{} da Escocia", b"treinador da Escocia"));
     assert!(!same_but_job_gender(b"presidente do Bayern", b"O presidente do Porto"));
+    assert!(same_but_job_gender(b"escolheu os jogador do Hamilton", b"escolheu o jogador do Hamilton"));
+    assert!(!same_but_job_gender(b"escolheu os jogador do Hamilton", b"escolheu o goleiro do Hamilton"));
     assert!(!same_but_job_gender(b"presidente do Bayern", b"Um longo presidente do Bayern"));
 }
 

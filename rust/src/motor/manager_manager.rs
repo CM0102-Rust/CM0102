@@ -5703,6 +5703,10 @@ pub(crate) unsafe extern "stdcall" fn news_manager_appointment_text(news: usize,
         format(buf, 0xa09e18, gn, gn, newn, nm);
     } else {
         let job_name = |gender: &mut i8| {
+            // 0x53ad00 writes the gender only in language 4: the original formats with a stack byte otherwise
+            if exe::langlib_get_language() != 4 {
+                PRAISE_JOB_GENDER_UNSET.store(true, Relaxed);
+            }
             let f: unsafe extern "C" fn(u32, u32, u32, *mut i8) -> usize = core::mem::transmute(manager_text_fns::GET_JOB_NAME);
             f(s[7] as u8 as u32, 0, 0, gender)
         };
@@ -5764,8 +5768,10 @@ pub(crate) unsafe extern "stdcall" fn news_manager_appointment_text(news: usize,
 /// Comparer for `news_manager_appointment_text` (`compare_text_writer`).
 pub(crate) unsafe extern "stdcall" fn compare_news_manager_appointment_text(news: usize, body: u32, out: usize) {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, u32, usize)>(IDX_NEWS_MANAGER_APPOINTMENT_TEXT);
-    compare_text_writer(out, || o(news, body, out), |t| news_manager_appointment_text(news, body, t),
-        || format!("news_manager_appointment_text(body {})", body));
+    // the old job's title gender is the original's unset stack byte outside language 4 (PRAISE_JOB_GENDER_UNSET)
+    PRAISE_JOB_GENDER_UNSET.store(false, Relaxed);
+    compare_text_writer_tolerant(out, || o(news, body, out), |t| news_manager_appointment_text(news, body, t),
+        || format!("news_manager_appointment_text(body {})", body), || PRAISE_JOB_GENDER_UNSET.load(Relaxed));
 }
 
 /// Writes the headline or body of a story about board pressure on a manager: a shortlist for his job, a rumour, or the

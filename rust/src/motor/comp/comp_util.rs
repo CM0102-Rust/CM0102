@@ -992,8 +992,8 @@ pub(crate) unsafe extern "C" fn compare_comp_util_write_cup_tie_result_news(club
 /// (plural name): id 0 prints the string at 0xad9c64 (sprintf `exe::crt_sprintf`, the string as the format); an id of
 /// the form's table (`STAGE_NAMES_FULL`, `STAGE_NAMES_SHORT`, `STAGE_NAMES_PLURAL`: 322, 322 and 321 ids from 1 to
 /// 1155, extracted by following the original's switches for every id and form) prints its text (langlib_sprintf
-/// `FN_LANGLIB_SPRINTF`, the text as the format, no arguments: the "<%s - ...>" parts are translator comments the
-/// langlib drops); any other id writes "Cannot find index %d" with the id into the global text buffer 0xde1f64 and
+/// `FN_LANGLIB_SPRINTF`, the text as the format and the empty text 0xad9c64 as its argument, which the 40 texts with a
+/// "<%s - COMMENT ...>" part print); any other id writes "Cannot find index %d" with the id into the global text buffer 0xde1f64 and
 /// leaves `buf` as it is. Any other form: the error box of line 0x15e2.
 /// Original: `comp_util_get_stage_name` (0x4b4850, comp_util.cpp, cdecl).
 pub(crate) unsafe extern "C" fn comp_util_get_stage_name(buf: usize, size: i32, id: u32, form: u32) -> usize {
@@ -1021,7 +1021,9 @@ pub(crate) unsafe extern "C" fn comp_util_get_stage_name(buf: usize, size: i32, 
     match table.binary_search_by_key(&id, |e| e.0) {
         Ok(k) => {
             covered!("cqy_3 stage name");
-            lang_sprintf(buf, table[k].1);
+            // the empty text as the argument, as the original pushes it for its 40 texts with a "<%s - COMMENT"
+            // part (0x4b9043 for id 1106); the texts without a conversion do not read it (fixed 26/11/2026)
+            lang_sprintf(buf, table[k].1, 0xad9c64usize);
         }
         Err(_) => {
             covered!("cqy_3 stage name not found");

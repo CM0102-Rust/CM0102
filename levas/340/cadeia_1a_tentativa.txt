@@ -1,0 +1,5 @@
+sem mutacao (437s): ['caixa do jogo: Error | v3.9.68 swe_second..cpp 643 [GetLastError 183] (436 s)']
+restaurado e recompilado
+base sem resultado: mutacoes canceladas
+=== MUTACOES FALHARAM
+=== FIM

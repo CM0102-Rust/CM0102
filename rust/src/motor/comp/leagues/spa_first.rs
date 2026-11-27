@@ -726,3 +726,161 @@ pub(crate) unsafe fn senior_in_second_division(club: usize, is_senior: &mut u32)
     }
     Some(senior.addr())
 }
+
+/// rule: at the Spanish turnover with a played Segunda B, the clubs relegated from its four groups go down to the
+/// generic lower division, and as many Spanish clubs of the lower division (one more when a group had 19 clubs), the
+/// strongest first, go up into the Segunda B; a reserve side whose first team is already in the Segunda B is skipped
+///
+/// Up to 200 candidates in club table order (`club_sides_count`): division [`KEY_CLUB_COMP_A_LOWER_DIVISION`] and
+/// nation [`KEY_NATION_SPAIN`]. For the Segunda B ([`KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B`]) and its stages 0 to 2
+/// (`league_group`): a group of 19 clubs sets the extra place; every row with `league_table_row::STATUS` 3 sends its club
+/// down (`exe::league_relegate_club_to_division`(this, club, the lower division's record, 1)) and clears its
+/// `club::RESERVE_DIVISION` [the dword at +0x60: here the Segunda B group]. The places are the relegated plus the extra
+/// one. Fewer candidates: the box of spa_first.cpp line 0x3b7 (the relegations stay). Otherwise the candidates are
+/// sorted (`exe::comp_util_sort_and_shuffle_top_clubs`(list, n, places)) and, in that order while places are left,
+/// each goes up (`exe::league_move_club_to_division`(this, club, the Segunda B record, 1)), unless it is a B team
+/// (`exe::club_get_linked_b_team`(club, &is_a, 1) gives a partner and is_a is 0) whose partner's division is the Segunda
+/// B.
+/// Original: `spa_first_exchange_second_division_b_clubs` (0x850300, spa_first.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn spa_first_exchange_second_division_b_clubs(this: usize) {
+    let this = League(this);
+    let mut list = [0usize; 200];
+    let mut n = 0usize;
+    for i in 0..club_sides_count().max(0) as usize {
+        let c = read_usize(G_CLUB_TABLE) + i * club::SIZE;
+        let d = read_usize(c + club::DIVISION);
+        let nation = read_usize(c + club::NATION);
+        if d != 0 && read_u32(d) == read_u32(KEY_CLUB_COMP_A_LOWER_DIVISION) && nation != 0 && read_u32(nation) == read_u32(KEY_NATION_SPAIN) {
+            list[n] = c;
+            n += 1;
+            if n == 200 {
+                break;
+            }
+        }
+    }
+    let second_b = League(comp_by_global(KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B));
+    let mut places = 0i16;
+    let mut extra = false;
+    for k in -1i8..3 {
+        let g = league_group(second_b, k);
+        if g.club_count() == 0x13 {
+            extra = true; // rx13_16: a group of 19
+        }
+        for r in 0..g.club_count().max(0) as usize {
+            let row = g.table() + r * 0x3b;
+            if read_u8(row + league_table_row::STATUS) == 3 {
+                exe::league_relegate_club_to_division(this, read_usize(row), comp_record_of_key(KEY_CLUB_COMP_A_LOWER_DIVISION), 1);
+                places += 1;
+                write_u32(read_usize(row) + club::RESERVE_DIVISION, 0);
+            }
+        }
+    }
+    if extra {
+        places += 1;
+    }
+    if (n as i16) < places {
+        show_error_at(SPA_FIRST_CPP, 0x3b7);
+        return;
+    }
+    covered!("rx13_16 segunda b exchange");
+    exe::comp_util_sort_and_shuffle_top_clubs(list.as_mut_ptr() as usize, n as u32, places as u16 as u32);
+    for &c in &list[..n] {
+        if places == 0 {
+            break;
+        }
+        let mut is_a = 0u32;
+        let partner = exe::club_get_linked_b_team(c, &mut is_a, 1);
+        if partner != 0 && is_a == 0 {
+            let d = read_usize(partner + club::DIVISION);
+            if d != 0 && read_u32(d) == read_u32(KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B) {
+                covered!("rx13_16 b team kept down");
+                continue;
+            }
+        }
+        exe::league_move_club_to_division(this, c, comp_record_of_key(KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B), 1);
+        places -= 1;
+    }
+}
+
+/// rule: the 80 Segunda B clubs are dealt into its four groups of 20 by geography: sorted from south to north by their
+/// stadium city, the 20 southernmost go to group 4; the other 60, sorted from west to east, 20 each to groups 1, 2 and
+/// 3; with a number other than 80 nothing is dealt (an error box)
+///
+/// In club table order (`club_sides_count`, stopping at 80), the clubs whose division is the Segunda B. Not 80: the
+/// box of spa_first.cpp line 0x3f7. Otherwise `exe::crt_qsort`(list, 80, 4, `CLUB_LATITUDE_COMPARE`), then the last 60
+/// with `CLUB_LONGITUDE_COMPARE`; entry k's `club::RESERVE_DIVISION` [the dword at +0x60: the Segunda B group] becomes
+/// the record of group 4 (k < 20), 1, 2 or 3.
+/// Original: `spa_first_assign_second_division_b_groups` (0x850530, spa_first.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn spa_first_assign_second_division_b_groups(_this: usize) {
+    let groups = [KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B4, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B1,
+        KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B2, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B3].map(|k| comp_record_of_key(k));
+    let mut list = [0usize; 80];
+    let mut n = 0usize;
+    for i in 0..club_sides_count().max(0) as usize {
+        let c = read_usize(G_CLUB_TABLE) + i * club::SIZE;
+        let d = read_usize(c + club::DIVISION);
+        if d != 0 && read_u32(d) == read_u32(KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B) {
+            list[n] = c;
+            n += 1;
+            if n == 80 {
+                break;
+            }
+        }
+    }
+    if n != 80 {
+        show_error_at(SPA_FIRST_CPP, 0x3f7);
+        return;
+    }
+    covered!("rx13_16 segunda b groups");
+    exe::crt_qsort(list.as_mut_ptr() as usize, 80, 4, CLUB_LATITUDE_COMPARE);
+    exe::crt_qsort(list[20..].as_mut_ptr() as usize, 60, 4, CLUB_LONGITUDE_COMPARE); // rx13_16: the northern 60 by longitude
+    for (k, &c) in list.iter().enumerate() {
+        write_usize(c + club::RESERVE_DIVISION, groups[k / 20]);
+    }
+}
+
+/// Comparer for `spa_first_exchange_second_division_b_clubs`: only the original runs (it draws in the sort and moves
+/// clubs); afterwards no relegated row of the four groups may still hold a club in the Segunda B.
+pub(crate) unsafe extern "thiscall" fn compare_spa_first_exchange_second_division_b_clubs(this: usize) {
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SPA_FIRST_EXCHANGE_SECOND_DIVISION_B_CLUBS)(this);
+    let second_b = League(comp_by_global(KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B));
+    let record = comp_record_of_key(KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B);
+    let wrong: Vec<usize> = (-1i8..3).flat_map(|k| {
+        let g = league_group(second_b, k);
+        (0..g.club_count().max(0) as usize).map(move |r| g.table() + r * 0x3b)
+    }).filter(|&row| read_u8(row + league_table_row::STATUS) == 3 && read_usize(read_usize(row) + club::DIVISION) == record)
+        .map(|row| read_usize(row)).collect();
+    SCOREBOARD.record(wrong.is_empty(), || format!("spa_first_exchange_second_division_b_clubs({:#x}) relegated clubs still in the Second B: {:x?}", this, wrong));
+}
+
+/// Comparer for `spa_first_assign_second_division_b_groups`: side by side over the +0x60 dword of the 80 clubs (the
+/// copy's sorts on a copy of the list give the same order).
+pub(crate) unsafe extern "thiscall" fn compare_spa_first_assign_second_division_b_groups(this: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SPA_FIRST_ASSIGN_SECOND_DIVISION_B_GROUPS);
+    let regions: Vec<(usize, usize)> = (0..club_sides_count().max(0) as usize)
+        .map(|i| read_usize(G_CLUB_TABLE) + i * club::SIZE)
+        .filter(|&c| { let d = read_usize(c + club::DIVISION); d != 0 && read_u32(d) == read_u32(KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B) })
+        .take(80)
+        .map(|c| (c + club::RESERVE_DIVISION, 4))
+        .collect();
+    let (_, _, equal, mo, mr) = crate::comparison::side_by_side(&regions, || o(this), || spa_first_assign_second_division_b_groups(this));
+    SCOREBOARD.record(equal, || format!("spa_first_assign_second_division_b_groups {:?}", first_differences(&mo, &mr)));
+}
+
+/// The club table's clubs (the national teams at its end, two per nation, left out), as the Spanish turnover reads it.
+pub(crate) unsafe fn club_sides_count() -> i32 {
+    read_i32(G_CLUB_COUNT) - 2 * read_i32(G_NATION_COUNT)
+}
+
+/// Group `k` of a league split in groups: the league itself for −1, its stage `k` otherwise (`league::STAGES`).
+pub(crate) unsafe fn league_group(main: League, k: i8) -> League {
+    if k < 0 { main } else { League(read_usize(main.stages() + k as usize * 4)) }
+}
+
+/// The `qsort` comparers of two club pointers by their stadium city's latitude and longitude.
+pub(crate) const CLUB_LATITUDE_COMPARE: usize = 0x53fd40;
+
+pub(crate) const CLUB_LONGITUDE_COMPARE: usize = 0x53fe50;
+
+/// "E:\dev\CM3\cm3 00-01\cm3\code\comp\leagues\spa_first.cpp" (the error boxes).
+pub(crate) const SPA_FIRST_CPP: usize = 0xa82844;

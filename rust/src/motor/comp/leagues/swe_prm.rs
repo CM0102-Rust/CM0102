@@ -293,3 +293,69 @@ pub(crate) const ALLSVENSKAN_ROUNDS: [EngFirstScheduleRound; 26] = [
     (31, 9, 0, 5, 1, &[(-1, -1, -1)]), // 24: 31/out
     (8, 10, 0, 6, 1, &[(-1, -1, -1)]), // 25: 8/nov
 ];
+
+/// rule: at the Swedish turnover with a playable Second Division, the winners of its promotion play-off go up into it,
+/// the clubs relegated from its four sections go down to the lower division, and the twelve clubs it kept for promotion
+/// go up
+///
+/// The Second Division is the object of [`KEY_CLUB_COMP_SWEDISH_SECOND_DIVISION`]. Its stage 6 (the play-off, a cup):
+/// every entrant of `cup::TEAM_TABLE` (6-byte entries, `cup::TEAM_COUNT` of them) with the outcome byte (+5) 1 whose
+/// club's division is not the Second Division's record goes up (`exe::league_move_club_to_division`(this, club, record,
+/// 1)). Then the Second Division and its stages 0 to 4 (`league_group`, the six sections): every row with `league_table_row::STATUS` 3
+/// goes down (`exe::league_relegate_club_to_division`(this, club, the [`KEY_CLUB_COMP_SWEDISH_LOWER_DIVISION`] record,
+/// 1)). Then the twelve club ids at +0xee (the clubs promoted into the Second Division) each go up to its record.
+/// Original: `swe_prm_apply_second_division_moves` (0x890b40, swe_prm.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn swe_prm_apply_second_division_moves(this: usize) {
+    let this = League(this);
+    let second = League(comp_by_global(KEY_CLUB_COMP_SWEDISH_SECOND_DIVISION));
+    let record = second.competition().addr();
+    let play_off = read_usize(second.stages() + 0x18); // stage 6: the promotion play-off
+    for k in 0..read_i16(play_off + cup::TEAM_COUNT).max(0) as usize {
+        let e = read_usize(play_off + cup::TEAM_TABLE) + k * 6;
+        let c = Club(read_usize(e));
+        if read_u8(e + 5) == 1 && c.division().addr() != record {
+            covered!("rx13_16 swedish play-off winner up");
+            exe::league_move_club_to_division(this, c, record, 1);
+        }
+    }
+    for k in -1i8..5 { // the North and the stages 0 to 4: the six sections (bl from -1 while below 5, 0x890c0d; fixed 26/11/2026)
+        let g = league_group(second, k);
+        for r in 0..g.club_count().max(0) as usize {
+            let row = g.table() + r * 0x3b;
+            if read_u8(row + league_table_row::STATUS) == 3 {
+                exe::league_relegate_club_to_division(this, read_usize(row), comp_record_of_key(KEY_CLUB_COMP_SWEDISH_LOWER_DIVISION), 1);
+            }
+        }
+    }
+    covered!("rx13_16 swedish second division moves");
+    for k in 0..0xc {
+        let id = read_u32(second.addr() + 0xee + k * 4); // the twelve promoted club ids
+        exe::league_move_club_to_division(this, club_at(id as isize), comp_record_of_key(KEY_CLUB_COMP_SWEDISH_SECOND_DIVISION), 1);
+    }
+}
+
+/// Comparer for `swe_prm_apply_second_division_moves`: only the original runs (it moves clubs); afterwards the twelve
+/// stored clubs must be in the Second Division.
+pub(crate) unsafe extern "thiscall" fn compare_swe_prm_apply_second_division_moves(this: usize) {
+    let second = comp_by_global(KEY_CLUB_COMP_SWEDISH_SECOND_DIVISION);
+    let record = comp_record_of_key(KEY_CLUB_COMP_SWEDISH_SECOND_DIVISION);
+    // the relegated rows of the six sections, planned before the original moves them (26/11/2026: the copy skipped
+    // the sixth section and this comparer, which only looked at the twelve stored clubs, did not see it)
+    let mut relegated = Vec::new();
+    for k in -1i8..5 {
+        let g = league_group(League(second), k);
+        for r in 0..g.club_count().max(0) as usize {
+            let row = g.table() + r * 0x3b;
+            if read_u8(row + league_table_row::STATUS) == 3 {
+                relegated.push(read_usize(row));
+            }
+        }
+    }
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SWE_PRM_APPLY_SECOND_DIVISION_MOVES)(this);
+    let lower = comp_record_of_key(KEY_CLUB_COMP_SWEDISH_LOWER_DIVISION);
+    let not_down: Vec<usize> = relegated.into_iter().filter(|&c| read_usize(c + club::DIVISION) != lower).collect();
+    let wrong: Vec<u32> = (0..0xc).map(|k| read_u32(second + 0xee + k * 4))
+        .filter(|&id| read_usize(club_at(id as isize).addr() + club::DIVISION) != record).collect();
+    SCOREBOARD.record(wrong.is_empty() && not_down.is_empty(), || format!(
+        "swe_prm_apply_second_division_moves({:#x}) stored clubs outside the Second Division: {:?}; relegated rows not in the lower division: {:x?}", this, wrong, not_down));
+}

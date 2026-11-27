@@ -4176,8 +4176,38 @@ routines! {
     Prologue { address: 0x7ca2a0, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x3c, 0x01] } => pol_first_update_staff_records_for_status, compare_pol_first_update_staff_records_for_status;
     Prologue { address: 0x7ca320, bytes: &[0x53, 0x8a, 0x5c, 0x24, 0x10] } => pol_first_build_fate_news_text, compare_pol_first_build_fate_news_text;
     Prologue { address: 0x7ca3f0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] } => pol_first_set_club_progress, compare_pol_first_set_club_progress;
+    Prologue { address: 0x855f40, bytes: &[0x6a, 0xff, 0x68, 0xa9, 0x27, 0x96, 0x00] } => construct_spa_second_b, compare_construct_spa_second_b;
+    Prologue { address: 0x856ef0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0xb2, 0x03] } => spa_second_b_set_up_rules, compare_spa_second_b_set_up_rules;
+    Prologue { address: 0x856260, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => spa_second_b_create_schedule, compare_spa_second_b_create_schedule;
+    Prologue { address: 0x856cd0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => spa_second_b_load_group_clubs, compare_spa_second_b_load_group_clubs;
+    Prologue { address: 0x856f90, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => spa_second_b_start_new_season, compare_spa_second_b_start_new_season;
+    Prologue { address: 0x857150, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => spa_second_b_advance_stage, compare_spa_second_b_advance_stage;
+    Prologue { address: 0x857210, bytes: &[0x6a, 0xff, 0x68, 0xee, 0x27, 0x96, 0x00] } => spa_second_b_create_group_stage, compare_spa_second_b_create_group_stage;
+    Prologue { address: 0x857570, bytes: &[0x6a, 0xff, 0x68, 0x0e, 0x28, 0x96, 0x00] } => spa_second_b_create_promotion_playoff_groups, compare_spa_second_b_create_promotion_playoff_groups;
+    Prologue { address: 0x857860, bytes: &[0x6a, 0xff, 0x68, 0x2e, 0x28, 0x96, 0x00] } => spa_second_b_create_relegation_playoff, compare_spa_second_b_create_relegation_playoff;
+    Prologue { address: 0x857a00, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => spa_second_b_create_relegation_playoff_final, compare_spa_second_b_create_relegation_playoff_final;
+    Prologue { address: 0x858160, bytes: &[0x56, 0x8b, 0xf1, 0x83, 0x7e, 0x30, 0x07] } => spa_second_b_update_for_date, compare_spa_second_b_update_for_date;
+    Prologue { address: 0x857b70, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x53] } => spa_second_b_update_staff_records_for_status, compare_spa_second_b_update_staff_records_for_status;
+    Prologue { address: 0x857e20, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0x83, 0xec, 0x64] } => spa_second_b_build_fate_news_text, compare_spa_second_b_build_fate_news_text;
+    Prologue { address: 0x8581a0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => spa_second_b_get_club_array, compare_spa_second_b_get_club_array;
+    Prologue { address: 0x8582f0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => spa_second_b_set_predicted_positions, compare_spa_second_b_set_predicted_positions;
+    Prologue { address: 0x858460, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] } => spa_second_b_set_club_progress, compare_spa_second_b_set_club_progress;
+    Prologue { address: 0x8916f0, bytes: &[0x6a, 0xff, 0x68, 0xb9, 0x31, 0x96, 0x00] } => construct_swe_second, compare_construct_swe_second;
+    Prologue { address: 0x892380, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0xb8, 0x02, 0x00, 0x00, 0x00] } => swe_second_set_up_rules, compare_swe_second_set_up_rules;
+    Prologue { address: 0x891a60, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => swe_second_create_schedule, compare_swe_second_create_schedule;
+    Prologue { address: 0x8921b0, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => swe_second_create_table, compare_swe_second_create_table;
+    Prologue { address: 0x892410, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => swe_second_start_new_season, compare_swe_second_start_new_season;
+    Prologue { address: 0x8925d0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => swe_second_advance_stage, compare_swe_second_advance_stage;
+    Prologue { address: 0x892ee0, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => swe_second_update_staff_records_for_status, compare_swe_second_update_staff_records_for_status;
+    Prologue { address: 0x893160, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0x56] } => swe_second_build_fate_news_text, compare_swe_second_build_fate_news_text;
+    Prologue { address: 0x893320, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => swe_second_get_club_array, compare_swe_second_get_club_array;
+    Prologue { address: 0x893470, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => swe_second_set_predicted_positions, compare_swe_second_set_predicted_positions;
+    Prologue { address: 0x8935e0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] } => swe_second_set_club_progress, compare_swe_second_set_club_progress;
+    Prologue { address: 0x850300, bytes: &[0x81, 0xec, 0x34, 0x05, 0x00, 0x00] } => spa_first_exchange_second_division_b_clubs, compare_spa_first_exchange_second_division_b_clubs;
+    Prologue { address: 0x850530, bytes: &[0x81, 0xec, 0x4c, 0x03, 0x00, 0x00] } => spa_first_assign_second_division_b_groups, compare_spa_first_assign_second_division_b_groups;
+    Prologue { address: 0x890b40, bytes: &[0x51, 0xa1, 0xfc, 0xad, 0xad, 0x00] } => swe_prm_apply_second_division_moves, compare_swe_prm_apply_second_division_moves;
 }
-const N: usize = 4018;
+const N: usize = 4048;
 include!(concat!(env!("OUT_DIR"), "/indices.rs")); // IDX_<NAME>: the position of each routine (build.rs)
 
 /// Size of the engine object (the game allocates it with new(0xf63b)): side 1's block (+0xf5f2, 0x36
@@ -4746,6 +4776,9 @@ pub(crate) use self::comp_leagues_spa_lower::*;
 #[path = "motor/comp/leagues/spa_second.rs"]
 pub(crate) mod comp_leagues_spa_second;
 pub(crate) use self::comp_leagues_spa_second::*;
+#[path = "motor/comp/leagues/spa_second_b.rs"]
+pub(crate) mod comp_leagues_spa_second_b;
+pub(crate) use self::comp_leagues_spa_second_b::*;
 #[path = "motor/comp/leagues/sub_league.rs"]
 pub(crate) mod comp_leagues_sub_league;
 pub(crate) use self::comp_leagues_sub_league::*;
@@ -4755,6 +4788,9 @@ pub(crate) use self::comp_leagues_swe_first::*;
 #[path = "motor/comp/leagues/swe_prm.rs"]
 pub(crate) mod comp_leagues_swe_prm;
 pub(crate) use self::comp_leagues_swe_prm::*;
+#[path = "motor/comp/leagues/swe_second.rs"]
+pub(crate) mod comp_leagues_swe_second;
+pub(crate) use self::comp_leagues_swe_second::*;
 #[path = "motor/comp/leagues/tur_first.rs"]
 pub(crate) mod comp_leagues_tur_first;
 pub(crate) use self::comp_leagues_tur_first::*;
@@ -5656,6 +5692,21 @@ pub(crate) use self::zipdir::*;
 // ---------- 161st batch: watch list, position code and staff criterion ----------
 
 compare_value!(compare_staff_criterion, staff_criterion, IDX_STAFF_CRITERION, () -> u32);
+
+// ---------- rx09_1: the Spanish Second Division B at career creation, its rules and its round tables (spa_second_b.cpp) ----------
+
+/// A league split into regional groups (the Spanish Second Division B, the Swedish Second Division) as its
+/// constructor builds it: the shape the constructors' comparer checks (`compare_league_with_stages_ctor`: vtable,
+/// discipline, stage count; the table routine, the source file and the box lines in the order rules, table,
+/// fixtures, sort, statistics), the rules written inline (the Swedish constructor does not call its set_up_rules) or
+/// called, the group stage routine with the number of other groups, and the predicted positions routine.
+pub(crate) struct GroupedLeagueCtor {
+    pub(crate) shape: LeagueWithStages,
+    pub(crate) inline_rules: Option<unsafe fn() -> Vec<(usize, u8, u32)>>,
+    pub(crate) group_stage: usize,
+    pub(crate) groups: u32,
+    pub(crate) predicted: usize,
+}
 
 // ---------- cx01_9: the order of clubs by their last division (comp_util.cpp, used by the Turkish cup) ----------
 

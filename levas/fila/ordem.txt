@@ -1,7 +1,4 @@
 # ordem da fila (fila.py); um item por linha
-rx09_1
-rx09_2
-rx09_3
 cx16_10
 cx16_11
 cx16_12
@@ -577,14 +574,7 @@ rx08_7
 rx08_8
 rx08_9
 rx08_10
-rx09_4
-rx09_5
-rx09_6
-rx09_7
-rx09_8
 rx09_9
-rx09_10
-rx09_11
 rx09_12
 rx09_13
 rx09_14
@@ -639,7 +629,6 @@ rx13_12
 rx13_13
 rx13_14
 rx13_15
-rx13_16
 rx13_17
 rx13_18
 rx15_1
