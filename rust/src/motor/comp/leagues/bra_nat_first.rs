@@ -1005,12 +1005,12 @@ pub(crate) const BRA_STATE_LOWER_DIVISION_KEYS: [usize; 12] = [
 /// Original: `bra_nat_first_fill_brazilian_cup_entrants` (0x42b760, bra_nat_first.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn bra_nat_first_fill_brazilian_cup_entrants(_this: usize) {
     let cup = League(comp_by_global(KEY_CLUB_COMP_BRAZILIAN_CUP));
-    let serie_a = League(comp_by_global(KEY_CLUB_COMP_BRAZILIAN_NATIONAL_FIRST_DIVISION));
+    let series = League(comp_by_global(KEY_CLUB_COMP_BRAZILIAN_NATIONAL_FIRST_DIVISION));
     let leagues: [League; 12] = core::array::from_fn(|k| League(comp_by_global(BRAZILIAN_CUP_STATE_LEAGUES[k].0)));
     let champions_cup = read_usize(G_CLUB_COMP_TABLE).wrapping_add(read_usize(KEY_CLUB_COMP_BRAZILIAN_CHAMPIONS_CUP).wrapping_mul(0x6b));
     let left_out = [
-        exe::comp_util_get_latest_placed_club(serie_a.competition(), 0) as u32,
-        exe::comp_util_get_latest_placed_club(serie_a.competition(), 1) as u32,
+        exe::comp_util_get_latest_placed_club(series.competition(), 0) as u32,
+        exe::comp_util_get_latest_placed_club(series.competition(), 1) as u32,
         exe::comp_util_get_latest_placed_club(cup.competition(), 0) as u32,
         exe::comp_util_get_latest_placed_club(champions_cup, 0) as u32,
     ];
@@ -1029,15 +1029,15 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_first_fill_brazilian_cup_entrants
         slot -= 1;
     }
     let mut row: i8 = 2;
-    if serie_a.club_count() > 2 {
+    if series.club_count() > 2 {
         while slot >= 0 {
-            let club = table_club(serie_a, row);
+            let club = table_club(series, row);
             if !already_in(club, slot) && !left_out.contains(&club) {
                 write_entrant_slot(cup, slot, club);
                 slot -= 1;
             }
             row = row.wrapping_add(1);
-            if row as i16 >= serie_a.club_count() {
+            if row as i16 >= series.club_count() {
                 break;
             }
         }

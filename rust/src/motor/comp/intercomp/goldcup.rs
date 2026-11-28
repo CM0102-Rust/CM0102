@@ -881,14 +881,15 @@ pub(crate) fn copa_america_fate_template(fate: u8) -> usize {
 /// 2, 8 teams; no stage: the box at line 0x35e).
 /// Original: `GoldCup::create_knockout_stage` (0x5e18a0, goldcup.cpp, thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn goldcup_create_knockout_stage(this: usize) {
+    let this = League(this);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
-    let league = League(this);
+    let league = this;
     let p = exe::crt_operator_new(0xee);
     let thirds = if p != 0 {
-        construct(p, this, 3, 0, 0, league.competition().addr(), 0, 0, league.win_points() as u32, league.draw_points() as u32, 0, this + league::TIEBREAKS,
-            this + league::PROMOTED_COUNT, league.year() as u16 as u32, (-2i32) as u32, 0, 0, 1, 0, 2, -1, 0, 2)
+        construct(p, this.addr(), 3, 0, 0, league.competition().addr(), 0, 0, league.win_points() as u32, league.draw_points() as u32, 0, this.addr() + league::TIEBREAKS,
+            this.addr() + league::PROMOTED_COUNT, league.year() as u16 as u32, (-2i32) as u32, 0, 0, 1, 0, 2, -1, 0, 2)
     } else {
         0
     };
@@ -917,8 +918,8 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_knockout_stage(this: usize
         write_usize(teams + (6 + r as usize) * 4, table_row_club(thirds, r));
     }
     covered!("cx07_2 copa america quarter-finalists");
-    let progress: unsafe extern "thiscall" fn(usize, usize, i32, u32, u32, u32) = core::mem::transmute(read_usize(read_usize(this) + comp_vtable::SET_CLUB_PROGRESS));
-    progress(this, table_row_club(thirds, 2), -1, 3, 3, 3);
+    let progress: unsafe extern "thiscall" fn(usize, usize, i32, u32, u32, u32) = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::SET_CLUB_PROGRESS));
+    progress(this.addr(), table_row_club(thirds, 2), -1, 3, 3, 3);
     for g in -1i8..2 {
         let group = copa_america_group(league, g);
         let update: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(group) + league_vtable::UPDATE_POSITIONS_AND_STATUS));
@@ -1010,7 +1011,7 @@ pub(crate) unsafe fn check_nations_knockout(name: &str, this: League, stage: usi
 /// The table of group `g` of the Copa América: group A (−1) is the cup's own table, B and C the stages 0 and 1.
 /// The club of row `row` of a league's table (League::get_table_row, the club at the row's start); the same helper as
 /// the cx05_3 item's, which is still held in the queue (28/11/2026: cx07_2 came in calling it).
-unsafe fn table_row_club(league: usize, row: i32) -> usize {
+pub(crate) unsafe fn table_row_club(league: usize, row: i32) -> usize {
     read_usize(exe::league_get_table_row(league, row) + league_table_row::CLUB)
 }
 

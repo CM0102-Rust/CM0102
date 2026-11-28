@@ -2,7 +2,7 @@
 
 Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os arquivos-fonte do mapa de [maxevans60](https://github.com/maxevans60/cm0102-function-map) (CC BY 4.0). Uma função conta quando o início dela é desviado para Rust (`Prologue` em `rust/src/motor.rs`). O placar do motor de partidas, pelas nossas fronteiras, fica em `PLACAR.md`.
 
-**Exe inteiro:** 4251 de 6709 funções, 4090.5 de 5528.0 KB (**74.00%**) · 311 de 393 arquivos com rotinas em Rust
+**Exe inteiro:** 4259 de 6709 funções, 4095.5 de 5528.0 KB (**74.09%**) · 313 de 393 arquivos com rotinas em Rust
 
 | Arquivo | Funções | KB | Progresso |
 |---|---|---|---|
@@ -43,6 +43,7 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `turkey_awards.cpp` | 4/4 | 1.0/1.0 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 **100.0%** |
 | `ultimatum.cpp` | 3/3 | 1.2/1.2 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 **100.0%** |
 | `usa_awards.cpp` | 4/4 | 1.5/1.5 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 **100.0%** |
+| `wales_awards.cpp` | 5/5 | 1.4/1.4 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 **100.0%** |
 | `wales_rules.cpp` | 2/2 | 0.4/0.4 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 **100.0%** |
 | `world_cup_awards.cpp` | 3/3 | 0.6/0.6 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 **100.0%** |
 | `year_ratings.cpp` | 14/14 | 4.9/4.9 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 **100.0%** |
@@ -203,6 +204,7 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `tactics.cpp` | 27/29 | 18.8/23.1 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **81.2%** |
 | `nation_awards.cpp` | 16/19 | 6.9/8.6 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **80.9%** |
 | `training_manager.cpp` | 23/34 | 13.2/16.3 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **80.8%** |
+| `scotland_awards.cpp` | 3/5 | 3.7/4.5 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **80.7%** |
 | `turkey_rules.cpp` | 2/3 | 0.5/0.6 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **80.6%** |
 | `fix_man.cpp` | 31/37 | 17.9/22.4 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **79.9%** |
 | `northern_ireland_rules.cpp` | 3/4 | 0.5/0.6 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **79.5%** |
@@ -318,4 +320,4 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `finland_awards.cpp` | 1/6 | 0.0/2.5 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **1.9%** |
 | `library_without_asserts` | 1/243 | 0.3/205.5 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **0.1%** |
 
-Os outros 82 arquivos ainda não têm rotina em Rust.
+Os outros 80 arquivos ainda não têm rotina em Rust.

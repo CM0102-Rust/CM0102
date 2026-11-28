@@ -6782,3 +6782,18 @@ Mutations: `mutacoes/leva344.py` (10, by the career to 2002-06-01, confirming th
 | `brazil_awards_daily_update()` | 0x43e990 | thiscall, ret 4 | award/brazil_awards.cpp: rule: on 10 July, the awards of each of the twelve state championships: best player, top goalscorer and best goalkeeper; on 16 December, those of the First and Second Divisions: player of the year, team of the year, top goalscorer and young player of the year (up to 21) |
 
 Mutations: `mutacoes/leva345.py` (53, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 53 caught.  Real game comparing 8 leagues to 2002-06-01: deferred to the audit's accumulated comparison (decision of 5 Nov 2026). Careers to 2002-06-01: Rust ×2 348e1ac6, original 1c0bb860 (recorded; does not block the batch since 31/10/2026). Garbage detector: equal.
+
+### Simulation, 346th batch — the Welsh awards; the Welsh manager of the month and team of the week; the Scottish awards (official on 2026-11-28)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `wales_awards_construct()` | 0x90ead0 | thiscall, ret 4 | award/wales_awards.cpp: builds the Welsh awards: the base with the class vtable, Wales, id 0x1c and type 1; with a file, the saved ones; otherwise the month ratings (out of memory, the error box and no awards) and the six awards |
+| `wales_awards_init()` | 0x90ec10 | thiscall, ret 4 | award/wales_awards.cpp: creates the six Welsh Premier Division awards: the team of the week, player, young player, top goalscorer and manager of the year, and the manager of the month (August of the current year to April of the next) |
+| `wales_awards_daily_update()` | 0x90ef10 | thiscall, ret 4 | award/wales_awards.cpp: on 11 May, the Welsh awards: player, top goalscorer and young player (up to 21) of the year and the manager of the year; on the nation's season end day, the month award moves to the next season; then, every day, the base daily update |
+| `wales_awards_on_month_change()` | 0x90f020 | thiscall | award/wales_awards.cpp: at the turn of the month, the Welsh Premier Division manager of the month: the staff records' best manager of the month takes the month award, with his club |
+| `wales_awards_team_of_the_week()` | 0x90f060 | thiscall, ret 4 | award/wales_awards.cpp: builds the team of the week of a Welsh award: only for the team of the week (award 0) |
+| `scotland_awards_construct()` | 0x7f5170 | thiscall, ret 4 | award/scotland_awards.cpp: builds the Scottish awards: the base with the class vtable, Scotland, id 0x11 and type 1; with a file, the saved ones; otherwise the month ratings and the 27 awards |
+| `scotland_awards_init()` | 0x7f52b0 | thiscall, ret 4 | award/scotland_awards.cpp: creates the 27 awards: the Scottish player, top goalscorer and young player of the year and, in each of the four divisions, the team of the week, manager, player and young player of the month (August to May), manager of the year and team of the year |
+| `scotland_awards_daily_update()` | 0x7f5dc0 | thiscall, ret 4 | award/scotland_awards.cpp: on the Saturday of 23 May, the manager of the year of each division, the Scottish player, young player (up to 21) and top goalscorer of the year from the year ratings top three and the team of the season of each division; on the season end day, the twelve month awards move on; then, every day, the base daily update |
+
+Mutations: `mutacoes/leva346.py` (8, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 8 caught.  Real game comparing 8 leagues to 2002-06-01: deferred to the audit's accumulated comparison (decision of 5 Nov 2026). Careers to 2002-06-01: Rust ×2 abec784e, original eb48bed6 (recorded; does not block the batch since 31/10/2026). Garbage detector: equal.

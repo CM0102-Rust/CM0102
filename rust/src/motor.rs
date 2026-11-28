@@ -4413,8 +4413,16 @@ routines! {
     Prologue { address: 0x9072d0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => usa_mls_create_schedule, compare_usa_mls_create_schedule;
     Prologue { address: 0x43d2b0, bytes: &[0x6a, 0xff, 0x68, 0x78, 0x4b, 0x95, 0x00] } => construct_brazil_awards, compare_construct_brazil_awards;
     Prologue { address: 0x43e990, bytes: &[0x83, 0xec, 0x10, 0x56, 0x57] } => brazil_awards_daily_update, compare_brazil_awards_daily_update;
+    Prologue { address: 0x90ead0, bytes: &[0x6a, 0xff, 0x68, 0xc9, 0x55, 0x96, 0x00] } => wales_awards_construct, compare_wales_awards_construct;
+    Prologue { address: 0x90ec10, bytes: &[0x6a, 0xff, 0x68, 0x34, 0x56, 0x96, 0x00] } => wales_awards_init, compare_wales_awards_init;
+    Prologue { address: 0x90ef10, bytes: &[0x83, 0xec, 0x10, 0x56, 0x57] } => wales_awards_daily_update, compare_wales_awards_daily_update;
+    Prologue { address: 0x90f020, bytes: &[0xa1, 0x4c, 0xf9, 0x9c, 0x00] } => wales_awards_on_month_change, compare_wales_awards_on_month_change;
+    Prologue { address: 0x90f060, bytes: &[0x8b, 0x51, 0x04, 0x8b, 0x44, 0x24, 0x04] } => wales_awards_team_of_the_week, compare_wales_awards_team_of_the_week;
+    Prologue { address: 0x7f5170, bytes: &[0x6a, 0xff, 0x68, 0x39, 0x0d, 0x96, 0x00] } => scotland_awards_construct, compare_scotland_awards_construct;
+    Prologue { address: 0x7f52b0, bytes: &[0x6a, 0xff, 0x68, 0xca, 0x0e, 0x96, 0x00] } => scotland_awards_init, compare_scotland_awards_init;
+    Prologue { address: 0x7f5dc0, bytes: &[0x83, 0xec, 0x10, 0x56, 0x57] } => scotland_awards_daily_update, compare_scotland_awards_daily_update;
 }
-const N: usize = 4255;
+const N: usize = 4263;
 include!(concat!(env!("OUT_DIR"), "/indices.rs")); // IDX_<NAME>: the position of each routine (build.rs)
 
 /// Size of the engine object (the game allocates it with new(0xf63b)): side 1's block (+0xf5f2, 0x36
@@ -4473,6 +4481,9 @@ pub(crate) use self::award_poland_awards::*;
 #[path = "motor/award/russia_awards.rs"]
 pub(crate) mod award_russia_awards;
 pub(crate) use self::award_russia_awards::*;
+#[path = "motor/award/scotland_awards.rs"]
+pub(crate) mod award_scotland_awards;
+pub(crate) use self::award_scotland_awards::*;
 #[path = "motor/award/sweden_awards.rs"]
 pub(crate) mod award_sweden_awards;
 pub(crate) use self::award_sweden_awards::*;
@@ -4485,6 +4496,9 @@ pub(crate) use self::award_turkey_awards::*;
 #[path = "motor/award/usa_awards.rs"]
 pub(crate) mod award_usa_awards;
 pub(crate) use self::award_usa_awards::*;
+#[path = "motor/award/wales_awards.rs"]
+pub(crate) mod award_wales_awards;
+pub(crate) use self::award_wales_awards::*;
 #[path = "motor/award/world_cup_awards.rs"]
 pub(crate) mod award_world_cup_awards;
 pub(crate) use self::award_world_cup_awards::*;
