@@ -5,7 +5,7 @@
 MUTACOES = [
     ('sx19_18_um_jogo_a_menos',
      '(read_i8(ban + ban_record::MATCHES_SERVED) as i32 + extra as i32 <= read_i8(ban + ban_record::MATCHES) as i32) as u32 // sx19_18: matches still to serve',
-     '(read_i8(ban + ban_record::MATCHES_SERVED) as i32 + extra as i32 < read_i8(ban + ban_record::MATCHES) as i32) as u32 // mutation: one match less',
+     '((read_i8(ban + ban_record::MATCHES_SERVED) as i32 + extra as i32) < read_i8(ban + ban_record::MATCHES) as i32) as u32 // mutation: one match less',
      'sx19_18 ban by matches'),
     ('sx19_18_amarelos_ficam',
      'write_u8(e + ruling_body_entry::YELLOW_CARDS, 0); // sx19_18: the club\'s bookings cleared',

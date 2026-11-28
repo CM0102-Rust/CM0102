@@ -1,0 +1,14 @@
+NAO PROVADO NO JOGO (leitor r7_06, rodada 7, 28/11/2026): WcEuropeLeague::load_2002_campaign 0x91b760. Codigo morto no
+jogo como ele e (a campanha nunca e antes de 2004 e o jogo comeca em 2001; so um exe com o ano de inicio mudado chega
+aqui). TELAS so para entrar numa leva sem mutacoes pela carreira; ou segurar no SEGURADOS.txt.
+Compila sobre o HEAD 5206427ad com o r7_06_1 (cargo build --release sem erro e sem aviso nas linhas do item); com as
+mutacoes aplicadas: compila. Ancoras unicas no rust/src e na fila. Nao depende de nome do r7_06_1 (chama a 0x91db60
+pelo endereco).
+Emulacao (unicorn, rascunho r7_06\check_r7_06.py): 800 cargas (chaves das nacoes sorteadas, pool antigo ou nao, falha
+do malloc do pool e da tabela), 0 diferencas no rastro (selecoes pedidas, pool liberado com as 50 selecoes, linhas da
+tabela, as 8 fases de grupo com as listas, segundos colocados, posicoes previstas, as 230 chamadas com os 8 argumentos)
+e no estado final da secao; vistas as caixas 0x8ea e 0x906. As tabelas (9 grupos, 230 jogos) tiradas da desmontagem
+por script (r7_06\extrai_r7_06.py).
+Mutacoes 3/3 juntas mudam o rastro (270 de 300 cargas diferentes; as 30 iguais sao as que param numa caixa antes dos
+jogos). Prologo sub esp, 0x224 (6 bytes, sem relativo); igual no cm0102-1080.exe. Nao rodei o conferir_assinaturas.py
+--fila: rodar antes de integrar.

@@ -3225,3 +3225,45 @@ pub(crate) unsafe extern "thiscall" fn injury_load(this: usize, save: usize) -> 
 pub(crate) unsafe extern "thiscall" fn compare_injury_load(this: usize, save: usize) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_INJURY_LOAD)(this, save)
 }
+
+/// Builds the injury object, for a new game (`stream` 0) or from the saved game.
+///
+/// `Injury::Injury(stream)`: the CD search (`find_game_cd`, the no-CD patch read at 0x62a6cf and 0x62a713). The injury
+/// history list (`injury_fields::INJURY_HISTORY`, "CM3_TEMP\injury_history.tmp", 0x2c-byte records,
+/// `club_history_new_file_list`); none stops the game (injury.cpp line 0xb4). The injury array, its count, the recovery
+/// news queue (+0x10, +0x14, `injury_fields::RECOVERY_NEWS_COUNT`), the outbreaks (array, capacity, count) and the match
+/// hit list are zeroed (`injury_fields::PHYSICAL_RECORDS` is left as it was). With a `stream`, the state is read from
+/// the saved game (`Injury::load`); otherwise, or when that fails, the records of a new game (`init_records`). Returns
+/// this.
+/// Original: `Injury::Injury` (0x62a680, injury.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn construct_injury(this: usize, stream: usize) -> usize {
+    find_game_cd(0x62a6cf, 0x62a713);
+    let history = club_history_new_file_list(0x9e7f54, 0x2c); // "injury_history.tmp"
+    write_usize(this + injury_fields::INJURY_HISTORY, history);
+    if history == 0 {
+        fatal_error_at(0x9e7f28, 0xb4); // "...\injury.cpp"
+    }
+    use injury_fields as f;
+    for field in [f::INJURY_ENTRIES, f::INJURY_ENTRY_COUNT, f::RECOVERY_NEWS_QUEUE, 0x14, f::RECOVERY_NEWS_COUNT, f::OUTBREAKS,
+                  f::OUTBREAK_CAPACITY, f::OUTBREAK_COUNT, f::MATCH_HIT_LIST] {
+        write_u32(this + field, 0); // 0x14: the recovery news capacity [inference]
+    }
+    if stream != 0 {
+        let load: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_INJURY_LOAD);
+        if load(this, stream) != 0 {
+            covered!("sx12b_2 injuries from the save");
+            return this;
+        }
+    }
+    covered!("sx12b_2 new injury records");
+    init_records(this);
+    this
+}
+
+/// Comparer for `construct_injury`: it searches the CD, opens the history file list and builds (or loads) the records:
+/// it cannot run twice. Only the original runs; the copy is proven by the new career (Rust mode).
+pub(crate) unsafe extern "thiscall" fn compare_construct_injury(this: usize, stream: usize) -> usize {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_CONSTRUCT_INJURY)(this, stream)
+}
+
+pub(crate) const FN_INJURY_LOAD: usize = 0x62ab00;

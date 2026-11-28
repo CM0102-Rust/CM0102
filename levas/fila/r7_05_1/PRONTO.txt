@@ -1,0 +1,15 @@
+NAO PROVADO NO JOGO (leitor r7_05, rodada 7, 28/11/2026): club_records_format_record_text 0x449810 (11,8 KB), inteira,
+um desvio. Item de TELAS: so a tela de recordes do clube (e o historico por temporada) chama a rotina.
+Caminho para o Lucas, jogando comparando: Clube -> Recordes; passar pelos 32 tipos em "Modern Day" e "This Season" e
+pelo historico de temporadas (de preferencia um clube com sequencia invicta ou sem vencer em curso, para o "?").
+Comparador: compare_text_writer (texto, vinculos, gerador) e o retorno (1/0); sem Text, clube ou registros, ou tipo
+fora de 1..32 (as caixas), so a original.
+Prova sem o jogo: a original do exe e a copia da ddraw.dll compilada emuladas (unicorn,
+scratchpad\r7_05\check5.py) no mesmo mundo com stubs (Text, langlib, sprintf, ordinal, temporada, rodada e genero,
+data, mando, nomes, conferencia dos nomes, jogo, idade, dinheiro, caixa de erro); 3000 + 15000 casos sorteados (os 32
+tipos e tipos invalidos, recordes ausentes, sequencias em curso ou nao, Text/clube/registros nulos), 0 diferencas, os
+31 modelos de texto vistos.
+Mutacoes 3/3 mudam o rastro na emulacao (build com as tres juntas: 375 de 3000 casos diferentes; vistos os tipos 7 a
+11, 14/15 e 18). Compila sobre o HEAD 5206427ad (0 erros, 0 avisos nas linhas do item); com as mutacoes, compila;
+ancoras com 1 ocorrencia em rust/src e na fila. Sem dependencias de itens da fila (o rx08_9 chama a rotina pelo
+exe::, que passa pelo desvio). Nao rodei o conferir_assinaturas.py --fila: rodar antes de integrar.

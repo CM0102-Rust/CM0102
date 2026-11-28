@@ -1,0 +1,19 @@
+NAO PROVADO NO JOGO (leitor r7_08, rodada 7, 28/11/2026): TRANSFER_MANAGER::set_player_squad_status 0x8ce0e0,
+inteira (com as duas tabelas de saltos). Item de TELAS: as telas de transferencias (transfer_screens.rs a chama pelo
+endereco).
+Caminho para o Lucas, jogando comparando: no proprio clube, perfil de um jogador -> mudar o status no elenco (de
+nenhum para cada um; de titular para rodizio/reserva; nao desejado), com e sem pedir preco, e tirar da lista; uma vez
+com o jogo com mais de uma semana, rebaixando um titular jovem. O comparador e so a original com o plano (o nibble do
+status no elenco), entao jogando comparando a copia nao roda: a prova da copia e a emulacao e o jogo so com a Rust.
+Prova sem o jogo: a original do exe e a copia da ddraw.dll compilada emuladas (unicorn, scratchpad\r7_08\check8.py
+squad) com stubs (financas e crise, contrato no clube, a caixa "Error", valor do jogador, dias desde, queixas e marcas
+do contrato, sorteio, lesao, noticia de insatisfeito, status merecido com lixo nos bits de cima, listas curtas):
+3000 + 3000 casos (status 0..7, 0xff, 9 e com lixo em cima; marcas; jogo com 0..400 dias; contratos de 0..1000
+dias), 0 diferencas nas chamadas, nos sorteios, no contrato, na pessoa e na saida; todas as chamadas vistas.
+Achado na emulacao e corrigido antes: o titular jovem rebaixado que nao reclama (sorteios de carater e 1 em 5) cai no
+mesmo teste do status 2 (1 em 5 e sorteio da ambicao): o codigo e compartilhado no original.
+Mutacoes 3/3 acusadas na emulacao (build com as 12 do grupo: a moral do rodizio sem status anterior, os 25 por posicao
+e o contratado recente (event_flags)).
+Compila sobre o HEAD 5206427ad junto com r7_08_1/2/4 (0 erros, 0 avisos nas linhas do item); com as mutacoes,
+compila; ancoras com 1 ocorrencia na fila e 0 no rust/src. Prologo sem relativas. Sem dependencias da fila (a noticia
+0x5882d0 vai pelo endereco). Nao rodei o conferir_assinaturas.py --fila.

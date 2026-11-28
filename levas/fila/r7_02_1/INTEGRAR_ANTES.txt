@@ -1,0 +1,1 @@
+Sem dependências: chama database_free_all_tables por exe:: (a original ou a do r7_02_2) e as leitoras do Db_files.cpp, a resolve_database_indexes e a db_files_open_for_read que já estão no rust/src. Prólogo sem relativo (sub esp, 0x7d0): nada a pedir no relativas_pedidas.py.

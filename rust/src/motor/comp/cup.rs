@@ -4445,3 +4445,23 @@ pub(crate) const FN_CUP_STAGE_SAVE_TO_FILE: usize = 0x523eb0;
 
 /// `League_Stage::save_to_file` (0x68ca40, league_stage.cpp, thiscall(file), ret 4).
 pub(crate) const FN_LEAGUE_STAGE_SAVE_TO_FILE: usize = 0x68ca40;
+
+/// The first day from `d` on (`d` itself included) whose `Date::get_weekday` is `weekday`.
+pub(crate) unsafe fn date_moved_to_weekday(mut d: [u8; 8], weekday: u16) -> [u8; 8] {  // renamed 28/11/2026: cup.rs already has date_on_weekday(day, month, year, week)
+    while exe::date_get_weekday(d.as_ptr() as usize) as u16 != weekday {
+        date_next_day(&mut d);
+    }
+    d
+}
+
+/// The first day after today whose `Date::get_weekday` is `weekday` (tomorrow, then day by day).
+pub(crate) unsafe fn first_weekday_after_today(weekday: u16) -> [u8; 8] {
+    date_moved_to_weekday(ban_start_in(1), weekday)
+}
+
+/// The date one day later (`Date::add_days` into `d`).
+pub(crate) unsafe fn date_next_day(d: &mut [u8; 8]) {
+    let mut t = [0u8; 8];
+    let p = exe::date_add_days(d.as_ptr() as usize, t.as_mut_ptr() as usize, 1);
+    copy_record_date(d.as_mut_ptr() as usize, p);
+}

@@ -1,0 +1,16 @@
+NAO PROVADO NO JOGO (leitor r7_07, rodada 7, 28/11/2026): SearchFilters::set_option_flag 0x806630 e
+SearchFilters::player_matches_filter 0x807450, inteiras. Item de TELAS: so a busca de jogadores as chama.
+Caminho para o Lucas, jogando comparando: Buscar jogadores -> Filtros: mudar cada grupo de opcoes (nacionalidade com
+nacao e regiao vazias, idade, idioma, onde joga, valor e "livre", listados, olheiro, contrato, posicoes, cargo,
+lesionados, interesse, texto, minimos de atributo) e buscar; uma vez com um tecnico com selecao.
+Prova sem o jogo: a original do exe e a copia da ddraw.dll compilada emuladas (unicorn,
+scratchpad\r7_07\check7.py) no mesmo mundo com stubs (elegibilidade, fluencia, contrato, rolante, dias, passe livre,
+faixas de valor, listas, olheiro, FIFA, posicoes, lesao, os dois interesses em ponto flutuante, o texto livre, os
+atributos e a caixa de erro); 4000 + 6000 + 6000 + 3000 casos sorteados (bits isolados e valores quaisquer na
+set_option_flag; mascaras padrao com 1 a 6 trocas, quaisquer, so o interesse, so o cargo), 0 diferencas nas chamadas,
+na resposta e no filtro; todas as chamadas vistas.
+Mutacoes 3/3 acusadas na emulacao (build com as tres: 22 a 23 de 3000 casos diferentes, faixa de idade e fluencia; so
+o cargo: 36 de 800). Compila sobre o HEAD 5206427ad junto com o sx20_13 (0 erros, 0 avisos nas linhas do item); com
+as mutacoes, compila; ancoras com 1 ocorrencia na fila e 0 no rust/src.
+Depende do sx20_13 (as constantes SEARCH_*, SEARCH_FILTERS_SOURCE e o search_filters_compare): INTEGRAR_ANTES.txt.
+Nao rodei o conferir_assinaturas.py --fila: rodar antes de integrar.

@@ -90,7 +90,7 @@ def do_lote(ordem_):
     def depende_de_pulado(nome):
         codigo = sem_comentarios(open(os.path.join(FILA, nome, 'codigo.rs'), encoding='utf-8').read())
         antes = os.path.join(FILA, nome, 'INTEGRAR_ANTES.txt')
-        pedidos = set(re.findall(r'\b([a-z]+\d*[a-zA-Z]?_\d+)\b', open(antes, encoding='utf-8').read())) if os.path.exists(antes) else set()
+        pedidos = set(re.findall(r'\b([a-z]+\d*[a-zA-Z]?(?:_\d+)+)\b', open(antes, encoding='utf-8').read())) if os.path.exists(antes) else set()
         return bool(set(IDENT.findall(codigo)) & pulados) or bool(pedidos & nomes_pulados)
 
     def pular(nome):

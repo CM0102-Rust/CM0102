@@ -1,0 +1,19 @@
+NAO PROVADO NO JOGO (leitor r7_06, rodada 7, 28/11/2026): WcEuropeLeague::add_fixed_result 0x91db60,
+WcSouthAmericanLeague::add_fixed_fixture 0x922350 e WcSouthAmericanLeague::load_2002_campaign 0x9216d0. Codigo morto no
+jogo como ele e (a campanha nunca e antes de 2004 e o jogo comeca em 2001; so um exe com o ano de inicio mudado, ex. o
+YearChanger em 2005, chega aqui): nenhuma carreira de teste nem o Lucas jogando passam por elas. TELAS so para entrar
+numa leva sem mutacoes pela carreira; ou segurar no SEGURADOS.txt.
+Compila sobre o HEAD 5206427ad com o r7_06_2 (git archive de rust/ e cm0102-base/, os itens pela ancora; cargo build
+--release sem erro e sem aviso nas linhas dos itens); de novo com as 6 mutacoes dos dois itens aplicadas: compila.
+Ancoras das mutacoes unicas no rust/src e na fila.
+Emulacao (unicorn, rascunho r7_06\check_r7_06.py: a original e a copia da DLL compilada no mesmo mundo falso; a pilha
+enchida com um byte sorteado; rastros com o registro do jogo entregue ao estadio, ao calendario e ao resultado, com os
+bytes que a original nao escreve mascarados): 4800 casos (fase -128..127, fase atual, vetor de fases nulo ou com buraco,
+ano 1999..2002 e 0x107d0, datas e gols sorteados, data de inicio antes e depois), 0 diferencas; vistas as caixas 0xa32,
+0xa39, 0x3c7, 0x3ce, o jogo com e sem resultado e a carga inteira. 32 casos pulados: vetor de fases nulo na
+sul-americana (as duas leem o endereco 0: queda no jogo; no unicorn ali fica a cadeia SEH).
+Mutacoes 3/3 mudam o rastro na emulacao (build com as seis juntas dos dois itens: 122 de 600 sul-americanas, 184 de 600
+europeias e 300 de 300 cargas sul-americanas diferentes). A tabela dos 90 jogos foi tirada da desmontagem por script
+(r7_06\extrai_r7_06.py) e conferida pela emulacao da carga (os 90 rastros iguais). Prologos conferidos (mov eax,
+fs:[0] de 6 bytes duas vezes; push esi; mov esi, ecx; mov eax, [esi] de 5), sem relativos; as tres iguais no
+cm0102-1080.exe. Nao rodei o conferir_assinaturas.py --fila: rodar antes de integrar.

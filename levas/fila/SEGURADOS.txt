@@ -36,3 +36,5 @@ rx12_15	ATE 2003-08-15
 rx04_2	pede ARG_DWORDS 16 -> 28 no rust/src/detours.rs (fazer entre duas levas, com a cadeia parada)
 rxf_6	ATE 2003-08-15
 rxg_3	ATE 2003-08-15
+r7_06_1	codigo morto no exe padrao (so o YearChanger em anos 4k+1 chega): provado por emulacao, espera decisao
+r7_06_2	codigo morto no exe padrao (so o YearChanger em anos 4k+1 chega): provado por emulacao, espera decisao

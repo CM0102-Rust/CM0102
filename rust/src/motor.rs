@@ -4425,8 +4425,70 @@ routines! {
     Prologue { address: 0x716630, bytes: &[0x83, 0xec, 0x10, 0x53, 0x55] } => start_fight, compare_start_fight;
     Prologue { address: 0x716c90, bytes: &[0x51, 0x56, 0x8b, 0xf1, 0x57] } => handle_suspected_dive, compare_handle_suspected_dive;
     Prologue { address: 0x716e10, bytes: &[0x83, 0xec, 0x08, 0x53, 0x56] } => react_to_foul_decision, compare_react_to_foul_decision;
+    Prologue { address: 0x5a5820, bytes: &[0x51, 0x53, 0x56, 0x57, 0x8b, 0xf9] } => fine_daily_update, compare_fine_daily_update;
+    Prologue { address: 0x5a4fc0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00, 0x6a, 0xff] } => new_fine, compare_new_fine;
+    Prologue { address: 0x5a5120, bytes: &[0x56, 0x8b, 0xf1, 0x57, 0x8b, 0x3e] } => fine_free_data, compare_fine_free_data;
+    Prologue { address: 0x5554a0, bytes: &[0x6a, 0xff, 0x68, 0x8c, 0x7c, 0x95, 0x00] } => new_discipline, compare_new_discipline;
+    Prologue { address: 0x555790, bytes: &[0x6a, 0xff, 0x68, 0xab, 0x7c, 0x95, 0x00] } => drop_discipline, compare_drop_discipline;
+    Prologue { address: 0x55e300, bytes: &[0x6a, 0xff, 0x68, 0xf8, 0x7f, 0x95, 0x00] } => handle_referee_assault, compare_handle_referee_assault;
+    Prologue { address: 0x5697e0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00, 0x6a, 0xff] } => new_dispute, compare_new_dispute;
+    Prologue { address: 0x5698d0, bytes: &[0x56, 0x8b, 0xf1, 0x57, 0x8b, 0x46, 0x04] } => drop_dispute, compare_drop_dispute;
+    Prologue { address: 0x56a100, bytes: &[0x6a, 0xff, 0x68, 0xd0, 0x80, 0x95, 0x00] } => file_complaint, compare_file_complaint;
+    Prologue { address: 0x667150, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => key_nation_build_table, compare_key_nation_build_table;
+    Prologue { address: 0x5fb430, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => construct_human_manager, compare_construct_human_manager;
+    Prologue { address: 0x5fb690, bytes: &[0x6a, 0xff, 0x68, 0xf4, 0xaf, 0x95, 0x00] } => construct_human_record, compare_construct_human_record;
+    Prologue { address: 0x62a680, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => construct_injury, compare_construct_injury;
+    Prologue { address: 0x5ef0b0, bytes: &[0x6a, 0xff, 0x68, 0x06, 0xac, 0x95, 0x00] } => construct_hall_of_fame, compare_construct_hall_of_fame;
+    Prologue { address: 0x5ef120, bytes: &[0x56, 0x8b, 0xf1, 0x8d, 0x4e, 0x70] } => construct_hall_of_fame_entry, compare_construct_hall_of_fame_entry;
+    Prologue { address: 0x667100, bytes: &[0x6a, 0xff, 0x68, 0x2b, 0xc3, 0x95, 0x00] } => construct_key_nation, compare_construct_key_nation;
+    Prologue { address: 0x6a9e60, bytes: &[0x6a, 0xff, 0x68, 0xb8, 0xcf, 0x95, 0x00] } => handle_fa_request, compare_handle_fa_request;
+    Prologue { address: 0x6aaa90, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => post_fa_request_reply_news, compare_post_fa_request_reply_news;
+    Prologue { address: 0x6aa7d0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => post_match_rescheduled_news, compare_post_match_rescheduled_news;
+    Prologue { address: 0x79d540, bytes: &[0x6a, 0xff, 0x68, 0x49, 0xec, 0x95, 0x00] } => old_finland_awards_construct, compare_old_finland_awards_construct;
+    Prologue { address: 0x79d680, bytes: &[0x6a, 0xff, 0x68, 0xfa, 0xec, 0x95, 0x00] } => old_finland_awards_init, compare_old_finland_awards_init;
+    Prologue { address: 0x79db30, bytes: &[0x83, 0xec, 0x10, 0x56, 0x57] } => old_finland_awards_daily_update, compare_old_finland_awards_daily_update;
+    Prologue { address: 0x79dcb0, bytes: &[0x8b, 0x41, 0x0a, 0x8b, 0x49, 0x04] } => old_finland_awards_on_month_change, compare_old_finland_awards_on_month_change;
+    Prologue { address: 0x79dcf0, bytes: &[0x6a, 0xff, 0x68, 0x18, 0xed, 0x95, 0x00] } => old_france_awards_construct, compare_old_france_awards_construct;
+    Prologue { address: 0x79dd80, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => old_france_awards_init, compare_old_france_awards_init;
+    Prologue { address: 0x79e330, bytes: &[0x83, 0xec, 0x10, 0x56, 0x57] } => old_france_awards_daily_update, compare_old_france_awards_daily_update;
+    Prologue { address: 0x79f490, bytes: &[0xa1, 0x0c, 0xf8, 0x9c, 0x00] } => old_ireland_awards_on_month_change, compare_old_ireland_awards_on_month_change;
+    Prologue { address: 0x7ab340, bytes: &[0x83, 0xec, 0x10, 0x53, 0x56] } => regenerate_as_non_player, compare_regenerate_as_non_player;
+    Prologue { address: 0x7a16d0, bytes: &[0x83, 0xec, 0x20, 0xb8, 0x20, 0x00, 0x00, 0x00] } => os_get_total_physical_memory_mb, compare_os_get_total_physical_memory_mb;
+    Prologue { address: 0x7a1710, bytes: &[0x83, 0xec, 0x20, 0xb8, 0x20, 0x00, 0x00, 0x00] } => os_get_free_memory_mb, compare_os_get_free_memory_mb;
+    Prologue { address: 0x7a1750, bytes: &[0x83, 0xec, 0x44, 0x53, 0x55] } => os_get_cpu_speed_class, compare_os_get_cpu_speed_class;
+    Prologue { address: 0x7a1820, bytes: &[0x81, 0xec, 0xbc, 0x02, 0x00, 0x00] } => os_get_free_disk_space_mb, compare_os_get_free_disk_space_mb;
+    Prologue { address: 0x7a8eb0, bytes: &[0x81, 0xec, 0x48, 0x03, 0x00, 0x00] } => player_regen_write_youth_promotion_news_text, compare_player_regen_write_youth_promotion_news_text;
+    Prologue { address: 0x7dcf90, bytes: &[0x6a, 0xff, 0x68, 0x58, 0xff, 0x95, 0x00] } => rb_england_construct, compare_rb_england_construct;
+    Prologue { address: 0x7dd010, bytes: &[0x6a, 0xff, 0x68, 0xa0, 0xff, 0x95, 0x00] } => rb_england_process_match_cards, compare_rb_england_process_match_cards;
+    Prologue { address: 0x7dd450, bytes: &[0x6a, 0xff, 0x68, 0xb8, 0xff, 0x95, 0x00] } => rb_europe_process_match_cards, compare_rb_europe_process_match_cards;
+    Prologue { address: 0x7dd400, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] } => rb_europe_construct, compare_rb_europe_construct;
+    Prologue { address: 0x7df180, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] } => rb_international_construct, compare_rb_international_construct;
+    Prologue { address: 0x7db360, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] } => rb_asia_construct, compare_rb_asia_construct;
+    Prologue { address: 0x7df1c0, bytes: &[0x6a, 0xff, 0x68, 0xa8, 0x01, 0x96, 0x00] } => rb_international_process_match_cards, compare_rb_international_process_match_cards;
+    Prologue { address: 0x7df3c0, bytes: &[0x55, 0x56, 0x57, 0x8b, 0xf9] } => rb_international_start_new_season, compare_rb_international_start_new_season;
+    Prologue { address: 0x7e4de0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => write_match_record_to_news, compare_write_match_record_to_news;
+    Prologue { address: 0x7e4fa0, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] } => read_match_record_from_news, compare_read_match_record_from_news;
+    Prologue { address: 0x7e5160, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => write_staff_name_ref_to_news, compare_write_staff_name_ref_to_news;
+    Prologue { address: 0x7e52c0, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] } => read_staff_name_ref_from_news, compare_read_staff_name_ref_from_news;
+    Prologue { address: 0x7e5420, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => write_date_span_record_to_news, compare_write_date_span_record_to_news;
+    Prologue { address: 0x7e5570, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] } => read_date_span_record_from_news, compare_read_date_span_record_from_news;
+    Prologue { address: 0x7e6ba0, bytes: &[0x6a, 0xff, 0x68, 0xf0, 0x07, 0x96, 0x00] } => can_clubs_field_reserve_sides, compare_can_clubs_field_reserve_sides;
+    Prologue { address: 0x7e6a70, bytes: &[0x6a, 0xff, 0x68, 0xc8, 0x07, 0x96, 0x00] } => cancel_unplayable_reserve_fixtures, compare_cancel_unplayable_reserve_fixtures;
+    Prologue { address: 0x7e61c0, bytes: &[0x6a, 0xff, 0x68, 0x46, 0x07, 0x96, 0x00] } => reserve_comp_create_sub_comps, compare_reserve_comp_create_sub_comps;
+    Prologue { address: 0x7e29e0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] } => rb_south_america_construct, compare_rb_south_america_construct;
+    Prologue { address: 0x7e2a30, bytes: &[0x6a, 0xff, 0x68, 0xe8, 0x04, 0x96, 0x00] } => rb_south_america_process_match_cards, compare_rb_south_america_process_match_cards;
+    Prologue { address: 0x7e82e0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => find_or_add_discipline_entry, compare_find_or_add_discipline_entry;
+    Prologue { address: 0x7e8510, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x08] } => attach_ban, compare_attach_ban;
+    Prologue { address: 0x7e8590, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x6a, 0x00] } => detach_ban, compare_detach_ban;
+    Prologue { address: 0x7e85b0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => is_player_banned, compare_is_player_banned;
+    Prologue { address: 0x7e9180, bytes: &[0x8b, 0x41, 0x13, 0x57, 0x33, 0xff] } => reset_bookings_for_club, compare_reset_bookings_for_club;
+    Prologue { address: 0x7e91d0, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x46, 0x07] } => remove_pending_bans, compare_remove_pending_bans;
+    Prologue { address: 0x7e7d50, bytes: &[0x83, 0xec, 0x10, 0x53, 0x55] } => ruling_body_daily_update, compare_ruling_body_daily_update;
+    Prologue { address: 0x84be20, bytes: &[0x6a, 0xff, 0x68, 0x24, 0x26, 0x96, 0x00] } => simulated_stats_play_daily_matches, compare_simulated_stats_play_daily_matches;
+    Prologue { address: 0x84b940, bytes: &[0x81, 0xec, 0xfc, 0x04, 0x00, 0x00] } => simulated_stats_simulated_stats, compare_simulated_stats_simulated_stats;
+    Prologue { address: 0x84be10, bytes: &[0x8b, 0x41, 0x04, 0x85, 0xc0] } => simulated_stats_destructor, compare_simulated_stats_destructor;
 }
-const N: usize = 4267;
+const N: usize = 4329;
 include!(concat!(env!("OUT_DIR"), "/indices.rs")); // IDX_<NAME>: the position of each routine (build.rs)
 
 /// Size of the engine object (the game allocates it with new(0xf63b)): side 1's block (+0xf5f2, 0x36
@@ -4479,6 +4541,15 @@ pub(crate) use self::award_nation_awards::*;
 #[path = "motor/award/norway_awards.rs"]
 pub(crate) mod award_norway_awards;
 pub(crate) use self::award_norway_awards::*;
+#[path = "motor/award/old_finland_awards.rs"]
+pub(crate) mod award_old_finland_awards;
+pub(crate) use self::award_old_finland_awards::*;
+#[path = "motor/award/old_france_awards.rs"]
+pub(crate) mod award_old_france_awards;
+pub(crate) use self::award_old_france_awards::*;
+#[path = "motor/award/old_ireland_awards.rs"]
+pub(crate) mod award_old_ireland_awards;
+pub(crate) use self::award_old_ireland_awards::*;
 #[path = "motor/award/poland_awards.rs"]
 pub(crate) mod award_poland_awards;
 pub(crate) use self::award_poland_awards::*;
@@ -5766,6 +5837,9 @@ pub(crate) use self::notes::*;
 #[path = "motor/officials_manager.rs"]
 pub(crate) mod officials_manager;
 pub(crate) use self::officials_manager::*;
+#[path = "motor/os.rs"]
+pub(crate) mod os;
+pub(crate) use self::os::*;
 #[path = "motor/physio.rs"]
 pub(crate) mod physio;
 pub(crate) use self::physio::*;
@@ -5793,6 +5867,21 @@ pub(crate) use self::record_utils::*;
 #[path = "motor/records.rs"]
 pub(crate) mod records;
 pub(crate) use self::records::*;
+#[path = "motor/ruling_body/rb_asia.rs"]
+pub(crate) mod ruling_body_rb_asia;
+pub(crate) use self::ruling_body_rb_asia::*;
+#[path = "motor/ruling_body/rb_england.rs"]
+pub(crate) mod ruling_body_rb_england;
+pub(crate) use self::ruling_body_rb_england::*;
+#[path = "motor/ruling_body/rb_europe.rs"]
+pub(crate) mod ruling_body_rb_europe;
+pub(crate) use self::ruling_body_rb_europe::*;
+#[path = "motor/ruling_body/rb_international.rs"]
+pub(crate) mod ruling_body_rb_international;
+pub(crate) use self::ruling_body_rb_international::*;
+#[path = "motor/ruling_body/rb_south_america.rs"]
+pub(crate) mod ruling_body_rb_south_america;
+pub(crate) use self::ruling_body_rb_south_america::*;
 #[path = "motor/ruling_body/ruling_body.rs"]
 pub(crate) mod ruling_body_ruling_body;
 pub(crate) use self::ruling_body_ruling_body::*;
@@ -5941,6 +6030,112 @@ pub(crate) use self::zipdir::*;
 // ---------- 161st batch: watch list, position code and staff criterion ----------
 
 compare_value!(compare_staff_criterion, staff_criterion, IDX_STAFF_CRITERION, () -> u32);
+
+// --- sx09c_1: the Fine manager: its daily pass, its construction and its release (Fine.cpp) ---
+
+// --- sx09c_5: the discipline object's construction and release, and the ban for assaulting a referee (discipline.cpp) ---
+
+// --- sx09c_6: the dispute object's construction and release, and filing a complaint to the Player Status Committee (dispute.cpp) ---
+
+// ---------- batch 348: building the key nation table (key_nation.cpp; sx12b_1) ----------
+
+/// A season date of a key nation row: day and month (0-based) of the current year (`G_CURRENT_DATE_YEAR`) or of the
+/// next, and the weekday the date is moved to (-1: none), as `Date::Date` (0x549f70) takes them.
+#[derive(Clone, Copy)]
+pub(crate) struct KeyNationDate {
+    day: u32,
+    month: u32,
+    next_year: bool,
+    weekday: i32,
+}
+
+const fn date(day: u32, month: u32, next_year: bool, weekday: i32) -> KeyNationDate {
+    KeyNationDate { day, month, next_year, weekday }
+}
+
+// ---------- sx04c_22: the old Irish managers of the month (award/old_ireland_awards.cpp) ----------
+
+// --- sx16_1: player_regen_regenerate_as_non_player (0x7ab340, player_regen.cpp) ---
+
+/// Exe routines the non-player regeneration calls by address (Rust hooks among them, called through the exe so the
+/// comparison runs their comparers).
+pub(crate) mod regen_non_player_fns {
+    pub(crate) const REWIND_STAFF_HISTORY: usize = 0x86fb80; // Staff_Records::rewind_staff_history, thiscall(this, person), ret 4
+    pub(crate) const REMOVE_NICKNAME_FROM_ALL: usize = 0x5fff30; // HUMAN_MANAGER::remove_nickname_from_all, thiscall(this, person), ret 4
+    pub(crate) const REMOVE_TALKS_RECORDS: usize = 0x4ca1c0; // CONTRACT_MANAGER::remove_talks_records, thiscall(this, person, manager, club), ret 0xc
+    pub(crate) const STAFF_CAN_TAKE_JOB: usize = 0x4cb990; // staff_can_take_job, stdcall(job, person), ret 8
+}
+
+// --- sx16_6: the machine checks (os.cpp: physical and free memory, CPU speed class, free disk space) ---
+
+/// The Windows functions os.cpp calls, read from the exe's import table.
+pub(crate) mod os_imports {
+    pub(crate) const GET_DISK_FREE_SPACE_A: usize = 0x9670b0;
+    pub(crate) const LOAD_LIBRARY_A: usize = 0x9670b4;
+    pub(crate) const GET_PROC_ADDRESS: usize = 0x9670b8;
+    pub(crate) const FREE_LIBRARY: usize = 0x9670bc;
+    pub(crate) const GET_SYSTEM_INFO: usize = 0x9670c0;
+    pub(crate) const GLOBAL_MEMORY_STATUS: usize = 0x9670c4;
+    pub(crate) const GET_VERSION_EX_A: usize = 0x9670c8;
+}
+
+// --- sx16_12: the youth promotion news text (player_regen.cpp 0x7a8eb0) ---
+
+// ---------- sx18_1: the English ruling body (its constructor and its card rules) and the pieces every country's ruling body shares (ruling_body/rb_*.cpp) ----------
+
+/// `Discipline::post_ban_news(player, ban, fixture)` (0x557280, discipline.cpp, thiscall, ret 0xc): the ban news.
+const FN_POST_BAN_NEWS: usize = 0x557280;
+
+/// One ruling body class as its constructor sets it on the RulingBody base: the vtable, the slot of the person's
+/// discipline record it uses (`ruling_body::RECORD_SLOT`), its index in the discipline table
+/// (`ruling_body::RULE_SET_INDEX`), the ban scale (`ruling_body::BAN_SCALE`), the nation and continent it covers (the
+/// key, or None for −1) and the indexes of the league, cup and continental ruling bodies of its area (+0x1f, +0x20,
+/// +0x21; 0xff none).
+pub(crate) struct RulingBodyClass {
+    pub(crate) vtable: u32,
+    pub(crate) record_slot: u8,
+    pub(crate) rule_set: u8,
+    pub(crate) scale: u8,
+    pub(crate) nation: Option<usize>,
+    pub(crate) continent: Option<usize>,
+    pub(crate) league_rule: u8,
+    pub(crate) cup_rule: u8,
+    pub(crate) continental_rule: u8,
+}
+
+/// The ban a ruling body hands out on the spot: the matches, the reason (0 points, 1 bookings, 2 red card) and its
+/// amount, the four rules it applies under and the start date.
+pub(crate) struct ImmediateBan {
+    pub(crate) matches: u8,
+    pub(crate) reason: u8,
+    pub(crate) amount: i16,
+    pub(crate) rules: [u8; 4],
+    pub(crate) start: [u8; 8],
+}
+
+/// What a ruling body's card rules decide for one player after a match: the 0x70-byte pending bans queued on the
+/// body's list, in order (bans that start on a later date), and the ban handed out on the spot.
+pub(crate) struct CardVerdict {
+    pub(crate) pending: Vec<[u8; 0x70]>,
+    pub(crate) ban: Option<ImmediateBan>,
+}
+
+// ---------- sx18_4: a club match record and a staff name reference into and out of a news item's numbered slots (record_utils.cpp) ----------
+
+/// "E:\dev\CM3\cm3 00-01\cm3\code\record_utils.cpp" (the error boxes).
+const RECORD_UTILS_CPP: usize = 0xa7a088;
+
+// ---------- sx18_28: the reserve competition: whether two clubs can field reserve sides, today's unplayable reserve fixtures and the B and Under 21 sub competitions (record_utils.cpp) ----------
+
+compare_value!(compare_can_clubs_field_reserve_sides, can_clubs_field_reserve_sides, IDX_CAN_CLUBS_FIELD_RESERVE_SIDES, (fixture: usize, check_date: u32) -> u32);
+
+// ---------- sx19_19: a ruling body's day: the pending bans whose date has come (ruling_body/ruling_body.cpp) ----------
+
+// --- sx20_1: the daily simulated matches of the clubs outside the playable leagues (simulated_stats.cpp,
+// SimulatedStats::play_daily_matches 0x84be20) ---
+
+// --- sx20_2: building and freeing the simulated statistics groups (simulated_stats.cpp, SimulatedStats::SimulatedStats
+// 0x84b940 and SimulatedStats::~SimulatedStats 0x84be10) ---
 
 // ---------- cx03_19: the constructors of the Copa Libertadores and the Copa Mercosur, and the Mercosur rules (conmebol_liber.cpp, conmebol_merc.cpp) ----------
 

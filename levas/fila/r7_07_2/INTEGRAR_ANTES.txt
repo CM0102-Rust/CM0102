@@ -1,0 +1,1 @@
+Depende do sx20_13 (as constantes do filtro SEARCH_* e SEARCH_FILTERS_SOURCE e o search_filters_compare do comparador).

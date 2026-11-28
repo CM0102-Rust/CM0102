@@ -1,0 +1,20 @@
+NAO PROVADO NO JOGO (leitor r7_08, rodada 7, 28/11/2026): TRANSFER_MANAGER::add_config_future_transfer 0x8bf060,
+inteira. Simulacao (criacao do jogo), chamada so pela player_setup_apply_line 0x7a3a10 (r7_07_1, que a chama pelo
+endereco com a mesma assinatura: thiscall(pessoa, clube, &data, taxa, salario, anos) ret 0x18).
+ATENCAO: o Data/player_setup.cfg do jogo_testes NAO tem linha FUTURE_TRANSFER (184 INJURY, 49 INT_RETIREMENT, 56 LOAN,
+1 MISCONDUCT): na carreira de teste a rotina nao roda (0 chamadas na cobertura do mundo), entao a comparacao e as
+mutacoes da cadeia nao a alcancam e as 3 mutacoes vao escapar. Para a cadeia alcanca-la, a sessao principal decide se
+acrescenta ao player_setup.cfg do jogo_testes uma linha FUTURE_TRANSFER de um jogador da ENG (de um clube para outro,
+data em 2001-2002; taxa 0 passa tambem pelo passe livre); o formato e o da 0x7a3a10.
+Prova sem o jogo: a original do exe e a copia da ddraw.dll compilada emuladas (unicorn, scratchpad\r7_08\check8.py
+fut) no mesmo mundo com stubs (construtores e destrutor da oferta e do contrato, contrato atual, ofertas da pessoa, a
+caixa "Error" e o nome formatado, build_bid, add_transfer_offer, set_to_desired_contract, financas e teto de salario,
+sorteio, add_days/sub_days, add_contract_offer, add_future_transfer, passe livre da nacao): 1500 + 3000 casos sorteados
+(taxa -1/0/outras, salario -1/outros, anos 0/1..10/0xff/0x80 e com lixo em cima), 0 diferencas nas chamadas, nos
+argumentos, na oferta e no contrato entregues, no contrato atual e nos globais; todas as chamadas vistas (o erro de
+quem ja tem oferta e o passe livre incluidos).
+Mutacoes 3/3 acusadas na emulacao (build com as 12 mutacoes do grupo: 2288 de 3000 casos diferentes; primeira
+diferenca nos anos (date_add), no teto do salario (add_contract_offer) e na data da transferencia futura).
+Compila sobre o HEAD 5206427ad junto com r7_08_2..4 (cargo build --release, 0 erros, 0 avisos nas linhas do item); com
+as mutacoes, compila; ancoras com 1 ocorrencia na fila e 0 no rust/src. Prologo sem relativas. Sem dependencias da
+fila. Nao rodei o conferir_assinaturas.py --fila: rodar antes de integrar.

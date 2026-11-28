@@ -1,0 +1,1 @@
+Depende do rx04_1 (G_LANGLIB_LANGUAGE e c_string_bytes_eq): integrar depois dele. Prólogo sem relativo (mov eax, 0x2808): nada a pedir no relativas_pedidas.py.

@@ -342,3 +342,420 @@ pub(crate) unsafe fn ruling_body_extra_data(this: usize, slot: usize, file: usiz
 pub(crate) const PENDING_BAN_NODE_SIZE: u32 = 0x70;
 
 pub(crate) const PENDING_BAN_FIXTURE: usize = 0x20;
+
+/// Returns the player's disciplinary entry in this ruling body, adding one when he has none and `create` is set.
+///
+/// The index comes from the player's discipline record (`ruling_body_entry_index`). Without one and without `create`:
+/// 0. With `create`: a held ban of the body's rule set in the record slot (`Discipline::find_held_ban`) is the error
+/// box of line 0x295 (and goes on); a full array grows by 100 entries (`realloc`, or `malloc` the first time; failing,
+/// the error box of line 0x2b0 and 0); the new entry at the end is zeroed with the player's id and no ban (−1), and its
+/// index goes into the player's record (`Discipline::set_slot`). An index outside the array clears the record's slot
+/// (−1) and gives 0; otherwise the entry's address.
+/// Original: `RulingBody::find_or_add_discipline_entry` (0x7e82e0, ruling_body.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn find_or_add_discipline_entry(this: usize, id: u32, create: u32) -> usize {
+    let d = read_usize(G_DISCIPLINE);
+    let (slot, rule) = (read_u8(this + ruling_body::RECORD_SLOT) as i8, read_u8(this + ruling_body::RULE_SET_INDEX));
+    let mut k = ruling_body_entry_index(this, id);
+    if k == -1 {
+        if create == 0 {
+            return 0;
+        }
+        covered!("sx19_17 entry added");
+        let held = exe::discipline_find_held_ban(d, id as i32, slot);
+        if held != 0 && read_u8(held + 5) == rule { // the held ban's rule set
+            show_error_at(RULING_BODY_CPP, 0x295);
+        }
+        let count = read_i32(this + ruling_body::ENTRY_COUNT);
+        if count == read_i32(this + ruling_body::ENTRY_CAPACITY) {
+            let capacity = count + 100;
+            write_i32(this + ruling_body::ENTRY_CAPACITY, capacity);
+            let old = read_usize(this + ruling_body::ENTRIES);
+            let size = (capacity as u32).wrapping_mul(RULING_BODY_ENTRY_SIZE as u32);
+            let p = if old != 0 { exe::crt_realloc(old, size) } else { exe::crt_malloc(size) };
+            write_usize(this + ruling_body::ENTRIES, p);
+            if p == 0 {
+                show_error_at(RULING_BODY_CPP, 0x2b0);
+                return 0;
+            }
+        }
+        let e = ruling_body_entry_at(this, count);
+        core::ptr::write_bytes(e as *mut u8, 0, RULING_BODY_ENTRY_SIZE);
+        write_i16(e + ruling_body_entry::BAN_INDEX, -1);
+        write_u32(e + ruling_body_entry::PERSON_ID, id); // sx19_17: the new entry's player
+        k = count;
+        write_i32(this + ruling_body::ENTRY_COUNT, count + 1);
+        exe::discipline_set_slot(d, id as i32, slot, rule, k as u32);
+    }
+    if k < read_i32(this + ruling_body::ENTRY_CAPACITY) && k >= 0 {
+        return ruling_body_entry_at(this, k);
+    }
+    exe::discipline_set_slot(d, id as i32, slot, rule, u32::MAX);
+    0
+}
+
+/// Links ban `ban` of the discipline's ban array to the player's entry (found or added). When the entry already points
+/// to a ban, what is left of the old one goes onto the new one (its days when positive, otherwise its matches when
+/// positive) and the old one is released (`Discipline::release_ban`).
+/// Original: `RulingBody::attach_ban` (0x7e8510, ruling_body.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn attach_ban(this: usize, id: u32, ban: i16) {
+    let e = exe::rulingbody_find_or_add_discipline_entry(this, id, 1);
+    if e == 0 {
+        return;
+    }
+    let old = read_i16(e + ruling_body_entry::BAN_INDEX);
+    if old != -1 {
+        covered!("sx19_17 ban merged");
+        let d = read_usize(G_DISCIPLINE);
+        let bans = read_usize(d + discipline_fields::BANS);
+        let (o, n) = (bans.wrapping_add((old as isize * 20) as usize), bans.wrapping_add((ban as isize * 20) as usize));
+        let days = read_i16(o + ban_record::DAYS);
+        if days > 0 {
+            write_i16(n + ban_record::DAYS, read_i16(n + ban_record::DAYS).wrapping_add(days));
+        } else if read_i8(o + ban_record::MATCHES) > 0 { // sx19_17: the old ban's matches go onto the new one
+            write_u8(n + ban_record::MATCHES, read_u8(n + ban_record::MATCHES).wrapping_add(read_u8(o + ban_record::MATCHES)));
+        }
+        exe::discipline_release_ban(d, id, old as u16 as u32);
+    }
+    write_i16(e + ruling_body_entry::BAN_INDEX, ban);
+}
+
+/// Unlinks the player's ban from his entry (−1), when he has an entry; called when the ban is released.
+/// Original: `RulingBody::detach_ban` (0x7e8590, ruling_body.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn detach_ban(this: usize, id: u32) {
+    let e = exe::rulingbody_find_or_add_discipline_entry(this, id, 0);
+    if e != 0 {
+        covered!("sx19_17 ban detached");
+        write_i16(e + ruling_body_entry::BAN_INDEX, -1); // sx19_17: the entry without a ban
+    }
+}
+
+/// Comparer of `find_or_add_discipline_entry`. A lookup (no `create`, or the player has an index) runs both and
+/// compares the addresses. Adding cannot happen twice: only the original runs, and the new entry is checked (the
+/// player's id, no ban, zero counts, one more entry).
+pub(crate) unsafe extern "thiscall" fn compare_find_or_add_discipline_entry(this: usize, id: u32, create: u32) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> usize>(IDX_FIND_OR_ADD_DISCIPLINE_ENTRY);
+    if create == 0 || ruling_body_entry_index(this, id) != -1 {
+        let r = o(this, id, create);
+        let n = find_or_add_discipline_entry(this, id, create);
+        SCOREBOARD.record(r == n, || format!("find_or_add_discipline_entry(player {}, {}): original {:#x} rust {:#x}", id, create, r, n));
+        return r;
+    }
+    let before = read_i32(this + ruling_body::ENTRY_COUNT);
+    let r = o(this, id, create);
+    let ok = r == 0 || (read_u32(r + ruling_body_entry::PERSON_ID) == id && read_i16(r + ruling_body_entry::BAN_INDEX) == -1
+        && read_u16(r + ruling_body_entry::YELLOW_CARDS) == 0 && read_u32(r + ruling_body_entry::DISCIPLINE_POINTS) == 0
+        && read_i32(this + ruling_body::ENTRY_COUNT) == before + 1 && ruling_body_entry_index(this, id) == before);
+    SCOREBOARD.record(ok, || format!("find_or_add_discipline_entry(player {}): new entry {:#x}, count {} (before {})", id, r,
+        read_i32(this + ruling_body::ENTRY_COUNT), before));
+    r
+}
+
+/// Comparer of `attach_ban`: the old ban is released only once, so only the original runs; checked afterwards: the
+/// entry points to the new ban and the new ban carries the old one's days or matches.
+pub(crate) unsafe extern "thiscall" fn compare_attach_ban(this: usize, id: u32, ban: i16) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, i16)>(IDX_ATTACH_BAN);
+    let e = exe::rulingbody_find_or_add_discipline_entry(this, id, 1);
+    if e == 0 {
+        return o(this, id, ban);
+    }
+    let bans = read_usize(read_usize(G_DISCIPLINE) + discipline_fields::BANS);
+    let at = |k: i16| bans.wrapping_add((k as isize * 20) as usize);
+    let old = read_i16(e + ruling_body_entry::BAN_INDEX);
+    let n = at(ban);
+    let (mut days, mut matches) = (read_i16(n + ban_record::DAYS), read_u8(n + ban_record::MATCHES));
+    if old != -1 {
+        let o = at(old);
+        if read_i16(o + ban_record::DAYS) > 0 {
+            days = days.wrapping_add(read_i16(o + ban_record::DAYS));
+        } else if read_i8(o + ban_record::MATCHES) > 0 {
+            matches = matches.wrapping_add(read_u8(o + ban_record::MATCHES));
+        }
+    }
+    o(this, id, ban);
+    let e = exe::rulingbody_find_or_add_discipline_entry(this, id, 0);
+    let ok = e != 0 && read_i16(e + ruling_body_entry::BAN_INDEX) == ban && read_i16(n + ban_record::DAYS) == days
+        && read_u8(n + ban_record::MATCHES) == matches;
+    SCOREBOARD.record(ok, || format!("attach_ban(player {}, ban {}): old {}, days {} matches {} (expected {} {})", id, ban, old,
+        read_i16(n + ban_record::DAYS), read_u8(n + ban_record::MATCHES), days, matches));
+}
+
+/// Comparer of `detach_ban`: only the original runs; afterwards the player's entry, when there is one, has no ban.
+pub(crate) unsafe extern "thiscall" fn compare_detach_ban(this: usize, id: u32) {
+    original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_DETACH_BAN)(this, id);
+    let e = exe::rulingbody_find_or_add_discipline_entry(this, id, 0);
+    SCOREBOARD.record(e == 0 || read_i16(e + ruling_body_entry::BAN_INDEX) == -1, || format!("detach_ban(player {}): entry {:#x} ban {}", id, e,
+        if e != 0 { read_i16(e + ruling_body_entry::BAN_INDEX) } else { 0 }));
+}
+
+/// Whether this ruling body's active ban on the player covers a match.
+///
+/// No entry in the body (`ruling_body_entry_index`): no. A body without entries is the error box of line 0x330 and no.
+/// First the player's bans move on (`Discipline::update_ban_progress` with the body's rule set and 0 matches); then
+/// the entry's ban (none: no). With `flagged_only`, a ban without flag bit 1 does not count. A ban that has not started
+/// yet (today before its start) only counts against a later match (`ban_covers_later_match`; no fixture: no). A
+/// started ban by days covers any match without a fixture, and a fixture's match when the days from the ban's start
+/// to the match are fewer than the ban's; a ban by matches covers when the matches served plus `extra` are at most its
+/// matches.
+/// Original: `RulingBody::is_player_banned` (0x7e85b0, ruling_body.cpp, thiscall, ret 0x10).
+pub(crate) unsafe extern "thiscall" fn is_player_banned(this: usize, person: usize, flagged_only: u32, extra: i16, fixture: usize) -> u32 {
+    let d = read_usize(G_DISCIPLINE);
+    let id = read_u32(person);
+    let k = ruling_body_entry_index(this, id);
+    if k == -1 {
+        return 0;
+    }
+    if read_usize(this + ruling_body::ENTRIES) == 0 {
+        show_error_at(RULING_BODY_CPP, 0x330);
+        return 0;
+    }
+    exe::discipline_update_ban_progress(d, id, read_u8(this + ruling_body::RULE_SET_INDEX) as u32, 0);
+    let b = read_i16(ruling_body_entry_at(this, k) + ruling_body_entry::BAN_INDEX);
+    if b == -1 {
+        return 0;
+    }
+    let ban = read_usize(d + discipline_fields::BANS).wrapping_add((b as isize * 20) as usize);
+    if flagged_only != 0 && read_u8(ban + ban_record::FLAGS) & 2 == 0 {
+        return 0;
+    }
+    if ban_date_before(G_CURRENT_DATE, ban + ban_record::START_DATE) {
+        covered!("sx19_18 ban not started");
+        return (fixture != 0 && ban_covers_later_match(ban, Staff(person), Fixture(fixture))) as u32;
+    }
+    if read_i16(ban + ban_record::DAYS) != -1 {
+        if fixture == 0 {
+            return 1;
+        }
+        covered!("sx19_18 ban by days");
+        let mut md = [0u8; 8];
+        exe::new_date(md.as_mut_ptr() as usize, Fixture(fixture).day() as u32, Fixture(fixture).year() as u32);
+        let days = exe::date_days_since(md.as_ptr() as usize, read_u32(ban + ban_record::START_DATE), read_u32(ban + ban_record::START_DATE + 4));
+        return (days < read_i16(ban + ban_record::DAYS) as i32) as u32;
+    }
+    covered!("sx19_18 ban by matches");
+    (read_i8(ban + ban_record::MATCHES_SERVED) as i32 + extra as i32 <= read_i8(ban + ban_record::MATCHES) as i32) as u32 // sx19_18: matches still to serve
+}
+
+/// Clears the bookings of every player of the club in this body (all players with a null club); entries without a
+/// player (−1) are skipped.
+/// Original: `RulingBody::reset_bookings_for_club` (0x7e9180, ruling_body.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn reset_bookings_for_club(this: usize, club: usize) {
+    let mut k = 0;
+    while k < read_i32(this + ruling_body::ENTRY_COUNT) {
+        let e = ruling_body_entry_at(this, k);
+        let id = read_i32(e + ruling_body_entry::PERSON_ID);
+        if id != -1 && (club == 0 || read_usize(staff_at(id as isize).addr() + staff::CLUB_JOB) == club) {
+            covered!("sx19_18 bookings cleared");
+            write_u8(e + ruling_body_entry::YELLOW_CARDS, 0); // sx19_18: the club's bookings cleared
+        }
+        k += 1;
+    }
+}
+
+/// Removes every pending ban of the player from this body's list (`LLIST::remove` on the nodes whose person is his).
+/// Original: `RulingBody::remove_pending_bans` (0x7e91d0, ruling_body.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn remove_pending_bans(this: usize, id: u32) {
+    let list = Llist(read_usize(this + RULING_BODY_LIST));
+    if list.is_null() {
+        return;
+    }
+    list.set_cursor(list.head());
+    let mut node = exe::llist_get_next(list);
+    while node != 0 {
+        if read_u32(node + pending_ban::PERSON_ID) == id { // sx19_18: the player's pending ban
+            covered!("sx19_18 pending ban removed");
+            exe::llist_remove(list, node);
+        }
+        node = exe::llist_get_next(list);
+    }
+}
+
+/// Comparer of `is_player_banned`: the original runs first (it moves the player's bans on); the copy then asks the same
+/// question (moving them on again changes nothing) and the answers are compared.
+pub(crate) unsafe extern "thiscall" fn compare_is_player_banned(this: usize, person: usize, flagged_only: u32, extra: i16, fixture: usize) -> u32 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, i16, usize) -> u32>(IDX_IS_PLAYER_BANNED)(this, person, flagged_only, extra, fixture);
+    let n = is_player_banned(this, person, flagged_only, extra, fixture);
+    SCOREBOARD.record(r == n, || format!("is_player_banned(player {}, {}, {}, fixture {:#x}): original {} rust {}", read_u32(person), flagged_only, extra, fixture, r, n));
+    r
+}
+
+/// Comparer of `reset_bookings_for_club`: the copy clears a copy of the entries, the original runs, the bytes are
+/// compared.
+pub(crate) unsafe extern "thiscall" fn compare_reset_bookings_for_club(this: usize, club: usize) {
+    let entries = read_usize(this + ruling_body::ENTRIES);
+    let n = read_i32(this + ruling_body::ENTRY_COUNT).max(0) as usize;
+    let mut copy = core::slice::from_raw_parts(entries as *const u8, n * RULING_BODY_ENTRY_SIZE).to_vec();
+    for k in 0..n {
+        let e = copy.as_mut_ptr() as usize + k * RULING_BODY_ENTRY_SIZE;
+        let id = read_i32(e + ruling_body_entry::PERSON_ID);
+        if id != -1 && (club == 0 || read_usize(staff_at(id as isize).addr() + staff::CLUB_JOB) == club) {
+            write_u8(e + ruling_body_entry::YELLOW_CARDS, 0);
+        }
+    }
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_RESET_BOOKINGS_FOR_CLUB)(this, club);
+    let got = core::slice::from_raw_parts(entries as *const u8, n * RULING_BODY_ENTRY_SIZE);
+    SCOREBOARD.record(got == &copy[..], || format!("reset_bookings_for_club({:#x}, club {:#x}): {} entries differ", this, club, n));
+}
+
+/// Comparer of `remove_pending_bans`: only the original runs; afterwards no node of the body's list is the player's.
+pub(crate) unsafe extern "thiscall" fn compare_remove_pending_bans(this: usize, id: u32) {
+    original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_REMOVE_PENDING_BANS)(this, id);
+    let list = Llist(read_usize(this + RULING_BODY_LIST));
+    if list.is_null() {
+        return;
+    }
+    let mut left = 0;
+    list.set_cursor(list.head());
+    let mut node = exe::llist_get_next(list);
+    while node != 0 {
+        if read_u32(node + pending_ban::PERSON_ID) == id {
+            left += 1;
+        }
+        node = exe::llist_get_next(list);
+    }
+    SCOREBOARD.record(left == 0, || format!("remove_pending_bans(player {}): {} nodes left", id, left));
+}
+
+/// Applies the body's pending bans whose start date has come.
+///
+/// From the start of the body's list, until the first node that starts after `date`: the node's ban record takes the
+/// node's start date (+0x14 into +4) and the player's entry is looked up (not added). Without an entry the node is just
+/// removed. Otherwise the player's bans move on (`Discipline::update_ban_progress` with the body's rule set and 0
+/// matches); without a ban in the body, the node's ban is added as it is (flag bit 0 cleared, +0x6f = 1,
+/// `Discipline::add_ban`); with one, the node's matches (or days, for a ban by days) go onto it (replacing a 0xff or −1)
+/// with flag bit 2, and the node gets flag bit 0. The ban news is posted (the player, the node and the node's fixture at
+/// +0x20) and the node removed; each removal restarts the walk from the head.
+/// Original: `RulingBody::daily_update` (0x7e7d50, ruling_body.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn ruling_body_daily_update(this: usize, date: usize) {
+    let list = Llist(read_usize(this + RULING_BODY_LIST));
+    if list.is_null() {
+        return;
+    }
+    let d = read_usize(G_DISCIPLINE);
+    list.set_cursor(list.head());
+    let mut node = exe::llist_get_next(list);
+    while node != 0 {
+        if pending_ban_after(node, date) {
+            return;
+        }
+        covered!("sx19_19 pending ban due");
+        copy_record_date(node + ban_record::START_DATE, node + 0x14); // the pending ban starts on its date
+        let id = read_u32(node + pending_ban::PERSON_ID);
+        let e = exe::rulingbody_find_or_add_discipline_entry(this, id, 0);
+        if e != 0 {
+            exe::discipline_update_ban_progress(d, id, read_u8(this + ruling_body::RULE_SET_INDEX) as u32, 0);
+            let b = read_i16(e + ruling_body_entry::BAN_INDEX);
+            if b == -1 {
+                write_u8(node + ban_record::FLAGS, read_u8(node + ban_record::FLAGS) & 0xfe);
+                write_u8(node + 0x6f, 1); // the pending ban's byte +0x6f
+                add_ban(d, id, node);
+            } else {
+                covered!("sx19_19 pending ban merged");
+                write_u8(node + ban_record::FLAGS, read_u8(node + ban_record::FLAGS) | 1);
+                let ban = read_usize(d + discipline_fields::BANS).wrapping_add((b as isize * 20) as usize);
+                let matches = read_u8(node + ban_record::MATCHES);
+                if matches != 0xff {
+                    let old = read_u8(ban + ban_record::MATCHES);
+                    write_u8(ban + ban_record::MATCHES, if old == 0xff { matches } else { old.wrapping_add(matches) }); // sx19_19: the pending matches added
+                } else {
+                    let (old, days) = (read_i16(ban + ban_record::DAYS), read_i16(node + ban_record::DAYS));
+                    write_i16(ban + ban_record::DAYS, if old == -1 { days } else { old.wrapping_add(days) });
+                }
+                write_u8(ban + ban_record::FLAGS, read_u8(ban + ban_record::FLAGS) | 4);
+            }
+            let post: unsafe extern "thiscall" fn(usize, usize, usize, usize) = core::mem::transmute(FN_POST_BAN_NEWS);
+            post(d, staff_at(id as isize).addr(), node, node + 0x20);
+        }
+        exe::llist_remove(list, node);
+        list.set_cursor(list.head());
+        node = exe::llist_get_next(list);
+    }
+}
+
+/// Comparer of the day: the bans and their news cannot be handed out twice, so only the original runs; checked
+/// afterwards: the nodes due that day (the leading ones not after the date) left the list and the others stayed.
+pub(crate) unsafe extern "thiscall" fn compare_ruling_body_daily_update(this: usize, date: usize) {
+    let list = Llist(read_usize(this + RULING_BODY_LIST));
+    let (mut due, mut total) = (0u16, 0u16);
+    if !list.is_null() {
+        total = list.count() as u16;
+        list.set_cursor(list.head());
+        let mut node = exe::llist_get_next(list);
+        while node != 0 && !pending_ban_after(node, date) {
+            due += 1;
+            node = exe::llist_get_next(list);
+        }
+    }
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_RULING_BODY_DAILY_UPDATE)(this, date);
+    let left = if list.is_null() { 0 } else { list.count() as u16 };
+    SCOREBOARD.record(left == total - due, || format!("ruling_body_daily_update({:#x}): {} nodes left of {} ({} due)", this, left, total, due));
+}
+
+/// The address of entry `k` of the body's entries.
+pub(crate) unsafe fn ruling_body_entry_at(this: usize, k: i32) -> usize {
+    read_usize(this + ruling_body::ENTRIES).wrapping_add((k as usize).wrapping_mul(RULING_BODY_ENTRY_SIZE))
+}
+
+/// The player's index in the body's entries, from his discipline record (`table_penalty` on the body's record slot and
+/// rule set); −1 when he has none.
+pub(crate) unsafe fn ruling_body_entry_index(this: usize, id: u32) -> i32 {
+    table_penalty(read_usize(G_DISCIPLINE), id as i32, read_u8(this + ruling_body::RECORD_SLOT) as i8, read_u8(this + ruling_body::RULE_SET_INDEX) as i8)
+}
+
+/// Whether date `a` (day i16 +0, year u16 +2) comes before date `b`: the year unsigned, then the day signed.
+pub(crate) unsafe fn ban_date_before(a: usize, b: usize) -> bool {
+    let (ya, yb) = (read_u16(a + 2), read_u16(b + 2));
+    ya < yb || (ya == yb && read_i16(a) < read_i16(b))
+}
+
+/// A ban that has not started yet against a match: the player's club in the fixture (home when the fixture's home club
+/// is his club or his national team, otherwise away) and that side's mark pick the club's fixtures from the ban's start
+/// to the match (`FIXTURE_MANAGER::find_fixtures` into a local list, any competition and kind, the side filter = the mark
+/// is set); the unplayed ones (home goals 0xff) of a competition under the same discipline rule set as the fixture's are
+/// counted. Covered when the ban's matches are at least that count; a ban starting after the match covers nothing.
+pub(crate) unsafe fn ban_covers_later_match(ban: usize, person: Staff, fixture: Fixture) -> bool {
+    let mut l = [0u8; 14];
+    let list = Llist(l.as_mut_ptr() as usize);
+    exe::new_llist(list);
+    let mut md = [0u8; 8];
+    exe::new_date(md.as_mut_ptr() as usize, fixture.day() as u32, fixture.year() as u32);
+    let m = md.as_ptr() as usize;
+    if ban_date_before(m, ban + ban_record::START_DATE) {
+        exe::drop_llist(list);
+        return false;
+    }
+    let home = fixture.home_club().addr();
+    let (club, mark) = if person.club_job().addr() == home || person.national_job().addr() == home {
+        (home, fixture.home_side_mark())
+    } else {
+        (fixture.away_club().addr(), fixture.away_side_mark() as u8)
+    };
+    exe::fixture_manager_find_fixtures(read_usize(G_FIXTURE_MANAGER), read_u16(ban + ban_record::START_DATE) as u32,
+        read_u16(ban + ban_record::START_DATE + 2) as u32, read_u16(m) as u32, read_u16(m + 2) as u32, read_u32(club), list, u32::MAX,
+        (-2i32) as u32, (mark != 0) as u32);
+    let rule_of = |comp: i32| League(read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((comp as usize).wrapping_mul(4)))).discipline_rule();
+    list.set_cursor(list.head());
+    let mut count = 0i16;
+    let mut f = exe::llist_get_next(list);
+    while f != 0 {
+        let other = Fixture(f);
+        if other.home_goals() as u8 == 0xff && other.comp_id() >= 0 && fixture.comp_id() >= 0 {
+            let r = rule_of(other.comp_id());
+            if r != 0xff && r == rule_of(fixture.comp_id()) { // sx19_18: a match of the same rule set still to play
+                count += 1;
+            }
+        }
+        f = exe::llist_get_next(list);
+    }
+    exe::drop_llist(list);
+    read_i8(ban + ban_record::MATCHES) as i16 >= count
+}
+
+/// Whether a pending ban's start (node +0x14: day i16, year u16) is after `date`: the list is in date order, so the
+/// day's work stops at the first such node.
+pub(crate) unsafe fn pending_ban_after(node: usize, date: usize) -> bool {
+    let (yn, yd) = (read_u16(node + 0x16), read_u16(date + 2));
+    yd < yn || (yd == yn && read_i16(date) < read_i16(node + 0x14))
+}
+
+/// The size of a ruling body's disciplinary entry (`ruling_body_entry`).
+pub(crate) const RULING_BODY_ENTRY_SIZE: usize = 0xe;

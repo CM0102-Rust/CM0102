@@ -1,0 +1,17 @@
+NAO PROVADO NO JOGO (leitor r7_08, rodada 7, 28/11/2026): Shortlist_Manager::club_wants_player 0x843800, inteira.
+Item de TELAS: a troca oferecida pelo humano (0x47c0b0, gravar 0) e a resposta da IA a proposta com troca (0x8c8090,
+gravar 1).
+Caminho para o Lucas, jogando comparando: fazer uma proposta por um jogador de um clube da IA oferecendo um jogador do
+proprio elenco na troca (a tela de acrescentar jogador na troca) e enviar a proposta.
+Prova sem o jogo: a original do exe e a copia da ddraw.dll compilada emuladas (unicorn, scratchpad\r7_08\check8.py
+wants) no mesmo mundo com stubs (contrato, mascara de posicao com lixo em cima, bsearch dos pares, visto, pode fazer
+proposta, reputacao vista, sorteio, precisa de visto, value_player_for_club com a nota, clube humano, precos pedidos,
+financas e crise, valor do jogador, lesao, interesse em ponto flutuante pela caverna, update_staff_status,
+add_shortlist_entry): 3000 + 3000 casos (40 vagas sorteadas, reputacoes 0/2/3 para a divisao por zero, gravar 0/1),
+0 diferencas nas chamadas, na resposta, nas vagas e nos globais; todas as chamadas vistas.
+Mutacoes 3/3 acusadas na emulacao (build com as 12 do grupo: 59 de 3000 casos diferentes; o estrangeiro jovem, o
+interesse minimo e a escala da margem); no jogo, o comparador lado a lado (gravar 0) as acusa.
+Compila sobre o HEAD 5206427ad junto com r7_08_1..3 (0 erros, 0 avisos nas linhas do item); com as mutacoes, compila;
+ancoras com 1 ocorrencia na fila e 0 no rust/src. Prologo sem relativas. Sem dependencias da fila (os auxiliares do
+irmao 0x842e10 ja estao no rust/src; add_shortlist_entry pelo endereco, como no irmao). Nao rodei o
+conferir_assinaturas.py --fila.

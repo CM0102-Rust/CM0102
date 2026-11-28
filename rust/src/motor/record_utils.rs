@@ -482,3 +482,511 @@ pub(crate) const TREATMENT_PHYSIO: u8 = 0x4e;
 pub(crate) const TREATMENT_SURGERY: u8 = 0x4f;
 
 pub(crate) const TREATMENT_LEAVE: u8 = 0x51;
+
+/// Stores the eleven fields of a club match record (`match_record_slot_values`) in the news item's slots from `*k` on
+/// and advances `*k`; returns 1. A null record or news item shows the error box (lines 0x160, 0x168) and returns 0.
+/// Original: `write_match_record_to_news` (0x7e4de0, record_utils.cpp, cdecl).
+pub(crate) unsafe extern "C" fn write_match_record_to_news(record: usize, news: usize, k: usize) -> u32 {
+    if record == 0 {
+        show_error_at(RECORD_UTILS_CPP, 0x160);
+        return 0;
+    }
+    if news == 0 {
+        show_error_at(RECORD_UTILS_CPP, 0x168);
+        return 0;
+    }
+    covered!("sx18_4 match record to news");
+    news_put_slots(news, k, &match_record_slot_values(record));
+    1
+}
+
+/// Reads a club match record back from the news item's slots from `*k` on and advances `*k`: the date from the first
+/// two (day, year), then the fixture id, the round prefix and name (words), the venue (byte), the club and opponent
+/// ids, the goals for and against (bytes) and the match statistics slot; returns 1. A null news item or record shows
+/// the error box (lines 0x18e, 0x196) and returns 0.
+/// Original: `read_match_record_from_news` (0x7e4fa0, record_utils.cpp, cdecl).
+pub(crate) unsafe extern "C" fn read_match_record_from_news(news: usize, k: usize, record: usize) -> u32 {
+    if news == 0 {
+        show_error_at(RECORD_UTILS_CPP, 0x18e);
+        return 0;
+    }
+    if record == 0 {
+        show_error_at(RECORD_UTILS_CPP, 0x196);
+        return 0;
+    }
+    covered!("sx18_4 match record from news");
+    let [day, year] = news_take_slots::<2>(news, k);
+    news_slot_date(record, day, year);
+    let v = news_take_slots::<9>(news, k);
+    write_u32(record + club_match_record::FIXTURE_ID, v[0]);
+    write_u16(record + club_match_record::ROUND_PREFIX, v[1] as u16);
+    write_u16(record + club_match_record::ROUND_NAME, v[2] as u16);
+    write_u8(record + club_match_record::VENUE, v[3] as u8);
+    write_u32(record + club_match_record::CLUB_ID, v[4]);
+    write_u32(record + club_match_record::OPPONENT_ID, v[5]);
+    write_u8(record + club_match_record::GOALS_FOR, v[6] as u8);
+    write_u8(record + club_match_record::GOALS_AGAINST, v[7] as u8); // sx18_4: the goals against
+    write_u32(record + club_match_record::MATCH_STATS_SLOT, v[8]);
+    1
+}
+
+/// Stores a staff name reference (`staff_name_ref_slot_values`: the three name ids, the staff id, the date) in the news
+/// item's slots from `*k` on and advances `*k`; returns 1. A null reference or news item shows the error box (lines
+/// 0x1bb, 0x1c3) and returns 0.
+/// Original: `write_staff_name_ref_to_news` (0x7e5160, record_utils.cpp, cdecl).
+pub(crate) unsafe extern "C" fn write_staff_name_ref_to_news(r: usize, news: usize, k: usize) -> u32 {
+    if r == 0 {
+        show_error_at(RECORD_UTILS_CPP, 0x1bb);
+        return 0;
+    }
+    if news == 0 {
+        show_error_at(RECORD_UTILS_CPP, 0x1c3);
+        return 0;
+    }
+    covered!("sx18_4 name reference to news");
+    news_put_slots(news, k, &staff_name_ref_slot_values(r));
+    1
+}
+
+pub(crate) unsafe extern "C" fn compare_write_match_record_to_news(record: usize, news: usize, k: usize) -> u32 {
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_WRITE_MATCH_RECORD_TO_NEWS);
+    if record == 0 || news == 0 {
+        return o(record, news, k);
+    }
+    compare_news_slot_writer(news, k, &match_record_slot_values(record), || o(record, news, k), "write_match_record_to_news")
+}
+
+pub(crate) unsafe extern "C" fn compare_read_match_record_from_news(news: usize, k: usize, record: usize) -> u32 {
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_READ_MATCH_RECORD_FROM_NEWS);
+    if news == 0 || record == 0 {
+        return o(news, k, record);
+    }
+    compare_news_slot_reader(k, record, 0x1f, || o(news, k, record), |kc, rc| read_match_record_from_news(news, kc, rc), "read_match_record_from_news")
+}
+
+pub(crate) unsafe extern "C" fn compare_write_staff_name_ref_to_news(r: usize, news: usize, k: usize) -> u32 {
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_WRITE_STAFF_NAME_REF_TO_NEWS);
+    if r == 0 || news == 0 {
+        return o(r, news, k);
+    }
+    compare_news_slot_writer(news, k, &staff_name_ref_slot_values(r), || o(r, news, k), "write_staff_name_ref_to_news")
+}
+
+/// Reads a staff name reference back from the news item's slots from `*k` on and advances `*k`: the three name ids and
+/// the staff id (dwords), then the date from the next two (day, year); returns 1. A null news item or reference shows
+/// the error box (lines 0x1e4, 0x1ec) and returns 0.
+/// Original: `read_staff_name_ref_from_news` (0x7e52c0, record_utils.cpp, cdecl).
+pub(crate) unsafe extern "C" fn read_staff_name_ref_from_news(news: usize, k: usize, r: usize) -> u32 {
+    if news == 0 {
+        show_error_at(RECORD_UTILS_CPP, 0x1e4);
+        return 0;
+    }
+    if r == 0 {
+        show_error_at(RECORD_UTILS_CPP, 0x1ec);
+        return 0;
+    }
+    covered!("sx18_5 name reference from news");
+    let v = news_take_slots::<6>(news, k);
+    write_u32(r, v[0]); // sx18_5: the first name id
+    write_u32(r + record_holder::SECOND_NAME_ID, v[1]);
+    write_u32(r + record_holder::COMMON_NAME_ID, v[2]);
+    write_u32(r + record_holder::STAFF_ID, v[3]);
+    news_slot_date(r + record_holder::DATE, v[4], v[5]);
+    1
+}
+
+/// Stores a span record (`date_span_slot_values`: the value, the start and end dates) in the news item's slots from
+/// `*k` on and advances `*k`; returns 1. A null record or news item shows the error box (lines 0x20c, 0x214) and
+/// returns 0.
+/// Original: `write_date_span_record_to_news` (0x7e5420, record_utils.cpp, cdecl).
+pub(crate) unsafe extern "C" fn write_date_span_record_to_news(r: usize, news: usize, k: usize) -> u32 {
+    if r == 0 {
+        show_error_at(RECORD_UTILS_CPP, 0x20c);
+        return 0;
+    }
+    if news == 0 {
+        show_error_at(RECORD_UTILS_CPP, 0x214);
+        return 0;
+    }
+    covered!("sx18_5 span record to news");
+    news_put_slots(news, k, &date_span_slot_values(r));
+    1
+}
+
+/// Reads a span record back from the news item's slots from `*k` on and advances `*k`: the value (+0), then the start
+/// date and the end date, each from two slots (day, year); returns 1. A null news item or record shows the error box
+/// (lines 0x234, 0x23c) and returns 0.
+/// Original: `read_date_span_record_from_news` (0x7e5570, record_utils.cpp, cdecl).
+pub(crate) unsafe extern "C" fn read_date_span_record_from_news(news: usize, k: usize, r: usize) -> u32 {
+    if news == 0 {
+        show_error_at(RECORD_UTILS_CPP, 0x234);
+        return 0;
+    }
+    if r == 0 {
+        show_error_at(RECORD_UTILS_CPP, 0x23c);
+        return 0;
+    }
+    covered!("sx18_5 span record from news");
+    let [value, d0, y0] = news_take_slots::<3>(news, k);
+    write_u32(r, value);
+    news_slot_date(r + run_record::START_DATE, d0, y0);
+    let [d1, y1] = news_take_slots::<2>(news, k);
+    news_slot_date(r + run_record::END_DATE, d1, y1); // sx18_5: the end date
+    1
+}
+
+pub(crate) unsafe extern "C" fn compare_read_staff_name_ref_from_news(news: usize, k: usize, r: usize) -> u32 {
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_READ_STAFF_NAME_REF_FROM_NEWS);
+    if news == 0 || r == 0 {
+        return o(news, k, r);
+    }
+    compare_news_slot_reader(k, r, 0x18, || o(news, k, r), |kc, rc| read_staff_name_ref_from_news(news, kc, rc), "read_staff_name_ref_from_news")
+}
+
+pub(crate) unsafe extern "C" fn compare_write_date_span_record_to_news(r: usize, news: usize, k: usize) -> u32 {
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_WRITE_DATE_SPAN_RECORD_TO_NEWS);
+    if r == 0 || news == 0 {
+        return o(r, news, k);
+    }
+    compare_news_slot_writer(news, k, &date_span_slot_values(r), || o(r, news, k), "write_date_span_record_to_news")
+}
+
+pub(crate) unsafe extern "C" fn compare_read_date_span_record_from_news(news: usize, k: usize, r: usize) -> u32 {
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_READ_DATE_SPAN_RECORD_FROM_NEWS);
+    if news == 0 || r == 0 {
+        return o(news, k, r);
+    }
+    compare_news_slot_reader(k, r, 0x14, || o(news, k, r), |kc, rc| read_date_span_record_from_news(news, kc, rc), "read_date_span_record_from_news")
+}
+
+/// Whether both clubs of a fixture can field a reserve side (`reserve_squad`, `reserve_side_ok`).
+///
+/// With `check_date`: not for a fixture with a round name (`fixture::ROUND_NAME` ≠ 0), nor when the home club is
+/// Turkish (`club::NATION`) and its division is not the Turkish one, nor for the round prefixes 0x418, 0x419 and 0xa0,
+/// nor on 26 December of the fixture's year. A home club in the Scottish Premier Division or Turkish needs 15 young
+/// players (21 or under at the fixture's date); the others none (−1). Both clubs must have a reserve squad
+/// (`database_club_has_reserve_squad`); then the home club's side and the away club's are checked in turn.
+/// Original: `ReserveComp::can_clubs_field_reserve_sides` (0x7e6ba0, record_utils.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn can_clubs_field_reserve_sides(_this: usize, fixture: usize, check_date: u32) -> u32 {
+    let fixture = Fixture(fixture);
+    let f = fixture;
+    let nation_is_turkey = |club: usize| read_i32(read_usize(club + club::NATION)) == read_i32(KEY_NATION_TURKEY);
+    if check_date != 0 {
+        let home = f.home_club().addr();
+        if (fixture.round_name() as u16) != 0 {
+            return 0;
+        }
+        if nation_is_turkey(home) {
+            let division = read_usize(home + club::DIVISION);
+            if division == 0 || read_i32(division) != read_i32(KEY_RESERVE_TURKISH_DIVISION) {
+                return 0;
+            }
+        }
+        if matches!(fixture.round_prefix() as u16, 0x418 | 0x419 | 0xa0) {
+            return 0;
+        }
+        let (mut boxing_day, mut played) = ([0u16; 4], [0u8; 8]);
+        exe::date_date_549f70(&mut boxing_day, 0x1a, 0xb, f.year() as u32, u32::MAX);
+        let p = exe::new_date(played.as_mut_ptr() as usize, f.day() as u32, f.year() as u32);
+        if boxing_day[1] == read_u16(p + 2) && boxing_day[0] == read_u16(p) { // sx18_28: no reserve match on 26 December
+            return 0;
+        }
+    }
+    let (mut min_young, mut when) = (-1i8, [0u16; 4]);
+    exe::date_date_54a110(when.as_mut_ptr() as usize);
+    let home = f.home_club().addr();
+    if home != 0 {
+        let division = read_usize(home + club::DIVISION);
+        if division != 0 && (read_i32(division) == read_i32(KEY_CLUB_COMP_SCOTTISH_PREMIER_DIVISION) || nation_is_turkey(home)) {
+            covered!("sx18_28 reserve sides with young players");
+            min_young = 0xf;
+            let mut t = [0u8; 8];
+            let p = exe::new_date(t.as_mut_ptr() as usize, f.day() as u32, f.year() as u32);
+            copy_record_date(when.as_mut_ptr() as usize, p);
+        }
+    }
+    let away = f.away_club().addr();
+    if exe::database_club_has_reserve_squad(home) == 0 || exe::database_club_has_reserve_squad(away) == 0 {
+        return 0;
+    }
+    covered!("sx18_28 reserve sides counted");
+    for club in [home, away] {
+        let s = reserve_squad(club, min_young, when.as_ptr());
+        if !reserve_side_ok(club, &s, min_young) {
+            return 0;
+        }
+    }
+    1
+}
+
+/// Removes today's reserve fixtures that cannot be played: for each active key nation's fixture list of today
+/// (`fix_man_get_fixture_list_for_date` with today, the day slice and the index), each fixture of the reserve
+/// competition or of the French CFA or lower division whose clubs cannot field reserve sides
+/// (`can_clubs_field_reserve_sides` without the date checks) is copied to a local list; then each one is removed
+/// (`FIXTURE_MANAGER::remove_fixture`).
+/// Original: `ReserveComp::cancel_unplayable_reserve_fixtures` (0x7e6a70, record_utils.cpp, thiscall).
+pub(crate) unsafe extern "thiscall" fn cancel_unplayable_reserve_fixtures(this: usize) {
+    for fixture in unplayable_reserve_fixtures(this) {
+        covered!("sx18_28 reserve fixture cancelled");
+        exe::fixture_manager_remove_fixture(read_usize(G_FIXTURE_MANAGER), fixture.as_ptr() as usize);
+    }
+}
+
+/// Registers the reserve competition and builds its two sub competitions: the reserve competition object goes to its
+/// slot of `G_COMP_OBJECT_TABLE` (`KEY_CLUB_COMP_RESERVE`); a B international competition (0xa3 bytes, `Comp::Comp`,
+/// vtable 0x96f074, its record `KEY_CLUB_COMP_B_INTERNATIONAL`) goes to +0xa3 and to its slot, and an Under 21
+/// international one (vtable 0x96efe4, `KEY_CLUB_COMP_UNDER_21_INTERNATIONAL`) to +0xa7 and to its slot (0 when out of
+/// memory). Then, with the French first division built, the French CFA's slot gets its object's +0xee and the French
+/// lower division's its +0xf2; with the Spanish first division built, the Spanish lower division's slot gets its +0xee.
+/// Original: `ReserveComp::create_sub_comps` (0x7e61c0, record_utils.cpp, thiscall).
+pub(crate) unsafe extern "thiscall" fn reserve_comp_create_sub_comps(this: usize) {
+    let slot = |key: usize| read_usize(G_COMP_OBJECT_TABLE).wrapping_add((read_i32(key) as usize).wrapping_mul(4));
+    write_usize(slot(KEY_CLUB_COMP_RESERVE), this);
+    for (at, vtable, key) in [(0xa3usize, 0x96f074u32, KEY_CLUB_COMP_B_INTERNATIONAL), (0xa7, 0x96efe4, KEY_CLUB_COMP_UNDER_21_INTERNATIONAL)] {
+        let p = exe::crt_operator_new(0xa3);
+        let comp = if p != 0 {
+            exe::new_comp(p);
+            write_u32(p, vtable);
+            write_usize(p + 4, reserve_comp_record(key)); // the competition's record
+            p
+        } else {
+            0
+        };
+        write_usize(this + at, comp); // the B (+0xa3) and Under 21 (+0xa7) international competitions
+        write_usize(slot(key), comp);
+    }
+    covered!("sx18_28 reserve sub competitions");
+    let french = read_usize(slot(KEY_CLUB_COMP_FRENCH_FIRST_DIVISION));
+    if french != 0 {
+        write_usize(slot(KEY_CLUB_COMP_FRENCH_CFA), read_usize(french + 0xee)); // the French first division's CFA object
+        write_usize(slot(KEY_CLUB_COMP_FRENCH_LOWER_DIVISION), read_usize(read_usize(slot(KEY_CLUB_COMP_FRENCH_FIRST_DIVISION)) + 0xf2));
+    }
+    let spanish = read_usize(slot(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION));
+    if spanish != 0 {
+        write_usize(slot(KEY_CLUB_COMP_SPANISH_LOWER_DIVISION), read_usize(spanish + 0xee)); // the Spanish first division's lower object
+    }
+}
+
+/// Comparer for `cancel_unplayable_reserve_fixtures`: the fixtures cannot be removed twice; the copy lists the
+/// fixtures it would remove first (their first 0x14 bytes: competition, stadium, statistics slot and clubs), then only
+/// the original runs; none of them may be left among today's fixtures.
+pub(crate) unsafe extern "thiscall" fn compare_cancel_unplayable_reserve_fixtures(this: usize) {
+    let expected: Vec<[u8; 0x14]> = unplayable_reserve_fixtures(this).iter().map(|f| f[..0x14].try_into().unwrap()).collect();
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CANCEL_UNPLAYABLE_RESERVE_FIXTURES)(this);
+    let mut left = 0;
+    let mut k = 0i8;
+    while k < read_i8(G_KEY_NATION_ACTIVE_COUNT) {
+        let list = exe::fix_man_get_fixture_list_for_date(read_usize(G_FIXTURE_MANAGER), G_CURRENT_DATE, read_u8(G_CURRENT_DAY_SLICE) as u32, k as u8 as u32);
+        if list != 0 {
+            write_u32(list + llist::CURSOR, read_u32(list + llist::HEAD));
+            loop {
+                let fixture = exe::llist_get_next(list);
+                if fixture == 0 {
+                    break;
+                }
+                if expected.iter().any(|e| core::slice::from_raw_parts(fixture as *const u8, 0x14) == &e[..]) {
+                    left += 1;
+                }
+            }
+        }
+        k += 1;
+    }
+    SCOREBOARD.record(left == 0, || format!("cancel_unplayable_reserve_fixtures: {} of {} unplayable fixtures still there", left, expected.len()));
+}
+
+/// Comparer for `reserve_comp_create_sub_comps`: it allocates the sub competitions (it cannot run twice); only the
+/// original runs and the table slots it leaves are checked.
+pub(crate) unsafe extern "thiscall" fn compare_reserve_comp_create_sub_comps(this: usize) {
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_RESERVE_COMP_CREATE_SUB_COMPS)(this);
+    let slot = |key: usize| read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((read_i32(key) as usize).wrapping_mul(4)));
+    let (b, u21) = (read_usize(this + 0xa3), read_usize(this + 0xa7));
+    let mut ok = slot(KEY_CLUB_COMP_RESERVE) == this && slot(KEY_CLUB_COMP_B_INTERNATIONAL) == b && slot(KEY_CLUB_COMP_UNDER_21_INTERNATIONAL) == u21
+        && (b == 0 || (read_u32(b) == 0x96f074 && read_usize(b + 4) == reserve_comp_record(KEY_CLUB_COMP_B_INTERNATIONAL)))
+        && (u21 == 0 || (read_u32(u21) == 0x96efe4 && read_usize(u21 + 4) == reserve_comp_record(KEY_CLUB_COMP_UNDER_21_INTERNATIONAL)));
+    let french = slot(KEY_CLUB_COMP_FRENCH_FIRST_DIVISION);
+    if french != 0 {
+        ok &= slot(KEY_CLUB_COMP_FRENCH_CFA) == read_usize(french + 0xee) && slot(KEY_CLUB_COMP_FRENCH_LOWER_DIVISION) == read_usize(french + 0xf2);
+    }
+    let spanish = slot(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION);
+    if spanish != 0 {
+        ok &= slot(KEY_CLUB_COMP_SPANISH_LOWER_DIVISION) == read_usize(spanish + 0xee);
+    }
+    SCOREBOARD.record(ok, || format!("reserve_comp_create_sub_comps({:#x}): B {:#x}, Under 21 {:#x}", this, b, u21));
+}
+
+/// Stores `values` in the news item's slots from `*k` on (`NewsItem::set_slot`), advancing `*k` past them.
+pub(crate) unsafe fn news_put_slots(news: usize, k: usize, values: &[u32]) {
+    for &v in values {
+        let slot = read_u8(k);
+        write_u8(k, slot.wrapping_add(1));
+        exe::newsitem_set_slot(news, slot as i8, v);
+    }
+}
+
+/// Reads `N` slots of the news item from `*k` on (`NewsItem::get_slot`), advancing `*k` past them.
+pub(crate) unsafe fn news_take_slots<const N: usize>(news: usize, k: usize) -> [u32; N] {
+    let mut v = [0u32; N];
+    for x in v.iter_mut() {
+        let slot = read_u8(k);
+        write_u8(k, slot.wrapping_add(1));
+        *x = exe::newsitem_get_slot(news, slot as u32);
+    }
+    v
+}
+
+/// Writes the date (day, year) read from two slots into `at` (`Date::Date` then `Date::operator=`).
+pub(crate) unsafe fn news_slot_date(at: usize, day: u32, year: u32) {
+    let mut d = [0u8; 8];
+    let p = exe::new_date(d.as_mut_ptr() as usize, day, year);
+    copy_record_date(at, p);
+}
+
+/// The eleven slot values of a club match record, in the original's order: the date (day, year), the fixture id, the
+/// round prefix and name words (sign-extended), the venue byte (sign-extended), the club and opponent ids, the goals for
+/// and against (sign-extended) and the match statistics slot.
+pub(crate) unsafe fn match_record_slot_values(record: usize) -> [u32; 11] {
+    let [day, year] = date_slot_values(record);
+    [day, year, read_u32(record + club_match_record::FIXTURE_ID),
+     read_i16(record + club_match_record::ROUND_PREFIX) as i32 as u32, read_i16(record + club_match_record::ROUND_NAME) as i32 as u32,
+     read_i8(record + club_match_record::VENUE) as i32 as u32, read_u32(record + club_match_record::CLUB_ID),
+     read_u32(record + club_match_record::OPPONENT_ID), read_i8(record + club_match_record::GOALS_FOR) as i32 as u32, // sx18_4: the goals for
+     read_i8(record + club_match_record::GOALS_AGAINST) as i32 as u32, read_u32(record + club_match_record::MATCH_STATS_SLOT)]
+}
+
+/// The six slot values of a staff name reference: the three name ids, the staff id and the date (day, year).
+pub(crate) unsafe fn staff_name_ref_slot_values(r: usize) -> [u32; 6] {
+    let [day, year] = date_slot_values(r + record_holder::DATE);
+    [read_u32(r), read_u32(r + record_holder::SECOND_NAME_ID), read_u32(r + record_holder::COMMON_NAME_ID),
+     read_u32(r + record_holder::STAFF_ID), day, year]
+}
+
+/// Comparer of the slot writers: the copy's values are taken first, then only the original writes (a news item's slots
+/// are written once); the slots it wrote from the old `*k` must hold the copy's values, and `*k` must have moved past
+/// them.
+pub(crate) unsafe fn compare_news_slot_writer(news: usize, k: usize, values: &[u32], original: impl FnOnce() -> u32, name: &str) -> u32 {
+    let k0 = read_u8(k);
+    let r = original();
+    let got: Vec<u32> = (0..values.len()).map(|i| exe::newsitem_get_slot(news, k0.wrapping_add(i as u8) as u32)).collect();
+    let ok = r == 1 && read_u8(k) == k0.wrapping_add(values.len() as u8) && got == values;
+    SCOREBOARD.record(ok, || format!("{}(news {:#x}, slot {}): original {:x?}, copy {:x?}", name, news, k0, got, values));
+    r
+}
+
+/// Comparer of the slot readers: the copy reads into a copy of the record with its own `*k` first, then the original
+/// reads into the record; the `size` bytes of both records and the two `*k` must match.
+pub(crate) unsafe fn compare_news_slot_reader(k: usize, record: usize, size: usize, original: impl FnOnce() -> u32, copy: impl FnOnce(usize, usize) -> u32, name: &str) -> u32 {
+    let mut local = vec![0u8; size];
+    core::ptr::copy_nonoverlapping(record as *const u8, local.as_mut_ptr(), size);
+    let mut k_copy = read_u8(k);
+    let n = copy(&mut k_copy as *mut u8 as usize, local.as_mut_ptr() as usize);
+    let r = original();
+    let same = core::slice::from_raw_parts(record as *const u8, size) == &local[..];
+    SCOREBOARD.record(r == n && same && read_u8(k) == k_copy, || format!("{}: original {:x?} k {}, copy {:x?} k {}", name,
+        core::slice::from_raw_parts(record as *const u8, size), read_u8(k), local, k_copy));
+    r
+}
+
+/// The five slot values of a span record: the value (+0), the start date (day, year) and the end date (day, year).
+pub(crate) unsafe fn date_span_slot_values(r: usize) -> [u32; 5] {
+    let [d0, y0] = date_slot_values(r + run_record::START_DATE);
+    let [d1, y1] = date_slot_values(r + run_record::END_DATE);
+    [read_u32(r), d0, y0, d1, y1]
+}
+
+/// The competition record (0x6b bytes in `G_CLUB_COMP_TABLE`) of the competition whose id the key holds.
+pub(crate) unsafe fn reserve_comp_record(key: usize) -> usize {
+    read_usize(G_CLUB_COMP_TABLE).wrapping_add((read_i32(key) as usize).wrapping_mul(0x6b))
+}
+
+pub(crate) unsafe fn reserve_squad(club: usize, min_young: i8, when: *const u16) -> ReserveSquad {
+    let club = Club(club);
+    let mut s = ReserveSquad { empty: 0, listed: 0, young: 0, available: 0, available_listed: 0 };
+    for k in 0..50 {
+        let p = Staff(club.squad(k));
+        if p.is_null() {
+            s.empty += 1;
+            continue;
+        }
+        if p.club_job() != club || exe::injury_get_player_injury_status(read_usize(G_INJURY), p) != 0 {
+            continue;
+        }
+        let listed = read_i32(p.addr()) < read_i32(G_STAFF_COUNT);
+        if listed {
+            s.listed += 1;
+        }
+        if min_young != -1 && exe::database_get_staff_age(p, when) <= 0x15 {
+            s.young += 1;
+        }
+        if p.playing_squad() & 1 == 0 {
+            if listed {
+                s.available_listed += 1;
+            }
+            s.available += 1;
+        }
+    }
+    s
+}
+
+/// Whether a club can field its reserve side: with fewer than 11 available players, no more than 36 listed and enough
+/// empty slots to make up 14; a human club needs 11 available and one of them listed; and the young players must reach
+/// `min_young`.
+pub(crate) unsafe fn reserve_side_ok(club: usize, s: &ReserveSquad, min_young: i8) -> bool {
+    if s.available < 0xb && (s.listed > 0x24 || (s.empty as i32) < 0xe - s.available as i32) {
+        return false;
+    }
+    if exe::human_manager_is_human_club(club, 1, 1, 0, 0) != 0 && (s.available < 0xb || s.available_listed < 1) { // sx18_28: a human club's reserve side
+        return false;
+    }
+    s.young >= min_young
+}
+
+/// Today's reserve fixtures whose clubs cannot field reserve sides, copied (`fixture::SIZE` bytes each), in order.
+pub(crate) unsafe fn unplayable_reserve_fixtures(this: usize) -> Vec<[u8; fixture::SIZE]> {
+    let mut out = Vec::new();
+    let mut k = 0i8;
+    while k < read_i8(G_KEY_NATION_ACTIVE_COUNT) {
+        let list = exe::fix_man_get_fixture_list_for_date(read_usize(G_FIXTURE_MANAGER), G_CURRENT_DATE, read_u8(G_CURRENT_DAY_SLICE) as u32, k as u8 as u32);
+        if list != 0 {
+            write_u32(list + llist::CURSOR, read_u32(list + llist::HEAD));
+            loop {
+                let fixture = Fixture(exe::llist_get_next(list));
+                if fixture.is_null() {
+                    break;
+                }
+                let comp = fixture.competition().addr();
+                if comp == 0 {
+                    continue;
+                }
+                let id = read_i32(comp);
+                let reserve = [KEY_CLUB_COMP_RESERVE, KEY_CLUB_COMP_FRENCH_CFA, KEY_CLUB_COMP_FRENCH_LOWER_DIVISION].iter().any(|&key| id == read_i32(key));
+                if reserve && can_clubs_field_reserve_sides(this, fixture.addr(), 0) == 0 {
+                    let mut copy = [0u8; fixture::SIZE];
+                    core::ptr::copy_nonoverlapping(fixture.addr() as *const u8, copy.as_mut_ptr(), fixture::SIZE);
+                    out.push(copy);
+                }
+            }
+        }
+        k += 1;
+    }
+    out
+}
+
+/// The two slot values of a date: the day word sign-extended, the year word zero-extended.
+pub(crate) unsafe fn date_slot_values(at: usize) -> [u32; 2] {
+    [read_i16(at) as i32 as u32, read_u16(at + 2) as u32]
+}
+
+/// A Turkish competition key the reserve rules require of a Turkish home club's division (no name in `keys.rs` yet).
+pub(crate) const KEY_RESERVE_TURKISH_DIVISION: usize = 0x9cf8d4;
+
+/// One club's squad for a reserve match, over the 50 `club::SQUAD` slots: the empty slots; and, among the players at
+/// the club (`staff::CLUB_JOB` = the club) and not injured (`Injury::get_player_injury_status`), the listed ones (id
+/// below `G_STAFF_COUNT`), the young ones (age at `when` up to 21, counted only when `min_young` is not −1), the
+/// available ones (bit 0 of `staff::PLAYING_SQUAD` clear) and those of them listed.
+pub(crate) struct ReserveSquad {
+    pub(crate) empty: i8,
+    pub(crate) listed: i8,
+    pub(crate) young: i8,
+    pub(crate) available: i8,
+    pub(crate) available_listed: i8,
+}

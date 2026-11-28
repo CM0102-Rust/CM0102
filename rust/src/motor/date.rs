@@ -627,3 +627,20 @@ pub(crate) const DATE_TEXT_GRAMMAR: u32 = 0x64;
 /// The shared buffers a date text may write besides its own (the weekday, month, short weekday, short month, time
 /// of day and suffix names, and the ordinal's at 0xde2734).
 pub(crate) const DATE_TEXT_BUFFERS: [(usize, usize); 7] = [(0xae2434, 0x1c), (0xae2450, 0x19), (0xae2478, 0xc), (0xae2484, 0x19), (0xae24a0, 0xa), (0xae24ac, 0x14), (0xde2734, 0x20)];
+
+/// Day `day` of the current month (`Date::set` with today's month and year); when today is past it, day `day` of the
+/// next month (January of the next year after December).
+pub(crate) unsafe fn day_of_this_or_next_month(day: u32) -> [u8; 8] {
+    let year = read_u16(G_CURRENT_DATE_YEAR) as u32;
+    let mut d = [0u8; 8];
+    exe::date_set(d.as_mut_ptr() as usize, day, exe::date_get_month(G_CURRENT_DATE) as u32, year, -1);
+    if cm_date_after(G_CURRENT_DATE, d.as_ptr() as usize) {
+        let month = exe::date_get_month(G_CURRENT_DATE).wrapping_add(1);
+        if (month as i8) < 0xc {
+            exe::date_set(d.as_mut_ptr() as usize, day, month as u32, year, -1);
+        } else {
+            exe::date_set(d.as_mut_ptr() as usize, day, 0, (year as u16).wrapping_add(1) as u32, -1);
+        }
+    }
+    d
+}

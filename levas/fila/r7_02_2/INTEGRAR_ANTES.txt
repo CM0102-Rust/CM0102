@@ -1,0 +1,1 @@
+Integrar depois do r7_02_1 (SAVE, outra leva): sem a carga desviada, a única liberação do jogo comparando acha as tabelas vazias e as 3 mutações não aparecem. Não chama nada que só exista no r7_02_1 (a carga vai por exe::load_database). Prólogos sem relativo: nada a pedir no relativas_pedidas.py.

@@ -1,0 +1,16 @@
+NAO PROVADO NO JOGO (leitor r7_03, rodada 7, 28/11/2026): player_search_write_player_report_news_text 0x7b95c0
+(13,5 KB), inteira, um desvio. Item de TELAS: a noticia 0x138b so sai com um relatorio de jogador pedido pelo tecnico
+humano ao olheiro ou achado numa busca dele.
+Caminho para o Lucas, jogando comparando: pedir a um olheiro o relatorio de um jogador (ficha do jogador) e dar a
+outro uma busca (nacao, regiao, competicao, base); abrir as noticias de relatorio (manchete e corpo), de preferencia
+uma de jogo visto e uma sem jogo, uma com estrangeiro (autorizacao de trabalho). Comparador: compare_text_writer
+(texto, vinculos, gerador) e o retorno (1/0).
+Prova sem o jogo: a original do exe e a copia da ddraw.dll compilada emuladas (unicorn,
+scratchpad\r7_03\check_r7.py) no mesmo mundo com stubs (vagas, nomes, posicao, descricao, fase, jogo, pontos fortes,
+adjetivo, regiao, busca, vinculos, langlib e sprintf); 0x7e52c0, 0x7e4fa0 e as datas rodam o codigo do exe: 3000 +
+15000 noticias sorteadas (notas -1..6, jogo visto ou nao, fase/reserva/Friendly, placar, clube ou nao, passaporte 0..3,
+manchetes), 0 diferencas, os 92 modelos de texto vistos; a caixa de erro (noticia nula) igual.
+Mutacoes 3/3 mudam o rastro na emulacao (build com as tres juntas: 1428 de 3000 casos diferentes; vistos o empate, o
+veredito 3/4 e o vinculo do jogador). Compila sobre o HEAD 5206427ad (0 erros, 0 avisos nas linhas do item); com as
+mutacoes, compila; ancoras com 1 ocorrencia em rust/src e na fila. Depende do sx17_7 so pelo endereco (chama 0x7bdee0
+pelo exe). Nao rodei o conferir_assinaturas.py --fila: rodar antes de integrar.

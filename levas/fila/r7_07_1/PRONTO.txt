@@ -1,0 +1,14 @@
+NAO PROVADO NO JOGO (leitor r7_07, rodada 7, 28/11/2026): player_setup_apply_line 0x7a3a10 (5,7 KB, inteira, em
+pedacos: decodificar a linha numa SetupAction e depois executar) e player_setup_cfg_load 0x7a30c0. Simulacao: a
+carreira de teste cria o jogo e aplica o Data/player_setup.cfg do jogo_testes (184 INJURY, 49 INT_RETIREMENT, 56 LOAN,
+1 MISCONDUCT; fim de linha CRLF), entao a comparacao e as mutacoes da cadeia a provam.
+Comparador da 0x7a3a10: le a mesma linha antes (ftell, utils_read_config_line, fseek de volta; o arquivo do jogo e
+CRLF, como o ftell em modo texto do CRT supoe), decide com o decodificador da copia, roda a original e confere a linha
+lida (a mesma) e o efeito (marcas, marca de regen, suspensao no vetor do Discipline, lesao no registro fisico, notas da
+diretoria, aposentadoria pendente e estado "anunciada", emprestimo como o compare_add_config_loan); report (o
+-verifyplcfg) so a original. 0x7a30c0 so a original.
+Compila sobre o HEAD 5206427ad (cargo build --release, 0 erros, 0 avisos nas linhas do item); com as 3 mutacoes,
+compila; ancoras com 1 ocorrencia na fila e 0 no rust/src. Sem dependencias da fila (os auxiliares do player_setup,
+add_ban, add_injury, add_retirement, add_config_loan, awol_start_absence, set_board_ratings, staff_add_disliked_club e
+main_national_team ja estao no rust/src; TACTICS_PRESETS_ON e G_PLAYER_SETUP_*_FLAG tambem). Prologos sem relativas.
+Nao rodei o conferir_assinaturas.py --fila: rodar antes de integrar.
