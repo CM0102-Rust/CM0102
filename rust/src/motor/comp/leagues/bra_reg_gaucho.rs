@@ -193,3 +193,17 @@ pub(crate) const GAUCHO_STAGE_0_OPS: [AsiaClubChampScheduleOp; 36] = [
     Cqp11W(0x77, 0x804), Cqp11W(0x86, 0), Cqp11B(0x88, 0), Cqp11B(0x89, 2), Cqp11B(0x8a, 7), Cqp11X(0xc4, 0),
     Cqp11X(0xc8, 0x3d090), Cqp11X(0xcc, 0x186a0),
 ];
+
+/// Stores a club's progress in the Rio Grande do Sul state championship (`league_stage_progress`: in the league a best
+/// code below 5 becomes 1 and a worst code below 5 becomes 3).
+/// Original: `BraRegGaucho::set_club_progress` (0x432af0, bra_reg_gaucho.cpp, thiscall, ret 0x14).
+pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_set_club_progress(this: usize, club: usize, stage: u32, current: u32, best: u32, worst: u32) -> usize {
+    covered!("cx09_17 gaucho progress");
+    league_stage_progress(this, club, stage, current, best, worst, 5, 3)
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_bra_reg_gaucho_set_club_progress(this: usize, club: usize, stage: u32, current: u32, best: u32, worst: u32) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> usize>(IDX_BRA_REG_GAUCHO_SET_CLUB_PROGRESS);
+    compare_league_stage_progress("bra_reg_gaucho_set_club_progress", this, club, || o(this, club, stage, current, best, worst),
+        || bra_reg_gaucho_set_club_progress(this, club, stage, current, best, worst))
+}

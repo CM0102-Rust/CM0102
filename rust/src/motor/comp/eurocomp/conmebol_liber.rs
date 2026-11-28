@@ -614,3 +614,73 @@ pub(crate) unsafe fn conmebol_predicted_positions_plan(this: usize, table: usize
     }
     v
 }
+
+/// The Copa Libertadores at career creation: discipline rule 2 and importance 15; a new cup has eight stages, the
+/// Conmebol seeding of the new season, the rules and the statistics (`build_south_american_cup`).
+/// Original: `ConmebolLiber::ConmebolLiber` (0x4c2f50, conmebol_liber.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn construct_conmebol_liber(this: usize, year: u32, record: usize) -> usize {
+    build_south_american_cup(League(this), year, record, &COPA_LIBERTADORES, "cx03_19 libertadores new")
+}
+
+/// Comparer for `construct_conmebol_liber`: only the original runs (it allocates and reads the save file), then the
+/// plan is checked (`cup_constructor_plan_mismatch`, without the round table).
+pub(crate) unsafe extern "thiscall" fn compare_construct_conmebol_liber(this: usize, year: u32, record: usize) -> usize {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_CONMEBOL_LIBER)(this, year, record);
+    let error = cup_constructor_plan_mismatch(this, r, year, record, COPA_LIBERTADORES.vtable, &south_american_cup_ctor_fields(8), false);
+    SCOREBOARD.record(error.is_none(), || format!("construct_conmebol_liber({:#x}, {}, {:#x}): {}", this, year as u16, record, error.clone().unwrap_or_default()));
+    r
+}
+
+/// The constructor of the two South American cups (`Libertadores(year, record)`, `Mercosur(year, record)`), run once, at
+/// career creation; the same body in both (checked instruction by instruction), `SouthAmericanCup` sets them apart.
+///
+/// On the League base (`exe::new_league`, thiscall, ret 0): the competition record (`league::COMPETITION`), the vtable,
+/// the year (`set_year`), `discipline_rule` 2 (the South American rules), the drawn club list (+0xee) = 0 and
+/// `importance` 0xf. If the saved state loads (`exe::league_load_from_temp_file`: push 1 -> thiscall, ret 4; nonzero),
+/// returns this. On a new cup, in order: `league_flags` 0x28, `stage_index` 0xff, `current_stage` −1, the stage count
+/// and the stage vector (`exe::crt_malloc` of 4 per stage, unchecked); in the Libertadores the Conmebol seeding's new
+/// season (ConmebolSeeding::update_for_new_season on `G_CONMEBOL_SEEDING` with 0, thiscall, ret 4); the rules (thiscall,
+/// ret 0; 0: the box of `rows[0]` and this); `club_count` 0, `table` 0 and `active` 0; the statistics
+/// (`create_comp_stats_at_8`; without them the box of `rows[1]`). Returns this.
+pub(crate) unsafe fn build_south_american_cup(this: League, year: u32, record: usize, cup: &SouthAmericanCup, branch: &'static str) -> usize {
+    exe::new_league(this);
+    write_u32(this.addr() + league::COMPETITION, record as u32);
+    write_u32(this.addr(), cup.vtable as u32);
+    this.set_year(year as u16 as i16);
+    this.set_discipline_rule(2);
+    write_u32(this.addr() + conmebol_liber::DRAWN_CLUBS, 0);
+    this.set_importance(0xf);
+    if exe::league_load_from_temp_file(this, 1) != 0 {
+        return this.addr();
+    }
+    covered!(branch);
+    this.set_league_flags(0x28);
+    this.set_stage_index(stage_index::MAIN);
+    this.set_current_stage(0xffff_ffff);
+    this.set_stage_count(cup.stages);
+    this.set_stages(exe::crt_malloc(cup.stages as u32 * 4));
+    if cup.seeding {
+        let seed: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CONMEBOLSEEDING_UPDATE_FOR_NEW_SEASON); // return unused
+        seed(read_usize(G_CONMEBOL_SEEDING), 0);
+    }
+    let rules: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(cup.rules);
+    if rules(this.addr()) == 0 {
+        show_error_at(cup.file, cup.rows[0]);
+        return this.addr();
+    }
+    this.set_club_count(0);
+    this.set_table(0);
+    this.set_active(0);
+    if !create_comp_stats_at_8(this.addr()) {
+        show_error_at(cup.file, cup.rows[1]);
+    }
+    this.addr()
+}
+
+/// The Copa Libertadores: 8 stages, the seeding moved on, the boxes of lines 0x52 and 0x60.
+pub(crate) const COPA_LIBERTADORES: SouthAmericanCup = SouthAmericanCup {
+    vtable: 0x968bf4, stages: 8, seeding: true, rules: FN_CONMEBOLLIBER_SET_UP_RULES, file: 0x9a7de4, rows: [0x52, 0x60],
+};
+
+/// ConmebolLiber::set_up_rules (thiscall, ret 0; 0 = failure).
+pub(crate) const FN_CONMEBOLLIBER_SET_UP_RULES: usize = 0x4c3890;

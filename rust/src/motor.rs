@@ -4356,8 +4356,65 @@ routines! {
     Prologue { address: 0x7ec210, bytes: &[0x6a, 0xff, 0x68, 0xf8, 0x09, 0x96, 0x00] } => russia_awards_construct, compare_russia_awards_construct;
     Prologue { address: 0x7ec2a0, bytes: &[0x6a, 0xff, 0x68, 0x72, 0x0a, 0x96, 0x00] } => russia_awards_init, compare_russia_awards_init;
     Prologue { address: 0x7ec600, bytes: &[0x83, 0xec, 0x10, 0x56, 0x57] } => russia_awards_daily_update, compare_russia_awards_daily_update;
+    Prologue { address: 0x906980, bytes: &[0x6a, 0xff, 0x68, 0xd9, 0x52, 0x96, 0x00] } => usa_awards_construct, compare_usa_awards_construct;
+    Prologue { address: 0x906ac0, bytes: &[0x6a, 0xff, 0x68, 0x52, 0x53, 0x96, 0x00] } => usa_awards_init, compare_usa_awards_init;
+    Prologue { address: 0x906e10, bytes: &[0x83, 0xec, 0x10, 0x56, 0x57] } => usa_awards_daily_update, compare_usa_awards_daily_update;
+    Prologue { address: 0x906f60, bytes: &[0x8b, 0x41, 0x0a, 0x8b, 0x49, 0x04] } => usa_awards_on_month_change, compare_usa_awards_on_month_change;
+    Prologue { address: 0x666690, bytes: &[0x6a, 0xff, 0x68, 0x68, 0xc2, 0x95, 0x00] } => japan_awards_construct, compare_japan_awards_construct;
+    Prologue { address: 0x666720, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => japan_awards_init, compare_japan_awards_init;
+    Prologue { address: 0x666ab0, bytes: &[0x83, 0xec, 0x10, 0x56, 0x57] } => japan_awards_daily_update, compare_japan_awards_daily_update;
+    Prologue { address: 0x4259a0, bytes: &[0x6a, 0xff, 0x68, 0x39, 0x43, 0x95, 0x00] } => construct_bra_champ_cup, compare_construct_bra_champ_cup;
+    Prologue { address: 0x426d80, bytes: &[0x81, 0xec, 0x2c, 0x05, 0x00, 0x00] } => bra_champ_cup_select_entrants, compare_bra_champ_cup_select_entrants;
+    Prologue { address: 0x426ab0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_champ_cup_set_predicted_positions, compare_bra_champ_cup_set_predicted_positions;
+    Prologue { address: 0x426130, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => bra_champ_cup_create_preliminary_table, compare_bra_champ_cup_create_preliminary_table;
+    Prologue { address: 0x427320, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_champ_cup_start_preliminary_stage, compare_bra_champ_cup_start_preliminary_stage;
+    Prologue { address: 0x4263c0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => bra_champ_cup_advance_stage, compare_bra_champ_cup_advance_stage;
+    Prologue { address: 0x426470, bytes: &[0x6a, 0xff, 0x68, 0x8c, 0x43, 0x95, 0x00] } => bra_champ_cup_create_group_stages, compare_bra_champ_cup_create_group_stages;
+    Prologue { address: 0x426720, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => bra_champ_cup_create_semi_final_stage, compare_bra_champ_cup_create_semi_final_stage;
+    Prologue { address: 0x4262c0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_champ_cup_start_new_season, compare_bra_champ_cup_start_new_season;
+    Prologue { address: 0x426900, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x56] } => bra_champ_cup_update_staff_records_for_status, compare_bra_champ_cup_update_staff_records_for_status;
+    Prologue { address: 0x426c20, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] } => bra_champ_cup_set_club_progress, compare_bra_champ_cup_set_club_progress;
+    Prologue { address: 0x425fd0, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x56] } => bra_champ_cup_build_fate_news_text, compare_bra_champ_cup_build_fate_news_text;
+    Prologue { address: 0x42b760, bytes: &[0x83, 0xec, 0x64, 0xa1, 0xfc, 0xad, 0xad, 0x00] } => bra_nat_first_fill_brazilian_cup_entrants, compare_bra_nat_first_fill_brazilian_cup_entrants;
+    Prologue { address: 0x42bba0, bytes: &[0x81, 0xec, 0xa0, 0x00, 0x00, 0x00] } => bra_nat_first_fill_champions_cup_entrants, compare_bra_nat_first_fill_champions_cup_entrants;
+    Prologue { address: 0x88c9f0, bytes: &[0x6a, 0xff, 0x68, 0x38, 0x30, 0x96, 0x00] } => sub_league_add_results_between_members, compare_sub_league_add_results_between_members;
+    Prologue { address: 0x4c2f50, bytes: &[0x6a, 0xff, 0x68, 0x39, 0x6a, 0x95, 0x00] } => construct_conmebol_liber, compare_construct_conmebol_liber;
+    Prologue { address: 0x4c46c0, bytes: &[0x6a, 0xff, 0x68, 0xe9, 0x6a, 0x95, 0x00] } => construct_conmebol_merc, compare_construct_conmebol_merc;
+    Prologue { address: 0x4c4f50, bytes: &[0x6a, 0xff, 0x68, 0x28, 0x6b, 0x95, 0x00] } => conmebol_merc_set_up_rules, compare_conmebol_merc_set_up_rules;
+    Prologue { address: 0x90a980, bytes: &[0x6a, 0xff, 0x68, 0xd6, 0x54, 0x96, 0x00] } => usa_mls_all_stars_select_squads, compare_usa_mls_all_stars_select_squads;
+    Prologue { address: 0x7976b0, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x56] } => oceania_club_champ_build_fate_news_text, compare_oceania_club_champ_build_fate_news_text;
+    Prologue { address: 0x7987a0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] } => oceania_club_champ_set_club_progress, compare_oceania_club_champ_set_club_progress;
+    Prologue { address: 0x4029c0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] } => african_nations_set_club_progress, compare_african_nations_set_club_progress;
+    Prologue { address: 0x57ce10, bytes: &[0x6a, 0xff, 0x68, 0x67, 0x88, 0x95, 0x00] } => construct_euro_champ_qual, compare_construct_euro_champ_qual;
+    Prologue { address: 0x57f600, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => euro_champ_qual_collect_entrants, compare_euro_champ_qual_collect_entrants;
+    Prologue { address: 0x5806d0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => euro_champ_qual_set_predicted_positions, compare_euro_champ_qual_set_predicted_positions;
+    Prologue { address: 0x57d190, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => euro_champ_qual_create_schedule, compare_euro_champ_qual_create_schedule;
+    Prologue { address: 0x57ed10, bytes: &[0x6a, 0xff, 0x68, 0xce, 0x88, 0x95, 0x00] } => euro_champ_qual_create_group_stage, compare_euro_champ_qual_create_group_stage;
+    Prologue { address: 0x57fd60, bytes: &[0x6a, 0xff, 0x68, 0xa6, 0x89, 0x95, 0x00] } => euro_champ_qual_update_for_date, compare_euro_champ_qual_update_for_date;
+    Prologue { address: 0x5e18a0, bytes: &[0x6a, 0xff, 0x68, 0xbc, 0xa8, 0x95, 0x00] } => goldcup_create_knockout_stage, compare_goldcup_create_knockout_stage;
+    Prologue { address: 0x5e2500, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] } => goldcup_set_club_progress, compare_goldcup_set_club_progress;
+    Prologue { address: 0x682200, bytes: &[0x6a, 0xff, 0x68, 0x26, 0xc9, 0x95, 0x00] } => new_league, compare_new_league;
+    Prologue { address: 0x68aff0, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x8b, 0x54, 0x24, 0x08] } => fixed_fixture_set_by_club_names, compare_fixed_fixture_set_by_club_names;
+    Prologue { address: 0x411a30, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x56] } => aus_nsl_build_fate_news_text, compare_aus_nsl_build_fate_news_text;
+    Prologue { address: 0x412380, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] } => aus_nsl_set_club_progress, compare_aus_nsl_set_club_progress;
+    Prologue { address: 0x4124e0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] } => aus_nsl_set_fixture_substitutes, compare_aus_nsl_set_fixture_substitutes;
+    Prologue { address: 0x42d040, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x56] } => bra_nat_second_update_staff_records_for_status, compare_bra_nat_second_update_staff_records_for_status;
+    Prologue { address: 0x42d260, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] } => bra_nat_second_set_club_progress, compare_bra_nat_second_set_club_progress;
+    Prologue { address: 0x42e380, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => bra_nat_third_advance_stage, compare_bra_nat_third_advance_stage;
+    Prologue { address: 0x432af0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] } => bra_reg_gaucho_set_club_progress, compare_bra_reg_gaucho_set_club_progress;
+    Prologue { address: 0x433cf0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] } => bra_reg_goias_set_club_progress, compare_bra_reg_goias_set_club_progress;
+    Prologue { address: 0x654390, bytes: &[0x8b, 0x44, 0x24, 0x24, 0x56] } => ita_ser_c_build_fate_news_text, compare_ita_ser_c_build_fate_news_text;
+    Prologue { address: 0x663db0, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x53] } => jap_j1_update_staff_records_for_status, compare_jap_j1_update_staff_records_for_status;
+    Prologue { address: 0x6640a0, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x53] } => jap_j1_build_fate_news_text, compare_jap_j1_build_fate_news_text;
+    Prologue { address: 0x664400, bytes: &[0x53, 0x55, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x14] } => jap_j1_set_club_progress, compare_jap_j1_set_club_progress;
+    Prologue { address: 0x664390, bytes: &[0x56, 0x8b, 0xf1, 0x83, 0x7e, 0x2c, 0x02] } => jap_j1_record_season_honours, compare_jap_j1_record_season_honours;
+    Prologue { address: 0x909ec0, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => usa_mls_get_club_division, compare_usa_mls_get_club_division;
+    Prologue { address: 0x90a130, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] } => usa_mls_compare_points_desc, compare_usa_mls_compare_points_desc;
+    Prologue { address: 0x9072d0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => usa_mls_create_schedule, compare_usa_mls_create_schedule;
+    Prologue { address: 0x43d2b0, bytes: &[0x6a, 0xff, 0x68, 0x78, 0x4b, 0x95, 0x00] } => construct_brazil_awards, compare_construct_brazil_awards;
+    Prologue { address: 0x43e990, bytes: &[0x83, 0xec, 0x10, 0x56, 0x57] } => brazil_awards_daily_update, compare_brazil_awards_daily_update;
 }
-const N: usize = 4198;
+const N: usize = 4255;
 include!(concat!(env!("OUT_DIR"), "/indices.rs")); // IDX_<NAME>: the position of each routine (build.rs)
 
 /// Size of the engine object (the game allocates it with new(0xf63b)): side 1's block (+0xf5f2, 0x36
@@ -4377,6 +4434,9 @@ pub(crate) use self::award_award_manager::*;
 #[path = "motor/award/award_shortlist.rs"]
 pub(crate) mod award_award_shortlist;
 pub(crate) use self::award_award_shortlist::*;
+#[path = "motor/award/brazil_awards.rs"]
+pub(crate) mod award_brazil_awards;
+pub(crate) use self::award_brazil_awards::*;
 #[path = "motor/award/denmark_awards.rs"]
 pub(crate) mod award_denmark_awards;
 pub(crate) use self::award_denmark_awards::*;
@@ -4392,6 +4452,9 @@ pub(crate) use self::award_finland_awards::*;
 #[path = "motor/award/international_awards.rs"]
 pub(crate) mod award_international_awards;
 pub(crate) use self::award_international_awards::*;
+#[path = "motor/award/japan_awards.rs"]
+pub(crate) mod award_japan_awards;
+pub(crate) use self::award_japan_awards::*;
 #[path = "motor/award/month_award.rs"]
 pub(crate) mod award_month_award;
 pub(crate) use self::award_month_award::*;
@@ -4419,6 +4482,9 @@ pub(crate) use self::award_team_award::*;
 #[path = "motor/award/turkey_awards.rs"]
 pub(crate) mod award_turkey_awards;
 pub(crate) use self::award_turkey_awards::*;
+#[path = "motor/award/usa_awards.rs"]
+pub(crate) mod award_usa_awards;
+pub(crate) use self::award_usa_awards::*;
 #[path = "motor/award/world_cup_awards.rs"]
 pub(crate) mod award_world_cup_awards;
 pub(crate) use self::award_world_cup_awards::*;
@@ -5857,6 +5923,31 @@ pub(crate) use self::zipdir::*;
 // ---------- 161st batch: watch list, position code and staff criterion ----------
 
 compare_value!(compare_staff_criterion, staff_criterion, IDX_STAFF_CRITERION, () -> u32);
+
+// ---------- cx03_19: the constructors of the Copa Libertadores and the Copa Mercosur, and the Mercosur rules (conmebol_liber.cpp, conmebol_merc.cpp) ----------
+
+/// What differs between the two South American cups' constructors: the vtable, the stage count, whether the
+/// Conmebol seeding moves to the new season first, the rules routine and the source file with the box lines of the
+/// rules and the statistics.
+pub(crate) struct SouthAmericanCup {
+    pub(crate) vtable: usize,
+    pub(crate) stages: usize,
+    pub(crate) seeding: bool,
+    pub(crate) rules: usize,
+    pub(crate) file: usize,
+    pub(crate) rows: [u32; 2],
+}
+
+/// The fixed fields the South American cups' constructors leave on a new cup, for the comparers.
+pub(crate) const fn south_american_cup_ctor_fields(stages: u32) -> [(usize, u8, u32); 10] {
+    [(league::STAGE_COUNT, 4, stages), (league::CURRENT_STAGE, 4, 0xffff_ffff), (league::CLUB_COUNT, 2, 0), (league::STAGE_INDEX, 1, 0xff), (league::ACTIVE, 4, 0),
+        (league::DISCIPLINE_RULE, 1, 2), (league::IMPORTANCE, 1, 0xf), (league::TABLE, 4, 0), (league::LEAGUE_FLAGS, 2, 0x28), (conmebol_liber::DRAWN_CLUBS, 4, 0)]
+}
+
+// ---------- rx09_13: the Brazilian awards object and its day (award/brazil_awards.cpp) ----------
+
+/// "E:\dev\CM3\cm3 00-01\cm3\code\award\brazil_awards.cpp" (the error box).
+pub(crate) const BRAZIL_AWARDS_CPP: usize = 0x98b0cc;
 
 // ---------- sx04b_8: a nation's player of the year by the season statistics and the orders of its candidates (nation_awards.cpp) ----------
 

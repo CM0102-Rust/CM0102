@@ -2144,3 +2144,7 @@ pub const FN_NOTES_LOAD_NOTES: usize = 0x794be0; // Notes::load_notes
 pub const FN_OFFICIALSMANAGER_LOAD_OFFICIAL_STATS: usize = 0x79b850; // OfficialsManager::load_official_stats
 pub const FN_OFFICIALSMANAGER_SET_UP_OFFICIALS: usize = 0x79bf60; // OfficialsManager::set_up_officials
 pub const FN_PLAYER_REGEN_LOAD_RETIRE_DAT: usize = 0x7adcd0; // PLAYER_REGEN::load_retire_dat
+pub const FN_EUROCHAMPQUAL_COLLECT_ENTRANTS: usize = 0x57f600; // EuroChampQual::collect_entrants
+pub const FN_EUROCHAMPQUAL_CREATE_RUNNERS_UP_STAGE: usize = 0x57f920; // EuroChampQual::create_runners_up_stage
+pub const FN_EUROCHAMPQUAL_UPDATE_RUNNERS_UP_TABLE: usize = 0x57fa10; // EuroChampQual::update_runners_up_table
+pub const FN_EUROCHAMPQUAL_CREATE_GROUPS_AND_RESULTS: usize = 0x580bd0; // EuroChampQual::create_groups_and_results

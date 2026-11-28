@@ -624,3 +624,49 @@ pub(crate) unsafe fn conmebol_merc_group(this: usize, g: i8) -> usize {
         read_usize(this.stages() + g as isize as usize * 4)
     }
 }
+
+/// The Copa Mercosur at career creation: as the Libertadores, with five stages and no seeding step
+/// (`build_south_american_cup`).
+/// Original: `ConmebolMerc::ConmebolMerc` (0x4c46c0, conmebol_merc.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn construct_conmebol_merc(this: usize, year: u32, record: usize) -> usize {
+    build_south_american_cup(League(this), year, record, &COPA_MERCOSUR, "cx03_19 mercosur new")
+}
+
+/// rule: the Copa Mercosur groups are home and away, 3 points a win and 1 a draw, tiebreak by codes 1, 2 and 3, one
+/// club going through directly from each group, clubs from several nations, category 7, 7 substitutes named and 3
+/// changes; the season starts on day 15 of month 5 of the competition year [inference: 15 June]; prize fund of 2,000,000
+/// (`apply_cup_rules` with `MERCOSUR_RULES`: the fields, the start day word, its year offset 0, the prize and the
+/// round table from virtual +0x3c into `league::ROUND_DATES`). Returns 1.
+/// Original: `ConmebolMerc::set_up_rules` (0x4c4f50, conmebol_merc.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn conmebol_merc_set_up_rules(this: usize) -> u32 {
+    covered!("cx03_19 mercosur rules");
+    apply_cup_rules(League(this), &MERCOSUR_RULES, MERCOSUR_RULES.day, 3)
+}
+
+/// Comparer for `construct_conmebol_merc` (as above).
+pub(crate) unsafe extern "thiscall" fn compare_construct_conmebol_merc(this: usize, year: u32, record: usize) -> usize {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_CONMEBOL_MERC)(this, year, record);
+    let error = cup_constructor_plan_mismatch(this, r, year, record, COPA_MERCOSUR.vtable, &south_american_cup_ctor_fields(5), false);
+    SCOREBOARD.record(error.is_none(), || format!("construct_conmebol_merc({:#x}, {}, {:#x}): {}", this, year as u16, record, error.clone().unwrap_or_default()));
+    r
+}
+
+/// Comparer for `conmebol_merc_set_up_rules`: only the original runs (virtual +0x3c allocates the round table); the plan
+/// checks the rules (`check_cup_rules`).
+pub(crate) unsafe extern "thiscall" fn compare_conmebol_merc_set_up_rules(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CONMEBOL_MERC_SET_UP_RULES);
+    check_cup_rules("conmebol_merc_set_up_rules", League(this), &MERCOSUR_RULES, || o(this))
+}
+
+/// The Copa Mercosur: 5 stages, the boxes of lines 0x4a and 0x58.
+pub(crate) const COPA_MERCOSUR: SouthAmericanCup = SouthAmericanCup {
+    vtable: 0x968ca8, stages: 5, seeding: false, rules: 0x4c4f50, file: 0x9a7e5c, rows: [0x4a, 0x58],
+};
+
+/// The Copa Mercosur rules: the Merconorte's fields with 7 substitutes named and 3 substitutions allowed, one qualifier
+/// per group, the start on day 15 of month 5 [inference: 15 June] and the prize fund of 2,000,000.
+pub(crate) const MERCOSUR_RULES: ContinentalGroupRules = ContinentalGroupRules {
+    fields: &[(0xc2, 1, 3), (0xc7, 1, 3), (0x4a, 1, 3), (0x3c, 2, 2), (0xc6, 1, 2), (0x42, 1, 2), (0xc3, 1, 1), (0xc4, 1, 7), (0xc5, 1, 1),
+        (0xbe, 1, 1), (0xbf, 1, 0), (0xc0, 1, 0), (0xc1, 1, 0), (0x1c, 4, 0xffff_ffff), (0x20, 4, 0xffff_ffff), (0x49, 1, 7)],
+    day: 0xf, month: 5, week: 0xffff_ffff, prize: Some(0x1e8480),
+};

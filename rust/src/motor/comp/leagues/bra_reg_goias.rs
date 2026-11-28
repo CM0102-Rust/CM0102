@@ -319,3 +319,17 @@ pub(crate) const GOIAS_STAGE_0_OPS: [AsiaClubChampScheduleOp; 54] = [
     Cqp11W(0xec, 0), Cqp11W(0xdf, 0x804), Cqp11W(0xee, 0), Cqp11B(0xf0, 0), Cqp11B(0xf1, 2), Cqp11B(0xf2, 7),
     Cqp11X(0x12c, 0), Cqp11X(0x130, 0x3d090), Cqp11X(0x134, 0x186a0),
 ];
+
+/// Stores a club's progress in the Goias state championship (`league_stage_progress`: in the league a best code below 9
+/// becomes 1 and a worst code below 9 becomes 5).
+/// Original: `BraRegGoias::set_club_progress` (0x433cf0, bra_reg_goias.cpp, thiscall, ret 0x14).
+pub(crate) unsafe extern "thiscall" fn bra_reg_goias_set_club_progress(this: usize, club: usize, stage: u32, current: u32, best: u32, worst: u32) -> usize {
+    covered!("cx09_17 goias progress");
+    league_stage_progress(this, club, stage, current, best, worst, 9, 5)
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_bra_reg_goias_set_club_progress(this: usize, club: usize, stage: u32, current: u32, best: u32, worst: u32) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> usize>(IDX_BRA_REG_GOIAS_SET_CLUB_PROGRESS);
+    compare_league_stage_progress("bra_reg_goias_set_club_progress", this, club, || o(this, club, stage, current, best, worst),
+        || bra_reg_goias_set_club_progress(this, club, stage, current, best, worst))
+}

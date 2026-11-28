@@ -8,19 +8,19 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 
 | Medida | Quantidade |
 |---|---:|
-| deslocamentos crus | 4112 |
+| deslocamentos crus | 4147 |
 | chaves fixas cruas | 1130 |
 | chamadas por endereço | 0 |
 | cópias de acesso à memória | 0 |
 | rotinas sem cabeçalho | 0 |
 | locais/parâmetros em português | 222 |
-| linhas | 414544 |
+| linhas | 417708 |
 
 ## Por arquivo (os 40 piores, pelos deslocamentos crus)
 
 | Arquivo | deslocamentos crus | chaves fixas cruas | chamadas por endereço | cópias de acesso à memória | rotinas sem cabeçalho | locais/parâmetros em português | linhas |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| `motor.rs` | 583 | 0 | 0 | 0 | 0 | 72 | 12838 |
+| `motor.rs` | 583 | 0 | 0 | 0 | 0 | 72 | 12929 |
 | `motor/comp_screens.rs` | 339 | 11 | 0 | 0 | 0 | 0 | 9539 |
 | `motor/club_screens.rs` | 321 | 2 | 0 | 0 | 0 | 0 | 13774 |
 | `motor/news.rs` | 169 | 0 | 0 | 0 | 0 | 0 | 3888 |
@@ -44,6 +44,7 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 | `motor/comp/cup.rs` | 47 | 3 | 0 | 0 | 0 | 2 | 4447 |
 | `motor/award_screens.rs` | 41 | 0 | 0 | 0 | 0 | 0 | 1110 |
 | `motor/menubar.rs` | 40 | 0 | 0 | 0 | 0 | 0 | 2904 |
+| `motor/comp/intercomp/euro_champ_qual.rs` | 37 | 0 | 0 | 0 | 0 | 0 | 725 |
 | `motor/tactics.rs` | 36 | 0 | 0 | 0 | 0 | 4 | 1701 |
 | `motor/player_stats.rs` | 35 | 0 | 0 | 0 | 0 | 1 | 1911 |
 | `motor/tactics_screens.rs` | 32 | 0 | 0 | 0 | 0 | 0 | 5668 |
@@ -56,7 +57,6 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 | `motor/comp/eurocomp/european_cup.rs` | 29 | 1 | 0 | 0 | 0 | 1 | 1625 |
 | `motor/setup.rs` | 27 | 0 | 0 | 0 | 0 | 0 | 8258 |
 | `motor/comp/intercomp/oceania_nations.rs` | 27 | 0 | 0 | 0 | 0 | 0 | 506 |
-| `motor/comp/league.rs` | 26 | 0 | 0 | 0 | 0 | 5 | 4345 |
+| `motor/comp/league.rs` | 26 | 0 | 0 | 0 | 0 | 5 | 4431 |
 | `motor/injury.rs` | 24 | 0 | 0 | 0 | 0 | 4 | 3227 |
 | `motor/award/team_award.rs` | 24 | 0 | 0 | 0 | 0 | 0 | 552 |
-| `motor/file_screens.rs` | 23 | 0 | 0 | 0 | 0 | 0 | 1142 |

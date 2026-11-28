@@ -714,3 +714,31 @@ pub(crate) const BRA_NAT_THIRD_LEAGUE: BraNatThirdLeagueVariant = BraNatThirdLea
     file: 0x98aba4,
     rows: &[0x4a, 0x51, 0x58, 0x61, 0x68],
 };
+
+/// Moves the Brazilian Serie C to its next stage: past the last stage (`league::CURRENT_STAGE` at or past
+/// `league::STAGE_COUNT` − 1) the bra_nat_third.cpp box of line 0x2b7; otherwise the current stage goes up by one and
+/// stage 7 builds the second round (0x42e430), stage 8 the third-round groups (0x42e700) and stage 10 the final
+/// (0x42e980), through their detours; stage 9 builds nothing.
+/// Original: `BraNatThird::advance_stage` (0x42e380, bra_nat_third.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn bra_nat_third_advance_stage(this: usize) {
+    let l = League(this);
+    if l.current_stage() as i32 >= l.stage_count() as i32 - 1 {
+        return show_error_at(0x98aba4, 0x2b7); // bra_nat_third.cpp
+    }
+    l.set_current_stage((l.current_stage() as i32 + 1) as usize);
+    let build = match l.current_stage() as i32 {
+        7 => 0x42e430usize,
+        8 => 0x42e700,
+        10 => 0x42e980,
+        _ => return,
+    };
+    covered!("cx09_16 serie c next stage");
+    let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(build);
+    f(this);
+}
+
+/// Comparer for `bra_nat_third_advance_stage` (`compare_state_league_advance_stage`).
+pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_advance_stage(this: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_NAT_THIRD_ADVANCE_STAGE);
+    compare_state_league_advance_stage("bra_nat_third_advance_stage", League(this), || o(this))
+}

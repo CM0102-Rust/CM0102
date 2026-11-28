@@ -113,6 +113,11 @@ def do_lote(ordem_):
         return sem_comentarios(open(os.path.join(FILA, nome, 'codigo.rs'), encoding='utf-8').read())
     no_lote = set().union(*(set(DEF.findall(codigo_de(nome))) for nome in lote))
     adiante = [nome for nome in ordem_[1:] if nome not in lote]
+    # 28/11/2026: and the held items (SEGURADOS.txt) too: batch 345 took cx07_2, which calls a helper only cx05_3 defines
+    segurados = os.path.join(FILA, 'SEGURADOS.txt')
+    if os.path.exists(segurados):
+        adiante += [l.split('\t')[0].strip() for l in open(segurados, encoding='utf-8') if l.strip() and not l.startswith('#')
+                    and os.path.isdir(os.path.join(FILA, l.split('\t')[0].strip()))]
     pulados.clear()
     pulados.update(set().union(*(set(DEF_PUB.findall(codigo_de(nome))) for nome in adiante)) - definidos_no_motor - no_lote)
     nomes_pulados.clear()
