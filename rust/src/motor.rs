@@ -4206,8 +4206,69 @@ routines! {
     Prologue { address: 0x850300, bytes: &[0x81, 0xec, 0x34, 0x05, 0x00, 0x00] } => spa_first_exchange_second_division_b_clubs, compare_spa_first_exchange_second_division_b_clubs;
     Prologue { address: 0x850530, bytes: &[0x81, 0xec, 0x4c, 0x03, 0x00, 0x00] } => spa_first_assign_second_division_b_groups, compare_spa_first_assign_second_division_b_groups;
     Prologue { address: 0x890b40, bytes: &[0x51, 0xa1, 0xfc, 0xad, 0xad, 0x00] } => swe_prm_apply_second_division_moves, compare_swe_prm_apply_second_division_moves;
+    Prologue { address: 0x917060, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => wc_concacaf_cup_advance_stage, compare_wc_concacaf_cup_advance_stage;
+    Prologue { address: 0x917110, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => wc_concacaf_cup_create_play_off_stage, compare_wc_concacaf_cup_create_play_off_stage;
+    Prologue { address: 0x91def0, bytes: &[0x51, 0x0f, 0xbe, 0x91, 0x00, 0x01, 0x00, 0x00] } => wc_europe_league_get_asia_play_off_team, compare_wc_europe_league_get_asia_play_off_team;
+    Prologue { address: 0x919620, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => wc_europe_league_advance_stage, compare_wc_europe_league_advance_stage;
+    Prologue { address: 0x91a140, bytes: &[0x6a, 0xff, 0x68, 0x1b, 0x5a, 0x96, 0x00] } => wc_europe_league_create_runners_up_stage, compare_wc_europe_league_create_runners_up_stage;
+    Prologue { address: 0x9190d0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => wc_europe_league_init_own_group_table, compare_wc_europe_league_init_own_group_table;
+    Prologue { address: 0x91a7b0, bytes: &[0x56, 0x8b, 0xf1, 0xe8, 0x18, 0xa5, 0xd6, 0xff] } => wc_europe_league_update_positions_and_status, compare_wc_europe_league_update_positions_and_status;
+    Prologue { address: 0x91a7e0, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] } => wc_europe_league_mark_play_off_qualifiers, compare_wc_europe_league_mark_play_off_qualifiers;
+    Prologue { address: 0x918040, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x53, 0x56] } => wc_concacaf_cup_set_club_progress, compare_wc_concacaf_cup_set_club_progress;
+    Prologue { address: 0x91b510, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x53, 0x56] } => wc_europe_league_set_club_progress, compare_wc_europe_league_set_club_progress;
+    Prologue { address: 0x9200e0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] } => wc_oceania_league_set_club_progress, compare_wc_oceania_league_set_club_progress;
+    Prologue { address: 0x91b6e0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] } => wc_europe_league_get_qualification_status, compare_wc_europe_league_get_qualification_status;
+    Prologue { address: 0x91b710, bytes: &[0x53, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x10] } => wc_europe_league_get_qualification_status_change, compare_wc_europe_league_get_qualification_status_change;
+    Prologue { address: 0x920260, bytes: &[0x53, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x10] } => wc_oceania_league_get_qualification_status_change, compare_wc_oceania_league_get_qualification_status_change;
+    Prologue { address: 0x91e1c0, bytes: &[0x8b, 0x0d, 0x9c, 0xf7, 0x9c, 0x00] } => wc_oceania_league_get_finals_comp, compare_wc_oceania_league_get_finals_comp;
+    Prologue { address: 0x915fe0, bytes: &[0xc6, 0x81, 0xb1, 0x00, 0x00, 0x00, 0x00] } => wc_concacaf_cup_skip_season_reset, compare_wc_concacaf_cup_skip_season_reset;
+    Prologue { address: 0x918dd0, bytes: &[0x0f, 0xbe, 0x81, 0xf6, 0x00, 0x00, 0x00] } => wc_europe_league_get_group_size, compare_wc_europe_league_get_group_size;
+    Prologue { address: 0x918980, bytes: &[0x8a, 0x81, 0x01, 0x01, 0x00, 0x00] } => wc_europe_league_update_staff_records_for_status, compare_wc_europe_league_update_staff_records_for_status;
+    Prologue { address: 0x918b00, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x56] } => wc_europe_league_build_fate_news_text, compare_wc_europe_league_build_fate_news_text;
+    Prologue { address: 0x918ec0, bytes: &[0x81, 0xec, 0x24, 0x02, 0x00, 0x00] } => wc_europe_league_draw_groups, compare_wc_europe_league_draw_groups;
+    Prologue { address: 0x9196d0, bytes: &[0x6a, 0xff, 0x68, 0xde, 0x59, 0x96, 0x00] } => wc_europe_league_create_group_stage, compare_wc_europe_league_create_group_stage;
+    Prologue { address: 0x919910, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => wc_europe_league_create_play_off_stage, compare_wc_europe_league_create_play_off_stage;
+    Prologue { address: 0x91a240, bytes: &[0x6a, 0xff, 0x68, 0x54, 0x5a, 0x96, 0x00] } => wc_europe_league_fill_runners_up_table, compare_wc_europe_league_fill_runners_up_table;
+    Prologue { address: 0x91b1b0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => wc_europe_league_set_predicted_positions, compare_wc_europe_league_set_predicted_positions;
+    Prologue { address: 0x912db0, bytes: &[0x0f, 0xbe, 0x81, 0xee, 0x00, 0x00, 0x00] } => wc_asia_league_get_first_round_group_size, compare_wc_asia_league_get_first_round_group_size;
+    Prologue { address: 0x912bd0, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] } => wc_asia_league_draw_first_round_groups, compare_wc_asia_league_draw_first_round_groups;
+    Prologue { address: 0x912ad0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => wc_asia_league_init_first_group_table, compare_wc_asia_league_init_first_group_table;
+    Prologue { address: 0x913540, bytes: &[0x6a, 0xff, 0x68, 0x8e, 0x57, 0x96, 0x00] } => wc_asia_league_create_first_round_group, compare_wc_asia_league_create_first_round_group;
+    Prologue { address: 0x913490, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => wc_asia_league_advance_stage, compare_wc_asia_league_advance_stage;
+    Prologue { address: 0x913740, bytes: &[0x6a, 0xff, 0x68, 0xbc, 0x57, 0x96, 0x00] } => wc_asia_league_create_second_round_groups, compare_wc_asia_league_create_second_round_groups;
+    Prologue { address: 0x913b60, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => wc_asia_league_create_third_round_tie, compare_wc_asia_league_create_third_round_tie;
+    Prologue { address: 0x913d50, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => wc_asia_league_create_playoff_tie, compare_wc_asia_league_create_playoff_tie;
+    Prologue { address: 0x9144d0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => wc_asia_league_set_predicted_positions, compare_wc_asia_league_set_predicted_positions;
+    Prologue { address: 0x912500, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x56] } => wc_asia_league_update_staff_records_for_status, compare_wc_asia_league_update_staff_records_for_status;
+    Prologue { address: 0x912780, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x56] } => wc_asia_league_build_fate_news_text, compare_wc_asia_league_build_fate_news_text;
+    Prologue { address: 0x914730, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x53] } => wc_asia_league_set_club_progress, compare_wc_asia_league_set_club_progress;
+    Prologue { address: 0x90fe00, bytes: &[0x8a, 0x54, 0x24, 0x0c, 0x56] } => wc_african_cup_build_fate_news_text, compare_wc_african_cup_build_fate_news_text;
+    Prologue { address: 0x9159b0, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x53] } => wc_concacaf_cup_build_fate_news_text, compare_wc_concacaf_cup_build_fate_news_text;
+    Prologue { address: 0x90fbf0, bytes: &[0x8a, 0x54, 0x24, 0x0c, 0x56] } => wc_african_cup_update_staff_records_for_status, compare_wc_african_cup_update_staff_records_for_status;
+    Prologue { address: 0x915710, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x56] } => wc_concacaf_cup_update_staff_records_for_status, compare_wc_concacaf_cup_update_staff_records_for_status;
+    Prologue { address: 0x90fbe0, bytes: &[0x8b, 0x41, 0x04, 0x8b, 0x0d, 0x18, 0x43, 0xb7, 0x00] } => wc_qualifying_record_season_honours, compare_wc_qualifying_record_season_honours;
+    Prologue { address: 0x910920, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => wc_african_cup_advance_stage, compare_wc_african_cup_advance_stage;
+    Prologue { address: 0x9109e0, bytes: &[0x6a, 0xff, 0x68, 0xbe, 0x56, 0x96, 0x00] } => wc_african_cup_create_group_stages, compare_wc_african_cup_create_group_stages;
+    Prologue { address: 0x910d20, bytes: &[0x6a, 0xff, 0x68, 0xde, 0x56, 0x96, 0x00] } => wc_african_cup_create_playoff_stage, compare_wc_african_cup_create_playoff_stage;
+    Prologue { address: 0x9115a0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x53] } => wc_african_cup_set_club_progress, compare_wc_african_cup_set_club_progress;
+    Prologue { address: 0x911b80, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] } => wc_african_cup_get_qualification_status, compare_wc_african_cup_get_qualification_status;
+    Prologue { address: 0x911ba0, bytes: &[0x53, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x10] } => wc_african_cup_get_qualification_status_change, compare_wc_african_cup_get_qualification_status_change;
+    Prologue { address: 0x917320, bytes: &[0x6a, 0xff, 0x68, 0xfa, 0x58, 0x96, 0x00] } => wc_concacaf_cup_create_semi_final_groups, compare_wc_concacaf_cup_create_semi_final_groups;
+    Prologue { address: 0x917830, bytes: &[0x6a, 0xff, 0x68, 0x1e, 0x59, 0x96, 0x00] } => wc_concacaf_cup_create_final_group, compare_wc_concacaf_cup_create_final_group;
+    Prologue { address: 0x91e990, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x53] } => wc_oceania_league_build_fate_news_text, compare_wc_oceania_league_build_fate_news_text;
+    Prologue { address: 0x91f800, bytes: &[0x6a, 0xff, 0x68, 0x7e, 0x5b, 0x96, 0x00] } => wc_oceania_league_create_playoff_stage, compare_wc_oceania_league_create_playoff_stage;
+    Prologue { address: 0x921630, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] } => wc_south_american_league_get_qualification_status, compare_wc_south_american_league_get_qualification_status;
+    Prologue { address: 0x921670, bytes: &[0x53, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x10] } => wc_south_american_league_get_qualification_status_change, compare_wc_south_american_league_get_qualification_status_change;
+    Prologue { address: 0x920a50, bytes: &[0x8a, 0x44, 0x24, 0x08, 0x56] } => wc_south_american_league_update_staff_records_for_status, compare_wc_south_american_league_update_staff_records_for_status;
+    Prologue { address: 0x920b40, bytes: &[0x8a, 0x44, 0x24, 0x08, 0x53] } => wc_south_american_league_build_fate_news_text, compare_wc_south_american_league_build_fate_news_text;
+    Prologue { address: 0x92f660, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x4c, 0x24, 0x08] } => compare_entries_by_pot, compare_compare_entries_by_pot;
+    Prologue { address: 0x92ccf0, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x56] } => world_cup_update_staff_records_for_status, compare_world_cup_update_staff_records_for_status;
+    Prologue { address: 0x92f9e0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] } => world_cup_set_club_progress, compare_world_cup_set_club_progress;
+    Prologue { address: 0x92d330, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => world_cup_start_new_season, compare_world_cup_start_new_season;
+    Prologue { address: 0x92fae0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] } => world_cup_get_qualification_status, compare_world_cup_get_qualification_status;
+    Prologue { address: 0x92fb40, bytes: &[0x53, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x10] } => world_cup_get_qualification_status_change, compare_world_cup_get_qualification_status_change;
 }
-const N: usize = 4048;
+const N: usize = 4109;
 include!(concat!(env!("OUT_DIR"), "/indices.rs")); // IDX_<NAME>: the position of each routine (build.rs)
 
 /// Size of the engine object (the game allocates it with new(0xf63b)): side 1's block (+0xf5f2, 0x36
@@ -5692,6 +5753,61 @@ pub(crate) use self::zipdir::*;
 // ---------- 161st batch: watch list, position code and staff criterion ----------
 
 compare_value!(compare_staff_criterion, staff_criterion, IDX_STAFF_CRITERION, () -> u32);
+
+// ---------- rx11_1: the news texts of a nation's fate in the African and CONCACAF World Cup qualifying (wc_african_cup.cpp, wc_concacaf_cup.cpp) ----------
+
+/// The fate news templates of the African qualifying (langlib, `.rdata`).
+pub(crate) mod wc_african_fate_texts {
+    /// "{}<%s - Team Name (e.g. Scotland)>{} qualify for Final"
+    pub(crate) const QUALIFY_FOR_FINAL: usize = 0xad45fc;
+    /// "{}<%s - Team Name (e.g. Scotland)>{} qualify for {}<%s - World Cup>{}" (from a group)
+    pub(crate) const GROUP_QUALIFY_FOR_WORLD_CUP: usize = 0xad45b4;
+    /// "{}<%s - Team Name (e.g. South Africa)>{} qualify for 2nd round in qualifiers"
+    pub(crate) const QUALIFY_FOR_SECOND_ROUND: usize = 0xad4564;
+    /// "{}<%s - Team Name (e.g. South Africa)>{} knocked out in 1st round qualifier"
+    pub(crate) const KNOCKED_OUT_IN_FIRST_ROUND: usize = 0xad4518;
+    /// "{}<%s - Team Name (e.g. South Africa)>{} qualify for {}<%s - World Cup>{}" (from a tie)
+    pub(crate) const TIE_QUALIFY_FOR_WORLD_CUP: usize = 0xad44cc;
+    /// "{}<%s - Team Name (e.g. South Africa)>{} knocked out of {}<%s - World Cup>{}"
+    pub(crate) const KNOCKED_OUT_OF_WORLD_CUP: usize = 0xad447c;
+}
+
+/// The fate news templates of the CONCACAF qualifying (langlib, `.rdata`).
+pub(crate) mod wc_concacaf_fate_texts {
+    /// "{}<%s - Team Name(e.g.Canada)>{} qualify for Semi Finals"
+    pub(crate) const QUALIFY_FOR_SEMI_FINALS: usize = 0xad49e4;
+    /// "{}<%s - Team Name(e.g.Canada)>{} have qualified from the semi final stage of the {}<%s - Competition Name>{}."
+    pub(crate) const QUALIFIED_FROM_SEMI_FINAL_STAGE: usize = 0xad4974;
+    /// "{}<%s - Team Name(e.g.Canada)>{} qualify for final"
+    pub(crate) const QUALIFY_FOR_FINAL: usize = 0xad4940;
+    /// "{}<%s - Team Name(e.g.Canada)>{} have qualified from the final stage of the {}<%s - Competition Name>{}."
+    pub(crate) const QUALIFIED_FROM_FINAL_STAGE: usize = 0xad48d4;
+    /// "{}<%s - Team Name(e.g.Canada)>{} qualify for {}<%s - World Cup>{}"
+    pub(crate) const QUALIFY_FOR_WORLD_CUP: usize = 0xad4890;
+}
+
+// ---------- rx12_17: the Oceania World Cup qualifying: the fate news text and the inter-continental play-off (wc_oceania_league.cpp) ----------
+
+/// The fate news templates of the Oceania qualifying (langlib, `.rdata`).
+pub(crate) mod wc_oceania_fate_texts {
+    /// "{}<%s - Team Name(e.g.Australia)>{} have qualified for the semi finals of the {}<%s - Competition Name>{}."
+    pub(crate) const QUALIFIED_FOR_SEMI_FINALS_OF: usize = 0xad4c48;
+    /// "{}<%s - Team Name(e.g.Australia)>{} qualify for semi finals"
+    pub(crate) const QUALIFY_FOR_SEMI_FINALS: usize = 0xad4c0c;
+    /// "{}<%s - Team Name>{} qualify for playoff"
+    pub(crate) const QUALIFY_FOR_PLAYOFF: usize = 0xad4be0;
+    /// "{}<%s - Team Name>{} knocked out of World Cup qualifying"
+    pub(crate) const KNOCKED_OUT_OF_QUALIFYING: usize = 0xad4ba4;
+    /// "{}<%s - Team Name>{} qualify for World Cup"
+    pub(crate) const QUALIFY_FOR_WORLD_CUP: usize = 0xad4b78;
+    /// "{}<%s - Team Name>{} knocked out in World Cup playoff"
+    pub(crate) const KNOCKED_OUT_IN_PLAYOFF: usize = 0xad4b40;
+}
+
+// ---------- cx17_2: the qualification status and the staff records of a nation in the South American World Cup qualifying (wc_south_american_league.cpp) ----------
+
+/// NationalTeams::add_qualified_nation (thiscall, ret 8).
+const FN_NATIONALTEAMS_ADD_QUALIFIED_NATION: usize = 0x7779b0;
 
 // ---------- rx09_1: the Spanish Second Division B at career creation, its rules and its round tables (spa_second_b.cpp) ----------
 

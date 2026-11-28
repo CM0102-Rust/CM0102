@@ -659,3 +659,612 @@ pub(crate) const WC_CONCACAF_2000_ENTRANTS: [usize; 35] = [
     KEY_NATION_GUATEMALA, KEY_NATION_PANAMA, KEY_NATION_BELIZE, KEY_NATION_NICARAGUA, KEY_NATION_CANADA, KEY_NATION_COSTA_RICA,
     KEY_NATION_MEXICO, KEY_NATION_UNITED_STATES,
 ];
+
+/// rule: the CONCACAF qualifying moves on one stage at a time: to stage 2 the play-off, to 3 the three semi-final
+/// groups, to 6 the final group (stages 4 and 5 are the other semi-final groups, built with stage 3); past the last
+/// stage it is an error
+///
+/// At or past the last stage (`cup::STAGE_COUNT` − 1, signed), the error box of line 0x5d7. Otherwise
+/// `cup::CURRENT_STAGE` + 1 and, by the new stage, WcConcacafCup::create_play_off_stage (2),
+/// create_semi_final_groups (3) or create_final_group (6), thiscall, ret 0, called directly.
+/// Original: `WcConcacafCup::advance_stage` (0x917060, wc_concacaf_cup.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn wc_concacaf_cup_advance_stage(this: usize) {
+    let cup = Cup(this);
+    let current = cup.current_stage() as i32;
+    if current >= (cup.stage_count() as i32).wrapping_sub(1) {
+        return show_error_at(wc_cup_turnover_consts::WC_CONCACAF_CUP_CPP, 0x5d7);
+    }
+    let next = current + 1;
+    cup.set_current_stage(next as usize);
+    covered!("cx16_10 concacaf next stage");
+    let build = match next {
+        2 => FN_WC_CONCACAF_CUP_CREATE_PLAY_OFF_STAGE,
+        3 => FN_WC_CONCACAF_CUP_CREATE_SEMI_FINAL_GROUPS, // cx16_10: the semi-final groups at stage 3
+        6 => FN_WC_CONCACAF_CUP_CREATE_FINAL_GROUP,
+        _ => return,
+    };
+    call_section_routine(build, this);
+}
+
+/// Comparer for `wc_concacaf_cup_advance_stage`: it builds stages, so only the original runs; the stage stays or moves
+/// on by one, or goes from 2 to 5 (the semi-final groups are built at stages 3 to 5 and the last one stays current).
+pub(crate) unsafe extern "thiscall" fn compare_wc_concacaf_cup_advance_stage(this: usize) {
+    let before = Cup(this).current_stage() as i32;
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_WC_CONCACAF_CUP_ADVANCE_STAGE)(this);
+    let after = Cup(this).current_stage() as i32;
+    // to stage 3 the original builds the three semi-final groups and leaves the current stage at the last, 5
+    let ok = after == before || after == before + 1 || (before == 2 && after == 5);
+    SCOREBOARD.record(ok, || format!("wc_concacaf_cup_advance_stage({:#x}): stage {} -> {}", this, before, after));
+}
+
+/// rule: the CONCACAF play-off is a cup stage of six: the next seeded nation, the Caribbean knockout survivors and the
+/// two Central American group runners-up
+///
+/// A team array (`exe::crt_malloc` of 0x18, cdecl; null, the error box of line 0x5ff) with `concacaf_play_off_nations`
+/// (the seeded slot emptied); the round table of stage 2 (virtual `comp_vtable::CREATE_SCHEDULE`(2, &rounds, &label, 0),
+/// thiscall, ret 0x10); the stage (operator new of 0xb2 and Cup_Stage::Cup_Stage `FN_CUP_STAGE_CUP_STAGE`, thiscall,
+/// ret 0x3c: the section, 6, the teams, the rounds, the record, the round table, the year, 2, 4, the label, the
+/// importance bias `cup::IMPORTANCE_BIAS`, 0, 0, 0, 0; the original pushes the words and the byte with garbage in the
+/// high bytes, which the constructor does not read: the copy passes clean values) into `cup::STAGES`[2]; the array and
+/// the round table freed (`exe::crt_free`); without a stage, the box of line 0x629; with it, `cup::CURRENT_STAGE` 2 and
+/// its first round set up (Cup::set_up_round `exe::cup_set_up_round`(stage, 0), thiscall, ret 4). The SEH frame covers
+/// only the stage's new.
+/// Original: `WcConcacafCup::create_play_off_stage` (0x917110, wc_concacaf_cup.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn wc_concacaf_cup_create_play_off_stage(this: usize) {
+    let this = League(this);
+    let cpp = wc_cup_turnover_consts::WC_CONCACAF_CUP_CPP;
+    let cup = Cup(this.addr());
+    let teams = exe::crt_malloc(0x18);
+    if teams == 0 {
+        return show_error_at(cpp, 0x5ff);
+    }
+    covered!("cx16_10 concacaf play-off");
+    let (nations, seeded) = concacaf_play_off_nations(this.addr());
+    if let Some(s) = seeded {
+        write_usize(read_usize(this.addr() + wc_cup_turnover_consts::CUP_ENTRANT_LIST) + s * 4, 0);
+    }
+    for (k, &n) in nations.iter().enumerate() {
+        write_usize(teams + k * 4, n);
+    }
+    let create_schedule: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
+    let (mut rounds, mut label) = (0i16, 0i16);
+    let table = create_schedule(this.addr(), 2, &mut rounds, &mut label, 0);
+    let p = exe::crt_operator_new(0xb2);
+    let stage = if p != 0 {
+        #[allow(clippy::type_complexity)]
+        let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, u32) -> usize =
+            core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
+        construct(p, this.addr(), 6, teams, rounds as u16 as u32, this.competition().addr(), table, cup.year() as u16 as u32, 2, 4, label as u16 as u32, cup.importance_bias() as u32, 0, 0, 0, 0)
+    } else {
+        0
+    };
+    write_usize(cup.stages() + 8, stage);
+    exe::crt_free(teams);
+    exe::crt_free(table);
+    if stage == 0 {
+        return show_error_at(cpp, 0x629);
+    }
+    cup.set_current_stage(2);
+    exe::cup_set_up_round(stage, 0);
+}
+
+/// Comparer for `wc_concacaf_cup_create_play_off_stage`: it builds a stage, so only the original runs; then the plan:
+/// the current stage 2 and the stage's team table (6-byte rows) with the planned nations in order.
+pub(crate) unsafe extern "thiscall" fn compare_wc_concacaf_cup_create_play_off_stage(this: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_WC_CONCACAF_CUP_CREATE_PLAY_OFF_STAGE);
+    let cup = Cup(this);
+    if read_usize(this + 0xb2) == 0 || cup.stages() == 0 || read_usize(cup.stages()) == 0 || read_usize(cup.stages() + 4) == 0 {
+        return o(this);
+    }
+    let (plan, _) = concacaf_play_off_nations(this);
+    o(this);
+    let stage = read_usize(cup.stages() + 8);
+    if stage == 0 {
+        return;
+    }
+    let t = Cup(stage).team_table();
+    let read: Vec<usize> = if t != 0 { (0..plan.len()).map(|k| read_usize(t + k * 6)).collect() } else { Vec::new() };
+    SCOREBOARD.record(cup.current_stage() == 2 && read == plan, || format!("wc_concacaf_cup_create_play_off_stage({:#x}): {:x?} plan {:x?}", this, read, plan));
+}
+
+/// rule: the CONCACAF qualifying progress of a nation: a knockout winner is best 1, the rest 13; in a group the first
+/// two are 1 at best and 6 now, third 7 and fourth 10; in the final group the qualifying places (three less the exempt)
+/// are 1
+///
+/// The codes of `wc_concacaf_progress_codes` (by +0xba and +0xbc, signed bytes) into the nation's statistics entry
+/// (`exe::comp_stats_find_club_entry`, not checked for null; `write_progress_codes` of the Minas Gerais state league).
+/// Original: `WcConcacafCup::set_club_progress` (0x918040, wc_concacaf_cup.cpp, thiscall, ret 0x14).
+pub(crate) unsafe extern "thiscall" fn wc_concacaf_cup_set_club_progress(this: usize, club: usize, stage: u32, current: u32, best: u32, worst: u32) {
+    let this = League(this);
+    covered!("cx16_7 concacaf progress");
+    let e = exe::comp_stats_find_club_entry(this.comp_stats(), club);
+    let (c, b, w) = wc_concacaf_progress_codes(stage as i8, read_u8(this.addr() + 0xba) as i8, read_u8(this.addr() + 0xbc) as i8, current as u8, best as u8, worst as u8);
+    write_progress_codes(e, c, b, w);
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_wc_concacaf_cup_set_club_progress(this: usize, club: usize, stage: u32, current: u32, best: u32, worst: u32) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(IDX_WC_CONCACAF_CUP_SET_CLUB_PROGRESS);
+    compare_progress_codes("wc_concacaf_cup_set_club_progress", this, club, stage, (current, best, worst), || o(this, club, stage, current, best, worst),
+        || wc_concacaf_cup_set_club_progress(this, club, stage, current, best, worst))
+}
+
+/// rule: the CONCACAF qualifying clears its run-by-stages flag (`cup::RUN_BY_STAGES` 0) and returns 1
+/// Original: `WcConcacafCup::skip_season_reset` (0x915fe0, wc_concacaf_cup.cpp, thiscall, ret 0; vtable +0x2c).
+pub(crate) unsafe extern "thiscall" fn wc_concacaf_cup_skip_season_reset(this: usize) -> u32 {
+    covered!("cx16_9 concacaf reset");
+    Cup(this).set_run_by_stages(0); // cx16_9: the flag cleared
+    1
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_wc_concacaf_cup_skip_season_reset(this: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_WC_CONCACAF_CUP_SKIP_SEASON_RESET);
+    let (a, b, same, mo, mr) = crate::comparison::side_by_side_light(&[(this + cup::RUN_BY_STAGES, 1)], || o(this), || wc_concacaf_cup_skip_season_reset(this));
+    SCOREBOARD.record(same && a == b, || format!("wc_concacaf_cup_skip_season_reset({:#x}) original={} {:x?} rust={} {:x?}", this, a, mo, b, mr));
+    a
+}
+
+/// rule: the CONCACAF qualifying fate news: in the Caribbean knockout (code 0x40f) and the play-off (stage 2), the
+/// shared tie sentence, or, in short, "qualify for Semi Finals" for a winner and the shared win-or-defeat sentence
+/// otherwise; in the semi-final groups (codes 0x40c to 0x40e), "have qualified from the semi final stage" (or, in
+/// short, "qualify for final") for a qualifier (6) and the group sentence for one going out (−2); in the final group
+/// (code 0x96), "have qualified from the final stage" (or, in short, "qualify for the World Cup") for a qualifier (7)
+/// and the group sentence for one going out (−2)
+///
+/// `this.build_fate_news_text(club_index, fate, stage, code, a5, a6, a7, a8, full_sentence, text)` (virtual +0x48), as
+/// the African one. Code 0x40f or stage byte 2: with `full_sentence`, `exe::comp_util_write_cup_tie_result_news`(
+/// club_index, a5, a8, the fate dword, a6, text); otherwise fate 1 "qualify for Semi Finals" with the club's link, any
+/// other `exe::comp_util_write_cup_win_or_defeat_news`(club_index, a5, the fate dword, text) (cdecl).
+///
+/// Codes 0x40c..=0x40e (signed): fate 6, with `full_sentence` "have qualified from the semi final stage of the" the
+/// competition (its long name `competition::NAME` with the short gender byte), the club's link and the competition's
+/// (its short name); without, "qualify for final" with the club's link. Fate 0xfe: the shared group sentence
+/// (`exe::comp_util_write_group_qualify_news`(club_index, code, the competition record, −2, full_sentence, text)). Code
+/// 0x96: fate 7, with `full_sentence` "have qualified from the final stage of the" competition and the two links;
+/// without, "qualify for" the World Cup (the record of [`KEY_CLUB_COMP_FIFA_WORLD_CUP`]: short gender and short name)
+/// with the club's link and the World Cup's; fate 0xfe, the group sentence with code 0x96. Any other code or fate,
+/// nothing.
+/// Original: `WcConcacafCup::build_fate_news_text` (0x9159b0, wc_concacaf_cup.cpp, thiscall, ret 0x28).
+#[allow(clippy::too_many_arguments)]
+pub(crate) unsafe extern "thiscall" fn wc_concacaf_cup_build_fate_news_text(this: usize, club_index: u32, fate: u32, stage: u32, code: u32, a5: u32, a6: u32, a7: u32, a8: u32, full_sentence: u32, text: usize) {
+    use wc_concacaf_fate_texts as t;
+    let _ = a7;
+    let comp = League(this).competition().addr();
+    let club = club_of_index(club_index);
+    let raw_code = code;
+    let code = code as u16 as i16;
+    // simplification: on the paths without text the original leaves al with a byte of the arguments; the callers do not read it
+    if code == 0x40f || stage as u8 == 2 {
+        covered!("rx11_1 concacaf tie fate");
+        if full_sentence != 0 {
+            return exe::comp_util_write_cup_tie_result_news(club_index, a5, a8, fate, a6, text);
+        }
+        if fate as u8 == 1 {
+            qualifying_fate_line(text, t::QUALIFY_FOR_SEMI_FINALS, club, None);
+            return link_fate_club(text, club);
+        }
+        return exe::comp_util_write_cup_win_or_defeat_news(club_index, a5, fate, text);
+    }
+    let (qualified, from_stage, in_short) = if (0x40c..=0x40e).contains(&code) {
+        (6, t::QUALIFIED_FROM_SEMI_FINAL_STAGE, t::QUALIFY_FOR_FINAL)
+    } else if code == 0x96 {
+        (7, t::QUALIFIED_FROM_FINAL_STAGE, t::QUALIFY_FOR_WORLD_CUP)
+    } else {
+        return;
+    };
+    covered!("rx11_1 concacaf group fate");
+    match fate as u8 {
+        f if f == qualified => {
+            if full_sentence != 0 {
+                qualifying_fate_line(text, from_stage, club, Some((comp + competition::SHORT_GENDER_NAME, comp + competition::NAME)));
+                link_fate_club(text, club);
+                link_fate_competition(text, comp);
+            } else if code == 0x96 {
+                let world_cup = key_comp_record(KEY_CLUB_COMP_FIFA_WORLD_CUP);
+                qualifying_fate_line(text, in_short, club, Some((world_cup + competition::SHORT_GENDER_NAME, world_cup + competition::SHORT_NAME)));
+                link_fate_club(text, club);
+                link_fate_competition(text, world_cup); // rx11_1: the World Cup from the final group
+            } else {
+                qualifying_fate_line(text, in_short, club, None);
+                link_fate_club(text, club);
+            }
+        }
+        0xfe => exe::comp_util_write_group_qualify_news(club_index, if code == 0x96 { 0x96 } else { raw_code }, comp, -2, full_sentence, text),
+        _ => {}
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+pub(crate) unsafe extern "thiscall" fn compare_wc_concacaf_cup_build_fate_news_text(this: usize, club_index: u32, fate: u32, stage: u32, code: u32, a5: u32, a6: u32, a7: u32, a8: u32, full_sentence: u32, text: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32, u32, usize)>(IDX_WC_CONCACAF_CUP_BUILD_FATE_NEWS_TEXT);
+    compare_text_writer(text, || o(this, club_index, fate, stage, code, a5, a6, a7, a8, full_sentence, text),
+        |t| wc_concacaf_cup_build_fate_news_text(this, club_index, fate, stage, code, a5, a6, a7, a8, full_sentence, t),
+        || format!("wc_concacaf_cup_build_fate_news_text(club {}, fate {}, stage {}, code {:#x}, full {})", club_index, fate as u8, stage as u8 as i8, code as u16, full_sentence));
+}
+
+/// rule: in the CONCACAF qualifying, in the Caribbean knockout a tie winner gets the qualification for the next round
+/// (weight 20), a loser the knocked-out record (20) and the end of its campaign, a group stage qualifier (1) the
+/// qualification for round 0x82 (30); in the first Central American stages a qualifier for the semi finals (6 or 1)
+/// gets its record (30) and one going out (−2) only the end of its campaign; in the play-off the winner gets the
+/// semi-final qualification and the rest the knocked-out record; in the semi-final groups a qualifier (6) gets round
+/// 0x96 (75) and one going out the failed-to-qualify record (75); in the final group a qualifier (7) gets the World Cup
+/// record (100) and place, one going out the failed-to-qualify record (100)
+///
+/// `this.update_staff_records_for_status(club, outcome, stage, out, game, a6)` (virtual +0x44), stage a signed byte.
+/// Stage −1: outcome 0, `european_cup_add_qualified_record`(club, comp, the fixture's `round_prefix`, the round code of
+/// the round after the fixture's (`cup_round::ROUND_CODE` of entry `round_number` + 1 in the cup's `round_table`),
+/// 0x14), 0; 0xff, `knock_nation_out`(0x14), 0; 1, the qualification (0x82, 0, 0x1e), 0; any other, the qualification
+/// (0, 0x172, 0x1e) and −1. Stage below 2: 6, (0x82, 0, 0x1e); 1, (0, 0x172, 0x1e); 0xfe, `clear_national_team_competition`
+/// only; always −1. Stage 2: 1, (0x82, 0, 0x1e); any other, `knock_nation_out`(0x14); 0. Stages 3 to 5: 6, (0x96, 0,
+/// 0x4b); 0xfe, `european_cup_add_failed_to_qualify_record`(0x82, 0x4b) and the end of the campaign; 0. Stage 6: 7,
+/// `qualify_nation_for_world_cup`(0x64), −1; 0xfe, the failed-to-qualify record (0x96, 0x64) and the end of the
+/// campaign, 0. Later stages, 0.
+/// Original: `WcConcacafCup::update_staff_records_for_status` (0x915710, wc_concacaf_cup.cpp, thiscall, ret 0x18).
+pub(crate) unsafe extern "thiscall" fn wc_concacaf_cup_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, out: usize, game: usize, _a6: u32) -> u32 {
+    let cup = Cup(this);
+    let comp = League(this).competition().addr();
+    let game = Fixture(game);
+    let (outcome, stage) = (outcome as u8, stage as u8 as i8);
+    let qualified = |round_or_stage: (u32, u32), weight: u32| european_cup_add_qualified_record(club, comp, round_or_stage.0, round_or_stage.1, weight);
+    match stage {
+        -1 => {
+            covered!("rx11_2 concacaf knockout records");
+            match outcome {
+                0 => {
+                    let next = cup.round_table() + (game.round_number() as isize as usize).wrapping_mul(cup_round::SIZE) + cup_round::SIZE + cup_round::ROUND_CODE;
+                    // simplification: the two words go in registers with garbage in the high 16 bits; 0x86bdd0 only uses the words
+                    qualified((game.round_prefix() as u16 as u32, read_u16(next) as u32), 0x14);
+                }
+                0xff => knock_nation_out(club, comp, game, 0x14),
+                1 => qualified((0x82, 0), 0x1e),
+                _ => {
+                    qualified((0, 0x172), 0x1e);
+                    return u32::MAX;
+                }
+            }
+            0
+        }
+        s if s < 2 => {
+            covered!("rx11_2 concacaf first stage records");
+            match outcome {
+                6 => qualified((0x82, 0), 0x1e),
+                1 => qualified((0, 0x172), 0x1e),
+                0xfe => clear_national_team_competition(Club(club)), // rx11_2: the CONCACAF first stage loser has no record
+                _ => {}
+            }
+            u32::MAX
+        }
+        2 => {
+            covered!("rx11_2 concacaf play-off records");
+            if outcome == 1 {
+                qualified((0x82, 0), 0x1e);
+            } else {
+                knock_nation_out(club, comp, game, 0x14);
+            }
+            0
+        }
+        s if s < 6 => {
+            covered!("rx11_2 concacaf semi-final group records");
+            match outcome {
+                6 => qualified((0x96, 0), 0x4b),
+                0xfe => {
+                    european_cup_add_failed_to_qualify_record(club, comp, 0x82, 0x4b);
+                    clear_national_team_competition(Club(club));
+                }
+                _ => {}
+            }
+            0
+        }
+        6 => {
+            covered!("rx11_2 concacaf final group records");
+            match outcome {
+                7 => {
+                    qualify_nation_for_world_cup(club, out, 0x64); // rx11_2: the CONCACAF final group qualifier
+                    return u32::MAX;
+                }
+                0xfe => {
+                    european_cup_add_failed_to_qualify_record(club, comp, 0x96, 0x64);
+                    clear_national_team_competition(Club(club));
+                }
+                _ => {}
+            }
+            0
+        }
+        _ => 0,
+    }
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_wc_concacaf_cup_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, out: usize, game: usize, a6: u32) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, usize, u32) -> u32>(IDX_WC_CONCACAF_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS);
+    let plan = concacaf_staff_records_plan(stage as u8 as i8, outcome as u8);
+    compare_qualifying_staff_records("wc_concacaf_cup_update_staff_records_for_status", club, outcome, stage, out, plan, || o(this, club, outcome, stage, out, game, a6))
+}
+
+/// rule: the CONCACAF semi finals are three round robin groups of four, two qualifying from each: each takes the next
+/// seeded nation, one Caribbean knockout survivor, one play-off survivor and a Central American nation; each group gets
+/// its draw news
+///
+/// A team array (`exe::crt_malloc(0x10)`; null, the error box of line 0x65a). The Caribbean survivors
+/// (`first_three_still_in` of the cup) and the play-off survivors (of `cup::STAGES`[2]). For the three groups at the
+/// current stage g (`cup::CURRENT_STAGE`, its byte) and g + 1, g + 2: slot 0 `take_next_concacaf_seed` (none: the slot
+/// keeps what was there), slots 1 and 2 the survivors, slot 3 `concacaf_semi_final_fourth`; the stage of 4 nations, 2
+/// qualifying, importance 0xf, code 0x28 (`concacaf_qualifying_group_stage`); without it, the error box (lines 0x698, 0x6c4,
+/// 0x6f3) and the routine ends (the array and the round table not freed). Groups A and B: the round table freed and
+/// the group draw news (`exe::league_send_group_draw_news`). Group C: the array and the round table freed, then
+/// `cup::CURRENT_STAGE` g + 2 and its draw news. The SEH frame covers only each stage's new.
+/// Original: `WcConcacafCup::create_semi_final_groups` (0x917320, wc_concacaf_cup.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn wc_concacaf_cup_create_semi_final_groups(this: usize) {
+    let cpp = wc_cup_turnover_consts::WC_CONCACAF_CUP_CPP;
+    let cup = Cup(this);
+    let first = cup.current_stage() as u8;
+    let play_off = Cup(read_usize(cup.stages() + 8));
+    let teams = exe::crt_malloc(0x10);
+    if teams == 0 {
+        return show_error_at(cpp, 0x65a);
+    }
+    covered!("rx11_5 concacaf semi-final groups");
+    let caribbean = first_three_still_in(cup);
+    let play_off = first_three_still_in(play_off);
+    let lines = [0x698, 0x6c4, 0x6f3];
+    for g in 0..3 {
+        if let Some(seed) = take_next_concacaf_seed(this) {
+            write_usize(teams, seed);
+        }
+        // simplification: with fewer than three survivors the original reads stack leftovers; the copy passes 0
+        write_usize(teams + 4, caribbean[g].unwrap_or(0));
+        write_usize(teams + 8, play_off[g].unwrap_or(0)); // rx11_5: one play-off survivor per group
+        write_usize(teams + 0xc, concacaf_semi_final_fourth(this, g));
+        let index = first.wrapping_add(g as u8);
+        let (stage, table) = concacaf_qualifying_group_stage(this, index, teams, 4, 2, 0xf, 0x28);
+        if g == 2 {
+            exe::crt_free(teams);
+            exe::crt_free(table);
+        }
+        if stage == 0 {
+            return show_error_at(cpp, lines[g]);
+        }
+        if g == 2 {
+            cup.set_current_stage(index as i8 as isize as usize);
+        } else {
+            exe::crt_free(table);
+        }
+        exe::league_send_group_draw_news(stage);
+    }
+}
+
+/// rule: the CONCACAF final group is a round robin of six, the top two of each semi-final group, with three places
+/// less the exempt nations qualifying for the World Cup
+///
+/// A team array (`exe::crt_malloc(0x18)`; null, the error box of line 0x723). The current stage s (`cup::CURRENT_STAGE`,
+/// its byte); for the semi-final groups s − 3, s − 2 and s − 1, rows 0 and 1 (`exe::league_get_table_row`(group, row),
+/// thiscall, ret 4; the club at the row's start). The stage of 6 nations at index s, with 3 − the exempt count
+/// (+0xba, the byte `wc_concacaf_progress_codes` reads) qualifying, importance 0x14, code 0x24 (`concacaf_qualifying_group_stage`);
+/// the array and the round table freed; without a stage, the error box of line 0x742. No draw news, and the current
+/// stage is not touched (advance_stage set it).
+/// Original: `WcConcacafCup::create_final_group` (0x917830, wc_concacaf_cup.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn wc_concacaf_cup_create_final_group(this: usize) {
+    let cpp = wc_cup_turnover_consts::WC_CONCACAF_CUP_CPP;
+    let cup = Cup(this);
+    let index = cup.current_stage() as u8;
+    let qualifiers = 3u8.wrapping_sub(read_u8(this + 0xba)); // three places less the exempt nations (+0xba)
+    let teams = exe::crt_malloc(0x18);
+    if teams == 0 {
+        return show_error_at(cpp, 0x723);
+    }
+    covered!("rx11_5 concacaf final group");
+    let base = index.wrapping_sub(3) as i8 as isize;
+    for g in 0..3isize {
+        let group = read_usize(cup.stages() + (base + g) as usize * 4);
+        for row in 0..2 {
+            write_usize(teams + (g as usize * 2 + row) * 4, read_usize(exe::league_get_table_row(group, row as i32))); // rx11_5: the top two of each group
+        }
+    }
+    let (stage, table) = concacaf_qualifying_group_stage(this, index, teams, 6, qualifiers, 0x14, 0x24);
+    exe::crt_free(teams);
+    exe::crt_free(table);
+    if stage == 0 {
+        show_error_at(cpp, 0x742);
+    }
+}
+
+/// Comparer for `wc_concacaf_cup_create_semi_final_groups`: it builds stages and takes the seeded nations, so only the
+/// original runs; then the plan: the current stage two past the first group, and each group's table with its planned
+/// four (read before: the seeds in order, the survivors, the fourth) as a set.
+pub(crate) unsafe extern "thiscall" fn compare_wc_concacaf_cup_create_semi_final_groups(this: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_WC_CONCACAF_CUP_CREATE_SEMI_FINAL_GROUPS);
+    let cup = Cup(this);
+    let list = read_usize(this + wc_cup_turnover_consts::CUP_ENTRANT_LIST);
+    if cup.stages() == 0 || list == 0 || (0..3).any(|k| read_usize(cup.stages() + k * 4) == 0) {
+        return o(this);
+    }
+    let first = cup.current_stage() as u8;
+    let caribbean = first_three_still_in(cup);
+    let play_off = first_three_still_in(Cup(read_usize(cup.stages() + 8)));
+    if caribbean.iter().chain(play_off.iter()).any(|t| t.is_none()) {
+        return o(this);
+    }
+    let seeds: Vec<usize> = (0x19..0x23).map(|s| read_usize(list + s * 4)).filter(|&n| n != 0).take(3).collect();
+    if seeds.len() < 3 {
+        return o(this);
+    }
+    let plans: Vec<Vec<usize>> = (0..3).map(|g| {
+        let mut v = vec![seeds[g], caribbean[g].unwrap(), play_off[g].unwrap(), concacaf_semi_final_fourth(this, g)];
+        v.sort_unstable();
+        v
+    }).collect();
+    o(this);
+    let mut ok = cup.current_stage() as i32 == first as i8 as i32 + 2;
+    for (g, plan) in plans.iter().enumerate() {
+        let stage = read_usize(cup.stages() + (first.wrapping_add(g as u8) as i8 as isize as usize) * 4);
+        ok &= stage != 0 && league_stage_clubs(League(stage)) == *plan;
+    }
+    SCOREBOARD.record(ok, || format!("wc_concacaf_cup_create_semi_final_groups({:#x}): stage {} plans {:x?}", this, cup.current_stage() as i32, plans));
+}
+
+/// Comparer for `wc_concacaf_cup_create_final_group`: it builds a stage, so only the original runs; then the plan: the
+/// stage at the current index with the top two of the three semi-final groups (read before) as a set.
+pub(crate) unsafe extern "thiscall" fn compare_wc_concacaf_cup_create_final_group(this: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_WC_CONCACAF_CUP_CREATE_FINAL_GROUP);
+    let cup = Cup(this);
+    let index = cup.current_stage() as u8 as i8;
+    if cup.stages() == 0 || index < 3 || (0..3).any(|g| read_usize(cup.stages() + (index as usize - 3 + g) * 4) == 0) {
+        return o(this);
+    }
+    let mut plan: Vec<usize> = (0..3).flat_map(|g| {
+        let t = League(read_usize(cup.stages() + (index as usize - 3 + g) * 4)).table();
+        [read_usize(t), read_usize(t + league_table_row::SIZE)]
+    }).collect();
+    plan.sort_unstable();
+    o(this);
+    let stage = read_usize(cup.stages() + index as usize * 4);
+    let ok = stage != 0 && league_stage_clubs(League(stage)) == plan;
+    SCOREBOARD.record(ok, || format!("wc_concacaf_cup_create_final_group({:#x}): stage {} plan {:x?}", this, index, plan));
+}
+
+/// The six nations of the CONCACAF play-off, taken without side effects: the first seeded entrant left in the list's
+/// last ten slots (+0xb2, slots 25 to 34; the original then empties that slot), the Caribbean knockout survivors (the
+/// cup's team table rows with status 2, in order) and the runners-up of the two Central American groups (row 1 of the
+/// tables of stages 0 and 1). Returns the nations and the seeded slot taken.
+pub(crate) unsafe fn concacaf_play_off_nations(this: usize) -> (Vec<usize>, Option<usize>) {
+    let cup = Cup(this);
+    let list = read_usize(this + wc_cup_turnover_consts::CUP_ENTRANT_LIST);
+    let seeded = (0x19..0x23).find(|&s| read_usize(list + s * 4) != 0);
+    let mut v: Vec<usize> = seeded.map(|s| read_usize(list + s * 4)).into_iter().collect();
+    for i in 0..cup.team_count().max(0) as usize {
+        let row = cup.team_table() + i * 6;
+        if read_u8(row + 5) == 2 {
+            v.push(read_usize(row)); // a knockout survivor
+        }
+    }
+    for k in 0..2 {
+        let group = League(read_usize(cup.stages() + k * 4));
+        v.push(read_usize(group.table() + league_table_row::SIZE)); // cx16_10: the group runner-up
+    }
+    (v, seeded)
+}
+
+/// The CONCACAF progress codes (current, best, worst) of a nation at `stage` (signed byte), with `exempt` (+0xba) and
+/// `others` (+0xbc) the exempt counts. The knockout (stage −1, or stage 0 with fewer than two exempt non-Caribbean
+/// nations): best 1 for a winner (1) else 13, current and worst 13. A Central American or semi-final group (stages
+/// below 3 other than the knockout, with fewer than two exempt others; stage 3 too, then; or below 3 with exactly two):
+/// 1 and 2 become 1 for the best and 6 for the current and worst, 3 becomes 7 and 4 becomes 10. The final group (stage 4
+/// with fewer than two exempt others, or 3 with exactly two): codes up to 3 − exempt become 1. Any other, as they came.
+pub(crate) fn wc_concacaf_progress_codes(stage: i8, exempt: i8, others: i8, current: u8, best: u8, worst: u8) -> (u8, u8, u8) {
+    let knockout = (stage == -1 || stage == 0) && (stage == -1 || others < 2);
+    if knockout {
+        return (0xd, if best == 1 { 1 } else { 0xd }, 0xd);
+    }
+    let group = (stage != 0 && stage < 4 && others < 2) || (stage < 3 && others == 2);
+    if group {
+        let band = |v: u8, top: u8| match v {
+            1 | 2 => top,
+            3 => 7,
+            4 => 0xa,
+            _ => v,
+        };
+        return (band(current, 6), band(best, 1), band(worst, 6)); // cx16_7: the group bands
+    }
+    let last = (stage == 4 && others < 2) || (stage == 3 && others == 2);
+    if last {
+        let top = 3 - exempt as i32;
+        let q = |v: u8| if v as i32 > top { v } else { 1 };
+        return (q(current), q(best), q(worst));
+    }
+    (current, best, worst)
+}
+
+/// The club's link in a fate news (its short name, kind 0x7d5).
+pub(crate) unsafe fn link_fate_club(text: usize, club: Club) {
+    exe::text_add_link(text, (club.addr() + club::SHORT_NAME) as *const u8, 0x7d5, club);
+}
+
+/// The planned return of the CONCACAF records (and whether the nation enters the World Cup).
+pub(crate) fn concacaf_staff_records_plan(stage: i8, outcome: u8) -> (u32, bool) {
+    match stage {
+        -1 => (if matches!(outcome, 0 | 0xff | 1) { 0 } else { u32::MAX }, false),
+        s if s < 2 => (u32::MAX, false),
+        6 if outcome == 7 => (u32::MAX, true),
+        _ => (0, false),
+    }
+}
+
+/// The clubs of a league stage's table, sorted (a set: the stage may order them).
+pub(crate) unsafe fn league_stage_clubs(stage: League) -> Vec<usize> {
+    let mut v: Vec<usize> = (0..stage.club_count().max(0) as usize).map(|i| read_usize(stage.table() + i * league_table_row::SIZE)).collect();
+    v.sort_unstable();
+    v
+}
+
+/// The next seeded CONCACAF nation: the first one left in the entrant list's slots 25 to 34
+/// (`wc_cup_turnover_consts::CUP_ENTRANT_LIST`), taken out of it (the slot zeroed). None when they are all taken.
+pub(crate) unsafe fn take_next_concacaf_seed(this: usize) -> Option<usize> {
+    let list = read_usize(this + wc_cup_turnover_consts::CUP_ENTRANT_LIST);
+    let slot = (0x19..0x23).find(|&s| read_usize(list + s * 4) != 0)?;
+    let nation = read_usize(list + slot * 4);
+    write_usize(read_usize(this + wc_cup_turnover_consts::CUP_ENTRANT_LIST) + slot * 4, 0);
+    Some(nation)
+}
+
+/// The first three teams with status 1 (still in) of a cup's team table (6-byte rows), in order; fewer than three
+/// leave the rest None (the original then reads stack leftovers; see DEFEITOS_DO_ORIGINAL).
+pub(crate) unsafe fn first_three_still_in(cup: Cup) -> [Option<usize>; 3] {
+    let mut v = [None; 3];
+    let mut k = 0;
+    for i in 0..cup.team_count().max(0) as usize {
+        let row = cup.team_table() + i * 6;
+        if read_u8(row + 5) == 1 && k < 3 {
+            v[k] = Some(read_usize(row));
+            k += 1;
+        }
+    }
+    v
+}
+
+/// A CONCACAF group stage: the round table of stage `index` (virtual `comp_vtable::CREATE_SCHEDULE`(index, &rounds,
+/// &label, 0)); operator new of 0xee and League_Stage::League_Stage `FN_LEAGUE_STAGE_LEAGUE_STAGE` (thiscall, ret
+/// 0x58: the section, `size`, the teams, 2, the record, the round table, rounds, 3, 1, 0xa, the tie-breaks {1, 2, 3,
+/// 0}, the places {`qualifiers`, 0, 0, 0}, the year, `index`, the label, `importance`, 4, 0, `code`, −1, 0, 2; the
+/// original pushes the words and the index with garbage in the high bytes, which the constructor does not read: the
+/// copy passes clean values) into `cup::STAGES`[index]. Returns the stage (or 0) and the round table. The Central
+/// American groups' `concacaf_group_stage` (cx16_3) is this with places {1, 1, 0, 0}, importance 0xf and code 0x28,
+/// without the store: one can replace the other when both are in the motor.
+pub(crate) unsafe fn concacaf_qualifying_group_stage(this: usize, index: u8, teams: usize, size: u32, qualifiers: u8, importance: u32, code: u32) -> (usize, usize) {
+    let cup = Cup(this);
+    let create_schedule: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + comp_vtable::CREATE_SCHEDULE));
+    let (mut rounds, mut label) = (0i16, 0i16);
+    let table = create_schedule(this, index as u32, &mut rounds, &mut label, 0);
+    let tiebreaks: [u8; 4] = [1, 2, 3, 0];
+    let places: [u8; 4] = [qualifiers, 0, 0, 0];
+    #[allow(clippy::type_complexity)]
+    let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
+        core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
+    let p = exe::crt_operator_new(0xee);
+    let stage = if p != 0 {
+        construct(p, this, size, teams, 2, League(this).competition().addr(), table, rounds as u16 as u32, 3, 1, 0xa, tiebreaks.as_ptr() as usize,
+            places.as_ptr() as usize, cup.year() as u16 as u32, index as u32, label as u16 as u32, importance, 4, 0, code, -1, 0, 2)
+    } else {
+        0
+    };
+    write_usize(cup.stages() + (index as i8 as isize as usize).wrapping_mul(4), stage);
+    (read_usize(cup.stages() + (index as i8 as isize as usize).wrapping_mul(4)), table)
+}
+
+/// The four nations of each CONCACAF semi-final group g (0, 1, 2): the next seeded nation, the g-th Caribbean knockout
+/// survivor (the cup's team table, status 1), the g-th play-off survivor (the play-off stage `cup::STAGES`[2], status
+/// 1) and a Central American nation: the winner of group 0 (row 0 of `cup::STAGES`[0]) for group A, the entrant list's
+/// slot at the cup's `team_count` for group B, the winner of group 1 for group C. The B slot is a defect of the
+/// original [inference: the group 1 winner was meant, as in group C].
+pub(crate) unsafe fn concacaf_semi_final_fourth(this: usize, g: usize) -> usize {
+    let cup = Cup(this);
+    match g {
+        0 => read_usize(League(read_usize(cup.stages())).table()),
+        1 => read_usize(read_usize(this + wc_cup_turnover_consts::CUP_ENTRANT_LIST) + (cup.team_count() as isize as usize).wrapping_mul(4)), // rx11_5: the B slot
+        _ => read_usize(League(read_usize(cup.stages() + 4)).table()),
+    }
+}
+
+/// WcConcacafCup routines that build a stage (thiscall, ret 0): the play-off, the semi-final groups and the final group.
+pub(crate) const FN_WC_CONCACAF_CUP_CREATE_PLAY_OFF_STAGE: usize = 0x917110;
+
+pub(crate) const FN_WC_CONCACAF_CUP_CREATE_SEMI_FINAL_GROUPS: usize = 0x917320;
+
+pub(crate) const FN_WC_CONCACAF_CUP_CREATE_FINAL_GROUP: usize = 0x917830;

@@ -49,6 +49,11 @@ def main():
     prefixo = 'Match engine' if 'Motor de partidas' in open(os.path.join(RAIZ, 'levas', str(n), 'docs.py'), encoding='utf-8').read() else 'Simulation'
     adiado = '=== JOGO REAL ADIADO' in open(os.path.join(RAIZ, 'levas', str(n), 'cadeia.txt'), encoding='utf-8', errors='replace').read()
     real = 'real-game comparison deferred to the audit' if adiado else 'real game 0 divergences'
+    # levas/N/JOGO_REAL_NOTA (27/11/2026): what the real game gave when it is not plain 0 divergences (a comparer false
+    # alarm the Lucas accepted, explained in the cadeia.txt)
+    nota = os.path.join(RAIZ, 'levas', str(n), 'JOGO_REAL_NOTA')
+    if os.path.exists(nota):
+        real = open(nota, encoding='utf-8').read().strip()
     # commit messages in English since 07/11/2026
     msg = (f'{prefixo}: batch {n} ({total} routines): {titulo}\n\nEach routine compared with the original; full chain '
            f'(levas/{n}/cadeia.txt): {real}, Rust careers x2 equal.\n\n'

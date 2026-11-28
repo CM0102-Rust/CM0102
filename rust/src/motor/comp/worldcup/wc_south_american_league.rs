@@ -424,3 +424,187 @@ pub(crate) const WC_SOUTH_AMERICAN_EIGHT_OPS_1: [GoldcupScheduleOp; 28] = [
     Cqp12D(0xc, 8, 0xa, 1, 2, 2, 0), Cqp12L(0xc, 0, -1, -1, -1, 0), Cqp12D(0xd, 0xf, 0xa, 1, 2, 2, 0),
     Cqp12L(0xd, 0, -1, -1, -1, 0),
 ];
+
+/// rule: in the South American qualifying a nation's status is qualified (−2) while its table position (stat 0x12) is
+/// inside the qualifying places (six less the exempt nations), and not qualified (−3) otherwise
+///
+/// `qualifying_stat_byte`(club, 0x12) below `south_american_qualifying_places`: −2, otherwise −3 (a word).
+/// Original: `WcSouthAmericanLeague::get_qualification_status` (0x921630, wc_south_american_league.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn wc_south_american_league_get_qualification_status(this: usize, club: usize) -> i16 {
+    covered!("cx17_2 south american qualification status");
+    let now = qualifying_stat_byte(this, club, 0x12) as i32;
+    (now < south_american_qualifying_places(this)) as i16 - 3
+}
+
+/// rule: in the South American qualifying a nation's status changes down (−1) when its table position (stat 0x12) leaves
+/// the qualifying places (stat 0x13, the previous position, was inside), up (1) when it enters them, otherwise 0
+///
+/// `qualifying_stat_byte` of 0x13 (before) and 0x12 (now), signed, against `south_american_qualifying_places`: now
+/// inside, (before inside) − 1; otherwise (before inside). The byte in al.
+/// Original: `WcSouthAmericanLeague::get_qualification_status_change` (0x921670, wc_south_american_league.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn wc_south_american_league_get_qualification_status_change(this: usize, club: usize) -> i8 {
+    covered!("cx17_2 south american status change");
+    let before = qualifying_stat_byte(this, club, 0x13) as i32;
+    let now = qualifying_stat_byte(this, club, 0x12) as i32;
+    let places = south_american_qualifying_places(this);
+    if now < places {
+        (before < places) as i8 - 1
+    } else {
+        (before < places) as i8
+    }
+}
+
+/// rule: when the South American qualifying ends, a nation that qualifies (status 7) gets the World Cup qualification
+/// record (weight 100), enters the World Cup and the national teams' list of qualified nations and its status becomes 4;
+/// one that goes to the play-off against Oceania (1) gets the record of qualifying for the Oceania section (stage 0xa0,
+/// weight 70); one that fails (−2) gets the failed-to-qualify record (weight 100) and ends its campaign
+///
+/// `this.update_staff_records_for_status(club, outcome, stage, out, game, a6)` (virtual +0x44; only `club`, the outcome
+/// byte and `out` are read). The records go to Staff_Records ([`G_STAFF_RECORDS`]). Outcome 7: the World Cup record
+/// (`KEY_CLUB_COMP_FIFA_WORLD_CUP` in [`G_CLUB_COMP_TABLE`], 0x6b bytes each) with
+/// `european_cup_add_qualified_record`(club, record, 0, 0, 0x64); WorldCup::add_qualified_team on the World Cup object
+/// (`exe::worldcup_add_qualified_team`); `*out` = 4; NationalTeams::add_qualified_nation(club, record) on
+/// [`G_NATIONAL_TEAMS`] (`FN_NATIONALTEAMS_ADD_QUALIFIED_NATION`: 2 pushes; mov ecx -> thiscall, ret 8); returns −1.
+/// Outcome 1: `european_cup_add_qualified_record`(club, the Oceania section's record, 0xa0, 0, 0x46); 0. Outcome 0xfe:
+/// `european_cup_add_failed_to_qualify_record`(club, `league::COMPETITION`, 0, 0x64) and the national team's campaign
+/// ended (`clear_national_team_competition`); 0. Any other outcome: 0.
+/// Original: `WcSouthAmericanLeague::update_staff_records_for_status` (0x920a50, wc_south_american_league.cpp, thiscall, ret 0x18).
+pub(crate) unsafe extern "thiscall" fn wc_south_american_league_update_staff_records_for_status(this: usize, club: usize, outcome: u32, _stage: u32, out: usize, _game: usize, _a6: u32) -> u32 {
+    let comp_record = |key: usize| read_usize(G_CLUB_COMP_TABLE).wrapping_add(read_usize(key).wrapping_mul(0x6b));
+    match outcome as u8 {
+        7 => {
+            covered!("cx17_2 south american to the world cup");
+            european_cup_add_qualified_record(club, comp_record(KEY_CLUB_COMP_FIFA_WORLD_CUP), 0, 0, 0x64);
+            let world_cup = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP).wrapping_mul(4)));
+            exe::worldcup_add_qualified_team(world_cup, club); // cx17_2: the qualified nation enters the World Cup
+            write_u8(out, 4);
+            exe::nationalteams_add_qualified_nation(read_usize(G_NATIONAL_TEAMS), club, comp_record(KEY_CLUB_COMP_FIFA_WORLD_CUP));
+            u32::MAX
+        }
+        1 => {
+            covered!("cx17_2 south american to the oceania play-off");
+            european_cup_add_qualified_record(club, comp_record(KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION), 0xa0, 0, 0x46);
+            0
+        }
+        0xfe => {
+            covered!("cx17_2 south american out");
+            european_cup_add_failed_to_qualify_record(club, League(this).competition().addr(), 0, 0x64);
+            clear_national_team_competition(Club(club)); // cx17_2: the eliminated nation ends its campaign
+            0
+        }
+        _ => 0,
+    }
+}
+
+/// Comparers of the two status readers: they only read the statistics; side by side on the result (the word or byte).
+pub(crate) unsafe extern "thiscall" fn compare_wc_south_american_league_get_qualification_status(this: usize, club: usize) -> i16 {
+    let a = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> i16>(IDX_WC_SOUTH_AMERICAN_LEAGUE_GET_QUALIFICATION_STATUS)(this, club);
+    let b = wc_south_american_league_get_qualification_status(this, club);
+    SCOREBOARD.record(a == b, || format!("wc_south_american_league_get_qualification_status({:#x}, {:#x}) original={} rust={}", this, club, a, b));
+    a
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_wc_south_american_league_get_qualification_status_change(this: usize, club: usize) -> i8 {
+    let a = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> i8>(IDX_WC_SOUTH_AMERICAN_LEAGUE_GET_QUALIFICATION_STATUS_CHANGE)(this, club);
+    let b = wc_south_american_league_get_qualification_status_change(this, club);
+    SCOREBOARD.record(a == b, || format!("wc_south_american_league_get_qualification_status_change({:#x}, {:#x}) original={} rust={}", this, club, a, b));
+    a
+}
+
+/// Comparer for `wc_south_american_league_update_staff_records_for_status`: the records, the end of the national team's
+/// campaign and the World Cup place do not run twice, so only the original runs; the plan: −1 for a qualified nation
+/// (outcome 7) with `*out` = 4 and the World Cup's entrant count one more when it had room, 0 otherwise.
+pub(crate) unsafe extern "thiscall" fn compare_wc_south_american_league_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, out: usize, game: usize, a6: u32) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, usize, u32) -> u32>(IDX_WC_SOUTH_AMERICAN_LEAGUE_UPDATE_STAFF_RECORDS_FOR_STATUS);
+    let qualified = outcome as u8 == 7 && out != 0;
+    let world_cup = League(read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP).wrapping_mul(4))));
+    if qualified && world_cup.is_null() {
+        return o(this, club, outcome, stage, out, game, a6);
+    }
+    let n = if qualified { world_cup.entrant_count() } else { 0 };
+    let room = qualified && n < world_cup.entrant_capacity();
+    let r = o(this, club, outcome, stage, out, game, a6);
+    let same = if qualified { r == u32::MAX && read_u8(out) == 4 && world_cup.entrant_count() == if room { n + 1 } else { n } } else { r == 0 };
+    SCOREBOARD.record(same, || format!("wc_south_american_league_update_staff_records_for_status({:#x}, {}) returned {:#x}, list {}", club, outcome as u8, r, n));
+    r
+}
+
+/// rule: the news text of a nation's fate in the South American qualifying: a qualified nation (fate 7) "have qualified
+/// from the" South American qualifying in the full sentence, "qualify for" the World Cup in the short one; a nation going
+/// to the play-off (1) "qualify for Oceania playoff"; an eliminated one (−2) the shared group sentence; any other fate,
+/// no text
+///
+/// The arguments as `world_cup_build_fate_news_text` (the club index `club_index` in [`G_CLUB_TABLE`], the fate byte
+/// `fate`, six values not read here, `full_sentence` and the Text `text`). The lines are printed into the global buffer
+/// 0xde1f64 (`FN_LANGLIB_SPRINTF`) and set as the text (`exe::text_set_string`); the club's gender and short name
+/// (`club::SHORT_GENDER_NAME`, `club::SHORT_NAME`) go into every one.
+/// - Fate 7 with `full_sentence`: 0xad4d6c with the club's gender twice, the competition record's short gender twice
+///   (`competition::SHORT_GENDER_NAME`), the club's short name and the competition's long name (`competition::NAME`);
+///   the links: the club (0x7d5) and the competition's long name (0x7d0).
+/// - Fate 7 without it: 0xad44cc with the club's gender twice, the World Cup record's short gender twice
+///   (`KEY_CLUB_COMP_FIFA_WORLD_CUP` in [`G_CLUB_COMP_TABLE`], 0x6b bytes each), the club's and the World Cup's short
+///   names; the links: the World Cup (0x7d0) first, then the club (0x7d5).
+/// - Fate 1: 0xad4d2c with the club's gender twice and its short name; the club's link (0x7d5).
+/// - Fate 0xfe: the shared group sentence (`FN_COMP_UTIL_WRITE_GROUP_QUALIFY_NEWS`: club_index, the stage id, the
+///   competition record, −2, full_sentence, text: 6 pushes; add esp, 0x18 -> cdecl). The stage id goes as the dword
+///   the original builds: the word `league::STAGE_ID` over the high half of `text` (the callee reads the word).
+/// Original: `WcSouthAmericanLeague::build_fate_news_text` (0x920b40, wc_south_american_league.cpp, thiscall, ret 0x28).
+#[allow(clippy::too_many_arguments)]
+pub(crate) unsafe extern "thiscall" fn wc_south_american_league_build_fate_news_text(this: usize, club_index: u32, fate: u32, stage: u32, a3: u32, a4: u32, a5: u32, a6: u32, a7: u32, full_sentence: u32, text: usize) {
+    let _ = (stage, a3, a4, a5, a6, a7);
+    let this = League(this);
+    let club = club_at(club_index as i32 as isize);
+    let club_name = club.addr() + club::SHORT_NAME;
+    let club_gender = club.short_gender_name() as i8 as i32;
+    let sprintf: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+    // simplification: the original leaves al with the fate byte or a callee's eax; the callers do not read it
+    match fate as u8 {
+        7 if full_sentence != 0 => {
+            covered!("cx17_3 south american qualified, full sentence");
+            let comp = this.competition().addr();
+            let comp_gender = read_u8(comp + competition::SHORT_GENDER_NAME) as i8 as i32;
+            sprintf(0xde1f64, 0xad4d6c, club_gender, club_gender, comp_gender, comp_gender, club_name, comp + competition::NAME);
+            exe::text_set_string(text, 0xde1f64 as *const u8);
+            exe::text_add_link(text, club_name as *const u8, 0x7d5, club);
+            exe::text_add_link(text, (comp + competition::NAME) as *const u8, 0x7d0, comp);
+        }
+        7 => {
+            covered!("cx17_3 south american qualified");
+            let world_cup = read_usize(G_CLUB_COMP_TABLE).wrapping_add(read_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP).wrapping_mul(0x6b));
+            let cup_gender = read_u8(world_cup + competition::SHORT_GENDER_NAME) as i8 as i32;
+            sprintf(0xde1f64, 0xad44cc, club_gender, club_gender, cup_gender, cup_gender, club_name, world_cup + competition::SHORT_NAME);
+            exe::text_set_string(text, 0xde1f64 as *const u8);
+            exe::text_add_link(text, (world_cup + competition::SHORT_NAME) as *const u8, 0x7d0, world_cup); // cx17_3: the World Cup's link first
+            exe::text_add_link(text, club_name as *const u8, 0x7d5, club);
+        }
+        1 => {
+            covered!("cx17_3 south american to the play-off");
+            sprintf(0xde1f64, 0xad4d2c, club_gender, club_gender, club_name);
+            exe::text_set_string(text, 0xde1f64 as *const u8);
+            exe::text_add_link(text, club_name as *const u8, 0x7d5, club);
+        }
+        0xfe => {
+            covered!("cx17_3 south american out");
+            let sentence: unsafe extern "C" fn(u32, u32, usize, i32, u32, usize) = core::mem::transmute(FN_COMP_UTIL_WRITE_GROUP_QUALIFY_NEWS);
+            let stage_id = (text as u32 & 0xffff_0000) | this.stage_id() as u16 as u32;
+            sentence(club_index, stage_id, this.competition().addr(), -2, full_sentence, text);
+        }
+        _ => {}
+    }
+}
+
+/// Comparer for `wc_south_american_league_build_fate_news_text`: side by side into two Texts (`compare_text_writer`).
+#[allow(clippy::too_many_arguments)]
+pub(crate) unsafe extern "thiscall" fn compare_wc_south_american_league_build_fate_news_text(this: usize, club_index: u32, fate: u32, stage: u32, a3: u32, a4: u32, a5: u32, a6: u32, a7: u32, full_sentence: u32, text: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32, u32, usize)>(IDX_WC_SOUTH_AMERICAN_LEAGUE_BUILD_FATE_NEWS_TEXT);
+    compare_text_writer(text, || o(this, club_index, fate, stage, a3, a4, a5, a6, a7, full_sentence, text),
+        |t| wc_south_american_league_build_fate_news_text(this, club_index, fate, stage, a3, a4, a5, a6, a7, full_sentence, t),
+        || format!("wc_south_american_league_build_fate_news_text(club {}, fate {}, full {})", club_index, fate as u8, full_sentence));
+}
+
+/// The qualifying places of the South American section: six less the exempt nations
+/// (`wc_south_american_league_fields::EXEMPT_COUNT`, a signed byte); a progress code (the table position) below it is
+/// inside them.
+pub(crate) unsafe fn south_american_qualifying_places(this: usize) -> i32 {
+    6 - read_u8(this + wc_south_american_league_fields::EXEMPT_COUNT) as i8 as i32 // cx17_2: six places less the exempt
+}

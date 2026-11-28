@@ -6,7 +6,7 @@
 MUTACOES = [
     ('sx05b_6_sem_reservas',
      '        (ta::SUBSTITUTES, 1, 0x77, 0xa8c7d8),',
-     '        // mutation: the substitutes not read'),
+     '        (ta::SUBSTITUTES, 0, 0x77, 0xa8c7d8), // mutation: the substitutes not read (size 0: the array keeps its length)'),
     ('sx05b_6_sem_ultimo',
      "        || !award_read(this + ya::HISTORY_LAST, 4, file, YEAR_AWARD_CPP, 0x77, 0xad5940) {",
      "        || false { // mutation: the last offset not read"),

@@ -5,7 +5,7 @@
 MUTACOES = [
     ('sx05b_7_sem_data',
      '        (ta::UPDATE_DATE, 8, 0x96),',
-     '        // mutation: the update date not saved'),
+     '        (ta::UPDATE_DATE, 0, 0x96), // mutation: the update date not saved (size 0: the array keeps its length)'),
     ('sx05b_7_sem_lista',
      '        save(shortlist, file);',
      '        let _ = (save, shortlist); // mutation: no shortlist'),

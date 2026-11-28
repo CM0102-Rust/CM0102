@@ -2,7 +2,7 @@
 
 Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os arquivos-fonte do mapa de [maxevans60](https://github.com/maxevans60/cm0102-function-map) (CC BY 4.0). Uma função conta quando o início dela é desviado para Rust (`Prologue` em `rust/src/motor.rs`). O placar do motor de partidas, pelas nossas fronteiras, fica em `PLACAR.md`.
 
-**Exe inteiro:** 4044 de 6709 funções, 3978.9 de 5528.0 KB (**71.98%**) · 303 de 393 arquivos com rotinas em Rust
+**Exe inteiro:** 4105 de 6709 funções, 4005.3 de 5528.0 KB (**72.46%**) · 303 de 393 arquivos com rotinas em Rust
 
 | Arquivo | Funções | KB | Progresso |
 |---|---|---|---|
@@ -64,6 +64,7 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `cro_a1.cpp` | 10/13 | 5.0/5.2 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **96.1%** |
 | `bra_reg_minas_gerais.cpp` | 12/14 | 5.3/5.5 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **96.0%** |
 | `cro_a2a.cpp` | 8/10 | 4.1/4.3 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **96.0%** |
+| `world_cup.cpp` | 22/26 | 14.6/15.2 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **95.9%** |
 | `bra_reg_parana.cpp` | 11/13 | 5.0/5.2 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **95.8%** |
 | `cro_a2b.cpp` | 7/9 | 3.9/4.1 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **95.8%** |
 | `ger_second.cpp` | 5/7 | 4.6/4.9 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟨 **95.5%** |
@@ -148,6 +149,7 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `hol_super.cpp` | 4/6 | 1.7/1.9 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **87.9%** |
 | `ita_super.cpp` | 4/6 | 1.7/1.9 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **87.9%** |
 | `nir_charity.cpp` | 4/6 | 1.7/1.9 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **87.9%** |
+| `wc_asia_league.cpp` | 18/23 | 10.1/11.5 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **87.8%** |
 | `game.cpp` | 21/34 | 37.8/43.1 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **87.6%** |
 | `eur_super_cup.cpp` | 4/6 | 1.7/1.9 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **87.6%** |
 | `ire_prm.cpp` | 5/12 | 3.8/4.3 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **87.6%** |
@@ -155,7 +157,7 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `bra_reg_rio.cpp` | 11/14 | 5.0/5.7 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **87.5%** |
 | `con_merc_cup.cpp` | 12/16 | 5.3/6.1 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **87.4%** |
 | `stadium.cpp` | 12/17 | 9.9/11.3 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **87.2%** |
-| `world_cup.cpp` | 16/26 | 13.2/15.2 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **86.8%** |
+| `wc_oceania_league.cpp` | 17/21 | 7.6/8.8 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **87.0%** |
 | `conmebol_seeding.cpp` | 8/9 | 2.9/3.3 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **86.4%** |
 | `spa_super.cpp` | 4/7 | 1.7/2.0 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **85.8%** |
 | `fra_cup.cpp` | 4/9 | 3.5/4.0 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **85.7%** |
@@ -203,6 +205,7 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `display.cpp` | 31/36 | 27.6/37.5 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **73.4%** |
 | `contract_manager.cpp` | 63/121 | 63.7/87.1 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **73.1%** |
 | `Database.cpp` | 172/181 | 108.3/148.5 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **72.9%** |
+| `wc_concacaf_cup.cpp` | 15/21 | 10.2/14.0 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **72.6%** |
 | `swe_first.cpp` | 7/12 | 3.8/5.3 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **72.0%** |
 | `virtual_staff.cpp` | 6/12 | 4.5/6.4 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **70.9%** |
 | `training_manager.cpp` | 20/34 | 11.5/16.3 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **70.5%** |
@@ -216,7 +219,6 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `sco_first.cpp` | 6/12 | 4.5/6.5 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **68.2%** |
 | `fin_prm.cpp` | 39/66 | 30.8/45.2 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **68.2%** |
 | `comp_util.cpp` | 29/38 | 46.5/68.4 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **67.9%** |
-| `wc_oceania_league.cpp` | 12/21 | 5.9/8.8 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **67.4%** |
 | `transfer_manager.cpp` | 151/199 | 112.4/167.1 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **67.2%** |
 | `club_records.cpp` | 41/56 | 40.6/61.6 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **65.9%** |
 | `player_regen.cpp` | 42/51 | 29.2/44.7 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **65.2%** |
@@ -242,16 +244,17 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `dispute.cpp` | 7/11 | 2.4/4.6 | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **52.6%** |
 | `belgium_rules.cpp` | 4/10 | 1.8/3.5 | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **51.6%** |
 | `rus_first.cpp` | 4/7 | 1.5/2.8 | 🟩🟩🟩🟩🟩🟨⬜⬜⬜⬜ **51.4%** |
+| `wc_south_american_league.cpp` | 11/17 | 4.5/9.0 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **49.7%** |
 | `Date.cpp` | 16/36 | 6.8/13.6 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **49.5%** |
 | `fin_first.cpp` | 7/18 | 4.2/8.7 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **48.7%** |
 | `european_cup.cpp` | 19/50 | 14.2/29.3 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **48.6%** |
 | `swe_prm.cpp` | 6/13 | 3.3/7.0 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **48.0%** |
 | `pol_lge_cup.cpp` | 3/7 | 1.5/3.2 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **47.8%** |
+| `wc_african_cup.cpp` | 10/20 | 5.0/10.5 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **47.8%** |
 | `cup_stage.cpp` | 3/7 | 3.5/7.7 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **46.0%** |
 | `fifa_confed.cpp` | 7/20 | 3.8/8.5 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **44.7%** |
+| `wc_europe_league.cpp` | 22/30 | 10.0/23.4 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **42.7%** |
 | `tur_first.cpp` | 6/10 | 2.5/5.9 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **41.6%** |
-| `wc_south_american_league.cpp` | 7/17 | 3.6/9.0 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **40.4%** |
-| `wc_concacaf_cup.cpp` | 7/21 | 5.6/14.0 | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **40.0%** |
 | `rus_prm.cpp` | 5/13 | 2.3/5.9 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **39.5%** |
 | `notes.cpp` | 4/23 | 3.6/9.2 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **39.4%** |
 | `nor_first.cpp` | 6/12 | 2.2/5.9 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **37.9%** |
@@ -265,7 +268,6 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `human_manager.cpp` | 22/61 | 8.8/25.5 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **34.5%** |
 | `olympics.cpp` | 4/16 | 2.9/8.4 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **34.2%** |
 | `hall_of_fame.cpp` | 6/20 | 2.8/8.3 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **33.3%** |
-| `wc_asia_league.cpp` | 6/23 | 3.7/11.5 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **32.1%** |
 | `international_awards.cpp` | 1/3 | 0.4/1.2 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **31.6%** |
 | `scout_manager.cpp` | 20/39 | 7.3/23.0 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **31.5%** |
 | `kor_league_cup.cpp` | 6/17 | 1.9/6.3 | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **30.3%** |
@@ -295,11 +297,9 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `portugal_rules.cpp` | 1/5 | 0.2/1.6 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **15.4%** |
 | `league_stage.cpp` | 2/6 | 1.1/7.7 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **14.0%** |
 | `coach.cpp` | 3/10 | 2.4/18.3 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **13.0%** |
-| `wc_europe_league.cpp` | 5/30 | 2.8/23.4 | 🟩🟨⬜⬜⬜⬜⬜⬜⬜⬜ **12.0%** |
 | `main.cpp` | 4/16 | 0.3/3.0 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.7%** |
 | `utils.cpp` | 1/23 | 0.5/5.7 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.0%** |
 | `transfer_offer.cpp` | 4/27 | 1.0/15.2 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **6.4%** |
-| `wc_african_cup.cpp` | 1/20 | 0.6/10.5 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **6.1%** |
 | `simulated_stats.cpp` | 1/19 | 0.3/5.5 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **5.9%** |
 | `arg_prm.cpp` | 1/17 | 0.5/10.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **5.3%** |
 | `arg_second.cpp` | 2/18 | 0.6/13.8 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **4.1%** |

@@ -5560,6 +5560,11 @@ pub(crate) mod exe {
         f(a0.addr(), a1.addr(), a2, a3.addr())
     }
     #[inline(always)]
+    pub(crate) unsafe fn nationalteams_add_qualified_nation(a0: impl Addr, a1: impl Addr, a2: impl Addr) {
+        let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_NATIONALTEAMS_ADD_QUALIFIED_NATION);
+        f(a0.addr(), a1.addr(), a2.addr())
+    }
+    #[inline(always)]
     pub(crate) unsafe fn nationalteams_build_selection_pools(a0: impl Addr) {
         let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_NATIONALTEAMS_BUILD_SELECTION_POOLS);
         f(a0.addr())
@@ -8098,6 +8103,11 @@ pub(crate) mod exe {
     pub(crate) unsafe fn subleague_add_results_between_members(a0: impl Addr, a1: u32, a2: u32, a3: u32, a4: u32, a5: i32, a6: u32, a7: u32) -> u32 {
         let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, i32, u32, u32) -> u32 = core::mem::transmute(FN_SUBLEAGUE_ADD_RESULTS_BETWEEN_MEMBERS);
         f(a0.addr(), a1, a2, a3, a4, a5, a6, a7)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn new_subleague(a0: impl Addr, a1: u32, a2: impl Addr, a3: i32, a4: i32, a5: impl Addr, a6: impl Addr, a7: i32, a8: u32, a9: u32, a10: impl Addr, a11: u32, a12: impl Addr) -> usize {
+        let f: unsafe extern "thiscall" fn(usize, u32, usize, i32, i32, usize, usize, i32, u32, u32, usize, u32, usize) -> usize = core::mem::transmute(FN_SUBLEAGUE_SUBLEAGUE);
+        f(a0.addr(), a1, a2.addr(), a3, a4, a5.addr(), a6.addr(), a7, a8, a9, a10.addr(), a11, a12.addr())
     }
     #[inline(always)]
     pub(crate) unsafe fn swap_bytes_16_array(a0: impl Addr, a1: u32) {

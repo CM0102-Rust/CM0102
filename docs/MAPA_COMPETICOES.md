@@ -2,7 +2,7 @@
 
 Gerado por `python engenharia-reversa/competicoes.py` (o mapa de funções de maxevans60, CC BY 4.0, e a cobertura de uma carreira com as 8 ligas `ENG ESP ITA FRA BRA JPN AUS USA` até 2002-06-01, `levas/competicoes/`; as rotinas já em Rust não levam contador). "falta" = chamada ao menos uma vez nessa carreira e ainda não está em Rust (a lista para `candidatos.py --competicoes` fica em `docs/cobertura_competicoes.txt`).
 
-**Total:** 2695 funções, 1475.7 KB; em Rust 1444 (63.9% dos bytes); faltam 35 (31.8 KB).
+**Total:** 2695 funções, 1475.7 KB; em Rust 1505 (65.7% dos bytes); faltam 35 (31.8 KB).
 
 | Grupo | Funções | KB | Rust | Falta (KB) | Progresso |
 |---|---|---|---|---|---|
@@ -11,7 +11,7 @@ Gerado por `python engenharia-reversa/competicoes.py` (o mapa de funções de ma
 | Copas nacionais | 526 | 228.3 | 296 | 11 (4.9) | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **73.8%** |
 | Competições europeias | 221 | 98.2 | 122 | 0 (0.0) | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **67.3%** |
 | Continentais fora da Europa | 203 | 105.2 | 58 | 9 (6.3) | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **32.4%** |
-| Copa do Mundo e eliminatórias | 158 | 92.4 | 54 | 7 (7.3) | 🟩🟩🟩🟨⬜⬜⬜⬜⬜⬜ **38.4%** |
+| Copa do Mundo e eliminatórias | 158 | 92.4 | 115 | 7 (7.3) | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **67.1%** |
 | Torneios amistosos | 17 | 4.5 | 0 | 0 (0.0) | ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜ **0.0%** |
 | Regras de transferência por nação (`transfer/*_rules.cpp`) | 126 | 26.7 | 51 | 0 (0.0) | 🟩🟩🟩🟩🟨⬜⬜⬜⬜⬜ **47.9%** |
 
@@ -118,13 +118,13 @@ Só os arquivos com alguma rotina que falta; ordem: grupo, depois o que falta.
 | `fifa_confed.cpp` | intercomp | 20 | 7 | 0 (0.0) |
 | `oceania_nations.cpp` | intercomp | 16 | 8 | 0 (0.0) |
 | `olympics.cpp` | intercomp | 16 | 4 | 0 (0.0) |
-| `wc_african_cup.cpp` | worldcup | 20 | 1 | 5 (4.0) |
-| `wc_concacaf_cup.cpp` | worldcup | 21 | 7 | 1 (2.3) |
-| `wc_europe_league.cpp` | worldcup | 30 | 5 | 1 (0.9) |
-| `wc_asia_league.cpp` | worldcup | 23 | 6 | 0 (0.0) |
-| `wc_oceania_league.cpp` | worldcup | 21 | 12 | 0 (0.0) |
-| `wc_south_american_league.cpp` | worldcup | 17 | 7 | 0 (0.0) |
-| `world_cup.cpp` | worldcup | 26 | 16 | 0 (0.0) |
+| `wc_african_cup.cpp` | worldcup | 20 | 10 | 5 (4.0) |
+| `wc_concacaf_cup.cpp` | worldcup | 21 | 15 | 1 (2.3) |
+| `wc_europe_league.cpp` | worldcup | 30 | 22 | 1 (0.9) |
+| `wc_asia_league.cpp` | worldcup | 23 | 18 | 0 (0.0) |
+| `wc_oceania_league.cpp` | worldcup | 21 | 17 | 0 (0.0) |
+| `wc_south_american_league.cpp` | worldcup | 17 | 11 | 0 (0.0) |
+| `world_cup.cpp` | worldcup | 26 | 22 | 0 (0.0) |
 | `argentina_rules.cpp` | rules | 12 | 1 | 0 (0.0) |
 | `australia_rules.cpp` | rules | 3 | 2 | 0 (0.0) |
 | `belgium_rules.cpp` | rules | 10 | 4 | 0 (0.0) |

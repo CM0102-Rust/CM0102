@@ -1,27 +1,4 @@
 # ordem da fila (fila.py); um item por linha
-cx16_10
-cx16_11
-cx16_12
-cx16_7
-cx16_8
-cx16_9
-rx08_4
-rx08_5
-rx08_6
-rx09_16
-rx09_17
-rx09_18
-rx09_19
-rx11_1
-rx11_2
-rx11_3
-rx11_4
-rx11_5
-rx12_17
-cx17_2
-cx17_3
-cx17_5
-cx17_6
 sx05b_6
 sx05b_7
 sx05b_12

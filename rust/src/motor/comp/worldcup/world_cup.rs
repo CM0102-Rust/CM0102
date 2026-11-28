@@ -1024,3 +1024,271 @@ pub(crate) const WORLD_CUP_2002_AFRICA: [usize; 5] = [KEY_NATION_CAMEROON, KEY_N
 /// European Championship plus `+0xc8` 0.
 pub(crate) const WORLD_CUP_RULE_FIELDS: [(usize, u8, u32); 16] = [(0x43, 1, 2), (0xc7, 1, 2), (0xbe, 1, 2), (0xc2, 1, 3), (0x4a, 1, 3), (0x3c, 2, 1), (0xc3, 1, 1),
     (0xc4, 1, 0xa), (0xc5, 1, 4), (0xc6, 1, 1), (0xc8, 1, 0), (0xbf, 1, 0), (0xc0, 1, 0), (0xc1, 1, 0), (0x3a, 2, 0x3e8), (0x49, 1, 7)];
+
+/// rule: the draw entries are sorted by pot, lowest first
+///
+/// The qsort comparator of the draw and seeding entries: the signed pot byte at +4 of `a` less that of `b`.
+/// Original: `compare_entries_by_pot` (0x92f660, world_cup.cpp, cdecl).
+pub(crate) unsafe extern "C" fn compare_entries_by_pot(a: usize, b: usize) -> i32 {
+    covered!("cx17_3 pot order");
+    read_i8(a + 4) as i32 - read_i8(b + 4) as i32 // cx17_3: the pot byte
+}
+
+/// Comparer for `compare_entries_by_pot`: it only reads; side by side on the result.
+pub(crate) unsafe extern "C" fn compare_compare_entries_by_pot(a: usize, b: usize) -> i32 {
+    let o = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_COMPARE_ENTRIES_BY_POT)(a, b);
+    let r = compare_entries_by_pot(a, b);
+    SCOREBOARD.record(o == r, || format!("compare_entries_by_pot({:#x}, {:#x}) original={} rust={}", a, b, o, r));
+    o
+}
+
+/// rule: the World Cup's career records: in the groups a nation through to the round of 16 gets the qualification (stage
+/// 0x14, weight 30) and one going out the failed-to-qualify record (weight 30) and ends its campaign; in the knockout a
+/// winner of a tie gets the qualification for the next round and a loser the knock-out record, both weighted 50 to 100
+/// by round; the champion, the runner-up and the third get their records and end the campaign with every other nation
+/// knocked out; the champion's status becomes 4
+///
+/// `this.update_staff_records_for_status(club, outcome, stage, out, game, final_)` (virtual +0x44). The records go to
+/// Staff_Records ([`G_STAFF_RECORDS`]); the competition is `league::COMPETITION`; ending a campaign is
+/// `clear_national_team_competition`. Stage below 7 (signed byte, the groups): outcome 6, `european_cup_add_qualified_record`
+/// (club, competition, 0, 0x14, 0x1e); 0xfe, `european_cup_add_failed_to_qualify_record`(club, competition, 0x41c, 0x1e)
+/// and the campaign ended; any other, nothing. Stage 7 (the knockout): outcome 0, the qualification with the fixture's
+/// `round_prefix()`, the round code of the next round of the knockout stage (`.stages()`[7], its round table, round
+/// `round_number()` + 1, `cup_round::ROUND_CODE`) and the weight `scale_by_round`(0x32, 0x64, `round_number()`, 5);
+/// 0xff, `european_cup_add_knocked_out_record`(club, competition, `round_prefix()`, `round_name()`, the same weight) and
+/// the campaign ended; 4, only the campaign ended; 1, 2 and 3, the winners, runners-up and third-place records
+/// (`cup_record_final_result` with 0x86a800, 0x86b0b0 and 0x86b710: club, game, final_), for 1 `*out` = 4, then the
+/// campaign ended; any other, nothing. Past stage 7, nothing. Returns 0.
+/// Original: `WorldCup::update_staff_records_for_status` (0x92ccf0, world_cup.cpp, thiscall, ret 0x18).
+pub(crate) unsafe extern "thiscall" fn world_cup_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, out: usize, game: usize, final_: u32) -> u32 {
+    let league = League(this);
+    let comp = league.competition().addr();
+    let stage = stage as u8 as i8;
+    if stage < 7 {
+        match outcome as u8 {
+            6 => european_cup_add_qualified_record(club, comp, 0, 0x14, 0x1e),
+            0xfe => {
+                covered!("cx17_5 world cup group exit");
+                european_cup_add_failed_to_qualify_record(club, comp, 0x41c, 0x1e);
+                clear_national_team_competition(Club(club)); // cx17_5: the group exit ends the campaign
+            }
+            _ => {}
+        }
+        return 0;
+    }
+    if stage != 7 {
+        return 0;
+    }
+    covered!("cx17_5 world cup knockout records");
+    let game = Fixture(game);
+    // simplification: the original pushes the fixture's words in registers with garbage in the high 16 bits; the
+    // records and scale_by_round only read the words
+    match outcome as u8 {
+        0 => {
+            let weight = scale_by_round(0x32, 0x64, game.round_number(), 5);
+            let rounds = Cup(read_usize(league.stages() + 7 * 4)).round_table();
+            let next = read_u16(rounds.wrapping_add((game.round_number() as i32 as usize).wrapping_mul(cup_round::SIZE)) + cup_round::SIZE + cup_round::ROUND_CODE);
+            european_cup_add_qualified_record(club, comp, game.round_prefix() as u16 as u32, next as u32, weight);
+            return 0;
+        }
+        0xff => {
+            let weight = scale_by_round(0x32, 0x64, game.round_number(), 5);
+            european_cup_add_knocked_out_record(club, comp, game.round_prefix() as u16 as u32, game.round_name() as u16 as u32, weight);
+        }
+        4 => {}
+        1 => {
+            covered!("cx17_5 world cup winner");
+            cup_record_final_result(FN_STAFF_RECORDS_ADD_CUP_WINNERS_RECORD, club, game, final_);
+            write_u8(out, 4); // cx17_5: the champion's status
+        }
+        2 => cup_record_final_result(FN_STAFF_RECORDS_ADD_CUP_RUNNERS_UP_RECORD, club, game, final_),
+        3 => cup_record_final_result(0x86b710, club, game, final_), // Staff_Records: the third place
+        _ => return 0,
+    }
+    clear_national_team_competition(Club(club));
+    0
+}
+
+/// rule: a nation's World Cup progress: in a group the first two are 1 at best and 9 now and at worst (the round of 16),
+/// the third 17 and the fourth 25; in the knockout the codes stay as they came
+///
+/// The nation's statistics entry (`exe::comp_stats_find_club_entry`, not checked for null) gets the codes of
+/// `world_cup_progress_codes` (`write_progress_codes`: best, current, worst, in the original's order).
+/// Original: `WorldCup::set_club_progress` (0x92f9e0, world_cup.cpp, thiscall, ret 0x14).
+pub(crate) unsafe extern "thiscall" fn world_cup_set_club_progress(this: usize, club: usize, stage: u32, current: u32, best: u32, worst: u32) {
+    covered!("cx17_5 world cup progress");
+    let e = exe::comp_stats_find_club_entry(League(this).comp_stats(), club);
+    let (c, b, w) = world_cup_progress_codes(stage as i8, current as u8, best as u8, worst as u8);
+    write_progress_codes(e, c, b, w);
+}
+
+/// rule: at the World Cup's turnover the six qualifying sections start their new campaign, the finished World Cup is
+/// cleared (table, dates, stages) with its statistics archived, the edition moves on four years and the team list and
+/// the rules are built again
+///
+/// `league::SEASON_CLOSED` = 0; each section of `WORLD_CUP_QUALIFYING_SECTIONS` (the competition object of its key in
+/// [`G_COMP_OBJECT_TABLE`], not checked for null) restarts (virtual `comp_vtable::START_NEW_SEASON`, thiscall, ret 0;
+/// its eax not read). Then `exe::league_free_table(this, 0)`, `league::CLUB_COUNT` = 0, `league::ACTIVE` = 0, the round
+/// dates freed and cleared; the statistics, when there, archived (`exe::comp_stats_archive_season_and_reset` with 1);
+/// the stages 0..=`current_stage` destroyed (`destroy_comp_stages`; the vector stays). The year + 4 (word),
+/// `league::STAGE_INDEX` = 0xff (the main competition), `current_stage` = −1, `league::ENTRANTS_ARE_QUALIFIERS` = 1; the
+/// team list (`exe::worldcup_set_up_team_list`, its eax not read) and the rules (virtual `comp_vtable::SET_UP_RULES`):
+/// 0, the world_cup.cpp box of line 0x332 and 0; otherwise `league::TABLE` = null and the rules' result.
+/// Original: `WorldCup::start_new_season` (0x92d330, world_cup.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn world_cup_start_new_season(this: usize) -> u32 {
+    let league = League(this);
+    league.set_season_closed(0);
+    for key in WORLD_CUP_QUALIFYING_SECTIONS {
+        let section = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(key).wrapping_mul(4)));
+        let restart: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(section) + comp_vtable::START_NEW_SEASON));
+        restart(section);
+    }
+    exe::league_free_table(league, 0);
+    league.set_club_count(0);
+    league.set_active(0);
+    if league.round_dates() != 0 {
+        exe::crt_free(league.round_dates());
+        league.set_round_dates(0);
+    }
+    if league.comp_stats() != 0 {
+        exe::comp_stats_archive_season_and_reset(league.comp_stats(), 1);
+    }
+    destroy_comp_stages(league);
+    covered!("cx17_5 world cup turnover");
+    league.set_year(league.year().wrapping_add(4)); // cx17_5: the next edition
+    league.set_stage_index(stage_index::MAIN);
+    league.set_current_stage(0xffff_ffff);
+    league.set_entrants_are_qualifiers(1);
+    exe::worldcup_set_up_team_list(league);
+    let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + comp_vtable::SET_UP_RULES));
+    let r = rules(this);
+    if r == 0 {
+        // simplification: after the box the original returns whatever the box left in eax; the caller reads 0 or not
+        show_error_at(world_cup_knockout_consts::WORLD_CUP_CPP, 0x332);
+        return 0;
+    }
+    league.set_table(0);
+    r
+}
+
+/// Comparer for `world_cup_update_staff_records_for_status`: the records and the end of the campaigns do not run
+/// twice, so only the original runs; the plan: 0 and, for the champion (stage 7, outcome 1), `*out` = 4.
+pub(crate) unsafe extern "thiscall" fn compare_world_cup_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, out: usize, game: usize, final_: u32) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, usize, u32) -> u32>(IDX_WORLD_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS);
+    let champion = stage as u8 == 7 && outcome as u8 == 1 && out != 0;
+    let r = o(this, club, outcome, stage, out, game, final_);
+    SCOREBOARD.record(r == 0 && (!champion || read_u8(out) == 4), || format!("world_cup_update_staff_records_for_status({:#x}, {}, stage {}) returned {}", club, outcome as u8, stage as u8 as i8, r));
+    r
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_world_cup_set_club_progress(this: usize, club: usize, stage: u32, current: u32, best: u32, worst: u32) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(IDX_WORLD_CUP_SET_CLUB_PROGRESS);
+    compare_progress_codes("world_cup_set_club_progress", this, club, stage, (current, best, worst), || o(this, club, stage, current, best, worst),
+        || world_cup_set_club_progress(this, club, stage, current, best, worst));
+}
+
+/// Comparer for `world_cup_start_new_season`: it restarts the six sections and frees the finished World Cup (it cannot
+/// run twice), so only the original runs; the plan: the year four on, the season reopened, the main competition back
+/// at no stage with the qualifiers' list, no clubs and inactive, and with the rules set up no table.
+pub(crate) unsafe extern "thiscall" fn compare_world_cup_start_new_season(this: usize) -> u32 {
+    let this = League(this);
+    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_WORLD_CUP_START_NEW_SEASON);
+    let league = this;
+    let year = league.year();
+    let r = o(this.addr());
+    let ok = league.year() == year.wrapping_add(4) && league.season_closed() == 0 && league.current_stage() == 0xffff_ffff
+        && league.stage_index() == stage_index::MAIN && this.entrants_are_qualifiers() == 1 && league.club_count() == 0
+        && league.active() == 0 && (r == 0 || league.table() == 0);
+    SCOREBOARD.record(ok, || format!("world_cup_start_new_season({:#x}) returned {}: year {} -> {}, stage {:#x}", this.addr(), r, year, league.year(), league.current_stage()));
+    r
+}
+
+/// rule: a nation's World Cup status by its progress code: −1 for the champion, 150 for the runner-up, 130 for the
+/// semi-finalists, 120 for the quarter-finalists, 20 for the round of 16 and −4 for those out in the groups
+///
+/// `qualifying_stat_byte`(club, 0x12) through `world_cup_status_of_code` (a word).
+/// Original: `WorldCup::get_qualification_status` (0x92fae0, world_cup.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn world_cup_get_qualification_status(this: usize, club: usize) -> i16 {
+    covered!("cx17_6 world cup status");
+    world_cup_status_of_code(qualifying_stat_byte(this, club, 0x12))
+}
+
+/// rule: the change of a nation's World Cup status between its previous progress code (stat 0x13) and its current one
+/// (stat 0x12): 0 within the same band, positive when it goes down the bands (worse), negative when it goes up, by the
+/// number of bands crossed
+///
+/// The bands of the current code are below 3, below 9, below 17 and the rest; those of the previous one below 5, below
+/// 9, below 17 and the rest (`WORLD_CUP_STATUS_CHANGE`; signed bytes). Defect of the original [inference]: the first
+/// band of the current code ends at 3 where the previous one's ends at 5, so a nation whose code stays 3 or 4 (a semi-
+/// finalist) shows a change of 2. The byte in al.
+/// Original: `WorldCup::get_qualification_status_change` (0x92fb40, world_cup.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn world_cup_get_qualification_status_change(this: usize, club: usize) -> i8 {
+    covered!("cx17_6 world cup status change");
+    let before = qualifying_stat_byte(this, club, 0x13);
+    let now = qualifying_stat_byte(this, club, 0x12);
+    let band = |code: i8, first: i8| match code {
+        c if c < first => 0,
+        c if c < 9 => 1,
+        c if c < 0x11 => 2,
+        _ => 3,
+    };
+    WORLD_CUP_STATUS_CHANGE[band(now, 3)][band(before, 5)]
+}
+
+/// Comparers: the two only read; side by side on the result.
+pub(crate) unsafe extern "thiscall" fn compare_world_cup_get_qualification_status(this: usize, club: usize) -> i16 {
+    let a = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> i16>(IDX_WORLD_CUP_GET_QUALIFICATION_STATUS)(this, club);
+    let b = world_cup_get_qualification_status(this, club);
+    SCOREBOARD.record(a == b, || format!("world_cup_get_qualification_status({:#x}, {:#x}) original={} rust={}", this, club, a, b));
+    a
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_world_cup_get_qualification_status_change(this: usize, club: usize) -> i8 {
+    let a = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> i8>(IDX_WORLD_CUP_GET_QUALIFICATION_STATUS_CHANGE)(this, club);
+    let b = world_cup_get_qualification_status_change(this, club);
+    SCOREBOARD.record(a == b, || format!("world_cup_get_qualification_status_change({:#x}, {:#x}) original={} rust={}", this, club, a, b));
+    a
+}
+
+/// The World Cup's progress codes (current, best, worst) at `stage` (signed byte): in the groups (below 7) a code 1 or 2
+/// becomes 1 at best and 9 now and at worst, 3 becomes 17 and 4 becomes 25; in the knockout (from 7) they stay as they
+/// came.
+pub(crate) fn world_cup_progress_codes(stage: i8, current: u8, best: u8, worst: u8) -> (u8, u8, u8) {
+    if stage >= 7 {
+        return (current, best, worst);
+    }
+    let band = |v: u8, top: u8| match v {
+        1 | 2 => top,
+        3 => 0x11, // cx17_5: the third of a group
+        4 => 0x19,
+        _ => v,
+    };
+    (band(current, 9), band(best, 1), band(worst, 9))
+}
+
+/// The World Cup status of a progress code (signed): 1 (the champion) −1, 2 (the runner-up) 150, below 5 (the semi-
+/// finals) 130, below 9 (the quarter-finals) 120, below 17 (the round of 16) 20, otherwise (out in the groups) −4.
+pub(crate) fn world_cup_status_of_code(code: i8) -> i16 {
+    match code {
+        1 => -1,
+        2 => 0x96,
+        c if c < 5 => 0x82,
+        c if c < 9 => 0x78,
+        c if c < 0x11 => 0x14,
+        _ => -4, // cx17_6: out in the groups
+    }
+}
+
+/// The six World Cup qualifying sections the World Cup restarts at its turnover, in the original's order.
+pub(crate) const WORLD_CUP_QUALIFYING_SECTIONS: [usize; 6] = [KEY_CLUB_COMP_WORLD_CUP_CONCACAF_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION,
+    KEY_CLUB_COMP_WORLD_CUP_ASIAN_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_SOUTH_AMERICAN_QUALIFYING_SECT, KEY_CLUB_COMP_WORLD_CUP_AFRICAN_QUALIFYING_SECTION,
+    KEY_CLUB_COMP_WORLD_CUP_EUROPEAN_QUALIFYING_SECTION];
+
+/// The change of a nation's World Cup status, by the band of its current code (rows: below 3, below 9, below 17, the
+/// rest) and of its previous one (columns: below 5, below 9, below 17, the rest).
+pub(crate) const WORLD_CUP_STATUS_CHANGE: [[i8; 4]; 4] = [
+    [0, -1, -2, -3],
+    [2, 0, -1, -2],
+    [3, 2, 0, -1],
+    [3, 3, 2, 0], // cx17_6: still out in the groups
+];

@@ -380,7 +380,7 @@ unsafe fn hook_with(name: &str, p: &Prologue, target: impl FnOnce(usize) -> usiz
 /// in the bytes: the trampoline redoes the instruction with the absolute target. `engenharia-reversa/prologos.py`
 /// reads this table and accepts the relative instruction only at that position.
 pub const RELATIVAS: &[(usize, usize)] = &[(0x714d00, 4), (0x6f55c0, 4), (0x482a40, 3), (0x513a20, 3), (0x77a870, 3), (0x567b00, 4),
-    (0x497910, 3), (0x727fa0, 2), (0x54d130, 0)];
+    (0x497910, 3), (0x727fa0, 2), (0x54d130, 0), (0x91a7b0, 3)];
 
 /// Copies the prologue to the trampoline, redoing the relative instruction from RELATIVAS. Returns the size
 /// written (the `jmp` back comes after).
