@@ -2,7 +2,7 @@
 //! mudar a tabela PROLOGOS do motor.rs. (início, tamanho até a próxima fronteira real, FNV-1a 64 no
 //! cm0102.exe original, FNV-1a 64 no cm0102-1080.exe). Ordenada pelo início (busca binária).
 
-pub const ASSINATURAS: [(usize, usize, u64, u64); 4187] = [
+pub const ASSINATURAS: [(usize, usize, u64, u64); 4198] = [
     (0x401000, 544, 0x07248056f27f191f, 0x07248056f27f191f),
     (0x4012e0, 1760, 0x86ea7ac579cbfed1, 0x86ea7ac579cbfed1),
     (0x4019c0, 240, 0x182cb3e580f9deb2, 0x182cb3e580f9deb2),
@@ -2962,6 +2962,10 @@ pub const ASSINATURAS: [(usize, usize, u64, u64); 4187] = [
     (0x7ccbd0, 320, 0x3151c37e764a77ef, 0x3151c37e764a77ef),
     (0x7ccd10, 640, 0x01a80bbd1017637c, 0x01a80bbd1017637c),
     (0x7ccf90, 416, 0x07203466827c9830, 0x07203466827c9830),
+    (0x7cd130, 144, 0x18c0ada38ecd2622, 0x18c0ada38ecd2622),
+    (0x7cd1c0, 1136, 0x12875044ce4be985, 0x12875044ce4be985),
+    (0x7cd630, 352, 0xfc896ece09e6f623, 0xfc896ece09e6f623),
+    (0x7cd790, 160, 0xe3a113835326510a, 0xe3a113835326510a),
     (0x7cd830, 336, 0xcb28f3863d2b6306, 0xcb28f3863d2b6306),
     (0x7cd980, 496, 0x8ef332a96f3f621a, 0x8ef332a96f3f621a),
     (0x7cdc40, 1504, 0x0bb004842c538737, 0x0bb004842c538737),
@@ -3035,6 +3039,9 @@ pub const ASSINATURAS: [(usize, usize, u64, u64); 4187] = [
     (0x7eb740, 192, 0x1a924aaf0a9607bf, 0x1a924aaf0a9607bf),
     (0x7eb800, 656, 0x2adf718206f8abfd, 0x2adf718206f8abfd),
     (0x7ebe20, 1008, 0xdceeca79a2805901, 0xdceeca79a2805901),
+    (0x7ec210, 144, 0x13107c6dafbac07c, 0x13107c6dafbac07c),
+    (0x7ec2a0, 864, 0x64d1880842b66f0e, 0x64d1880842b66f0e),
+    (0x7ec600, 368, 0x9c9fe61f781ce7f0, 0x9c9fe61f781ce7f0),
     (0x7ec7e0, 256, 0x625852710b46cf84, 0x625852710b46cf84),
     (0x7ec8e0, 160, 0xde1bc4b413859901, 0xde1bc4b413859901),
     (0x7ec980, 496, 0x260328eacded818b, 0x260328eacded818b),
@@ -3936,6 +3943,10 @@ pub const ASSINATURAS: [(usize, usize, u64, u64); 4187] = [
     (0x901950, 368, 0x43c3a64fff9f26cc, 0x43c3a64fff9f26cc),
     (0x901ac0, 224, 0x58af07c1864f7ebc, 0x58af07c1864f7ebc),
     (0x901ba0, 208, 0xe12cb7291364b549, 0xe12cb7291364b549),
+    (0x901c70, 144, 0x1e7fce0e5049eb10, 0x1e7fce0e5049eb10),
+    (0x901d00, 720, 0x5be7e300d270d30e, 0x5be7e300d270d30e),
+    (0x901fd0, 176, 0xc7dc638f1df32be9, 0xc7dc638f1df32be9),
+    (0x902080, 32, 0xc993f1456aa5ec8a, 0xc993f1456aa5ec8a),
     (0x9020a0, 416, 0xd468a3f904eec9e0, 0xd468a3f904eec9e0),
     (0x902240, 160, 0x24274021c08612fd, 0x24274021c08612fd),
     (0x9022e0, 528, 0x1e1e73aff4dec930, 0x1e1e73aff4dec930),

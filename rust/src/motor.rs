@@ -4345,8 +4345,19 @@ routines! {
     Prologue { address: 0x76a480, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] } => nation_awards_compare_score_ascending, compare_nation_awards_compare_score_ascending;
     Prologue { address: 0x76a4b0, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] } => nation_awards_compare_score_descending, compare_nation_awards_compare_score_descending;
     Prologue { address: 0x794430, bytes: &[0xa1, 0xbc, 0xf6, 0x9c, 0x00] } => norway_awards_on_month_change, compare_norway_awards_on_month_change;
+    Prologue { address: 0x901c70, bytes: &[0x6a, 0xff, 0x68, 0x28, 0x51, 0x96, 0x00] } => turkey_awards_construct, compare_turkey_awards_construct;
+    Prologue { address: 0x901d00, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => turkey_awards_init, compare_turkey_awards_init;
+    Prologue { address: 0x901fd0, bytes: &[0x83, 0xec, 0x10, 0x56, 0x57] } => turkey_awards_daily_update, compare_turkey_awards_daily_update;
+    Prologue { address: 0x902080, bytes: &[0x8b, 0x51, 0x04, 0x8b, 0x44, 0x24, 0x04] } => turkey_awards_team_of_the_week, compare_turkey_awards_team_of_the_week;
+    Prologue { address: 0x7cd130, bytes: &[0x6a, 0xff, 0x68, 0xe8, 0xf8, 0x95, 0x00] } => poland_awards_construct, compare_poland_awards_construct;
+    Prologue { address: 0x7cd1c0, bytes: &[0x6a, 0xff, 0x68, 0x8c, 0xf9, 0x95, 0x00] } => poland_awards_init, compare_poland_awards_init;
+    Prologue { address: 0x7cd630, bytes: &[0x83, 0xec, 0x10, 0x56, 0x57] } => poland_awards_daily_update, compare_poland_awards_daily_update;
+    Prologue { address: 0x7cd790, bytes: &[0xa1, 0x58, 0xf8, 0x9c, 0x00] } => poland_awards_on_month_change, compare_poland_awards_on_month_change;
+    Prologue { address: 0x7ec210, bytes: &[0x6a, 0xff, 0x68, 0xf8, 0x09, 0x96, 0x00] } => russia_awards_construct, compare_russia_awards_construct;
+    Prologue { address: 0x7ec2a0, bytes: &[0x6a, 0xff, 0x68, 0x72, 0x0a, 0x96, 0x00] } => russia_awards_init, compare_russia_awards_init;
+    Prologue { address: 0x7ec600, bytes: &[0x83, 0xec, 0x10, 0x56, 0x57] } => russia_awards_daily_update, compare_russia_awards_daily_update;
 }
-const N: usize = 4187;
+const N: usize = 4198;
 include!(concat!(env!("OUT_DIR"), "/indices.rs")); // IDX_<NAME>: the position of each routine (build.rs)
 
 /// Size of the engine object (the game allocates it with new(0xf63b)): side 1's block (+0xf5f2, 0x36
@@ -4393,12 +4404,21 @@ pub(crate) use self::award_nation_awards::*;
 #[path = "motor/award/norway_awards.rs"]
 pub(crate) mod award_norway_awards;
 pub(crate) use self::award_norway_awards::*;
+#[path = "motor/award/poland_awards.rs"]
+pub(crate) mod award_poland_awards;
+pub(crate) use self::award_poland_awards::*;
+#[path = "motor/award/russia_awards.rs"]
+pub(crate) mod award_russia_awards;
+pub(crate) use self::award_russia_awards::*;
 #[path = "motor/award/sweden_awards.rs"]
 pub(crate) mod award_sweden_awards;
 pub(crate) use self::award_sweden_awards::*;
 #[path = "motor/award/team_award.rs"]
 pub(crate) mod award_team_award;
 pub(crate) use self::award_team_award::*;
+#[path = "motor/award/turkey_awards.rs"]
+pub(crate) mod award_turkey_awards;
+pub(crate) use self::award_turkey_awards::*;
 #[path = "motor/award/world_cup_awards.rs"]
 pub(crate) mod award_world_cup_awards;
 pub(crate) use self::award_world_cup_awards::*;

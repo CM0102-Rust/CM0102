@@ -223,6 +223,12 @@ def main():
         n, total, base = estado()
         s = open(os.path.join(R, 'rust', 'src', 'motor.rs'), encoding='utf-8').read()
         while os.path.isdir(os.path.join(R, 'levas', str(n + 1))):
+            vazia = os.path.join(R, 'levas', str(n + 1))
+            if not os.listdir(vazia):
+                # 28/11/2026: a failed materialisation left the folder empty; it is not a pending batch (the 344th had
+                # come out as 346 over two empty ones)
+                os.rmdir(vazia)
+                break
             n += 1  # já materializada (ou escrita à mão) e ainda não publicada
             # bancadas paralelas (31/10/2026): a leva pendente conta no total e, se ainda não estiver integrada na
             # principal, também nos índices (a seguinte roda numa bancada com as duas integradas)

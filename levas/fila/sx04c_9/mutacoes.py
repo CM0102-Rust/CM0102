@@ -12,6 +12,6 @@ MUTACOES = [
      '        year(1, KEY_STAFF_COMP_POLISH_FIRST_DIVISION_PLAYER_OF_THE_YEAR, 300, 0, d1, 1), // mutation',
      'sx04c_9 polish awards built'),
     ('sx04c_9_junho',
-     '    if awards_day_is(today, 0x1e, 4) {',
-     '    if awards_day_is(today, 0x1e, 5) { // mutation'),
+     '    if awards_day_is(today, 0x1e, 4) {\n        covered!("sx04c_9 polish awards day");',
+     '    if awards_day_is(today, 0x1e, 5) { // mutation\n        covered!("sx04c_9 polish awards day");'),
 ]

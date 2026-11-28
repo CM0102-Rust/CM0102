@@ -6698,3 +6698,21 @@ Mutações: `mutacoes/leva342.py` (43, pela prova do save): 27 acusadas. `sx12b_
 | `norway_awards_on_month_change()` | 0x794430 | thiscall | award/norway_awards.cpp: na virada do mês, o técnico do mês de cada divisão (o melhor técnico do mês, com o clube) e o jogador do mês de cada uma pelas notas do mês |
 
 Mutações: `mutacoes/leva343.py` (10, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 10 acusadas.  Jogo real comparando 8 ligas até 2002-06-01: adiado para a comparação acumulada da auditoria (decisão de 05/11/2026). Carreiras até 2002-06-01: Rust ×2 77f1b62b, original 18b0f378 (registrada; não barra a leva desde 31/10/2026). Detector de lixo: igual.
+
+### Simulação, 344ª leva — os prêmios da Turquia; as equipes da semana turcas; os prêmios da Polônia; os técnicos do mês da Polônia; os prêmios da Rússia (oficial em 28/11/2026)
+
+| Rotina | Original | Convenção | Observação |
+|---|---|---|---|
+| `turkey_awards_construct()` | 0x901c70 | thiscall, ret 4 | award/turkey_awards.cpp: monta os prêmios da Turquia: a base com a tabela virtual da classe, a Turquia, o id 0x1a e o tipo 1; com arquivo, os salvos; senão os seis prêmios |
+| `turkey_awards_init()` | 0x901d00 | thiscall, ret 4 | award/turkey_awards.cpp: cria os seis prêmios turcos: jogador do ano, técnico do ano e as equipes da semana e do ano da primeira e da segunda divisão (sem reputações) |
+| `turkey_awards_daily_update()` | 0x901fd0 | thiscall, ret 4 | award/turkey_awards.cpp: em 30 de maio, os prêmios turcos: o jogador do ano pelos três melhores das notas do ano, o técnico do ano e as equipes do ano das duas divisões; depois, todo dia, a atualização da base |
+| `turkey_awards_team_of_the_week()` | 0x902080 | thiscall, ret 4 | award/turkey_awards.cpp: monta a equipe da semana de um prêmio turco: só para as equipes da semana da primeira e da segunda divisão (prêmios 2 e 4), pela competição de clubes do prêmio |
+| `poland_awards_construct()` | 0x7cd130 | thiscall, ret 4 | award/poland_awards.cpp: monta os prêmios da Polônia: a base com a tabela virtual da classe, a Polônia, o id 0x15 e o tipo 1, sem notas do mês; com arquivo, os salvos; senão os dez prêmios |
+| `poland_awards_init()` | 0x7cd1c0 | thiscall, ret 4 | award/poland_awards.cpp: cria os dez prêmios: em cada divisão a equipe da semana, jogador, jovem e técnico do ano e o técnico do mês (de julho a maio) |
+| `poland_awards_daily_update()` | 0x7cd630 | thiscall, ret 4 | award/poland_awards.cpp: em 30 de maio, em cada divisão o jogador e o jovem (até 21) do ano pelas estatísticas e o técnico do ano; no dia do fim da temporada, os técnicos do mês passam à temporada seguinte; depois, todo dia, a atualização da base |
+| `poland_awards_on_month_change()` | 0x7cd790 | thiscall | award/poland_awards.cpp: na virada do mês, o técnico do mês de cada divisão; nunca roda, porque a Polônia não tem notas do mês (defeito do original) |
+| `russia_awards_construct()` | 0x7ec210 | thiscall, ret 4 | award/russia_awards.cpp: monta os prêmios da Rússia: a base com a tabela virtual da classe, a Rússia, o id 0x1b e o tipo 1, sem notas do mês; com arquivo, os salvos; senão os sete prêmios |
+| `russia_awards_init()` | 0x7ec2a0 | thiscall, ret 4 | award/russia_awards.cpp: cria os sete prêmios: o jogador russo do ano e, em cada divisão, a equipe da semana, a do ano e o jogador do mês (de abril a novembro) |
+| `russia_awards_daily_update()` | 0x7ec600 | thiscall, ret 4 | award/russia_awards.cpp: em 30 de novembro, o jogador russo do ano pelos três melhores das notas do ano e as equipes da temporada das duas divisões; depois, todo dia, a atualização da base |
+
+Mutações: `mutacoes/leva344.py` (10, pela carreira até 2002-06-01, confirmando no modo comparação as que escapam): 10 acusadas.  Jogo real comparando 8 ligas até 2002-06-01: adiado para a comparação acumulada da auditoria (decisão de 05/11/2026). Carreiras até 2002-06-01: Rust ×2 f632fb18, original ced0d1c2 (registrada; não barra a leva desde 31/10/2026). Detector de lixo: igual.

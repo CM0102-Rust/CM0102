@@ -6700,3 +6700,21 @@ Mutations: `mutacoes/leva342.py` (43, by the save proof): 27 caught. `sx12b_noti
 | `norway_awards_on_month_change()` | 0x794430 | thiscall | award/norway_awards.cpp: at the turn of the month, the manager of the month of each division (the best manager of the month, with his club) and the player of the month of each from the month ratings |
 
 Mutations: `mutacoes/leva343.py` (10, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 10 caught.  Real game comparing 8 leagues to 2002-06-01: deferred to the audit's accumulated comparison (decision of 5 Nov 2026). Careers to 2002-06-01: Rust ×2 77f1b62b, original 18b0f378 (recorded; does not block the batch since 31/10/2026). Garbage detector: equal.
+
+### Simulation, 344th batch — the Turkish awards; the Turkish teams of the week; the Polish awards; the Polish managers of the month; the Russian awards (official on 2026-11-28)
+
+| Routine | Original | Convention | Notes |
+|---|---|---|---|
+| `turkey_awards_construct()` | 0x901c70 | thiscall, ret 4 | award/turkey_awards.cpp: builds the Turkish awards: the base with the class vtable, Turkey, id 0x1a and type 1; with a file, the saved ones; otherwise the six awards |
+| `turkey_awards_init()` | 0x901d00 | thiscall, ret 4 | award/turkey_awards.cpp: creates the six Turkish awards: player of the year, manager of the year and the teams of the week and of the year of the first and second divisions (without reputations) |
+| `turkey_awards_daily_update()` | 0x901fd0 | thiscall, ret 4 | award/turkey_awards.cpp: on 30 May, the Turkish awards: the player of the year from the year ratings' top three, the manager of the year and the teams of the year of both divisions; then, every day, the base daily update |
+| `turkey_awards_team_of_the_week()` | 0x902080 | thiscall, ret 4 | award/turkey_awards.cpp: builds the team of the week of a Turkish award: only for the first and second division teams of the week (awards 2 and 4), by the award's club competition |
+| `poland_awards_construct()` | 0x7cd130 | thiscall, ret 4 | award/poland_awards.cpp: builds the Polish awards: the base with the class vtable, Poland, id 0x15 and type 1, with no month ratings; with a file, the saved ones; otherwise the ten awards |
+| `poland_awards_init()` | 0x7cd1c0 | thiscall, ret 4 | award/poland_awards.cpp: creates the ten awards: in each division the team of the week, player, young player and manager of the year and the manager of the month (July to May) |
+| `poland_awards_daily_update()` | 0x7cd630 | thiscall, ret 4 | award/poland_awards.cpp: on 30 May, in each division the player and the young player (up to 21) of the year from the stats and the manager of the year; on the season end day, the managers of the month move on; then, every day, the base daily update |
+| `poland_awards_on_month_change()` | 0x7cd790 | thiscall | award/poland_awards.cpp: at the turn of the month, the manager of the month of each division; never runs, because Poland has no month ratings (defect of the original) |
+| `russia_awards_construct()` | 0x7ec210 | thiscall, ret 4 | award/russia_awards.cpp: builds the Russian awards: the base with the class vtable, Russia, id 0x1b and type 1, with no month ratings; with a file, the saved ones; otherwise the seven awards |
+| `russia_awards_init()` | 0x7ec2a0 | thiscall, ret 4 | award/russia_awards.cpp: creates the seven awards: the Russian player of the year and, in each division, the team of the week, the team of the year and the player of the month (April to November) |
+| `russia_awards_daily_update()` | 0x7ec600 | thiscall, ret 4 | award/russia_awards.cpp: on 30 November, the Russian player of the year from the year ratings top three and the teams of the season of both divisions; then, every day, the base daily update |
+
+Mutations: `mutacoes/leva344.py` (10, by the career to 2002-06-01, confirming the escaped ones in comparison mode): 10 caught.  Real game comparing 8 leagues to 2002-06-01: deferred to the audit's accumulated comparison (decision of 5 Nov 2026). Careers to 2002-06-01: Rust ×2 f632fb18, original ced0d1c2 (recorded; does not block the batch since 31/10/2026). Garbage detector: equal.
