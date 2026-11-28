@@ -4421,8 +4421,12 @@ routines! {
     Prologue { address: 0x7f5170, bytes: &[0x6a, 0xff, 0x68, 0x39, 0x0d, 0x96, 0x00] } => scotland_awards_construct, compare_scotland_awards_construct;
     Prologue { address: 0x7f52b0, bytes: &[0x6a, 0xff, 0x68, 0xca, 0x0e, 0x96, 0x00] } => scotland_awards_init, compare_scotland_awards_init;
     Prologue { address: 0x7f5dc0, bytes: &[0x83, 0xec, 0x10, 0x56, 0x57] } => scotland_awards_daily_update, compare_scotland_awards_daily_update;
+    Prologue { address: 0x6eaea0, bytes: &[0x83, 0xec, 0x18, 0x8b, 0x44, 0x24, 0x1c] } => match_player_setup, compare_match_player_setup;
+    Prologue { address: 0x716630, bytes: &[0x83, 0xec, 0x10, 0x53, 0x55] } => start_fight, compare_start_fight;
+    Prologue { address: 0x716c90, bytes: &[0x51, 0x56, 0x8b, 0xf1, 0x57] } => handle_suspected_dive, compare_handle_suspected_dive;
+    Prologue { address: 0x716e10, bytes: &[0x83, 0xec, 0x08, 0x53, 0x56] } => react_to_foul_decision, compare_react_to_foul_decision;
 }
-const N: usize = 4263;
+const N: usize = 4267;
 include!(concat!(env!("OUT_DIR"), "/indices.rs")); // IDX_<NAME>: the position of each routine (build.rs)
 
 /// Size of the engine object (the game allocates it with new(0xf63b)): side 1's block (+0xf5f2, 0x36

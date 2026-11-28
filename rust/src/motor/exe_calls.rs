@@ -5295,6 +5295,11 @@ pub(crate) mod exe {
         f(a0.addr(), a1, a2, a3, a4)
     }
     #[inline(always)]
+    pub(crate) unsafe fn match_player_start_fight(a0: impl Addr, a1: u32) -> u8 {
+        let f: unsafe extern "thiscall" fn(usize, u32) -> u8 = core::mem::transmute(FN_MATCH_PLAYER_START_FIGHT);
+        f(a0.addr(), a1)
+    }
+    #[inline(always)]
     pub(crate) unsafe fn match_player_take_possession(a0: impl Addr) {
         let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_MATCH_PLAYER_TAKE_POSSESSION);
         f(a0.addr())

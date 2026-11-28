@@ -1,6 +1,4 @@
 # ordem da fila (fila.py); um item por linha
-sx15_1
-sx15_2
 sx09c_1
 sx09c_5
 sx09c_6
