@@ -778,7 +778,7 @@ pub(crate) unsafe extern "thiscall" fn wc_concacaf_cup_set_club_progress(this: u
     let this = League(this);
     covered!("cx16_7 concacaf progress");
     let e = exe::comp_stats_find_club_entry(this.comp_stats(), club);
-    let (c, b, w) = wc_concacaf_progress_codes(stage as i8, read_u8(this.addr() + 0xba) as i8, read_u8(this.addr() + 0xbc) as i8, current as u8, best as u8, worst as u8);
+    let (c, b, w) = wc_concacaf_progress_codes(stage as i8, (this.round_dates() as u8) as i8, read_u8(this.addr() + 0xbc) as i8, current as u8, best as u8, worst as u8);
     write_progress_codes(e, c, b, w);
 }
 

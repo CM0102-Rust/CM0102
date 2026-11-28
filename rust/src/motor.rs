@@ -4267,8 +4267,77 @@ routines! {
     Prologue { address: 0x92d330, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => world_cup_start_new_season, compare_world_cup_start_new_season;
     Prologue { address: 0x92fae0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] } => world_cup_get_qualification_status, compare_world_cup_get_qualification_status;
     Prologue { address: 0x92fb40, bytes: &[0x53, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x10] } => world_cup_get_qualification_status_change, compare_world_cup_get_qualification_status_change;
+    Prologue { address: 0x8af660, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => team_award_load_from_disk, compare_team_award_load_from_disk;
+    Prologue { address: 0x92fff0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => year_award_load_from_disk, compare_year_award_load_from_disk;
+    Prologue { address: 0x931390, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => year_ratings_load_from_disk, compare_year_ratings_load_from_disk;
+    Prologue { address: 0x8af870, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => team_award_save_to_disk, compare_team_award_save_to_disk;
+    Prologue { address: 0x9301f0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => year_award_save_to_disk, compare_year_award_save_to_disk;
+    Prologue { address: 0x9314e0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => year_ratings_save_to_disk, compare_year_ratings_save_to_disk;
+    Prologue { address: 0x767d60, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => month_ratings_save_to_disk, compare_month_ratings_save_to_disk;
+    Prologue { address: 0x76a280, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => nation_awards_load, compare_nation_awards_load;
+    Prologue { address: 0x76a380, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => nation_awards_save, compare_nation_awards_save;
+    Prologue { address: 0x555860, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x14, 0x02, 0x00, 0x00] } => discipline_load, compare_discipline_load;
+    Prologue { address: 0x555dd0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => discipline_save, compare_discipline_save;
+    Prologue { address: 0x62ab00, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => injury_load, compare_injury_load;
+    Prologue { address: 0x5fee50, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => human_manager_load, compare_human_manager_load;
+    Prologue { address: 0x5f00c0, bytes: &[0x81, 0xec, 0x68, 0x03, 0x00, 0x00] } => hall_of_fame_save, compare_hall_of_fame_save;
+    Prologue { address: 0x68dbf0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => new_manager_manager, compare_new_manager_manager;
+    Prologue { address: 0x68e0e0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x33, 0xdb] } => drop_manager_manager, compare_drop_manager_manager;
+    Prologue { address: 0x68e180, bytes: &[0x6a, 0xff, 0x68, 0x33, 0xcc, 0x95, 0x00] } => load_man_conf, compare_load_man_conf;
+    Prologue { address: 0x68e920, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x18, 0x02, 0x00, 0x00] } => save_man_conf, compare_save_man_conf;
+    Prologue { address: 0x785b20, bytes: &[0x81, 0xec, 0xe0, 0x04, 0x00, 0x00] } => new_news, compare_new_news;
+    Prologue { address: 0x785d00, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x06] } => drop_news, compare_drop_news;
+    Prologue { address: 0x787780, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => news_load_from_zip, compare_news_load_from_zip;
+    Prologue { address: 0x794ad0, bytes: &[0x6a, 0xff, 0x68, 0x8b, 0xe9, 0x95, 0x00] } => new_notes, compare_new_notes;
+    Prologue { address: 0x794ba0, bytes: &[0x53, 0x55, 0x56, 0x57, 0xbd, 0x10, 0x00, 0x00, 0x00] } => drop_notes, compare_drop_notes;
+    Prologue { address: 0x794be0, bytes: &[0x6a, 0xff, 0x68, 0xc1, 0xe9, 0x95, 0x00] } => notes_load_notes, compare_notes_load_notes;
+    Prologue { address: 0x787c30, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => news_save_to_zip, compare_news_save_to_zip;
+    Prologue { address: 0x794f00, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => notes_save_notes, compare_notes_save_notes;
+    Prologue { address: 0x7ad7c0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => save_retire_dat, compare_save_retire_dat;
+    Prologue { address: 0x79b580, bytes: &[0x81, 0xec, 0x74, 0x04, 0x00, 0x00] } => new_officials_manager, compare_new_officials_manager;
+    Prologue { address: 0x79b800, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x46, 0x08] } => drop_officials_manager, compare_drop_officials_manager;
+    Prologue { address: 0x79b850, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] } => load_official_stats, compare_load_official_stats;
+    Prologue { address: 0x7a5380, bytes: &[0x81, 0xec, 0xe0, 0x04, 0x00, 0x00] } => new_player_regen, compare_new_player_regen;
+    Prologue { address: 0x7a56f0, bytes: &[0x55, 0x56, 0x8b, 0xf1, 0x33, 0xed] } => drop_player_regen, compare_drop_player_regen;
+    Prologue { address: 0x7adcd0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => load_retire_dat, compare_load_retire_dat;
+    Prologue { address: 0x7ae390, bytes: &[0x6a, 0xff, 0x68, 0xea, 0xf2, 0x95, 0x00] } => new_player_search, compare_new_player_search;
+    Prologue { address: 0x7b2360, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => player_search_save, compare_player_search_save;
+    Prologue { address: 0x7b17e0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => player_search_load, compare_player_search_load;
+    Prologue { address: 0x8995d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => tactics_write_to_save, compare_tactics_write_to_save;
+    Prologue { address: 0x8961e0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x33, 0xdb] } => tactics_free_data, compare_tactics_free_data;
+    Prologue { address: 0x83b360, bytes: &[0x56, 0x8b, 0xf1, 0x8d, 0x4e, 0x1a] } => shortlist_old_slot_shortlist_old_slot, compare_shortlist_old_slot_shortlist_old_slot;
+    Prologue { address: 0x7e78a0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => ruling_body_load, compare_ruling_body_load;
+    Prologue { address: 0x7e7b80, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => ruling_body_save, compare_ruling_body_save;
+    Prologue { address: 0x4c0aa0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x8b, 0x44, 0x24, 0x0c] } => file_find_first, compare_file_find_first;
+    Prologue { address: 0x4c0b50, bytes: &[0x81, 0xec, 0x18, 0x01, 0x00, 0x00] } => file_find_next, compare_file_find_next;
+    Prologue { address: 0x4c0c10, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => file_find_close, compare_file_find_close;
+    Prologue { address: 0x4c5fe0, bytes: &[0x81, 0xec, 0x70, 0x04, 0x00, 0x00] } => new_conmebol_seeding, compare_new_conmebol_seeding;
+    Prologue { address: 0x5210f0, bytes: &[0x81, 0xec, 0x0c, 0x03, 0x00, 0x00] } => cup_save_cup_to_disk, compare_cup_save_cup_to_disk;
+    Prologue { address: 0x8e5790, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => transfer_offer_load, compare_transfer_offer_load;
+    Prologue { address: 0x8e5b30, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => transfer_offer_save, compare_transfer_offer_save;
+    Prologue { address: 0x8b10d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => load_training_dat, compare_load_training_dat;
+    Prologue { address: 0x8b1450, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => save_training_dat, compare_save_training_dat;
+    Prologue { address: 0x8b1070, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x86, 0x1d, 0x65, 0x00, 0x00] } => destroy_training_manager, compare_destroy_training_manager;
+    Prologue { address: 0x56d2e0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => eng_cc_cup_load_extra_data, compare_eng_cc_cup_load_extra_data;
+    Prologue { address: 0x570830, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] } => eng_fa_cup_load_extra_data, compare_eng_fa_cup_load_extra_data;
+    Prologue { address: 0x5708a0, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] } => eng_fa_cup_save_extra_data, compare_eng_fa_cup_save_extra_data;
+    Prologue { address: 0x5e9df0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => gre_cup_load_extra_data, compare_gre_cup_load_extra_data;
+    Prologue { address: 0x638260, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => ire_lge_cup_load_extra_data, compare_ire_lge_cup_load_extra_data;
+    Prologue { address: 0x63e3c0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => ita_c_cup_load_extra_data, compare_ita_c_cup_load_extra_data;
+    Prologue { address: 0x640050, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => ita_cup_load_extra_data, compare_ita_cup_load_extra_data;
+    Prologue { address: 0x66d1e0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => kor_league_cup_load_extra_data, compare_kor_league_cup_load_extra_data;
+    Prologue { address: 0x78db10, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => nir_lge_cup_load_extra_data, compare_nir_lge_cup_load_extra_data;
+    Prologue { address: 0x5e9fb0, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x08] } => gre_cup_save_extra_data, compare_gre_cup_save_extra_data;
+    Prologue { address: 0x5f4e90, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => hol_cup_load_extra_data, compare_hol_cup_load_extra_data;
+    Prologue { address: 0x5f5070, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x08] } => hol_cup_save_extra_data, compare_hol_cup_save_extra_data;
+    Prologue { address: 0x5230e0, bytes: &[0x6a, 0xff, 0x68, 0x5b, 0x78, 0x95, 0x00] } => new_cup_stage_for_load, compare_new_cup_stage_for_load;
+    Prologue { address: 0x523380, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => cup_stage_load_from_file, compare_cup_stage_load_from_file;
+    Prologue { address: 0x523eb0, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] } => cup_stage_save_to_file, compare_cup_stage_save_to_file;
+    Prologue { address: 0x7f0ae0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => sco_lge_cup_load_extra_data, compare_sco_lge_cup_load_extra_data;
+    Prologue { address: 0x927330, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => wel_lge_cup_load_extra_data, compare_wel_lge_cup_load_extra_data;
+    Prologue { address: 0x928c40, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => wel_prm_cup_load_extra_data, compare_wel_prm_cup_load_extra_data;
 }
-const N: usize = 4109;
+const N: usize = 4178;
 include!(concat!(env!("OUT_DIR"), "/indices.rs")); // IDX_<NAME>: the position of each routine (build.rs)
 
 /// Size of the engine object (the game allocates it with new(0xf63b)): side 1's block (+0xf5f2, 0x36
@@ -5753,6 +5822,32 @@ pub(crate) use self::zipdir::*;
 // ---------- 161st batch: watch list, position code and staff criterion ----------
 
 compare_value!(compare_staff_criterion, staff_criterion, IDX_STAFF_CRITERION, () -> u32);
+
+// ---------- sx04b_7: the month ratings' save and a nation's awards in the saved game (month_ratings.cpp, nation_awards.cpp) ----------
+
+// --- sx09c_4: discipline.dat in the save: Discipline::load (0x555860) and Discipline::save (0x555dd0), discipline.cpp ---
+
+// ---------- batch 342: the saving of man_conf.dat (manager_manager.cpp) ----------
+
+// --- sx16_7: the news store: News::News (0x785b20), News::~News (0x785d00), News::load_from_zip (0x787780) ---
+
+/// The news item size (223 bytes) and the inbox record size (start, position, count).
+const NEWS_ITEM_SIZE: u32 = 0xdf;
+
+// --- sx16_8: the notes manager: Notes::Notes (0x794ad0), Notes::~Notes (0x794ba0), Notes::load_notes (0x794be0) ---
+
+// --- sx16_9: saving news.dat (0x787c30), notes.dat (0x794f00) and retire.dat (0x7ad7c0) ---
+
+// --- sx16_10: the officials manager: OfficialsManager::OfficialsManager (0x79b580), ~OfficialsManager (0x79b800),
+// load_official_stats (0x79b850) ---
+
+// --- sx16_11: the regen manager: PLAYER_REGEN::PLAYER_REGEN (0x7a5380), ~PLAYER_REGEN (0x7a56f0),
+// load_retire_dat (0x7adcd0) ---
+
+// --- sx17_1: PLAYER_SEARCH::PLAYER_SEARCH (0x7ae390), PLAYER_SEARCH::save (0x7b2360) and PLAYER_SEARCH::load (0x7b17e0), player_search.cpp ---
+
+// --- sx20_9: writing and freeing the tactics store (tactics.cpp: Tactics::write_to_save 0x8995d0, Tactics::free_data
+// 0x8961e0) and the old shortlist slot record (shortlist_manager.cpp: ShortlistOldSlot::ShortlistOldSlot 0x83b360) ---
 
 // ---------- rx11_1: the news texts of a nation's fate in the African and CONCACAF World Cup qualifying (wc_african_cup.cpp, wc_concacaf_cup.cpp) ----------
 

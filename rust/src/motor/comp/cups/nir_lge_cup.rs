@@ -319,3 +319,15 @@ pub(crate) const NORTHERN_IRISH_LEAGUE_CUP_CONSTRUCTOR: IrishLeagueCupConstructo
 /// The Northern Irish League Cup's group rules: 3 points for a win and 1 for a draw, the tie-breaks 1, 2 and 4, the top
 /// two go through, category 4, a 100,000 prize fund.
 pub(crate) const NORTHERN_IRISH_LEAGUE_CUP_GROUP_RULES: GroupStageRules = GroupStageRules { win: 3, draw: 1, category: 4, tiebreak: [1, 2, 4, 0], slots: 2, prize: Some(0x186a0), bits: None }; // mwa17: two through per group
+
+/// The Northern Irish League Cup entrant list (`load_group_cup_entrants`, nir_lge_cup.cpp lines 0x34f, 0x357 and
+/// 0x35f).
+/// Original: `NirLgeCup::load_extra_data` (0x78db10, nir_lge_cup.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn nir_lge_cup_load_extra_data(this: usize, file: usize) -> u32 {
+    load_group_cup_entrants(this, file, 0xa69698, (0x34f, 0x357, 0x35f), false)
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_nir_lge_cup_load_extra_data(this: usize, file: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_NIR_LGE_CUP_LOAD_EXTRA_DATA);
+    compare_group_cup_entrants_load("nir_lge_cup_load_extra_data", this, file, || o(this, file), || nir_lge_cup_load_extra_data(this, file))
+}

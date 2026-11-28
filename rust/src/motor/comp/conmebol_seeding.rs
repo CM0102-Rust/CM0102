@@ -357,3 +357,60 @@ pub(crate) unsafe fn temp_file_open_for_read(name: usize) -> usize {
 pub(crate) unsafe fn game_data_version() -> i32 {
     read_i32(G_GAME_DATA_VERSION).wrapping_abs()
 }
+
+/// Builds the CONMEBOL seeding: the game CD check (`game_cd_check`, the drive type jump 0x4c601a and the found test
+/// 0x4c605d); then, when the seeding comes back from its temporary file (`ConmebolSeeding::load_from_temp_file`), that
+/// is all. Otherwise the year of the last update and the row count are cleared and the nations are walked in table
+/// order (`G_NATION_TABLE`, 0x122 bytes each) while there are fewer than 11 rows: Mexico and every nation of the South
+/// American continent get a 10-byte row (+0 the nation id, +4 the nation, +8 its Libertadores places: 4 for Brazil and
+/// Argentina, 1 for Venezuela and Mexico, 3 for the others). The Copa dos Campeões winner (`BRA_CHAMP_CUP_WINNER_ID`)
+/// becomes −1. Returns the object.
+/// Original: `ConmebolSeeding::ConmebolSeeding` (0x4c5fe0, conmebol_seeding.cpp, thiscall, ret 0).
+pub(crate) unsafe extern "thiscall" fn new_conmebol_seeding(this: usize) -> usize {
+    game_cd_check(0x4c601a, 0x4c605d);
+    let load: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_CONMEBOL_SEEDING_LOAD_FROM_TEMP_FILE);
+    if load(this) != 0 {
+        covered!("cx01_7 conmebol seeding from the file");
+        return this;
+    }
+    covered!("cx01_7 conmebol seeding built");
+    write_u16(this + conmebol_seeding::LAST_SEASON_YEAR, 0);
+    write_u8(this + conmebol_seeding::NATION_COUNT, 0);
+    let mut k = 0i16;
+    while (k as i32) < read_i32(G_NATION_COUNT) {
+        let rows = read_u8(this + conmebol_seeding::NATION_COUNT) as i8;
+        if rows >= 0xb {
+            break;
+        }
+        let nation = Nation(read_usize(G_NATION_TABLE) + k as usize * 0x122);
+        let id = read_u32(nation.addr());
+        let continent = nation.continent();
+        if id == read_u32(KEY_NATION_MEXICO) || (continent != 0 && read_u32(continent) == read_u32(KEY_CONTINENT_SOUTH_AMERICA)) {
+            let row = this + rows as isize as usize * 10;
+            write_u32(row, id); // the row's nation id
+            write_usize(row + 4, nation.addr()); // the row's nation
+            let places = if id == read_u32(KEY_NATION_BRAZIL) || id == read_u32(KEY_NATION_ARGENTINA) {
+                4
+            } else if id == read_u32(KEY_NATION_VENEZUELA) || id == read_u32(KEY_NATION_MEXICO) {
+                1
+            } else {
+                3
+            };
+            write_u8(row + 8, places); // the row's Libertadores places
+            write_u8(this + conmebol_seeding::NATION_COUNT, rows as u8 + 1);
+        }
+        k += 1;
+    }
+    write_u32(this + conmebol_seeding::BRA_CHAMP_CUP_WINNER_ID, u32::MAX);
+    this
+}
+
+/// Comparer for `new_conmebol_seeding`: it waits for the CD and may read the temporary file (cannot run twice); only
+/// the original runs.
+pub(crate) unsafe extern "thiscall" fn compare_new_conmebol_seeding(this: usize) -> usize {
+    original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_NEW_CONMEBOL_SEEDING)(this)
+}
+
+/// `ConmebolSeeding::load_from_temp_file` (0x4c6970, conmebol_seeding.cpp, thiscall, ret 0): 1 when the seeding came
+/// back from its temporary file.
+pub(crate) const FN_CONMEBOL_SEEDING_LOAD_FROM_TEMP_FILE: usize = 0x4c6970;

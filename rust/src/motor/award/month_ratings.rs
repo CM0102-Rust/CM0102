@@ -316,3 +316,30 @@ pub(crate) unsafe extern "thiscall" fn compare_construct_month_ratings(this: usi
 
 /// `MONTH_RATINGS::load_from_disk(file)` (0x767b20, month_ratings.cpp, thiscall, ret 4).
 pub(crate) const FN_MONTH_RATINGS_LOAD_FROM_DISK: usize = 0x767b20;
+
+/// Writes the month ratings to the saved game as `month_ratings_load_from_disk` reads them: the entry count, the
+/// entries (when there are any), the month and the year (`exe::zwrite`); a short write shows the "Error" box
+/// (month_ratings.cpp 138, 147, 155, 162) and stops there.
+/// Original: `MONTH_RATINGS::save_to_disk` (0x767d60, month_ratings.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn month_ratings_save_to_disk(this: usize, file: usize) {
+    if exe::zwrite(this + MONTH_RATINGS_COUNT, 4, 1, file) != 1 {
+        return tel26_error_box(MONTH_RATINGS_CPP, 0x8a);
+    }
+    let count = read_u32(this + MONTH_RATINGS_COUNT);
+    if count != 0 && exe::zwrite(read_usize(this + MONTH_RATINGS_ENTRIES), MONTH_RATING_ENTRY_SIZE, count, file) != read_u32(this + MONTH_RATINGS_COUNT) {
+        return tel26_error_box(MONTH_RATINGS_CPP, 0x93);
+    }
+    if exe::zwrite(this + month_ratings_fields::MONTH, 1, 1, file) != 1 {
+        return tel26_error_box(MONTH_RATINGS_CPP, 0x9b);
+    }
+    if exe::zwrite(this + month_ratings_fields::YEAR, 2, 1, file) != 1 { // sx04b_7: the ratings' year
+        return tel26_error_box(MONTH_RATINGS_CPP, 0xa2);
+    }
+    covered!("sx04b_7 month ratings saved");
+}
+
+/// Comparer for `month_ratings_save_to_disk`: it writes the file once; only the original runs (the save proof compares
+/// the written game).
+pub(crate) unsafe extern "thiscall" fn compare_month_ratings_save_to_disk(this: usize, file: usize) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_MONTH_RATINGS_SAVE_TO_DISK)(this, file)
+}

@@ -488,3 +488,65 @@ pub(crate) unsafe fn award_comp_name(award: usize) -> (usize, u32) {
 
 /// `TEAM_AWARD::send_club_news()` (0x8b0140, thiscall), called by `team_award_record_winners` through the hook.
 pub(crate) const FN_TEAM_AWARD_SEND_CLUB_NEWS: usize = 0x8b0140;
+
+/// Loads a team award from a saved game: the update date (8 bytes), the 0x205-byte selection record, the substitutes
+/// count (1) and the first and last history offsets (4 each), in that order; 1, or 0 after the load error box of the
+/// first short read (lines 0x69, 0x70, 0x77, 0x7e, 0x85, each with its message).
+/// Original: `TEAM_AWARD::load_from_disk` (0x8af660, team_award.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn team_award_load_from_disk(this: usize, file: usize) -> u32 {
+    use team_award_obj as ta;
+    let fields: [(usize, u32, u32, usize); 5] = [
+        (ta::UPDATE_DATE, 8, 0x69, 0xa8c844),
+        (ta::RECORD, ta::RECORD_SIZE, 0x70, 0xa8c80c),
+        (ta::SUBSTITUTES, 1, 0x77, 0xa8c7d8),
+        (ta::HISTORY_FIRST, 4, 0x7e, 0xa8c798),
+        (ta::HISTORY_LAST, 4, 0x85, 0xa8c758),
+    ];
+    for (off, size, line, message) in fields {
+        if !award_read(this + off, size, file, TEAM_AWARD_CPP, line, message) {
+            return 0;
+        }
+    }
+    covered!("sx05b_6 team award loaded");
+    1
+}
+
+/// Comparer for `team_award_load_from_disk`: reading the save cannot be done twice; only the original runs and a
+/// loaded award must keep its substitutes count in range (0 to 9).
+pub(crate) unsafe extern "thiscall" fn compare_team_award_load_from_disk(this: usize, file: usize) -> u32 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_TEAM_AWARD_LOAD_FROM_DISK)(this, file);
+    if r == 1 {
+        let subs = read_i8(this + team_award_obj::SUBSTITUTES);
+        SCOREBOARD.record((0..=9).contains(&subs), || format!("team_award_load_from_disk({:#x}): substitutes {}", this, subs));
+    }
+    r
+}
+
+/// Saves a team award as `team_award_load_from_disk` reads it: the update date, the selection record, the
+/// substitutes count and the two history offsets; a short write shows the "Error" box (lines 0x96, 0x9d, 0xa4, 0xab,
+/// 0xb2) and stops there.
+/// Original: `TEAM_AWARD::save_to_disk` (0x8af870, team_award.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn team_award_save_to_disk(this: usize, file: usize) {
+    use team_award_obj as ta;
+    let fields: [(usize, u32, u32); 5] = [
+        (ta::UPDATE_DATE, 8, 0x96),
+        (ta::RECORD, ta::RECORD_SIZE, 0x9d),
+        (ta::SUBSTITUTES, 1, 0xa4),
+        (ta::HISTORY_FIRST, 4, 0xab),
+        (ta::HISTORY_LAST, 4, 0xb2),
+    ];
+    for (off, size, line) in fields {
+        if !award_write(this + off, size, file, TEAM_AWARD_CPP, line) {
+            return;
+        }
+    }
+    covered!("sx05b_7 team award saved");
+}
+
+/// Comparer for `team_award_save_to_disk`: the save file cannot be written twice; only the original.
+pub(crate) unsafe extern "thiscall" fn compare_team_award_save_to_disk(this: usize, file: usize) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_TEAM_AWARD_SAVE_TO_DISK)(this, file)
+}
+
+/// "E:\dev\CM3\cm3 00-01\cm3\code\award\team_award.cpp" and "...\year_award.cpp" (the error boxes).
+pub(crate) const TEAM_AWARD_CPP: usize = 0xa8c87c;

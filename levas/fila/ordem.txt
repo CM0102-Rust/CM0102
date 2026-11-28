@@ -1,6 +1,4 @@
 # ordem da fila (fila.py); um item por linha
-sx05b_6
-sx05b_7
 sx05b_12
 sx05b_13
 sx05b_14
@@ -9,22 +7,16 @@ sx05b_16
 sx05b_17
 sx05b_18
 sx05b_19
-sx04b_7
 sx04b_8
 sx15_1
 sx15_2
 sx09c_1
-sx09c_4
 sx09c_5
 sx09c_6
 sx12b_1
 sx12b_2
 sx12b_3
-sx12b_4
-sx12b_5
 sx14b_1
-sx14b_2
-sx14b_3
 sx04c_1
 sx04c_2
 sx04c_3
@@ -49,13 +41,7 @@ sx04c_21
 sx04c_22
 sx16_1
 sx16_6
-sx16_7
-sx16_8
-sx16_9
-sx16_10
-sx16_11
 sx16_12
-sx17_1
 sx18_1
 sx18_2
 sx18_3
@@ -104,10 +90,8 @@ sx20_5
 sx20_6
 sx20_7
 sx20_8
-sx20_9
 sx19b_1
 sx19b_2
-sx19b_3
 sx19b_4
 sxA_1
 sx09c_8
@@ -162,8 +146,6 @@ cx01_2
 cx01_3
 cx01_4
 cx01_5
-cx01_6
-cx01_7
 cx01_8
 cx01_10
 cx01_11
@@ -173,8 +155,6 @@ sx21b_1
 sx21b_2
 sx21b_3
 sx21b_4
-sx21b_5
-sx21b_6
 sx21b_10
 sx21b_11
 sx21b_12
@@ -313,11 +293,6 @@ cx02_9
 cx02_10
 cx02_11
 cx02_12
-cx02_13
-cx02_14
-cx02_15
-cx02_16
-cx02_17
 cx02_19
 cx02_20
 cx02_21
@@ -333,7 +308,6 @@ cx03_6
 cx03_8
 cx03_9
 cx03_10
-cx03_11
 cx03_12
 cx03_13
 cx03_14

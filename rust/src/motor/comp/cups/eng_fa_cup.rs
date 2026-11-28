@@ -553,3 +553,42 @@ pub(crate) const FA_CUP_NON_LEAGUE_START: i32 = 22;
 
 /// The fixed fields `construct_eng_fa_cup` writes on a new cup, for the comparer: (offset, width, value).
 pub(crate) const FA_CUP_CONSTRUCTOR_FIELDS: [(usize, u8, u32); 13] = [(cup::PRIZE_FUND, 4, 0x1e8480), (cup::STAGE_COUNT, 4, 0x0), (cup::CURRENT_STAGE, 4, 0xffffffff), (cup::TEAM_COUNT, 2, 0x98), (cup::CLUB_SIDES, 1, 0x1), (cup::STAGE_INDEX, 1, 0xff), (cup::SEASON_SET_UP, 4, 0x0), (cup::DISCIPLINE_INDEX, 1, 0x9), (cup::CURRENT_ROUND, 1, 0x0), (cup::RUN_BY_STAGES, 1, 0x0), (eng_fa_cup::FIFTH_ROUND_QUESTION_ASKED, 1, 0x0), (eng_fa_cup::EXEMPTION_COUNT, 1, 0x0), (eng_fa_cup::FIFTH_ROUND_ENTRY, 1, 0x1)];
+
+/// Reads the FA Cup's own data from the saved game, one byte each (`exe::crt_fread`, unchecked): the exemption count
+/// (`eng_fa_cup::EXEMPTION_COUNT`) and the fifth-round entry choice (`FIFTH_ROUND_ENTRY`); then, when the saved game's
+/// data version (`G_GAME_DATA_VERSION`, absolute value) is above 0x3e001, whether the fifth-round question was asked
+/// (`FIFTH_ROUND_QUESTION_ASKED`), otherwise that byte becomes 3. Returns 1.
+/// Original: `EngFaCup::load_extra_data` (0x570830, eng_fa_cup.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn eng_fa_cup_load_extra_data(this: usize, file: usize) -> u32 {
+    exe::crt_fread(this + eng_fa_cup::EXEMPTION_COUNT, 1, 1, file);
+    exe::crt_fread(this + eng_fa_cup::FIFTH_ROUND_ENTRY, 1, 1, file);
+    if read_i32(G_GAME_DATA_VERSION).wrapping_abs() > 0x3e001 {
+        covered!("cx02_13 fa cup question flag loaded");
+        exe::crt_fread(this + eng_fa_cup::FIFTH_ROUND_QUESTION_ASKED, 1, 1, file);
+    } else {
+        write_u8(this + eng_fa_cup::FIFTH_ROUND_QUESTION_ASKED, 3);
+    }
+    1
+}
+
+/// Writes the FA Cup's own data to the saved game, one byte each (`exe::crt_fwrite`, unchecked), in the order the load
+/// reads it: the exemption count, the fifth-round entry choice and whether the fifth-round question was asked. Returns
+/// the last write's count.
+/// Original: `EngFaCup::save_extra_data` (0x5708a0, eng_fa_cup.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn eng_fa_cup_save_extra_data(this: usize, file: usize) -> u32 {
+    covered!("cx02_13 fa cup data saved");
+    exe::crt_fwrite(this + eng_fa_cup::EXEMPTION_COUNT, 1, 1, file);
+    exe::crt_fwrite(this + eng_fa_cup::FIFTH_ROUND_ENTRY, 1, 1, file);
+    exe::crt_fwrite(this + eng_fa_cup::FIFTH_ROUND_QUESTION_ASKED, 1, 1, file)
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_eng_fa_cup_load_extra_data(this: usize, file: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_ENG_FA_CUP_LOAD_EXTRA_DATA);
+    compare_cup_extra_data_load("eng_fa_cup_load_extra_data", this, file, &[(eng_fa_cup::FIFTH_ROUND_QUESTION_ASKED, 3)], || o(this, file), || eng_fa_cup_load_extra_data(this, file))
+}
+
+/// Comparer for `eng_fa_cup_save_extra_data`: it writes the saved game (it cannot run twice), so only the original
+/// runs; the copy is proven by the save proof.
+pub(crate) unsafe extern "thiscall" fn compare_eng_fa_cup_save_extra_data(this: usize, file: usize) -> u32 {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_ENG_FA_CUP_SAVE_EXTRA_DATA)(this, file)
+}

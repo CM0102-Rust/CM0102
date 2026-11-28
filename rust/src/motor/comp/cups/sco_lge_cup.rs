@@ -239,3 +239,20 @@ pub(crate) const SCOTTISH_LEAGUE_CUP_ROUNDS: [EngCcCupCupRound; 6] = [
     cql10r((2, 0xb, 0, 3), (0x10, 1, 1, 2, 2, 0x28), 0x82, (0, 3, 0), 6, (4, 2, 0, 0), (0, 1, 0), (0, 0xffff_ffff, 0)),
     cql10r((0x11, 1, 1, 3), (0x13, 2, 1, 6, 1, 4), 0x96, (0, 3, 0), 6, (2, 1, 0, 0), (0, 1, 0), (0, 0xffff_ffff, 0)),
 ];
+
+/// Reads the Scottish League Cup's own data from its temporary file: the byes byte (+0xb2, the clubs in the European
+/// cups) (`exe::crt_fread` of 1 byte, cdecl); a short read: the box of line 0x2b8 of sco_lge_cup.cpp and 0. Returns 1.
+/// Original: `ScoLgeCup::load_extra_data` (0x7f0ae0, sco_lge_cup.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn sco_lge_cup_load_extra_data(this: usize, file: usize) -> u32 {
+    if exe::crt_fread(this + 0xb2, 1, 1, file) != 1 {
+        show_error_at(0xa7af38, 0x2b8);
+        return 0;
+    }
+    covered!("cx03_11 scottish league cup data loaded");
+    1
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_sco_lge_cup_load_extra_data(this: usize, file: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SCO_LGE_CUP_LOAD_EXTRA_DATA);
+    compare_cup_extra_data_load("sco_lge_cup_load_extra_data", this, file, &[(0xb2, 1)], || o(this, file), || sco_lge_cup_load_extra_data(this, file))
+}

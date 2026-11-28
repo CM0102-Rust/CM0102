@@ -34,3 +34,25 @@ pub(crate) unsafe extern "thiscall" fn compare_hol_cup_advance_stage(this: usize
     let (_, _, same, mo, mr) = crate::comparison::side_by_side_light(&[(this.addr() + league::CURRENT_STAGE, 4)], || o(this.addr()), || hol_cup_advance_stage(this.addr()));
     SCOREBOARD.record(same, || format!("hol_cup_advance_stage({:#x}) original={:x?} rust={:x?}", this.addr(), mo, mr));
 }
+
+/// The Dutch Cup entrant list (`load_group_cup_entrants`, hol_cup.cpp lines 0x44b, 0x455 and 0x45d; a count of 0
+/// leaves the list null).
+/// Original: `HolCup::load_extra_data` (0x5f4e90, hol_cup.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn hol_cup_load_extra_data(this: usize, file: usize) -> u32 {
+    load_group_cup_entrants(this, file, 0x9cedd4, (0x44b, 0x455, 0x45d), true)
+}
+
+/// The Dutch Cup entrant list written (`save_group_cup_entrants`, not written when the list is null).
+/// Original: `HolCup::save_extra_data` (0x5f5070, hol_cup.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn hol_cup_save_extra_data(this: usize, file: usize) -> u32 {
+    save_group_cup_entrants(this, file, true)
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_hol_cup_load_extra_data(this: usize, file: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_HOL_CUP_LOAD_EXTRA_DATA);
+    compare_group_cup_entrants_load("hol_cup_load_extra_data", this, file, || o(this, file), || hol_cup_load_extra_data(this, file))
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_hol_cup_save_extra_data(this: usize, file: usize) -> u32 {
+    compare_group_cup_entrants_save("hol_cup_save_extra_data", this, || original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_HOL_CUP_SAVE_EXTRA_DATA)(this, file))
+}

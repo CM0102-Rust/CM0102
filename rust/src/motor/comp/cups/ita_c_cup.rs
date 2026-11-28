@@ -162,3 +162,14 @@ pub(crate) unsafe fn ita_c_cup_constructor_body(this: usize, year: u32, owner: u
 
 /// The fixed fields the Serie C cup constructor writes on a new cup (offset, width, value).
 pub(crate) const SERIE_C_CUP_FIELDS: [(usize, u8, u32); 7] = [(league::STAGE_COUNT, 4, 0x10), (league::STAGE_INDEX, 1, 0xff), (league::SUBSTITUTES_NAMED, 1, 0x7), (league::SUBSTITUTIONS_ALLOWED, 1, 0x3), (league::DISCIPLINE_RULE, 1, 0x12), (league::IMPORTANCE, 1, 0xc), (league::LEAGUE_FLAGS, 2, 0x28)];
+
+/// The Serie C cup entrant list (`load_group_cup_entrants`, ita_c_cup.cpp lines 0x3cc, 0x3d4 and 0x3dc).
+/// Original: `ItaCCup::load_extra_data` (0x63e3c0, ita_c_cup.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn ita_c_cup_load_extra_data(this: usize, file: usize) -> u32 {
+    load_group_cup_entrants(this, file, 0x9ea204, (0x3cc, 0x3d4, 0x3dc), false)
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_ita_c_cup_load_extra_data(this: usize, file: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_ITA_C_CUP_LOAD_EXTRA_DATA);
+    compare_group_cup_entrants_load("ita_c_cup_load_extra_data", this, file, || o(this, file), || ita_c_cup_load_extra_data(this, file))
+}

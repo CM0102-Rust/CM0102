@@ -480,3 +480,135 @@ pub(crate) struct CupGroupStage {
     pub(crate) file: usize,
     pub(crate) rows: (u32, u32),
 }
+
+/// The Greek Cup entrant list (`load_group_cup_entrants`, gre_cup.cpp lines 0x383, 0x38b and 0x393).
+/// Original: `GreCup::load_extra_data` (0x5e9df0, gre_cup.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn gre_cup_load_extra_data(this: usize, file: usize) -> u32 {
+    load_group_cup_entrants(this, file, 0x9cdab0, (0x383, 0x38b, 0x393), false)
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_gre_cup_load_extra_data(this: usize, file: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_GRE_CUP_LOAD_EXTRA_DATA);
+    compare_group_cup_entrants_load("gre_cup_load_extra_data", this, file, || o(this, file), || gre_cup_load_extra_data(this, file))
+}
+
+/// The entrant list of the Greek Cup and of the other group cups that share this virtual (the Irish, Northern Irish
+/// and Korean League Cups, the Coppa Italia, the Serie C cup and the Welsh League and Premier Cups):
+/// `save_group_cup_entrants`, the list always written.
+/// Original: `GreCup::save_extra_data` (0x5e9fb0, gre_cup.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn gre_cup_save_extra_data(this: usize, file: usize) -> u32 {
+    save_group_cup_entrants(this, file, false)
+}
+
+/// Comparer for `gre_cup_save_extra_data`: it writes the saved game (it cannot run twice), so only the original runs;
+/// the list must come back as it was (the clubs, not the ids). The copy is proven by the save proof.
+pub(crate) unsafe extern "thiscall" fn compare_gre_cup_save_extra_data(this: usize, file: usize) -> u32 {
+    compare_group_cup_entrants_save("gre_cup_save_extra_data", this, || original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_GRE_CUP_SAVE_EXTRA_DATA)(this, file))
+}
+
+/// The entrant list of a cup built on a league with group stages, read from its temporary file: the count
+/// (`ita_cup_fields::ENTRANT_CLUB_COUNT`, 4 bytes; `exe::crt_fread`); a short read shows the box of `lines.0` and
+/// returns 0. With `empty_is_none` (the Dutch Cup) a count of 0 leaves the list null and returns 1. Otherwise a new
+/// list of count × 4 bytes (`exe::crt_malloc`, into `ita_cup_fields::ENTRANT_CLUBS`; out of memory the box of
+/// `lines.1` and 0) and the count's club ids read into it (short: the box of `lines.2` and 0); each id becomes its club
+/// (`club_at`, the club table read each time), −1 a null slot (the count read again each time). Returns 1. The boxes
+/// are the source file `file_name`'s.
+pub(crate) unsafe fn load_group_cup_entrants(this: usize, file: usize, file_name: usize, lines: (u32, u32, u32), empty_is_none: bool) -> u32 {
+    let cup = ItaCupFields(this);
+    if exe::crt_fread(this + ita_cup_fields::ENTRANT_CLUB_COUNT, 4, 1, file) != 1 {
+        show_error_at(file_name, lines.0);
+        return 0;
+    }
+    let count = || read_i32(this + ita_cup_fields::ENTRANT_CLUB_COUNT);
+    if empty_is_none && count() == 0 {
+        cup.set_entrant_clubs(0);
+        return 1;
+    }
+    let list = exe::crt_malloc((count() as u32).wrapping_mul(4));
+    cup.set_entrant_clubs(list);
+    if list == 0 {
+        show_error_at(file_name, lines.1);
+        return 0;
+    }
+    if exe::crt_fread(list, 4, count() as u32, file) != count() as u32 {
+        show_error_at(file_name, lines.2);
+        return 0;
+    }
+    covered!("cx02_14 group cup entrants loaded");
+    let mut k = 0i32;
+    while k < count() {
+        let slot = cup.entrant_clubs() + 4 * k as usize;
+        let id = read_i32(slot);
+        write_usize(slot, if id == -1 { 0 } else { club_at(id as isize).addr() });
+        k += 1;
+    }
+    1
+}
+
+/// Comparer of the group cups' entrant list readers: the original reads first (its list kept); then the file goes
+/// back to where it was and the copy reads the same bytes into a list of its own; the returns, the counts, the file
+/// positions and the lists' clubs must match. The copy's list is freed and the original's put back.
+pub(crate) unsafe fn compare_group_cup_entrants_load(name: &str, this: usize, file: usize, original: impl FnOnce() -> u32, copy: impl FnOnce() -> u32) -> u32 {
+    let cup = ItaCupFields(this);
+    let at = exe::crt_ftell(file);
+    let r = original();
+    if r == 0 {
+        return r; // the error box was shown: the copy is not run again
+    }
+    let (end_o, list_o, count_o) = (exe::crt_ftell(file), cup.entrant_clubs(), read_i32(this + ita_cup_fields::ENTRANT_CLUB_COUNT));
+    exe::crt_fseek(file, at, 0);
+    let c = copy();
+    let (end_c, list_c, count_c) = (exe::crt_ftell(file), cup.entrant_clubs(), read_i32(this + ita_cup_fields::ENTRANT_CLUB_COUNT));
+    let n = if r == 1 && c == 1 && count_o == count_c && list_o != 0 && list_c != 0 { count_o.max(0) as usize } else { 0 };
+    let same = (0..n).all(|k| read_usize(list_o + 4 * k) == read_usize(list_c + 4 * k));
+    if list_c != 0 && list_c != list_o {
+        exe::crt_free(list_c);
+    }
+    cup.set_entrant_clubs(list_o);
+    write_i32(this + ita_cup_fields::ENTRANT_CLUB_COUNT, count_o);
+    exe::crt_fseek(file, end_o, 0);
+    SCOREBOARD.record(r == c && count_o == count_c && end_o == end_c && same && (list_o == 0) == (list_c == 0),
+        || format!("{}({:#x}) returned {} x {}, count {} x {}, file at {} x {} (from {}), lists equal {}", name, this, r, c, count_o, count_c, end_o, end_c, at, same));
+    r
+}
+
+/// The entrant list of a cup built on a league with group stages, written to its temporary file in the order
+/// `load_group_cup_entrants` reads it: the count (`ita_cup_fields::ENTRANT_CLUB_COUNT`, 4 bytes; `exe::crt_fwrite`,
+/// unchecked); the list's clubs turned into their ids (a null slot −1; the list and the count read again each time);
+/// the count's ids written (with `skip_null_list`, the Dutch Cup, not when the list is null); the ids turned back into
+/// clubs (`club_at`; −1 a null slot). Returns the count as last read (the eax the original leaves).
+pub(crate) unsafe fn save_group_cup_entrants(this: usize, file: usize, skip_null_list: bool) -> u32 {
+    let cup = ItaCupFields(this);
+    let count = || read_i32(this + ita_cup_fields::ENTRANT_CLUB_COUNT);
+    exe::crt_fwrite(this + ita_cup_fields::ENTRANT_CLUB_COUNT, 4, 1, file);
+    let mut k = 0i32;
+    while k < count() {
+        let slot = cup.entrant_clubs() + 4 * k as usize;
+        let club = read_usize(slot);
+        write_u32(slot, if club != 0 { read_u32(club) } else { u32::MAX });
+        k += 1;
+    }
+    if !skip_null_list || cup.entrant_clubs() != 0 {
+        covered!("cx02_16 group cup entrants saved");
+        exe::crt_fwrite(cup.entrant_clubs(), 4, count() as u32, file);
+    }
+    let mut k = 0i32;
+    while k < count() {
+        let slot = cup.entrant_clubs() + 4 * k as usize;
+        let id = read_i32(slot);
+        write_usize(slot, if id == -1 { 0 } else { club_at(id as isize).addr() });
+        k += 1;
+    }
+    count() as u32
+}
+
+/// Runs only the original writer and checks that the entrant list is back as it was before (clubs, not ids).
+pub(crate) unsafe fn compare_group_cup_entrants_save(name: &str, this: usize, original: impl FnOnce() -> u32) -> u32 {
+    let list = ItaCupFields(this).entrant_clubs();
+    let n = if list != 0 { read_i32(this + ita_cup_fields::ENTRANT_CLUB_COUNT).max(0) as usize } else { 0 };
+    let before: Vec<usize> = (0..n).map(|k| read_usize(list + 4 * k)).collect();
+    let r = original();
+    let after: Vec<usize> = (0..n).map(|k| read_usize(list + 4 * k)).collect();
+    SCOREBOARD.record(before == after, || format!("{}({:#x}): the list changed ({} entries)", name, this, n));
+    r
+}

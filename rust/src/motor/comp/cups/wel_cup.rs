@@ -121,3 +121,27 @@ pub(crate) const WELSH_CUP_ROUNDS: [EngCcCupCupRound; 5] = [
     cql10r((0xb, 2, 1, 6), (7, 3, 1, 5, 1, 0), 0x82, (0, 3, 3), 4, (4, 2, 0, 0), (0, 1, 0), (0, 0xffff_ffff, 0)),
     cql10r((8, 3, 1, 6), (6, 4, 1, 6, 1, 0), 0x96, (0, 3, 0), 6, (2, 1, 0, 0), (0, 1, 7), (0, 0xffff_ffff, 0)),
 ];
+
+/// Comparer of the Welsh entrant readers: the original reads first; then the file goes back to where it was and the
+/// copy reads the same bytes into a list of its own; the returns, the counts, the lists and the file positions must
+/// match. The copy's list is freed and the original's put back.
+pub(crate) unsafe fn compare_welsh_cup_entrants(name: &str, this: usize, file: usize, original: impl FnOnce() -> u32, copy: impl FnOnce() -> u32) -> u32 {
+    let cup = ItaCupFields(this);
+    let at = exe::crt_ftell(file);
+    let r = original();
+    let (end_o, list_o, n_o) = (exe::crt_ftell(file), cup.entrant_clubs(), cup.entrant_club_count());
+    exe::crt_fseek(file, at, 0);
+    let c = copy();
+    let (end_c, list_c, n_c) = (exe::crt_ftell(file), cup.entrant_clubs(), cup.entrant_club_count());
+    let k = 4 * (n_o as i32).max(0) as usize;
+    let same = n_o == n_c && (r == 0 || (list_o != 0 && list_c != 0
+        && core::slice::from_raw_parts(list_o as *const u8, k) == core::slice::from_raw_parts(list_c as *const u8, k)));
+    if list_c != 0 && list_c != list_o {
+        exe::crt_free(list_c);
+    }
+    cup.set_entrant_clubs(list_o);
+    cup.set_entrant_club_count(n_o);
+    exe::crt_fseek(file, end_o, 0);
+    SCOREBOARD.record(same && r == c && end_o == end_c, || format!("{}({:#x}) returned {} x {}, file at {} x {} (from {}), entrants {} x {}", name, this, r, c, end_o, end_c, at, n_o, n_c));
+    r
+}

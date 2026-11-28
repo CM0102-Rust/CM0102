@@ -3095,3 +3095,133 @@ pub(crate) unsafe extern "thiscall" fn injury_save(this: usize, save: usize) {
 pub(crate) unsafe extern "thiscall" fn compare_injury_save(this: usize, save: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_INJURY_SAVE)(this, save)
 }
+
+/// Reads the injury state from the `injury.dat` item of a saved game; returns 1, or 0 after an error.
+///
+/// `Injury::load(save)`: no container: the "Error" box (injury.cpp line 0x15f) and 0; `injury.dat` not opened
+/// (`exe::zopen`): line 0x167 and 0. Then, in order, each failing with the box, the item closed and 0: the physical
+/// records (`injury_fields::PHYSICAL_RECORDS`, `malloc` of `G_STAFF_COUNT` x 31 bytes, line 0x16f; read, 0x177), the
+/// injury slot count (`injury_fields::INJURY_ENTRY_COUNT`, 0x17f) and the 0x30-byte injuries
+/// (`injury_fields::INJURY_ENTRIES`, `malloc`, 0x188). Saves older than data version 0x3e024 stored 0x2c bytes per
+/// injury (each read alone, 0x196): the days left (`injury_entry::DAYS_LEFT`) and the training days left
+/// (`injury_entry::TRAINING_DAYS_LEFT`) become the days from today (`G_CURRENT_DATE`, `Date::days_since`) to the
+/// injury date plus `DAYS_OUT` and plus `TRAINING_RETURN_DAYS` (`Date::add_days`); newer ones store all 0x30 (0x1a5).
+/// The recovery news count (+0x14, 0x1ae) and, when not zero, `injury_fields::RECOVERY_NEWS_COUNT` = it and the
+/// 22-byte entries (`injury_fields::RECOVERY_NEWS_QUEUE`, `malloc`, 0x1bd; read, 0x1c5); the outbreak count
+/// (`injury_fields::OUTBREAK_CAPACITY`, 0x1ce) and, when not zero, `injury_fields::OUTBREAK_COUNT` = it and the 17-byte
+/// outbreaks (`injury_fields::OUTBREAKS`, `malloc`, 0x1de; read, 0x1e7); the word count of the match knock list (0x1f0)
+/// and, when not zero, a new list (`injury_fields::MATCH_HIT_LIST`: the old one destroyed, `operator new` of 14 bytes,
+/// `LLIST::LLIST`) and its 6-byte items (each read, 0x207, and added at the tail). The item closed, 1.
+/// Original: `Injury::load` (0x62ab00, injury.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn injury_load(this: usize, save: usize) -> u32 {
+    use injury_fields as f;
+    const FILE: usize = 0x9e7f28; // "...\injury.cpp"
+    if save == 0 {
+        show_error_at(FILE, 0x15f);
+        return 0;
+    }
+    let mut z = exe::zopen(save, 0x9e7f68usize, 0, 0x16, 4); // "injury.dat"
+    if z == 0 {
+        show_error_at(FILE, 0x167);
+        return 0;
+    }
+    let failed = |z: &mut usize, row: u32| {
+        show_error_at(FILE, row);
+        exe::zclose(z);
+        0
+    };
+    let records = exe::crt_malloc(read_u32(G_STAFF_COUNT).wrapping_mul(31));
+    write_usize(this + f::PHYSICAL_RECORDS, records);
+    if records == 0 {
+        return failed(&mut z, 0x16f);
+    }
+    if exe::zread(records, 0x1f, read_u32(G_STAFF_COUNT), z) != read_u32(G_STAFF_COUNT) {
+        return failed(&mut z, 0x177);
+    }
+    if exe::zread(this + f::INJURY_ENTRY_COUNT, 4, 1, z) != 1 {
+        return failed(&mut z, 0x17f);
+    }
+    let entries = exe::crt_malloc(read_u32(this + f::INJURY_ENTRY_COUNT).wrapping_mul(0x30));
+    write_usize(this + f::INJURY_ENTRIES, entries);
+    if entries == 0 {
+        return failed(&mut z, 0x188);
+    }
+    if saved_data_version() < 0x3e024 {
+        covered!("sx12b_4 injuries of an old save");
+        for k in 0..read_i32(this + f::INJURY_ENTRY_COUNT).max(0) as usize {
+            let e = read_usize(this + f::INJURY_ENTRIES) + k * 0x30;
+            if exe::zread(e, 0x2c, 1, z) != 1 {
+                return failed(&mut z, 0x196);
+            }
+            for (days, left) in [(injury_entry::DAYS_OUT, injury_entry::DAYS_LEFT), (injury_entry::TRAINING_RETURN_DAYS, injury_entry::TRAINING_DAYS_LEFT)] {
+                let mut end = [0u8; 8];
+                let d = exe::date_add_days(e + injury_entry::DATE, end.as_mut_ptr() as usize, read_u16(e + days) as u32);
+                let n = exe::date_days_since(d, read_u32(G_CURRENT_DATE), read_u32(G_CURRENT_DATE + 4));
+                write_u16(read_usize(this + f::INJURY_ENTRIES) + k * 0x30 + left, n as u16);
+            }
+        }
+    } else if exe::zread(entries, 0x30, read_u32(this + f::INJURY_ENTRY_COUNT), z) != read_u32(this + f::INJURY_ENTRY_COUNT) {
+        return failed(&mut z, 0x1a5);
+    }
+    if exe::zread(this + 0x14, 4, 1, z) != 1 {
+        return failed(&mut z, 0x1ae); // 0x14: the recovery news capacity [inference]
+    }
+    let news = read_u32(this + 0x14);
+    if news != 0 {
+        write_u32(this + f::RECOVERY_NEWS_COUNT, news); // sx12b_4: the recovery news count
+        let queue = exe::crt_malloc(news.wrapping_mul(0x16));
+        write_usize(this + f::RECOVERY_NEWS_QUEUE, queue);
+        if queue == 0 {
+            return failed(&mut z, 0x1bd);
+        }
+        if exe::zread(queue, 0x16, read_u32(this + 0x14), z) != read_u32(this + 0x14) {
+            return failed(&mut z, 0x1c5);
+        }
+    }
+    if exe::zread(this + f::OUTBREAK_CAPACITY, 4, 1, z) != 1 {
+        return failed(&mut z, 0x1ce);
+    }
+    let outbreaks = read_u32(this + f::OUTBREAK_CAPACITY);
+    if outbreaks != 0 {
+        write_u32(this + f::OUTBREAK_COUNT, outbreaks);
+        let array = exe::crt_malloc(outbreaks.wrapping_mul(0x11));
+        write_usize(this + f::OUTBREAKS, array);
+        if array == 0 {
+            return failed(&mut z, 0x1de);
+        }
+        if exe::zread(array, 0x11, read_u32(this + f::OUTBREAK_CAPACITY), z) != read_u32(this + f::OUTBREAK_CAPACITY) {
+            return failed(&mut z, 0x1e7);
+        }
+    }
+    let mut knocks = 0i16;
+    if exe::zread(&mut knocks as *mut i16 as usize, 2, 1, z) != 1 {
+        return failed(&mut z, 0x1f0);
+    }
+    if knocks != 0 {
+        let old = read_usize(this + f::MATCH_HIT_LIST);
+        if old != 0 {
+            exe::drop_llist(old);
+            exe::crt_operator_delete(old);
+        }
+        let list = exe::crt_operator_new(0xe);
+        write_usize(this + f::MATCH_HIT_LIST, if list != 0 { exe::new_llist(list) } else { 0 });
+        let mut k = 0i16;
+        while k < knocks {
+            let mut item = [0u8; 6];
+            if exe::zread(item.as_mut_ptr() as usize, 6, 1, z) != 1 {
+                return failed(&mut z, 0x207);
+            }
+            exe::llist_add_tail(read_usize(this + f::MATCH_HIT_LIST), item.as_ptr() as usize, 6);
+            k += 1;
+        }
+    }
+    covered!("sx12b_4 injuries loaded");
+    exe::zclose(&mut z);
+    1
+}
+
+/// Comparer for `injury_load`: it allocates and reads the save item: it cannot run twice. Only the original runs; the
+/// copy is proven by loading the holiday save (levas/N/CARGA).
+pub(crate) unsafe extern "thiscall" fn compare_injury_load(this: usize, save: usize) -> u32 {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_INJURY_LOAD)(this, save)
+}

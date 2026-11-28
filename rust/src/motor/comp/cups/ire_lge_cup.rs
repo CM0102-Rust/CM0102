@@ -699,3 +699,14 @@ pub(crate) const IRISH_LEAGUE_CUP_CONSTRUCTOR: IrishLeagueCupConstructor = Irish
 /// The Irish League Cup's group rules: 3 points for a win and 1 for a draw, the tie-breaks 1, 2 and 4 (goal difference,
 /// goals for, head-to-head [inference]), the group winner goes through, category 4, a 100,000 prize fund.
 pub(crate) const IRISH_LEAGUE_CUP_GROUP_RULES: GroupStageRules = GroupStageRules { win: 3, draw: 1, category: 4, tiebreak: [1, 2, 4, 0], slots: 1, prize: Some(0x186a0), bits: None }; // mwa16: one through per group
+
+/// The Irish League Cup entrant list (`load_group_cup_entrants`, ire_lge_cup.cpp lines 0x381, 0x389 and 0x391).
+/// Original: `IreLgeCup::load_extra_data` (0x638260, ire_lge_cup.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn ire_lge_cup_load_extra_data(this: usize, file: usize) -> u32 {
+    load_group_cup_entrants(this, file, 0x9e9f4c, (0x381, 0x389, 0x391), false)
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_ire_lge_cup_load_extra_data(this: usize, file: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_IRE_LGE_CUP_LOAD_EXTRA_DATA);
+    compare_group_cup_entrants_load("ire_lge_cup_load_extra_data", this, file, || o(this, file), || ire_lge_cup_load_extra_data(this, file))
+}

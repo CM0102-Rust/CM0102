@@ -6840,3 +6840,19 @@ impl FillSlotState {
         read_u8(self.slot + shortlist_slot::FLAGS)
     }
 }
+
+/// Builds one 0x24-byte old-format shortlist slot record (from saves of an older version): the default date
+/// (`Date::Date`) in its field at +0x1a. Returns the record.
+/// Original: `ShortlistOldSlot::ShortlistOldSlot` (0x83b360, shortlist_manager.cpp, thiscall).
+pub(crate) unsafe extern "thiscall" fn shortlist_old_slot_shortlist_old_slot(this: usize) -> usize {
+    exe::date_date_54a110(this + 0x1a);
+    this
+}
+
+/// Comparer for `shortlist_old_slot_shortlist_old_slot`: side by side over the record's date (8 bytes at +0x1a).
+pub(crate) unsafe extern "thiscall" fn compare_shortlist_old_slot_shortlist_old_slot(this: usize) -> usize {
+    let original = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_SHORTLIST_OLD_SLOT_SHORTLIST_OLD_SLOT);
+    let (r, c, same, mo, mr) = crate::comparison::side_by_side(&[(this + 0x1a, 8)], || original(this), || shortlist_old_slot_shortlist_old_slot(this));
+    SCOREBOARD.record(same && r == c, || format!("shortlist_old_slot_shortlist_old_slot({:#x}) {:?}", this, first_differences(&mo, &mr)));
+    r
+}

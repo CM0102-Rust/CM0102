@@ -287,3 +287,14 @@ pub(crate) const KOR_LEAGUE_CUP_FILE: usize = 0x9eb15c;
 /// The fixed fields the Korean League Cup constructor writes on a new cup (offset, width, value).
 pub(crate) const KOREAN_LEAGUE_CUP_FIELDS: [(usize, u8, u32); 7] = [(league::STAGE_COUNT, 4, 2), (league::STAGE_INDEX, 1, 0xff), (league::SUBSTITUTES_NAMED, 1, 5), (league::SUBSTITUTIONS_ALLOWED, 1, 3),
     (league::DISCIPLINE_RULE, 1, discipline_rule::KOREA as u32), (league::IMPORTANCE, 1, 0xc), (league::LEAGUE_FLAGS, 2, 8)];
+
+/// The Korean League Cup entrant list (`load_group_cup_entrants`, kor_league_cup.cpp lines 0x320, 0x328 and 0x330).
+/// Original: `KorLeagueCup::load_extra_data` (0x66d1e0, kor_league_cup.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn kor_league_cup_load_extra_data(this: usize, file: usize) -> u32 {
+    load_group_cup_entrants(this, file, 0x9eb15c, (0x320, 0x328, 0x330), false)
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_kor_league_cup_load_extra_data(this: usize, file: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_KOR_LEAGUE_CUP_LOAD_EXTRA_DATA);
+    compare_group_cup_entrants_load("kor_league_cup_load_extra_data", this, file, || o(this, file), || kor_league_cup_load_extra_data(this, file))
+}

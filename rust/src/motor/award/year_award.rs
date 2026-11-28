@@ -405,3 +405,109 @@ impl YearNews {
 /// The slot 0xd value of a current year award news item (`year_award_post_winner_news`); older items carry another
 /// value and get the plain texts, no position text and no third winner.
 pub(crate) const YEAR_NEWS_CURRENT: u32 = 0x420e9;
+
+/// Loads a year award from a saved game: the first and last history offsets (4 bytes each; a short read, the load
+/// error box of line 0x70 or 0x77 and 0); then, with a scope, its shortlist is built from the save
+/// (`construct_award_shortlist`(scope, file) in 0x40 bytes of `exe::crt_operator_new`): out of memory, the "Memory
+/// Allocation Error" box (line 0x81, "Cannot create AWARD_SHORTLIST") and 0. Otherwise 1.
+/// Original: `YEAR_AWARD::load_from_disk` (0x92fff0, year_award.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn year_award_load_from_disk(this: usize, scope: usize, file: usize) -> u32 {
+    use year_award_obj as ya;
+    if !award_read(this + ya::HISTORY_FIRST, 4, file, YEAR_AWARD_CPP, 0x70, 0xad5978)
+        || !award_read(this + ya::HISTORY_LAST, 4, file, YEAR_AWARD_CPP, 0x77, 0xad5940) {
+        return 0;
+    }
+    if scope == 0 {
+        return 1;
+    }
+    covered!("sx05b_6 year award shortlist loaded");
+    let p = exe::crt_operator_new(0x40);
+    let shortlist = if p != 0 { construct_award_shortlist(p, scope, file) } else { 0 };
+    write_usize(this + ya::SHORTLIST, shortlist);
+    if shortlist == 0 {
+        memory_error_box_of(YEAR_AWARD_CPP, 0x81, 0xad5900);
+        return 0;
+    }
+    1
+}
+
+/// Comparer for `year_award_load_from_disk`: only the original (it reads the save and builds the shortlist); a load
+/// with a scope must leave a shortlist.
+pub(crate) unsafe extern "thiscall" fn compare_year_award_load_from_disk(this: usize, scope: usize, file: usize) -> u32 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_YEAR_AWARD_LOAD_FROM_DISK)(this, scope, file);
+    if r == 1 && scope != 0 {
+        SCOREBOARD.record(read_usize(this + year_award_obj::SHORTLIST) != 0, || format!("year_award_load_from_disk({:#x}): no shortlist", this));
+    }
+    r
+}
+
+/// Saves a year award as `year_award_load_from_disk` reads it: the two history offsets (a short write, the "Error"
+/// box of line 0x94 or 0x9b) and the shortlist when there is one (`award_shortlist_save`).
+/// Original: `YEAR_AWARD::save_to_disk` (0x9301f0, year_award.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn year_award_save_to_disk(this: usize, file: usize) {
+    use year_award_obj as ya;
+    if !award_write(this + ya::HISTORY_FIRST, 4, file, YEAR_AWARD_CPP, 0x94) || !award_write(this + ya::HISTORY_LAST, 4, file, YEAR_AWARD_CPP, 0x9b) {
+        return;
+    }
+    let shortlist = read_usize(this + ya::SHORTLIST);
+    if shortlist != 0 {
+        covered!("sx05b_7 year award shortlist saved");
+        let save: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_AWARD_SHORTLIST_SAVE);
+        save(shortlist, file);
+    }
+}
+
+/// Comparer for `year_award_save_to_disk`: only the original.
+pub(crate) unsafe extern "thiscall" fn compare_year_award_save_to_disk(this: usize, file: usize) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_YEAR_AWARD_SAVE_TO_DISK)(this, file)
+}
+
+/// Reads one field of an award from the save (`exe::zread`, one item of `size` bytes); a short read shows the load
+/// error box of `cpp` at `line` with `message`.
+pub(crate) unsafe fn award_read(dest: usize, size: u32, file: usize, cpp: usize, line: u32, message: usize) -> bool {
+    if exe::zread(dest, size, 1, file) == 1 {
+        return true;
+    }
+    save_load_error_box(cpp, line, message);
+    false
+}
+
+/// The "Memory Allocation Error" box of a source file at a line with a message ("v%s %s.%s %d (%s)"); the game goes on.
+pub(crate) unsafe fn memory_error_box_of(cpp: usize, line: u32, message: usize) {
+    let version: unsafe extern "C" fn(*mut u8, *mut u8, u32, usize) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
+    let (mut name, mut ext) = ([0u8; 256], [0u8; 256]);
+    exe::crt_strtok(cpp, 0usize, 0usize, name.as_mut_ptr(), ext.as_mut_ptr());
+    let v = version(name.as_mut_ptr(), ext.as_mut_ptr(), line, message);
+    comp_crt_format()(0xae24d0, 0x9a8120, v, name.as_ptr(), ext.as_ptr(), line, message);
+    comp_lang_format()(0xae28bc, 0x9a8108);
+    comp_lang_format()(0xae26c4, 0x9a7ff8, 0xae24d0);
+    exe::gui_show_message_box(0xae28bc, 0xae26c4, 0);
+}
+
+/// Writes one field to the save (`exe::zwrite`, one item of `size` bytes); a short write shows the "Error" box of
+/// `cpp` at `line` (`show_error_at`).
+pub(crate) unsafe fn award_write(src: usize, size: u32, file: usize, cpp: usize, line: u32) -> bool {
+    if exe::zwrite(src, size, 1, file) == 1 {
+        return true;
+    }
+    show_error_at(cpp, line);
+    false
+}
+
+/// The "Load Game Error" box of a save game load: "v%s %s.%s %d (%s)" of the source file `cpp` at `line` with the
+/// message, then the box ("The save game is corrupted...", `0x9af334`). The mouse flag is left alone.
+pub(crate) unsafe fn save_load_error_box(cpp: usize, line: u32, message: usize) {
+    let version: unsafe extern "C" fn(*mut u8, *mut u8, u32, usize) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
+    let (mut name, mut ext) = ([0u8; 256], [0u8; 256]);
+    exe::crt_strtok(cpp, 0usize, 0usize, name.as_mut_ptr(), ext.as_mut_ptr());
+    let v = version(name.as_mut_ptr(), ext.as_mut_ptr(), line, message);
+    comp_crt_format()(0xae24d0, 0x9a8120, v, name.as_ptr(), ext.as_ptr(), line, message);
+    comp_lang_format()(0xae28bc, 0x9af3e0);
+    comp_lang_format()(0xae26c4, 0x9af334, 0xae24d0);
+    exe::gui_show_message_box(0xae28bc, 0xae26c4, 0);
+}
+
+pub(crate) const YEAR_AWARD_CPP: usize = 0xad59b0;
+
+/// `AWARD_SHORTLIST::save(file)` (0x417720, thiscall, ret 4), through its hook.
+pub(crate) const FN_AWARD_SHORTLIST_SAVE: usize = 0x417720;

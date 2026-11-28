@@ -1328,3 +1328,14 @@ pub(crate) unsafe fn ita_cup_constructor_body(this: usize, year: u32, owner: usi
 
 /// The fixed fields the Coppa Italia constructor writes on a new cup (offset, width, value).
 pub(crate) const COPPA_ITALIA_FIELDS: [(usize, u8, u32); 7] = [(league::STAGE_COUNT, 4, 0x8), (league::STAGE_INDEX, 1, 0xff), (league::SUBSTITUTES_NAMED, 1, 0x7), (league::SUBSTITUTIONS_ALLOWED, 1, 0x3), (league::DISCIPLINE_RULE, 1, 0x12), (league::IMPORTANCE, 1, 0xc), (league::LEAGUE_FLAGS, 2, 0x28)];
+
+/// The Coppa Italia entrant list (`load_group_cup_entrants`, ita_cup.cpp lines 0x3cb, 0x3d3 and 0x3db).
+/// Original: `ItaCup::load_extra_data` (0x640050, ita_cup.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn ita_cup_load_extra_data(this: usize, file: usize) -> u32 {
+    load_group_cup_entrants(this, file, 0x9ea23c, (0x3cb, 0x3d3, 0x3db), false)
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_ita_cup_load_extra_data(this: usize, file: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_ITA_CUP_LOAD_EXTRA_DATA);
+    compare_group_cup_entrants_load("ita_cup_load_extra_data", this, file, || o(this, file), || ita_cup_load_extra_data(this, file))
+}

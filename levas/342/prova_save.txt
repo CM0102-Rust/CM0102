@@ -1,0 +1,14 @@
+leva 342: desligando team_award_load_from_disk, year_award_load_from_disk, year_ratings_load_from_disk, team_award_save_to_disk, year_award_save_to_disk, year_ratings_save_to_disk, month_ratings_save_to_disk, nation_awards_load, nation_awards_save, discipline_load, discipline_save, injury_load, human_manager_load, hall_of_fame_save, new_manager_manager, drop_manager_manager, load_man_conf, save_man_conf, new_news, drop_news, news_load_from_zip, new_notes, drop_notes, notes_load_notes, news_save_to_zip, notes_save_notes, save_retire_dat, new_officials_manager, drop_officials_manager, load_official_stats, new_player_regen, drop_player_regen, load_retire_dat, new_player_search, player_search_save, player_search_load, tactics_write_to_save, tactics_free_data, shortlist_old_slot_shortlist_old_slot, ruling_body_load, ruling_body_save, file_find_first, file_find_next, file_find_close, new_conmebol_seeding, cup_save_cup_to_disk, transfer_offer_load, transfer_offer_save, load_training_dat, save_training_dat, destroy_training_manager, eng_cc_cup_load_extra_data, eng_fa_cup_load_extra_data, eng_fa_cup_save_extra_data, gre_cup_load_extra_data, ire_lge_cup_load_extra_data, ita_c_cup_load_extra_data, ita_cup_load_extra_data, kor_league_cup_load_extra_data, nir_lge_cup_load_extra_data, gre_cup_save_extra_data, hol_cup_load_extra_data, hol_cup_save_extra_data, new_cup_stage_for_load, cup_stage_load_from_file, cup_stage_save_to_file, sco_lge_cup_load_extra_data, wel_lge_cup_load_extra_data, wel_prm_cup_load_extra_data (com a carga de D:\Sistemas\CM0102\jogo\FeriasTesteSave.sav ate 2001-08-28)
+game.cfg restaurado; PROVA.cfg, quick_start.cfg removido
+gravar rust: C:\Users\lucas\AppData\Local\Temp\cm0102_prova_save\base1.qst, 16844374 bytes, tipo 4, id 0x17, 106 itens, 5 s
+game.cfg restaurado; PROVA.cfg, quick_start.cfg removido
+gravar rust: C:\Users\lucas\AppData\Local\Temp\cm0102_prova_save\base2.qst, 16844371 bytes, tipo 4, id 0x17, 106 itens, 5 s
+game.cfg restaurado;  removido
+carregar rust: parou em 2001-239, 721093961 sorteios, impressao dc210bb9e645b870, partidas 9623/5e099a7e6c1e68ff, banco 57af9bafcc680c83, 69 s
+motor.rs restaurado e recompilado
+variaveis: general.dat 48 bytes, human_manager.dat 384 bytes, index.dat 24 bytes, staff history.tmp 8 bytes
+game.cfg restaurado; PROVA.cfg, quick_start.cfg removido
+gravar rust: C:\Users\lucas\AppData\Local\Temp\cm0102_prova_save\leva.qst, 16844369 bytes, tipo 4, id 0x17, 106 itens, 5 s
+game.cfg restaurado;  removido
+carregar rust: parou em 2001-239, 721093961 sorteios, impressao dc210bb9e645b870, partidas 9623/5e099a7e6c1e68ff, banco 57af9bafcc680c83, 68 s
+prova da leva 342: IGUAL fora dos campos ignorados; carga IGUAL (parou em 2001-239, 721093961 sorteios, impressao dc210bb9e645b870)

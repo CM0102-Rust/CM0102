@@ -417,3 +417,15 @@ pub(crate) const WELSH_PREMIER_CUP_GUESTS: [usize; 4] = [0x9d0434, 0x9d0430, 0x9
 
 /// A group matchday with its year offset: (day, month from 0, years after the cup's year, weekday, code).
 pub(crate) type WelshGroupRound = (u32, u32, u32, u32, u32);
+
+/// Reads the Welsh Premier Cup's entrants from its temporary file (`load_welsh_cup_entrants`, the boxes of lines 0x36e,
+/// 0x376 and 0x37e of wel_prm_cup.cpp).
+/// Original: `WelPrmCup::load_extra_data` (0x928c40, wel_prm_cup.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn wel_prm_cup_load_extra_data(this: usize, file: usize) -> u32 {
+    load_welsh_cup_entrants(this, file, 0xad572c, [0x36e, 0x376, 0x37e], "cx03_11 welsh premier cup entrants loaded")
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_wel_prm_cup_load_extra_data(this: usize, file: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_WEL_PRM_CUP_LOAD_EXTRA_DATA);
+    compare_welsh_cup_entrants("wel_prm_cup_load_extra_data", this, file, || o(this, file), || wel_prm_cup_load_extra_data(this, file))
+}

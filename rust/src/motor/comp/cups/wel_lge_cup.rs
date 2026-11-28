@@ -361,3 +361,47 @@ pub(crate) const WELSH_LEAGUE_CUP_KNOCKOUT_ROUNDS: [EngCcCupCupRound; 3] = [
 /// (0x926800), create_table (0x926700) and create_group_stage (0x926b00), wel_lge_cup.cpp.
 pub(crate) const WELSH_LEAGUE_CUP_CONSTRUCTOR: IrishLeagueCupConstructor = IrishLeagueCupConstructor { vtable: 0x971034, discipline: discipline_rule::WALES, stages: 6, groups: 5,
     entrants: 0x927010, predicted: 0x9274f0, rules: 0x926800, first_group: 0x926700, group_stage: 0x926b00, file: 0xad56f4 };
+
+/// Reads the Welsh League Cup's entrants from its temporary file (`load_welsh_cup_entrants`, the boxes of lines 0x348,
+/// 0x350 and 0x358 of wel_lge_cup.cpp).
+/// Original: `WelLgeCup::load_extra_data` (0x927330, wel_lge_cup.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn wel_lge_cup_load_extra_data(this: usize, file: usize) -> u32 {
+    load_welsh_cup_entrants(this, file, 0xad56f4, [0x348, 0x350, 0x358], "cx03_11 welsh league cup entrants loaded")
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_wel_lge_cup_load_extra_data(this: usize, file: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_WEL_LGE_CUP_LOAD_EXTRA_DATA);
+    compare_welsh_cup_entrants("wel_lge_cup_load_extra_data", this, file, || o(this, file), || wel_lge_cup_load_extra_data(this, file))
+}
+
+/// The body of the Welsh league cups' `load_extra_data`: the entrant count (`ita_cup_fields::ENTRANT_CLUB_COUNT`, 4 bytes;
+/// a short read: the box of line `rows[0]` and 0), the entrant list (`exe::crt_malloc` of 4 per entrant into
+/// `ita_cup_fields::ENTRANT_CLUBS`; out of memory, the box of `rows[1]` and 0) read whole (a short read: the box of
+/// `rows[2]` and 0), then each club index back into a club pointer (`club_at`; −1, a free slot, becomes null). Returns
+/// 1.
+pub(crate) unsafe fn load_welsh_cup_entrants(this: usize, file: usize, source: usize, rows: [u32; 3], branch: &'static str) -> u32 {
+    let cup = ItaCupFields(this);
+    if exe::crt_fread(this + ita_cup_fields::ENTRANT_CLUB_COUNT, 4, 1, file) != 1 {
+        show_error_at(source, rows[0]);
+        return 0;
+    }
+    let list = exe::crt_malloc(cup.entrant_club_count() as u32 * 4);
+    cup.set_entrant_clubs(list);
+    if list == 0 {
+        show_error_at(source, rows[1]);
+        return 0;
+    }
+    if exe::crt_fread(list, 4, cup.entrant_club_count() as u32, file) != cup.entrant_club_count() as u32 {
+        show_error_at(source, rows[2]);
+        return 0;
+    }
+    covered!(branch);
+    let mut k = 0i32;
+    while k < cup.entrant_club_count() as i32 {
+        let slot = cup.entrant_clubs() + k as usize * 4;
+        let index = read_i32(slot);
+        write_usize(slot, if index == -1 { 0 } else { club_at(index as isize).addr() });
+        k += 1;
+    }
+    1
+}

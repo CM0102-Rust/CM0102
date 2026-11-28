@@ -1,0 +1,14 @@
+=== CARREIRA (rodada a parte em 27/11/2026: a cadeia parou depois das mutacoes, que estao completas acima)
+    pool nao paginado 3.49 -> 3.53 GB, paginado 10.60 -> 10.61 GB
+execucao 1: parou em 2002-151, 2318633757 sorteios, impressao d092be7a7d23974d, partidas 19308/87d26142e2d53b50, banco 0758486335bab6d9, 221 s
+    pool nao paginado 3.53 -> 3.55 GB, paginado 10.61 -> 10.63 GB
+execucao 2: parou em 2002-151, 2318633757 sorteios, impressao d092be7a7d23974d, partidas 19308/87d26142e2d53b50, banco 0758486335bab6d9, 220 s
+detector: parou em 2002-151, 2318633757 sorteios, impressao d092be7a7d23974d, partidas 19308/87d26142e2d53b50, banco 0758486335bab6d9, 230 s
+detector de lixo: igual
+game.cfg restaurado; auto_setup.cfg removido
+determinismo: OK, todas as execucoes iguais
+    pool nao paginado 3.55 -> 3.56 GB, paginado 10.64 -> 10.66 GB
+execucao 1: parou em 2002-151, 2350798210 sorteios, impressao e882b8d8376eb65e, partidas 19479/d9f5a530fca9f297, banco 63adba16c6863fc7, 192 s
+game.cfg restaurado; auto_setup.cfg removido
+=== FIM
+SAIDA 0

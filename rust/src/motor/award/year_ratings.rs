@@ -602,3 +602,61 @@ pub(crate) unsafe extern "thiscall" fn compare_year_ratings_construct(this: usiz
 
 /// `YEAR_RATINGS::load_from_disk(file)` (0x931390, thiscall, ret 4).
 pub(crate) const FN_YEAR_RATINGS_LOAD_FROM_DISK: usize = 0x931390;
+
+/// Loads the year ratings table from a saved game: the entry count (4 bytes, into +4; a short read, the "Error" box
+/// of line 0x60 and 0); with entries, the capacity becomes the count and the entries (21 bytes each, `exe::crt_malloc`;
+/// out of memory, the box of line 0x6c and 0) are read in one go (short, the box of line 0x73 and 0). Otherwise 1.
+/// Original: `YEAR_RATINGS::load_from_disk` (0x931390, year_ratings.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn year_ratings_load_from_disk(this: usize, file: usize) -> u32 {
+    use year_ratings_consts as yr;
+    if exe::zread(this + 4, 4, 1, file) != 1 {
+        show_error_at(yr::YEAR_RATINGS_CPP, 0x60);
+        return 0;
+    }
+    let count = read_u32(this + 4);
+    if count == 0 {
+        return 1;
+    }
+    covered!("sx05b_6 year ratings loaded");
+    write_u32(this + 8, count);
+    let entries = exe::crt_malloc(count.wrapping_mul(yr::ENTRY_SIZE as u32));
+    write_usize(this, entries);
+    if entries == 0 {
+        show_error_at(yr::YEAR_RATINGS_CPP, 0x6c);
+        return 0;
+    }
+    if exe::zread(entries, yr::ENTRY_SIZE as u32, count, file) != read_u32(this + 4) {
+        show_error_at(yr::YEAR_RATINGS_CPP, 0x73);
+        return 0;
+    }
+    1
+}
+
+/// Comparer for `year_ratings_load_from_disk`: only the original; the loaded count must fit the capacity.
+pub(crate) unsafe extern "thiscall" fn compare_year_ratings_load_from_disk(this: usize, file: usize) -> u32 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_YEAR_RATINGS_LOAD_FROM_DISK)(this, file);
+    if r == 1 {
+        let (count, capacity) = (read_u32(this + 4), read_u32(this + 8));
+        SCOREBOARD.record(count == 0 || count == capacity, || format!("year_ratings_load_from_disk({:#x}): count {} capacity {}", this, count, capacity));
+    }
+    r
+}
+
+/// Saves the year ratings table as `year_ratings_load_from_disk` reads it: the entry count (a short write, the "Error"
+/// box of line 0x86) and, with entries, the 21-byte entries in one go (short, line 0x8f).
+/// Original: `YEAR_RATINGS::save_to_disk` (0x9314e0, year_ratings.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn year_ratings_save_to_disk(this: usize, file: usize) {
+    use year_ratings_consts as yr;
+    if exe::zwrite(this + 4, 4, 1, file) != 1 {
+        return show_error_at(yr::YEAR_RATINGS_CPP, 0x86);
+    }
+    let count = read_u32(this + 4);
+    if count != 0 && exe::zwrite(read_usize(this), yr::ENTRY_SIZE as u32, count, file) != read_u32(this + 4) {
+        show_error_at(yr::YEAR_RATINGS_CPP, 0x8f);
+    }
+}
+
+/// Comparer for `year_ratings_save_to_disk`: only the original.
+pub(crate) unsafe extern "thiscall" fn compare_year_ratings_save_to_disk(this: usize, file: usize) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_YEAR_RATINGS_SAVE_TO_DISK)(this, file)
+}

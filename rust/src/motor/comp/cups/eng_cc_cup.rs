@@ -740,3 +740,43 @@ pub(crate) unsafe fn eng_fa_cup_create_comp_stats(this: Cup) -> bool {
 
 /// The fixed fields `construct_eng_cc_cup` writes on a new cup, for the comparer: (offset, width, value).
 pub(crate) const LEAGUE_CUP_CONSTRUCTOR_FIELDS: [(usize, u8, u32); 11] = [(cup::PRIZE_FUND, 4, 0xf4240), (cup::STAGE_COUNT, 4, 0x0), (cup::CURRENT_STAGE, 4, 0xffffffff), (cup::TEAM_COUNT, 2, 0x5c), (cup::CLUB_SIDES, 1, 0x1), (cup::STAGE_INDEX, 1, 0xff), (cup::SEASON_SET_UP, 4, 0x0), (cup::DISCIPLINE_INDEX, 1, 0x9), (cup::CURRENT_ROUND, 1, 0x0), (cup::RUN_BY_STAGES, 1, 0x0), (eng_cc_cup::EUROPEAN_ENTRANT_COUNT, 1, 0x0)];
+
+/// Reads the League Cup's own data from the saved game: the count of entrants in the European cups
+/// (`eng_cc_cup::EUROPEAN_ENTRANT_COUNT`, 1 byte; `exe::crt_fread`). A short read shows the eng_cc_cup.cpp box (line
+/// 0x2e4) and returns 0; otherwise 1.
+/// Original: `EngCcCup::load_extra_data` (0x56d2e0, eng_cc_cup.cpp, thiscall, ret 4).
+pub(crate) unsafe extern "thiscall" fn eng_cc_cup_load_extra_data(this: usize, file: usize) -> u32 {
+    if exe::crt_fread(this + eng_cc_cup::EUROPEAN_ENTRANT_COUNT, 1, 1, file) != 1 {
+        show_error_at(0x9c4224, 0x2e4); // eng_cc_cup.cpp
+        return 0;
+    }
+    covered!("cx02_13 league cup data loaded");
+    1
+}
+
+pub(crate) unsafe extern "thiscall" fn compare_eng_cc_cup_load_extra_data(this: usize, file: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_ENG_CC_CUP_LOAD_EXTRA_DATA);
+    compare_cup_extra_data_load("eng_cc_cup_load_extra_data", this, file, &[(eng_cc_cup::EUROPEAN_ENTRANT_COUNT, 1)], || o(this, file), || eng_cc_cup_load_extra_data(this, file))
+}
+
+/// Comparer of the cups' own data readers: the original reads first; then the file goes back to where it was and the
+/// copy reads the same bytes again over the `fields` (the object as the original left it is put back); the returns,
+/// the fields and the file positions must match.
+pub(crate) unsafe fn compare_cup_extra_data_load(name: &str, this: usize, file: usize, fields: &[(usize, usize)], original: impl FnOnce() -> u32, copy: impl FnOnce() -> u32) -> u32 {
+    let at = exe::crt_ftell(file);
+    let (mut end_o, mut end_c) = (0, 0);
+    let regions: Vec<(usize, usize)> = fields.iter().map(|&(o, n)| (this + o, n)).collect();
+    let (r, c, same, mo, mc) = crate::comparison::side_by_side(&regions, || {
+        let r = original();
+        end_o = exe::crt_ftell(file);
+        r
+    }, || {
+        exe::crt_fseek(file, at, 0);
+        let c = copy();
+        end_c = exe::crt_ftell(file);
+        c
+    });
+    exe::crt_fseek(file, end_o, 0);
+    SCOREBOARD.record(same && r == c && end_o == end_c, || format!("{}({:#x}) returned {} x {}, file at {} x {} (from {}), original {:x?} copy {:x?}", name, this, r, c, end_o, end_c, at, mo, mc));
+    r
+}
