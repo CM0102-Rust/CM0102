@@ -4336,8 +4336,17 @@ routines! {
     Prologue { address: 0x7f0ae0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => sco_lge_cup_load_extra_data, compare_sco_lge_cup_load_extra_data;
     Prologue { address: 0x927330, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => wel_lge_cup_load_extra_data, compare_wel_lge_cup_load_extra_data;
     Prologue { address: 0x928c40, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => wel_prm_cup_load_extra_data, compare_wel_prm_cup_load_extra_data;
+    Prologue { address: 0x893720, bytes: &[0x6a, 0xff, 0x68, 0x58, 0x32, 0x96, 0x00] } => sweden_awards_construct, compare_sweden_awards_construct;
+    Prologue { address: 0x8937b0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => sweden_awards_init, compare_sweden_awards_init;
+    Prologue { address: 0x893bf0, bytes: &[0x83, 0xec, 0x10, 0x56, 0x57] } => sweden_awards_daily_update, compare_sweden_awards_daily_update;
+    Prologue { address: 0x893d60, bytes: &[0x8b, 0x51, 0x04, 0x8b, 0x44, 0x24, 0x04] } => sweden_awards_team_of_the_week, compare_sweden_awards_team_of_the_week;
+    Prologue { address: 0x893d80, bytes: &[0x8b, 0x44, 0x24, 0x14, 0x8b, 0x54, 0x24, 0x0c] } => construct_sweden_rules, compare_construct_sweden_rules;
+    Prologue { address: 0x769380, bytes: &[0x81, 0xec, 0x90, 0x02, 0x00, 0x00] } => nation_awards_award_player_of_year_by_stats, compare_nation_awards_award_player_of_year_by_stats;
+    Prologue { address: 0x76a480, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] } => nation_awards_compare_score_ascending, compare_nation_awards_compare_score_ascending;
+    Prologue { address: 0x76a4b0, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] } => nation_awards_compare_score_descending, compare_nation_awards_compare_score_descending;
+    Prologue { address: 0x794430, bytes: &[0xa1, 0xbc, 0xf6, 0x9c, 0x00] } => norway_awards_on_month_change, compare_norway_awards_on_month_change;
 }
-const N: usize = 4178;
+const N: usize = 4187;
 include!(concat!(env!("OUT_DIR"), "/indices.rs")); // IDX_<NAME>: the position of each routine (build.rs)
 
 /// Size of the engine object (the game allocates it with new(0xf63b)): side 1's block (+0xf5f2, 0x36
@@ -4381,6 +4390,12 @@ pub(crate) use self::award_month_ratings::*;
 #[path = "motor/award/nation_awards.rs"]
 pub(crate) mod award_nation_awards;
 pub(crate) use self::award_nation_awards::*;
+#[path = "motor/award/norway_awards.rs"]
+pub(crate) mod award_norway_awards;
+pub(crate) use self::award_norway_awards::*;
+#[path = "motor/award/sweden_awards.rs"]
+pub(crate) mod award_sweden_awards;
+pub(crate) use self::award_sweden_awards::*;
 #[path = "motor/award/team_award.rs"]
 pub(crate) mod award_team_award;
 pub(crate) use self::award_team_award::*;
@@ -5822,6 +5837,12 @@ pub(crate) use self::zipdir::*;
 // ---------- 161st batch: watch list, position code and staff criterion ----------
 
 compare_value!(compare_staff_criterion, staff_criterion, IDX_STAFF_CRITERION, () -> u32);
+
+// ---------- sx04b_8: a nation's player of the year by the season statistics and the orders of its candidates (nation_awards.cpp) ----------
+
+compare_order!(compare_nation_awards_compare_score_ascending, nation_awards_compare_score_ascending, IDX_NATION_AWARDS_COMPARE_SCORE_ASCENDING);
+
+compare_order!(compare_nation_awards_compare_score_descending, nation_awards_compare_score_descending, IDX_NATION_AWARDS_COMPARE_SCORE_DESCENDING);
 
 // ---------- sx04b_7: the month ratings' save and a nation's awards in the saved game (month_ratings.cpp, nation_awards.cpp) ----------
 

@@ -2,7 +2,7 @@
 
 Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os arquivos-fonte do mapa de [maxevans60](https://github.com/maxevans60/cm0102-function-map) (CC BY 4.0). Uma função conta quando o início dela é desviado para Rust (`Prologue` em `rust/src/motor.rs`). O placar do motor de partidas, pelas nossas fronteiras, fica em `PLACAR.md`.
 
-**Exe inteiro:** 4174 de 6709 funções, 4054.3 de 5528.0 KB (**73.34%**) · 303 de 393 arquivos com rotinas em Rust
+**Exe inteiro:** 4183 de 6709 funções, 4057.6 de 5528.0 KB (**73.40%**) · 305 de 393 arquivos com rotinas em Rust
 
 | Arquivo | Funções | KB | Progresso |
 |---|---|---|---|
@@ -38,6 +38,7 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `search_screens.cpp` | 53/53 | 76.9/76.9 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 **100.0%** |
 | `Setup.cpp` | 107/107 | 120.6/120.6 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 **100.0%** |
 | `staff_screens.cpp` | 27/27 | 113.0/113.0 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 **100.0%** |
+| `sweden_awards.cpp` | 5/5 | 1.7/1.7 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 **100.0%** |
 | `transfer_screens.cpp` | 69/69 | 76.1/76.1 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 **100.0%** |
 | `ultimatum.cpp` | 3/3 | 1.2/1.2 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 **100.0%** |
 | `wales_rules.cpp` | 2/2 | 0.4/0.4 | 🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩 **100.0%** |
@@ -187,6 +188,7 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `discipline.cpp` | 31/38 | 31.5/38.6 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **81.7%** |
 | `wel_prm_cup.cpp` | 11/16 | 5.1/6.3 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **81.2%** |
 | `tactics.cpp` | 27/29 | 18.8/23.1 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **81.2%** |
+| `nation_awards.cpp` | 16/19 | 6.9/8.6 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **80.9%** |
 | `training_manager.cpp` | 23/34 | 13.2/16.3 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **80.8%** |
 | `turkey_rules.cpp` | 2/3 | 0.5/0.6 | 🟩🟩🟩🟩🟩🟩🟩🟩🟨⬜ **80.6%** |
 | `fix_man.cpp` | 31/37 | 17.9/22.4 | 🟩🟩🟩🟩🟩🟩🟩🟨⬜⬜ **79.9%** |
@@ -228,7 +230,6 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `club_records.cpp` | 41/56 | 40.6/61.6 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **65.9%** |
 | `sco_lge_cup.cpp` | 5/8 | 2.9/4.4 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **65.2%** |
 | `squad_manager.cpp` | 10/16 | 4.5/7.0 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **64.7%** |
-| `nation_awards.cpp` | 13/19 | 5.5/8.6 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **63.9%** |
 | `por_prm.cpp` | 6/12 | 5.3/8.5 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **62.5%** |
 | `notes.cpp` | 8/23 | 5.8/9.2 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **62.5%** |
 | `friendly.cpp` | 49/67 | 26.0/41.7 | 🟩🟩🟩🟩🟩🟩🟨⬜⬜⬜ **62.4%** |
@@ -302,6 +303,7 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `main.cpp` | 4/16 | 0.3/3.0 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.7%** |
 | `utils.cpp` | 1/23 | 0.5/5.7 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **8.0%** |
 | `simulated_stats.cpp` | 1/19 | 0.3/5.5 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **5.9%** |
+| `norway_awards.cpp` | 1/5 | 0.2/2.9 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **5.3%** |
 | `arg_prm.cpp` | 1/17 | 0.5/10.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **5.3%** |
 | `arg_second.cpp` | 2/18 | 0.6/13.8 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **4.1%** |
 | `bel_third.cpp` | 1/24 | 0.4/11.4 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **3.8%** |
@@ -310,4 +312,4 @@ Gerado por `python engenharia-reversa/placar_arquivos.py` com as fronteiras e os
 | `finland_awards.cpp` | 1/6 | 0.0/2.5 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **1.9%** |
 | `library_without_asserts` | 1/243 | 0.3/205.5 | 🟨⬜⬜⬜⬜⬜⬜⬜⬜⬜ **0.1%** |
 
-Os outros 90 arquivos ainda não têm rotina em Rust.
+Os outros 88 arquivos ainda não têm rotina em Rust.

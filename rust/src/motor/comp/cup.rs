@@ -4279,7 +4279,7 @@ pub(crate) unsafe extern "thiscall" fn cup_save_cup_to_disk(this: usize, by_id: 
     let this = League(this);
     let cup = Cup(this.addr());
     let has_stats = (this.comp_stats() != 0) as u32;
-    let no_competition = u32::MAX;
+    let in_the_competition = u32::MAX;
     cup_temp_file_name(this, read_i32(this.competition().addr()));
     if by_id as u8 == 0 {
         if cup.season_set_up() == 0 {
@@ -4312,7 +4312,7 @@ pub(crate) unsafe extern "thiscall" fn cup_save_cup_to_disk(this: usize, by_id: 
         temp_write(f, this.competition().addr(), 4, 1);
     } else {
         show_error_at(CUP_SOURCE, 0x14c3);
-        temp_write(f, &no_competition as *const u32 as usize, 4, 1);
+        temp_write(f, &in_the_competition as *const u32 as usize, 4, 1);
     }
     temp_write(f, cup.round_table(), cup_round::SIZE as u32, cup.round_count() as i32 as u32);
     club_entries_to_ids(cup.team_table(), cup.team_count());

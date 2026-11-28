@@ -14,13 +14,13 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 | cópias de acesso à memória | 0 |
 | rotinas sem cabeçalho | 0 |
 | locais/parâmetros em português | 222 |
-| linhas | 413852 |
+| linhas | 414248 |
 
 ## Por arquivo (os 40 piores, pelos deslocamentos crus)
 
 | Arquivo | deslocamentos crus | chaves fixas cruas | chamadas por endereço | cópias de acesso à memória | rotinas sem cabeçalho | locais/parâmetros em português | linhas |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| `motor.rs` | 583 | 0 | 0 | 0 | 0 | 72 | 12797 |
+| `motor.rs` | 583 | 0 | 0 | 0 | 0 | 72 | 12818 |
 | `motor/comp_screens.rs` | 339 | 11 | 0 | 0 | 0 | 0 | 9539 |
 | `motor/club_screens.rs` | 321 | 2 | 0 | 0 | 0 | 0 | 13774 |
 | `motor/news.rs` | 169 | 0 | 0 | 0 | 0 | 0 | 3888 |
@@ -37,7 +37,7 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 | `motor/search_screens.rs` | 61 | 1 | 0 | 0 | 0 | 0 | 4877 |
 | `motor/national_teams.rs` | 57 | 1 | 0 | 0 | 0 | 2 | 4845 |
 | `motor/comp/worldcup/wc_europe_league.rs` | 57 | 0 | 0 | 0 | 0 | 0 | 1490 |
-| `motor/fields.rs` | 51 | 0 | 0 | 0 | 0 | 0 | 3404 |
+| `motor/fields.rs` | 51 | 0 | 0 | 0 | 0 | 0 | 3405 |
 | `motor/transfer_manager.rs` | 50 | 0 | 0 | 0 | 0 | 3 | 12650 |
 | `motor/club_records.rs` | 48 | 3 | 0 | 0 | 0 | 0 | 2761 |
 | `motor/manager_manager.rs` | 47 | 0 | 0 | 0 | 0 | 0 | 8478 |

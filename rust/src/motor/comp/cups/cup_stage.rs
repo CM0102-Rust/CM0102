@@ -457,7 +457,7 @@ pub(crate) unsafe extern "thiscall" fn cup_stage_load_from_file(this: usize, fil
 pub(crate) unsafe extern "thiscall" fn cup_stage_save_to_file(this: usize, file: usize) {
     let this = League(this);
     let cup = Cup(this.addr());
-    let no_competition = u32::MAX;
+    let in_the_competition = u32::MAX;
     if cup.round_table() == 0 || cup.team_table() == 0 || cup.tie_tables() == 0 {
         show_error_at(CUP_STAGE_SOURCE, 0x19a);
         return;
@@ -471,7 +471,7 @@ pub(crate) unsafe extern "thiscall" fn cup_stage_save_to_file(this: usize, file:
         exe::crt_fwrite(competition, 4, 1, file);
     } else {
         show_error_at(CUP_STAGE_SOURCE, 0x1b9);
-        exe::crt_fwrite(&no_competition as *const u32 as usize, 4, 1, file);
+        exe::crt_fwrite(&in_the_competition as *const u32 as usize, 4, 1, file);
     }
     exe::crt_fwrite(cup.round_table(), cup_round::SIZE as u32, cup.round_count() as i32 as u32, file);
     club_entries_to_ids(cup.team_table(), cup.team_count());
